@@ -1,0 +1,69 @@
+# Production Requirements for Project Management System
+
+# Django and Core Dependencies
+Django==5.2.3
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.0
+django-cors-headers==4.3.1
+python-decouple==3.8
+
+# Database Drivers
+psycopg2-binary==2.9.9  # PostgreSQL
+# mysqlclient==2.2.0  # Uncomment if using MySQL
+
+# Static File Serving
+whitenoise==6.6.0
+
+# Authentication & Security
+cryptography==41.0.8
+PyJWT==2.8.0
+
+# API & HTTP
+requests==2.31.0
+urllib3==2.1.0
+
+# File Handling
+Pillow==10.1.0
+
+# Google API Integration
+google-auth==2.25.2
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.109.0
+
+# Supabase
+supabase==2.3.4
+
+# Date/Time Handling
+python-dateutil==2.8.2
+
+# Environment & Configuration
+python-dotenv==1.0.0
+
+# Caching (Optional - Redis)
+# django-redis==5.4.0
+# redis==5.0.1
+
+# Monitoring & Logging
+gunicorn==21.2.0  # WSGI server for production
+
+# Development Tools (Optional for debugging)
+# django-debug-toolbar==4.2.0
+
+# Email Backend (if using advanced email features)
+# django-ses==3.5.0  # For Amazon SES
+
+# Background Tasks (Optional)
+# celery==5.3.4
+# django-celery-beat==2.5.0
+
+# File Storage (Optional - for cloud storage)
+# django-storages==1.14.2
+# boto3==1.34.0  # For AWS S3
+
+# API Documentation (Optional)
+# drf-spectacular==0.27.0
+
+# Testing (Optional for production testing)
+# pytest==7.4.3
+# pytest-django==4.7.0 
