@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Request Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+        textarea { width: 100%; height: 200px; font-family: monospace; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Leave Request API Debug Tool</h1>
+        
+        <div class="section">
+            <h3>1. Authentication Test</h3>
+            <button onclick="setTestToken()">Set Test Token</button>
+            <button onclick="checkAuth()">Check Authentication</button>
+            <div id="auth-status"></div>
+        </div>
+
+        <div class="section">
+            <h3>2. Leave Balance Test</h3>
+            <button onclick="getLeaveBalance()">Get Leave Balance</button>
+            <div id="balance-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>3. Submit Leave Request</h3>
+            <form id="leave-form">
+                <input type="date" id="start-date" required placeholder="Start Date">
+                <input type="date" id="end-date" required placeholder="End Date">
+                <select id="leave-type">
+                    <option value="vacation">Vacation</option>
+                    <option value="sick">Sick Leave</option>
+                    <option value="personal">Personal Leave</option>
+                </select>
+                <input type="text" id="reason" required placeholder="Reason for leave">
+                <br>
+                <button type="submit">Submit Leave Request</button>
+            </form>
+            <div id="submit-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>4. Debug Output</h3>
+            <textarea id="debug-output" readonly></textarea>
+            <button onclick="clearDebug()">Clear Debug</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUwNDM4MzAwLCJpYXQiOjE3NTA0MzQ3MDAsImp0aSI6IjZmMDE2YWQ1NzFkYzQ5MGM4ZmYxNTA4ZGM4Mjc5MDkyIiwidXNlcl9pZCI6MX0.7NNKWA_GBt9humV3fcSAbLh3FePboJ39bpyj9_32OgE';
+        
+        function log(message) {
+            const debugOutput = document.getElementById('debug-output');
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.value += `[${timestamp}] ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function setTestToken() {
+            localStorage.setItem('token', TEST_TOKEN);
+            log('✅ Test token set in localStorage');
+            document.getElementById('auth-status').innerHTML = '<span class="success">Token set successfully</span>';
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            log(`🔍 Checking auth... Token exists: ${!!token}`);
+            
+            if (!token) {
+                document.getElementById('auth-status').innerHTML = '<span class="error">No token found in localStorage</span>';
+                return;
+            }
+
+            log(`🔑 Token preview: ${token.substring(0, 50)}...`);
+            
+            try {
+                const response = await fetch(`${API_BASE}/leave-balance/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                log(`📡 Auth check response: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('auth-status').innerHTML = '<span class="success">✅ Authentication successful</span>';
+                    log(`✅ Auth successful. User has ${data.available_days} days available`);
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('auth-status').innerHTML = '<span class="error">❌ Authentication failed</span>';
+                    log(`❌ Auth failed: ${errorText}`);
+                }
+            } catch (error) {
+                log(`💥 Auth check error: ${error.message}`);
+                document.getElementById('auth-status').innerHTML = '<span class="error">Network error</span>';
+            }
+        }
+
+        async function getLeaveBalance() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('balance-result').innerHTML = '<span class="error">No token found</span>';
+                return;
+            }
+
+            log('📊 Fetching leave balance...');
+
+            try {
+                const response = await fetch(`${API_BASE}/leave-balance/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                log(`📡 Balance response: ${response.status} ${response.statusText}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('balance-result').innerHTML = `
+                        <div class="success">
+                            <strong>Leave Balance:</strong><br>
+                            Total: ${data.total_days} days<br>
+                            Used: ${data.used_days} days<br>
+                            Available: ${data.available_days} days<br>
+                            Pending: ${data.pending_days} days
+                        </div>
+                    `;
+                    log(`✅ Balance retrieved: ${data.available_days}/${data.total_days} days available`);
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('balance-result').innerHTML = `<span class="error">Error: ${errorText}</span>`;
+                    log(`❌ Balance error: ${errorText}`);
+                }
+            } catch (error) {
+                log(`💥 Balance fetch error: ${error.message}`);
+                document.getElementById('balance-result').innerHTML = '<span class="error">Network error</span>';
+            }
+        }
+
+        document.getElementById('leave-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('submit-result').innerHTML = '<span class="error">No token found</span>';
+                return;
+            }
+
+            const formData = {
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+                leave_type: document.getElementById('leave-type').value,
+                reason: document.getElementById('reason').value,
+                notes: ''
+            };
+
+            log('📝 Submitting leave request...');
+            log(`📋 Request data: ${JSON.stringify(formData)}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/leave-requests/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                log(`📡 Submit response: ${response.status} ${response.statusText}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('submit-result').innerHTML = `
+                        <div class="success">
+                            ✅ Leave request submitted successfully!<br>
+                            Request ID: ${data.id}<br>
+                            Days requested: ${data.days_requested}<br>
+                            Status: ${data.status}
+                        </div>
+                    `;
+                    log(`✅ Leave request created with ID: ${data.id}`);
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('submit-result').innerHTML = `<span class="error">❌ Error: ${errorText}</span>`;
+                    log(`❌ Submit error: ${errorText}`);
+                }
+            } catch (error) {
+                log(`💥 Submit error: ${error.message}`);
+                document.getElementById('submit-result').innerHTML = '<span class="error">Network error</span>';
+            }
+        });
+
+        function clearDebug() {
+            document.getElementById('debug-output').value = '';
+        }
+
+        // Auto-check auth on page load
+        window.addEventListener('load', () => {
+            log('🚀 Debug tool loaded');
+            const token = localStorage.getItem('token');
+            if (token) {
+                log('🔑 Found existing token in localStorage');
+                checkAuth();
+            } else {
+                log('⚠️ No token found in localStorage');
+            }
+        });
+    </script>
+</body>
+</html> 

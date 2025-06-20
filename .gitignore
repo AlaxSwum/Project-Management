@@ -1,0 +1,135 @@
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Sensitive Credentials - NEVER COMMIT THESE
+backend/projects/google_drive_credentials.json
+backend/projects/oauth_credentials.json
+backend/projects/token.pickle
+backend/config.py
+*.key
+*.pem
+*.p12
+*.json.secret
+
+# Database Files
+backend/db_temp.sqlite3
+backend/db.sqlite3
+backend/db.sqlite3-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual Environment
+backend/venv/
+backend/env/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js - Exclude ALL node_modules directories
+node_modules/
+**/node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+*.tgz
+*.tar.gz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs
+*.log
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Next.js
+frontend/.vercel
+
+# Temporary files
+*.tmp
+*.temp 
