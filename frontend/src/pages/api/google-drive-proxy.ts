@@ -62,6 +62,9 @@ export default async function handler(
       case 'getAccessToken':
         return handleGetAccessToken(req, res);
       
+      case 'testAuth':
+        return handleTestAuth(req, res);
+      
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
@@ -73,18 +76,30 @@ export default async function handler(
 
 async function handleListFiles(req: NextApiRequest, res: NextApiResponse, folderId: string) {
   try {
+    console.log('🔍 DEBUG: Attempting to list files for folder:', folderId || 'root');
+    
+    const query = folderId && folderId !== 'root' ? `'${folderId}' in parents and trashed=false` : `'root' in parents and trashed=false`;
+    console.log('🔍 DEBUG: Using query:', query);
+    
     const response = await drive.files.list({
-      q: folderId && folderId !== 'root' ? `'${folderId}' in parents and trashed=false` : `'root' in parents and trashed=false`,
+      q: query,
       fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, size, webViewLink, parents)',
       orderBy: 'folder,name'
     });
 
     const files = response.data.files || [];
+    console.log('🔍 DEBUG: Found', files.length, 'files');
+    console.log('🔍 DEBUG: Files:', files.map(f => ({ name: f.name, type: f.mimeType })));
     
     return res.status(200).json({ files });
   } catch (error) {
-    console.error('Error listing files:', error);
-    return res.status(500).json({ error: 'Failed to list files' });
+    console.error('❌ ERROR listing files:', error);
+    console.error('❌ ERROR details:', error.message);
+    return res.status(500).json({ 
+      error: 'Failed to list files',
+      details: error.message,
+      debug: true 
+    });
   }
 }
 
@@ -135,6 +150,44 @@ async function handleGetAccessToken(req: NextApiRequest, res: NextApiResponse) {
     expires_in: 3600,
     token_type: 'Bearer'
   });
+}
+
+async function handleTestAuth(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    console.log('🔍 DEBUG: Testing service account authentication...');
+    
+    // Test 1: Get user info (should return service account info)
+    const aboutResponse = await drive.about.get({ fields: 'user' });
+    console.log('🔍 DEBUG: Service account user:', aboutResponse.data.user);
+    
+    // Test 2: Try to list all files (including shared ones)
+    const allFilesResponse = await drive.files.list({
+      q: 'trashed=false',
+      fields: 'files(id, name, mimeType, parents, shared, ownedByMe)',
+      pageSize: 10
+    });
+    
+    console.log('🔍 DEBUG: Found', allFilesResponse.data.files?.length, 'total files');
+    console.log('🔍 DEBUG: Files:', allFilesResponse.data.files?.map(f => ({ 
+      name: f.name, 
+      type: f.mimeType, 
+      shared: f.shared, 
+      ownedByMe: f.ownedByMe 
+    })));
+    
+    return res.status(200).json({
+      success: true,
+      serviceAccount: aboutResponse.data.user,
+      totalFiles: allFilesResponse.data.files?.length || 0,
+      files: allFilesResponse.data.files?.slice(0, 5) // First 5 files for debugging
+    });
+  } catch (error) {
+    console.error('❌ ERROR testing auth:', error);
+    return res.status(500).json({ 
+      error: 'Auth test failed',
+      details: error.message 
+    });
+  }
 }
 
 /* 
