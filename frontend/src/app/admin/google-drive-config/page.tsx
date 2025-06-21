@@ -75,6 +75,14 @@ export default function GoogleDriveConfigPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
             Google Drive Access Control Configuration
           </h1>
+          
+          <div className="mb-6 p-4 bg-green-100 border border-green-400 rounded-lg">
+            <h2 className="text-lg font-semibold text-green-800 mb-2">✅ Currently Configured for Internal Use</h2>
+            <p className="text-green-700">
+              <strong>Full Access Mode:</strong> All users can access the entire Google Drive, browse all folders, and upload files anywhere. 
+              Perfect for internal team collaboration.
+            </p>
+          </div>
 
           {/* Root Access Control */}
           <div className="mb-8 p-6 bg-blue-50 rounded-lg">
