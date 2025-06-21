@@ -114,7 +114,7 @@ class GoogleDriveServiceAccount {
       this.accessToken = data.access_token;
       this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // Refresh 1 minute early
 
-      return this.accessToken;
+      return this.accessToken || '';
     } catch (error) {
       console.error('Error getting service account access token:', error);
       throw error;
