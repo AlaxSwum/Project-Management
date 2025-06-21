@@ -1753,6 +1753,446 @@ export default function ProjectDetailPage() {
             margin-left: 0.25rem;
           }
 
+          /* Enhanced Gantt Chart Styles */
+          .gantt-chart-enhanced {
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+          }
+          
+          .gantt-sidebar-enhanced {
+            width: 350px;
+            border-right: 2px solid #000000;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .gantt-sidebar-header-enhanced {
+            display: grid;
+            grid-template-columns: 1fr 80px 80px;
+            gap: 1px;
+            background: #000000;
+            font-weight: 600;
+            color: #000000;
+            border-bottom: 2px solid #000000;
+          }
+          
+          .task-header-cell, .duration-header-cell, .assignee-header-cell {
+            background: #ffffff;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            text-align: center;
+            border-right: 1px solid #e5e7eb;
+          }
+          
+          .task-header-cell {
+            text-align: left;
+            padding-left: 1rem;
+          }
+          
+          .gantt-tasks-enhanced {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 400px;
+          }
+          
+          .gantt-empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #6b7280;
+          }
+          
+          .gantt-task-row-enhanced {
+            border-bottom: 1px solid #e5e7eb;
+            background: #ffffff;
+            transition: background-color 0.2s ease;
+          }
+          
+          .gantt-task-row-enhanced:hover {
+            background: #f9fafb;
+          }
+          
+          .gantt-task-info-enhanced {
+            display: grid;
+            grid-template-columns: 1fr 80px 80px;
+            gap: 1px;
+            align-items: center;
+            min-height: 60px;
+            padding: 0.5rem 0;
+          }
+          
+          .gantt-task-name-enhanced {
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+          }
+          
+          .task-title {
+            font-weight: 600;
+            color: #000000;
+            font-size: 0.9rem;
+            flex: 1;
+          }
+          
+          .task-status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1px solid #000000;
+            flex-shrink: 0;
+          }
+          
+          .task-status-indicator.status-todo { background: #f3f4f6; }
+          .task-status-indicator.status-in_progress { background: #dbeafe; }
+          .task-status-indicator.status-review { background: #fef3c7; }
+          .task-status-indicator.status-done { background: #d1fae5; }
+          
+          .priority-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+          }
+          
+          .priority-indicator.priority-low { background: #10b981; }
+          .priority-indicator.priority-medium { background: #f59e0b; }
+          .priority-indicator.priority-high { background: #ef4444; }
+          .priority-indicator.priority-urgent { background: #dc2626; }
+          
+          .gantt-task-duration {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 500;
+            padding: 0 0.5rem;
+          }
+          
+          .gantt-task-assignee {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 0.5rem;
+          }
+          
+          .assignee-avatar-enhanced {
+            width: 24px;
+            height: 24px;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #000000;
+          }
+          
+          .unassigned {
+            color: #9ca3af;
+            font-size: 0.8rem;
+          }
+          
+          .gantt-timeline-enhanced {
+            flex: 1;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+          }
+          
+          .gantt-timeline-header-enhanced {
+            border-bottom: 2px solid #000000;
+            background: #f8fafc;
+          }
+          
+          .gantt-month-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            text-align: center;
+          }
+          
+          .month-label {
+            font-weight: 600;
+            color: #000000;
+            font-size: 1rem;
+          }
+          
+          .gantt-week-headers {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .week-header {
+            padding: 0.4rem;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #374151;
+            border-right: 1px solid #e5e7eb;
+          }
+          
+          .week-header:last-child {
+            border-right: none;
+          }
+          
+          .gantt-date-grid {
+            display: grid;
+            grid-template-columns: repeat(30, 1fr);
+            background: #ffffff;
+          }
+          
+          .gantt-date-cell {
+            padding: 0.5rem 0.25rem;
+            text-align: center;
+            border-right: 1px solid #e5e7eb;
+            transition: background-color 0.2s ease;
+          }
+          
+          .gantt-date-cell:last-child {
+            border-right: none;
+          }
+          
+          .gantt-date-cell.today {
+            background: #fef3c7;
+            border-left: 2px solid #f59e0b;
+            border-right: 2px solid #f59e0b;
+          }
+          
+          .gantt-date-cell.weekend {
+            background: #f9fafb;
+          }
+          
+          .date-number {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #000000;
+            line-height: 1;
+          }
+          
+          .date-day {
+            font-size: 0.6rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-top: 0.1rem;
+          }
+          
+          .gantt-grid-container {
+            flex: 1;
+            position: relative;
+            overflow-y: auto;
+            background: #ffffff;
+          }
+          
+          .gantt-vertical-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: grid;
+            grid-template-columns: repeat(30, 1fr);
+            pointer-events: none;
+            z-index: 1;
+          }
+          
+          .grid-line-vertical {
+            border-right: 1px solid #f3f4f6;
+            height: 100%;
+          }
+          
+          .grid-line-vertical:nth-child(7n) {
+            border-right: 1px solid #e5e7eb;
+          }
+          
+          .gantt-bars-enhanced {
+            position: relative;
+            z-index: 2;
+            padding: 1rem;
+            min-height: 400px;
+          }
+          
+          .gantt-bars-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #6b7280;
+          }
+          
+          .gantt-bar-row-enhanced {
+            margin-bottom: 1.5rem;
+            height: 40px;
+            position: relative;
+          }
+          
+          .gantt-horizontal-grid-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #f3f4f6;
+            z-index: 1;
+          }
+          
+          .gantt-bar-enhanced {
+            height: 28px;
+            border-radius: 14px;
+            position: relative;
+            min-width: 80px;
+            border: 2px solid;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 3;
+            overflow: hidden;
+          }
+          
+          .gantt-bar-enhanced:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+          
+          .gantt-bar-enhanced.overdue {
+            border-color: #dc2626 !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+          }
+          
+          .gantt-bar-content-enhanced {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0.75rem;
+            position: relative;
+            z-index: 2;
+          }
+          
+          .gantt-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            border-radius: 12px;
+            opacity: 0.3;
+            z-index: 1;
+          }
+          
+          .gantt-bar-text-enhanced {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #000000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            z-index: 2;
+            position: relative;
+          }
+          
+          .gantt-bar-duration-enhanced {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #374151;
+            white-space: nowrap;
+            margin-left: 0.5rem;
+            z-index: 2;
+            position: relative;
+          }
+          
+          .overdue-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ffffff;
+            border: 2px solid #dc2626;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            z-index: 4;
+          }
+          
+          .gantt-legend {
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          }
+          
+          .legend-section h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #000000;
+            margin: 0 0 0.75rem 0;
+          }
+          
+          .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+          }
+          
+          .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #374151;
+          }
+          
+          .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            border: 2px solid;
+            flex-shrink: 0;
+          }
+          
+          .legend-priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+          }
+          
+          .progress-example {
+            width: 24px;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+          }
+          
+          .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+          }
+          
+          .overdue-example {
+            font-size: 0.8rem;
+          }
+
           @media (max-width: 1200px) {
             .board-grid {
               grid-template-columns: repeat(2, 1fr);
@@ -1799,6 +2239,27 @@ export default function ProjectDetailPage() {
               width: 100%;
               border-right: none;
               border-bottom: 2px solid #000000;
+            }
+            .gantt-chart-enhanced {
+              flex-direction: column;
+            }
+            .gantt-sidebar-enhanced {
+              width: 100%;
+              border-right: none;
+              border-bottom: 2px solid #000000;
+            }
+            .gantt-sidebar-header-enhanced {
+              grid-template-columns: 2fr 1fr 1fr;
+            }
+            .gantt-task-info-enhanced {
+              grid-template-columns: 2fr 1fr 1fr;
+            }
+            .gantt-week-headers {
+              grid-template-columns: repeat(2, 1fr);
+            }
+            .gantt-legend {
+              grid-template-columns: 1fr;
+              gap: 1rem;
             }
           }
         `
@@ -2147,100 +2608,191 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            <div className="gantt-chart">
-              <div className="gantt-sidebar">
-                <div className="gantt-sidebar-header">Tasks</div>
-                <div className="gantt-tasks">
-                  {tasks.map((task) => (
-                    <div key={task.id} className="gantt-task-row">
-                      <div className="gantt-task-info">
-                        <div className="gantt-task-name">{task.name}</div>
-                        <div className="gantt-task-meta">
-                          {task.assignee && (
-                            <div className="assignee-avatar-xs">
-                              {task.assignee.name.charAt(0).toUpperCase()}
+            <div className="gantt-chart-enhanced">
+              <div className="gantt-sidebar-enhanced">
+                <div className="gantt-sidebar-header-enhanced">
+                  <div className="task-header-cell">Task</div>
+                  <div className="duration-header-cell">Duration</div>
+                  <div className="assignee-header-cell">Assignee</div>
+                </div>
+                <div className="gantt-tasks-enhanced">
+                  {tasks.length === 0 ? (
+                    <div className="gantt-empty-state">
+                      <p>No tasks available</p>
+                    </div>
+                  ) : (
+                    tasks.map((task) => {
+                      const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
+                      const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                      const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
+                      
+                      return (
+                        <div key={task.id} className="gantt-task-row-enhanced">
+                          <div className="gantt-task-info-enhanced">
+                            <div className="gantt-task-name-enhanced">
+                              <span className="task-title">{task.name}</span>
+                              <span className={`task-status-indicator status-${task.status}`}></span>
+                              <span className={`priority-indicator priority-${task.priority}`}></span>
                             </div>
-                          )}
-                          <span className={`priority-dot priority-${task.priority}`}></span>
+                            <div className="gantt-task-duration">{durationInDays}d</div>
+                            <div className="gantt-task-assignee">
+                              {task.assignee ? (
+                                <div className="assignee-avatar-enhanced">
+                                  {task.assignee.name.charAt(0).toUpperCase()}
+                                </div>
+                              ) : (
+                                <span className="unassigned">—</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              
+              <div className="gantt-timeline-enhanced">
+                <div className="gantt-timeline-header-enhanced">
+                  <div className="gantt-month-header">
+                    <div className="month-label">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                  </div>
+                  <div className="gantt-week-headers">
+                    {Array.from({ length: 4 }, (_, weekIndex) => (
+                      <div key={weekIndex} className="week-header">
+                        Week {weekIndex + 1}
                       </div>
+                    ))}
+                  </div>
+                  <div className="gantt-date-grid">
+                    {Array.from({ length: 30 }, (_, i) => {
+                      const date = new Date();
+                      date.setDate(date.getDate() + i - 5); // Start 5 days before today
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                      
+                      return (
+                        <div 
+                          key={i} 
+                          className={`gantt-date-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}
+                        >
+                          <div className="date-number">{date.getDate()}</div>
+                          <div className="date-day">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                <div className="gantt-grid-container">
+                  <div className="gantt-vertical-grid">
+                    {Array.from({ length: 30 }, (_, i) => (
+                      <div key={i} className="grid-line-vertical"></div>
+                    ))}
+                  </div>
+                  
+                  <div className="gantt-bars-enhanced">
+                    {tasks.length === 0 ? (
+                      <div className="gantt-bars-empty">
+                        <p>Create tasks to see them on the timeline</p>
+                      </div>
+                    ) : (
+                      tasks.map((task, taskIndex) => {
+                        const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
+                        const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                        const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
+                        
+                        // Calculate position relative to the timeline start (today - 5 days)
+                        const timelineStart = new Date();
+                        timelineStart.setDate(timelineStart.getDate() - 5);
+                        const daysFromStart = Math.ceil((taskStartDate.getTime() - timelineStart.getTime()) / (24 * 60 * 60 * 1000));
+                        
+                        // Calculate width and position as percentages of 30-day timeline
+                        const barWidth = Math.min((durationInDays / 30) * 100, 95);
+                        const barLeft = Math.max(0, Math.min((daysFromStart / 30) * 100, 90));
+                        
+                        const statusConfig = getStatusConfig(task.status);
+                        const isOverdueTask = isOverdue(task.due_date);
+                        
+                        return (
+                          <div key={task.id} className="gantt-bar-row-enhanced">
+                            <div className="gantt-horizontal-grid-line"></div>
+                            <div 
+                              className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
+                              style={{
+                                width: `${barWidth}%`,
+                                left: `${barLeft}%`,
+                                backgroundColor: statusConfig.color,
+                                borderColor: statusConfig.color === '#f3f4f6' ? '#d1d5db' : statusConfig.color
+                              }}
+                              title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInDays} days\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
+                              onClick={(e) => handleTaskClick(task, e)}
+                            >
+                              <div className="gantt-bar-content-enhanced">
+                                <div className="gantt-bar-fill" style={{ 
+                                  width: task.status === 'done' ? '100%' : 
+                                         task.status === 'review' ? '80%' :
+                                         task.status === 'in_progress' ? '50%' : '10%',
+                                  backgroundColor: task.status === 'done' ? '#10b981' : '#3b82f6'
+                                }}></div>
+                                <span className="gantt-bar-text-enhanced">{task.name}</span>
+                                <span className="gantt-bar-duration-enhanced">{durationInDays}d</span>
+                              </div>
+                              {isOverdueTask && <div className="overdue-indicator">⚠️</div>}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="gantt-legend">
+              <div className="legend-section">
+                <h4>Status Legend</h4>
+                <div className="legend-items">
+                  {TASK_STATUSES.map(status => (
+                    <div key={status.value} className="legend-item">
+                      <div 
+                        className="legend-color" 
+                        style={{ backgroundColor: status.color, borderColor: status.color === '#f3f4f6' ? '#d1d5db' : status.color }}
+                      ></div>
+                      <span>{status.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
               
-              <div className="gantt-timeline">
-                <div className="gantt-timeline-header">
-                  <div className="gantt-dates">
-                    {Array.from({ length: 30 }, (_, i) => {
-                      const date = new Date();
-                      date.setDate(date.getDate() + i);
-                      return (
-                        <div key={i} className="gantt-date">
-                          {date.getDate()}
+              <div className="legend-section">
+                <h4>Priority Legend</h4>
+                <div className="legend-items">
+                  {PRIORITY_LEVELS.map(priority => (
+                    <div key={priority.value} className="legend-item">
+                      <div 
+                        className="legend-priority-dot" 
+                        style={{ backgroundColor: priority.color }}
+                      ></div>
+                      <span>{priority.label}</span>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-                  </div>
-                </div>
-                
-                <div className="gantt-bars">
-                  {tasks.map((task) => {
-                    // Use actual start and due dates from the task
-                    const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
-                    const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    
-                    // Calculate duration in days from start to due date
-                    const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
-                    
-                    // Calculate position relative to current month view
-                    const today = new Date();
-                    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                    const daysFromMonthStart = Math.ceil((taskStartDate.getTime() - monthStart.getTime()) / (24 * 60 * 60 * 1000));
-                    
-                    // Calculate width and position as percentages
-                    const barWidth = Math.min((durationInDays / 30) * 100, 90); // Max 90% width
-                    const barLeft = Math.max(0, (daysFromMonthStart / 30) * 100);
-                    
-                    return (
-                      <div key={task.id} className="gantt-bar-row">
-                        <div 
-                          className={`gantt-bar status-${task.status}`}
-                          style={{
-                            width: `${barWidth}%`,
-                            left: `${Math.min(barLeft, 80)}%`,
-                            backgroundColor: getStatusConfig(task.status).color,
-                            position: 'relative'
-                          }}
-                          title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInDays} days\nStatus: ${task.status}`}
-                        >
-                          <div className="gantt-bar-content">
-                            <span className="gantt-bar-text">{task.name}</span>
-                            <span className="gantt-bar-duration">({durationInDays}d)</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="gantt-info">
-              <div className="info-card" style={{ background: '#f0f9ff', border: '2px solid #0ea5e9', borderRadius: '8px', padding: '1rem', margin: '1rem 0' }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#0c4a6e', margin: '0 0 0.5rem 0' }}>📅 Date Information</h4>
-                <p style={{ fontSize: '0.8rem', margin: '0', color: '#0c4a6e', lineHeight: '1.4' }}>
-                  Tasks are displayed from their <strong>start date</strong> to <strong>due date</strong>. 
-                  Tasks without dates are positioned at the current date with a default 7-day duration.
-                </p>
               </div>
               
-              <div className="coming-soon-gantt">
-                <div className="coming-soon-content" style={{ textAlign: 'center', padding: '2rem', background: '#ffffff', border: '2px solid #000000', borderRadius: '12px', margin: '2rem 0' }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000000', margin: '0 0 0.5rem 0' }}>Full Gantt Chart Features Coming Soon!</h3>
-                  <p style={{ fontSize: '0.875rem', margin: '0', color: '#6b7280' }}>
-                    Task dependencies, drag-and-drop scheduling, critical path analysis, and resource management.
-                  </p>
+              <div className="legend-section">
+                <h4>Progress Indicators</h4>
+                <div className="legend-items">
+                  <div className="legend-item">
+                    <div className="progress-example">
+                      <div className="progress-bar" style={{ width: '50%', backgroundColor: '#3b82f6' }}></div>
+                    </div>
+                    <span>Task Progress</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="overdue-example">⚠️</span>
+                    <span>Overdue Task</span>
+                  </div>
                 </div>
               </div>
             </div>
