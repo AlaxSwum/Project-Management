@@ -57,6 +57,7 @@ export default function ProjectMembersModal({
   );
 
   const handleAddMember = async (userId: number) => {
+    alert(`🔄 Testing: Attempting to add member ${userId} to project ${projectId}`);
     console.log(`Attempting to add member ${userId} to project ${projectId}`);
     setIsLoading(true);
     setError('');
@@ -64,9 +65,11 @@ export default function ProjectMembersModal({
     try {
       const result = await projectService.addProjectMember(projectId, userId);
       console.log('Add member result:', result);
+      alert(`✅ Success: Member added successfully!`);
       onMembersUpdate();
     } catch (err: any) {
       console.error('Failed to add member:', err);
+      alert(`❌ Error: ${err.message || err.toString()}`);
       setError(`Failed to add member: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
@@ -74,6 +77,7 @@ export default function ProjectMembersModal({
   };
 
   const handleRemoveMember = async (userId: number) => {
+    alert(`🔄 Testing: Attempting to remove member ${userId} from project ${projectId}`);
     console.log(`Attempting to remove member ${userId} from project ${projectId}`);
     setIsLoading(true);
     setError('');
@@ -81,9 +85,11 @@ export default function ProjectMembersModal({
     try {
       const result = await projectService.removeProjectMember(projectId, userId);
       console.log('Remove member result:', result);
+      alert(`✅ Success: Member removed successfully!`);
       onMembersUpdate();
     } catch (err: any) {
       console.error('Failed to remove member:', err);
+      alert(`❌ Error: ${err.message || err.toString()}`);
       setError(`Failed to remove member: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
