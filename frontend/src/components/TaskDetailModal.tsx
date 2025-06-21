@@ -300,6 +300,12 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             overflow-y: auto;
             flex: none;
           }
+          .task-info-section.editing {
+            flex: 1;
+            overflow-y: auto !important;
+            max-height: calc(85vh - 120px);
+            padding-bottom: 2rem;
+          }
           .task-interaction-wrapper {
             border-top: 2px solid #e5e7eb;
             display: flex;
@@ -754,9 +760,9 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
 
         <div className="task-modal-body">
           <div 
-            className="task-info-section"
+            className={`task-info-section ${isEditing ? 'editing' : ''}`}
             style={{ 
-              height: isEditing ? '100%' : `${topSectionHeight}%`,
+              height: isEditing ? 'auto' : `${topSectionHeight}%`,
               overflow: isEditing ? 'auto' : 'auto'
             }}
           >
