@@ -65,23 +65,46 @@ export default function GoogleDriveExplorer({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Debug: Check authentication status
-  const token = localStorage.getItem('accessToken');
-  const user = localStorage.getItem('user');
-  const hasValidToken = token && token.length > 0;
+  // State for authentication status
+  const [authStatus, setAuthStatus] = useState<'checking' | 'authenticated' | 'not_authenticated'>('checking');
 
-  // Show authentication debug info if no token
-  if (!hasValidToken) {
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Try to initialize Google Drive API
+        await listDriveFiles('root');
+        setAuthStatus('authenticated');
+      } catch (error) {
+        console.error('Google Drive authentication failed:', error);
+        setAuthStatus('not_authenticated');
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Show authentication status while checking
+  if (authStatus === 'checking') {
+    return (
+      <div className="google-drive-explorer">
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <p>Checking Google Drive authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication required if not authenticated
+  if (authStatus === 'not_authenticated') {
     return (
       <div className="google-drive-explorer">
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <h3 style={{ color: '#ef4444', marginBottom: '1rem' }}>Authentication Required</h3>
           <p style={{ marginBottom: '1rem' }}>Please log in to access Google Drive files.</p>
           <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem' }}>
-            <strong>Debug Info:</strong><br/>
-            Token: {token ? 'Present' : 'Missing'}<br/>
-            User: {user ? 'Present' : 'Missing'}<br/>
-            Please refresh the page after logging in.
+            <strong>Note:</strong><br/>
+            Google Drive integration requires authentication.<br/>
+            Please make sure you're logged in and have granted permissions.
           </div>
         </div>
       </div>

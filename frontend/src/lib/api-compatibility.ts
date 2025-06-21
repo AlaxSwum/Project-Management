@@ -1,4 +1,5 @@
 import { supabaseDb, supabaseAuth } from './supabase';
+import googleDriveService from './google-drive';
 
 // Enhanced task data transformation
 const transformTaskData = (task: any) => {
@@ -428,118 +429,72 @@ export const templateService = {
   },
 };
 
-// Google Drive service - Google Drive API integration
-import googleDriveService from './google-drive';
+interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  parents?: string[];
+  modifiedTime: string;
+  size?: string;
+  webViewLink: string;
+}
 
-export const listDriveFiles = async (folderId: string | null = null) => {
+// Google Drive API functions using the service
+export async function listDriveFiles(folderId: string | null = null): Promise<DriveFile[]> {
   try {
-    // Check if Google API credentials are configured
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || !process.env.NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY) {
-      console.warn('Google Drive API credentials not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID and NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY environment variables.');
-      
-      // Return mock data when credentials are not configured
-      return [
-        {
-          id: 'mock_folder1',
-          name: 'Documents (Demo)',
-          mimeType: 'application/vnd.google-apps.folder',
-          modifiedTime: new Date().toISOString(),
-          webViewLink: '#',
-          parents: folderId ? [folderId] : undefined
-        },
-        {
-          id: 'mock_file1',
-          name: 'Sample Document.pdf (Demo)',
-          mimeType: 'application/pdf',
-          modifiedTime: new Date().toISOString(),
-          size: '1024000',
-          webViewLink: '#',
-          parents: folderId ? [folderId] : undefined
-        }
-      ];
+    await googleDriveService.initialize();
+    const authenticated = await googleDriveService.authenticate();
+    if (!authenticated) {
+      throw new Error('Google Drive authentication failed');
     }
-
     return await googleDriveService.listFiles(folderId);
   } catch (error) {
     console.error('Error listing drive files:', error);
-    
-    // Fallback to mock data on error
-    return [
-      {
-        id: 'error_folder',
-        name: 'Error: Could not connect to Google Drive',
-        mimeType: 'application/vnd.google-apps.folder',
-        modifiedTime: new Date().toISOString(),
-        webViewLink: '#',
-        parents: folderId ? [folderId] : undefined
-      }
-    ];
+    throw error;
   }
-};
+}
 
-export const searchDriveFiles = async (query: string) => {
+export async function searchDriveFiles(query: string): Promise<DriveFile[]> {
   try {
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || !process.env.NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY) {
-      console.warn('Google Drive API credentials not configured');
-      const mockFiles = await listDriveFiles();
-      return mockFiles.filter(file => 
-        file.name.toLowerCase().includes(query.toLowerCase())
-      );
+    await googleDriveService.initialize();
+    const authenticated = await googleDriveService.authenticate();
+    if (!authenticated) {
+      throw new Error('Google Drive authentication failed');
     }
-
     return await googleDriveService.searchFiles(query);
   } catch (error) {
     console.error('Error searching drive files:', error);
     throw error;
   }
-};
+}
 
-export const uploadToDrive = async (file: File, folderId: string | null = null) => {
+export async function uploadToDrive(file: File, folderId: string): Promise<any> {
   try {
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || !process.env.NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY) {
-      console.warn('Google Drive API credentials not configured');
-      
-      // Return mock success response
-      return {
-        id: 'mock_uploaded_' + Date.now(),
-        name: file.name + ' (Demo Upload)',
-        mimeType: file.type,
-        modifiedTime: new Date().toISOString(),
-        size: file.size.toString(),
-        webViewLink: '#',
-        parents: folderId ? [folderId] : undefined
-      };
+    await googleDriveService.initialize();
+    const authenticated = await googleDriveService.authenticate();
+    if (!authenticated) {
+      throw new Error('Google Drive authentication failed');
     }
-
     return await googleDriveService.uploadFile(file, folderId);
   } catch (error) {
     console.error('Error uploading to drive:', error);
     throw error;
   }
-};
+}
 
-export const createDriveFolder = async (name: string, parentId: string | null = null) => {
+export async function createDriveFolder(name: string, parentId: string | null = null): Promise<any> {
   try {
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || !process.env.NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY) {
-      console.warn('Google Drive API credentials not configured');
-      
-      // Return mock folder creation response
-      return {
-        id: 'mock_folder_' + Date.now(),
-        name: name + ' (Demo Folder)',
-        mimeType: 'application/vnd.google-apps.folder',
-        modifiedTime: new Date().toISOString(),
-        webViewLink: '#',
-        parents: parentId ? [parentId] : undefined
-      };
+    await googleDriveService.initialize();
+    const authenticated = await googleDriveService.authenticate();
+    if (!authenticated) {
+      throw new Error('Google Drive authentication failed');
     }
-
     return await googleDriveService.createFolder(name, parentId);
   } catch (error) {
     console.error('Error creating drive folder:', error);
     throw error;
   }
-};
+}
 
 // Reporting service - TODO: Implement with Supabase
 export const reportingService = {
