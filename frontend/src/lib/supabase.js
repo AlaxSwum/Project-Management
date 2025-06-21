@@ -805,10 +805,16 @@ export const supabaseDb = {
         return { data: [], error };
       }
 
-      // Transform to match the expected format
+      // Transform to match the expected format with user property
       const transformedComments = (data || []).map(comment => ({
         id: comment.id,
         comment: comment.comment,
+        user: {
+          id: comment.auth_user?.id || comment.user_id,
+          name: comment.auth_user?.name || 'Unknown User',
+          email: comment.auth_user?.email || '',
+          role: comment.auth_user?.role || 'member'
+        },
         author: comment.auth_user?.name || 'Unknown User',
         author_email: comment.auth_user?.email || '',
         created_at: comment.created_at,
@@ -857,10 +863,16 @@ export const supabaseDb = {
         return { data: null, error: new Error('Failed to create comment') };
       }
 
-      // Return comment in the expected format
+      // Return comment in the expected format with user property
       const transformedComment = {
         id: newComment.id,
         comment: newComment.comment,
+        user: {
+          id: user.id,
+          name: user.user_metadata?.name || 'Current User',
+          email: user.email || '',
+          role: user.user_metadata?.role || 'member'
+        },
         author: user.user_metadata?.name || 'Current User',
         author_email: user.email || '',
         created_at: newComment.created_at,
