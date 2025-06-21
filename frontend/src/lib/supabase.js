@@ -334,12 +334,17 @@ export const supabaseDb = {
         return { data: null, error: new Error('Authentication required') };
       }
 
-      // Prepare project data with creator info
+      // Prepare project data with creator info and required fields
       const projectToInsert = {
         ...projectData,
         created_by_id: user.id,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        is_archived: false,  // ✅ Add required field
+        status: projectData.status || 'planning',  // ✅ Default status
+        // Set defaults for fields that might be missing
+        start_date: projectData.start_date || null,
+        due_date: projectData.due_date || null
       };
 
       // Insert the project
