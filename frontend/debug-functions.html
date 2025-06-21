@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { margin: 5px; padding: 10px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Function Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase Connection Test</h2>
+        <button onclick="testSupabaseConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Authentication Test</h2>
+        <button onclick="testLogin()">Test Login (admin@project.com)</button>
+        <button onclick="testGetUser()">Test Get User</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Database Query Test</h2>
+        <button onclick="testGetProjects()">Test Get Projects</button>
+        <button onclick="testGetTasks()">Test Get Tasks</button>
+        <div id="db-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. API Compatibility Test</h2>
+        <button onclick="testApiCompat()">Test API Compatibility Layer</button>
+        <div id="api-result"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://bayyefskgflbyyuwrlgm.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        
+        let currentUser = null;
+
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = isError ? 'error' : 'success';
+            div.innerHTML = `<pre>${JSON.stringify(message, null, 2)}</pre>`;
+            element.appendChild(div);
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        async function testSupabaseConnection() {
+            clearLog('connection-result');
+            try {
+                // Test basic connection
+                const { data, error } = await supabase.from('auth_user').select('count').limit(1);
+                if (error) {
+                    log('connection-result', `Connection Error: ${error.message}`, true);
+                } else {
+                    log('connection-result', 'Supabase connection successful!');
+                }
+            } catch (err) {
+                log('connection-result', `Connection Error: ${err.message}`, true);
+            }
+        }
+
+        async function testLogin() {
+            clearLog('auth-result');
+            try {
+                // Test login with known credentials
+                const { data: users, error } = await supabase
+                    .from('auth_user')
+                    .select('*')
+                    .eq('email', 'admin@project.com')
+                    .eq('is_active', true);
+                
+                if (error) {
+                    log('auth-result', `Auth Error: ${error.message}`, true);
+                } else if (users && users.length > 0) {
+                    currentUser = users[0];
+                    log('auth-result', `Login successful! User: ${currentUser.name} (ID: ${currentUser.id})`);
+                    
+                    // Store in localStorage like the real app
+                    const authUser = {
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        user_metadata: {
+                            name: currentUser.name,
+                            role: currentUser.role
+                        }
+                    };
+                    localStorage.setItem('supabase_user', JSON.stringify(authUser));
+                    localStorage.setItem('supabase_token', `sb-token-${currentUser.id}`);
+                } else {
+                    log('auth-result', 'No user found with email admin@project.com', true);
+                }
+            } catch (err) {
+                log('auth-result', `Auth Error: ${err.message}`, true);
+            }
+        }
+
+        async function testGetUser() {
+            clearLog('auth-result');
+            try {
+                const userData = localStorage.getItem('supabase_user');
+                const token = localStorage.getItem('supabase_token');
+                
+                if (userData && token) {
+                    const user = JSON.parse(userData);
+                    log('auth-result', `User from localStorage: ${user.user_metadata.name} (ID: ${user.id})`);
+                    currentUser = user;
+                } else {
+                    log('auth-result', 'No user found in localStorage. Please login first.', true);
+                }
+            } catch (err) {
+                log('auth-result', `GetUser Error: ${err.message}`, true);
+            }
+        }
+
+        async function testGetProjects() {
+            clearLog('db-result');
+            if (!currentUser) {
+                log('db-result', 'Please login first!', true);
+                return;
+            }
+            
+            try {
+                // Test project membership check
+                const { data: membershipData, error: membershipError } = await supabase
+                    .from('projects_project_members')
+                    .select('project_id')
+                    .eq('user_id', currentUser.id);
+
+                if (membershipError) {
+                    log('db-result', `Membership Error: ${membershipError.message}`, true);
+                    return;
+                }
+                
+                log('db-result', `User is member of ${membershipData?.length || 0} projects`);
+                
+                if (membershipData && membershipData.length > 0) {
+                    const projectIds = membershipData.map(m => m.project_id);
+                    
+                    // Get projects
+                    const { data: projects, error: projectError } = await supabase
+                        .from('projects_project')
+                        .select('*')
+                        .in('id', projectIds);
+                    
+                    if (projectError) {
+                        log('db-result', `Projects Error: ${projectError.message}`, true);
+                    } else {
+                        log('db-result', `Found ${projects.length} projects: ${projects.map(p => p.name).join(', ')}`);
+                    }
+                }
+            } catch (err) {
+                log('db-result', `DB Error: ${err.message}`, true);
+            }
+        }
+
+        async function testGetTasks() {
+            clearLog('db-result');
+            if (!currentUser) {
+                log('db-result', 'Please login first!', true);
+                return;
+            }
+            
+            try {
+                // Test tasks query
+                const { data: tasks, error } = await supabase
+                    .from('projects_task')
+                    .select('id, name, status, project_id, assignee_id')
+                    .eq('assignee_id', currentUser.id);
+                
+                if (error) {
+                    log('db-result', `Tasks Error: ${error.message}`, true);
+                } else {
+                    log('db-result', `Found ${tasks.length} tasks assigned to user`);
+                    if (tasks.length > 0) {
+                        log('db-result', tasks.map(t => `${t.name} (${t.status})`));
+                    }
+                }
+            } catch (err) {
+                log('db-result', `Tasks Error: ${err.message}`, true);
+            }
+        }
+
+        async function testApiCompat() {
+            clearLog('api-result');
+            try {
+                // Simulate API compatibility layer calls
+                log('api-result', 'Testing API compatibility layer...');
+                
+                // Test if we can reach the Next.js app
+                const response = await fetch('http://localhost:3001/api/test').catch(() => null);
+                if (response) {
+                    log('api-result', 'Next.js API routes are accessible');
+                } else {
+                    log('api-result', 'Cannot reach Next.js app on localhost:3001. Make sure dev server is running.', true);
+                }
+                
+                // Test browser-side function calls
+                if (typeof window !== 'undefined') {
+                    log('api-result', 'Browser environment detected - functions should work');
+                } else {
+                    log('api-result', 'Server-side environment - this might cause issues', true);
+                }
+            } catch (err) {
+                log('api-result', `API Test Error: ${err.message}`, true);
+            }
+        }
+
+        // Auto-run connection test on load
+        window.onload = function() {
+            testSupabaseConnection();
+        };
+    </script>
+</body>
+</html> 

@@ -219,17 +219,40 @@ export const supabaseDb = {
       // Fetch project members separately for each accessible project
       const projectsWithMembers = await Promise.all(
         projects.map(async (project) => {
-          const { data: members } = await supabase
-            .from('projects_project_members')
-            .select(`
-              user_id,
-              auth_user(id, name, email, role)
-            `)
-            .eq('project_id', project.id)
-          
-          return {
-            ...project,
-            project_members: members || []
+          try {
+            const { data: members, error: membersError } = await supabase
+              .from('projects_project_members')
+              .select(`
+                user_id,
+                auth_user(id, name, email, role)
+              `)
+              .eq('project_id', project.id)
+            
+            // If there's an error, log it but don't fail the whole request
+            if (membersError) {
+              console.error(`Error fetching members for project ${project.id}:`, membersError);
+            }
+            
+            // Transform members to match expected format
+            const transformedMembers = (members || []).map(member => ({
+              id: member.auth_user?.id || member.user_id,
+              name: member.auth_user?.name || 'Unknown User',
+              email: member.auth_user?.email || '',
+              role: member.auth_user?.role || 'member'
+            }));
+            
+            return {
+              ...project,
+              members: transformedMembers, // Use 'members' instead of 'project_members'
+              project_members: members || [] // Keep both for compatibility
+            }
+          } catch (err) {
+            console.error(`Exception fetching members for project ${project.id}:`, err);
+            return {
+              ...project,
+              members: [],
+              project_members: []
+            }
           }
         })
       )
@@ -269,7 +292,7 @@ export const supabaseDb = {
       if (error) return { data: null, error }
       
       // Fetch project members separately
-      const { data: members } = await supabase
+      const { data: members, error: membersError } = await supabase
         .from('projects_project_members')
         .select(`
           user_id,
@@ -277,10 +300,24 @@ export const supabaseDb = {
         `)
         .eq('project_id', id)
       
+      // If there's an error fetching members, log it but don't fail
+      if (membersError) {
+        console.error(`Error fetching members for project ${id}:`, membersError);
+      }
+      
+      // Transform members to match expected format
+      const transformedMembers = (members || []).map(member => ({
+        id: member.auth_user?.id || member.user_id,
+        name: member.auth_user?.name || 'Unknown User',
+        email: member.auth_user?.email || '',
+        role: member.auth_user?.role || 'member'
+      }));
+      
       return {
         data: {
           ...project,
-          project_members: members || []
+          members: transformedMembers, // Use 'members' for components
+          project_members: members || [] // Keep both for compatibility
         },
         error: null
       }
