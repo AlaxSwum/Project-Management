@@ -184,59 +184,108 @@ export const supabaseDb = {
     return { data, error }
   },
 
-  // Projects
-  getProjects: async () => {
-    const { data: projects, error } = await supabase
-      .from('projects_project')
-      .select('*')
-    
-    if (error) return { data: null, error }
-    
-    // Fetch project members separately
-    const projectsWithMembers = await Promise.all(
-      projects.map(async (project) => {
-        const { data: members } = await supabase
-          .from('projects_project_members')
-          .select(`
-            user_id,
-            auth_user(id, name, email, role)
-          `)
-          .eq('project_id', project.id)
-        
-        return {
-          ...project,
-          project_members: members || []
-        }
-      })
-    )
-    
-    return { data: projectsWithMembers, error: null }
+  // Projects - with user-based access control
+  getProjects: async (userId) => {
+    if (!userId) {
+      // If no userId provided, return empty array for security
+      return { data: [], error: null }
+    }
+
+    try {
+      // First, get all project IDs where the user is a member
+      const { data: membershipData, error: membershipError } = await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', userId)
+
+      if (membershipError) return { data: null, error: membershipError }
+      
+      // If user is not a member of any projects, return empty array
+      if (!membershipData || membershipData.length === 0) {
+        return { data: [], error: null }
+      }
+
+      // Extract project IDs the user has access to
+      const accessibleProjectIds = membershipData.map(m => m.project_id)
+
+      // Fetch only the projects the user is a member of
+      const { data: projects, error } = await supabase
+        .from('projects_project')
+        .select('*')
+        .in('id', accessibleProjectIds)
+      
+      if (error) return { data: null, error }
+      
+      // Fetch project members separately for each accessible project
+      const projectsWithMembers = await Promise.all(
+        projects.map(async (project) => {
+          const { data: members } = await supabase
+            .from('projects_project_members')
+            .select(`
+              user_id,
+              auth_user(id, name, email, role)
+            `)
+            .eq('project_id', project.id)
+          
+          return {
+            ...project,
+            project_members: members || []
+          }
+        })
+      )
+      
+      return { data: projectsWithMembers, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
   },
 
-  getProject: async (id) => {
-    const { data: project, error } = await supabase
-      .from('projects_project')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    if (error) return { data: null, error }
-    
-    // Fetch project members separately
-    const { data: members } = await supabase
-      .from('projects_project_members')
-      .select(`
-        user_id,
-        auth_user(id, name, email, role)
-      `)
-      .eq('project_id', id)
-    
-    return {
-      data: {
-        ...project,
-        project_members: members || []
-      },
-      error: null
+  // Single project access control
+  getProject: async (id, userId) => {
+    if (!userId) {
+      return { data: null, error: new Error('Access denied: User ID required') }
+    }
+
+    try {
+      // First check if user has access to this project
+      const { data: membership, error: membershipError } = await supabase
+        .from('projects_project_members')
+        .select('id')
+        .eq('project_id', id)
+        .eq('user_id', userId)
+        .single()
+
+      if (membershipError || !membership) {
+        return { data: null, error: new Error('Access denied: You are not a member of this project') }
+      }
+
+      // If user has access, fetch the project
+      const { data: project, error } = await supabase
+        .from('projects_project')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) return { data: null, error }
+      
+      // Fetch project members separately
+      const { data: members } = await supabase
+        .from('projects_project_members')
+        .select(`
+          user_id,
+          auth_user(id, name, email, role)
+        `)
+        .eq('project_id', id)
+      
+      return {
+        data: {
+          ...project,
+          project_members: members || []
+        },
+        error: null
+      }
+    } catch (error) {
+      return { data: null, error }
     }
   },
 
@@ -324,52 +373,74 @@ export const supabaseDb = {
     return { data, error }
   },
 
-  // Get tasks for a specific user
+  // Get tasks for a specific user - only from projects they have access to
   getUserTasks: async (userId) => {
-    const { data, error } = await supabase
-      .from('projects_task')
-      .select(`
-        id,
-        name,
-        description, 
-        status,
-        priority,
-        due_date,
-        start_date,
-        completed_at,
-        estimated_hours,
-        actual_hours,
-        position,
-        tags,
-        created_at,
-        updated_at,
-        assignee_id,
-        created_by_id,
-        project_id,
-        projects_project!inner(id, name)
-      `)
-      .eq('assignee_id', userId)
-    
-    // Enrich with user data
-    if (data && !error) {
-      const enrichedData = await Promise.all(
-        data.map(async (task) => {
-          const createdByResult = task.created_by_id
-            ? await supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
-            : { data: null };
+    try {
+      // First, get all project IDs where the user is a member
+      const { data: membershipData, error: membershipError } = await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', userId)
 
-          return {
-            ...task,
-            assignee: { id: userId }, // We know this is the user
-            created_by: createdByResult.data,
-            project: task.projects_project
-          };
-        })
-      );
-      return { data: enrichedData, error: null };
+      if (membershipError) return { data: null, error: membershipError }
+      
+      // If user is not a member of any projects, return empty array
+      if (!membershipData || membershipData.length === 0) {
+        return { data: [], error: null }
+      }
+
+      // Extract project IDs the user has access to
+      const accessibleProjectIds = membershipData.map(m => m.project_id)
+
+      // Get tasks assigned to user only from accessible projects
+      const { data, error } = await supabase
+        .from('projects_task')
+        .select(`
+          id,
+          name,
+          description, 
+          status,
+          priority,
+          due_date,
+          start_date,
+          completed_at,
+          estimated_hours,
+          actual_hours,
+          position,
+          tags,
+          created_at,
+          updated_at,
+          assignee_id,
+          created_by_id,
+          project_id,
+          projects_project!inner(id, name)
+        `)
+        .eq('assignee_id', userId)
+        .in('project_id', accessibleProjectIds)
+      
+      // Enrich with user data
+      if (data && !error) {
+        const enrichedData = await Promise.all(
+          data.map(async (task) => {
+            const createdByResult = task.created_by_id
+              ? await supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
+              : { data: null };
+
+            return {
+              ...task,
+              assignee: { id: userId }, // We know this is the user
+              created_by: createdByResult.data,
+              project: task.projects_project
+            };
+          })
+        );
+        return { data: enrichedData, error: null };
+      }
+      
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
     }
-    
-    return { data, error }
   },
 
   createTask: async (taskData) => {

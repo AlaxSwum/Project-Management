@@ -9,6 +9,17 @@ const transformTaskData = (task: any) => ({
 // Transform array of tasks
 const transformTasksData = (tasks: any[]) => tasks.map(transformTaskData);
 
+// Helper function to get current user ID
+const getCurrentUserId = async (): Promise<number | null> => {
+  try {
+    const { user } = await supabaseAuth.getUser();
+    return user?.id || null;
+  } catch (error) {
+    console.error('Failed to get current user ID:', error);
+    return null;
+  }
+};
+
 // Compatibility layer for existing components to use Supabase instead of Django backend
 export const authService = {
   async login(email: string, password: string) {
@@ -47,13 +58,21 @@ export const authService = {
 
 export const projectService = {
   async getProjects() {
-    const { data, error } = await supabaseDb.getProjects();
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('Authentication required');
+    }
+    const { data, error } = await supabaseDb.getProjects(userId);
     if (error) throw error;
     return data || [];
   },
 
   async getProject(id: number) {
-    const { data, error } = await supabaseDb.getProject(id);
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('Authentication required');
+    }
+    const { data, error } = await supabaseDb.getProject(id, userId);
     if (error) throw error;
     return data;
   },
@@ -83,16 +102,18 @@ export const projectService = {
   },
 
   getUserProjects: async () => {
-    // TODO: Implement user-specific projects filtering
-    const { data, error } = await supabaseDb.getProjects();
-    if (error) throw new Error(error.message);
-    return data || [];
+    // This is the same as getProjects now with access control
+    return await projectService.getProjects();
   },
 
   // Project Members - TODO: Implement properly
   getProjectMembers: async (projectId: number) => {
-    const { data, error } = await supabaseDb.getProject(projectId);
-    if (error) throw new Error(error.message);
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('Authentication required');
+    }
+    const { data, error } = await supabaseDb.getProject(projectId, userId);
+    if (error) throw error;
     return data?.project_members || [];
   },
 
@@ -110,24 +131,55 @@ export const projectService = {
 // Task service with automatic tags_list transformation
 export const taskService = {
   async getTasks(projectId?: number) {
+    // If projectId is provided, verify user has access to that project
+    if (projectId) {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+      // Verify access to the specific project
+      await supabaseDb.getProject(projectId, userId); // This will throw if no access
+    }
+    
     const { data, error } = await supabaseDb.getTasks(projectId);
     if (error) throw error;
     return transformTasksData(data || []);
   },
 
   async getProjectTasks(projectId: number) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('Authentication required');
+    }
+    
+    // Verify user has access to this project
+    await supabaseDb.getProject(projectId, userId); // This will throw if no access
+    
     const { data, error } = await supabaseDb.getTasks(projectId);
     if (error) throw error;
     return transformTasksData(data || []);
   },
 
   async getUserTasks() {
-    const { data, error } = await supabaseDb.getUserTasks(1); // Using user ID 1 as fallback
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('Authentication required');
+    }
+    
+    const { data, error } = await supabaseDb.getUserTasks(userId);
     if (error) throw error;
     return transformTasksData(data || []);
   },
 
   async createTask(projectId: number, taskData: any) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      throw new Error('Authentication required');
+    }
+    
+    // Verify user has access to this project
+    await supabaseDb.getProject(projectId, userId); // This will throw if no access
+    
     const { data, error } = await supabaseDb.createTask({
       ...taskData,
       project_id: projectId
@@ -137,53 +189,76 @@ export const taskService = {
   },
 
   async updateTask(id: number, taskData: any) {
+    // TODO: Add task-level access control - verify user can edit this task
     const { data, error } = await supabaseDb.updateTask(id, taskData);
     if (error) throw error;
     return transformTaskData(data);
   },
 
   async updateTaskStatus(id: number, status: string) {
+    // TODO: Add task-level access control - verify user can edit this task
     const { data, error } = await supabaseDb.updateTask(id, { status });
     if (error) throw error;
     return transformTaskData(data);
   },
 
   async deleteTask(id: number) {
+    // TODO: Add task-level access control - verify user can delete this task
     const { data, error } = await supabaseDb.deleteTask(id);
     if (error) throw error;
     return data;
   },
 
   async getTaskComments(taskId: number) {
+    // TODO: Add task-level access control - verify user can see this task
     // Return empty array for now since comments aren't implemented
     return [];
   },
 
   async createTaskComment(taskId: number, commentData: any) {
+    // TODO: Add task-level access control - verify user can comment on this task
+    const userId = await getCurrentUserId();
+    const user = await supabaseAuth.getUser();
+    
     // Return mock comment that satisfies both Comment and TaskComment interfaces
     return {
       id: Date.now(),
       comment: commentData.comment,
-      user: { id: 1, name: 'Current User', email: 'user@example.com', role: 'member' },
-      author: 'Current User',
-      author_email: 'user@example.com',
+      user: { 
+        id: userId || 1, 
+        name: user.user?.user_metadata?.name || 'Current User', 
+        email: user.user?.email || 'user@example.com', 
+        role: user.user?.user_metadata?.role || 'member' 
+      },
+      author: user.user?.user_metadata?.name || 'Current User',
+      author_email: user.user?.email || 'user@example.com',
       created_at: new Date().toISOString(),
       task_id: taskId
     };
   },
 
   async getTaskAttachments(taskId: number) {
+    // TODO: Add task-level access control - verify user can see this task
     // Return empty array for now since attachments aren't implemented
     return [];
   },
 
   async uploadTaskAttachment(taskId: number, file: File) {
+    // TODO: Add task-level access control - verify user can upload to this task
+    const userId = await getCurrentUserId();
+    const user = await supabaseAuth.getUser();
+    
     // Return mock attachment for now
     return {
       id: Date.now(),
       file: file.name,
       filename: file.name,
-      user: { id: 1, name: 'Current User', email: 'user@example.com', role: 'member' },
+      user: { 
+        id: userId || 1, 
+        name: user.user?.user_metadata?.name || 'Current User', 
+        email: user.user?.email || 'user@example.com', 
+        role: user.user?.user_metadata?.role || 'member' 
+      },
       created_at: new Date().toISOString(),
       file_size: file.size
     };
