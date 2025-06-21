@@ -1486,12 +1486,12 @@ export default function MyTasksPage() {
                           <span>Created by {task.created_by.name}</span>
                         </div>
                         
-                        {task.tags_list.length > 0 && (
+                        {(task.tags_list || []).length > 0 && (
                           <div className="task-meta-item">
                             <TagIcon style={{ width: '14px', height: '14px' }} />
-                            <span>{task.tags_list.slice(0, 3).join(', ')}</span>
-                            {task.tags_list.length > 3 && (
-                              <span style={{ fontWeight: 'bold' }}>+{task.tags_list.length - 3} more</span>
+                            <span>{(task.tags_list || []).slice(0, 3).join(', ')}</span>
+                            {(task.tags_list || []).length > 3 && (
+                              <span style={{ fontWeight: 'bold' }}>+{(task.tags_list || []).length - 3} more</span>
                             )}
                           </div>
                         )}

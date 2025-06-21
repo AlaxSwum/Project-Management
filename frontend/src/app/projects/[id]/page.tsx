@@ -1829,7 +1829,7 @@ export default function ProjectDetailPage() {
               <div className="stat-item members-display">
                 <UserIcon style={{ width: '16px', height: '16px' }} />
                 <div className="members-avatars">
-                  {project.members.slice(0, 5).map((member, index) => (
+                  {(project.members || []).slice(0, 5).map((member, index) => (
                     <div 
                       key={member.id} 
                       className="member-avatar"
@@ -1839,13 +1839,13 @@ export default function ProjectDetailPage() {
                       {member.name.charAt(0).toUpperCase()}
                     </div>
                   ))}
-                  {project.members.length > 5 && (
-                    <div className="member-avatar more-members" title={`+${project.members.length - 5} more members`}>
-                      +{project.members.length - 5}
+                  {(project.members || []).length > 5 && (
+                    <div className="member-avatar more-members" title={`+${(project.members || []).length - 5} more members`}>
+                      +{(project.members || []).length - 5}
                     </div>
                   )}
                 </div>
-                <span className="members-count">{project.members.length} members</span>
+                <span className="members-count">{(project.members || []).length} members</span>
               </div>
             </div>
         </header>

@@ -2081,7 +2081,7 @@ export default function CalendarPage() {
                     <div key={dayNumber} className={`calendar-cell ${isToday ? 'today' : ''}`}>
                       <div className="day-number">{dayNumber}</div>
                       <div className="events-container">
-                        {dayTasks.slice(0, 3).map((task) => (
+                        {(dayTasks || []).slice(0, 3).map((task) => (
                           <div
                             key={task.id}
                             className={`task-item ${task.is_important ? 'important' : ''} ${isOverdue(task.due_date) ? 'overdue' : ''}`}
@@ -2107,9 +2107,9 @@ export default function CalendarPage() {
                             </div>
                           </div>
                         ))}
-                        {dayTasks.length > 3 && (
+                        {(dayTasks || []).length > 3 && (
                           <div className="more-tasks">
-                            +{dayTasks.length - 3} more
+                            +{(dayTasks || []).length - 3} more
                           </div>
                         )}
                       </div>
