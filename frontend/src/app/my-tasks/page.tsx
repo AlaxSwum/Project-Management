@@ -284,8 +284,10 @@ export default function MyTasksPage() {
     
     try {
       const comment = await taskService.createTaskComment(selectedTask.id, { comment: newComment.trim() });
-      setTaskComments([...taskComments, comment]);
-      setNewComment('');
+      if (comment) {
+        setTaskComments([...taskComments, comment]);
+        setNewComment('');
+      }
     } catch (err) {
       setError('Failed to add comment');
     }
