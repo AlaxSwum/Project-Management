@@ -35,6 +35,9 @@ interface DriveFile {
   name: string;
   mimeType: string;
   parents?: string[];
+  modifiedTime: string;
+  size?: string;
+  webViewLink: string;
 }
 
 export class GoogleDriveAccessControl {
