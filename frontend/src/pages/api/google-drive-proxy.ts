@@ -117,7 +117,7 @@ async function handleCreateFolder(req: NextApiRequest, res: NextApiResponse, nam
     }
 
     const response = await drive.files.create({
-      resource: metadata,
+      requestBody: metadata,
       fields: 'id, name, mimeType, modifiedTime, webViewLink, parents',
     });
 
