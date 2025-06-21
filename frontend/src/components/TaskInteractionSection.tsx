@@ -93,8 +93,10 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
         comment: newComment.trim()
       });
       
-      setComments([...comments, commentData]);
-      setNewComment('');
+      if (commentData) {
+        setComments([...comments, commentData]);
+        setNewComment('');
+      }
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
