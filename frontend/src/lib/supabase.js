@@ -735,8 +735,6 @@ export const supabaseDb = {
   // Project Member Management
   addProjectMember: async (projectId, userId) => {
     try {
-      console.log(`DB: Adding member ${userId} to project ${projectId}`);
-      
       // Check if user is already a member
       const { data: existingMember, error: checkError } = await supabase
         .from('projects_project_members')
@@ -745,10 +743,7 @@ export const supabaseDb = {
         .eq('user_id', userId)
         .single()
 
-      console.log('Existing member check:', { existingMember, checkError });
-
       if (existingMember) {
-        console.log('User is already a member');
         return { data: null, error: new Error('User is already a member of this project') }
       }
 
@@ -759,7 +754,6 @@ export const supabaseDb = {
       }
 
       // Add the member
-      console.log('Adding member to database...');
       const { data, error } = await supabase
         .from('projects_project_members')
         .insert([{
@@ -768,7 +762,6 @@ export const supabaseDb = {
         }])
         .select()
 
-      console.log('Insert result:', { data, error });
       return { data: data?.[0], error }
     } catch (error) {
       console.error('Exception in addProjectMember:', error);
@@ -778,15 +771,12 @@ export const supabaseDb = {
 
   removeProjectMember: async (projectId, userId) => {
     try {
-      console.log(`DB: Removing member ${userId} from project ${projectId}`);
-      
       const { data, error } = await supabase
         .from('projects_project_members')
         .delete()
         .eq('project_id', projectId)
         .eq('user_id', userId)
 
-      console.log('Delete result:', { data, error });
       return { data, error }
     } catch (error) {
       console.error('Exception in removeProjectMember:', error);

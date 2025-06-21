@@ -57,64 +57,32 @@ export default function ProjectMembersModal({
   );
 
   const handleAddMember = async (userId: number) => {
-    console.log('🔥 BUTTON CLICKED! Adding member:', { userId, projectId });
-    
-    // Test 1: Basic alert
-    try {
-      alert(`🔄 Testing: Add member ${userId} to project ${projectId}`);
-    } catch (e) {
-      console.error('Alert failed:', e);
-    }
-    
     setIsLoading(true);
     setError('');
     
     try {
-      console.log('🔥 Calling projectService.addProjectMember...');
-      const result = await projectService.addProjectMember(projectId, userId);
-      console.log('🔥 Add member result:', result);
-      alert(`✅ Success: Member added successfully!`);
+      await projectService.addProjectMember(projectId, userId);
       onMembersUpdate();
     } catch (err: any) {
-      console.error('🔥 Failed to add member:', err);
-      const errorMessage = err.message || err.toString();
-      console.error('🔥 Error message:', errorMessage);
-      alert(`❌ Error: ${errorMessage}`);
-      setError(`Failed to add member: ${errorMessage}`);
+      console.error('Failed to add member:', err);
+      setError(`Failed to add member: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
-      console.log('🔥 handleAddMember finished');
     }
   };
 
   const handleRemoveMember = async (userId: number) => {
-    console.log('🔥 REMOVE BUTTON CLICKED! Removing member:', { userId, projectId });
-    
-    // Test 1: Basic alert
-    try {
-      alert(`🔄 Testing: Remove member ${userId} from project ${projectId}`);
-    } catch (e) {
-      console.error('Alert failed:', e);
-    }
-    
     setIsLoading(true);
     setError('');
     
     try {
-      console.log('🔥 Calling projectService.removeProjectMember...');
-      const result = await projectService.removeProjectMember(projectId, userId);
-      console.log('🔥 Remove member result:', result);
-      alert(`✅ Success: Member removed successfully!`);
+      await projectService.removeProjectMember(projectId, userId);
       onMembersUpdate();
     } catch (err: any) {
-      console.error('🔥 Failed to remove member:', err);
-      const errorMessage = err.message || err.toString();
-      console.error('🔥 Error message:', errorMessage);
-      alert(`❌ Error: ${errorMessage}`);
-      setError(`Failed to remove member: ${errorMessage}`);
+      console.error('Failed to remove member:', err);
+      setError(`Failed to remove member: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
-      console.log('🔥 handleRemoveMember finished');
     }
   };
 
