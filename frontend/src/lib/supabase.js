@@ -782,6 +782,96 @@ export const supabaseDb = {
       console.error('Exception in removeProjectMember:', error);
       return { data: null, error }
     }
+  },
+
+  // Task Comments
+  getTaskComments: async (taskId) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects_taskcomment')
+        .select(`
+          id,
+          comment,
+          created_at,
+          task_id,
+          user_id,
+          auth_user(id, name, email)
+        `)
+        .eq('task_id', taskId)
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching task comments:', error);
+        return { data: [], error };
+      }
+
+      // Transform to match the expected format
+      const transformedComments = (data || []).map(comment => ({
+        id: comment.id,
+        comment: comment.comment,
+        author: comment.auth_user?.name || 'Unknown User',
+        author_email: comment.auth_user?.email || '',
+        created_at: comment.created_at,
+        task_id: comment.task_id
+      }));
+
+      return { data: transformedComments, error: null };
+    } catch (error) {
+      console.error('Exception in getTaskComments:', error);
+      return { data: [], error };
+    }
+  },
+
+  createTaskComment: async (taskId, commentData) => {
+    try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      // Insert the comment
+      const { data, error } = await supabase
+        .from('projects_taskcomment')
+        .insert([{
+          task_id: taskId,
+          user_id: user.id,
+          comment: commentData.comment,
+          created_at: new Date().toISOString()
+        }])
+        .select(`
+          id,
+          comment,
+          created_at,
+          task_id,
+          user_id
+        `)
+
+      if (error) {
+        console.error('Error creating task comment:', error);
+        return { data: null, error };
+      }
+
+      const newComment = data?.[0];
+      if (!newComment) {
+        return { data: null, error: new Error('Failed to create comment') };
+      }
+
+      // Return comment in the expected format
+      const transformedComment = {
+        id: newComment.id,
+        comment: newComment.comment,
+        author: user.user_metadata?.name || 'Current User',
+        author_email: user.email || '',
+        created_at: newComment.created_at,
+        task_id: newComment.task_id
+      };
+
+      return { data: transformedComment, error: null };
+    } catch (error) {
+      console.error('Exception in createTaskComment:', error);
+      return { data: null, error };
+    }
   }
 }
 

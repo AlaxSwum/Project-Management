@@ -70,8 +70,8 @@ def profile(request):
         })
     else:
         # Fallback to user object data
-        serializer = UserProfileSerializer(request.user)
-        return Response(serializer.data)
+    serializer = UserProfileSerializer(request.user)
+    return Response(serializer.data)
 
 
 @api_view(['PUT', 'PATCH'])

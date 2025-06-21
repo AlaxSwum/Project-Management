@@ -290,32 +290,23 @@ export const taskService = {
   },
 
   async getTaskComments(taskId: number) {
-    // TODO: Add task-level access control - verify user can see this task
-    // Return empty array for now since comments aren't implemented
-    return [];
+    try {
+      // TODO: Add task-level access control - verify user can see this task
+      const { data, error } = await supabaseDb.getTaskComments(taskId);
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error in getTaskComments:', error);
+      return [];
+    }
   },
 
   async createTaskComment(taskId: number, commentData: any) {
     try {
       // TODO: Add task-level access control - verify user can comment on this task
-      const userId = await getCurrentUserId();
-      const user = await supabaseAuth.getUser();
-      
-      // Return mock comment that satisfies both Comment and TaskComment interfaces
-      return {
-        id: Date.now(),
-        comment: commentData.comment,
-        user: { 
-          id: userId || 1, 
-          name: user.user?.user_metadata?.name || 'Current User', 
-          email: user.user?.email || 'user@example.com', 
-          role: user.user?.user_metadata?.role || 'member' 
-        },
-        author: user.user?.user_metadata?.name || 'Current User',
-        author_email: user.user?.email || 'user@example.com',
-        created_at: new Date().toISOString(),
-        task_id: taskId
-      };
+      const { data, error } = await supabaseDb.createTaskComment(taskId, commentData);
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Error in createTaskComment:', error);
       throw error;

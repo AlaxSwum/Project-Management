@@ -58,7 +58,7 @@ class UserRegistrationSerializer(serializers.Serializer):
                 is_superuser=supabase_user['is_superuser']
             )
             # Don't save to database - just return the object for JWT
-            return user
+        return user
         else:
             raise serializers.ValidationError("Failed to create user in Supabase")
 

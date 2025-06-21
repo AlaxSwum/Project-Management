@@ -26,7 +26,7 @@ class SupabaseAuthBackend(BaseBackend):
             
             if not user_data:
                 return None
-            
+                
             # Verify password using Django's check_password
             if check_password(password, user_data.get('password', '')):
                 # Create Django user object for session/JWT purposes (not saved to DB)
@@ -41,9 +41,9 @@ class SupabaseAuthBackend(BaseBackend):
                     is_superuser=user_data.get('is_superuser', False)
                 )
                 return django_user
-            
-            return None
-            
+                
+                return None
+                
         except Exception as e:
             print(f"Supabase authentication error: {e}")
             return None
