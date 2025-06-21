@@ -94,10 +94,11 @@ async function handleListFiles(req: NextApiRequest, res: NextApiResponse, folder
     return res.status(200).json({ files });
   } catch (error) {
     console.error('❌ ERROR listing files:', error);
-    console.error('❌ ERROR details:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ ERROR details:', errorMessage);
     return res.status(500).json({ 
       error: 'Failed to list files',
-      details: error.message,
+      details: errorMessage,
       debug: true 
     });
   }
@@ -185,7 +186,7 @@ async function handleTestAuth(req: NextApiRequest, res: NextApiResponse) {
     console.error('❌ ERROR testing auth:', error);
     return res.status(500).json({ 
       error: 'Auth test failed',
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 }
