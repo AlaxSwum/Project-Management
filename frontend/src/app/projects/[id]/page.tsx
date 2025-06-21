@@ -1753,20 +1753,20 @@ export default function ProjectDetailPage() {
             margin-left: 0.25rem;
           }
 
-          /* Enhanced Gantt Chart Styles */
+          /* Enhanced Gantt Chart Styles - Minimal Design */
           .gantt-chart-enhanced {
             background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
             overflow: hidden;
             display: flex;
-            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           }
           
           .gantt-sidebar-enhanced {
             width: 350px;
-            border-right: 2px solid #000000;
-            background: #f8fafc;
+            border-right: 1px solid #e5e7eb;
+            background: #fafafa;
             display: flex;
             flex-direction: column;
           }
@@ -1774,19 +1774,22 @@ export default function ProjectDetailPage() {
           .gantt-sidebar-header-enhanced {
             display: grid;
             grid-template-columns: 1fr 80px 80px;
-            gap: 1px;
-            background: #000000;
+            gap: 0;
+            background: #f3f4f6;
             font-weight: 600;
-            color: #000000;
-            border-bottom: 2px solid #000000;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
           }
           
           .task-header-cell, .duration-header-cell, .assignee-header-cell {
-            background: #ffffff;
+            background: #f3f4f6;
             padding: 0.75rem;
             font-size: 0.8rem;
             text-align: center;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid #d1d5db;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
           }
           
           .task-header-cell {
@@ -1845,27 +1848,54 @@ export default function ProjectDetailPage() {
           .task-status-indicator {
             width: 8px;
             height: 8px;
-            border-radius: 50%;
-            border: 1px solid #000000;
+            border-radius: 2px;
+            border: 1px solid #9ca3af;
             flex-shrink: 0;
+            position: relative;
           }
           
-          .task-status-indicator.status-todo { background: #f3f4f6; }
-          .task-status-indicator.status-in_progress { background: #dbeafe; }
-          .task-status-indicator.status-review { background: #fef3c7; }
-          .task-status-indicator.status-done { background: #d1fae5; }
+          .task-status-indicator.status-todo { 
+            background: #ffffff; 
+            border-style: dashed;
+          }
+          .task-status-indicator.status-in_progress { 
+            background: #6b7280; 
+            border-radius: 50%;
+          }
+          .task-status-indicator.status-review { 
+            background: #374151;
+            border-radius: 2px;
+          }
+          .task-status-indicator.status-done { 
+            background: #111827;
+            border-radius: 2px;
+          }
           
           .priority-indicator {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
+            width: 16px;
+            height: 2px;
             flex-shrink: 0;
+            background: #d1d5db;
+            position: relative;
           }
           
-          .priority-indicator.priority-low { background: #10b981; }
-          .priority-indicator.priority-medium { background: #f59e0b; }
-          .priority-indicator.priority-high { background: #ef4444; }
-          .priority-indicator.priority-urgent { background: #dc2626; }
+          .priority-indicator.priority-low { 
+            width: 8px;
+            background: #9ca3af;
+          }
+          .priority-indicator.priority-medium { 
+            width: 12px;
+            background: #6b7280;
+          }
+          .priority-indicator.priority-high { 
+            width: 16px;
+            background: #374151;
+          }
+          .priority-indicator.priority-urgent { 
+            width: 16px;
+            background: #111827;
+            height: 3px;
+          }
           
           .gantt-task-duration {
             text-align: center;
@@ -1883,17 +1913,17 @@ export default function ProjectDetailPage() {
           }
           
           .assignee-avatar-enhanced {
-            width: 24px;
-            height: 24px;
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            background: #f3f4f6;
+            border: 1px solid #9ca3af;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #000000;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #374151;
           }
           
           .unassigned {
@@ -1910,37 +1940,40 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-timeline-header-enhanced {
-            border-bottom: 2px solid #000000;
-            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafafa;
           }
           
           .gantt-month-header {
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1rem;
             text-align: center;
           }
           
           .month-label {
-            font-weight: 600;
-            color: #000000;
-            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
           }
           
           .gantt-week-headers {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            background: #f3f4f6;
+            background: #f9fafb;
             border-bottom: 1px solid #e5e7eb;
           }
           
           .week-header {
-            padding: 0.4rem;
+            padding: 0.5rem;
             text-align: center;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #374151;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6b7280;
             border-right: 1px solid #e5e7eb;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
           }
           
           .week-header:last-child {
@@ -1965,27 +1998,30 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-date-cell.today {
-            background: #fef3c7;
-            border-left: 2px solid #f59e0b;
-            border-right: 2px solid #f59e0b;
+            background: #f3f4f6;
+            border-left: 2px solid #111827;
+            border-right: 2px solid #111827;
+            font-weight: 700;
           }
           
           .gantt-date-cell.weekend {
-            background: #f9fafb;
+            background: #f8f9fa;
+            opacity: 0.7;
           }
           
           .date-number {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #000000;
+            color: #111827;
             line-height: 1;
           }
           
           .date-day {
-            font-size: 0.6rem;
-            color: #6b7280;
+            font-size: 0.55rem;
+            color: #9ca3af;
             text-transform: uppercase;
-            margin-top: 0.1rem;
+            margin-top: 0.2rem;
+            letter-spacing: 0.05em;
           }
           
           .gantt-grid-container {
@@ -2047,26 +2083,50 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-bar-enhanced {
-            height: 28px;
-            border-radius: 14px;
+            height: 24px;
+            border-radius: 4px;
             position: relative;
-            min-width: 80px;
-            border: 2px solid;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            min-width: 60px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
             cursor: pointer;
             z-index: 3;
             overflow: hidden;
           }
           
           .gantt-bar-enhanced:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-color: #9ca3af;
+          }
+          
+          .gantt-bar-enhanced.status-todo {
+            background: #ffffff;
+            border-style: dashed;
+            border-color: #d1d5db;
+          }
+          
+          .gantt-bar-enhanced.status-in_progress {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+          }
+          
+          .gantt-bar-enhanced.status-review {
+            background: #e5e7eb;
+            border-color: #6b7280;
+          }
+          
+          .gantt-bar-enhanced.status-done {
+            background: #d1d5db;
+            border-color: #374151;
           }
           
           .gantt-bar-enhanced.overdue {
-            border-color: #dc2626 !important;
-            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+            border-color: #111827 !important;
+            background: #fef2f2 !important;
+            border-width: 2px;
           }
           
           .gantt-bar-content-enhanced {
@@ -2084,15 +2144,21 @@ export default function ProjectDetailPage() {
             top: 0;
             left: 0;
             height: 100%;
-            border-radius: 12px;
-            opacity: 0.3;
+            border-radius: 3px;
+            background: repeating-linear-gradient(
+              45deg,
+              transparent,
+              transparent 2px,
+              rgba(0, 0, 0, 0.1) 2px,
+              rgba(0, 0, 0, 0.1) 4px
+            );
             z-index: 1;
           }
           
           .gantt-bar-text-enhanced {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            color: #000000;
+            color: #111827;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -2102,77 +2168,87 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-bar-duration-enhanced {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 500;
-            color: #374151;
+            color: #6b7280;
             white-space: nowrap;
             margin-left: 0.5rem;
             z-index: 2;
             position: relative;
+            background: #ffffff;
+            padding: 0 0.25rem;
+            border-radius: 2px;
           }
           
           .overdue-indicator {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #ffffff;
-            border: 2px solid #dc2626;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            top: -4px;
+            right: -4px;
+            background: #111827;
+            color: #ffffff;
+            border-radius: 2px;
+            width: 12px;
+            height: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.6rem;
+            font-size: 0.5rem;
             z-index: 4;
+            font-weight: 700;
           }
           
           .gantt-legend {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
-            padding: 1.5rem;
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 1.25rem;
             margin-top: 1.5rem;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
           }
           
           .legend-section h4 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #000000;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #374151;
             margin: 0 0 0.75rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
           }
           
           .legend-items {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.75rem;
+            gap: 0.5rem;
           }
           
           .legend-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.8rem;
-            color: #374151;
+            font-size: 0.75rem;
+            color: #6b7280;
+            padding: 0.25rem 0.5rem;
+            background: #ffffff;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
           }
           
           .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            border: 2px solid;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid #d1d5db;
             flex-shrink: 0;
           }
           
           .legend-priority-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
+            width: 12px;
+            height: 2px;
             flex-shrink: 0;
+            background: #d1d5db;
           }
           
           .progress-example {
@@ -2721,9 +2797,7 @@ export default function ProjectDetailPage() {
                               className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
                               style={{
                                 width: `${barWidth}%`,
-                                left: `${barLeft}%`,
-                                backgroundColor: statusConfig.color,
-                                borderColor: statusConfig.color === '#f3f4f6' ? '#d1d5db' : statusConfig.color
+                                left: `${barLeft}%`
                               }}
                               title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInDays} days\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
                               onClick={(e) => handleTaskClick(task, e)}
@@ -2738,7 +2812,7 @@ export default function ProjectDetailPage() {
                                 <span className="gantt-bar-text-enhanced">{task.name}</span>
                                 <span className="gantt-bar-duration-enhanced">{durationInDays}d</span>
                               </div>
-                              {isOverdueTask && <div className="overdue-indicator">⚠️</div>}
+                              {isOverdueTask && <div className="overdue-indicator">!</div>}
                             </div>
                           </div>
                         );
@@ -2753,30 +2827,68 @@ export default function ProjectDetailPage() {
               <div className="legend-section">
                 <h4>Status Legend</h4>
                 <div className="legend-items">
-                  {TASK_STATUSES.map(status => (
-                    <div key={status.value} className="legend-item">
-                      <div 
-                        className="legend-color" 
-                        style={{ backgroundColor: status.color, borderColor: status.color === '#f3f4f6' ? '#d1d5db' : status.color }}
-                      ></div>
-                      <span>{status.label}</span>
-                    </div>
-                  ))}
+                  <div className="legend-item">
+                    <div 
+                      className="legend-color" 
+                      style={{ backgroundColor: '#ffffff', borderStyle: 'dashed' }}
+                    ></div>
+                    <span>To Do</span>
+                  </div>
+                  <div className="legend-item">
+                    <div 
+                      className="legend-color" 
+                      style={{ backgroundColor: '#f3f4f6' }}
+                    ></div>
+                    <span>In Progress</span>
+                  </div>
+                  <div className="legend-item">
+                    <div 
+                      className="legend-color" 
+                      style={{ backgroundColor: '#e5e7eb' }}
+                    ></div>
+                    <span>Review</span>
+                  </div>
+                  <div className="legend-item">
+                    <div 
+                      className="legend-color" 
+                      style={{ backgroundColor: '#d1d5db' }}
+                    ></div>
+                    <span>Done</span>
+                  </div>
                 </div>
               </div>
               
               <div className="legend-section">
                 <h4>Priority Legend</h4>
                 <div className="legend-items">
-                  {PRIORITY_LEVELS.map(priority => (
-                    <div key={priority.value} className="legend-item">
-                      <div 
-                        className="legend-priority-dot" 
-                        style={{ backgroundColor: priority.color }}
-                      ></div>
-                      <span>{priority.label}</span>
-                    </div>
-                  ))}
+                  <div className="legend-item">
+                    <div 
+                      className="legend-priority-dot" 
+                      style={{ width: '8px', backgroundColor: '#9ca3af' }}
+                    ></div>
+                    <span>Low</span>
+                  </div>
+                  <div className="legend-item">
+                    <div 
+                      className="legend-priority-dot" 
+                      style={{ width: '12px', backgroundColor: '#6b7280' }}
+                    ></div>
+                    <span>Medium</span>
+                  </div>
+                  <div className="legend-item">
+                    <div 
+                      className="legend-priority-dot" 
+                      style={{ width: '16px', backgroundColor: '#374151' }}
+                    ></div>
+                    <span>High</span>
+                  </div>
+                  <div className="legend-item">
+                    <div 
+                      className="legend-priority-dot" 
+                      style={{ width: '16px', height: '3px', backgroundColor: '#111827' }}
+                    ></div>
+                    <span>Urgent</span>
+                  </div>
                 </div>
               </div>
               
@@ -2785,12 +2897,26 @@ export default function ProjectDetailPage() {
                 <div className="legend-items">
                   <div className="legend-item">
                     <div className="progress-example">
-                      <div className="progress-bar" style={{ width: '50%', backgroundColor: '#3b82f6' }}></div>
+                      <div className="progress-bar" style={{ 
+                        width: '50%', 
+                        background: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0, 0, 0, 0.2) 1px, rgba(0, 0, 0, 0.2) 2px)' 
+                      }}></div>
                     </div>
                     <span>Task Progress</span>
                   </div>
                   <div className="legend-item">
-                    <span className="overdue-example">⚠️</span>
+                    <div style={{ 
+                      width: '12px', 
+                      height: '12px', 
+                      background: '#111827', 
+                      color: '#ffffff', 
+                      borderRadius: '2px', 
+                      fontSize: '0.5rem', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      fontWeight: '700'
+                    }}>!</div>
                     <span>Overdue Task</span>
                   </div>
                 </div>
