@@ -159,29 +159,58 @@ export const supabaseDb = {
 
   // Projects
   getProjects: async () => {
-    const { data, error } = await supabase
+    const { data: projects, error } = await supabase
       .from('projects_project')
-      .select(`
-        *,
-        project_members:projects_projectmember!inner(
-          user:auth_user!inner(id, name, email, role)
-        )
-      `)
-    return { data, error }
+      .select('*')
+    
+    if (error) return { data: null, error }
+    
+    // Fetch project members separately
+    const projectsWithMembers = await Promise.all(
+      projects.map(async (project) => {
+        const { data: members } = await supabase
+          .from('projects_project_members')
+          .select(`
+            user_id,
+            auth_user(id, name, email, role)
+          `)
+          .eq('project_id', project.id)
+        
+        return {
+          ...project,
+          project_members: members || []
+        }
+      })
+    )
+    
+    return { data: projectsWithMembers, error: null }
   },
 
   getProject: async (id) => {
-    const { data, error } = await supabase
+    const { data: project, error } = await supabase
       .from('projects_project')
-      .select(`
-        *,
-        project_members:projects_projectmember!inner(
-          user:auth_user!inner(id, name, email, role)
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single()
-    return { data, error }
+    
+    if (error) return { data: null, error }
+    
+    // Fetch project members separately
+    const { data: members } = await supabase
+      .from('projects_project_members')
+      .select(`
+        user_id,
+        auth_user(id, name, email, role)
+      `)
+      .eq('project_id', id)
+    
+    return {
+      data: {
+        ...project,
+        project_members: members || []
+      },
+      error: null
+    }
   },
 
   createProject: async (projectData) => {
@@ -214,9 +243,24 @@ export const supabaseDb = {
     let query = supabase
       .from('projects_task')
       .select(`
-        *,
-        assignee:auth_user(id, name, email),
-        project:projects_project(id, name)
+        id,
+        name,
+        description, 
+        status,
+        priority,
+        due_date,
+        start_date,
+        completed_at,
+        estimated_hours,
+        actual_hours,
+        position,
+        tags,
+        created_at,
+        updated_at,
+        assignee_id,
+        created_by_id,
+        project_id,
+        projects_project!inner(id, name)
       `)
 
     if (projectId) {
@@ -224,6 +268,80 @@ export const supabaseDb = {
     }
 
     const { data, error } = await query
+    
+    // If successful, enrich with user data separately
+    if (data && !error) {
+      const enrichedData = await Promise.all(
+        data.map(async (task) => {
+          const assigneePromise = task.assignee_id 
+            ? supabase.from('auth_user').select('id, name, email').eq('id', task.assignee_id).single()
+            : Promise.resolve({ data: null });
+          
+          const createdByPromise = task.created_by_id
+            ? supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
+            : Promise.resolve({ data: null });
+
+          const [assigneeResult, createdByResult] = await Promise.all([assigneePromise, createdByPromise]);
+
+          return {
+            ...task,
+            assignee: assigneeResult.data,
+            created_by: createdByResult.data,
+            project: task.projects_project
+          };
+        })
+      );
+      return { data: enrichedData, error: null };
+    }
+    
+    return { data, error }
+  },
+
+  // Get tasks for a specific user
+  getUserTasks: async (userId) => {
+    const { data, error } = await supabase
+      .from('projects_task')
+      .select(`
+        id,
+        name,
+        description, 
+        status,
+        priority,
+        due_date,
+        start_date,
+        completed_at,
+        estimated_hours,
+        actual_hours,
+        position,
+        tags,
+        created_at,
+        updated_at,
+        assignee_id,
+        created_by_id,
+        project_id,
+        projects_project!inner(id, name)
+      `)
+      .eq('assignee_id', userId)
+    
+    // Enrich with user data
+    if (data && !error) {
+      const enrichedData = await Promise.all(
+        data.map(async (task) => {
+          const createdByResult = task.created_by_id
+            ? await supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
+            : { data: null };
+
+          return {
+            ...task,
+            assignee: { id: userId }, // We know this is the user
+            created_by: createdByResult.data,
+            project: task.projects_project
+          };
+        })
+      );
+      return { data: enrichedData, error: null };
+    }
+    
     return { data, error }
   },
 
@@ -258,7 +376,8 @@ export const supabaseDb = {
       .from('projects_meeting')
       .select(`
         *,
-        project:projects_project(id, name)
+        project:projects_project(id, name),
+        created_by:auth_user(id, name, email)
       `)
     return { data, error }
   },
