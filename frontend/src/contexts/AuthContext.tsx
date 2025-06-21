@@ -63,6 +63,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         console.log('Starting auth initialization...');
         
+        // Small delay to ensure localStorage is fully available
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         const { user: currentUser, error } = await supabaseAuth.getUser();
         
         console.log('Auth result:', { currentUser, error });
@@ -94,14 +97,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const timeoutId = setTimeout(() => {
       console.warn('Auth initialization timeout, proceeding without auth');
       setIsLoading(false);
-    }, 2000);
+    }, 3000);
 
-    initializeAuth().finally(() => {
-      clearTimeout(timeoutId);
-    });
+    // Delay initialization slightly to avoid hydration mismatch
+    const delayedInit = setTimeout(() => {
+      initializeAuth().finally(() => {
+        clearTimeout(timeoutId);
+      });
+    }, 100);
 
     return () => {
       clearTimeout(timeoutId);
+      clearTimeout(delayedInit);
     };
   }, [isClient]);
 

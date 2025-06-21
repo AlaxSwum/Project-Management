@@ -71,6 +71,17 @@ export default function OAuthTestPage() {
   };
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existingScript) {
+      addLog('✅ Google Identity Services script already loaded');
+      setStatus('✅ Ready for testing');
+      return;
+    }
+
     // Load Google Identity Services
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -85,7 +96,11 @@ export default function OAuthTestPage() {
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
+      // Only remove if we added it
+      const scriptToRemove = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (scriptToRemove && document.head.contains(scriptToRemove)) {
+        document.head.removeChild(scriptToRemove);
+      }
     };
   }, []);
 

@@ -66,23 +66,50 @@ class GoogleDriveService {
         return false;
       }
 
+      // Ensure we're on client side
+      if (typeof window === 'undefined') {
+        console.warn('Authentication can only be performed on client side');
+        return false;
+      }
+
+      // Wait for Google Identity Services to load
+      let attempts = 0;
+      while (!(window as any).google && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (!(window as any).google) {
+        console.error('Google Identity Services not loaded');
+        return false;
+      }
+
       // Use Google Identity Services for authentication
       return new Promise((resolve) => {
-        if (typeof window !== 'undefined' && (window as any).google) {
+        try {
           const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
             client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
             scope: 'https://www.googleapis.com/auth/drive',
             callback: (tokenResponse: any) => {
+              console.log('Token response received:', tokenResponse);
               if (tokenResponse.access_token) {
                 this.gapi.client.setToken(tokenResponse);
+                console.log('Access token set successfully');
                 resolve(true);
+              } else if (tokenResponse.error) {
+                console.error('OAuth error:', tokenResponse.error);
+                resolve(false);
               } else {
+                console.warn('No access token received');
                 resolve(false);
               }
             },
           });
+          
+          console.log('Requesting access token...');
           tokenClient.requestAccessToken();
-        } else {
+        } catch (error) {
+          console.error('Token client initialization failed:', error);
           resolve(false);
         }
       });
