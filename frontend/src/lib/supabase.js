@@ -629,12 +629,62 @@ export const supabaseDb = {
   },
 
   updateTask: async (id, taskData) => {
-    const { data, error } = await supabase
-      .from('projects_task')
-      .update(taskData)
-      .eq('id', id)
-      .select()
-    return { data: data?.[0], error }
+    try {
+      // Update the task with timestamp
+      const taskUpdateData = {
+        ...taskData,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('projects_task')
+        .update(taskUpdateData)
+        .eq('id', id)
+        .select()
+
+      if (error) {
+        console.error('Error updating task:', error);
+        return { data: null, error };
+      }
+
+      const updatedTask = data?.[0];
+      if (!updatedTask) {
+        return { data: null, error: new Error('Task not found after update') };
+      }
+
+      // ✅ Enrich the updated task with user data like createTask and getTasks do
+      const assigneePromise = updatedTask.assignee_id 
+        ? supabase.from('auth_user').select('id, name, email').eq('id', updatedTask.assignee_id).single()
+        : Promise.resolve({ data: null });
+      
+      const createdByPromise = updatedTask.created_by_id
+        ? supabase.from('auth_user').select('id, name, email').eq('id', updatedTask.created_by_id).single()
+        : Promise.resolve({ data: null });
+
+      const projectPromise = updatedTask.project_id
+        ? supabase.from('projects_project').select('id, name').eq('id', updatedTask.project_id).single()
+        : Promise.resolve({ data: null });
+
+      const [assigneeResult, createdByResult, projectResult] = await Promise.all([
+        assigneePromise, 
+        createdByPromise, 
+        projectPromise
+      ]);
+
+      // Return enriched task data matching the format from getTasks/createTask
+      const enrichedTask = {
+        ...updatedTask,
+        assignee: assigneeResult.data,
+        created_by: createdByResult.data,
+        project: projectResult.data,
+        tags_list: updatedTask.tags ? updatedTask.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+      };
+
+      return { data: enrichedTask, error: null };
+    } catch (error) {
+      console.error('Exception in updateTask:', error);
+      return { data: null, error };
+    }
   },
 
   deleteTask: async (id) => {
