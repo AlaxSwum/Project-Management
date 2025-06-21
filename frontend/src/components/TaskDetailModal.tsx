@@ -79,6 +79,20 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
     tags: task.tags_list.join(', '),
   });
 
+  // ✅ Update editedTask state when task prop changes (after save)
+  useEffect(() => {
+    setEditedTask({
+      name: task.name,
+      description: task.description,
+      priority: task.priority,
+      due_date: task.due_date || '',
+      start_date: task.start_date || '',
+      estimated_hours: task.estimated_hours || '',
+      assignee_id: task.assignee?.id || 0,
+      tags: task.tags_list.join(', '),
+    });
+  }, [task]);
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -117,11 +131,12 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
         ...editedTask,
         tags: editedTask.tags,
         estimated_hours: editedTask.estimated_hours ? Number(editedTask.estimated_hours) : null,
-        assignee_id: editedTask.assignee_id || null,
+        assignee_id: editedTask.assignee_id && editedTask.assignee_id !== 0 ? Number(editedTask.assignee_id) : null,
         due_date: editedTask.due_date || null,
         start_date: editedTask.start_date || null,
       };
       
+      console.log('Saving task with assignee_id:', taskData.assignee_id); // Debug log
       await onSave(taskData);
       setIsEditing(false);
     } catch (error) {
