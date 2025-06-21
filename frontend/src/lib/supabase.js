@@ -843,7 +843,8 @@ export const supabaseDb = {
           task_id: taskId,
           user_id: user.id,
           comment: commentData.comment,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }])
         .select(`
           id,
