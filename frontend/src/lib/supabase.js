@@ -327,11 +327,70 @@ export const supabaseDb = {
   },
 
   createProject: async (projectData) => {
-    const { data, error } = await supabase
-      .from('projects_project')
-      .insert([projectData])
-      .select()
-    return { data: data?.[0], error }
+    try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      // Prepare project data with creator info
+      const projectToInsert = {
+        ...projectData,
+        created_by_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Insert the project
+      const { data: projectResult, error: projectError } = await supabase
+        .from('projects_project')
+        .insert([projectToInsert])
+        .select()
+
+      if (projectError) {
+        console.error('Error creating project:', projectError);
+        return { data: null, error: projectError };
+      }
+
+      const newProject = projectResult[0];
+
+      // Add the creator as a member of the project
+      const { error: membershipError } = await supabase
+        .from('projects_project_members')
+        .insert([{
+          project_id: newProject.id,
+          user_id: user.id
+        }]);
+
+      if (membershipError) {
+        console.error('Error adding creator as member:', membershipError);
+        // Don't fail the project creation, just log the error
+      }
+
+      // Return the project with creator info
+      return { 
+        data: {
+          ...newProject,
+          created_by: {
+            id: user.id,
+            name: user.user_metadata?.name || user.email,
+            email: user.email,
+            role: user.user_metadata?.role || 'member'
+          },
+          members: [{
+            id: user.id,
+            name: user.user_metadata?.name || user.email,
+            email: user.email,
+            role: user.user_metadata?.role || 'member'
+          }]
+        }, 
+        error: null 
+      };
+    } catch (error) {
+      console.error('Exception in createProject:', error);
+      return { data: null, error };
+    }
   },
 
   updateProject: async (id, projectData) => {
