@@ -2249,10 +2249,35 @@ export default function ProjectDetailPage() {
       </main>
 
       {showCreateTask && (
-            <div className="modal-overlay">
-              <div className="modal-content">
+            <div className="modal-overlay" style={{ 
+              position: 'fixed', 
+              inset: 0, 
+              background: 'rgba(0, 0, 0, 0.8)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '1rem', 
+              zIndex: 50 
+            }}>
+              <div className="modal-content" style={{ 
+                background: '#ffffff', 
+                border: '2px solid #000000', 
+                padding: '2rem', 
+                width: '100%', 
+                maxWidth: '600px', 
+                borderRadius: '12px', 
+                maxHeight: '90vh', 
+                overflowY: 'auto', 
+                overflowX: 'hidden',
+                boxSizing: 'border-box',
+                WebkitOverflowScrolling: 'touch'
+              }}>
                 <h2 className="modal-title">Create New Task</h2>
-                <form onSubmit={handleCreateTask}>
+                <form onSubmit={handleCreateTask} style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '1.5rem' 
+                }}>
                                       <div className="form-group">
                       <label className="form-label">Task Name</label>
                 <input
@@ -2338,7 +2363,13 @@ export default function ProjectDetailPage() {
                 />
               </div>
 
-                  <div className="button-group">
+                  <div className="button-group" style={{ 
+                    display: 'flex', 
+                    gap: '1rem', 
+                    marginTop: '0', 
+                    paddingTop: '1rem', 
+                    borderTop: '1px solid #e5e7eb' 
+                  }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateTask(false)}
