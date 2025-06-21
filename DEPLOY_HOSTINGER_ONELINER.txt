@@ -1,0 +1,18 @@
+🚀 ONE-COMMAND HOSTINGER DEPLOYMENT
+
+Copy and paste this ENTIRE command into your Hostinger server SSH terminal:
+
+cd /root && wget -O deploy-hostinger-complete.sh https://raw.githubusercontent.com/AlaxSwum/Project-Management/d394e696cb467d25947bc6efb2d79d36e465e18f/deploy-hostinger-complete.sh && chmod +x deploy-hostinger-complete.sh && ./deploy-hostinger-complete.sh
+
+==============================================================================
+
+Alternative method (if you have the script locally):
+
+1. Upload deploy-hostinger-complete.sh to your server
+2. Run: chmod +x deploy-hostinger-complete.sh && ./deploy-hostinger-complete.sh
+
+==============================================================================
+
+After deployment, access your app at:
+🌐 https://srv875725.hstgr.cloud
+🔐 Login: admin@project.com / admin123 
