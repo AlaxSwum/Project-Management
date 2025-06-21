@@ -65,62 +65,8 @@ export default function GoogleDriveExplorer({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // State for authentication status
-  const [authStatus, setAuthStatus] = useState<'checking' | 'authenticated' | 'not_authenticated'>('checking');
-
-  // Check authentication status on mount
-  useEffect(() => {
-    let isMounted = true;
-    
-    const checkAuth = async () => {
-      try {
-        // Try to initialize Google Drive API
-        await listDriveFiles('root');
-        if (isMounted) {
-          setAuthStatus('authenticated');
-        }
-      } catch (error) {
-        console.error('Google Drive authentication failed:', error);
-        if (isMounted) {
-          setAuthStatus('not_authenticated');
-        }
-      }
-    };
-    
-    checkAuth();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Show authentication status while checking
-  if (authStatus === 'checking') {
-    return (
-      <div className="google-drive-explorer">
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <p>Checking Google Drive authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show authentication required if not authenticated
-  if (authStatus === 'not_authenticated') {
-    return (
-      <div className="google-drive-explorer">
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <h3 style={{ color: '#ef4444', marginBottom: '1rem' }}>Authentication Required</h3>
-          <p style={{ marginBottom: '1rem' }}>Please log in to access Google Drive files.</p>
-          <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem' }}>
-            <strong>Note:</strong><br/>
-            Google Drive integration requires authentication.<br/>
-            Please make sure you're logged in and have granted permissions.
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Google Drive is now available to everyone without individual authentication
+  // Using service account approach - no OAuth popup required
 
   // Fetch files from the API
   const fetchFiles = async (folderId: string | null = null) => {

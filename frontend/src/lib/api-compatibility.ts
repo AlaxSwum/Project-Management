@@ -1,5 +1,5 @@
 import { supabaseDb, supabaseAuth } from './supabase';
-import googleDriveService from './google-drive';
+import googleDriveServiceAccount from './google-drive-service-account';
 import { driveAccessControl } from './google-drive-access-control';
 
 // Enhanced task data transformation
@@ -440,26 +440,13 @@ interface DriveFile {
   webViewLink: string;
 }
 
-// Google Drive API functions using the service with access control
+// Google Drive API functions using service account (no individual authentication required)
 export async function listDriveFiles(folderId: string | null = null): Promise<DriveFile[]> {
   try {
-    await googleDriveService.initialize();
-    const authenticated = await googleDriveService.authenticate();
-    if (!authenticated) {
-      throw new Error('Google Drive authentication failed');
-    }
+    // Use service account - no individual authentication needed
+    const files = await googleDriveServiceAccount.listFiles(folderId || 'root');
     
-    // Apply access control to determine which folder to access
-    const accessibleFolderId = driveAccessControl.getAccessibleFolderId(folderId);
-    
-    // Check if user can access the requested folder
-    if (folderId && !driveAccessControl.canAccessFolder(folderId)) {
-      throw new Error(driveAccessControl.getAccessDeniedMessage(folderId));
-    }
-    
-    const files = await googleDriveService.listFiles(accessibleFolderId);
-    
-    // Filter files based on access control rules
+    // Apply access control filtering if restrictions are configured
     return driveAccessControl.filterAccessibleFiles(files);
   } catch (error) {
     console.error('Error listing drive files:', error);
@@ -469,13 +456,8 @@ export async function listDriveFiles(folderId: string | null = null): Promise<Dr
 
 export async function searchDriveFiles(query: string): Promise<DriveFile[]> {
   try {
-    await googleDriveService.initialize();
-    const authenticated = await googleDriveService.authenticate();
-    if (!authenticated) {
-      throw new Error('Google Drive authentication failed');
-    }
-    
-    const files = await googleDriveService.searchFiles(query);
+    // Use service account - no individual authentication needed
+    const files = await googleDriveServiceAccount.searchFiles(query);
     
     // Filter search results based on access control rules
     return driveAccessControl.filterAccessibleFiles(files);
@@ -487,12 +469,8 @@ export async function searchDriveFiles(query: string): Promise<DriveFile[]> {
 
 export async function uploadToDrive(file: File, folderId: string): Promise<any> {
   try {
-    await googleDriveService.initialize();
-    const authenticated = await googleDriveService.authenticate();
-    if (!authenticated) {
-      throw new Error('Google Drive authentication failed');
-    }
-    return await googleDriveService.uploadFile(file, folderId);
+    // Use service account - no individual authentication needed
+    return await googleDriveServiceAccount.uploadFile(file, folderId);
   } catch (error) {
     console.error('Error uploading to drive:', error);
     throw error;
@@ -501,19 +479,8 @@ export async function uploadToDrive(file: File, folderId: string): Promise<any> 
 
 export async function createDriveFolder(name: string, parentId: string | null = null): Promise<any> {
   try {
-    await googleDriveService.initialize();
-    const authenticated = await googleDriveService.authenticate();
-    if (!authenticated) {
-      throw new Error('Google Drive authentication failed');
-    }
-    
-    // Check if user can create folders in the parent directory
-    const targetParentId = parentId || 'root';
-    if (!driveAccessControl.canAccessFolder(targetParentId)) {
-      throw new Error(driveAccessControl.getAccessDeniedMessage(targetParentId));
-    }
-    
-    return await googleDriveService.createFolder(name, parentId);
+    // Use service account - no individual authentication needed
+    return await googleDriveServiceAccount.createFolder(name, parentId || 'root');
   } catch (error) {
     console.error('Error creating drive folder:', error);
     throw error;
