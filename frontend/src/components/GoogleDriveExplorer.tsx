@@ -65,28 +65,8 @@ export default function GoogleDriveExplorer({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Debug: Check authentication status
-  const token = localStorage.getItem('accessToken');
-  const user = localStorage.getItem('user');
-  const hasValidToken = token && token.length > 0;
-
-  // Show authentication debug info if no token
-  if (!hasValidToken) {
-    return (
-      <div className="google-drive-explorer">
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <h3 style={{ color: '#ef4444', marginBottom: '1rem' }}>Authentication Required</h3>
-          <p style={{ marginBottom: '1rem' }}>Please log in to access Google Drive files.</p>
-          <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem' }}>
-            <strong>Debug Info:</strong><br/>
-            Token: {token ? 'Present' : 'Missing'}<br/>
-            User: {user ? 'Present' : 'Missing'}<br/>
-            Please refresh the page after logging in.
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Note: Google Drive functionality now uses its own authentication system
+  // No need to check for app authentication tokens
 
   // Fetch files from the API
   const fetchFiles = async (folderId: string | null = null) => {

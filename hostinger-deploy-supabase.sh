@@ -72,8 +72,12 @@ NEXT_PUBLIC_SUPABASE_URL=https://bayyefskgflbyyuwrlgm.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM
 
 # App Configuration  
-NEXT_PUBLIC_APP_URL=http://168.231.116.32:3000
+NEXT_PUBLIC_APP_URL=https://srv875725.hstgr.cloud
 NEXT_PUBLIC_APP_NAME=Project Management System
+
+# Google Drive API Configuration
+NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY=AIzaSyChzMSr6Bmro1K4FQn6wzjhID_N-D2iBy4
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=242050942548-qaiplivs5qa975uvtbelam351pdioa49.apps.googleusercontent.com
 
 # Production settings
 NODE_ENV=production
@@ -130,7 +134,7 @@ apt install -y nginx
 cat > /etc/nginx/sites-available/project-management << 'EOF'
 server {
     listen 80;
-    server_name 168.231.116.32;
+    server_name srv875725.hstgr.cloud 168.231.116.32;
     
     # Proxy all requests to Next.js
     location / {
@@ -184,8 +188,10 @@ echo ""
 echo "🎉 Deployment Complete!"
 echo ""
 echo "Your application is now running at:"
-echo "🌐 http://168.231.116.32:3000 (Direct Next.js)"
-echo "🌐 http://168.231.116.32 (Nginx Proxy)"
+echo "🌐 https://srv875725.hstgr.cloud:3000 (Direct Next.js)"
+echo "🌐 https://srv875725.hstgr.cloud (Nginx Proxy)"
+echo "🌐 http://168.231.116.32:3000 (Direct Next.js - IP fallback)"
+echo "🌐 http://168.231.116.32 (Nginx Proxy - IP fallback)"
 echo ""
 echo "Login with: admin@project.com / admin123"
 echo ""
