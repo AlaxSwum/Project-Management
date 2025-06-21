@@ -726,6 +726,10 @@ export default function ProjectDetailPage() {
             }
             
             .modal-content {
+              background: #ffffff;
+              border: 2px solid #000000;
+              padding: 2rem !important;
+              width: 100%;
               max-width: 95vw;
               padding: 1.5rem !important;
               margin: 0.5rem;
@@ -1185,9 +1189,48 @@ export default function ProjectDetailPage() {
             max-width: 600px;
             border-radius: 12px !important;
             max-height: 90vh;
-            overflow-y: auto;
+            height: auto;
+            overflow-y: auto !important;
+            overflow-x: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            /* Enhanced scrolling support for all devices */
+            -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #000000 #f1f1f1; /* Firefox */
+          }
+          /* Custom scrollbar styling for webkit browsers */
+          .modal-content::-webkit-scrollbar {
+            width: 8px;
+          }
+          .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+          }
+          .modal-content::-webkit-scrollbar-thumb {
+            background: #000000;
+            border-radius: 4px;
+          }
+          .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #333333;
+          }
+          /* Enhanced mobile support */
+          @media (max-width: 768px) {
+            .modal-content {
+              max-height: 95vh !important;
+              margin: 0.5rem;
+              padding: 1.5rem !important;
+              max-width: calc(100vw - 1rem);
+            }
+          }
+          @media (max-height: 600px) {
+            .modal-content {
+              max-height: 98vh !important;
+              padding: 1rem !important;
+            }
           }
           @keyframes slideIn {
             from { transform: translateY(-20px); opacity: 0; }
@@ -1200,8 +1243,16 @@ export default function ProjectDetailPage() {
             margin-bottom: 1.5rem !important;
             text-align: center;
           }
+          /* Enhanced form layout for scrollable modal */
+          .modal-content form {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Allow shrinking */
+          }
           .form-group {
             margin-bottom: 1.5rem !important;
+            flex-shrink: 0; /* Prevent form groups from shrinking */
           }
           .form-label {
             display: block;
@@ -1266,6 +1317,12 @@ export default function ProjectDetailPage() {
             display: flex;
             gap: 1rem;
             margin-top: 1.5rem !important;
+            flex-shrink: 0; /* Keep buttons at bottom */
+            position: sticky;
+            bottom: 0;
+            background: #ffffff;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
           }
           .btn-primary {
             flex: 1;
