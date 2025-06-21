@@ -33,7 +33,7 @@ interface Task {
   estimated_hours: number | null;
   actual_hours: number | null;
   assignee: User | null;
-  created_by: User;
+  created_by: User | null;
   tags_list: string[];
   created_at: string;
   updated_at: string;
@@ -740,7 +740,10 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
         <div className="task-modal-body">
           <div 
             className="task-info-section"
-            style={{ height: isEditing ? '100%' : `${topSectionHeight}%` }}
+            style={{ 
+              height: isEditing ? '100%' : `${topSectionHeight}%`,
+              overflow: isEditing ? 'auto' : 'auto'
+            }}
           >
             {isEditing ? (
               <div className="edit-form">
@@ -860,7 +863,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                     <div className="task-detail-content">
                       <div className="task-detail-label">Assigned to</div>
                       <div className="task-detail-value">
-                        {task.assignee ? task.assignee.name : 'Unassigned'}
+                        {task.assignee?.name || 'Unassigned'}
                       </div>
                     </div>
                   </div>
@@ -891,7 +894,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                     </div>
                   </div>
 
-                  {task.tags_list.length > 0 && (
+                  {task.tags_list && task.tags_list.length > 0 && (
                     <div className="task-detail-item">
                       <TagIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
                       <div className="task-detail-content">
@@ -905,7 +908,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                     <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
                     <div className="task-detail-content">
                       <div className="task-detail-label">Created by</div>
-                      <div className="task-detail-value">{task.created_by.name}</div>
+                      <div className="task-detail-value">{task.created_by?.name || 'Unknown User'}</div>
                     </div>
                   </div>
 

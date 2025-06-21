@@ -602,7 +602,26 @@ export const supabaseDb = {
         return { data: null, error: taskError };
       }
 
-      return { data: taskResult[0], error: null };
+      const newTask = taskResult[0];
+
+      // ✅ Enrich the task with user data before returning
+      const assignee = taskData.assignee_id ? 
+        await supabase.from('auth_user').select('id, name, email').eq('id', taskData.assignee_id).single() : 
+        { data: null };
+
+      const enrichedTask = {
+        ...newTask,
+        assignee: assignee.data,
+        created_by: {
+          id: user.id,
+          name: user.user_metadata?.name || user.email,
+          email: user.email,
+          role: user.user_metadata?.role || 'member'
+        },
+        tags_list: newTask.tags ? newTask.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+      };
+
+      return { data: enrichedTask, error: null };
     } catch (error) {
       console.error('Exception in createTask:', error);
       return { data: null, error };
