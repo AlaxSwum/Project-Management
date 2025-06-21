@@ -788,6 +788,21 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                       ))}
                     </select>
                   </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Created by</label>
+                    <input
+                      type="text"
+                      value={task.created_by?.name || 'Unknown User'}
+                      className="form-input"
+                      disabled
+                      style={{ 
+                        backgroundColor: '#f9fafb', 
+                        color: '#6b7280',
+                        cursor: 'not-allowed'
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
@@ -808,19 +823,6 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                       value={editedTask.due_date}
                       onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
                       className="form-input"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Estimated Hours</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={editedTask.estimated_hours}
-                      onChange={(e) => setEditedTask({ ...editedTask, estimated_hours: e.target.value })}
-                      className="form-input"
-                      placeholder="0"
                     />
                   </div>
                 </div>
@@ -861,7 +863,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                   <div className="task-detail-item">
                     <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
                     <div className="task-detail-content">
-                      <div className="task-detail-label">Assigned to</div>
+                      <div className="task-detail-label">Assignee</div>
                       <div className="task-detail-value">
                         {task.assignee?.name || 'Unassigned'}
                       </div>
