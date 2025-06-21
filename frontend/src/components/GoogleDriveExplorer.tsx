@@ -14,6 +14,7 @@ import {
   CheckIcon
 } from '@heroicons/react/24/outline';
 import { listDriveFiles, searchDriveFiles, uploadToDrive, createDriveFolder } from '@/lib/api-compatibility';
+import googleDriveService from '@/lib/google-drive';
 
 interface DriveFile {
   id: string;
@@ -64,9 +65,57 @@ export default function GoogleDriveExplorer({
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authenticationError, setAuthenticationError] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Note: Google Drive functionality now uses its own authentication system
-  // No need to check for app authentication tokens
+  // Check authentication status
+  const checkAuthStatus = async () => {
+    try {
+      const signedIn = await googleDriveService.isSignedIn();
+      setIsAuthenticated(signedIn);
+      setAuthenticationError(null);
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      setIsAuthenticated(false);
+      setAuthenticationError(error instanceof Error ? error.message : 'Authentication check failed');
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
+  // Handle Google Sign In
+  const handleSignIn = async () => {
+    setLoading(true);
+    setAuthenticationError(null);
+    try {
+      await googleDriveService.signIn();
+      setIsAuthenticated(true);
+      // Refresh folder tree after authentication
+      const rootFolders = await buildFolderTree();
+      setFolderTree(rootFolders);
+    } catch (error) {
+      console.error('Sign in error:', error);
+      setAuthenticationError(error instanceof Error ? error.message : 'Sign in failed');
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Google Sign Out
+  const handleSignOut = async () => {
+    try {
+      await googleDriveService.signOut();
+      setIsAuthenticated(false);
+      setFiles([]);
+      setFolderTree([]);
+      setSelectedFolderId(null);
+      setSelectedFolderName('');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   // Fetch files from the API
   const fetchFiles = async (folderId: string | null = null) => {
@@ -310,14 +359,178 @@ export default function GoogleDriveExplorer({
     </div>
   );
 
-  // Initial load
+  // Initial load and auth check
+  useEffect(() => {
+    const initializeComponent = async () => {
+      await checkAuthStatus();
+      if (isAuthenticated) {
+        const rootFolders = await buildFolderTree();
+        setFolderTree(rootFolders);
+      }
+    };
+    initializeComponent();
+  }, []);
+
+  // Load folder tree when authentication changes
   useEffect(() => {
     const initializeFolderTree = async () => {
-      const rootFolders = await buildFolderTree();
-      setFolderTree(rootFolders);
+      if (isAuthenticated) {
+        const rootFolders = await buildFolderTree();
+        setFolderTree(rootFolders);
+      }
     };
     initializeFolderTree();
-  }, []);
+  }, [isAuthenticated]);
+
+  // Show authentication screen if not authenticated
+  if (checkingAuth) {
+    return (
+      <div className="google-drive-explorer">
+        <div className="drive-loading">
+          <div className="auth-loading">
+            <div className="spinner"></div>
+            <p>Checking Google Drive authentication...</p>
+          </div>
+        </div>
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .google-drive-explorer {
+              background: #ffffff;
+              border: 2px solid #000000;
+              border-radius: 12px;
+              overflow: hidden;
+              height: 600px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .auth-loading {
+              text-align: center;
+              color: #6b7280;
+            }
+            .spinner {
+              width: 40px;
+              height: 40px;
+              border: 4px solid #f3f4f6;
+              border-top: 4px solid #000000;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin: 0 auto 1rem;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `
+        }} />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="google-drive-explorer">
+        <div className="auth-container">
+          <div className="auth-header">
+            <h3>🔐 Authentication Required</h3>
+            <p>Please log in to access Google Drive files.</p>
+          </div>
+          
+          {authenticationError && (
+            <div className="auth-error">
+              <p><strong>Error:</strong> {authenticationError}</p>
+            </div>
+          )}
+          
+          <div className="auth-info">
+            <p><strong>Debug Info:</strong></p>
+            <p>Token: Missing</p>
+            <p>User: Missing</p>
+            <p>Please click "Sign in with Google" below to authenticate.</p>
+          </div>
+          
+          <button 
+            className="auth-button"
+            onClick={handleSignIn}
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : '🚀 Sign in with Google'}
+          </button>
+        </div>
+        
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .google-drive-explorer {
+              background: #ffffff;
+              border: 2px solid #000000;
+              border-radius: 12px;
+              overflow: hidden;
+              height: 600px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 2rem;
+            }
+            .auth-container {
+              text-align: center;
+              max-width: 400px;
+            }
+            .auth-header h3 {
+              color: #dc2626;
+              font-size: 1.5rem;
+              margin-bottom: 0.5rem;
+            }
+            .auth-header p {
+              color: #374151;
+              margin-bottom: 1.5rem;
+            }
+            .auth-error {
+              background: #fef2f2;
+              border: 1px solid #fecaca;
+              border-radius: 8px;
+              padding: 1rem;
+              margin-bottom: 1.5rem;
+              color: #dc2626;
+            }
+            .auth-info {
+              background: #f9fafb;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              padding: 1rem;
+              margin-bottom: 1.5rem;
+              text-align: left;
+              font-family: monospace;
+              font-size: 0.875rem;
+              color: #374151;
+            }
+            .auth-button {
+              background: #4285f4;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              padding: 0.75rem 1.5rem;
+              font-size: 1rem;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              display: inline-flex;
+              align-items: center;
+              gap: 0.5rem;
+            }
+            .auth-button:hover:not(:disabled) {
+              background: #3367d6;
+              transform: translateY(-1px);
+            }
+            .auth-button:disabled {
+              opacity: 0.6;
+              cursor: not-allowed;
+              transform: none;
+            }
+          `
+        }} />
+      </div>
+    );
+  }
 
   return (
     <div className="google-drive-explorer">
@@ -368,6 +581,33 @@ export default function GoogleDriveExplorer({
             gap: 0.75rem;
             align-items: center;
             justify-content: space-between;
+          }
+          .auth-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #10b981;
+            font-weight: 500;
+          }
+          .sign-out-btn {
+            padding: 0.25rem 0.5rem;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          .sign-out-btn:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+          }
+          .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
           }
           .drive-action-btn {
             display: flex;
@@ -668,7 +908,14 @@ export default function GoogleDriveExplorer({
         )}
         
         <div className="drive-actions">
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="auth-status">
+            ✅ Connected to Google Drive
+            <button className="sign-out-btn" onClick={handleSignOut}>
+              Sign Out
+            </button>
+          </div>
+          
+          <div className="action-buttons">
             {showCreateFolder && (
               <button
                 onClick={() => setShowNewFolderDialog(true)}
@@ -678,17 +925,17 @@ export default function GoogleDriveExplorer({
                 New Folder
               </button>
             )}
+            
+            {selectedFolderId && (
+              <button
+                onClick={() => setShowUploadDialog(true)}
+                className="drive-action-btn primary"
+              >
+                <CloudArrowUpIcon style={{ width: '16px', height: '16px' }} />
+                Upload to {selectedFolderName}
+              </button>
+            )}
           </div>
-          
-          {selectedFolderId && (
-            <button
-              onClick={() => setShowUploadDialog(true)}
-              className="drive-action-btn primary"
-            >
-              <CloudArrowUpIcon style={{ width: '16px', height: '16px' }} />
-              Upload to {selectedFolderName}
-            </button>
-          )}
         </div>
       </div>
 
