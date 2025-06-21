@@ -51,7 +51,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { user: currentUser, error } = await supabaseAuth.getUser();
+        // Add timeout to prevent hanging
+        const authPromise = supabaseAuth.getUser();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
+        );
+        
+        const { user: currentUser, error } = await Promise.race([authPromise, timeoutPromise]) as any;
         
         if (currentUser && !error) {
           const userData: User = {
@@ -67,12 +73,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        // Continue without authentication
       } finally {
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
+    // Add immediate fallback
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('Auth initialization taking too long, proceeding without auth');
+      setIsLoading(false);
+    }, 3000);
+
+    initializeAuth().then(() => {
+      clearTimeout(fallbackTimeout);
+    });
+
+    return () => {
+      clearTimeout(fallbackTimeout);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {

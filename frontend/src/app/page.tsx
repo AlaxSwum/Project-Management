@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -15,8 +16,45 @@ export default function HomePage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  // Force show the page after 4 seconds if still loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('Auth loading timeout, showing page anyway');
+        setForceShow(true);
+      }
+    }, 4000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
+
+  if (isLoading && !forceShow) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        <div style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>Loading...</div>
+        <div style={{ fontSize: '0.9rem', color: '#666' }}>
+          If this takes too long, <button 
+            onClick={() => setForceShow(true)}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#4f46e5', 
+              textDecoration: 'underline',
+              cursor: 'pointer'
+            }}
+          >
+            click here to continue
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (isAuthenticated) {
