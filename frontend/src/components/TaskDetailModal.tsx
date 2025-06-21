@@ -303,7 +303,16 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           .task-info-section.editing {
             flex: 1;
             overflow-y: auto !important;
-            max-height: calc(85vh - 120px);
+            max-height: calc(85vh - 140px) !important;
+            height: calc(85vh - 140px) !important;
+            padding-bottom: 3rem;
+            box-sizing: border-box;
+          }
+          .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 100%;
             padding-bottom: 2rem;
           }
           .task-interaction-wrapper {
