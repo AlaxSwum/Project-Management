@@ -6,20 +6,20 @@ const nextConfig = {
   // Enable SWC minification for better performance
   swcMinify: true,
   
-  // Output configuration for static hosting
-  output: 'standalone',
+  // Remove standalone output since we're using standard hosting
+  // output: 'standalone',
   
   // Image optimization
   images: {
-    domains: ['localhost', 'your-domain.com'], // Add your production domains
+    domains: ['localhost', '168.231.116.32', 'bayyefskgflbyyuwrlgm.supabase.co'], // Add your production domains
     formats: ['image/webp', 'image/avif'],
   },
   
-  // Environment variables to expose to the client
+  // Environment variables to expose to the client (removed undefined ones)
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_AUTH_URL: process.env.NEXT_PUBLIC_AUTH_URL,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Project Management',
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bayyefskgflbyyuwrlgm.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM',
   },
   
   // Redirects for better SEO and user experience
@@ -56,7 +56,12 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          // Cache headers for static assets
+        ],
+      },
+      {
+        // Separate cache headers for static assets only
+        source: '/(.*)\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$',
+        headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
@@ -106,15 +111,13 @@ const nextConfig = {
   
   // TypeScript configuration
   typescript: {
-    // Ignore TypeScript errors during build (only for production deployment)
-    // Remove this in development
+    // Don't ignore TypeScript errors during build
     ignoreBuildErrors: false,
   },
   
   // ESLint configuration
   eslint: {
-    // Ignore ESLint errors during build (only for production deployment)
-    // Remove this in development
+    // Don't ignore ESLint errors during build
     ignoreDuringBuilds: false,
   },
 };
