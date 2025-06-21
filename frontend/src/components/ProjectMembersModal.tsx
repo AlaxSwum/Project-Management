@@ -57,28 +57,34 @@ export default function ProjectMembersModal({
   );
 
   const handleAddMember = async (userId: number) => {
+    console.log(`Attempting to add member ${userId} to project ${projectId}`);
     setIsLoading(true);
     setError('');
     
     try {
-      await projectService.addProjectMember(projectId, userId);
+      const result = await projectService.addProjectMember(projectId, userId);
+      console.log('Add member result:', result);
       onMembersUpdate();
-    } catch (err) {
-      setError('Failed to add member');
+    } catch (err: any) {
+      console.error('Failed to add member:', err);
+      setError(`Failed to add member: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRemoveMember = async (userId: number) => {
+    console.log(`Attempting to remove member ${userId} from project ${projectId}`);
     setIsLoading(true);
     setError('');
     
     try {
-      await projectService.removeProjectMember(projectId, userId);
+      const result = await projectService.removeProjectMember(projectId, userId);
+      console.log('Remove member result:', result);
       onMembersUpdate();
-    } catch (err) {
-      setError('Failed to remove member');
+    } catch (err: any) {
+      console.error('Failed to remove member:', err);
+      setError(`Failed to remove member: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
     }

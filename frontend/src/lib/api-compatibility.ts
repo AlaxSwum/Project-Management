@@ -156,39 +156,53 @@ export const projectService = {
 
   addProjectMember: async (projectId: number, userId: number) => {
     try {
+      console.log(`API: Adding member ${userId} to project ${projectId}`);
       const currentUserId = await getCurrentUserId();
+      console.log('Current user ID:', currentUserId);
+      
       if (!currentUserId) {
         throw new Error('Authentication required');
       }
       
       // Verify current user has access to this project
+      console.log('Verifying project access...');
       await supabaseDb.getProject(projectId, currentUserId);
+      console.log('Project access verified');
       
+      console.log('Calling supabaseDb.addProjectMember...');
       const { data, error } = await supabaseDb.addProjectMember(projectId, userId);
+      console.log('Database result:', { data, error });
       if (error) throw error;
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in addProjectMember:', error);
-      throw error;
+      throw new Error(`Failed to add project member: ${error.message || error.toString()}`);
     }
   },
 
   removeProjectMember: async (projectId: number, userId: number) => {
     try {
+      console.log(`API: Removing member ${userId} from project ${projectId}`);
       const currentUserId = await getCurrentUserId();
+      console.log('Current user ID:', currentUserId);
+      
       if (!currentUserId) {
         throw new Error('Authentication required');
       }
       
       // Verify current user has access to this project
+      console.log('Verifying project access...');
       await supabaseDb.getProject(projectId, currentUserId);
+      console.log('Project access verified');
       
+      console.log('Calling supabaseDb.removeProjectMember...');
       const { data, error } = await supabaseDb.removeProjectMember(projectId, userId);
+      console.log('Database result:', { data, error });
       if (error) throw error;
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in removeProjectMember:', error);
-      throw error;
+      throw new Error(`Failed to remove project member: ${error.message || error.toString()}`);
     }
   },
 };
