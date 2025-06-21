@@ -25,7 +25,7 @@ export default function DebugDrivePage() {
       console.log('🔍 Test Auth Result:', data);
     } catch (error) {
       console.error('❌ Test Auth Error:', error);
-      setTestResult({ error: error.message });
+      setTestResult({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export default function DebugDrivePage() {
       console.log('🔍 List Files Result:', data);
     } catch (error) {
       console.error('❌ List Files Error:', error);
-      setListResult({ error: error.message });
+      setListResult({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
