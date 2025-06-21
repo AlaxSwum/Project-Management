@@ -47,17 +47,25 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  // Handle SSR
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!isClient) {
+      return;
+    }
+
     const initializeAuth = async () => {
       try {
-        // Add timeout to prevent hanging
-        const authPromise = supabaseAuth.getUser();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout')), 5000)
-        );
+        console.log('Starting auth initialization...');
         
-        const { user: currentUser, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+        const { user: currentUser, error } = await supabaseAuth.getUser();
+        
+        console.log('Auth result:', { currentUser, error });
         
         if (currentUser && !error) {
           const userData: User = {
@@ -70,35 +78,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             date_joined: new Date().toISOString()
           };
           setUser(userData);
+          console.log('User set:', userData);
+        } else {
+          console.log('No user found or error occurred');
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Continue without authentication
       } finally {
+        console.log('Setting isLoading to false');
         setIsLoading(false);
       }
     };
 
-    // Add immediate fallback
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('Auth initialization taking too long, proceeding without auth');
+    // Set a maximum timeout for auth initialization
+    const timeoutId = setTimeout(() => {
+      console.warn('Auth initialization timeout, proceeding without auth');
       setIsLoading(false);
-    }, 3000);
+    }, 2000);
 
-    initializeAuth().then(() => {
-      clearTimeout(fallbackTimeout);
+    initializeAuth().finally(() => {
+      clearTimeout(timeoutId);
     });
 
     return () => {
-      clearTimeout(fallbackTimeout);
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isClient]);
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login for:', email);
       const { user: authUser, error } = await supabaseAuth.signIn(email, password);
       
       if (error) {
+        console.error('Login error:', error);
         throw new Error(error instanceof Error ? error.message : 'Login failed');
       }
 
@@ -113,8 +126,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           date_joined: new Date().toISOString()
         };
         setUser(userData);
+        console.log('Login successful:', userData);
       }
     } catch (error: any) {
+      console.error('Login failed:', error);
       throw new Error(error.message || 'Login failed');
     }
   };
@@ -162,7 +177,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
-      // Force logout even if there's an error
       setUser(null);
     }
   };

@@ -59,19 +59,34 @@ export const supabaseAuth = {
   // Get current user
   getUser: async () => {
     try {
+      console.log('getUser called - checking if window is defined');
+      
       if (typeof window === 'undefined') {
+        console.log('Server-side rendering detected, returning null user');
         return { user: null, error: null }
       }
+      
+      console.log('Client-side detected, checking localStorage');
       
       const userData = localStorage.getItem('supabase_user')
       const token = localStorage.getItem('supabase_token')
       
+      console.log('LocalStorage check:', { 
+        hasUserData: !!userData, 
+        hasToken: !!token,
+        userDataPreview: userData ? userData.substring(0, 50) + '...' : null
+      });
+      
       if (userData && token) {
-        return { user: JSON.parse(userData), error: null }
+        const parsedUser = JSON.parse(userData);
+        console.log('Found user in localStorage:', parsedUser);
+        return { user: parsedUser, error: null }
       }
       
+      console.log('No user found in localStorage');
       return { user: null, error: null }
     } catch (error) {
+      console.error('getUser error:', error);
       return { user: null, error }
     }
   },
