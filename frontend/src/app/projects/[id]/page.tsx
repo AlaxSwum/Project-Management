@@ -116,13 +116,13 @@ export default function ProjectDetailPage() {
       return;
     }
     fetchProject();
-  }, [isAuthenticated, authLoading, params.id, router]);
+  }, [isAuthenticated, authLoading, params?.id, router]);
 
   const fetchProject = async () => {
     try {
       const [projectData, tasksData, projectsData] = await Promise.all([
-        projectService.getProject(Number(params.id)),
-        taskService.getProjectTasks(Number(params.id)),
+        projectService.getProject(Number(params?.id)),
+        taskService.getProjectTasks(Number(params?.id)),
         projectService.getProjects()
       ]);
       setProject(projectData);
@@ -166,7 +166,7 @@ export default function ProjectDetailPage() {
         taskData.tags = newTask.tags.trim();
       }
       
-      const createdTask = await taskService.createTask(Number(params.id), taskData);
+      const createdTask = await taskService.createTask(Number(params?.id), taskData);
       setTasks([...tasks, createdTask]);
       
       setNewTask({
