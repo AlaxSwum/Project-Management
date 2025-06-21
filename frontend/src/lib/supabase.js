@@ -730,6 +730,52 @@ export const supabaseDb = {
       .delete()
       .eq('id', id)
     return { data, error }
+  },
+
+  // Project Member Management
+  addProjectMember: async (projectId, userId) => {
+    try {
+      // Check if user is already a member
+      const { data: existingMember, error: checkError } = await supabase
+        .from('projects_project_members')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('user_id', userId)
+        .single()
+
+      if (existingMember) {
+        return { data: null, error: new Error('User is already a member of this project') }
+      }
+
+      // Add the member
+      const { data, error } = await supabase
+        .from('projects_project_members')
+        .insert([{
+          project_id: projectId,
+          user_id: userId
+        }])
+        .select()
+
+      return { data: data?.[0], error }
+    } catch (error) {
+      console.error('Error adding project member:', error);
+      return { data: null, error }
+    }
+  },
+
+  removeProjectMember: async (projectId, userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects_project_members')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('user_id', userId)
+
+      return { data, error }
+    } catch (error) {
+      console.error('Error removing project member:', error);
+      return { data: null, error }
+    }
   }
 }
 

@@ -155,13 +155,41 @@ export const projectService = {
   },
 
   addProjectMember: async (projectId: number, userId: number) => {
-    // TODO: Implement project member management
-    throw new Error('Project member management not implemented with Supabase yet');
+    try {
+      const currentUserId = await getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('Authentication required');
+      }
+      
+      // Verify current user has access to this project
+      await supabaseDb.getProject(projectId, currentUserId);
+      
+      const { data, error } = await supabaseDb.addProjectMember(projectId, userId);
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error in addProjectMember:', error);
+      throw error;
+    }
   },
 
   removeProjectMember: async (projectId: number, userId: number) => {
-    // TODO: Implement project member management
-    throw new Error('Project member management not implemented with Supabase yet');
+    try {
+      const currentUserId = await getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('Authentication required');
+      }
+      
+      // Verify current user has access to this project
+      await supabaseDb.getProject(projectId, currentUserId);
+      
+      const { data, error } = await supabaseDb.removeProjectMember(projectId, userId);
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error in removeProjectMember:', error);
+      throw error;
+    }
   },
 };
 
