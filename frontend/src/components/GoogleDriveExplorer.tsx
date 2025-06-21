@@ -13,7 +13,7 @@ import {
   CloudArrowUpIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
-import { listDriveFiles, searchDriveFiles, uploadToDrive, createDriveFolder } from '@/lib/api';
+import { listDriveFiles, searchDriveFiles, uploadToDrive, createDriveFolder } from '@/lib/api-compatibility';
 
 interface DriveFile {
   id: string;

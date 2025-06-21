@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { reportingService } from '@/lib/api';
+import { reportingService } from '@/lib/api-compatibility';
 import {
   EyeIcon,
   DocumentChartBarIcon

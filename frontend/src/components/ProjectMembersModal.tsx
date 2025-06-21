@@ -7,7 +7,7 @@ import {
   UserMinusIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
-import { projectService } from '@/lib/api';
+import { projectService } from '@/lib/api-compatibility';
 
 interface User {
   id: number;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { taskService } from '@/lib/api';
+import { taskService } from '@/lib/api-compatibility';
 import {
   ChatBubbleLeftRightIcon,
   PaperClipIcon,
