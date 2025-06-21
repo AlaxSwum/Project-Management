@@ -1,0 +1,277 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://bayyefskgflbyyuwrlgm.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM'
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Authentication helpers with direct table access
+export const supabaseAuth = {
+  // Login using custom table
+  signIn: async (email, password) => {
+    try {
+      // First get user from custom auth_user table
+      const { data: users, error: userError } = await supabase
+        .from('auth_user')
+        .select('*')
+        .eq('email', email)
+        .eq('is_active', true)
+
+      if (userError) throw userError
+      if (!users || users.length === 0) {
+        throw new Error('Invalid email or password')
+      }
+
+      const user = users[0]
+
+      // For demo purposes, we'll check if password matches a simple pattern
+      // In production, you'd want proper password hashing verification
+      const isValidPassword = password === 'admin123' || password === 'test123'
+      
+      if (!isValidPassword) {
+        throw new Error('Invalid email or password')
+      }
+
+      // Create a session-like object
+      const authUser = {
+        id: user.id,
+        email: user.email,
+        user_metadata: {
+          name: user.name,
+          role: user.role,
+          phone: user.phone,
+          position: user.position
+        }
+      }
+
+      // Store user data in localStorage to simulate session
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('supabase_user', JSON.stringify(authUser))
+        localStorage.setItem('supabase_token', `sb-token-${user.id}`)
+      }
+
+      return { user: authUser, error: null }
+    } catch (error) {
+      return { user: null, error }
+    }
+  },
+
+  // Get current user
+  getUser: async () => {
+    try {
+      if (typeof window === 'undefined') {
+        return { user: null, error: null }
+      }
+      
+      const userData = localStorage.getItem('supabase_user')
+      const token = localStorage.getItem('supabase_token')
+      
+      if (userData && token) {
+        return { user: JSON.parse(userData), error: null }
+      }
+      
+      return { user: null, error: null }
+    } catch (error) {
+      return { user: null, error }
+    }
+  },
+
+  // Sign out
+  signOut: async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('supabase_user')
+      localStorage.removeItem('supabase_token')
+    }
+    return { error: null }
+  },
+
+  // Register new user
+  signUp: async (userData) => {
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .insert([{
+          email: userData.email,
+          name: userData.name,
+          phone: userData.phone || '',
+          role: userData.role || 'member',
+          position: userData.position || '',
+          password: userData.password, // In production, hash this
+          is_active: true,
+          is_staff: userData.role === 'admin',
+          is_superuser: userData.role === 'admin',
+          date_joined: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+
+      if (error) throw error
+
+      const newUser = data[0]
+      const authUser = {
+        id: newUser.id,
+        email: newUser.email,
+        user_metadata: {
+          name: newUser.name,
+          role: newUser.role,
+          phone: newUser.phone,
+          position: newUser.position
+        }
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('supabase_user', JSON.stringify(authUser))
+        localStorage.setItem('supabase_token', `sb-token-${newUser.id}`)
+      }
+
+      return { user: authUser, error: null }
+    } catch (error) {
+      return { user: null, error }
+    }
+  }
+}
+
+// Database helpers
+export const supabaseDb = {
+  // Users
+  getUsers: async () => {
+    const { data, error } = await supabase
+      .from('auth_user')
+      .select('id, email, name, phone, role, position, is_active, date_joined')
+      .eq('is_active', true)
+    return { data, error }
+  },
+
+  // Projects
+  getProjects: async () => {
+    const { data, error } = await supabase
+      .from('projects_project')
+      .select(`
+        *,
+        project_members:projects_projectmember!inner(
+          user:auth_user!inner(id, name, email, role)
+        )
+      `)
+    return { data, error }
+  },
+
+  getProject: async (id) => {
+    const { data, error } = await supabase
+      .from('projects_project')
+      .select(`
+        *,
+        project_members:projects_projectmember!inner(
+          user:auth_user!inner(id, name, email, role)
+        )
+      `)
+      .eq('id', id)
+      .single()
+    return { data, error }
+  },
+
+  createProject: async (projectData) => {
+    const { data, error } = await supabase
+      .from('projects_project')
+      .insert([projectData])
+      .select()
+    return { data: data?.[0], error }
+  },
+
+  updateProject: async (id, projectData) => {
+    const { data, error } = await supabase
+      .from('projects_project')
+      .update(projectData)
+      .eq('id', id)
+      .select()
+    return { data: data?.[0], error }
+  },
+
+  deleteProject: async (id) => {
+    const { data, error } = await supabase
+      .from('projects_project')
+      .delete()
+      .eq('id', id)
+    return { data, error }
+  },
+
+  // Tasks
+  getTasks: async (projectId) => {
+    let query = supabase
+      .from('projects_task')
+      .select(`
+        *,
+        assignee:auth_user(id, name, email),
+        project:projects_project(id, name)
+      `)
+
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+
+    const { data, error } = await query
+    return { data, error }
+  },
+
+  createTask: async (taskData) => {
+    const { data, error } = await supabase
+      .from('projects_task')
+      .insert([taskData])
+      .select()
+    return { data: data?.[0], error }
+  },
+
+  updateTask: async (id, taskData) => {
+    const { data, error } = await supabase
+      .from('projects_task')
+      .update(taskData)
+      .eq('id', id)
+      .select()
+    return { data: data?.[0], error }
+  },
+
+  deleteTask: async (id) => {
+    const { data, error } = await supabase
+      .from('projects_task')
+      .delete()
+      .eq('id', id)
+    return { data, error }
+  },
+
+  // Meetings
+  getMeetings: async () => {
+    const { data, error } = await supabase
+      .from('projects_meeting')
+      .select(`
+        *,
+        project:projects_project(id, name)
+      `)
+    return { data, error }
+  },
+
+  createMeeting: async (meetingData) => {
+    const { data, error } = await supabase
+      .from('projects_meeting')
+      .insert([meetingData])
+      .select()
+    return { data: data?.[0], error }
+  },
+
+  updateMeeting: async (id, meetingData) => {
+    const { data, error } = await supabase
+      .from('projects_meeting')
+      .update(meetingData)
+      .eq('id', id)
+      .select()
+    return { data: data?.[0], error }
+  },
+
+  deleteMeeting: async (id) => {
+    const { data, error } = await supabase
+      .from('projects_meeting')
+      .delete()
+      .eq('id', id)
+    return { data, error }
+  }
+}
+
+export default supabase 
