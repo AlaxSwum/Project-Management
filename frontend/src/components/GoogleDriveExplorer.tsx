@@ -70,17 +70,28 @@ export default function GoogleDriveExplorer({
 
   // Check authentication status on mount
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         // Try to initialize Google Drive API
         await listDriveFiles('root');
-        setAuthStatus('authenticated');
+        if (isMounted) {
+          setAuthStatus('authenticated');
+        }
       } catch (error) {
         console.error('Google Drive authentication failed:', error);
-        setAuthStatus('not_authenticated');
+        if (isMounted) {
+          setAuthStatus('not_authenticated');
+        }
       }
     };
+    
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Show authentication status while checking
