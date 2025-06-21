@@ -545,11 +545,68 @@ export const supabaseDb = {
   },
 
   createTask: async (taskData) => {
-    const { data, error } = await supabase
-      .from('projects_task')
-      .insert([taskData])
-      .select()
-    return { data: data?.[0], error }
+    try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      // Get the next position for this project
+      let nextPosition = 1;
+      try {
+        const { data: existingTasks, error: positionError } = await supabase
+          .from('projects_task')
+          .select('position')
+          .eq('project_id', taskData.project_id)
+          .order('position', { ascending: false })
+          .limit(1);
+
+        if (!positionError && existingTasks && existingTasks.length > 0) {
+          nextPosition = (existingTasks[0].position || 0) + 1;
+        }
+      } catch (positionErr) {
+        // Fallback to timestamp if position calculation fails
+        nextPosition = Date.now();
+      }
+
+      // Prepare task data with creator info and required fields
+      const taskToInsert = {
+        ...taskData,
+        created_by_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        position: nextPosition,
+        // Set defaults for optional fields
+        assignee_id: taskData.assignee_id || null,
+        estimated_hours: taskData.estimated_hours || null,
+        actual_hours: taskData.actual_hours || null,
+        tags: taskData.tags || '',
+        due_date: taskData.due_date || null,
+        start_date: taskData.start_date || null,
+        completed_at: null,
+        parent_task_id: taskData.parent_task_id || null,
+        // Ensure required fields have defaults
+        status: taskData.status || 'todo',
+        priority: taskData.priority || 'medium'
+      };
+
+      // Insert the task
+      const { data: taskResult, error: taskError } = await supabase
+        .from('projects_task')
+        .insert([taskToInsert])
+        .select()
+
+      if (taskError) {
+        console.error('Error creating task:', taskError);
+        return { data: null, error: taskError };
+      }
+
+      return { data: taskResult[0], error: null };
+    } catch (error) {
+      console.error('Exception in createTask:', error);
+      return { data: null, error };
+    }
   },
 
   updateTask: async (id, taskData) => {
