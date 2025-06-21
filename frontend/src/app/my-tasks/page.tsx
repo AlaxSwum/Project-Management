@@ -144,12 +144,7 @@ export default function MyTasksPage() {
   const fetchMyTasks = async () => {
     try {
       const tasksData = await taskService.getUserTasks();
-      // Enrich tasks with tags_list property
-      const enrichedTasks = tasksData.map((task: any) => ({
-        ...task,
-        tags_list: task.tags ? task.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : []
-      }));
-      setTasks(enrichedTasks);
+      setTasks(tasksData);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
       setError('Failed to fetch your tasks');

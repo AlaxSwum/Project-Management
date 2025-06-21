@@ -88,14 +88,13 @@ export default function CalendarPage() {
       ]);
       
       // Add project info to tasks
-      const tasksWithProjectInfo = tasksData.map((task: any) => {
+      const tasksWithProjectInfo = tasksData.map((task: Task) => {
         const project = projectsData.find((p: Project) => p.id === task.project_id);
         return {
           ...task,
           project_name: project?.name || 'Unknown Project',
           project_color: project?.color || '#6b7280',
-          is_important: task.priority === 'urgent' || task.priority === 'high',
-          tags_list: task.tags ? task.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : []
+          is_important: task.priority === 'urgent' || task.priority === 'high'
         };
       });
       
