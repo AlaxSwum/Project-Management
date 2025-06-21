@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { projectService, meetingService, userService } from '@/lib/api';
+import { projectService, meetingService, userService } from '@/lib/api-compatibility';
 import {
   ClockIcon,
   PlusIcon,
@@ -176,7 +176,7 @@ export default function TimetablePage() {
       date: meeting.date,
       time: meeting.time,
       duration: meeting.duration,
-      project_id: meeting.project_id || meeting.project,
+      project_id: meeting.project_id || meeting.project || 0,
       attendees: meeting.attendees_list ? meeting.attendees_list.join(', ') : meeting.attendees || '',
       attendee_ids: [],
     });

@@ -109,9 +109,9 @@ export default function GoogleDriveExplorer({
   // Build folder tree recursively
   const buildFolderTree = async (parentId: string | null = null): Promise<FolderNode[]> => {
     const files = await fetchFiles(parentId);
-    const folders = files.filter(file => file.mimeType === 'application/vnd.google-apps.folder');
+    const folders = files.filter((file: DriveFile) => file.mimeType === 'application/vnd.google-apps.folder');
     
-    return folders.map(folder => ({
+    return folders.map((folder: DriveFile) => ({
       id: folder.id,
       name: folder.name,
       children: [],
@@ -124,9 +124,9 @@ export default function GoogleDriveExplorer({
   // Load children for a specific folder node
   const loadFolderChildren = async (nodeId: string) => {
     const files = await fetchFiles(nodeId);
-    const folders = files.filter(file => file.mimeType === 'application/vnd.google-apps.folder');
+    const folders = files.filter((file: DriveFile) => file.mimeType === 'application/vnd.google-apps.folder');
     
-    return folders.map(folder => ({
+    return folders.map((folder: DriveFile) => ({
       id: folder.id,
       name: folder.name,
       children: [],

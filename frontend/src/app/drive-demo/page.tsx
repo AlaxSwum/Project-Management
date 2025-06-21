@@ -1,7 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import GoogleDriveExplorer from '../../components/GoogleDriveExplorer';
+import dynamic from 'next/dynamic';
+
+const GoogleDriveExplorer = dynamic(() => import('../../components/GoogleDriveExplorer'), {
+  ssr: false,
+  loading: () => <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    height: '400px',
+    background: '#f9fafb',
+    border: '2px solid #e5e7eb',
+    borderRadius: '12px',
+    color: '#6b7280'
+  }}>Loading Google Drive Explorer...</div>
+});
 
 interface DriveFile {
   id: string;

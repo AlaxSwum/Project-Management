@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService } from '@/lib/api';
+import { supabaseAuth } from '@/lib/supabase';
 
 interface User {
   id: number;
@@ -50,43 +50,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('accessToken');
-      const savedUser = localStorage.getItem('user');
-
-      if (token && savedUser) {
-        try {
-          // First, restore the user from localStorage to appear logged in
-          const userData = JSON.parse(savedUser);
+      try {
+        const { user: currentUser, error } = await supabaseAuth.getUser();
+        
+        if (currentUser && !error) {
+          const userData: User = {
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.user_metadata?.name || currentUser.email,
+            phone: currentUser.user_metadata?.phone || '',
+            role: currentUser.user_metadata?.role || 'member',
+            position: currentUser.user_metadata?.position || '',
+            date_joined: new Date().toISOString()
+          };
           setUser(userData);
-          
-          // Then try to verify token in the background
-          // Only log out if the token is definitively invalid (401)
-          try {
-            const profile = await authService.getProfile();
-            // Update with fresh profile data if successful
-            setUser(profile);
-          } catch (verificationError: any) {
-            // Only log out for authentication errors, not network errors
-            if (verificationError.response?.status === 401) {
-              console.log('Token expired or invalid, logging out');
-              localStorage.removeItem('accessToken');
-              localStorage.removeItem('refreshToken');
-              localStorage.removeItem('user');
-              setUser(null);
-            } else {
-              // For network errors or server issues, keep user logged in
-              console.warn('Token verification failed due to network/server issue, keeping user logged in:', verificationError.message);
-            }
-          }
-        } catch (parseError) {
-          // If we can't parse saved user data, clear everything
-          console.error('Failed to parse saved user data:', parseError);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
         }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initializeAuth();
@@ -94,15 +77,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authService.login({ email, password });
-      const { user: userData, access, refresh } = response;
+      const { user: authUser, error } = await supabaseAuth.signIn(email, password);
+      
+      if (error) {
+        throw new Error(error instanceof Error ? error.message : 'Login failed');
+      }
 
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-    } catch (error) {
-      throw error;
+      if (authUser) {
+        const userData: User = {
+          id: authUser.id,
+          email: authUser.email,
+          name: authUser.user_metadata?.name || authUser.email,
+          phone: authUser.user_metadata?.phone || '',
+          role: authUser.user_metadata?.role || 'member',
+          position: authUser.user_metadata?.position || '',
+          date_joined: new Date().toISOString()
+        };
+        setUser(userData);
+      }
+    } catch (error: any) {
+      throw new Error(error.message || 'Login failed');
     }
   };
 
@@ -116,41 +110,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password_confirm: string;
   }) => {
     try {
-      const response = await authService.register(userData);
-      const { user: newUser, access, refresh } = response;
-
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      setUser(newUser);
-    } catch (error: any) {
-      // Extract detailed error messages from backend
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        if (typeof errorData === 'object') {
-          // Convert validation errors to readable messages
-          const errorMessages = [];
-          for (const [field, messages] of Object.entries(errorData)) {
-            if (Array.isArray(messages)) {
-              errorMessages.push(`${field}: ${messages.join(', ')}`);
-            } else {
-              errorMessages.push(`${field}: ${messages}`);
-            }
-          }
-          const detailedError = new Error(errorMessages.join('\n'));
-          (detailedError as any).response = error.response;
-          throw detailedError;
-        }
+      if (userData.password !== userData.password_confirm) {
+        throw new Error("Passwords don't match");
       }
-      throw error;
+
+      const { user: authUser, error } = await supabaseAuth.signUp(userData);
+      
+      if (error) {
+        throw new Error(error instanceof Error ? error.message : 'Registration failed');
+      }
+
+      if (authUser) {
+        const newUser: User = {
+          id: authUser.id,
+          email: authUser.email,
+          name: authUser.user_metadata?.name || authUser.email,
+          phone: authUser.user_metadata?.phone || '',
+          role: authUser.user_metadata?.role || 'member',
+          position: authUser.user_metadata?.position || '',
+          date_joined: new Date().toISOString()
+        };
+        setUser(newUser);
+      }
+    } catch (error: any) {
+      throw new Error(error.message || 'Registration failed');
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await supabaseAuth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout even if there's an error
+      setUser(null);
+    }
   };
 
   const value: AuthContextType = {
