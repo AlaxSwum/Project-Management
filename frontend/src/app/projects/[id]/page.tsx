@@ -126,7 +126,12 @@ export default function ProjectDetailPage() {
         projectService.getProjects()
       ]);
       setProject(projectData);
-      setTasks(tasksData);
+      // Enrich tasks with tags_list property
+      const enrichedTasks = tasksData.map((task: any) => ({
+        ...task,
+        tags_list: task.tags ? task.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : []
+      }));
+      setTasks(enrichedTasks);
       setAllProjects(projectsData);
     } catch (err: any) {
       setError('Failed to fetch project');
@@ -2045,7 +2050,8 @@ export default function ProjectDetailPage() {
                           </div>
                                 </div>
                         </div>
-                      );
+                      </div>
+                    );
                           })
                         )}
                   </div>
