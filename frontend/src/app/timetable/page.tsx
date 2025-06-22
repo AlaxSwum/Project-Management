@@ -121,10 +121,39 @@ export default function TimetablePage() {
         }
       });
       
-      // Filter meetings to only those from accessible projects
+      // Filter meetings for confidentiality - only show meetings where user is:
+      // 1. The creator of the meeting, OR 
+      // 2. Listed as an attendee, OR
+      // 3. Has access to the project AND is specifically assigned
       const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
         const projectId = meeting.project_id || meeting.project;
-        return projectId && accessibleProjects.has(projectId);
+        
+        // Must have project access first
+        if (!projectId || !accessibleProjects.has(projectId)) {
+          return false;
+        }
+        
+        // Show if user created the meeting
+        if (meeting.created_by?.id === user?.id) {
+          return true;
+        }
+        
+        // Show if user is in attendees list
+        const attendeesList = meeting.attendees_list || 
+          (meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()) : []);
+        
+        // Check if user's name or email is in attendees
+        const userInAttendees = attendeesList.some(attendee => 
+          attendee.toLowerCase().includes(user?.name?.toLowerCase() || '') ||
+          attendee.toLowerCase().includes(user?.email?.toLowerCase() || '')
+        );
+        
+        if (userInAttendees) {
+          return true;
+        }
+        
+        // For additional security, don't show meetings where user is not explicitly involved
+        return false;
       });
       
       setAccessibleProjectIds(accessibleProjects);
@@ -2556,59 +2585,16 @@ export default function TimetablePage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Select Team Members</label>
-                <div style={{ 
-                  border: '2px solid #000000', 
-                  borderRadius: '4px', 
-                  padding: '0.75rem',
-                  background: '#ffffff',
-                  maxHeight: '150px',
-                  overflowY: 'auto'
-                }}>
-                  {projectMembers.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {projectMembers.map(user => (
-                        <label key={user.id} style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.5rem',
-                          cursor: 'pointer',
-                          padding: '0.25rem',
-                          borderRadius: '4px'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#f0f0f0';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                        }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={newMeeting.attendee_ids.includes(user.id)}
-                            onChange={(e) => {
-                              const isChecked = e.target.checked;
-                              const updatedIds = isChecked 
-                                ? [...newMeeting.attendee_ids, user.id]
-                                : newMeeting.attendee_ids.filter(id => id !== user.id);
-                              setNewMeeting({ ...newMeeting, attendee_ids: updatedIds });
-                            }}
-                            style={{ marginRight: '0.5rem' }}
-                          />
-                          <span style={{ fontSize: '0.875rem', color: '#000000' }}>
-                            {user.name} ({user.email})
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '0.875rem', color: '#666666', textAlign: 'center' }}>
-                      {newMeeting.project_id === 0 ? 'Please select a project first' : 'No team members in this project'}
-                    </div>
-                  )}
-                </div>
+                <label className="form-label">Invite Attendees (Optional)</label>
+                <textarea
+                  className="form-textarea"
+                  placeholder="Enter names or emails separated by commas (e.g., John Doe, jane@example.com)..."
+                  value={newMeeting.attendees}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, attendees: e.target.value })}
+                  style={{ minHeight: '80px' }}
+                />
                 <div style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.5rem' }}>
-                  Select multiple team members to attend this meeting
+                  🔒 For privacy, manually enter attendee names/emails instead of browsing team lists
                 </div>
               </div>
 

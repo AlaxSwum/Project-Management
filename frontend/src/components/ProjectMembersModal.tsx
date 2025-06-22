@@ -370,16 +370,21 @@ export default function ProjectMembersModal({
           <div className="members-section">
             <h3 className="section-title">
               Add New Members
-              <span className="member-count">{nonMembers.length} available</span>
+              {searchQuery && <span className="member-count">{nonMembers.length} found</span>}
             </h3>
             <div className="user-list">
-              {nonMembers.length === 0 ? (
+              {!searchQuery ? (
                 <div className="empty-state">
-                  <p>
-                    {searchQuery 
-                      ? 'No users found matching your search' 
-                      : 'All users are already members'
-                    }
+                  <p>🔍 Search by name or email to find team members</p>
+                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#9ca3af' }}>
+                    For privacy, team members are only shown when searched
+                  </p>
+                </div>
+              ) : nonMembers.length === 0 ? (
+                <div className="empty-state">
+                  <p>No users found matching "{searchQuery}"</p>
+                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#9ca3af' }}>
+                    Try searching by full name or email address
                   </p>
                 </div>
               ) : (
