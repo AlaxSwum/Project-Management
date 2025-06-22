@@ -19,11 +19,13 @@ import {
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
 import ProjectMembersModal from '@/components/ProjectMembersModal';
+import TodoListComponent from '@/components/TodoListComponent';
 
 interface User {
   id: number;
@@ -87,7 +89,7 @@ export default function ProjectDetailPage() {
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt'>('board');
+  const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt' | 'todo'>('board');
   const [showCreateTask, setShowCreateTask] = useState(false);
 
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -445,6 +447,17 @@ export default function ProjectDetailPage() {
             padding: 0.25rem;
             border: 2px solid #000000;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          .todo-view {
+            padding: 2rem;
+            background: #f8fafc;
+            min-height: 600px;
+          }
+          
+          .todo-container {
+            max-width: 100%;
+            margin: 0 auto;
           }
           .view-btn {
             padding: 0.5rem;
@@ -2461,6 +2474,13 @@ export default function ProjectDetailPage() {
                   >
                     <ChartBarIcon style={{ width: '16px', height: '16px' }} />
                   </button>
+                  <button
+                    onClick={() => setViewMode('todo')}
+                    className={`view-btn ${viewMode === 'todo' ? 'active' : ''}`}
+                    title="To Do List"
+                  >
+                    <ClipboardDocumentListIcon style={{ width: '16px', height: '16px' }} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -2971,6 +2991,19 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'todo' && (
+          <div className="todo-view">
+            <div className="view-description">
+              <h3>To Do List</h3>
+              <p>Advanced to-do list for quick task management. Add, edit, and organize todos with priorities, categories, and due dates.</p>
+            </div>
+            
+            <div className="todo-container">
+              <TodoListComponent projectId={Number(params?.id)} projectMembers={project.members} />
             </div>
           </div>
         )}
