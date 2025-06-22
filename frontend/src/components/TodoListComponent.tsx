@@ -79,7 +79,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   const [newTodo, setNewTodo] = useState({
     title: '',
     description: '',
-    priority: 'medium' as const,
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     category: 'General',
     due_date: ''
   });
