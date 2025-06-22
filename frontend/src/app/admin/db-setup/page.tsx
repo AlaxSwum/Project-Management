@@ -153,19 +153,17 @@ export default function DatabaseSetup() {
     setStatus('Creating todo_items table...');
 
     try {
-      // Create todo_items table
+      // Create todo_items table (simplified schema)
       const { error: createError } = await supabase.rpc('sql', {
         query: `
           CREATE TABLE IF NOT EXISTS todo_items (
-              id BIGSERIAL PRIMARY KEY,
-              project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+              id SERIAL PRIMARY KEY,
+              project_id INTEGER NOT NULL REFERENCES projects_project(id) ON DELETE CASCADE,
               title TEXT NOT NULL,
               description TEXT,
               completed BOOLEAN DEFAULT FALSE,
-              priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')) DEFAULT 'medium',
-              category TEXT DEFAULT 'General',
               due_date DATE,
-              created_by UUID NOT NULL,
+              created_by INTEGER NOT NULL,
               created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
           );
@@ -192,13 +190,12 @@ export default function DatabaseSetup() {
         }
       }
 
-      // Create indexes
+      // Create indexes (simplified)  
       await supabase.rpc('sql', {
         query: `
           CREATE INDEX IF NOT EXISTS idx_todo_items_project_id ON todo_items(project_id);
           CREATE INDEX IF NOT EXISTS idx_todo_items_created_by ON todo_items(created_by);
           CREATE INDEX IF NOT EXISTS idx_todo_items_due_date ON todo_items(due_date);
-          CREATE INDEX IF NOT EXISTS idx_todo_items_priority ON todo_items(priority);
           CREATE INDEX IF NOT EXISTS idx_todo_items_completed ON todo_items(completed);
         `
       });
@@ -208,90 +205,40 @@ export default function DatabaseSetup() {
         query: `ALTER TABLE todo_items ENABLE ROW LEVEL SECURITY;`
       });
 
-      // Create RLS policies
+      // Create RLS policies (updated table references)
       const todoPolicies = [
         `
         CREATE POLICY "Users can view todos for accessible projects" ON todo_items
         FOR SELECT USING (
             project_id IN (
-                SELECT p.id 
-                FROM projects p
-                WHERE p.created_by = auth.uid()
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM tasks 
-                    WHERE assignee = auth.uid() OR created_by = auth.uid()
-                )
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM project_members 
-                    WHERE user_id = auth.uid()
-                )
+                SELECT DISTINCT p.id 
+                FROM projects_project p
+                LEFT JOIN projects_project_members pm ON p.id = pm.project_id
+                WHERE p.created_by_id = auth.uid()::INTEGER 
+                   OR pm.user_id = auth.uid()::INTEGER
             )
         );
         `,
         `
         CREATE POLICY "Users can create todos for accessible projects" ON todo_items
         FOR INSERT WITH CHECK (
+            created_by = auth.uid()::INTEGER AND
             project_id IN (
-                SELECT p.id 
-                FROM projects p
-                WHERE p.created_by = auth.uid()
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM tasks 
-                    WHERE assignee = auth.uid() OR created_by = auth.uid()
-                )
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM project_members 
-                    WHERE user_id = auth.uid()
-                )
+                SELECT DISTINCT p.id 
+                FROM projects_project p
+                LEFT JOIN projects_project_members pm ON p.id = pm.project_id
+                WHERE p.created_by_id = auth.uid()::INTEGER 
+                   OR pm.user_id = auth.uid()::INTEGER
             )
-            AND created_by = auth.uid()
         );
         `,
         `
         CREATE POLICY "Users can update their own todos" ON todo_items
-        FOR UPDATE USING (
-            created_by = auth.uid()
-            AND project_id IN (
-                SELECT p.id 
-                FROM projects p
-                WHERE p.created_by = auth.uid()
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM tasks 
-                    WHERE assignee = auth.uid() OR created_by = auth.uid()
-                )
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM project_members 
-                    WHERE user_id = auth.uid()
-                )
-            )
-        );
+        FOR UPDATE USING (created_by = auth.uid()::INTEGER);
         `,
         `
         CREATE POLICY "Users can delete their own todos" ON todo_items
-        FOR DELETE USING (
-            created_by = auth.uid()
-            AND project_id IN (
-                SELECT p.id 
-                FROM projects p
-                WHERE p.created_by = auth.uid()
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM tasks 
-                    WHERE assignee = auth.uid() OR created_by = auth.uid()
-                )
-                OR p.id IN (
-                    SELECT project_id 
-                    FROM project_members 
-                    WHERE user_id = auth.uid()
-                )
-            )
-        );
+        FOR DELETE USING (created_by = auth.uid()::INTEGER);
         `
       ];
 
@@ -482,19 +429,17 @@ ALTER TABLE meeting_notes ENABLE ROW LEVEL SECURITY;`}
 
               {/* SQL Commands for Todo Items */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Todo Items SQL Commands</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Todo Items SQL Commands (Simplified)</h3>
                 <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
-{`-- Create todo_items table
+{`-- Create todo_items table (simplified: title, description, due_date only)
 CREATE TABLE IF NOT EXISTS todo_items (
-    id BIGSERIAL PRIMARY KEY,
-    project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES projects_project(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
     completed BOOLEAN DEFAULT FALSE,
-    priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')) DEFAULT 'medium',
-    category TEXT DEFAULT 'General',
     due_date DATE,
-    created_by UUID NOT NULL,
+    created_by INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -503,7 +448,6 @@ CREATE TABLE IF NOT EXISTS todo_items (
 CREATE INDEX IF NOT EXISTS idx_todo_items_project_id ON todo_items(project_id);
 CREATE INDEX IF NOT EXISTS idx_todo_items_created_by ON todo_items(created_by);
 CREATE INDEX IF NOT EXISTS idx_todo_items_due_date ON todo_items(due_date);
-CREATE INDEX IF NOT EXISTS idx_todo_items_priority ON todo_items(priority);
 CREATE INDEX IF NOT EXISTS idx_todo_items_completed ON todo_items(completed);
 
 -- Enable RLS

@@ -688,11 +688,66 @@ export const supabaseDb = {
   },
 
   deleteTask: async (id) => {
-    const { data, error } = await supabase
-      .from('projects_task')
-      .delete()
-      .eq('id', id)
-    return { data, error }
+    try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      // First check if the task exists and user has permission to delete it
+      const { data: taskCheck, error: checkError } = await supabase
+        .from('projects_task')
+        .select('id, created_by_id, assignee_id, project_id')
+        .eq('id', id)
+        .single();
+
+      if (checkError) {
+        if (checkError.code === 'PGRST116') {
+          return { data: null, error: new Error('Task not found') };
+        }
+        console.error('Error checking task:', checkError);
+        return { data: null, error: checkError };
+      }
+
+      // Check if user has permission to delete this task
+      // User can delete if they are:
+      // 1. The creator of the task, OR
+      // 2. The assignee of the task, OR  
+      // 3. A member of the project (we'll check project membership)
+      const canDelete = taskCheck.created_by_id === user.id || 
+                       taskCheck.assignee_id === user.id;
+
+      if (!canDelete) {
+        // Check if user is a member of the project
+        const { data: membership, error: membershipError } = await supabase
+          .from('projects_project_members')
+          .select('id')
+          .eq('project_id', taskCheck.project_id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (membershipError || !membership) {
+          return { data: null, error: new Error('Permission denied: You can only delete tasks you created, are assigned to, or belong to projects you are a member of') };
+        }
+      }
+
+      // Now delete the task
+      const { data, error } = await supabase
+        .from('projects_task')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting task:', error);
+        return { data: null, error };
+      }
+
+      return { data: { success: true }, error: null };
+    } catch (error) {
+      console.error('Exception in deleteTask:', error);
+      return { data: null, error };
+    }
   },
 
   // Meetings

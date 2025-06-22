@@ -11,9 +11,6 @@ import {
   CheckIcon,
   XMarkIcon,
   CalendarIcon,
-  TagIcon,
-  ExclamationTriangleIcon,
-  FunnelIcon,
   Squares2X2Icon,
   ListBulletIcon
 } from '@heroicons/react/24/outline';
@@ -30,8 +27,6 @@ interface TodoItem {
   title: string;
   description?: string;
   completed: boolean;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category?: string;
   due_date?: string;
   created_at: string;
   updated_at: string;
@@ -44,16 +39,7 @@ interface TodoListComponentProps {
   projectMembers: User[];
 }
 
-const PRIORITY_LEVELS = [
-  { value: 'low', label: 'Low', color: '#9ca3af' },
-  { value: 'medium', label: 'Medium', color: '#6b7280' },
-  { value: 'high', label: 'High', color: '#374151' },
-  { value: 'urgent', label: 'Urgent', color: '#000000' },
-];
-
-const DEFAULT_CATEGORIES = [
-  'General', 'Bug Fix', 'Feature', 'Documentation', 'Testing', 'Meeting', 'Review'
-];
+// Removed priority and category constants - simplified to title, description, due_date only
 
 export default function TodoListComponent({ projectId, projectMembers }: TodoListComponentProps) {
   const { user } = useAuth();
@@ -61,13 +47,11 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // UI State
+  // UI State (simplified)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filterBy, setFilterBy] = useState<'all' | 'pending' | 'completed'>('all');
-  const [filterPriority, setFilterPriority] = useState<string>('all');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'created_at' | 'due_date' | 'priority' | 'title'>('created_at');
+  const [sortBy, setSortBy] = useState<'created_at' | 'due_date' | 'title'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Form State
@@ -79,8 +63,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   const [newTodo, setNewTodo] = useState({
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-    category: 'General',
     due_date: ''
   });
 
@@ -109,13 +91,11 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     loadTodos();
   }, [projectId, user]);
 
-  // Filtered and sorted todos
+  // Filtered and sorted todos (simplified)
   const filteredTodos = todos
     .filter(todo => {
       if (filterBy === 'pending' && todo.completed) return false;
       if (filterBy === 'completed' && !todo.completed) return false;
-      if (filterPriority !== 'all' && todo.priority !== filterPriority) return false;
-      if (filterCategory !== 'all' && todo.category !== filterCategory) return false;
       if (searchQuery && !todo.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
           !todo.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
@@ -132,10 +112,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           const bDate = b.due_date ? new Date(b.due_date).getTime() : Infinity;
           comparison = aDate - bDate;
           break;
-        case 'priority':
-          const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-          comparison = priorityOrder[b.priority] - priorityOrder[a.priority];
-          break;
         default:
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       }
@@ -150,8 +126,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       const createdTodo = await todoService.createTodo(projectId, {
         title: newTodo.title.trim(),
         description: newTodo.description.trim() || undefined,
-        priority: newTodo.priority,
-        category: newTodo.category,
         due_date: newTodo.due_date || undefined
       });
       
@@ -159,8 +133,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       setNewTodo({
         title: '',
         description: '',
-        priority: 'medium',
-        category: 'General',
         due_date: ''
       });
       setShowQuickAdd(false);
@@ -203,8 +175,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     setNewTodo({
       title: todo.title,
       description: todo.description || '',
-      priority: todo.priority,
-      category: todo.category || 'General',
       due_date: todo.due_date || ''
     });
     setShowQuickAdd(true);
@@ -217,8 +187,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       const updatedTodo = await todoService.updateTodo(editingTodo.id, {
         title: newTodo.title.trim(),
         description: newTodo.description.trim() || undefined,
-        priority: newTodo.priority,
-        category: newTodo.category,
         due_date: newTodo.due_date || undefined,
         completed: editingTodo.completed
       });
@@ -231,8 +199,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       setNewTodo({
         title: '',
         description: '',
-        priority: 'medium',
-        category: 'General',
         due_date: ''
       });
       setShowQuickAdd(false);
@@ -311,11 +277,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     return new Date(dueDate) < new Date();
   };
 
-  const getPriorityConfig = (priority: string) => {
-    return PRIORITY_LEVELS.find(p => p.value === priority) || PRIORITY_LEVELS[1];
-  };
-
-  const categories = [...new Set([...DEFAULT_CATEGORIES, ...todos.map(t => t.category).filter(Boolean)])];
   const completedCount = todos.filter(t => t.completed).length;
   const pendingCount = todos.length - completedCount;
   const overdueCount = todos.filter(t => !t.completed && isOverdue(t.due_date)).length;
@@ -615,20 +576,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
             font-weight: 500;
           }
           
-          .priority-badge {
-            border: 1px solid;
-          }
-          
-          .priority-low { border-color: #d1d5db; color: #6b7280; }
-          .priority-medium { border-color: #9ca3af; color: #374151; }
-          .priority-high { border-color: #6b7280; color: #111827; }
-          .priority-urgent { border-color: #000000; color: #000000; background: #f3f4f6; }
-          
-          .category-badge {
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid #e5e7eb;
-          }
+
           
           .due-date-badge {
             background: #eff6ff;
@@ -870,28 +818,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
             </select>
 
             <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Priorities</option>
-              {PRIORITY_LEVELS.map(p => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-
-            <select
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
                 const [field, order] = e.target.value.split('-');
@@ -904,7 +830,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
               <option value="created_at-asc">Oldest First</option>
               <option value="due_date-asc">Due Date (Earliest)</option>
               <option value="due_date-desc">Due Date (Latest)</option>
-              <option value="priority-desc">Priority (High to Low)</option>
               <option value="title-asc">Title (A-Z)</option>
               <option value="title-desc">Title (Z-A)</option>
             </select>
@@ -945,16 +870,13 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Priority</label>
-                <select
-                  value={newTodo.priority}
-                  onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value as any })}
-                  className="form-select"
-                >
-                  {PRIORITY_LEVELS.map(p => (
-                    <option key={p.value} value={p.value}>{p.label}</option>
-                  ))}
-                </select>
+                <label className="form-label">Due Date</label>
+                <input
+                  type="date"
+                  value={newTodo.due_date}
+                  onChange={(e) => setNewTodo({ ...newTodo, due_date: e.target.value })}
+                  className="form-input"
+                />
               </div>
             </div>
 
@@ -970,30 +892,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Category</label>
-                <select
-                  value={newTodo.category}
-                  onChange={(e) => setNewTodo({ ...newTodo, category: e.target.value })}
-                  className="form-select"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Due Date</label>
-                <input
-                  type="date"
-                  value={newTodo.due_date}
-                  onChange={(e) => setNewTodo({ ...newTodo, due_date: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-            </div>
-
             <div className="form-actions">
               <button
                 onClick={() => {
@@ -1001,9 +899,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
                   setEditingTodo(null);
                   setNewTodo({
                     title: '',
-                    description: '',
-                    priority: 'medium',
-                    category: 'General',
+                    description: '',  
                     due_date: ''
                   });
                 }}
@@ -1051,7 +947,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           <div className="empty-state">
             <h3>No todos found</h3>
             <p>
-              {searchQuery || filterBy !== 'all' || filterPriority !== 'all' || filterCategory !== 'all'
+              {searchQuery || filterBy !== 'all'
                 ? 'Try adjusting your filters or search terms'
                 : 'Create your first todo to get started!'
               }
@@ -1060,7 +956,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
         ) : (
           <div className={viewMode === 'grid' ? 'todo-grid' : 'todo-list'}>
             {filteredTodos.map((todo) => {
-              const priorityConfig = getPriorityConfig(todo.priority);
               const isOverdueTodo = isOverdue(todo.due_date);
               
               return (
@@ -1084,26 +979,14 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
                         <p className="todo-description">{todo.description}</p>
                       )}
                       
-                      <div className="todo-meta">
-                        <span className={`todo-badge priority-badge priority-${todo.priority}`}>
-                          <ExclamationTriangleIcon style={{ width: '12px', height: '12px' }} />
-                          {priorityConfig.label}
-                        </span>
-                        
-                        {todo.category && (
-                          <span className="todo-badge category-badge">
-                            <TagIcon style={{ width: '12px', height: '12px' }} />
-                            {todo.category}
-                          </span>
-                        )}
-                        
-                        {todo.due_date && (
+                      {todo.due_date && (
+                        <div className="todo-meta">
                           <span className={`todo-badge due-date-badge ${isOverdueTodo ? 'overdue' : ''}`}>
                             <CalendarIcon style={{ width: '12px', height: '12px' }} />
                             {formatDate(todo.due_date)}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="todo-actions">

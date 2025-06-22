@@ -30,7 +30,11 @@ const transformTasksData = (tasks: any[]) => {
 // Helper function to get current user ID
 const getCurrentUserId = async (): Promise<number | null> => {
   try {
-    const { user } = await supabaseAuth.getUser();
+    const { user, error } = await supabaseAuth.getUser();
+    if (error) {
+      console.error('Authentication error:', error);
+      return null;
+    }
     return user?.id || null;
   } catch (error) {
     console.error('Failed to get current user ID:', error);
@@ -285,10 +289,28 @@ export const taskService = {
   },
 
   async deleteTask(id: number) {
-    // TODO: Add task-level access control - verify user can delete this task
-    const { data, error } = await supabaseDb.deleteTask(id);
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabaseDb.deleteTask(id);
+      if (error) {
+        console.error('Error in deleteTask:', error);
+        
+        // Provide more specific error messages
+        const errorMessage = String(error);
+        if (errorMessage.includes('not found')) {
+          throw new Error('Task not found or already deleted');
+        } else if (errorMessage.includes('Permission denied')) {
+          throw new Error('You do not have permission to delete this task');
+        } else if (errorMessage.includes('Authentication required')) {
+          throw new Error('Please log in to delete tasks');
+        } else {
+          throw new Error(`Failed to delete task: ${errorMessage}`);
+        }
+      }
+      return data;
+    } catch (error) {
+      console.error('Exception in taskService.deleteTask:', error);
+      throw error;
+    }
   },
 
   async getTaskComments(taskId: number) {
@@ -499,33 +521,28 @@ export const todoService = {
       // Verify user has access to this project
       await supabaseDb.getProject(projectId, userId);
       
-      // Query todo_items table
+      // Query todo_items table (simplified schema)
       const { data, error } = await supabase.from('todo_items')
-        .select(`
-          *,
-          created_by_user:auth.users!created_by(id)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       
-      // Transform data to match component interface
+      // Transform data to match component interface (simplified)
       return (data || []).map((todo: any) => ({
         id: todo.id,
         title: todo.title,
         description: todo.description,
         completed: todo.completed,
-        priority: todo.priority,
-        category: todo.category,
         due_date: todo.due_date,
         created_at: todo.created_at,
         updated_at: todo.updated_at,
         project_id: todo.project_id,
         created_by: {
           id: todo.created_by,
-          name: 'User', // We'll get this from a user lookup
-          email: 'user@example.com' // Placeholder for now
+          name: 'User',
+          email: 'user@example.com'
         }
       }));
     } catch (error) {
@@ -549,8 +566,6 @@ export const todoService = {
           project_id: projectId,
           title: todoData.title,
           description: todoData.description || null,
-          priority: todoData.priority || 'medium',
-          category: todoData.category || 'General',
           due_date: todoData.due_date || null,
           created_by: userId,
           completed: false
@@ -565,8 +580,6 @@ export const todoService = {
         title: data.title,
         description: data.description,
         completed: data.completed,
-        priority: data.priority,
-        category: data.category,
         due_date: data.due_date,
         created_at: data.created_at,
         updated_at: data.updated_at,
@@ -594,8 +607,6 @@ export const todoService = {
         .update({
           title: todoData.title,
           description: todoData.description || null,
-          priority: todoData.priority,
-          category: todoData.category,
           due_date: todoData.due_date || null,
           completed: todoData.completed,
           updated_at: new Date().toISOString()
@@ -612,8 +623,6 @@ export const todoService = {
         title: data.title,
         description: data.description,
         completed: data.completed,
-        priority: data.priority,
-        category: data.category,
         due_date: data.due_date,
         created_at: data.created_at,
         updated_at: data.updated_at,
@@ -675,8 +684,6 @@ export const todoService = {
         title: data.title,
         description: data.description,
         completed: data.completed,
-        priority: data.priority,
-        category: data.category,
         due_date: data.due_date,
         created_at: data.created_at,
         updated_at: data.updated_at,
