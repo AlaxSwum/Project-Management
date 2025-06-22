@@ -270,9 +270,8 @@ You will be notified once HR reviews your request.`);
   };
 
   const handleWeeklyReport = () => {
-    console.log('Opening weekly report form...');
     closeDropdown();
-    // TODO: Add navigation or modal for weekly report form
+    router.push('/weekly-report');
   };
 
   // Notification/Inbox functions
@@ -410,6 +409,13 @@ You will be notified once HR reviews your request.`);
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
+  ];
+
+  // HR-only navigation items (will be blank pages for now)
+  const hrNavItems = [
+    { name: 'Inbox', href: '/inbox', icon: InboxIcon },
+    { name: 'Weekly Report', href: '/weekly-report', icon: ClipboardDocumentListIcon },
+    { name: 'Absence', href: '/absence', icon: DocumentTextIcon },
   ];
 
   const inboxItem = { 
@@ -1220,8 +1226,7 @@ You will be notified once HR reviews your request.`);
         <div className="sidebar-header">
           <div className="sidebar-header-content">
             <h1 className="sidebar-title">Projects</h1>
-            {/* Plus button hidden for first prototype */}
-            {/* <div className="sidebar-add-container" ref={dropdownRef}>
+            <div className="sidebar-add-container" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
                 className={`sidebar-add-btn ${isDropdownOpen ? 'active' : ''}`}
@@ -1239,7 +1244,7 @@ You will be notified once HR reviews your request.`);
                   Weekly Report Form
                 </button>
               </div>
-            </div> */}
+            </div>
           </div>
 
           {/* Search */}
@@ -1265,6 +1270,43 @@ You will be notified once HR reviews your request.`);
                 {item.name}
               </Link>
             ))}
+            
+            {/* HR Navigation Items */}
+            {user?.role === 'hr' || user?.role === 'admin' ? (
+              <>
+                <div style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>HR Tools</span>
+                </div>
+                {hrNavItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
+                    onClick={closeMobileMenu}
+                  >
+                    <item.icon className="nav-icon" />
+                    {item.name}
+                  </Link>
+                ))}
+              </>
+            ) : (
+              <>
+                <div style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Personal</span>
+                </div>
+                {hrNavItems.slice(0, 2).map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
+                    onClick={closeMobileMenu}
+                  >
+                    <item.icon className="nav-icon" />
+                    {item.name}
+                  </Link>
+                ))}
+              </>
+            )}
             
             {/* Inbox Item - Hidden for first prototype */}
             {/* <button

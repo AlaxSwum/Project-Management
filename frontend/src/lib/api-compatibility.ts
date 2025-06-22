@@ -646,12 +646,32 @@ export const todoService = {
         throw new Error('Authentication required');
       }
       
+      // First check if the todo exists and user owns it
+      const { data: existingTodo, error: fetchError } = await supabase.from('todo_items')
+        .select('id, created_by')
+        .eq('id', todoId)
+        .single();
+      
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          throw new Error('Todo item not found or already deleted');
+        }
+        throw new Error(`Failed to find todo: ${fetchError.message}`);
+      }
+      
+      if (existingTodo.created_by !== userId) {
+        throw new Error('You can only delete your own todo items');
+      }
+      
       const { error } = await supabase.from('todo_items')
         .delete()
         .eq('id', todoId)
-        .eq('created_by', userId); // Only allow deleting own todos
+        .eq('created_by', userId); // Double check ownership
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw new Error(`Failed to delete todo: ${error.message}`);
+      }
       
       return { success: true };
     } catch (error) {
