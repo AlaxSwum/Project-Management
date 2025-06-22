@@ -10,6 +10,7 @@ import {
   ChartBarIcon,
   ClockIcon,
   CalendarIcon,
+  CalendarDaysIcon,
   PlusIcon,
   ChevronDownIcon,
   ChevronUpIcon,
@@ -87,7 +88,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     endDate: '',
     reason: '',
     leaveType: 'vacation',
-    notes: ''
+    notes: '',
+    projectId: 0
   });
   const [availableLeave, setAvailableLeave] = useState(14); // 14 days per employee
   const [usedLeave, setUsedLeave] = useState(0);
@@ -170,13 +172,18 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         return;
       }
 
+      // Get project name if project is selected
+      const selectedProject = projects.find(p => p.id === absenceFormData.projectId);
+      
       // Submit leave request to database
       const leaveRequest = {
         start_date: absenceFormData.startDate,
         end_date: absenceFormData.endDate,
         leave_type: absenceFormData.leaveType,
         reason: absenceFormData.reason,
-        notes: absenceFormData.notes || ''
+        notes: absenceFormData.notes || '',
+        project_id: absenceFormData.projectId || null,
+        project_name: selectedProject?.name || null
       };
       
       console.log('Submitting leave request:', leaveRequest);
@@ -208,7 +215,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           endDate: '',
           reason: '',
           leaveType: 'vacation',
-          notes: ''
+          notes: '',
+          projectId: 0
         });
         setShowAbsenceForm(false);
         
@@ -256,7 +264,8 @@ You will be notified once HR reviews your request.`);
       endDate: '',
       reason: '',
       leaveType: 'vacation',
-      notes: ''
+      notes: '',
+      projectId: 0
     });
   };
 
@@ -416,6 +425,7 @@ You will be notified once HR reviews your request.`);
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
     { name: 'Weekly Report', href: '/weekly-report', icon: ClipboardDocumentListIcon },
     { name: 'Absence', href: '/absence', icon: DocumentTextIcon },
+    { name: 'Employee Absent', href: '/employee-absent', icon: CalendarDaysIcon },
   ];
 
   const inboxItem = { 
@@ -1489,6 +1499,28 @@ You will be notified once HR reviews your request.`);
                     <option value="medical">Medical Appointment</option>
                     <option value="other">Other</option>
                   </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Related Project (Optional)</label>
+                  <select
+                    className="form-select"
+                    value={absenceFormData.projectId}
+                    onChange={(e) => setAbsenceFormData({
+                      ...absenceFormData,
+                      projectId: Number(e.target.value)
+                    })}
+                  >
+                    <option value={0}>Select a project (if applicable)</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+                    Select the project this leave affects, if any
+                  </div>
                 </div>
 
                 <div className="form-group">

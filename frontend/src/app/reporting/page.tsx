@@ -507,50 +507,50 @@ export default function ReportingPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#000000', margin: '0' }}>
-                  {selectedMember.task_statistics.total_tasks}
+                  {selectedMember.task_summary?.total_tasks || 0}
                 </div>
                 <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>Total Tasks</div>
               </div>
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981', margin: '0' }}>
-                  {selectedMember.task_statistics.tasks_by_status.done}
+                  {selectedMember.task_summary?.completed_tasks || 0}
                 </div>
                 <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>Completed</div>
               </div>
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#3b82f6', margin: '0' }}>
-                  {selectedMember.task_statistics.tasks_by_status.in_progress}
+                  {selectedMember.task_summary?.in_progress_tasks || 0}
                 </div>
                 <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>In Progress</div>
               </div>
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444', margin: '0' }}>
-                  {selectedMember.task_statistics.overdue_tasks}
+                  {selectedMember.task_summary?.overdue_tasks || 0}
                 </div>
                 <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>Overdue</div>
               </div>
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b', margin: '0' }}>
-                  {selectedMember.task_statistics.tasks_due_this_week}
+                  {selectedMember.task_summary?.todo_tasks || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>Due This Week</div>
+                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>To Do</div>
               </div>
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#8b5cf6', margin: '0' }}>
-                  {selectedMember.project_involvement.active_projects}
+                  {selectedMember.project_involvement?.length || 0}
                 </div>
                 <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>Active Projects</div>
               </div>
             </div>
 
             {/* Overdue Tasks Section */}
-            {selectedMember.detailed_tasks.overdue.length > 0 && (
+            {selectedMember.overdue_task_details && selectedMember.overdue_task_details.length > 0 && (
               <div style={{ marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <h3 style={{ margin: '0', color: '#ef4444', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                    ⚠️ Overdue Tasks ({selectedMember.detailed_tasks.overdue.length})
+                    ⚠️ Overdue Tasks ({selectedMember.overdue_task_details.length})
                   </h3>
-                  {selectedMember.detailed_tasks.overdue.length > 5 && (
+                  {selectedMember.overdue_task_details.length > 5 && (
                     <button
                       style={{
                         background: '#ef4444',
@@ -563,24 +563,24 @@ export default function ReportingPage() {
                         fontWeight: '500'
                       }}
                       onClick={() => {
-                        const allOverdueTasks = selectedMember.detailed_tasks.overdue;
+                        const allOverdueTasks = selectedMember.overdue_task_details;
                         alert(`All ${allOverdueTasks.length} overdue tasks:\n\n${allOverdueTasks.map((task: any, i: number) => 
                           `${i+1}. ${task.name} (Due: ${task.due_date})`
                         ).join('\n')}`);
                       }}
                     >
-                      View All {selectedMember.detailed_tasks.overdue.length} Tasks
+                      View All {selectedMember.overdue_task_details.length} Tasks
                     </button>
                   )}
                 </div>
                 
                 <div style={{ maxHeight: '300px', overflow: 'auto', border: '2px solid #ef4444', borderRadius: '6px', background: '#fef2f2' }}>
-                  {selectedMember.detailed_tasks.overdue.slice(0, 5).map((task: any, index: number) => (
+                  {selectedMember.overdue_task_details.slice(0, 5).map((task: any, index: number) => (
                     <div 
                       key={index} 
                       style={{ 
                         padding: '1rem', 
-                        borderBottom: index < Math.min(4, selectedMember.detailed_tasks.overdue.length - 1) ? '1px solid #fecaca' : 'none',
+                        borderBottom: index < Math.min(4, selectedMember.overdue_task_details.length - 1) ? '1px solid #fecaca' : 'none',
                         cursor: 'pointer',
                         transition: 'background-color 0.2s ease'
                       }}
@@ -591,7 +591,7 @@ export default function ReportingPage() {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                       onClick={() => {
-                        alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nStatus: ${task.status}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project?.name || 'Unknown'}\n\nDays Overdue: ${Math.ceil((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 3600 * 24))}`);
+                        alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project_name || 'Unknown'}\n\nDays Overdue: ${task.days_overdue}`);
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -604,7 +604,7 @@ export default function ReportingPage() {
                           fontSize: '0.75rem',
                           fontWeight: '500'
                         }}>
-                          {Math.ceil((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 3600 * 24))} days overdue
+                          {task.days_overdue} days overdue
                         </span>
                       </div>
                       
@@ -618,16 +618,9 @@ export default function ReportingPage() {
                       </div>
                       
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#7f1d1d' }}>
-                        <span><strong>Status:</strong> {task.status}</span>
                         <span><strong>Priority:</strong> {task.priority || 'Not set'}</span>
-                        {task.project && <span><strong>Project:</strong> {task.project.name}</span>}
+                        <span><strong>Project:</strong> {task.project_name}</span>
                       </div>
-                      
-                      {task.description && (
-                        <div style={{ fontSize: '0.875rem', color: '#991b1b', marginTop: '0.5rem', fontStyle: 'italic' }}>
-                          {task.description.length > 100 ? `${task.description.substring(0, 100)}...` : task.description}
-                        </div>
-                      )}
                       
                       <div style={{ fontSize: '0.75rem', color: '#7f1d1d', marginTop: '0.5rem', textAlign: 'right' }}>
                         Click for full details
@@ -635,49 +628,13 @@ export default function ReportingPage() {
                     </div>
                   ))}
                   
-                  {selectedMember.detailed_tasks.overdue.length > 5 && (
+                  {selectedMember.overdue_task_details.length > 5 && (
                     <div style={{ padding: '1rem', textAlign: 'center', background: '#fee2e2', borderTop: '1px solid #fecaca' }}>
                       <span style={{ color: '#991b1b', fontSize: '0.875rem', fontWeight: '500' }}>
-                        Showing 5 of {selectedMember.detailed_tasks.overdue.length} overdue tasks
+                        Showing 5 of {selectedMember.overdue_task_details.length} overdue tasks
                       </span>
                     </div>
                   )}
-                </div>
-              </div>
-            )}
-
-            {/* Tasks Due This Week Section */}
-            {selectedMember.detailed_tasks.due_this_week && selectedMember.detailed_tasks.due_this_week.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: '#f59e0b', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                  📅 Due This Week ({selectedMember.detailed_tasks.due_this_week.length})
-                </h3>
-                <div style={{ maxHeight: '200px', overflow: 'auto', border: '2px solid #f59e0b', borderRadius: '6px', background: '#fffbeb' }}>
-                  {selectedMember.detailed_tasks.due_this_week.slice(0, 3).map((task: any, index: number) => (
-                    <div 
-                      key={index} 
-                      style={{ 
-                        padding: '0.75rem', 
-                        borderBottom: index < Math.min(2, selectedMember.detailed_tasks.due_this_week.length - 1) ? '1px solid #fed7aa' : 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s ease'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fef3c7';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                      onClick={() => {
-                        alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nStatus: ${task.status}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project?.name || 'Unknown'}`);
-                      }}
-                    >
-                      <strong style={{ color: '#d97706' }}>{task.name}</strong>
-                      <div style={{ fontSize: '0.875rem', color: '#92400e', marginTop: '0.25rem' }}>
-                        Due: {new Date(task.due_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} | Status: {task.status}
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
