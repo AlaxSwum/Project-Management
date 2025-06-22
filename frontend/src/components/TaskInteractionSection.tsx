@@ -44,19 +44,16 @@ interface Attachment {
 
 interface TaskInteractionSectionProps {
   task: Task;
+  activeSection?: 'comments' | 'files';
   onClose?: () => void;
 }
 
-
-
-export default function TaskInteractionSection({ task }: TaskInteractionSectionProps) {
+export default function TaskInteractionSection({ task, activeSection = 'comments' }: TaskInteractionSectionProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [activeTab, setActiveTab] = useState('files');
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     if (task?.id) {
@@ -102,8 +99,6 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
     }
   };
 
-
-
   return (
     <>
       <style dangerouslySetInnerHTML={{
@@ -112,56 +107,12 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 500px;
+            height: 100%;
             background: #ffffff;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
-            overflow: visible;
-            position: relative;
-            margin-bottom: 2rem;
-            padding-bottom: 2rem;
-          }
-          
-          /* Tab Navigation */
-          .tab-navigation {
-            display: flex;
-            border-bottom: 2px solid #000000;
-            background: #f8fafc;
-            flex-shrink: 0;
-            z-index: 1;
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
-          }
-          .tab-btn {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            background: none;
-            border: none;
-            border-right: 1px solid #e5e7eb;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            min-height: 60px;
-          }
-          .tab-btn:last-child {
-            border-right: none;
-          }
-          .tab-btn:hover {
-            background: #e5e7eb;
-            color: #000000;
-          }
-          .tab-btn.active {
-            background: #ffffff;
-            color: #000000;
-            border-bottom: 3px solid #000000;
-            margin-bottom: -2px;
+            overflow: hidden;
           }
 
           /* Comments Section */
@@ -169,7 +120,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0;
+            height: 100%;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
@@ -177,13 +128,13 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           }
           .comments-list {
             flex: 1;
-            padding: 1.5rem;
+            padding: 0 0 1.5rem 0;
             overflow-y: auto;
-            max-height: 300px;
+            min-height: 0;
           }
           .empty-comments, .empty-files {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem 2rem;
             color: #6b7280;
           }
           .empty-comments p, .empty-files p {
@@ -240,8 +191,8 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           }
           .add-comment {
             border-top: 1px solid #e5e7eb;
-            padding: 1.5rem;
-            background: #f8fafc;
+            padding: 1.5rem 0 0 0;
+            background: #ffffff;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
@@ -299,146 +250,18 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             flex: 1;
             display: flex;
             flex-direction: column;
-            height: 700px;
-            max-height: 700px;
+            height: 100%;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
             overflow: hidden;
-            margin-bottom: 3rem;
-            padding-bottom: 3rem;
-            padding: 1rem;
-            border-radius: 8px;
-          }
-          .files-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f8fafc;
-          }
-          .files-header h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #000000;
-            margin: 0;
-          }
-          .upload-btn {
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            font-size: 0.875rem;
-          }
-          .upload-btn:hover {
-            background: #374151;
-            transform: translateY(-1px);
-          }
-          .files-list {
-            flex: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            max-height: 300px;
-          }
-          .file-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            transition: all 0.2s ease;
-          }
-          .file-item:hover {
-            border-color: #000000;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          .file-item:last-child {
-            margin-bottom: 0;
-          }
-          .file-icon {
-            width: 40px;
-            height: 40px;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            flex-shrink: 0;
-          }
-          .file-info {
-            flex: 1;
-            min-width: 0;
-          }
-          .file-name {
-            font-weight: 600;
-            color: #000000;
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-            word-break: break-all;
-          }
-          .file-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.75rem;
-            color: #6b7280;
-          }
-          .file-actions {
-            display: flex;
-            gap: 0.5rem;
-          }
-          .download-btn {
-            background: #ffffff;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
-            padding: 0.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: all 0.2s ease;
-          }
-          .download-btn:hover {
-            color: #000000;
-            border-color: #000000;
-            transform: translateY(-1px);
           }
         `
       }} />
       
       <div className="task-interaction-section">
-        {/* Tab Navigation */}
-        <div className="tab-navigation">
-          <button
-            onClick={() => setActiveTab('comments')}
-            className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`}
-          >
-            <ChatBubbleLeftRightIcon style={{ width: '16px', height: '16px' }} />
-            Comments ({comments.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('files')}
-            className={`tab-btn ${activeTab === 'files' ? 'active' : ''}`}
-          >
-            <PaperClipIcon style={{ width: '16px', height: '16px' }} />
-            Files & Drive
-          </button>
-        </div>
-
-        {/* Comments Tab */}
-        {activeTab === 'comments' && (
+        {/* Comments Section */}
+        {activeSection === 'comments' && (
           <div className="comments-section">
             <div className="comments-list">
               {loading ? (
@@ -499,8 +322,8 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           </div>
         )}
 
-        {/* Files Tab */}
-        {activeTab === 'files' && (
+        {/* Files Section */}
+        {activeSection === 'files' && (
           <div className="files-section">
             <GoogleDriveExplorer
               onFileSelect={(file) => {
