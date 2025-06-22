@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { projectService, meetingService, userService } from '@/lib/api-compatibility';
+import { projectService, meetingService, userService, taskService } from '@/lib/api-compatibility';
 import {
   ClockIcon,
   PlusIcon,
@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
+import MeetingDetailModal from '@/components/MeetingDetailModal';
 
 interface Project {
   id: number;
@@ -53,10 +54,13 @@ export default function TimetablePage() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
+  const [accessibleProjectIds, setAccessibleProjectIds] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [showMeetingDetail, setShowMeetingDetail] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
   const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('month');
@@ -96,14 +100,36 @@ export default function TimetablePage() {
 
   const fetchData = async () => {
     try {
-      const [projectsData, meetingsData, usersData] = await Promise.all([
+      const [projectsData, meetingsData, usersData, userTasks] = await Promise.all([
         projectService.getProjects(),
         meetingService.getMeetings(),
-        projectService.getUsers()
+        projectService.getUsers(),
+        taskService.getUserTasks()
       ]);
       
+      // Use all projects the user has access to (same as dashboard)
+      // The projectService.getProjects() already filters based on user access
+      const accessibleProjects = new Set<number>();
+      projectsData.forEach((project: any) => {
+        accessibleProjects.add(project.id);
+      });
+      
+      // Also track projects where user has task involvement for meeting access control
+      userTasks.forEach((task: any) => {
+        if (task.assignee?.id === user?.id || task.created_by?.id === user?.id) {
+          accessibleProjects.add(task.project_id);
+        }
+      });
+      
+      // Filter meetings to only those from accessible projects
+      const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
+        const projectId = meeting.project_id || meeting.project;
+        return projectId && accessibleProjects.has(projectId);
+      });
+      
+      setAccessibleProjectIds(accessibleProjects);
       setProjects(projectsData);
-      setMeetings(meetingsData);
+      setMeetings(filteredMeetings);
       setUsers(usersData);
     } catch (err: any) {
       setError('Failed to fetch data');
@@ -133,6 +159,12 @@ export default function TimetablePage() {
     
     if (!newMeeting.title.trim() || !newMeeting.date || !newMeeting.time || !newMeeting.project_id) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    // Check if user has access to the selected project
+    if (!accessibleProjectIds.has(newMeeting.project_id)) {
+      setError('You do not have access to create meetings for this project');
       return;
     }
 
@@ -168,7 +200,58 @@ export default function TimetablePage() {
     }
   };
 
+  const handleMeetingClick = (meeting: Meeting) => {
+    setSelectedMeeting(meeting);
+    setShowMeetingDetail(true);
+  };
+
+  const handleUpdateMeetingFromDetail = async (meetingData: any) => {
+    if (!selectedMeeting) return;
+
+    // Check if user has access to update this meeting
+    const projectId = selectedMeeting.project_id || selectedMeeting.project;
+    if (!projectId || !accessibleProjectIds.has(projectId)) {
+      setError('You do not have access to update this meeting');
+      return;
+    }
+
+    try {
+      const updatedMeeting = await meetingService.updateMeeting(selectedMeeting.id, {
+        title: meetingData.title.trim(),
+        description: meetingData.description.trim(),
+        date: meetingData.date,
+        time: meetingData.time,
+        duration: meetingData.duration,
+        attendees: meetingData.attendees,
+      });
+      
+      setMeetings(meetings.map(m => m.id === selectedMeeting.id ? updatedMeeting : m));
+      setSelectedMeeting(updatedMeeting);
+      setError('');
+    } catch (err: any) {
+      setError('Failed to update meeting');
+    }
+  };
+
+  const handleDeleteMeetingFromDetail = async (meetingId: number) => {
+    try {
+      // Check access (already done in the main delete handler)
+      await handleDeleteMeeting(meetingId);
+      setShowMeetingDetail(false);
+      setSelectedMeeting(null);
+    } catch (err: any) {
+      // Error already handled in handleDeleteMeeting
+    }
+  };
+
   const handleEditMeeting = (meeting: Meeting) => {
+    // Check if user has access to edit this meeting
+    const projectId = meeting.project_id || meeting.project;
+    if (!projectId || !accessibleProjectIds.has(projectId)) {
+      setError('You do not have access to edit this meeting');
+      return;
+    }
+
     setEditingMeeting(meeting);
     setNewMeeting({
       title: meeting.title,
@@ -187,6 +270,12 @@ export default function TimetablePage() {
     e.preventDefault();
     
     if (!editingMeeting) return;
+
+    // Check if user has access to the selected project
+    if (!accessibleProjectIds.has(newMeeting.project_id)) {
+      setError('You do not have access to update meetings for this project');
+      return;
+    }
 
     try {
       const meetingData = {
@@ -223,6 +312,19 @@ export default function TimetablePage() {
 
   const handleDeleteMeeting = async (meetingId: number) => {
     try {
+      // Find the meeting to check access
+      const meeting = meetings.find(m => m.id === meetingId);
+      if (!meeting) {
+        setError('Meeting not found');
+        return;
+      }
+
+      const projectId = meeting.project_id || meeting.project;
+      if (!projectId || !accessibleProjectIds.has(projectId)) {
+        setError('You do not have access to delete this meeting');
+        return;
+      }
+
       await meetingService.deleteMeeting(meetingId);
       setMeetings(meetings.filter(m => m.id !== meetingId));
     } catch (err: any) {
@@ -1961,7 +2063,12 @@ export default function TimetablePage() {
               ) : (
                 <div className="meetings-grid">
                   {upcomingMeetings.map(meeting => (
-                    <div key={meeting.id} className="meeting-card">
+                    <div 
+                      key={meeting.id} 
+                      className="meeting-card"
+                      onClick={() => handleMeetingClick(meeting)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="meeting-header">
                         <div>
                           <h3 className="meeting-title">{meeting.title}</h3>
@@ -1969,14 +2076,20 @@ export default function TimetablePage() {
                         </div>
                         <div className="meeting-actions">
                           <button
-                            onClick={() => handleEditMeeting(meeting)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditMeeting(meeting);
+                            }}
                             className="action-btn"
                             title="Edit meeting"
                           >
                             <PencilIcon style={{ width: '16px', height: '16px' }} />
                           </button>
                           <button
-                            onClick={() => handleDeleteMeeting(meeting.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMeeting(meeting.id);
+                            }}
                             className="action-btn delete"
                             title="Delete meeting"
                           >
@@ -2032,7 +2145,12 @@ export default function TimetablePage() {
                 
                 <div className="meetings-grid">
                   {pastMeetings.map(meeting => (
-                    <div key={meeting.id} className="meeting-card" style={{ opacity: '0.7' }}>
+                    <div 
+                      key={meeting.id} 
+                      className="meeting-card" 
+                      onClick={() => handleMeetingClick(meeting)}
+                      style={{ opacity: '0.7', cursor: 'pointer' }}
+                    >
                       <div className="meeting-header">
                         <div>
                           <h3 className="meeting-title">{meeting.title}</h3>
@@ -2040,7 +2158,10 @@ export default function TimetablePage() {
                         </div>
                         <div className="meeting-actions">
                           <button
-                            onClick={() => handleDeleteMeeting(meeting.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMeeting(meeting.id);
+                            }}
                             className="action-btn delete"
                             title="Delete meeting"
                           >
@@ -2199,7 +2320,7 @@ export default function TimetablePage() {
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleEditMeeting(meeting);
+                                  handleMeetingClick(meeting);
                                 }}
                                 onMouseOver={(e) => {
                                   e.currentTarget.style.background = '#333333';
@@ -2303,6 +2424,20 @@ export default function TimetablePage() {
           </div>
         </main>
       </div>
+
+      {/* Meeting Detail Modal */}
+      {showMeetingDetail && selectedMeeting && (
+        <MeetingDetailModal
+          meeting={selectedMeeting}
+          onClose={() => {
+            setShowMeetingDetail(false);
+            setSelectedMeeting(null);
+          }}
+          onUpdate={handleUpdateMeetingFromDetail}
+          onDelete={handleDeleteMeetingFromDetail}
+          projectMembers={projectMembers}
+        />
+      )}
 
       {/* Create/Edit Meeting Modal */}
       {showCreateForm && (
