@@ -171,7 +171,7 @@ export const projectService = {
       return data;
     } catch (error: any) {
       console.error('Error in addProjectMember:', error);
-      throw new Error(`Failed to add project member: ${error.message || error.toString()}`);
+      throw new Error(`Failed to add project member: ${String(error)}`);
     }
   },
 
@@ -190,7 +190,7 @@ export const projectService = {
       return data;
     } catch (error: any) {
       console.error('Error in removeProjectMember:', error);
-      throw new Error(`Failed to remove project member: ${error.message || error.toString()}`);
+      throw new Error(`Failed to remove project member: ${String(error)}`);
     }
   },
 };
