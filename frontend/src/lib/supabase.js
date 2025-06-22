@@ -697,31 +697,183 @@ export const supabaseDb = {
 
   // Meetings
   getMeetings: async () => {
-    const { data, error } = await supabase
-      .from('projects_meeting')
-      .select(`
-        *,
-        project:projects_project(id, name),
-        created_by:auth_user(id, name, email)
-      `)
-    return { data, error }
+    try {
+      const { data, error } = await supabase
+        .from('projects_meeting')
+        .select(`
+          id,
+          title,
+          description,
+          date,
+          time,
+          duration,
+          attendees,
+          created_at,
+          updated_at,
+          created_by_id,
+          project_id
+        `)
+      
+      if (error) return { data: null, error }
+      
+      // Enrich with project and creator info
+      const enrichedMeetings = await Promise.all(
+        (data || []).map(async (meeting) => {
+          // Get project info
+          const projectPromise = meeting.project_id 
+            ? supabase.from('projects_project').select('id, name').eq('id', meeting.project_id).single()
+            : Promise.resolve({ data: null });
+          
+          // Get creator info
+          const creatorPromise = meeting.created_by_id
+            ? supabase.from('auth_user').select('id, name, email').eq('id', meeting.created_by_id).single()
+            : Promise.resolve({ data: null });
+
+          const [projectResult, creatorResult] = await Promise.all([projectPromise, creatorPromise]);
+
+          return {
+            ...meeting,
+            project: meeting.project_id,
+            project_id: meeting.project_id,
+            project_name: projectResult.data?.name || 'Unknown Project',
+            created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
+            attendees_list: meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : []
+          };
+        })
+      );
+      
+      return { data: enrichedMeetings, error: null }
+    } catch (error) {
+      console.error('Error in getMeetings:', error);
+      return { data: [], error }
+    }
   },
 
   createMeeting: async (meetingData) => {
-    const { data, error } = await supabase
-      .from('projects_meeting')
-      .insert([meetingData])
-      .select()
-    return { data: data?.[0], error }
+    try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      // Prepare meeting data with creator info
+      const meetingToInsert = {
+        title: meetingData.title,
+        description: meetingData.description || '',
+        project_id: meetingData.project,
+        date: meetingData.date,
+        time: meetingData.time,
+        duration: meetingData.duration || 60,
+        attendees: meetingData.attendees || '',
+        created_by_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('projects_meeting')
+        .insert([meetingToInsert])
+        .select()
+
+      if (error) {
+        console.error('Error creating meeting:', error);
+        return { data: null, error };
+      }
+
+      const newMeeting = data?.[0];
+      if (!newMeeting) {
+        return { data: null, error: new Error('Failed to create meeting') };
+      }
+
+      // Get project info for the response
+      const projectResult = await supabase
+        .from('projects_project')
+        .select('id, name')
+        .eq('id', newMeeting.project_id)
+        .single();
+
+      // Return enriched meeting data
+      return {
+        data: {
+          ...newMeeting,
+          project: newMeeting.project_id,
+          project_id: newMeeting.project_id,
+          project_name: projectResult.data?.name || 'Unknown Project',
+          created_by: {
+            id: user.id,
+            name: user.user_metadata?.name || user.email,
+            email: user.email
+          },
+          attendees_list: newMeeting.attendees ? newMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : []
+        },
+        error: null
+      };
+    } catch (error) {
+      console.error('Exception in createMeeting:', error);
+      return { data: null, error };
+    }
   },
 
   updateMeeting: async (id, meetingData) => {
-    const { data, error } = await supabase
-      .from('projects_meeting')
-      .update(meetingData)
-      .eq('id', id)
-      .select()
-    return { data: data?.[0], error }
+    try {
+      // Prepare update data
+      const updateData = {
+        updated_at: new Date().toISOString()
+      };
+
+      // Add fields that are being updated
+      if (meetingData.title) updateData.title = meetingData.title;
+      if (meetingData.description !== undefined) updateData.description = meetingData.description;
+      if (meetingData.project) updateData.project_id = meetingData.project;
+      if (meetingData.date) updateData.date = meetingData.date;
+      if (meetingData.time) updateData.time = meetingData.time;
+      if (meetingData.duration) updateData.duration = meetingData.duration;
+      if (meetingData.attendees !== undefined) updateData.attendees = meetingData.attendees;
+
+      const { data, error } = await supabase
+        .from('projects_meeting')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+
+      if (error) {
+        console.error('Error updating meeting:', error);
+        return { data: null, error };
+      }
+
+      const updatedMeeting = data?.[0];
+      if (!updatedMeeting) {
+        return { data: null, error: new Error('Meeting not found after update') };
+      }
+
+      // Get project and creator info
+      const projectPromise = updatedMeeting.project_id 
+        ? supabase.from('projects_project').select('id, name').eq('id', updatedMeeting.project_id).single()
+        : Promise.resolve({ data: null });
+      
+      const creatorPromise = updatedMeeting.created_by_id
+        ? supabase.from('auth_user').select('id, name, email').eq('id', updatedMeeting.created_by_id).single()
+        : Promise.resolve({ data: null });
+
+      const [projectResult, creatorResult] = await Promise.all([projectPromise, creatorPromise]);
+
+      // Return enriched meeting data
+      return {
+        data: {
+          ...updatedMeeting,
+          project: updatedMeeting.project_id,
+          project_id: updatedMeeting.project_id,
+          project_name: projectResult.data?.name || 'Unknown Project',
+          created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
+          attendees_list: updatedMeeting.attendees ? updatedMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : []
+        },
+        error: null
+      };
+    } catch (error) {
+      console.error('Exception in updateMeeting:', error);
+      return { data: null, error };
+    }
   },
 
   deleteMeeting: async (id) => {

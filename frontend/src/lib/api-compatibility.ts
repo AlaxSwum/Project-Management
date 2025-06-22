@@ -149,7 +149,7 @@ export const projectService = {
       }
       const { data, error } = await supabaseDb.getProject(projectId, userId);
       if (error) return [];
-      return Array.isArray(data?.project_members) ? data.project_members : [];
+      return Array.isArray(data?.members) ? data.members : [];
     } catch (error) {
       console.error('Error in getProjectMembers:', error);
       return [];
@@ -487,37 +487,212 @@ export async function createDriveFolder(name: string, parentId: string | null = 
   }
 }
 
-// Reporting service - TODO: Implement with Supabase
+// Reporting service - Implemented with Supabase data
 export const reportingService = {
   getTeamKpiReport: async () => {
-    return {
-      total_projects: 0,
-      active_projects: 0,
-      completed_projects: 0,
-      total_tasks: 0,
-      completed_tasks: 0,
-      in_progress_tasks: 0,
-      overdue_tasks: 0,
-      team_members: 0
-    };
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+
+      // Get projects user has access to
+      const { data: projects, error: projectsError } = await supabaseDb.getProjects(userId);
+      if (projectsError) throw projectsError;
+
+      // Get all tasks from accessible projects
+      const { data: allTasks, error: tasksError } = await supabaseDb.getTasks();
+      if (tasksError) throw tasksError;
+
+      // Get all users
+      const { data: users, error: usersError } = await supabaseDb.getUsers();
+      if (usersError) throw usersError;
+
+      const accessibleProjects = projects || [];
+      const tasks = allTasks || [];
+      const allUsers = users || [];
+
+      // Calculate summary metrics
+      const totalProjects = accessibleProjects.length;
+      const activeProjects = accessibleProjects.filter((p: any) => !p.is_archived).length;
+      const completedProjects = accessibleProjects.filter((p: any) => p.status === 'completed').length;
+
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter((t: any) => t.status === 'done').length;
+      const inProgressTasks = tasks.filter((t: any) => t.status === 'in-progress').length;
+      const overdueCount = tasks.filter((t: any) => {
+        if (!t.due_date) return false;
+        const dueDate = new Date(t.due_date);
+        const now = new Date();
+        return dueDate < now && t.status !== 'done';
+      }).length;
+
+      // Calculate team report by user
+      const teamReport = allUsers.map((user: any) => {
+        const userTasks = tasks.filter((t: any) => 
+          t.assignee_id === user.id || t.created_by === user.id
+        );
+        
+        const finishedTasks = userTasks.filter((t: any) => t.status === 'done').length;
+        const unfinishedTasks = userTasks.filter((t: any) => t.status !== 'done').length;
+        const overdueTasks = userTasks.filter((t: any) => {
+          if (!t.due_date) return false;
+          const dueDate = new Date(t.due_date);
+          const now = new Date();
+          return dueDate < now && t.status !== 'done';
+        }).length;
+
+        const userProjects = new Set();
+        userTasks.forEach((task: any) => {
+          if (task.project_id) userProjects.add(task.project_id);
+        });
+
+        const completionRate = userTasks.length > 0 
+          ? Math.round((finishedTasks / userTasks.length) * 100) 
+          : 0;
+
+        return {
+          user_id: user.id,
+          user_name: user.name || user.email?.split('@')[0] || 'Unknown User',
+          user_email: user.email,
+          user_role: user.role || 'member',
+          user_position: user.position || user.role || 'Team Member',
+          finished_tasks: finishedTasks,
+          unfinished_tasks: unfinishedTasks,
+          overdue_tasks: overdueTasks,
+          active_projects: userProjects.size,
+          completion_rate: completionRate,
+          total_tasks: userTasks.length
+        };
+      });
+
+      const averageCompletionRate = teamReport.length > 0
+        ? Math.round(teamReport.reduce((sum, member) => sum + member.completion_rate, 0) / teamReport.length)
+        : 0;
+
+      return {
+        summary: {
+          total_team_members: allUsers.length,
+          average_completion_rate: averageCompletionRate,
+          total_tasks_across_team: totalTasks,
+          total_finished_tasks: completedTasks,
+          total_projects: totalProjects,
+          active_projects: activeProjects,
+          completed_projects: completedProjects,
+          overdue_tasks: overdueCount
+        },
+        team_report: teamReport
+      };
+    } catch (error) {
+      console.error('Error in getTeamKpiReport:', error);
+      // Return fallback data to prevent crashes
+      return {
+        summary: {
+          total_team_members: 0,
+          average_completion_rate: 0,
+          total_tasks_across_team: 0,
+          total_finished_tasks: 0,
+          total_projects: 0,
+          active_projects: 0,
+          completed_projects: 0,
+          overdue_tasks: 0
+        },
+        team_report: []
+      };
+    }
   },
 
   getMemberDetailedReport: async (userId: number) => {
-    return {
-      user_id: userId,
-      total_tasks: 0,
-      completed_tasks: 0,
-      in_progress_tasks: 0,
-      overdue_tasks: 0,
-      projects: []
-    };
+    try {
+      const currentUserId = await getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('Authentication required');
+      }
+
+      // Get user info
+      const { data: users, error: usersError } = await supabaseDb.getUsers();
+      if (usersError) throw usersError;
+      
+      const user = (users || []).find((u: any) => u.id === userId);
+      if (!user) throw new Error('User not found');
+
+      // Get all tasks for this user
+      const { data: allTasks, error: tasksError } = await supabaseDb.getTasks();
+      if (tasksError) throw tasksError;
+
+      const userTasks = (allTasks || []).filter((t: any) => 
+        t.assignee_id === userId || t.created_by === userId
+      );
+
+      // Separate overdue tasks for detailed view
+      const overdueTasks = userTasks.filter((t: any) => {
+        if (!t.due_date) return false;
+        const dueDate = new Date(t.due_date);
+        const now = new Date();
+        return dueDate < now && t.status !== 'done';
+      });
+
+      // Get projects info
+      const { data: projects, error: projectsError } = await supabaseDb.getProjects(currentUserId);
+      if (projectsError) throw projectsError;
+
+      const userProjects = (projects || []).filter((p: any) => {
+        return userTasks.some((t: any) => t.project_id === p.id);
+      });
+
+      return {
+        user_info: {
+          id: user.id,
+          name: user.name || user.email?.split('@')[0] || 'Unknown User',
+          email: user.email,
+          role: user.role || 'member',
+          position: user.position || user.role || 'Team Member'
+        },
+        task_summary: {
+          total_tasks: userTasks.length,
+          completed_tasks: userTasks.filter((t: any) => t.status === 'done').length,
+          in_progress_tasks: userTasks.filter((t: any) => t.status === 'in-progress').length,
+          todo_tasks: userTasks.filter((t: any) => t.status === 'todo').length,
+          overdue_tasks: overdueTasks.length
+        },
+        overdue_task_details: overdueTasks.map((task: any) => ({
+          id: task.id,
+          name: task.name,
+          project_name: userProjects.find((p: any) => p.id === task.project_id)?.name || 'Unknown Project',
+          due_date: task.due_date,
+          priority: task.priority || 'medium',
+          days_overdue: Math.ceil((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 60 * 60 * 24))
+        })),
+        project_involvement: userProjects.map((project: any) => ({
+          id: project.id,
+          name: project.name,
+          task_count: userTasks.filter((t: any) => t.project_id === project.id).length,
+          completed_in_project: userTasks.filter((t: any) => 
+            t.project_id === project.id && t.status === 'done'
+          ).length
+        }))
+      };
+    } catch (error) {
+      console.error('Error in getMemberDetailedReport:', error);
+      throw error;
+    }
   },
 
   getTeamPerformanceAnalytics: async () => {
-    return {
-      performance_trend: [],
-      productivity_metrics: {},
-      team_workload: []
-    };
+    try {
+      // Return basic analytics structure for now
+      return {
+        performance_trend: [],
+        productivity_metrics: {},
+        team_workload: []
+      };
+    } catch (error) {
+      console.error('Error in getTeamPerformanceAnalytics:', error);
+      return {
+        performance_trend: [],
+        productivity_metrics: {},
+        team_workload: []
+      };
+    }
   }
 }; 
