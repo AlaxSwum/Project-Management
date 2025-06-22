@@ -5,6 +5,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
 
+// Configure body parser for file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb', // Allow much larger file uploads
+    },
+  },
+};
+
 interface DriveFile {
   id: string;
   name: string;
@@ -59,6 +68,9 @@ export default async function handler(
       case 'createFolder':
         return handleCreateFolder(req, res, name, parentId);
       
+      case 'uploadFile':
+        return handleUploadFile(req, res);
+      
       case 'getAccessToken':
         return handleGetAccessToken(req, res);
       
@@ -78,18 +90,27 @@ async function handleListFiles(req: NextApiRequest, res: NextApiResponse, folder
   try {
     console.log('🔍 DEBUG: Attempting to list files for folder:', folderId || 'root');
     
-    const query = folderId && folderId !== 'root' ? `'${folderId}' in parents and trashed=false` : `'root' in parents and trashed=false`;
+    let query;
+    if (!folderId || folderId === 'root') {
+      // For root folder, show both owned files and shared files
+      query = `trashed=false and (sharedWithMe=true or 'root' in parents)`;
+      console.log('🔍 DEBUG: Using root query to include shared folders');
+    } else {
+      // For specific folder, list its contents
+      query = `'${folderId}' in parents and trashed=false`;
+    }
+    
     console.log('🔍 DEBUG: Using query:', query);
     
     const response = await drive.files.list({
       q: query,
-      fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, size, webViewLink, parents)',
+      fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, size, webViewLink, parents, shared, ownedByMe)',
       orderBy: 'folder,name'
     });
 
     const files = response.data.files || [];
     console.log('🔍 DEBUG: Found', files.length, 'files');
-    console.log('🔍 DEBUG: Files:', files.map(f => ({ name: f.name, type: f.mimeType })));
+    console.log('🔍 DEBUG: Files:', files.map(f => ({ name: f.name, type: f.mimeType, shared: f.shared, ownedByMe: f.ownedByMe })));
     
     return res.status(200).json({ files });
   } catch (error) {
@@ -190,6 +211,63 @@ async function handleTestAuth(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 }
+
+async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { fileName, fileData, mimeType, parentId } = req.body;
+    
+    if (!fileName || !fileData) {
+      return res.status(400).json({ error: 'File name and data are required' });
+    }
+
+    console.log('🔍 DEBUG: Upload file request:', { 
+      fileName, 
+      mimeType, 
+      parentId,
+      dataSize: fileData.length 
+    });
+
+    // Create file metadata
+    const metadata: any = {
+      name: fileName,
+    };
+
+    if (parentId && parentId !== 'root') {
+      metadata.parents = [parentId];
+    }
+
+    // Convert base64 to buffer
+    const fileBuffer = Buffer.from(fileData, 'base64');
+
+    // Create a readable stream from the buffer
+    const { Readable } = require('stream');
+    const bufferStream = new Readable();
+    bufferStream.push(fileBuffer);
+    bufferStream.push(null); // End the stream
+
+    // Upload to Google Drive
+    const response = await drive.files.create({
+      requestBody: metadata,
+      media: {
+        mimeType: mimeType || 'application/octet-stream',
+        body: bufferStream,
+      },
+      fields: 'id, name, mimeType, modifiedTime, size, webViewLink, parents',
+    });
+
+    console.log('✅ File uploaded successfully:', response.data);
+    return res.status(200).json(response.data);
+    
+  } catch (error) {
+    console.error('❌ ERROR uploading file:', error);
+    return res.status(500).json({ 
+      error: 'Failed to upload file',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+}
+
+
 
 /* 
 🎉 REAL GOOGLE DRIVE INTEGRATION ACTIVE!

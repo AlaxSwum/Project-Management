@@ -328,26 +328,35 @@ export default function GoogleDriveExplorer({
             border: 2px solid #000000;
             border-radius: 12px;
             overflow: hidden;
-            height: 600px;
+            height: 700px;
+            max-height: 700px;
             display: flex;
             flex-direction: column;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           }
           .drive-header {
             padding: 1rem 1.5rem;
             border-bottom: 2px solid #e5e7eb;
             background: #f9fafb;
+            flex-shrink: 0;
           }
           .drive-search {
             position: relative;
             margin-bottom: 1rem;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
           }
           .drive-search input {
             width: 100%;
+            max-width: 100%;
             padding: 0.75rem 0.75rem 0.75rem 2.5rem;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 0.9rem;
             transition: all 0.2s ease;
+            box-sizing: border-box;
           }
           .drive-search input:focus {
             outline: none;
@@ -409,19 +418,39 @@ export default function GoogleDriveExplorer({
           }
           .drive-content {
             flex: 1;
-            overflow-y: auto;
+            overflow: hidden;
             display: flex;
+            min-height: 0;
           }
           .folder-tree-panel {
             width: 50%;
             border-right: 2px solid #e5e7eb;
             padding: 1rem;
             overflow-y: auto;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .folder-tree {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            max-height: 550px;
           }
           .files-panel {
             width: 50%;
             padding: 1rem;
             overflow-y: auto;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .drive-file-list {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            max-height: 550px;
+            padding: 0;
           }
           .panel-title {
             font-weight: 600;
@@ -430,6 +459,32 @@ export default function GoogleDriveExplorer({
             font-size: 0.9rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .panel-title-text {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+          .new-folder-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+          }
+          .new-folder-btn:hover {
+            background: #374151;
+            transform: translateY(-1px);
           }
           .folder-tree-item {
             display: flex;
@@ -491,9 +546,7 @@ export default function GoogleDriveExplorer({
             background: #fef2f2;
             border-bottom: 1px solid #fecaca;
           }
-          .drive-file-list {
-            padding: 0;
-          }
+
           .drive-file-item {
             display: flex;
             align-items: center;
@@ -668,18 +721,6 @@ export default function GoogleDriveExplorer({
         )}
         
         <div className="drive-actions">
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            {showCreateFolder && (
-              <button
-                onClick={() => setShowNewFolderDialog(true)}
-                className="drive-action-btn"
-              >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
-                New Folder
-              </button>
-            )}
-          </div>
-          
           {selectedFolderId && (
             <button
               onClick={() => setShowUploadDialog(true)}
@@ -752,7 +793,18 @@ export default function GoogleDriveExplorer({
           <>
             {/* Folder Tree Panel */}
             <div className="folder-tree-panel">
-              <h3 className="panel-title">📁 Folder Structure</h3>
+              <h3 className="panel-title">
+                <span className="panel-title-text">📁 Folder Structure</span>
+                {showCreateFolder && (
+                  <button
+                    onClick={() => setShowNewFolderDialog(true)}
+                    className="new-folder-btn"
+                  >
+                    <PlusIcon style={{ width: '14px', height: '14px' }} />
+                    New Folder
+                  </button>
+                )}
+              </h3>
               {loading ? (
                 <div className="drive-loading">
                   <div>Loading folders...</div>

@@ -176,13 +176,31 @@ class GoogleDriveServiceAccount {
   // Upload file using service account
   async uploadFile(file: File, parentId: string = 'root'): Promise<DriveFile> {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('parentId', parentId);
+      // Convert file to base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
       const response = await fetch('/api/google-drive-proxy', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'uploadFile',
+          fileName: file.name,
+          fileData: base64Data,
+          mimeType: file.type,
+          parentId: parentId
+        })
       });
 
       if (!response.ok) {

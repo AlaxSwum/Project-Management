@@ -871,13 +871,6 @@ export default function DashboardPage() {
                 </div>
                 <h3 className="empty-title">No projects yet</h3>
                 <p className="empty-description">Create your first project to get started</p>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="btn-primary"
-                  style={{ width: 'auto', padding: '0.75rem 1.5rem' }}
-              >
-                Create Project
-              </button>
             </div>
           ) : (
               <div className="projects-grid">

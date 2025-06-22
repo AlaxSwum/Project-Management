@@ -1560,11 +1560,20 @@ export default function ProjectDetailPage() {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            margin-bottom: 2rem;
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid #000000;
           }
           .gantt-header-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 2px solid #000000;
           }
           .gantt-controls {
             display: flex;
@@ -1572,45 +1581,55 @@ export default function ProjectDetailPage() {
             gap: 1rem;
           }
           .gantt-btn {
-            background: #ffffff;
-            color: #000000;
+            background: #000000;
+            color: #ffffff;
             border: 2px solid #000000;
             padding: 0.5rem 1rem;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             transition: all 0.2s ease;
+            font-size: 0.875rem;
           }
           .gantt-btn:hover {
-            background: #f9fafb;
+            background: #ffffff;
+            color: #000000;
             transform: translateY(-1px);
           }
           .date-range-controls {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            background: #ffffff;
+            padding: 0.25rem;
+            border-radius: 4px;
+            border: 2px solid #000000;
           }
           .nav-btn {
             background: #ffffff;
             color: #000000;
-            border: 2px solid #000000;
+            border: 1px solid #000000;
             padding: 0.5rem;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           .nav-btn:hover {
-            background: #f9fafb;
-            transform: translateY(-1px);
+            background: #000000;
+            color: #ffffff;
           }
           .date-range {
             font-weight: 600;
             color: #000000;
             min-width: 150px;
             text-align: center;
+            font-size: 0.9rem;
           }
           .gantt-chart {
             background: #ffffff;
@@ -1753,43 +1772,45 @@ export default function ProjectDetailPage() {
             margin-left: 0.25rem;
           }
 
-          /* Enhanced Gantt Chart Styles - Minimal Design */
+          /* Enhanced Gantt Chart Styles - Simple Black & White */
           .gantt-chart-enhanced {
             background: #ffffff;
-            border: 1px solid #d1d5db;
+            border: 2px solid #000000;
             border-radius: 8px;
             overflow: hidden;
             display: flex;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
           }
           
           .gantt-sidebar-enhanced {
             width: 350px;
-            border-right: 1px solid #e5e7eb;
-            background: #fafafa;
+            min-width: 350px;
+            border-right: 2px solid #000000;
+            background: #ffffff;
             display: flex;
             flex-direction: column;
           }
           
           .gantt-sidebar-header-enhanced {
             display: grid;
-            grid-template-columns: 1fr 80px 80px;
+            grid-template-columns: 2fr 80px 80px;
             gap: 0;
-            background: #f3f4f6;
+            background: #000000;
             font-weight: 600;
-            color: #374151;
-            border-bottom: 1px solid #e5e7eb;
+            color: #ffffff;
+            border-bottom: 2px solid #000000;
           }
           
           .task-header-cell, .duration-header-cell, .assignee-header-cell {
-            background: #f3f4f6;
+            background: #000000;
             padding: 0.75rem;
             font-size: 0.8rem;
             text-align: center;
-            border-right: 1px solid #d1d5db;
+            border-right: 1px solid #ffffff;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            color: #ffffff;
           }
           
           .task-header-cell {
@@ -1812,37 +1833,43 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-task-row-enhanced {
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #000000;
             background: #ffffff;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
           }
           
           .gantt-task-row-enhanced:hover {
-            background: #f9fafb;
+            background: #f0f0f0;
           }
           
           .gantt-task-info-enhanced {
             display: grid;
-            grid-template-columns: 1fr 80px 80px;
-            gap: 1px;
+            grid-template-columns: 2fr 80px 80px;
+            gap: 0;
             align-items: center;
             min-height: 60px;
             padding: 0.5rem 0;
           }
           
           .gantt-task-name-enhanced {
-            padding: 0 1rem;
+            padding: 0 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             flex: 1;
+            overflow: visible;
+            white-space: nowrap;
           }
           
           .task-title {
             font-weight: 600;
             color: #000000;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             flex: 1;
+            overflow: visible;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 180px;
           }
           
           .task-status-indicator {
@@ -1940,29 +1967,29 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-timeline-header-enhanced {
-            border-bottom: 1px solid #e5e7eb;
-            background: #fafafa;
+            border-bottom: 2px solid #000000;
+            background: #ffffff;
           }
           
           .gantt-month-header {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            background: #000000;
+            border-bottom: 2px solid #000000;
             padding: 0.75rem 1rem;
             text-align: center;
           }
           
           .month-label {
-            font-weight: 700;
-            color: #111827;
-            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1rem;
             letter-spacing: 0.05em;
           }
           
           .gantt-week-headers {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            background: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
+            background: #f0f0f0;
+            border-bottom: 2px solid #000000;
           }
           
           .week-header {
@@ -1970,10 +1997,11 @@ export default function ProjectDetailPage() {
             text-align: center;
             font-size: 0.7rem;
             font-weight: 600;
-            color: #6b7280;
-            border-right: 1px solid #e5e7eb;
+            color: #000000;
+            border-right: 1px solid #000000;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.05em;
+            background: #f0f0f0;
           }
           
           .week-header:last-child {
@@ -1989,7 +2017,7 @@ export default function ProjectDetailPage() {
           .gantt-date-cell {
             padding: 0.5rem 0.25rem;
             text-align: center;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid #000000;
             transition: background-color 0.2s ease;
           }
           
@@ -1998,15 +2026,15 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-date-cell.today {
-            background: #f3f4f6;
-            border-left: 2px solid #111827;
-            border-right: 2px solid #111827;
+            background: #000000;
+            color: #ffffff;
             font-weight: 700;
           }
           
           .gantt-date-cell.weekend {
-            background: #f8f9fa;
+            background: #f0f0f0;
             opacity: 0.7;
+            color: #666666;
           }
           
           .date-number {
@@ -2105,28 +2133,33 @@ export default function ProjectDetailPage() {
           .gantt-bar-enhanced.status-todo {
             background: #ffffff;
             border-style: dashed;
-            border-color: #d1d5db;
+            border-color: #000000;
+            border-width: 2px;
           }
           
           .gantt-bar-enhanced.status-in_progress {
-            background: #f3f4f6;
-            border-color: #9ca3af;
+            background: #f0f0f0;
+            border-color: #000000;
+            border-width: 2px;
           }
           
           .gantt-bar-enhanced.status-review {
-            background: #e5e7eb;
-            border-color: #6b7280;
+            background: #e0e0e0;
+            border-color: #000000;
+            border-width: 2px;
           }
           
           .gantt-bar-enhanced.status-done {
-            background: #d1d5db;
-            border-color: #374151;
+            background: #000000;
+            border-color: #000000;
+            border-width: 2px;
           }
           
           .gantt-bar-enhanced.overdue {
-            border-color: #111827 !important;
-            background: #fef2f2 !important;
-            border-width: 2px;
+            border-color: #000000 !important;
+            background: #f0f0f0 !important;
+            border-width: 3px;
+            border-style: solid !important;
           }
           
           .gantt-bar-content-enhanced {
@@ -2134,7 +2167,7 @@ export default function ProjectDetailPage() {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 0.75rem;
+            padding: 0 0.5rem;
             position: relative;
             z-index: 2;
           }
@@ -2144,21 +2177,20 @@ export default function ProjectDetailPage() {
             top: 0;
             left: 0;
             height: 100%;
-            border-radius: 3px;
+            border-radius: 2px;
             background: repeating-linear-gradient(
               45deg,
               transparent,
               transparent 2px,
-              rgba(0, 0, 0, 0.1) 2px,
-              rgba(0, 0, 0, 0.1) 4px
+              rgba(0, 0, 0, 0.2) 2px,
+              rgba(0, 0, 0, 0.2) 4px
             );
             z-index: 1;
           }
           
           .gantt-bar-text-enhanced {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
-            color: #111827;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -2167,17 +2199,28 @@ export default function ProjectDetailPage() {
             position: relative;
           }
           
+          .gantt-bar-enhanced.status-done .gantt-bar-text-enhanced {
+            color: #ffffff;
+          }
+          
+          .gantt-bar-enhanced.status-todo .gantt-bar-text-enhanced,
+          .gantt-bar-enhanced.status-in_progress .gantt-bar-text-enhanced,
+          .gantt-bar-enhanced.status-review .gantt-bar-text-enhanced {
+            color: #000000;
+          }
+          
           .gantt-bar-duration-enhanced {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 500;
-            color: #6b7280;
             white-space: nowrap;
-            margin-left: 0.5rem;
+            margin-left: 0.25rem;
             z-index: 2;
             position: relative;
-            background: #ffffff;
-            padding: 0 0.25rem;
+            padding: 0 0.2rem;
             border-radius: 2px;
+            border: 1px solid #000000;
+            background: #ffffff;
+            color: #000000;
           }
           
           .overdue-indicator {
@@ -2198,24 +2241,25 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-legend {
-            background: #fafafa;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 1.25rem;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 1.5rem;
             margin-top: 1.5rem;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
           }
           
           .legend-section h4 {
             font-size: 0.8rem;
-            font-weight: 700;
-            color: #374151;
+            font-weight: 600;
+            color: #000000;
             margin: 0 0 0.75rem 0;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 0.5rem;
           }
           
           .legend-items {
@@ -2229,11 +2273,17 @@ export default function ProjectDetailPage() {
             align-items: center;
             gap: 0.5rem;
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #000000;
             padding: 0.25rem 0.5rem;
             background: #ffffff;
             border-radius: 4px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #000000;
+            font-weight: 500;
+            transition: all 0.2s ease;
+          }
+          
+          .legend-item:hover {
+            background: #f0f0f0;
           }
           
           .legend-color {

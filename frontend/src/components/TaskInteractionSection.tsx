@@ -112,13 +112,15 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 250px;
+            min-height: 500px;
             background: #ffffff;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
-            overflow: hidden;
+            overflow: visible;
             position: relative;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
           }
           
           /* Tab Navigation */
@@ -297,11 +299,16 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0;
+            height: 700px;
+            max-height: 700px;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
             overflow: hidden;
+            margin-bottom: 3rem;
+            padding-bottom: 3rem;
+            padding: 1rem;
+            border-radius: 8px;
           }
           .files-header {
             display: flex;

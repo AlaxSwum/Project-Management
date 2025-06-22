@@ -1,5 +1,0 @@
-#!/bin/bash
-# 🚀 ONE-COMMAND DEPLOYMENT
-# Copy this ENTIRE command and paste it in your SSH terminal
-
-chmod +x /root/hostinger-deploy.sh && bash /root/hostinger-deploy.sh 

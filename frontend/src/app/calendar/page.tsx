@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
-import TaskInteractionSection from '@/components/TaskInteractionSection';
+import TaskDetailModal from '@/components/TaskDetailModal';
 
 interface User {
   id: number;
@@ -66,8 +66,6 @@ export default function CalendarPage() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [topSectionHeight, setTopSectionHeight] = useState(50); // Percentage
-  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -87,14 +85,21 @@ export default function CalendarPage() {
         taskService.getUserTasks()
       ]);
       
+      // Filter tasks to only show those assigned to the user or created by the user
+      const userTasks = tasksData.filter((task: Task) => {
+        return task.assignee?.id === user?.id || task.created_by?.id === user?.id;
+      });
+      
       // Add project info to tasks
-      const tasksWithProjectInfo = tasksData.map((task: Task) => {
+      const tasksWithProjectInfo = userTasks.map((task: Task) => {
         const project = projectsData.find((p: Project) => p.id === task.project_id);
         return {
           ...task,
           project_name: project?.name || 'Unknown Project',
           project_color: project?.color || '#6b7280',
-          is_important: task.priority === 'urgent' || task.priority === 'high'
+          is_important: task.priority === 'urgent' || task.priority === 'high',
+          tags_list: task.tags_list || [], // Ensure tags_list is always an array
+          assignee: task.assignee || null // Ensure assignee is properly handled
         };
       });
       
@@ -169,11 +174,11 @@ export default function CalendarPage() {
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return <ExclamationTriangleIcon style={{ width: '12px', height: '12px', color: '#dc2626' }} />;
+        return <ExclamationTriangleIcon style={{ width: '12px', height: '12px', color: '#000000' }} />;
       case 'high':
-        return <ExclamationTriangleIcon style={{ width: '12px', height: '12px', color: '#ea580c' }} />;
+        return <ExclamationTriangleIcon style={{ width: '12px', height: '12px', color: '#000000' }} />;
       case 'medium':
-        return <ClockIcon style={{ width: '12px', height: '12px', color: '#d97706' }} />;
+        return <ClockIcon style={{ width: '12px', height: '12px', color: '#000000' }} />;
       default:
         return null;
     }
@@ -182,13 +187,13 @@ export default function CalendarPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'done':
-        return '#10b981';
+        return '#000000';
       case 'in_progress':
-        return '#3b82f6';
-      case 'review':
-        return '#f59e0b';
-      default:
         return '#6b7280';
+      case 'review':
+        return '#9ca3af';
+      default:
+        return '#d1d5db';
     }
   };
 
@@ -223,46 +228,33 @@ export default function CalendarPage() {
     setShowTaskModal(true);
   };
 
-  // Draggable splitter functionality for calendar modal
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    e.preventDefault();
+  const handleCloseTaskDetail = () => {
+    setShowTaskModal(false);
+    setSelectedTask(null);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const modalElement = document.querySelector('.enhanced-task-modal') as HTMLElement;
-    if (!modalElement) return;
-    
-    const modalRect = modalElement.getBoundingClientRect();
-    const headerHeight = 80;
-    const availableHeight = modalRect.height - headerHeight;
-    const mouseY = e.clientY - modalRect.top - headerHeight;
-    
-    let newPercentage = (mouseY / availableHeight) * 100;
-    newPercentage = Math.max(25, Math.min(75, newPercentage));
-    
-    setTopSectionHeight(newPercentage);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = 'none';
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.body.style.userSelect = '';
-      };
+  const handleUpdateTask = async (taskData: any) => {
+    try {
+      await taskService.updateTask(selectedTask!.id, taskData);
+      // Refresh data to get updated task
+      await fetchData();
+    } catch (err) {
+      console.error('Failed to update task:', err);
     }
-  }, [isDragging]);
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await taskService.deleteTask(taskId);
+      // Refresh data after deletion
+      await fetchData();
+      handleCloseTaskDetail();
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+    }
+  };
+
+
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -405,7 +397,8 @@ export default function CalendarPage() {
             color: #000000;
           }
           .stat-value.overdue {
-            color: #dc2626;
+            color: #000000;
+            font-weight: 800;
           }
           .header-title {
             font-size: 1.875rem;
@@ -490,8 +483,8 @@ export default function CalendarPage() {
             color: #9ca3af;
           }
           .calendar-cell.today {
-            background: #dbeafe;
-            border: 2px solid #3b82f6;
+            background: #f3f4f6;
+            border: 2px solid #000000;
           }
           .day-number {
             font-weight: 600;
@@ -502,7 +495,8 @@ export default function CalendarPage() {
             color: #9ca3af;
           }
           .calendar-cell.today .day-number {
-            color: #1d4ed8;
+            color: #000000;
+            font-weight: 800;
           }
           .events-container {
             display: flex;
@@ -526,12 +520,12 @@ export default function CalendarPage() {
             border-color: #000000;
           }
           .task-item.important {
-            border-color: #f59e0b;
-            background: #fffbeb;
+            border-color: #000000;
+            background: #f3f4f6;
           }
           .task-item.overdue {
-            border-color: #ef4444;
-            background: #fef2f2;
+            border-color: #000000;
+            background: #e5e7eb;
           }
           .task-header {
             display: flex;
@@ -946,10 +940,10 @@ export default function CalendarPage() {
             text-transform: uppercase;
             border: 1px solid;
           }
-          .status-todo { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
-          .status-in_progress { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
-          .status-review { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
-          .status-done { background: #d1fae5; color: #065f46; border-color: #10b981; }
+          .status-todo { background: #ffffff; color: #000000; border-color: #000000; }
+          .status-in_progress { background: #d1d5db; color: #000000; border-color: #000000; }
+          .status-review { background: #9ca3af; color: #ffffff; border-color: #000000; }
+          .status-done { background: #000000; color: #ffffff; border-color: #000000; }
           .priority-badge {
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
@@ -960,10 +954,10 @@ export default function CalendarPage() {
             gap: 0.25rem;
             border: 1px solid;
           }
-          .priority-low { background: #d1fae5; color: #065f46; border-color: #10b981; }
-          .priority-medium { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
-          .priority-high { background: #fecaca; color: #991b1b; border-color: #ef4444; }
-          .priority-urgent { background: #fecaca; color: #991b1b; border-color: #dc2626; }
+          .priority-low { background: #ffffff; color: #000000; border-color: #000000; }
+          .priority-medium { background: #d1d5db; color: #000000; border-color: #000000; }
+          .priority-high { background: #6b7280; color: #ffffff; border-color: #000000; }
+          .priority-urgent { background: #000000; color: #ffffff; border-color: #000000; }
           .description {
             margin-bottom: 1.5rem;
           }
@@ -1343,12 +1337,12 @@ export default function CalendarPage() {
               color: #9ca3af;
             }
             .calendar-cell.today {
-              background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-              border: 2px solid #3b82f6;
-              box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+              background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+              border: 2px solid #000000;
+              box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
             }
             .calendar-cell.today .day-number {
-              color: #1d4ed8;
+              color: #000000;
               font-weight: 800;
             }
             .day-number {
@@ -2095,13 +2089,13 @@ export default function CalendarPage() {
                               </div>
                             </div>
                             <div className="task-meta">
-                              <span className="project-name" style={{ color: task.project_color }}>
+                              <span className="project-name" style={{ color: '#000000' }}>
                                 {task.project_name}
                               </span>
                               {task.assignee && (
                                 <span className="assignee">
                                   <UserIcon style={{ width: '10px', height: '10px' }} />
-                                  {task.assignee.name.split(' ')[0]}
+                                  {task.assignee.name ? task.assignee.name.split(' ')[0] : 'Unknown'}
                                 </span>
                               )}
                             </div>
@@ -2132,159 +2126,16 @@ export default function CalendarPage() {
 
 
 
-            {/* Enhanced Task Detail Modal */}
+            {/* Task Detail Modal */}
             {showTaskModal && selectedTask && (
-              <div 
-                className="modal-overlay" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowTaskModal(false);
-                  setSelectedTask(null);
-                }}
-              >
-                <div 
-                  className="enhanced-task-modal" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                >
-                  {/* Header */}
-                  <div className="modal-header">
-                    <h3>{selectedTask.name}</h3>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowTaskModal(false);
-                        setSelectedTask(null);
-                      }}
-                      className="close-btn"
-                      type="button"
-                      aria-label="Close modal"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  
-                  {/* Top Section - Task Details */}
-                  <div 
-                    className="task-details-section resizable-task-details"
-                    style={{ height: `${topSectionHeight}%` }}
-                  >
-                    <div className="task-status-row">
-                      <span className={`status-badge status-${selectedTask.status}`}>
-                        {selectedTask.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                      <span className={`priority-badge priority-${selectedTask.priority}`}>
-                        {getPriorityIcon(selectedTask.priority)}
-                        {selectedTask.priority.toUpperCase()}
-                      </span>
-                    </div>
-                    
-                    {selectedTask.description && (
-                      <div className="description">
-                        <h4>Description</h4>
-                        <p>{selectedTask.description}</p>
-                      </div>
-                    )}
-                    
-                    <div className="task-metadata">
-                      <div className="meta-item">
-                        <span className="label">Project:</span>
-                        <span className="value" style={{ color: selectedTask.project_color }}>
-                          {selectedTask.project_name}
-                        </span>
-                      </div>
-                      
-                      {selectedTask.assignee && (
-                        <div className="meta-item">
-                          <span className="label">Assignee:</span>
-                          <span className="value">{selectedTask.assignee.name}</span>
-                        </div>
-                      )}
-                      
-                      {selectedTask.due_date && (
-                        <div className="meta-item">
-                          <span className="label">Due Date:</span>
-                          <span className={`value ${isOverdue(selectedTask.due_date) ? 'overdue' : ''}`}>
-                            {new Date(selectedTask.due_date).toLocaleDateString()}
-                            {isOverdue(selectedTask.due_date) && ' (Overdue)'}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {selectedTask.tags_list.length > 0 && (
-                        <div className="meta-item">
-                          <span className="label">Tags:</span>
-                          <div className="tags">
-                            {selectedTask.tags_list.map((tag, index) => (
-                              <span key={index} className="tag">
-                                <TagIcon style={{ width: '10px', height: '10px' }} />
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-
-
-                    {/* Status Change Section */}
-                    <div className="status-change-section">
-                      <div className="status-change-title">Change Status</div>
-                      <div className="status-change-buttons">
-                        <button
-                          onClick={() => updateTaskStatus(selectedTask.id, 'todo')}
-                          className={`status-change-btn ${selectedTask.status === 'todo' ? 'active' : ''}`}
-                          disabled={selectedTask.status === 'todo'}
-                        >
-                          To Do
-                        </button>
-                        <button
-                          onClick={() => updateTaskStatus(selectedTask.id, 'in_progress')}
-                          className={`status-change-btn ${selectedTask.status === 'in_progress' ? 'active' : ''}`}
-                          disabled={selectedTask.status === 'in_progress'}
-                        >
-                          In Progress
-                        </button>
-                        <button
-                          onClick={() => updateTaskStatus(selectedTask.id, 'review')}
-                          className={`status-change-btn ${selectedTask.status === 'review' ? 'active' : ''}`}
-                          disabled={selectedTask.status === 'review'}
-                        >
-                          Review
-                        </button>
-                        <button
-                          onClick={() => updateTaskStatus(selectedTask.id, 'done')}
-                          className={`status-change-btn ${selectedTask.status === 'done' ? 'active' : ''}`}
-                          disabled={selectedTask.status === 'done'}
-                        >
-                          Done
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Draggable Splitter */}
-                  <div 
-                    className={`modal-splitter ${isDragging ? 'dragging' : ''}`}
-                    onMouseDown={handleMouseDown}
-                  >
-                    <div className="splitter-handle"></div>
-                  </div>
-
-                  {/* Bottom Section - Comments & Files */}
-                  <div 
-                    className="resizable-interaction-section"
-                    style={{ height: `${100 - topSectionHeight}%` }}
-                  >
-                    <TaskInteractionSection task={selectedTask} />
-                  </div>
-                </div>
-              </div>
+              <TaskDetailModal
+                task={selectedTask}
+                users={[]} // Calendar doesn't need user list for assignment changes
+                onClose={handleCloseTaskDetail}
+                onSave={handleUpdateTask}
+                onStatusChange={updateTaskStatus}
+                onDelete={handleDeleteTask}
+              />
             )}
           </main>
         </div>
