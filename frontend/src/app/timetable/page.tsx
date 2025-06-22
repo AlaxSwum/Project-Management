@@ -2586,16 +2586,117 @@ export default function TimetablePage() {
 
               <div className="form-group">
                 <label className="form-label">Invite Attendees (Optional)</label>
-                <textarea
-                  className="form-textarea"
-                  placeholder="Enter names or emails separated by commas (e.g., John Doe, jane@example.com)..."
-                  value={newMeeting.attendees}
-                  onChange={(e) => setNewMeeting({ ...newMeeting, attendees: e.target.value })}
-                  style={{ minHeight: '80px' }}
-                />
-                <div style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.5rem' }}>
-                  🔒 For privacy, manually enter attendee names/emails instead of browsing team lists
-                </div>
+                
+                {/* Selected Attendees Display */}
+                {newMeeting.attendee_ids.length > 0 && (
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '0.5rem', 
+                    marginBottom: '0.75rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px'
+                  }}>
+                    {newMeeting.attendee_ids.map(memberId => {
+                      const member = projectMembers.find(m => m.id === memberId);
+                      return member ? (
+                        <span key={memberId} style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.25rem 0.75rem',
+                          backgroundColor: '#000000',
+                          color: '#ffffff',
+                          borderRadius: '20px',
+                          fontSize: '0.875rem'
+                        }}>
+                          {member.name}
+                          <button
+                            type="button"
+                            onClick={() => setNewMeeting(prev => ({
+                              ...prev,
+                              attendee_ids: prev.attendee_ids.filter(id => id !== memberId)
+                            }))}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ffffff',
+                              cursor: 'pointer',
+                              fontSize: '1rem',
+                              lineHeight: '1'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+
+                {/* Member Selection */}
+                {projectMembers.length > 0 ? (
+                  <div style={{
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '6px',
+                    maxHeight: '200px',
+                    overflowY: 'auto'
+                  }}>
+                    {projectMembers.map(member => {
+                      const isSelected = newMeeting.attendee_ids.includes(member.id);
+                      return (
+                        <div
+                          key={member.id}
+                          onClick={() => {
+                            setNewMeeting(prev => ({
+                              ...prev,
+                              attendee_ids: isSelected 
+                                ? prev.attendee_ids.filter(id => id !== member.id)
+                                : [...prev.attendee_ids, member.id]
+                            }));
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.75rem',
+                            borderBottom: '1px solid #e5e7eb',
+                            cursor: 'pointer',
+                            backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
+                            borderLeft: isSelected ? '4px solid #000000' : '4px solid transparent'
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: '500', color: '#000000' }}>
+                              {member.name}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                              {member.email}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '2rem',
+                    textAlign: 'center',
+                    color: '#6b7280',
+                    border: '2px dashed #e5e7eb',
+                    borderRadius: '6px'
+                  }}>
+                    Select a project first to see available members
+                  </div>
+                )}
               </div>
 
               <div className="form-actions">

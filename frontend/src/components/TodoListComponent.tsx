@@ -50,7 +50,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   // UI State (simplified)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filterBy, setFilterBy] = useState<'all' | 'pending' | 'completed'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'created_at' | 'due_date' | 'title'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
@@ -96,8 +95,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     .filter(todo => {
       if (filterBy === 'pending' && todo.completed) return false;
       if (filterBy === 'completed' && !todo.completed) return false;
-      if (searchQuery && !todo.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !todo.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
     .sort((a, b) => {
@@ -796,17 +793,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           </div>
 
           <div className="control-group">
-            <div className="search-box">
-              <MagnifyingGlassIcon className="search-icon" style={{ width: '16px', height: '16px' }} />
-              <input
-                type="text"
-                placeholder="Search todos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
-            </div>
-
             <select
               value={filterBy}
               onChange={(e) => setFilterBy(e.target.value as any)}
@@ -947,8 +933,8 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           <div className="empty-state">
             <h3>No todos found</h3>
             <p>
-              {searchQuery || filterBy !== 'all'
-                ? 'Try adjusting your filters or search terms'
+              {filterBy !== 'all'
+                ? 'Try adjusting your filters'
                 : 'Create your first todo to get started!'
               }
             </p>
