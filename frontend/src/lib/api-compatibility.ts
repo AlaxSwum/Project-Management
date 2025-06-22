@@ -364,7 +364,7 @@ export const meetingService = {
   async getMeeting(id: number) {
     try {
       const { data, error } = await supabaseDb.getMeetings();
-      if (error) throw new Error(error.message || 'Failed to fetch meetings');
+      if (error) throw new Error(String(error) || 'Failed to fetch meetings');
       const meeting = Array.isArray(data) ? data.find(m => m.id === id) : null;
       if (!meeting) throw new Error('Meeting not found');
       return meeting;
