@@ -1,4 +1,4 @@
-import { supabaseDb, supabaseAuth } from './supabase';
+import { supabaseDb, supabaseAuth, supabase } from './supabase';
 import googleDriveServiceAccount from './google-drive-service-account';
 import { driveAccessControl } from './google-drive-access-control';
 
@@ -486,6 +486,213 @@ export async function createDriveFolder(name: string, parentId: string | null = 
     throw error;
   }
 }
+
+// Todo service for managing project todo items
+export const todoService = {
+  async getTodos(projectId: number) {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        return [];
+      }
+      
+      // Verify user has access to this project
+      await supabaseDb.getProject(projectId, userId);
+      
+      // Query todo_items table
+      const { data, error } = await supabase.from('todo_items')
+        .select(`
+          *,
+          created_by_user:auth.users!created_by(id)
+        `)
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform data to match component interface
+      return (data || []).map((todo: any) => ({
+        id: todo.id,
+        title: todo.title,
+        description: todo.description,
+        completed: todo.completed,
+        priority: todo.priority,
+        category: todo.category,
+        due_date: todo.due_date,
+        created_at: todo.created_at,
+        updated_at: todo.updated_at,
+        project_id: todo.project_id,
+        created_by: {
+          id: todo.created_by,
+          name: 'User', // We'll get this from a user lookup
+          email: 'user@example.com' // Placeholder for now
+        }
+      }));
+    } catch (error) {
+      console.error('Error in getTodos:', error);
+      return [];
+    }
+  },
+
+  async createTodo(projectId: number, todoData: any) {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+      
+      // Verify user has access to this project
+      await supabaseDb.getProject(projectId, userId);
+      
+      const { data, error } = await supabase.from('todo_items')
+        .insert([{
+          project_id: projectId,
+          title: todoData.title,
+          description: todoData.description || null,
+          priority: todoData.priority || 'medium',
+          category: todoData.category || 'General',
+          due_date: todoData.due_date || null,
+          created_by: userId,
+          completed: false
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        completed: data.completed,
+        priority: data.priority,
+        category: data.category,
+        due_date: data.due_date,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        project_id: data.project_id,
+        created_by: {
+          id: userId,
+          name: 'Current User',
+          email: 'user@example.com'
+        }
+      };
+    } catch (error) {
+      console.error('Error in createTodo:', error);
+      throw error;
+    }
+  },
+
+  async updateTodo(todoId: number, todoData: any) {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+      
+      const { data, error } = await supabase.from('todo_items')
+        .update({
+          title: todoData.title,
+          description: todoData.description || null,
+          priority: todoData.priority,
+          category: todoData.category,
+          due_date: todoData.due_date || null,
+          completed: todoData.completed,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', todoId)
+        .eq('created_by', userId) // Only allow updating own todos
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        completed: data.completed,
+        priority: data.priority,
+        category: data.category,
+        due_date: data.due_date,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        project_id: data.project_id,
+        created_by: {
+          id: userId,
+          name: 'Current User',
+          email: 'user@example.com'
+        }
+      };
+    } catch (error) {
+      console.error('Error in updateTodo:', error);
+      throw error;
+    }
+  },
+
+  async deleteTodo(todoId: number) {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+      
+      const { error } = await supabase.from('todo_items')
+        .delete()
+        .eq('id', todoId)
+        .eq('created_by', userId); // Only allow deleting own todos
+      
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error in deleteTodo:', error);
+      throw error;
+    }
+  },
+
+  async toggleTodoComplete(todoId: number, completed: boolean) {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+      
+      const { data, error } = await supabase.from('todo_items')
+        .update({
+          completed: completed,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', todoId)
+        .eq('created_by', userId) // Only allow updating own todos
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        completed: data.completed,
+        priority: data.priority,
+        category: data.category,
+        due_date: data.due_date,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        project_id: data.project_id,
+        created_by: {
+          id: userId,
+          name: 'Current User',
+          email: 'user@example.com'
+        }
+      };
+    } catch (error) {
+      console.error('Error in toggleTodoComplete:', error);
+      throw error;
+    }
+  }
+};
 
 // Reporting service - Implemented with Supabase data
 export const reportingService = {

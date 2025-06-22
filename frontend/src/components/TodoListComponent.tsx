@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { todoService } from '@/lib/api-compatibility';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -83,51 +84,29 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     due_date: ''
   });
 
-  // Mock data for now - will be replaced with actual API calls
+  // Load todos from database
   useEffect(() => {
-    // Initialize with sample data
-    const sampleTodos: TodoItem[] = [
-      {
-        id: 1,
-        title: 'Review project requirements',
-        description: 'Go through the updated requirements document',
-        completed: false,
-        priority: 'high',
-        category: 'Review',
-        due_date: '2025-06-25',
-        created_at: '2025-06-22T10:00:00Z',
-        updated_at: '2025-06-22T10:00:00Z',
-        project_id: projectId,
-        created_by: user || { id: 1, name: 'Current User', email: 'user@example.com' }
-      },
-      {
-        id: 2,
-        title: 'Fix login bug',
-        description: 'Users unable to login with special characters in email',
-        completed: false,
-        priority: 'urgent',
-        category: 'Bug Fix',
-        due_date: '2025-06-23',
-        created_at: '2025-06-22T09:00:00Z',
-        updated_at: '2025-06-22T09:00:00Z',
-        project_id: projectId,
-        created_by: user || { id: 1, name: 'Current User', email: 'user@example.com' }
-      },
-      {
-        id: 3,
-        title: 'Update documentation',
-        description: 'Add new API endpoints to docs',
-        completed: true,
-        priority: 'medium',
-        category: 'Documentation',
-        created_at: '2025-06-21T15:00:00Z',
-        updated_at: '2025-06-22T11:00:00Z',
-        project_id: projectId,
-        created_by: user || { id: 1, name: 'Current User', email: 'user@example.com' }
+    const loadTodos = async () => {
+      if (!projectId || !user) {
+        setIsLoading(false);
+        return;
       }
-    ];
-    setTodos(sampleTodos);
-    setIsLoading(false);
+      
+      try {
+        setIsLoading(true);
+        const todoData = await todoService.getTodos(projectId);
+        setTodos(todoData);
+        setError('');
+      } catch (err) {
+        console.error('Error loading todos:', err);
+        setError('Failed to load todos');
+        setTodos([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTodos();
   }, [projectId, user]);
 
   // Filtered and sorted todos
@@ -167,41 +146,56 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   const handleAddTodo = async () => {
     if (!newTodo.title.trim()) return;
     
-    const todo: TodoItem = {
-      id: Date.now(), // Mock ID
-      title: newTodo.title.trim(),
-      description: newTodo.description.trim() || undefined,
-      completed: false,
-      priority: newTodo.priority,
-      category: newTodo.category,
-      due_date: newTodo.due_date || undefined,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      project_id: projectId,
-      created_by: user || { id: 1, name: 'Current User', email: 'user@example.com' }
-    };
-    
-    setTodos([todo, ...todos]);
-    setNewTodo({
-      title: '',
-      description: '',
-      priority: 'medium',
-      category: 'General',
-      due_date: ''
-    });
-    setShowQuickAdd(false);
+    try {
+      const createdTodo = await todoService.createTodo(projectId, {
+        title: newTodo.title.trim(),
+        description: newTodo.description.trim() || undefined,
+        priority: newTodo.priority,
+        category: newTodo.category,
+        due_date: newTodo.due_date || undefined
+      });
+      
+      setTodos([createdTodo, ...todos]);
+      setNewTodo({
+        title: '',
+        description: '',
+        priority: 'medium',
+        category: 'General',
+        due_date: ''
+      });
+      setShowQuickAdd(false);
+      setError('');
+    } catch (err) {
+      console.error('Error creating todo:', err);
+      setError('Failed to create todo');
+    }
   };
 
   const handleToggleComplete = async (todoId: number) => {
-    setTodos(todos.map(todo => 
-      todo.id === todoId 
-        ? { ...todo, completed: !todo.completed, updated_at: new Date().toISOString() }
-        : todo
-    ));
+    const todo = todos.find(t => t.id === todoId);
+    if (!todo) return;
+    
+    try {
+      const updatedTodo = await todoService.toggleTodoComplete(todoId, !todo.completed);
+      setTodos(todos.map(t => 
+        t.id === todoId ? updatedTodo : t
+      ));
+      setError('');
+    } catch (err) {
+      console.error('Error toggling todo:', err);
+      setError('Failed to update todo');
+    }
   };
 
   const handleDeleteTodo = async (todoId: number) => {
-    setTodos(todos.filter(todo => todo.id !== todoId));
+    try {
+      await todoService.deleteTodo(todoId);
+      setTodos(todos.filter(todo => todo.id !== todoId));
+      setError('');
+    } catch (err) {
+      console.error('Error deleting todo:', err);
+      setError('Failed to delete todo');
+    }
   };
 
   const handleEditTodo = (todo: TodoItem) => {
@@ -219,45 +213,78 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   const handleUpdateTodo = async () => {
     if (!editingTodo || !newTodo.title.trim()) return;
     
-    setTodos(todos.map(todo => 
-      todo.id === editingTodo.id 
-        ? {
-            ...todo,
-            title: newTodo.title.trim(),
-            description: newTodo.description.trim() || undefined,
-            priority: newTodo.priority,
-            category: newTodo.category,
-            due_date: newTodo.due_date || undefined,
-            updated_at: new Date().toISOString()
-          }
-        : todo
-    ));
-    
-    setEditingTodo(null);
-    setNewTodo({
-      title: '',
-      description: '',
-      priority: 'medium',
-      category: 'General',
-      due_date: ''
-    });
-    setShowQuickAdd(false);
+    try {
+      const updatedTodo = await todoService.updateTodo(editingTodo.id, {
+        title: newTodo.title.trim(),
+        description: newTodo.description.trim() || undefined,
+        priority: newTodo.priority,
+        category: newTodo.category,
+        due_date: newTodo.due_date || undefined,
+        completed: editingTodo.completed
+      });
+      
+      setTodos(todos.map(todo => 
+        todo.id === editingTodo.id ? updatedTodo : todo
+      ));
+      
+      setEditingTodo(null);
+      setNewTodo({
+        title: '',
+        description: '',
+        priority: 'medium',
+        category: 'General',
+        due_date: ''
+      });
+      setShowQuickAdd(false);
+      setError('');
+    } catch (err) {
+      console.error('Error updating todo:', err);
+      setError('Failed to update todo');
+    }
   };
 
-  const handleBulkComplete = () => {
-    setTodos(todos.map(todo => 
-      selectedTodos.has(todo.id) 
-        ? { ...todo, completed: true, updated_at: new Date().toISOString() }
-        : todo
-    ));
-    setSelectedTodos(new Set());
-    setShowBulkActions(false);
+  const handleBulkComplete = async () => {
+    try {
+      // Update each selected todo to completed
+      const updatePromises = Array.from(selectedTodos).map(todoId =>
+        todoService.toggleTodoComplete(todoId, true)
+      );
+      
+      const updatedTodos = await Promise.all(updatePromises);
+      
+      // Update local state with the results
+      setTodos(todos.map(todo => {
+        const updatedTodo = updatedTodos.find(ut => ut.id === todo.id);
+        return updatedTodo || todo;
+      }));
+      
+      setSelectedTodos(new Set());
+      setShowBulkActions(false);
+      setError('');
+    } catch (err) {
+      console.error('Error bulk completing todos:', err);
+      setError('Failed to complete some todos');
+    }
   };
 
-  const handleBulkDelete = () => {
-    setTodos(todos.filter(todo => !selectedTodos.has(todo.id)));
-    setSelectedTodos(new Set());
-    setShowBulkActions(false);
+  const handleBulkDelete = async () => {
+    try {
+      // Delete each selected todo
+      const deletePromises = Array.from(selectedTodos).map(todoId =>
+        todoService.deleteTodo(todoId)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      // Update local state
+      setTodos(todos.filter(todo => !selectedTodos.has(todo.id)));
+      setSelectedTodos(new Set());
+      setShowBulkActions(false);
+      setError('');
+    } catch (err) {
+      console.error('Error bulk deleting todos:', err);
+      setError('Failed to delete some todos');
+    }
   };
 
   const handleSelectTodo = (todoId: number) => {
@@ -886,6 +913,20 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       </div>
 
       <div className="todo-content">
+        {error && (
+          <div style={{ 
+            background: '#fef2f2', 
+            border: '2px solid #ef4444', 
+            borderRadius: '8px', 
+            padding: '1rem', 
+            marginBottom: '1.5rem',
+            color: '#dc2626',
+            fontWeight: '500'
+          }}>
+            {error}
+          </div>
+        )}
+
         {showQuickAdd && (
           <div className="quick-add-form">
             <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.125rem', fontWeight: '600' }}>

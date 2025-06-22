@@ -148,6 +148,166 @@ export default function DatabaseSetup() {
     setLoading(false);
   };
 
+  const createTodoItemsTable = async () => {
+    setLoading(true);
+    setStatus('Creating todo_items table...');
+
+    try {
+      // Create todo_items table
+      const { error: createError } = await supabase.rpc('sql', {
+        query: `
+          CREATE TABLE IF NOT EXISTS todo_items (
+              id BIGSERIAL PRIMARY KEY,
+              project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+              title TEXT NOT NULL,
+              description TEXT,
+              completed BOOLEAN DEFAULT FALSE,
+              priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')) DEFAULT 'medium',
+              category TEXT DEFAULT 'General',
+              due_date DATE,
+              created_by UUID NOT NULL,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `
+      });
+
+      if (createError) {
+        console.error('Error creating todo table:', createError);
+        
+        // Try to check if table exists
+        const { error: altError } = await supabase
+          .from('todo_items')
+          .select('id')
+          .limit(1);
+
+        if (altError && altError.code === '42P01') {
+          setStatus('❌ Todo table creation failed. Please create the table manually in Supabase dashboard.');
+          setLoading(false);
+          return;
+        } else if (!altError) {
+          setStatus('✅ Todo table already exists!');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Create indexes
+      await supabase.rpc('sql', {
+        query: `
+          CREATE INDEX IF NOT EXISTS idx_todo_items_project_id ON todo_items(project_id);
+          CREATE INDEX IF NOT EXISTS idx_todo_items_created_by ON todo_items(created_by);
+          CREATE INDEX IF NOT EXISTS idx_todo_items_due_date ON todo_items(due_date);
+          CREATE INDEX IF NOT EXISTS idx_todo_items_priority ON todo_items(priority);
+          CREATE INDEX IF NOT EXISTS idx_todo_items_completed ON todo_items(completed);
+        `
+      });
+
+      // Enable RLS
+      await supabase.rpc('sql', {
+        query: `ALTER TABLE todo_items ENABLE ROW LEVEL SECURITY;`
+      });
+
+      // Create RLS policies
+      const todoPolicies = [
+        `
+        CREATE POLICY "Users can view todos for accessible projects" ON todo_items
+        FOR SELECT USING (
+            project_id IN (
+                SELECT p.id 
+                FROM projects p
+                WHERE p.created_by = auth.uid()
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM tasks 
+                    WHERE assignee = auth.uid() OR created_by = auth.uid()
+                )
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM project_members 
+                    WHERE user_id = auth.uid()
+                )
+            )
+        );
+        `,
+        `
+        CREATE POLICY "Users can create todos for accessible projects" ON todo_items
+        FOR INSERT WITH CHECK (
+            project_id IN (
+                SELECT p.id 
+                FROM projects p
+                WHERE p.created_by = auth.uid()
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM tasks 
+                    WHERE assignee = auth.uid() OR created_by = auth.uid()
+                )
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM project_members 
+                    WHERE user_id = auth.uid()
+                )
+            )
+            AND created_by = auth.uid()
+        );
+        `,
+        `
+        CREATE POLICY "Users can update their own todos" ON todo_items
+        FOR UPDATE USING (
+            created_by = auth.uid()
+            AND project_id IN (
+                SELECT p.id 
+                FROM projects p
+                WHERE p.created_by = auth.uid()
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM tasks 
+                    WHERE assignee = auth.uid() OR created_by = auth.uid()
+                )
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM project_members 
+                    WHERE user_id = auth.uid()
+                )
+            )
+        );
+        `,
+        `
+        CREATE POLICY "Users can delete their own todos" ON todo_items
+        FOR DELETE USING (
+            created_by = auth.uid()
+            AND project_id IN (
+                SELECT p.id 
+                FROM projects p
+                WHERE p.created_by = auth.uid()
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM tasks 
+                    WHERE assignee = auth.uid() OR created_by = auth.uid()
+                )
+                OR p.id IN (
+                    SELECT project_id 
+                    FROM project_members 
+                    WHERE user_id = auth.uid()
+                )
+            )
+        );
+        `
+      ];
+
+      for (const policy of todoPolicies) {
+        await supabase.rpc('sql', { query: policy });
+      }
+
+      setStatus('✅ Todo items table created successfully with all policies!');
+    } catch (error) {
+      console.error('Todo setup error:', error);
+      setStatus(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    setLoading(false);
+  };
+
   const testConnection = async () => {
     setLoading(true);
     setStatus('Testing database connection...');
@@ -174,60 +334,126 @@ export default function DatabaseSetup() {
     setLoading(false);
   };
 
+  const testTodoConnection = async () => {
+    setLoading(true);
+    setStatus('Testing todo_items table connection...');
+
+    try {
+      const { data, error } = await supabase
+        .from('todo_items')
+        .select('count(*)')
+        .limit(1);
+
+      if (error) {
+        if (error.code === '42P01') {
+          setStatus('⚠️ Todo table does not exist. Click "Create Todo Table" to set it up.');
+        } else {
+          setStatus(`❌ Todo table error: ${error.message}`);
+        }
+      } else {
+        setStatus('✅ Todo table connection successful! Table exists and is accessible.');
+      }
+    } catch (error) {
+      setStatus(`❌ Todo test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Database Setup</h1>
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="bg-gray-800 text-white p-6">
+            <h1 className="text-2xl font-bold">Database Setup</h1>
+            <p className="text-gray-300 mt-2">Set up and test database tables for the project management system</p>
+          </div>
           
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h2 className="text-lg font-semibold text-blue-900 mb-2">Meeting Notes Table Setup</h2>
-              <p className="text-blue-700 mb-4">
-                This utility helps you set up the meeting_notes table required for the meeting notes feature.
-              </p>
-              
-              <div className="flex gap-4 mb-4">
-                <button
-                  onClick={testConnection}
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {loading ? 'Testing...' : 'Test Connection'}
-                </button>
+          <div className="p-6">
+            <div className="space-y-6">
+              {/* Meeting Notes Section */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Meeting Notes Table</h2>
                 
-                <button
-                  onClick={createMeetingNotesTable}
-                  disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                >
-                  {loading ? 'Creating...' : 'Create Table'}
-                </button>
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <button
+                    onClick={createMeetingNotesTable}
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Creating...' : 'Create Meeting Notes Table'}
+                  </button>
+                  
+                  <button
+                    onClick={testConnection}
+                    disabled={loading}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Testing...' : 'Test Connection'}
+                  </button>
+                </div>
               </div>
-              
+
+              {/* Todo Items Section */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Todo Items Table</h2>
+                
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <button
+                    onClick={createTodoItemsTable}
+                    disabled={loading}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Creating...' : 'Create Todo Items Table'}
+                  </button>
+                  
+                  <button
+                    onClick={testTodoConnection}
+                    disabled={loading}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Testing...' : 'Test Todo Table'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Display */}
               {status && (
-                <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-                  <p className="font-mono text-sm">{status}</p>
+                <div className={`p-4 rounded-lg ${
+                  status.includes('✅') ? 'bg-green-50 border border-green-200' :
+                  status.includes('❌') ? 'bg-red-50 border border-red-200' :
+                  status.includes('⚠️') ? 'bg-yellow-50 border border-yellow-200' :
+                  'bg-blue-50 border border-blue-200'
+                }`}>
+                  <p className={`font-medium ${
+                    status.includes('✅') ? 'text-green-800' :
+                    status.includes('❌') ? 'text-red-800' :
+                    status.includes('⚠️') ? 'text-yellow-800' :
+                    'text-blue-800'
+                  }`}>
+                    {status}
+                  </p>
                 </div>
               )}
-            </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-yellow-900 mb-2">Manual Setup Instructions</h3>
-              <p className="text-yellow-700 mb-2">
-                If the automatic setup doesn't work, you can manually create the table in Supabase:
-              </p>
-              <ol className="list-decimal list-inside text-yellow-700 text-sm space-y-1">
-                <li>Go to your Supabase dashboard</li>
-                <li>Navigate to SQL Editor</li>
-                <li>Run the SQL commands from the create_meeting_notes_table.sql file</li>
-                <li>Refresh this page and test the connection</li>
-              </ol>
-            </div>
+              {/* Manual Setup Instructions */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-yellow-900 mb-2">Manual Setup Instructions</h3>
+                <p className="text-yellow-700 mb-2">
+                  If automatic setup doesn't work, you can manually create tables in Supabase:
+                </p>
+                <ol className="list-decimal list-inside text-yellow-700 text-sm space-y-1">
+                  <li>Go to your Supabase dashboard</li>
+                  <li>Navigate to SQL Editor</li>
+                  <li>Run the SQL commands below</li>
+                  <li>Refresh this page and test the connection</li>
+                </ol>
+              </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">SQL Commands</h3>
-              <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
+              {/* SQL Commands for Meeting Notes */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Meeting Notes SQL Commands</h3>
+                <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
 {`-- Create meeting_notes table
 CREATE TABLE IF NOT EXISTS meeting_notes (
     id BIGSERIAL PRIMARY KEY,
@@ -251,7 +477,39 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_meeting_notes_unique_meeting ON meeting_no
 
 -- Enable RLS
 ALTER TABLE meeting_notes ENABLE ROW LEVEL SECURITY;`}
-              </pre>
+                </pre>
+              </div>
+
+              {/* SQL Commands for Todo Items */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Todo Items SQL Commands</h3>
+                <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
+{`-- Create todo_items table
+CREATE TABLE IF NOT EXISTS todo_items (
+    id BIGSERIAL PRIMARY KEY,
+    project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    completed BOOLEAN DEFAULT FALSE,
+    priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')) DEFAULT 'medium',
+    category TEXT DEFAULT 'General',
+    due_date DATE,
+    created_by UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_todo_items_project_id ON todo_items(project_id);
+CREATE INDEX IF NOT EXISTS idx_todo_items_created_by ON todo_items(created_by);
+CREATE INDEX IF NOT EXISTS idx_todo_items_due_date ON todo_items(due_date);
+CREATE INDEX IF NOT EXISTS idx_todo_items_priority ON todo_items(priority);
+CREATE INDEX IF NOT EXISTS idx_todo_items_completed ON todo_items(completed);
+
+-- Enable RLS
+ALTER TABLE todo_items ENABLE ROW LEVEL SECURITY;`}
+                </pre>
+              </div>
             </div>
           </div>
         </div>
