@@ -395,7 +395,7 @@ export const meetingService = {
   getProjectMeetings: async (projectId: number) => {
     try {
       const { data, error } = await supabaseDb.getMeetings();
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(String(error) || 'Failed to fetch meetings');
       return Array.isArray(data) ? data.filter(m => m.project_id === projectId) : [];
     } catch (error) {
       console.error('Error in getProjectMeetings:', error);
@@ -408,7 +408,7 @@ export const meetingService = {
 export const userService = {
   getUsers: async () => {
     const { data, error } = await supabaseDb.getUsers();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(String(error) || 'Failed to fetch users');
     return data || [];
   }
 };
