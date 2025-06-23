@@ -125,44 +125,40 @@ export default function EmployeeAbsentPage() {
             // Error other than "not found"
             console.error('Error checking leave balance:', balanceCheckError);
           } else if (existingBalance) {
-            // Update existing balance
+            // Update existing balance - only update used_days, available_days is auto-calculated
             const newUsedDays = existingBalance.used_days + request.days_requested;
-            const newAvailableDays = Math.max(0, existingBalance.available_days - request.days_requested);
             
             const { error: updateBalanceError } = await supabase
               .from('employee_leave_balance')
               .update({
-                used_days: newUsedDays,
-                available_days: newAvailableDays
+                used_days: newUsedDays
               })
               .eq('employee_id', request.employee_id);
             
             if (updateBalanceError) {
               console.error('Error updating leave balance:', updateBalanceError);
             } else {
-              console.log(`Updated leave balance: ${request.employee_name} now has ${newAvailableDays} days available`);
+              const remainingDays = Math.max(0, existingBalance.total_days - newUsedDays);
+              console.log(`Updated leave balance: ${request.employee_name} now has ${remainingDays} days available (${newUsedDays}/${existingBalance.total_days} used)`);
             }
           } else {
             // Create new balance record with default 14 days annual leave
             const startingBalance = 14;
             const newUsedDays = request.days_requested;
-            const newAvailableDays = Math.max(0, startingBalance - request.days_requested);
             
             const { error: createBalanceError } = await supabase
               .from('employee_leave_balance')
               .insert([{
                 employee_id: request.employee_id,
-                employee_name: request.employee_name,
-                employee_email: request.employee_email,
-                total_annual_leave: startingBalance,
-                used_days: newUsedDays,
-                available_days: newAvailableDays
+                total_days: startingBalance,
+                used_days: newUsedDays
               }]);
             
             if (createBalanceError) {
               console.error('Error creating leave balance:', createBalanceError);
             } else {
-              console.log(`Created leave balance: ${request.employee_name} has ${newAvailableDays} days remaining from initial ${startingBalance}`);
+              const remainingDays = Math.max(0, startingBalance - newUsedDays);
+              console.log(`Created leave balance: ${request.employee_name} has ${remainingDays} days remaining from initial ${startingBalance} (${newUsedDays} used)`);
             }
           }
         } catch (balanceError) {
