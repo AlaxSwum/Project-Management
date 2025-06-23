@@ -91,6 +91,15 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt' | 'todo'>('board');
   const [ganttView, setGanttView] = useState<'task' | 'gantt'>('task');
+  const [timelineStartDate, setTimelineStartDate] = useState<Date>(() => {
+    // Start from current Monday
+    const today = new Date();
+    const currentDay = today.getDay();
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    return monday;
+  });
   const [showCreateTask, setShowCreateTask] = useState(false);
 
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -317,6 +326,18 @@ export default function ProjectDetailPage() {
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
+  };
+
+  const handlePreviousMonth = () => {
+    const newDate = new Date(timelineStartDate);
+    newDate.setDate(newDate.getDate() - 28); // Go back 4 weeks
+    setTimelineStartDate(newDate);
+  };
+
+  const handleNextMonth = () => {
+    const newDate = new Date(timelineStartDate);
+    newDate.setDate(newDate.getDate() + 28); // Go forward 4 weeks
+    setTimelineStartDate(newDate);
   };
 
   // Show loading state while auth is initializing
@@ -3050,13 +3071,13 @@ export default function ProjectDetailPage() {
                   Filters
                 </button>
                 <div className="date-range-controls">
-                  <button className="nav-btn">
+                  <button className="nav-btn" onClick={handlePreviousMonth}>
                     <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
                   </button>
                   <span className="date-range">
-                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    {timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </span>
-                  <button className="nav-btn">
+                  <button className="nav-btn" onClick={handleNextMonth}>
                     <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
                   </button>
                 </div>
@@ -3074,16 +3095,13 @@ export default function ProjectDetailPage() {
               }}>
                 <div className="gantt-timeline-header-enhanced" style={{ minWidth: '800px' }}>
                   <div className="gantt-month-header">
-                    <div className="month-label">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                    <div className="month-label">{timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
                   </div>
                   <div className="gantt-week-headers">
                     {Array.from({ length: 4 }, (_, weekIndex) => {
-                      // Calculate proper week start (Monday)
-                      const today = new Date();
-                      const currentDay = today.getDay();
-                      const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay; // Handle Sunday (0) as end of week
-                      const startOfWeek = new Date(today);
-                      startOfWeek.setDate(today.getDate() + mondayOffset + (weekIndex * 7));
+                      // Calculate week start from timelineStartDate
+                      const startOfWeek = new Date(timelineStartDate);
+                      startOfWeek.setDate(timelineStartDate.getDate() + (weekIndex * 7));
                       
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
@@ -3103,12 +3121,9 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="gantt-date-grid">
                     {Array.from({ length: 28 }, (_, i) => {
-                      // Calculate proper week start and add days
-                      const today = new Date();
-                      const currentDay = today.getDay();
-                      const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-                      const date = new Date(today);
-                      date.setDate(today.getDate() + mondayOffset + i);
+                      // Calculate date from timelineStartDate
+                      const date = new Date(timelineStartDate);
+                      date.setDate(timelineStartDate.getDate() + i);
                       
                       const isToday = date.toDateString() === new Date().toDateString();
                       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -3163,12 +3178,8 @@ export default function ProjectDetailPage() {
                         const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                         const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
                         
-                        // Calculate position relative to timeline start (Monday of current week)
-                        const today = new Date();
-                        const currentDay = today.getDay();
-                        const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-                        const timelineStart = new Date(today);
-                        timelineStart.setDate(today.getDate() + mondayOffset);
+                        // Calculate position relative to timeline start
+                        const timelineStart = new Date(timelineStartDate);
                         
                         const daysFromStart = Math.ceil((taskStartDate.getTime() - timelineStart.getTime()) / (24 * 60 * 60 * 1000));
                         
