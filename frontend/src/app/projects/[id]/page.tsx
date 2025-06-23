@@ -1867,7 +1867,7 @@ export default function ProjectDetailPage() {
           .gantt-tasks-enhanced {
             flex: 1;
             overflow-y: auto;
-            min-height: 400px;
+            min-height: 200px;
           }
           
           .gantt-empty-state {
@@ -2140,20 +2140,20 @@ export default function ProjectDetailPage() {
           .gantt-bars-enhanced {
             position: relative;
             z-index: 2;
-            padding: 1rem;
-            min-height: 400px;
+            padding: 0.5rem;
+            min-height: 200px;
           }
           
           .gantt-bars-empty {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 200px;
+            height: 100px;
             color: #6b7280;
           }
           
           .gantt-bar-row-enhanced {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.5rem;
             height: 40px;
             position: relative;
           }
@@ -3103,6 +3103,11 @@ export default function ProjectDetailPage() {
                       const startOfWeek = new Date(timelineStartDate);
                       startOfWeek.setDate(timelineStartDate.getDate() + (weekIndex * 7));
                       
+                      // Calculate actual week number of the year
+                      const yearStart = new Date(startOfWeek.getFullYear(), 0, 1);
+                      const daysSinceYearStart = Math.floor((startOfWeek.getTime() - yearStart.getTime()) / (24 * 60 * 60 * 1000));
+                      const actualWeekNumber = Math.ceil((daysSinceYearStart + yearStart.getDay() + 1) / 7);
+                      
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
                           padding: '0.5rem',
@@ -3111,7 +3116,7 @@ export default function ProjectDetailPage() {
                           textAlign: 'center',
                           background: '#f3f4f6'
                         }}>
-                          Week {weekIndex + 1}
+                          Week {actualWeekNumber}
                           <div style={{ fontSize: '0.75rem', color: '#666666' }}>
                             {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </div>
@@ -3170,7 +3175,7 @@ export default function ProjectDetailPage() {
                   <div className="gantt-bars-enhanced" style={{ minWidth: '800px' }}>
                     {tasks.length === 0 ? (
                       <div className="gantt-bars-empty">
-                        <p>FIXED TIMELINE - Create tasks to see them here (4 weeks only)</p>
+                        <p>Create tasks to see them on the timeline</p>
                       </div>
                     ) : (
                       tasks.map((task, taskIndex) => {
