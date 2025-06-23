@@ -3157,30 +3157,35 @@ export default function ProjectDetailPage() {
                 
                 <div className="gantt-grid-container" style={{ 
                   minWidth: '800px',
-                  position: 'relative'
+                  position: 'relative',
+                  minHeight: tasks.length > 0 ? `${tasks.length * 40}px` : '200px'
                 }}>
                   <div className="gantt-vertical-grid" style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    right: 0,
-                    bottom: 0,
-                    pointerEvents: 'none'
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none',
+                    zIndex: 1
                   }}>
                     {Array.from({ length: 28 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
                         left: `${(i * 40)}px`,
                         top: 0,
-                        bottom: 0,
+                        height: '100%',
                         width: '1px',
-                        background: '#e5e7eb',
-                        zIndex: 1
+                        background: '#e5e7eb'
                       }}></div>
                     ))}
                   </div>
                   
-                  <div className="gantt-bars-enhanced" style={{ minWidth: '800px' }}>
+                  <div className="gantt-bars-enhanced" style={{ 
+                    minWidth: '800px',
+                    position: 'relative',
+                    zIndex: 2
+                  }}>
                     {tasks.length === 0 ? (
                       <div className="gantt-bars-empty">
                         <p>Create tasks to see them on the timeline</p>
