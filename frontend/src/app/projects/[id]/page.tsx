@@ -1791,9 +1791,10 @@ export default function ProjectDetailPage() {
             background: #ffffff;
             border: 2px solid #000000;
             border-radius: 8px;
-            overflow: hidden;
+            overflow: visible;
             display: flex;
             margin-top: 1rem;
+            max-width: 100%;
           }
           
           .gantt-sidebar-enhanced {
@@ -1979,6 +1980,8 @@ export default function ProjectDetailPage() {
             flex-direction: column;
             overflow-x: auto;
             overflow-y: hidden;
+            max-width: 100%;
+            position: relative;
           }
           
           .gantt-timeline-header-enhanced {
@@ -2017,8 +2020,8 @@ export default function ProjectDetailPage() {
             text-transform: uppercase;
             letter-spacing: 0.05em;
             background: #f0f0f0;
-            min-width: 150px;
-            flex: 0 0 150px;
+            min-width: 280px;
+            flex: 0 0 280px;
           }
           
           .week-header:last-child {
@@ -2077,6 +2080,7 @@ export default function ProjectDetailPage() {
             overflow-y: auto;
             overflow-x: visible;
             background: #ffffff;
+            width: 100%;
           }
           
           .gantt-vertical-grid {
@@ -3052,9 +3056,10 @@ export default function ProjectDetailPage() {
                 width: '100%', 
                 maxWidth: 'none',
                 overflowX: 'auto',
+                overflowY: 'hidden',
                 border: '2px solid #000000'
               }}>
-                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '1200px' }}>
+                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2240px' }}>
                   <div className="gantt-month-header">
                     <div className="month-label">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
                   </div>
@@ -3120,12 +3125,12 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
                 
-                <div className="gantt-grid-container" style={{ minWidth: '1200px' }}>
+                <div className="gantt-grid-container" style={{ minWidth: '2240px' }}>
                   <div className="gantt-vertical-grid">
                     {Array.from({ length: 56 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
-                        left: `${(i * 40) + 40}px`,
+                        left: `${(i * 40)}px`,
                         top: 0,
                         bottom: 0,
                         width: '1px',
@@ -3134,7 +3139,7 @@ export default function ProjectDetailPage() {
                     ))}
                   </div>
                   
-                  <div className="gantt-bars-enhanced" style={{ minWidth: '1200px' }}>
+                  <div className="gantt-bars-enhanced" style={{ minWidth: '2240px' }}>
                     {tasks.length === 0 ? (
                       <div className="gantt-bars-empty">
                         <p>Create tasks to see them on the timeline</p>
