@@ -42,84 +42,10 @@ export default function ReportingPage() {
         return;
       }
       
-      // Step 1: Get projects that the current HR/admin user is a member of
-      const { data: currentUserProjects, error: userProjectsError } = await supabase
-        .from('projects_project_members')
-        .select('project_id')
-        .eq('user_id', user?.id);
+      // For Admin/HR: Get ALL employees and their tasks across ALL projects
+      console.log('Admin/HR user - fetching all employee task data');
       
-      if (userProjectsError) {
-        console.error('User projects fetch error:', userProjectsError);
-        throw userProjectsError;
-      }
-      
-      console.log('HR/Admin user is member of projects:', currentUserProjects?.map(p => p.project_id) || []);
-      
-      if (!currentUserProjects || currentUserProjects.length === 0) {
-        // HR/admin user is not assigned to any projects, show empty state
-        console.log('HR/Admin user has no project assignments, showing empty data');
-        setTeamReport({
-          summary: {
-            total_team_members: 0,
-            average_completion_rate: 0,
-            total_tasks_across_team: 0,
-            total_finished_tasks: 0
-          },
-          team_report: []
-        });
-        return;
-      }
-      
-      const adminProjectIds = currentUserProjects.map(p => p.project_id);
-      
-      // Step 2: Get all employees who are members of the same projects
-      const { data: sharedProjectMembers, error: membersError } = await supabase
-        .from('projects_project_members')
-        .select(`
-          user_id,
-          auth_user:user_id (
-            id,
-            name,
-            email,
-            role
-          )
-        `)
-        .in('project_id', adminProjectIds);
-      
-      if (membersError) {
-        console.error('Shared project members fetch error:', membersError);
-        throw membersError;
-      }
-      
-      // Extract unique employee IDs
-      const sharedEmployeeIds = new Set();
-      const employeeData = new Map();
-      
-      sharedProjectMembers?.forEach((member: any) => {
-        if (member.auth_user && !sharedEmployeeIds.has(member.user_id)) {
-          sharedEmployeeIds.add(member.user_id);
-          employeeData.set(member.user_id, member.auth_user);
-        }
-      });
-      
-      console.log('Employees sharing projects with HR/Admin:', sharedEmployeeIds.size);
-      
-      if (sharedEmployeeIds.size === 0) {
-        // No shared employees found
-        console.log('No employees found sharing projects with HR/Admin user');
-        setTeamReport({
-          summary: {
-            total_team_members: 0,
-            average_completion_rate: 0,
-            total_tasks_across_team: 0,
-            total_finished_tasks: 0
-          },
-          team_report: []
-        });
-        return;
-      }
-      
-      // Step 3: Fetch tasks data for shared employees only
+      // Step 1: Fetch ALL tasks from ALL projects
       const { data: tasksData, error: tasksError } = await supabase
         .from('projects_task')
         .select(`
@@ -136,13 +62,35 @@ export default function ReportingPage() {
             id,
             name
           )
-        `)
-        .in('assignee_id', Array.from(sharedEmployeeIds));
+        `);
       
       if (tasksError) {
         console.error('Tasks fetch error:', tasksError);
         throw tasksError;
       }
+      
+      // Step 2: Get unique employee IDs from all tasks
+      const allEmployeeIds = [...new Set(tasksData?.map(task => task.assignee_id).filter(id => id) || [])];
+      
+      // Step 3: Fetch employee details for all employees who have tasks
+      let employeeData = new Map();
+      if (allEmployeeIds.length > 0) {
+        const { data: employeesData, error: employeesError } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role')
+          .in('id', allEmployeeIds);
+        
+        if (employeesError) {
+          console.error('Employees fetch error:', employeesError);
+          throw employeesError;
+        }
+        
+        employeesData?.forEach(emp => {
+          employeeData.set(emp.id, emp);
+        });
+      }
+      
+      console.log('Total employees with tasks:', allEmployeeIds.length);
       
       // Step 4: Calculate KPIs for each employee
       const teamReportData = [];
@@ -150,8 +98,10 @@ export default function ReportingPage() {
       let totalFinishedTasks = 0;
       let totalCompletionRates = 0;
       
-      for (const employeeId of sharedEmployeeIds) {
+      for (const employeeId of allEmployeeIds) {
         const employee = employeeData.get(employeeId);
+        if (!employee) continue; // Skip if employee data not found
+        
         const employeeTasks = tasksData?.filter(task => task.assignee_id === employeeId) || [];
         
         const finishedTasks = employeeTasks.filter(task => task.status === 'completed').length;
@@ -182,11 +132,11 @@ export default function ReportingPage() {
         });
       }
       
-      const averageCompletionRate = sharedEmployeeIds.size > 0 ? Math.round(totalCompletionRates / sharedEmployeeIds.size) : 0;
+      const averageCompletionRate = allEmployeeIds.length > 0 ? Math.round(totalCompletionRates / allEmployeeIds.length) : 0;
       
       const reportData = {
         summary: {
-          total_team_members: sharedEmployeeIds.size,
+          total_team_members: allEmployeeIds.length,
           average_completion_rate: averageCompletionRate,
           total_tasks_across_team: totalTasks,
           total_finished_tasks: totalFinishedTasks
@@ -194,7 +144,7 @@ export default function ReportingPage() {
         team_report: teamReportData
       };
       
-      console.log('Generated team report for shared project members:', reportData);
+      console.log('Generated team report for all employees:', reportData);
       setTeamReport(reportData);
       
     } catch (err: any) {
@@ -209,37 +159,6 @@ export default function ReportingPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       
-      // Verify the member is in shared projects with current user
-      const { data: currentUserProjects, error: userProjectsError } = await supabase
-        .from('projects_project_members')
-        .select(`
-          project_id,
-          projects_project:project_id (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user?.id);
-      
-      if (userProjectsError || !currentUserProjects) {
-        setError('Failed to verify project access');
-        return;
-      }
-      
-      const adminProjectIds = currentUserProjects.map(p => p.project_id);
-      
-      // Check if member is in any shared projects
-      const { data: memberProjects, error: memberProjectsError } = await supabase
-        .from('projects_project_members')
-        .select('project_id')
-        .eq('user_id', memberId)
-        .in('project_id', adminProjectIds);
-      
-      if (memberProjectsError || !memberProjects || memberProjects.length === 0) {
-        setError('Access denied: This member is not in your shared projects');
-        return;
-      }
-      
       // Fetch member basic info
       const { data: memberInfo, error: memberError } = await supabase
         .from('auth_user')
@@ -252,7 +171,7 @@ export default function ReportingPage() {
         throw memberError;
       }
       
-      // Fetch member's tasks from shared projects only
+      // Fetch ALL member's tasks from ALL projects (admin access)
       const { data: memberTasks, error: tasksError } = await supabase
         .from('projects_task')
         .select(`
@@ -269,8 +188,7 @@ export default function ReportingPage() {
             name
           )
         `)
-        .eq('assignee_id', memberId)
-        .in('project_id', adminProjectIds);
+        .eq('assignee_id', memberId);
       
       if (tasksError) {
         console.error('Member tasks fetch error:', tasksError);
@@ -288,11 +206,29 @@ export default function ReportingPage() {
         return new Date(task.due_date) < new Date();
       }) || [];
       
-      // Get project involvement
-      const projectInvolvement = memberProjects.map(mp => {
-        const project = currentUserProjects.find(p => p.project_id === mp.project_id);
-        return { project_id: mp.project_id, project_name: project?.projects_project?.[0]?.name || 'Unknown' };
-      });
+      // Get project involvement from all projects member is assigned to
+      const { data: memberProjects, error: memberProjectsError } = await supabase
+        .from('projects_project_members')
+        .select(`
+          project_id,
+          projects_project:project_id (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', memberId);
+      
+      if (memberProjectsError) {
+        console.error('Member projects fetch error:', memberProjectsError);
+        throw memberProjectsError;
+      }
+      
+      const projectInvolvement = memberProjects?.map(mp => ({
+        project_id: mp.project_id,
+        project_name: Array.isArray(mp.projects_project) 
+          ? (mp.projects_project[0]?.name || 'Unknown')
+          : (mp.projects_project?.name || 'Unknown')
+      })) || [];
       
       // Prepare overdue task details
       const overdueTaskDetails = overdueTasks.map(task => ({
