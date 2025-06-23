@@ -208,7 +208,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .from('leave_requests')
         .insert([{
           employee_id: user.id,
-          employee_name: user.name || user.username || 'Unknown',
+          employee_name: user.name || user.email?.split('@')[0] || 'Unknown',
           employee_email: user.email,
           project_id: leaveRequest.project_id,
           project_name: leaveRequest.project_name,
