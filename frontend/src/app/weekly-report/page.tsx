@@ -73,14 +73,14 @@ export default function WeeklyReportPage() {
       return;
     }
     
-    // Determine view mode based on user role
+    // Determine view mode based on user role  
     console.log('User role detection:', { 
       user: user, 
       role: user?.role, 
-      userMetadata: user?.user_metadata 
+      userMetadata: (user as any)?.user_metadata 
     });
     
-    const userRole = user?.role || user?.user_metadata?.role;
+    const userRole = user?.role || (user as any)?.user_metadata?.role;
     if (userRole === 'hr' || userRole === 'admin') {
       console.log('Setting admin view mode for role:', userRole);
       setViewMode('admin');
