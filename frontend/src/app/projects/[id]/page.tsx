@@ -2785,85 +2785,78 @@ export default function ProjectDetailPage() {
                 <div className="gantt-sidebar-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
                   <div className="gantt-sidebar-header-enhanced" style={{ 
                     display: 'flex', 
-                    background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
-                    borderRadius: '8px 8px 0 0',
+                    background: '#ffffff', 
                     border: '2px solid #000000',
-                    borderBottom: 'none'
+                    borderBottom: '2px solid #000000'
                   }}>
                     <div style={{ 
                       flex: '3', 
                       padding: '1rem', 
                       fontWeight: '700', 
-                      color: '#ffffff', 
+                      color: '#000000', 
                       fontSize: '1rem',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem'
+                      borderRight: '2px solid #000000'
                     }}>
-                      📋 TASK
+                      TASK
                     </div>
                     <div style={{ 
                       flex: '1', 
                       padding: '1rem', 
                       fontWeight: '700', 
-                      color: '#ffffff', 
+                      color: '#000000', 
                       fontSize: '1rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.5rem',
-                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                      borderRight: '2px solid #000000'
                     }}>
-                      ⏱️ DURATION
+                      DURATION
                     </div>
                     <div style={{ 
                       flex: '2', 
                       padding: '1rem', 
                       fontWeight: '700', 
-                      color: '#ffffff', 
+                      color: '#000000', 
                       fontSize: '1rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.5rem',
-                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                      borderRight: '2px solid #000000'
                     }}>
-                      👤 ASSIGNEE
+                      ASSIGNEE
                     </div>
                     <div style={{ 
                       flex: '1.5', 
                       padding: '1rem', 
                       fontWeight: '700', 
-                      color: '#ffffff', 
+                      color: '#000000', 
                       fontSize: '1rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.5rem',
-                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                      borderRight: '2px solid #000000'
                     }}>
-                      🎯 STATUS
+                      STATUS
                     </div>
                     <div style={{ 
                       flex: '1.5', 
                       padding: '1rem', 
                       fontWeight: '700', 
-                      color: '#ffffff', 
+                      color: '#000000', 
                       fontSize: '1rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                      justifyContent: 'center'
                     }}>
-                      🔥 PRIORITY
+                      PRIORITY
                     </div>
                   </div>
                                      <div className="gantt-tasks-enhanced" style={{ 
                      background: '#ffffff',
                      border: '2px solid #000000',
                      borderTop: 'none',
-                     borderRadius: '0 0 8px 8px',
                      overflow: 'hidden'
                    }}>
                      {tasks.length === 0 ? (
@@ -2890,7 +2883,7 @@ export default function ProjectDetailPage() {
                             style={{ 
                               cursor: 'pointer', 
                               transition: 'all 0.2s ease',
-                              borderBottom: '1px solid #e5e7eb'
+                              borderBottom: '2px solid #000000'
                             }}
                             onMouseOver={(e) => {
                               e.currentTarget.style.backgroundColor = '#f0f9ff';
@@ -2903,128 +2896,114 @@ export default function ProjectDetailPage() {
                               e.currentTarget.style.boxShadow = 'none';
                             }}
                           >
-                            <div className="gantt-task-info-enhanced" style={{ 
-                              display: 'flex', 
-                              width: '100%',
-                              background: '#ffffff',
-                              border: '1px solid #e5e7eb',
-                              borderTop: 'none'
-                            }}>
-                              <div className="gantt-task-name-enhanced" style={{ 
-                                flex: '3', 
-                                display: 'flex', 
-                                flexDirection: 'column', 
-                                gap: '0.25rem',
-                                padding: '1rem',
-                                borderRight: '1px solid #e5e7eb'
-                              }}>
-                                <span className="task-title" style={{ fontWeight: '600', color: '#000000', fontSize: '1rem' }}>{task.name}</span>
-                                {task.description && (
-                                  <span style={{ fontSize: '0.85rem', color: '#666666', lineHeight: '1.3' }}>{task.description}</span>
-                                )}
-                                <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
-                                  {task.start_date && <span>🚀 Start: {formatDate(task.start_date)}</span>}
-                                  {task.due_date && (
-                                    <span style={{ color: isOverdue(task.due_date) ? '#ef4444' : '#666666' }}>
-                                      🎯 Due: {formatDate(task.due_date)}
-                                      {isOverdue(task.due_date) && ' ⚠️ (Overdue)'}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="gantt-task-duration" style={{ 
-                                flex: '1', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                fontWeight: '700',
-                                fontSize: '1.1rem',
-                                color: '#3b82f6',
-                                borderRight: '1px solid #e5e7eb'
-                              }}>
-                                {durationInDays}d
-                              </div>
-                              <div className="gantt-task-assignee" style={{ 
-                                flex: '2', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                padding: '1rem',
-                                borderRight: '1px solid #e5e7eb'
-                              }}>
-                                {task.assignee ? (
-                                  <>
-                                    <div className="assignee-avatar-enhanced" style={{
-                                      width: '32px',
-                                      height: '32px',
-                                      borderRadius: '50%',
-                                      background: 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)',
-                                      color: '#ffffff',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontSize: '0.9rem',
-                                      fontWeight: '600',
-                                      border: '2px solid #ffffff',
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                    }}>
-                                      {task.assignee.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span style={{ fontSize: '0.9rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name}</span>
-                                  </>
-                                ) : (
-                                  <span className="unassigned" style={{ color: '#9ca3af', fontStyle: 'italic' }}>👤 Unassigned</span>
-                                )}
-                              </div>
-                              <div style={{ 
-                                flex: '1.5', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                borderRight: '1px solid #e5e7eb'
-                              }}>
-                                <span style={{
-                                  padding: '0.5rem 1rem',
-                                  borderRadius: '20px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: '600',
-                                  background: task.status === 'done' ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 
-                                             task.status === 'review' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                                             task.status === 'in_progress' ? 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)' : 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
-                                  color: '#ffffff',
-                                  border: 'none',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                }}>
-                                  {task.status === 'done' ? '✅' : 
-                                   task.status === 'review' ? '👀' :
-                                   task.status === 'in_progress' ? '⚡' : '📝'} {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
-                                </span>
-                              </div>
-                              <div style={{ 
-                                flex: '1.5', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center'
-                              }}>
-                                <span style={{
-                                  padding: '0.5rem 1rem',
-                                  borderRadius: '20px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: '600',
-                                  background: task.priority === 'urgent' ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' : 
-                                             task.priority === 'high' ? 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)' :
-                                             task.priority === 'medium' ? 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)' : 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
-                                  color: '#ffffff',
-                                  border: 'none',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                }}>
-                                  {task.priority === 'urgent' ? '🔴' : 
-                                   task.priority === 'high' ? '🟠' :
-                                   task.priority === 'medium' ? '🟡' : '🟢'} {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
-                                </span>
-                              </div>
-                            </div>
+                                                         <div className="gantt-task-info-enhanced" style={{ 
+                               display: 'flex', 
+                               width: '100%',
+                               background: '#ffffff'
+                             }}>
+                               <div className="gantt-task-name-enhanced" style={{ 
+                                 flex: '3', 
+                                 display: 'flex', 
+                                 flexDirection: 'column', 
+                                 gap: '0.25rem',
+                                 padding: '1rem',
+                                 borderRight: '2px solid #000000'
+                               }}>
+                                 <span className="task-title" style={{ fontWeight: '600', color: '#000000', fontSize: '1rem' }}>{task.name}</span>
+                                 {task.description && (
+                                   <span style={{ fontSize: '0.85rem', color: '#666666', lineHeight: '1.3' }}>{task.description}</span>
+                                 )}
+                                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
+                                   {task.start_date && <span>Start: {formatDate(task.start_date)}</span>}
+                                   {task.due_date && (
+                                     <span style={{ color: isOverdue(task.due_date) ? '#ef4444' : '#666666' }}>
+                                       Due: {formatDate(task.due_date)}
+                                       {isOverdue(task.due_date) && ' (Overdue)'}
+                                     </span>
+                                   )}
+                                 </div>
+                               </div>
+                               <div className="gantt-task-duration" style={{ 
+                                 flex: '1', 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 justifyContent: 'center', 
+                                 fontWeight: '600',
+                                 fontSize: '1rem',
+                                 color: '#000000',
+                                 borderRight: '2px solid #000000'
+                               }}>
+                                 {durationInDays}d
+                               </div>
+                               <div className="gantt-task-assignee" style={{ 
+                                 flex: '2', 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 justifyContent: 'center',
+                                 gap: '0.5rem',
+                                 padding: '1rem',
+                                 borderRight: '2px solid #000000'
+                               }}>
+                                 {task.assignee ? (
+                                   <>
+                                     <div className="assignee-avatar-enhanced" style={{
+                                       width: '32px',
+                                       height: '32px',
+                                       borderRadius: '50%',
+                                       background: '#000000',
+                                       color: '#ffffff',
+                                       display: 'flex',
+                                       alignItems: 'center',
+                                       justifyContent: 'center',
+                                       fontSize: '0.9rem',
+                                       fontWeight: '600'
+                                     }}>
+                                       {task.assignee.name.charAt(0).toUpperCase()}
+                                     </div>
+                                     <span style={{ fontSize: '0.9rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name}</span>
+                                   </>
+                                 ) : (
+                                   <span className="unassigned" style={{ color: '#666666', fontStyle: 'italic' }}>Unassigned</span>
+                                 )}
+                               </div>
+                               <div style={{ 
+                                 flex: '1.5', 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 justifyContent: 'center',
+                                 borderRight: '2px solid #000000'
+                               }}>
+                                 <span style={{
+                                   padding: '0.5rem 1rem',
+                                   borderRadius: '4px',
+                                   fontSize: '0.8rem',
+                                   fontWeight: '600',
+                                   background: '#ffffff',
+                                   color: '#000000',
+                                   border: '2px solid #000000'
+                                 }}>
+                                   {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
+                                 </span>
+                               </div>
+                               <div style={{ 
+                                 flex: '1.5', 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 justifyContent: 'center'
+                               }}>
+                                 <span style={{
+                                   padding: '0.5rem 1rem',
+                                   borderRadius: '4px',
+                                   fontSize: '0.8rem',
+                                   fontWeight: '600',
+                                   background: '#ffffff',
+                                   color: '#000000',
+                                   border: '2px solid #000000'
+                                 }}>
+                                   {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
+                                 </span>
+                               </div>
+                             </div>
                           </div>
                         );
                       })
@@ -3063,22 +3042,50 @@ export default function ProjectDetailPage() {
             </div>
 
             <div className="gantt-chart-enhanced">
-              <div className="gantt-timeline-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
-                <div className="gantt-timeline-header-enhanced">
+              <div className="gantt-timeline-enhanced" style={{ 
+                width: '100%', 
+                maxWidth: 'none',
+                overflowX: 'auto',
+                border: '2px solid #000000'
+              }}>
+                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '1200px' }}>
                   <div className="gantt-month-header">
                     <div className="month-label">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
                   </div>
                   <div className="gantt-week-headers">
-                    {Array.from({ length: 4 }, (_, weekIndex) => (
-                      <div key={weekIndex} className="week-header">
-                        Week {weekIndex + 1}
-                      </div>
-                    ))}
+                    {Array.from({ length: 8 }, (_, weekIndex) => {
+                      // Calculate proper week start (Monday)
+                      const today = new Date();
+                      const currentDay = today.getDay();
+                      const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay; // Handle Sunday (0) as end of week
+                      const startOfWeek = new Date(today);
+                      startOfWeek.setDate(today.getDate() + mondayOffset + (weekIndex * 7));
+                      
+                      return (
+                        <div key={weekIndex} className="week-header" style={{ 
+                          padding: '0.5rem',
+                          borderRight: weekIndex < 7 ? '1px solid #000000' : 'none',
+                          fontWeight: '600',
+                          textAlign: 'center',
+                          background: '#f3f4f6'
+                        }}>
+                          Week {weekIndex + 1}
+                          <div style={{ fontSize: '0.75rem', color: '#666666' }}>
+                            {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="gantt-date-grid">
-                    {Array.from({ length: 30 }, (_, i) => {
-                      const date = new Date();
-                      date.setDate(date.getDate() + i - 5); // Start 5 days before today
+                    {Array.from({ length: 56 }, (_, i) => {
+                      // Calculate proper week start and add days
+                      const today = new Date();
+                      const currentDay = today.getDay();
+                      const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+                      const date = new Date(today);
+                      date.setDate(today.getDate() + mondayOffset + i);
+                      
                       const isToday = date.toDateString() === new Date().toDateString();
                       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                       
@@ -3086,23 +3093,42 @@ export default function ProjectDetailPage() {
                         <div 
                           key={i} 
                           className={`gantt-date-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}
+                          style={{
+                            minWidth: '40px',
+                            padding: '0.5rem',
+                            borderRight: i < 55 ? '1px solid #e5e7eb' : 'none',
+                            borderBottom: '1px solid #000000',
+                            textAlign: 'center',
+                            background: isToday ? '#fef3c7' : isWeekend ? '#f9fafb' : '#ffffff'
+                          }}
                         >
-                          <div className="date-number">{date.getDate()}</div>
-                          <div className="date-day">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                          <div className="date-number" style={{ fontWeight: '600', fontSize: '0.9rem' }}>
+                            {date.getDate()}
+                          </div>
+                          <div className="date-day" style={{ fontSize: '0.7rem', color: '#666666' }}>
+                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
                 
-                <div className="gantt-grid-container">
+                <div className="gantt-grid-container" style={{ minWidth: '1200px' }}>
                   <div className="gantt-vertical-grid">
-                    {Array.from({ length: 30 }, (_, i) => (
-                      <div key={i} className="grid-line-vertical"></div>
+                    {Array.from({ length: 56 }, (_, i) => (
+                      <div key={i} className="grid-line-vertical" style={{
+                        position: 'absolute',
+                        left: `${(i * 40) + 40}px`,
+                        top: 0,
+                        bottom: 0,
+                        width: '1px',
+                        background: '#e5e7eb'
+                      }}></div>
                     ))}
                   </div>
                   
-                  <div className="gantt-bars-enhanced">
+                  <div className="gantt-bars-enhanced" style={{ minWidth: '1200px' }}>
                     {tasks.length === 0 ? (
                       <div className="gantt-bars-empty">
                         <p>Create tasks to see them on the timeline</p>
@@ -3113,39 +3139,76 @@ export default function ProjectDetailPage() {
                         const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                         const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
                         
-                        // Calculate position relative to the timeline start (today - 5 days)
-                        const timelineStart = new Date();
-                        timelineStart.setDate(timelineStart.getDate() - 5);
+                        // Calculate position relative to timeline start (Monday of current week)
+                        const today = new Date();
+                        const currentDay = today.getDay();
+                        const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+                        const timelineStart = new Date(today);
+                        timelineStart.setDate(today.getDate() + mondayOffset);
+                        
                         const daysFromStart = Math.ceil((taskStartDate.getTime() - timelineStart.getTime()) / (24 * 60 * 60 * 1000));
                         
-                        // Calculate width and position as percentages of 30-day timeline
-                        const barWidth = Math.min((durationInDays / 30) * 100, 95);
-                        const barLeft = Math.max(0, Math.min((daysFromStart / 30) * 100, 90));
+                        // Calculate width and position for 56-day timeline
+                        const barWidth = Math.min((durationInDays * 40), 56 * 40 - 40); // 40px per day
+                        const barLeft = Math.max(0, daysFromStart * 40); // 40px per day
                         
                         const statusConfig = getStatusConfig(task.status);
                         const isOverdueTask = isOverdue(task.due_date);
                         
                         return (
-                          <div key={task.id} className="gantt-bar-row-enhanced">
-                            <div className="gantt-horizontal-grid-line"></div>
+                          <div key={task.id} className="gantt-bar-row-enhanced" style={{
+                            position: 'relative',
+                            height: '40px',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            <div className="gantt-horizontal-grid-line" style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: '1px',
+                              background: '#e5e7eb'
+                            }}></div>
                             <div 
                               className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
                               style={{
-                                width: `${barWidth}%`,
-                                left: `${barLeft}%`
+                                width: `${barWidth}px`,
+                                left: `${barLeft}px`,
+                                position: 'absolute',
+                                height: '30px',
+                                background: '#3b82f6',
+                                border: '2px solid #000000',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginTop: '5px'
                               }}
                               title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInDays} days\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
                               onClick={(e) => handleTaskClick(task, e)}
                             >
-                              <div className="gantt-bar-content-enhanced">
-                                <div className="gantt-bar-fill" style={{ 
-                                  width: task.status === 'done' ? '100%' : 
-                                         task.status === 'review' ? '80%' :
-                                         task.status === 'in_progress' ? '50%' : '10%',
-                                  backgroundColor: task.status === 'done' ? '#10b981' : '#3b82f6'
-                                }}></div>
-                                <span className="gantt-bar-text-enhanced">{task.name}</span>
-                                <span className="gantt-bar-duration-enhanced">{durationInDays}d</span>
+                              <div className="gantt-bar-content-enhanced" style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '0 0.5rem',
+                                width: '100%',
+                                height: '100%'
+                              }}>
+                                <span className="gantt-bar-text-enhanced" style={{
+                                  color: '#ffffff',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '600',
+                                  textOverflow: 'ellipsis',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  flex: 1
+                                }}>{task.name}</span>
+                                <span className="gantt-bar-duration-enhanced" style={{
+                                  color: '#ffffff',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  marginLeft: '0.5rem'
+                                }}>{durationInDays}d</span>
                               </div>
                               {isOverdueTask && <div className="overdue-indicator">!</div>}
                             </div>
