@@ -2222,16 +2222,18 @@ Your report is now available in the system.`);
           backdrop-filter: blur(4px);
         }
         
-        .weekly-report-modal {
-          background: #ffffff;
-          border: 3px solid #000000;
-          border-radius: 0;
-          width: 100%;
-          max-width: 1200px;
-          max-height: 90vh;
-          overflow: hidden;
-          box-shadow: 8px 8px 0px #000000;
-        }
+                 .weekly-report-modal {
+           background: #ffffff;
+           border: 3px solid #000000;
+           border-radius: 0;
+           width: 100%;
+           max-width: 1200px;
+           max-height: 95vh;
+           overflow: hidden;
+           box-shadow: 8px 8px 0px #000000;
+           display: flex;
+           flex-direction: column;
+         }
         
         .weekly-report-header {
           background: #000000;
@@ -2271,12 +2273,14 @@ Your report is now available in the system.`);
           transform: scale(1.1);
         }
         
-        .weekly-report-body {
-          padding: 3rem;
-          max-height: calc(90vh - 120px);
-          overflow-y: auto;
-          background: #ffffff;
-        }
+                 .weekly-report-body {
+           padding: 2rem 3rem 3rem 3rem;
+           flex: 1;
+           overflow-y: auto;
+           overflow-x: hidden;
+           background: #ffffff;
+           scroll-behavior: smooth;
+         }
         
         .week-info-banner {
           background: #f8f9fa;
@@ -2301,11 +2305,12 @@ Your report is now available in the system.`);
           margin: 0;
         }
         
-        .weekly-report-form {
-          display: flex;
-          flex-direction: column;
-          gap: 2.5rem;
-        }
+                 .weekly-report-form {
+           display: flex;
+           flex-direction: column;
+           gap: 2.5rem;
+           padding-bottom: 2rem;
+         }
         
         .form-row {
           display: flex;
@@ -2459,13 +2464,14 @@ Your report is now available in the system.`);
           color: #888888;
         }
         
-        .weekly-form-buttons {
-          display: flex;
-          gap: 1.5rem;
-          justify-content: flex-end;
-          padding-top: 2rem;
-          border-top: 2px solid #e5e5e5;
-        }
+                 .weekly-form-buttons {
+           display: flex;
+           gap: 1.5rem;
+           justify-content: flex-end;
+           padding: 2rem 0 1rem 0;
+           margin-top: 2rem;
+           border-top: 2px solid #e5e5e5;
+         }
         
         .weekly-btn-cancel {
           background: #ffffff;
@@ -2507,36 +2513,44 @@ Your report is now available in the system.`);
           box-shadow: 3px 3px 0px #666666;
         }
         
-        @media (max-width: 768px) {
-          .weekly-report-overlay {
-            padding: 1rem;
-          }
-          
-          .weekly-report-modal {
-            max-width: 100%;
-          }
-          
-          .weekly-report-header {
-            padding: 1.5rem;
-          }
-          
-          .weekly-report-title {
-            font-size: 1.5rem;
-          }
-          
-          .weekly-report-body {
-            padding: 2rem;
-          }
-          
-          .form-row {
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-          
-          .weekly-form-buttons {
-            flex-direction: column;
-          }
-        }
+                 @media (max-width: 768px) {
+           .weekly-report-overlay {
+             padding: 1rem;
+           }
+           
+           .weekly-report-modal {
+             max-width: 100%;
+             max-height: 98vh;
+           }
+           
+           .weekly-report-header {
+             padding: 1.5rem;
+           }
+           
+           .weekly-report-title {
+             font-size: 1.5rem;
+           }
+           
+           .weekly-report-body {
+             padding: 1.5rem;
+           }
+           
+           .form-row {
+             flex-direction: column;
+             gap: 1.5rem;
+           }
+           
+           .weekly-form-buttons {
+             flex-direction: column;
+             gap: 1rem;
+           }
+           
+           .weekly-btn-cancel,
+           .weekly-btn-submit {
+             width: 100%;
+             text-align: center;
+           }
+         }
 
       `}</style>
     </div>
