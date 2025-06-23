@@ -302,7 +302,7 @@ export default function ReportingPage() {
         priority: task.priority,
         project_name: Array.isArray(task.projects_project) 
           ? (task.projects_project[0]?.name || 'Unknown')
-          : (task.projects_project?.name || 'Unknown'),
+          : (task.projects_project ? String(task.projects_project) : 'Unknown'),
         days_overdue: Math.ceil((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 60 * 60 * 24))
       }));
       

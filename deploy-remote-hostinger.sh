@@ -30,6 +30,10 @@ git pull origin main
 # Navigate to frontend
 cd frontend
 
+# Clean build directory to fix BUILD_ID issue
+echo "🧹 Cleaning build directory..."
+rm -rf .next
+
 # Install any new dependencies
 echo "📦 Installing dependencies..."
 npm install
@@ -58,8 +62,8 @@ echo "🎉 Remote deployment completed successfully!"
 echo "🌐 Application is running at: https://srv875725.hstgr.cloud"
 echo ""
 echo "Changes deployed:"
-echo "- Fixed timetable project visibility issue"
-echo "- Projects now appear in dropdown even without tasks"
+echo "- Fixed TypeScript error in reporting page"
+echo "- Clean rebuild to fix BUILD_ID issue"
 echo ""
 ENDSSH
 
