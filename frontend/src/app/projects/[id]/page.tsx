@@ -2783,20 +2783,101 @@ export default function ProjectDetailPage() {
                 </div>
                 
                 <div className="gantt-sidebar-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
-                  <div className="gantt-sidebar-header-enhanced">
-                    <div className="task-header-cell" style={{ flex: '3' }}>Task</div>
-                    <div className="duration-header-cell" style={{ flex: '1' }}>Duration</div>
-                    <div className="assignee-header-cell" style={{ flex: '2' }}>Assignee</div>
-                    <div style={{ flex: '1', padding: '0.75rem', fontWeight: '600', color: '#000000', borderBottom: '2px solid #000000' }}>Status</div>
-                    <div style={{ flex: '1', padding: '0.75rem', fontWeight: '600', color: '#000000', borderBottom: '2px solid #000000' }}>Priority</div>
+                  <div className="gantt-sidebar-header-enhanced" style={{ 
+                    display: 'flex', 
+                    background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
+                    borderRadius: '8px 8px 0 0',
+                    border: '2px solid #000000',
+                    borderBottom: 'none'
+                  }}>
+                    <div style={{ 
+                      flex: '3', 
+                      padding: '1rem', 
+                      fontWeight: '700', 
+                      color: '#ffffff', 
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      📋 TASK
+                    </div>
+                    <div style={{ 
+                      flex: '1', 
+                      padding: '1rem', 
+                      fontWeight: '700', 
+                      color: '#ffffff', 
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      ⏱️ DURATION
+                    </div>
+                    <div style={{ 
+                      flex: '2', 
+                      padding: '1rem', 
+                      fontWeight: '700', 
+                      color: '#ffffff', 
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      👤 ASSIGNEE
+                    </div>
+                    <div style={{ 
+                      flex: '1.5', 
+                      padding: '1rem', 
+                      fontWeight: '700', 
+                      color: '#ffffff', 
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      🎯 STATUS
+                    </div>
+                    <div style={{ 
+                      flex: '1.5', 
+                      padding: '1rem', 
+                      fontWeight: '700', 
+                      color: '#ffffff', 
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      borderLeft: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      🔥 PRIORITY
+                    </div>
                   </div>
-                  <div className="gantt-tasks-enhanced">
-                    {tasks.length === 0 ? (
-                      <div className="gantt-empty-state">
-                        <p>No tasks available</p>
-                      </div>
-                    ) : (
-                      tasks.map((task) => {
+                                     <div className="gantt-tasks-enhanced" style={{ 
+                     background: '#ffffff',
+                     border: '2px solid #000000',
+                     borderTop: 'none',
+                     borderRadius: '0 0 8px 8px',
+                     overflow: 'hidden'
+                   }}>
+                     {tasks.length === 0 ? (
+                       <div className="gantt-empty-state" style={{
+                         padding: '3rem',
+                         textAlign: 'center',
+                         color: '#6b7280',
+                         background: '#f9fafb'
+                       }}>
+                         <p style={{ margin: '0', fontSize: '1.1rem' }}>📝 No tasks available</p>
+                         <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to get started!</p>
+                       </div>
+                     ) : (
+                       tasks.map((task) => {
                         const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
                         const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                         const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
@@ -2806,68 +2887,141 @@ export default function ProjectDetailPage() {
                             key={task.id} 
                             className="gantt-task-row-enhanced"
                             onClick={(e) => handleTaskClick(task, e)}
-                            style={{ cursor: 'pointer', transition: 'background-color 0.2s ease' }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            style={{ 
+                              cursor: 'pointer', 
+                              transition: 'all 0.2s ease',
+                              borderBottom: '1px solid #e5e7eb'
+                            }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f0f9ff';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
                           >
-                            <div className="gantt-task-info-enhanced" style={{ display: 'flex', width: '100%' }}>
-                              <div className="gantt-task-name-enhanced" style={{ flex: '3', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span className="task-title" style={{ fontWeight: '600', color: '#000000' }}>{task.name}</span>
+                            <div className="gantt-task-info-enhanced" style={{ 
+                              display: 'flex', 
+                              width: '100%',
+                              background: '#ffffff',
+                              border: '1px solid #e5e7eb',
+                              borderTop: 'none'
+                            }}>
+                              <div className="gantt-task-name-enhanced" style={{ 
+                                flex: '3', 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                gap: '0.25rem',
+                                padding: '1rem',
+                                borderRight: '1px solid #e5e7eb'
+                              }}>
+                                <span className="task-title" style={{ fontWeight: '600', color: '#000000', fontSize: '1rem' }}>{task.name}</span>
                                 {task.description && (
-                                  <span style={{ fontSize: '0.8rem', color: '#666666', lineHeight: '1.3' }}>{task.description}</span>
+                                  <span style={{ fontSize: '0.85rem', color: '#666666', lineHeight: '1.3' }}>{task.description}</span>
                                 )}
-                                <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: '#666666' }}>
-                                  {task.start_date && <span>Start: {formatDate(task.start_date)}</span>}
+                                <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
+                                  {task.start_date && <span>🚀 Start: {formatDate(task.start_date)}</span>}
                                   {task.due_date && (
                                     <span style={{ color: isOverdue(task.due_date) ? '#ef4444' : '#666666' }}>
-                                      Due: {formatDate(task.due_date)}
-                                      {isOverdue(task.due_date) && ' (Overdue)'}
+                                      🎯 Due: {formatDate(task.due_date)}
+                                      {isOverdue(task.due_date) && ' ⚠️ (Overdue)'}
                                     </span>
                                   )}
                                 </div>
                               </div>
-                              <div className="gantt-task-duration" style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600' }}>
+                              <div className="gantt-task-duration" style={{ 
+                                flex: '1', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                fontWeight: '700',
+                                fontSize: '1.1rem',
+                                color: '#3b82f6',
+                                borderRight: '1px solid #e5e7eb'
+                              }}>
                                 {durationInDays}d
                               </div>
-                              <div className="gantt-task-assignee" style={{ flex: '2', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div className="gantt-task-assignee" style={{ 
+                                flex: '2', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                padding: '1rem',
+                                borderRight: '1px solid #e5e7eb'
+                              }}>
                                 {task.assignee ? (
                                   <>
-                                    <div className="assignee-avatar-enhanced">
+                                    <div className="assignee-avatar-enhanced" style={{
+                                      width: '32px',
+                                      height: '32px',
+                                      borderRadius: '50%',
+                                      background: 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)',
+                                      color: '#ffffff',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '0.9rem',
+                                      fontWeight: '600',
+                                      border: '2px solid #ffffff',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}>
                                       {task.assignee.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <span style={{ fontSize: '0.9rem', color: '#000000' }}>{task.assignee.name}</span>
+                                    <span style={{ fontSize: '0.9rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name}</span>
                                   </>
                                 ) : (
-                                  <span className="unassigned">Unassigned</span>
+                                  <span className="unassigned" style={{ color: '#9ca3af', fontStyle: 'italic' }}>👤 Unassigned</span>
                                 )}
                               </div>
-                              <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ 
+                                flex: '1.5', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                borderRight: '1px solid #e5e7eb'
+                              }}>
                                 <span style={{
-                                  padding: '0.25rem 0.75rem',
-                                  borderRadius: '4px',
-                                  fontSize: '0.75rem',
+                                  padding: '0.5rem 1rem',
+                                  borderRadius: '20px',
+                                  fontSize: '0.8rem',
                                   fontWeight: '600',
-                                  background: task.status === 'done' ? '#d1d5db' : 
-                                             task.status === 'review' ? '#e5e7eb' :
-                                             task.status === 'in_progress' ? '#f3f4f6' : '#ffffff',
-                                  color: '#000000',
-                                  border: '1px solid #000000'
+                                  background: task.status === 'done' ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 
+                                             task.status === 'review' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                             task.status === 'in_progress' ? 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)' : 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                 }}>
-                                  {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
+                                  {task.status === 'done' ? '✅' : 
+                                   task.status === 'review' ? '👀' :
+                                   task.status === 'in_progress' ? '⚡' : '📝'} {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
                                 </span>
                               </div>
-                              <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ 
+                                flex: '1.5', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center'
+                              }}>
                                 <span style={{
-                                  padding: '0.25rem 0.75rem',
-                                  borderRadius: '4px',
-                                  fontSize: '0.75rem',
+                                  padding: '0.5rem 1rem',
+                                  borderRadius: '20px',
+                                  fontSize: '0.8rem',
                                   fontWeight: '600',
-                                  background: task.priority === 'urgent' ? '#111827' : 
-                                             task.priority === 'high' ? '#374151' :
-                                             task.priority === 'medium' ? '#6b7280' : '#9ca3af',
-                                  color: '#ffffff'
+                                  background: task.priority === 'urgent' ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' : 
+                                             task.priority === 'high' ? 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)' :
+                                             task.priority === 'medium' ? 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)' : 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                 }}>
-                                  {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
+                                  {task.priority === 'urgent' ? '🔴' : 
+                                   task.priority === 'high' ? '🟠' :
+                                   task.priority === 'medium' ? '🟡' : '🟢'} {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
                                 </span>
                               </div>
                             </div>
