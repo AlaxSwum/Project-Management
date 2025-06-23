@@ -1791,10 +1791,12 @@ export default function ProjectDetailPage() {
             background: #ffffff;
             border: 2px solid #000000;
             border-radius: 8px;
-            overflow: visible;
+            overflow: hidden;
             display: flex;
             margin-top: 1rem;
             max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
           }
           
           .gantt-sidebar-enhanced {
@@ -1981,7 +1983,9 @@ export default function ProjectDetailPage() {
             overflow-x: auto;
             overflow-y: hidden;
             max-width: 100%;
+            min-width: 0;
             position: relative;
+            box-sizing: border-box;
           }
           
           .gantt-timeline-header-enhanced {
@@ -3054,10 +3058,11 @@ export default function ProjectDetailPage() {
             <div className="gantt-chart-enhanced">
               <div className="gantt-timeline-enhanced" style={{ 
                 width: '100%', 
-                maxWidth: 'none',
+                maxWidth: '100%',
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                border: '2px solid #000000'
+                border: '2px solid #000000',
+                boxSizing: 'border-box'
               }}>
                 <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2240px' }}>
                   <div className="gantt-month-header">
