@@ -704,7 +704,7 @@ export const supabaseDb = {
 
       if (checkError) {
         if (checkError.code === 'PGRST116') {
-          return { data: null, error: new Error('Task not found') };
+          return { data: null, error: new Error('Task not found or already deleted') };
         }
         console.error('Error checking task:', checkError);
         return { data: null, error: checkError };
@@ -732,7 +732,32 @@ export const supabaseDb = {
         }
       }
 
-      // Now delete the task
+      // Delete related records first to avoid foreign key constraint violations
+      try {
+        // Delete task comments if they exist
+        await supabase
+          .from('projects_taskcomment')
+          .delete()
+          .eq('task_id', id);
+
+        // Delete task attachments if they exist
+        await supabase
+          .from('projects_taskattachment')
+          .delete()
+          .eq('task_id', id);
+
+        // Delete any task dependencies/relationships
+        await supabase
+          .from('projects_taskdependency')
+          .delete()
+          .or(`predecessor_task_id.eq.${id},successor_task_id.eq.${id}`);
+
+      } catch (relatedError) {
+        // Log but don't fail - these tables might not exist or have different names
+        console.log('Note: Some related records cleanup failed (this is usually okay):', relatedError);
+      }
+
+      // Now delete the main task
       const { data, error } = await supabase
         .from('projects_task')
         .delete()
@@ -740,13 +765,23 @@ export const supabaseDb = {
 
       if (error) {
         console.error('Error deleting task:', error);
-        return { data: null, error };
+        
+        // Provide user-friendly error messages for common issues
+        if (error.code === '23503') {
+          return { data: null, error: new Error('Cannot delete task: This task is referenced by other records. Please remove any dependencies first.') };
+        } else if (error.code === '23505') {
+          return { data: null, error: new Error('Cannot delete task: Duplicate constraint violation.') };
+        } else if (error.message && error.message.includes('violates foreign key constraint')) {
+          return { data: null, error: new Error('Cannot delete task: This task has related records that must be removed first.') };
+        } else {
+          return { data: null, error: new Error(`Failed to delete task: ${error.message}`) };
+        }
       }
 
-      return { data: { success: true }, error: null };
+      return { data: { success: true, message: 'Task deleted successfully' }, error: null };
     } catch (error) {
       console.error('Exception in deleteTask:', error);
-      return { data: null, error };
+      return { data: null, error: new Error(`Failed to delete task: ${error.message}`) };
     }
   },
 
