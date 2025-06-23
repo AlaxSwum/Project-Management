@@ -111,6 +111,65 @@ export default function EmployeeAbsentPage() {
         )
       );
       
+      // If approved, update/create employee leave balance
+      if (newStatus === 'approved') {
+        try {
+          // Check if employee has a leave balance record
+          const { data: existingBalance, error: balanceCheckError } = await supabase
+            .from('employee_leave_balance')
+            .select('*')
+            .eq('employee_id', request.employee_id)
+            .single();
+          
+          if (balanceCheckError && balanceCheckError.code !== 'PGRST116') {
+            // Error other than "not found"
+            console.error('Error checking leave balance:', balanceCheckError);
+          } else if (existingBalance) {
+            // Update existing balance
+            const newUsedDays = existingBalance.used_days + request.days_requested;
+            const newAvailableDays = Math.max(0, existingBalance.available_days - request.days_requested);
+            
+            const { error: updateBalanceError } = await supabase
+              .from('employee_leave_balance')
+              .update({
+                used_days: newUsedDays,
+                available_days: newAvailableDays
+              })
+              .eq('employee_id', request.employee_id);
+            
+            if (updateBalanceError) {
+              console.error('Error updating leave balance:', updateBalanceError);
+            } else {
+              console.log(`Updated leave balance: ${request.employee_name} now has ${newAvailableDays} days available`);
+            }
+          } else {
+            // Create new balance record with default 14 days annual leave
+            const startingBalance = 14;
+            const newUsedDays = request.days_requested;
+            const newAvailableDays = Math.max(0, startingBalance - request.days_requested);
+            
+            const { error: createBalanceError } = await supabase
+              .from('employee_leave_balance')
+              .insert([{
+                employee_id: request.employee_id,
+                employee_name: request.employee_name,
+                employee_email: request.employee_email,
+                total_annual_leave: startingBalance,
+                used_days: newUsedDays,
+                available_days: newAvailableDays
+              }]);
+            
+            if (createBalanceError) {
+              console.error('Error creating leave balance:', createBalanceError);
+            } else {
+              console.log(`Created leave balance: ${request.employee_name} has ${newAvailableDays} days remaining from initial ${startingBalance}`);
+            }
+          }
+        } catch (balanceError) {
+          console.error('Error managing leave balance:', balanceError);
+        }
+      }
+      
       // Create notification for the employee
       const notificationTitle = newStatus === 'approved' 
         ? 'Leave Request Approved' 

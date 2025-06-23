@@ -95,6 +95,23 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [usedLeave, setUsedLeave] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
+  // Weekly Report state
+  const [showWeeklyReportForm, setShowWeeklyReportForm] = useState(false);
+  const [weeklyReportData, setWeeklyReportData] = useState({
+    projectId: 0,
+    weekNumber: 0,
+    year: new Date().getFullYear(),
+    weekStartDate: '',
+    weekEndDate: '',
+    dateRangeDisplay: '',
+    keyActivities: '',
+    ongoingTasks: '',
+    challenges: '',
+    teamPerformance: '',
+    nextWeekPriorities: '',
+    otherNotes: ''
+  });
+  
   // Inbox/Notifications state
   const [showInbox, setShowInbox] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -314,8 +331,144 @@ You will be notified once HR reviews your request.`);
   };
 
   const handleWeeklyReport = () => {
+    setShowWeeklyReportForm(true);
     closeDropdown();
-    router.push('/weekly-report');
+    
+    // Calculate current week details
+    const now = new Date();
+    const weekNumber = getWeekNumber(now);
+    const { start: weekStart, end: weekEnd } = getWeekDateRange(now);
+    const dateRangeDisplay = formatWeekDisplay(weekNumber, weekStart, weekEnd, now.getFullYear());
+    
+    setWeeklyReportData(prev => ({
+      ...prev,
+      weekNumber,
+      year: now.getFullYear(),
+      weekStartDate: weekStart.toISOString().split('T')[0],
+      weekEndDate: weekEnd.toISOString().split('T')[0],
+      dateRangeDisplay
+    }));
+  };
+
+  // Week calculation utilities
+  const getWeekNumber = (date: Date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  };
+
+  const getWeekDateRange = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday is first day
+    const start = new Date(d.setDate(diff));
+    const end = new Date(d.setDate(diff + 6));
+    return { start, end };
+  };
+
+  const formatWeekDisplay = (weekNumber: number, startDate: Date, endDate: Date, year: number) => {
+    const startFormatted = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    const endFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return `Week ${weekNumber} – ${startFormatted} to ${endFormatted}, ${year}`;
+  };
+
+  const handleWeeklyReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!weeklyReportData.keyActivities.trim() || !weeklyReportData.projectId) {
+      alert('Please fill in the required fields: Key Activities and Project.');
+      return;
+    }
+
+    try {
+      if (!user?.id) {
+        alert('User not found. Please log in again.');
+        return;
+      }
+
+      const selectedProject = projects.find(p => p.id === weeklyReportData.projectId);
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data, error } = await supabase
+        .from('weekly_reports')
+        .insert([{
+          employee_id: user.id,
+          employee_name: user.name || user.email?.split('@')[0] || 'Unknown',
+          employee_email: user.email,
+          project_id: weeklyReportData.projectId,
+          project_name: selectedProject?.name || null,
+          week_number: weeklyReportData.weekNumber,
+          year: weeklyReportData.year,
+          week_start_date: weeklyReportData.weekStartDate,
+          week_end_date: weeklyReportData.weekEndDate,
+          date_range_display: weeklyReportData.dateRangeDisplay,
+          key_activities: weeklyReportData.keyActivities.trim(),
+          ongoing_tasks: weeklyReportData.ongoingTasks.trim() || null,
+          challenges: weeklyReportData.challenges.trim() || null,
+          team_performance: weeklyReportData.teamPerformance.trim() || null,
+          next_week_priorities: weeklyReportData.nextWeekPriorities.trim() || null,
+          other_notes: weeklyReportData.otherNotes.trim() || null
+        }])
+        .select();
+
+      if (!error) {
+        // Reset form and close modal
+        setWeeklyReportData({
+          projectId: 0,
+          weekNumber: 0,
+          year: new Date().getFullYear(),
+          weekStartDate: '',
+          weekEndDate: '',
+          dateRangeDisplay: '',
+          keyActivities: '',
+          ongoingTasks: '',
+          challenges: '',
+          teamPerformance: '',
+          nextWeekPriorities: '',
+          otherNotes: ''
+        });
+        setShowWeeklyReportForm(false);
+        
+        alert(`Weekly report submitted successfully! 
+        
+Your report for ${weeklyReportData.dateRangeDisplay} has been saved.
+
+Project: ${selectedProject?.name || 'Unknown'}
+Key Activities: ${weeklyReportData.keyActivities.substring(0, 100)}${weeklyReportData.keyActivities.length > 100 ? '...' : ''}
+
+Your report is now available in the system.`);
+      } else {
+        console.error('Error submitting weekly report:', error);
+        if (error.code === '23505') {
+          alert('You have already submitted a weekly report for this week and project. Please edit the existing report or choose a different project.');
+        } else {
+          throw new Error(error.message || 'Failed to submit weekly report');
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting weekly report:', error);
+      alert('Failed to submit weekly report. Please try again.');
+    }
+  };
+
+  const handleWeeklyReportClose = () => {
+    setShowWeeklyReportForm(false);
+    setWeeklyReportData({
+      projectId: 0,
+      weekNumber: 0,
+      year: new Date().getFullYear(),
+      weekStartDate: '',
+      weekEndDate: '',
+      dateRangeDisplay: '',
+      keyActivities: '',
+      ongoingTasks: '',
+      challenges: '',
+      teamPerformance: '',
+      nextWeekPriorities: '',
+      otherNotes: ''
+    });
   };
 
   // Notification/Inbox functions using Supabase
@@ -1621,6 +1774,176 @@ You will be notified once HR reviews your request.`);
                     disabled={calculateRequestedDays() > availableLeave || calculateRequestedDays() === 0}
                   >
                     Submit Request
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Report Form Modal */}
+      {showWeeklyReportForm && (
+        <div className="modal-overlay" onClick={handleWeeklyReportClose}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Weekly Report</h2>
+              <button
+                onClick={handleWeeklyReportClose}
+                className="modal-close-btn"
+                title="Close"
+              >
+                <XMarkIcon style={{ width: '24px', height: '24px' }} />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {/* Week Info Display */}
+              <div style={{ 
+                background: '#f8fafc', 
+                border: '2px solid #e2e8f0', 
+                borderRadius: '8px', 
+                padding: '1rem', 
+                marginBottom: '1.5rem',
+                textAlign: 'center'
+              }}>
+                <h3 style={{ 
+                  color: '#000000', 
+                  fontSize: '1.125rem', 
+                  fontWeight: 'bold', 
+                  margin: '0 0 0.5rem 0' 
+                }}>
+                  {weeklyReportData.dateRangeDisplay}
+                </h3>
+                <p style={{ 
+                  color: '#666666', 
+                  fontSize: '0.875rem', 
+                  margin: 0 
+                }}>
+                  Submit your weekly progress report
+                </p>
+              </div>
+
+              {/* Weekly Report Form */}
+              <form onSubmit={handleWeeklyReportSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Project / Team *</label>
+                  <select
+                    className="form-select"
+                    required
+                    value={weeklyReportData.projectId}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      projectId: Number(e.target.value)
+                    })}
+                  >
+                    <option value={0}>Select the project or team for this report</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Key Activities Completed *</label>
+                  <textarea
+                    className="form-textarea"
+                    required
+                    placeholder="List the main tasks, milestones, or deliverables you completed this week..."
+                    value={weeklyReportData.keyActivities}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      keyActivities: e.target.value
+                    })}
+                    style={{ minHeight: '120px' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Ongoing Tasks</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Tasks or projects that are in progress and will continue next week..."
+                    value={weeklyReportData.ongoingTasks}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      ongoingTasks: e.target.value
+                    })}
+                    style={{ minHeight: '100px' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Challenges / Issues</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Any blockers, challenges, or issues encountered this week..."
+                    value={weeklyReportData.challenges}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      challenges: e.target.value
+                    })}
+                    style={{ minHeight: '100px' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Team Performance / KPIs</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Team metrics, performance indicators, sprint velocity, quality measures..."
+                    value={weeklyReportData.teamPerformance}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      teamPerformance: e.target.value
+                    })}
+                    style={{ minHeight: '100px' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Next Week's Priorities</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Key goals, priorities, and planned activities for the upcoming week..."
+                    value={weeklyReportData.nextWeekPriorities}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      nextWeekPriorities: e.target.value
+                    })}
+                    style={{ minHeight: '100px' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Other Notes</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Additional observations, suggestions, or miscellaneous notes..."
+                    value={weeklyReportData.otherNotes}
+                    onChange={(e) => setWeeklyReportData({
+                      ...weeklyReportData,
+                      otherNotes: e.target.value
+                    })}
+                    style={{ minHeight: '80px' }}
+                  />
+                </div>
+
+                <div className="form-buttons">
+                  <button
+                    type="button"
+                    onClick={handleWeeklyReportClose}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                  >
+                    Submit Report
                   </button>
                 </div>
               </form>
