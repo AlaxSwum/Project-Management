@@ -681,212 +681,212 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           <div className={`tab-content ${isEditing ? 'editing' : ''}`}>
             {activeTab === 'task' && (
               <>
-                {isEditing ? (
-                  <div className="edit-form">
-                    <div className="form-group">
-                      <label className="form-label">Description</label>
-                      <textarea
-                        value={editedTask.description}
-                        onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                        className="form-textarea"
-                        placeholder="Describe what needs to be done..."
-                      />
-                    </div>
+            {isEditing ? (
+              <div className="edit-form">
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    value={editedTask.description}
+                    onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                    className="form-textarea"
+                    placeholder="Describe what needs to be done..."
+                  />
+                </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
-                      <div className="form-group">
-                        <label className="form-label">Priority</label>
-                        <select
-                          value={editedTask.priority}
-                          onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
-                          className="form-select"
-                        >
-                          {PRIORITY_LEVELS.map(priority => (
-                            <option key={priority.value} value={priority.value}>
-                              {priority.icon} {priority.label}
-                            </option>
-                          ))}
-                        </select>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Priority</label>
+                    <select
+                      value={editedTask.priority}
+                      onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
+                      className="form-select"
+                    >
+                      {PRIORITY_LEVELS.map(priority => (
+                        <option key={priority.value} value={priority.value}>
+                          {priority.icon} {priority.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Assignee</label>
+                    <select
+                      value={editedTask.assignee_id}
+                      onChange={(e) => setEditedTask({ ...editedTask, assignee_id: Number(e.target.value) })}
+                      className="form-select"
+                    >
+                      <option value={0}>Unassigned</option>
+                      {users.map(user => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Created by</label>
+                    <input
+                      type="text"
+                      value={task.created_by?.name || 'Unknown User'}
+                      className="form-input"
+                      disabled
+                      style={{ 
+                        backgroundColor: '#f9fafb', 
+                        color: '#6b7280',
+                        cursor: 'not-allowed'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Start Date</label>
+                    <input
+                      type="date"
+                      value={editedTask.start_date}
+                      onChange={(e) => setEditedTask({ ...editedTask, start_date: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Due Date</label>
+                    <input
+                      type="date"
+                      value={editedTask.due_date}
+                      onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Tags</label>
+                  <input
+                    type="text"
+                    value={editedTask.tags}
+                    onChange={(e) => setEditedTask({ ...editedTask, tags: e.target.value })}
+                    className="form-input"
+                    placeholder="frontend, urgent, bug (comma-separated)"
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="btn btn-primary"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={`task-description ${!task.description ? 'empty' : ''}`}>
+                  {task.description || 'No description provided.'}
+                </div>
+
+                <div className="task-details-grid">
+                  <div className="task-detail-item">
+                    <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Assignee</div>
+                      <div className="task-detail-value">
+                        {task.assignee?.name || 'Unassigned'}
                       </div>
-
-                      <div className="form-group">
-                        <label className="form-label">Assignee</label>
-                        <select
-                          value={editedTask.assignee_id}
-                          onChange={(e) => setEditedTask({ ...editedTask, assignee_id: Number(e.target.value) })}
-                          className="form-select"
-                        >
-                          <option value={0}>Unassigned</option>
-                          {users.map(user => (
-                            <option key={user.id} value={user.id}>
-                              {user.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">Created by</label>
-                        <input
-                          type="text"
-                          value={task.created_by?.name || 'Unknown User'}
-                          className="form-input"
-                          disabled
-                          style={{ 
-                            backgroundColor: '#f9fafb', 
-                            color: '#6b7280',
-                            cursor: 'not-allowed'
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
-                      <div className="form-group">
-                        <label className="form-label">Start Date</label>
-                        <input
-                          type="date"
-                          value={editedTask.start_date}
-                          onChange={(e) => setEditedTask({ ...editedTask, start_date: e.target.value })}
-                          className="form-input"
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">Due Date</label>
-                        <input
-                          type="date"
-                          value={editedTask.due_date}
-                          onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
-                          className="form-input"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Tags</label>
-                      <input
-                        type="text"
-                        value={editedTask.tags}
-                        onChange={(e) => setEditedTask({ ...editedTask, tags: e.target.value })}
-                        className="form-input"
-                        placeholder="frontend, urgent, bug (comma-separated)"
-                      />
-                    </div>
-
-                    <div className="form-actions">
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="btn btn-secondary"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        className="btn btn-primary"
-                      >
-                        Save Changes
-                      </button>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className={`task-description ${!task.description ? 'empty' : ''}`}>
-                      {task.description || 'No description provided.'}
+
+                  <div className="task-detail-item">
+                    <CalendarIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Due Date</div>
+                      <div className="task-detail-value">{formatDate(task.due_date)}</div>
                     </div>
+                  </div>
 
-                    <div className="task-details-grid">
-                      <div className="task-detail-item">
-                        <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Assignee</div>
-                          <div className="task-detail-value">
-                            {task.assignee?.name || 'Unassigned'}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="task-detail-item">
+                    <ClockIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Start Date</div>
+                      <div className="task-detail-value">{formatDate(task.start_date)}</div>
+                    </div>
+                  </div>
 
-                      <div className="task-detail-item">
-                        <CalendarIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Due Date</div>
-                          <div className="task-detail-value">{formatDate(task.due_date)}</div>
-                        </div>
-                      </div>
-
-                      <div className="task-detail-item">
-                        <ClockIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Start Date</div>
-                          <div className="task-detail-value">{formatDate(task.start_date)}</div>
-                        </div>
-                      </div>
-
-                      <div className="task-detail-item">
-                        <ClockIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Estimated Hours</div>
-                          <div className="task-detail-value">
-                            {task.estimated_hours ? `${task.estimated_hours}h` : 'Not set'}
-                          </div>
-                        </div>
-                      </div>
-
-                      {task.tags_list && task.tags_list.length > 0 && (
-                        <div className="task-detail-item">
-                          <TagIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                          <div className="task-detail-content">
-                            <div className="task-detail-label">Tags</div>
-                            <div className="task-detail-value">{task.tags_list.join(', ')}</div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="task-detail-item">
-                        <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Created by</div>
-                          <div className="task-detail-value">{task.created_by?.name || 'Unknown User'}</div>
-                        </div>
-                      </div>
-
-                      <div className="task-detail-item">
-                        <CalendarIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Created</div>
-                          <div className="task-detail-value">{formatDateTime(task.created_at)}</div>
-                        </div>
-                      </div>
-
-                      <div className="task-detail-item">
-                        <CalendarIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
-                        <div className="task-detail-content">
-                          <div className="task-detail-label">Last Updated</div>
-                          <div className="task-detail-value">{formatDateTime(task.updated_at)}</div>
-                        </div>
+                  <div className="task-detail-item">
+                    <ClockIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Estimated Hours</div>
+                      <div className="task-detail-value">
+                        {task.estimated_hours ? `${task.estimated_hours}h` : 'Not set'}
                       </div>
                     </div>
+                  </div>
 
-                    {!isEditing && onStatusChange && (
-                      <div className="task-status-actions-inline">
-                        <div className="status-actions-title">Change Status</div>
-                        <div className="status-buttons">
-                          {TASK_STATUSES.map(status => (
-                            <button
-                              key={status.value}
-                              onClick={() => handleStatusChange(status.value)}
-                              className={`status-btn ${status.value === task.status ? 'current' : ''}`}
-                              disabled={status.value === task.status}
-                            >
-                              <span>{status.icon}</span>
-                              <span>{status.label}</span>
-                            </button>
-                          ))}
-                        </div>
+                  {task.tags_list && task.tags_list.length > 0 && (
+                    <div className="task-detail-item">
+                      <TagIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                      <div className="task-detail-content">
+                        <div className="task-detail-label">Tags</div>
+                        <div className="task-detail-value">{task.tags_list.join(', ')}</div>
                       </div>
-                    )}
-                  </>
+                    </div>
+                  )}
+
+                  <div className="task-detail-item">
+                    <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Created by</div>
+                      <div className="task-detail-value">{task.created_by?.name || 'Unknown User'}</div>
+                    </div>
+                  </div>
+
+                  <div className="task-detail-item">
+                    <CalendarIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Created</div>
+                      <div className="task-detail-value">{formatDateTime(task.created_at)}</div>
+                    </div>
+                  </div>
+
+                  <div className="task-detail-item">
+                    <CalendarIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="task-detail-content">
+                      <div className="task-detail-label">Last Updated</div>
+                      <div className="task-detail-value">{formatDateTime(task.updated_at)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {!isEditing && onStatusChange && (
+                  <div className="task-status-actions-inline">
+                    <div className="status-actions-title">Change Status</div>
+                    <div className="status-buttons">
+                      {TASK_STATUSES.map(status => (
+                        <button
+                          key={status.value}
+                          onClick={() => handleStatusChange(status.value)}
+                          className={`status-btn ${status.value === task.status ? 'current' : ''}`}
+                          disabled={status.value === task.status}
+                        >
+                          <span>{status.icon}</span>
+                          <span>{status.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
+              </>
+            )}
               </>
             )}
 
@@ -900,7 +900,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
               <div style={{ height: '100%' }}>
                 <TaskInteractionSection task={task} activeSection="files" />
               </div>
-            )}
+          )}
           </div>
         </div>
       </div>
