@@ -116,38 +116,95 @@ export default function WeeklyReportPage() {
         if (reportsError) throw reportsError;
         setReports(userReports || []);
       } else {
-        // Fetch all reports and employees for admin view
-        const [reportsResult, employeesResult] = await Promise.all([
-          supabase
-            .from('weekly_reports')
-            .select('*')
-            .order('year', { ascending: false })
-            .order('week_number', { ascending: false }),
-          supabase
-            .from('auth_user')
-            .select('id, name, email, role')
-            .eq('is_active', true)
-        ]);
+        // For HR/admin view: Only show reports from employees who share projects with the current user
         
-        if (reportsResult.error) {
-          console.error('Reports fetch error:', reportsResult.error);
-          throw reportsResult.error;
-        }
-        if (employeesResult.error) {
-          console.error('Employees fetch error:', employeesResult.error);
-          throw employeesResult.error;
+        // Step 1: Get projects that the current HR/admin user is a member of
+        const { data: currentUserProjects, error: userProjectsError } = await supabase
+          .from('projects_project_members')
+          .select('project_id')
+          .eq('user_id', user?.id);
+        
+        if (userProjectsError) {
+          console.error('User projects fetch error:', userProjectsError);
+          throw userProjectsError;
         }
         
-        console.log('Fetched reports:', reportsResult.data?.length || 0);
-        console.log('Fetched employees:', employeesResult.data?.length || 0);
-        console.log('Sample report:', reportsResult.data?.[0]);
-        console.log('Sample employee:', employeesResult.data?.[0]);
+        console.log('HR/Admin user is member of projects:', currentUserProjects?.map(p => p.project_id) || []);
         
-        setReports(reportsResult.data || []);
-        setEmployees(employeesResult.data || []);
+        if (!currentUserProjects || currentUserProjects.length === 0) {
+          // HR/admin user is not assigned to any projects, show empty state
+          console.log('HR/Admin user has no project assignments, showing empty state');
+          setReports([]);
+          setEmployees([]);
+          setWeekFolders([]);
+          return;
+        }
+        
+        const adminProjectIds = currentUserProjects.map(p => p.project_id);
+        
+        // Step 2: Get all employees who are members of the same projects
+        const { data: sharedProjectMembers, error: membersError } = await supabase
+          .from('projects_project_members')
+          .select(`
+            user_id,
+            auth_user:user_id (
+              id,
+              name,
+              email,
+              role
+            )
+          `)
+          .in('project_id', adminProjectIds);
+        
+        if (membersError) {
+          console.error('Shared project members fetch error:', membersError);
+          throw membersError;
+        }
+        
+        // Extract unique employee IDs and employee data
+        const sharedEmployeeIds = new Set();
+        const filteredEmployees: any[] = [];
+        
+        sharedProjectMembers?.forEach((member: any) => {
+          if (member.auth_user && !sharedEmployeeIds.has(member.user_id)) {
+            sharedEmployeeIds.add(member.user_id);
+            filteredEmployees.push(member.auth_user);
+          }
+        });
+        
+        console.log('Employees sharing projects with HR/Admin:', filteredEmployees.length);
+        console.log('Shared employee IDs:', Array.from(sharedEmployeeIds));
+        
+        if (filteredEmployees.length === 0) {
+          // No shared employees found
+          console.log('No employees found sharing projects with HR/Admin user');
+          setReports([]);
+          setEmployees([]);
+          setWeekFolders([]);
+          return;
+        }
+        
+        // Step 3: Fetch weekly reports only from employees who share projects
+        const { data: filteredReports, error: reportsError } = await supabase
+          .from('weekly_reports')
+          .select('*')
+          .in('employee_id', Array.from(sharedEmployeeIds))
+          .order('year', { ascending: false })
+          .order('week_number', { ascending: false });
+        
+        if (reportsError) {
+          console.error('Filtered reports fetch error:', reportsError);
+          throw reportsError;
+        }
+        
+        console.log('Filtered reports based on shared projects:', filteredReports?.length || 0);
+        console.log('Sample filtered report:', filteredReports?.[0]);
+        
+        setReports(filteredReports || []);
+        setEmployees(filteredEmployees);
         
         // Organize reports by week for admin view
-        organizeReportsByWeek(reportsResult.data || [], employeesResult.data || []);
+        organizeReportsByWeek(filteredReports || [], filteredEmployees);
       }
     } catch (err: any) {
       console.error('Error fetching data:', err);
@@ -497,7 +554,7 @@ export default function WeeklyReportPage() {
             </h1>
             <p style={{ color: '#666666', marginTop: '0.25rem' }}>
               {viewMode === 'admin' 
-                ? 'Monitor team weekly report submissions'
+                ? 'Monitor weekly reports from employees in your shared projects'
                 : 'View your submitted weekly reports'
               }
             </p>
@@ -528,7 +585,7 @@ export default function WeeklyReportPage() {
                   </div>
                   <div className="stat-item">
                     <div className="stat-number">{employees.length}</div>
-                    <div className="stat-label">Total Employees</div>
+                    <div className="stat-label">Shared Project Employees</div>
                   </div>
                   <div className="stat-item">
                     <div className="stat-number">{reports.length}</div>
@@ -539,8 +596,11 @@ export default function WeeklyReportPage() {
                 {weekFolders.length === 0 ? (
                   <div className="empty-state">
                     <ClipboardDocumentListIcon style={{ width: '80px', height: '80px', color: '#e5e7eb', margin: '0 auto 1rem' }} />
-                    <h3>No Weekly Reports</h3>
-                    <p>No weekly reports have been submitted yet.</p>
+                    <h3>No Weekly Reports Found</h3>
+                    <p>No weekly reports have been submitted by employees in your shared projects.</p>
+                    <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                      You can only view reports from employees who are assigned to the same projects as you.
+                    </div>
                   </div>
                 ) : (
                   weekFolders.map((folder) => {
