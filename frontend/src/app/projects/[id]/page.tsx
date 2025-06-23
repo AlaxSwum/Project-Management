@@ -2024,8 +2024,8 @@ export default function ProjectDetailPage() {
             text-transform: uppercase;
             letter-spacing: 0.05em;
             background: #f0f0f0;
-            min-width: 280px;
-            flex: 0 0 280px;
+            min-width: 200px;
+            flex: 0 0 200px;
           }
           
           .week-header:last-child {
@@ -3064,12 +3064,12 @@ export default function ProjectDetailPage() {
                 border: '2px solid #000000',
                 boxSizing: 'border-box'
               }}>
-                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2240px' }}>
+                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '800px' }}>
                   <div className="gantt-month-header">
                     <div className="month-label">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
                   </div>
                   <div className="gantt-week-headers">
-                    {Array.from({ length: 8 }, (_, weekIndex) => {
+                    {Array.from({ length: 4 }, (_, weekIndex) => {
                       // Calculate proper week start (Monday)
                       const today = new Date();
                       const currentDay = today.getDay();
@@ -3080,7 +3080,7 @@ export default function ProjectDetailPage() {
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
                           padding: '0.5rem',
-                          borderRight: weekIndex < 7 ? '1px solid #000000' : 'none',
+                          borderRight: weekIndex < 3 ? '1px solid #000000' : 'none',
                           fontWeight: '600',
                           textAlign: 'center',
                           background: '#f3f4f6'
@@ -3094,7 +3094,7 @@ export default function ProjectDetailPage() {
                     })}
                   </div>
                   <div className="gantt-date-grid">
-                    {Array.from({ length: 56 }, (_, i) => {
+                    {Array.from({ length: 28 }, (_, i) => {
                       // Calculate proper week start and add days
                       const today = new Date();
                       const currentDay = today.getDay();
@@ -3112,7 +3112,7 @@ export default function ProjectDetailPage() {
                           style={{
                             minWidth: '40px',
                             padding: '0.5rem',
-                            borderRight: i < 55 ? '1px solid #e5e7eb' : 'none',
+                            borderRight: i < 27 ? '1px solid #e5e7eb' : 'none',
                             borderBottom: '1px solid #000000',
                             textAlign: 'center',
                             background: isToday ? '#fef3c7' : isWeekend ? '#f9fafb' : '#ffffff'
@@ -3130,9 +3130,9 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
                 
-                <div className="gantt-grid-container" style={{ minWidth: '2240px' }}>
+                <div className="gantt-grid-container" style={{ minWidth: '800px' }}>
                   <div className="gantt-vertical-grid">
-                    {Array.from({ length: 56 }, (_, i) => (
+                    {Array.from({ length: 28 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
                         left: `${(i * 40)}px`,
@@ -3144,7 +3144,7 @@ export default function ProjectDetailPage() {
                     ))}
                   </div>
                   
-                  <div className="gantt-bars-enhanced" style={{ minWidth: '2240px' }}>
+                  <div className="gantt-bars-enhanced" style={{ minWidth: '800px' }}>
                     {tasks.length === 0 ? (
                       <div className="gantt-bars-empty">
                         <p>Create tasks to see them on the timeline</p>
@@ -3164,8 +3164,8 @@ export default function ProjectDetailPage() {
                         
                         const daysFromStart = Math.ceil((taskStartDate.getTime() - timelineStart.getTime()) / (24 * 60 * 60 * 1000));
                         
-                        // Calculate width and position for 56-day timeline
-                        const barWidth = Math.min((durationInDays * 40), 56 * 40 - 40); // 40px per day
+                        // Calculate width and position for 28-day timeline
+                        const barWidth = Math.min((durationInDays * 40), 28 * 40 - 40); // 40px per day
                         const barLeft = Math.max(0, daysFromStart * 40); // 40px per day
                         
                         const statusConfig = getStatusConfig(task.status);
