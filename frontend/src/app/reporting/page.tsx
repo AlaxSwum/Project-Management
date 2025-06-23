@@ -212,7 +212,13 @@ export default function ReportingPage() {
       // Verify the member is in shared projects with current user
       const { data: currentUserProjects, error: userProjectsError } = await supabase
         .from('projects_project_members')
-        .select('project_id')
+        .select(`
+          project_id,
+          projects_project:project_id (
+            id,
+            name
+          )
+        `)
         .eq('user_id', user?.id);
       
       if (userProjectsError || !currentUserProjects) {
@@ -285,7 +291,7 @@ export default function ReportingPage() {
       // Get project involvement
       const projectInvolvement = memberProjects.map(mp => {
         const project = currentUserProjects.find(p => p.project_id === mp.project_id);
-        return { project_id: mp.project_id, project_name: project?.name || 'Unknown' };
+        return { project_id: mp.project_id, project_name: project?.projects_project?.name || 'Unknown' };
       });
       
       // Prepare overdue task details
