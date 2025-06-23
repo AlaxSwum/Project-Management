@@ -93,6 +93,42 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   });
   const [availableLeave, setAvailableLeave] = useState(14); // 14 days per employee
   const [usedLeave, setUsedLeave] = useState(0);
+
+  // Fetch leave balance on component mount and user change
+  const fetchLeaveBalance = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data: balanceData, error } = await supabase
+        .from('employee_leave_balance')
+        .select('available_days, used_days, total_days')
+        .eq('employee_id', user.id)
+        .single();
+      
+      if (error) {
+        console.log('No leave balance record found, using defaults');
+        setAvailableLeave(14);
+        setUsedLeave(0);
+      } else {
+        setAvailableLeave(balanceData.available_days || 14);
+        setUsedLeave(balanceData.used_days || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching leave balance:', error);
+      // Use defaults if error
+      setAvailableLeave(14);
+      setUsedLeave(0);
+    }
+  };
+
+  // Fetch balance when user changes
+  useEffect(() => {
+    if (user?.id) {
+      fetchLeaveBalance();
+    }
+  }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Weekly Report state
@@ -148,30 +184,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     setShowAbsenceForm(true);
     closeDropdown();
     
-    // Fetch current leave balance from Supabase
-    try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      
-      const { data: balanceData, error } = await supabase
-        .from('employee_leave_balance')
-        .select('available_days, used_days')
-        .eq('employee_id', user?.id)
-        .single();
-      
-      if (error) {
-        console.log('No leave balance record found, using defaults');
-        setAvailableLeave(14);
-        setUsedLeave(0);
-      } else {
-        setAvailableLeave(balanceData.available_days || 14);
-        setUsedLeave(balanceData.used_days || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching leave balance:', error);
-      // Use defaults if error
-      setAvailableLeave(14);
-      setUsedLeave(0);
-    }
+    // Refresh leave balance to get latest data
+    await fetchLeaveBalance();
   };
 
   const handleAbsenceFormSubmit = async (e: React.FormEvent) => {
@@ -289,6 +303,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         } catch (notifyError) {
           console.error('Error notifying HR users:', notifyError);
         }
+        
+        // Refresh leave balance after submission
+        await fetchLeaveBalance();
         
         alert(`Leave request submitted successfully! 
         
