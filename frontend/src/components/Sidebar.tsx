@@ -1485,7 +1485,7 @@ Your report is now available in the system.`);
             ))}
             
             {/* HR Navigation Items */}
-            {user?.role === 'hr' || user?.role === 'admin' ? (
+            {(user?.role === 'hr' || user?.role === 'admin' || user?.user_metadata?.role === 'hr' || user?.user_metadata?.role === 'admin') ? (
               <>
                 <div style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>HR Tools</span>

@@ -74,14 +74,31 @@ export default function WeeklyReportPage() {
     }
     
     // Determine view mode based on user role
-    if (user?.role === 'hr' || user?.role === 'admin') {
+    console.log('User role detection:', { 
+      user: user, 
+      role: user?.role, 
+      userMetadata: user?.user_metadata 
+    });
+    
+    const userRole = user?.role || user?.user_metadata?.role;
+    if (userRole === 'hr' || userRole === 'admin') {
+      console.log('Setting admin view mode for role:', userRole);
       setViewMode('admin');
     } else {
+      console.log('Setting user view mode for role:', userRole);
       setViewMode('user');
     }
     
     fetchData();
   }, [isAuthenticated, authLoading, router, user]);
+
+  // Re-fetch data when view mode changes
+  useEffect(() => {
+    if (isAuthenticated && !authLoading && user) {
+      console.log('View mode changed, re-fetching data. Mode:', viewMode);
+      fetchData();
+    }
+  }, [viewMode]);
 
   const fetchData = async () => {
     try {
@@ -108,12 +125,23 @@ export default function WeeklyReportPage() {
             .order('week_number', { ascending: false }),
           supabase
             .from('auth_user')
-            .select('id, first_name, last_name, email')
+            .select('id, name, email, role')
             .eq('is_active', true)
         ]);
         
-        if (reportsResult.error) throw reportsResult.error;
-        if (employeesResult.error) throw employeesResult.error;
+        if (reportsResult.error) {
+          console.error('Reports fetch error:', reportsResult.error);
+          throw reportsResult.error;
+        }
+        if (employeesResult.error) {
+          console.error('Employees fetch error:', employeesResult.error);
+          throw employeesResult.error;
+        }
+        
+        console.log('Fetched reports:', reportsResult.data?.length || 0);
+        console.log('Fetched employees:', employeesResult.data?.length || 0);
+        console.log('Sample report:', reportsResult.data?.[0]);
+        console.log('Sample employee:', employeesResult.data?.[0]);
         
         setReports(reportsResult.data || []);
         setEmployees(employeesResult.data || []);
@@ -618,7 +646,7 @@ export default function WeeklyReportPage() {
                                   {getMissingEmployees(folder.reports, employees).map((employee) => (
                                     <div key={employee.id} className="missing-employee">
                                       <ExclamationTriangleIcon style={{ width: '12px', height: '12px' }} />
-                                      {employee.first_name} {employee.last_name}
+                                      {employee.name}
                                     </div>
                                   ))}
                                 </div>
