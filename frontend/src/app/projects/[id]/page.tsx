@@ -90,6 +90,7 @@ export default function ProjectDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt' | 'todo'>('board');
+  const [ganttView, setGanttView] = useState<'task' | 'gantt'>('task');
   const [showCreateTask, setShowCreateTask] = useState(false);
 
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -2729,12 +2730,238 @@ export default function ProjectDetailPage() {
 
         {viewMode === 'gantt' && (
           <div className="gantt-view">
-            <div className="view-description">
-              <h3>Gantt Chart</h3>
-              <p>Visualize project timeline with task scheduling from start date to due date. See task dependencies, durations, and project timeline at a glance.</p>
+            {/* Tab Navigation */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '1rem', 
+              marginBottom: '2rem', 
+              padding: '0 2rem',
+              borderBottom: '2px solid #e5e7eb'
+            }}>
+              <button
+                onClick={() => setGanttView('task')}
+                style={{
+                  padding: '1rem 2rem',
+                  border: '3px solid #000000',
+                  background: ganttView === 'task' ? '#000000' : '#ffffff',
+                  color: ganttView === 'task' ? '#ffffff' : '#000000',
+                  borderRadius: '8px 8px 0 0',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  borderBottom: ganttView === 'task' ? '3px solid #000000' : '3px solid #000000'
+                }}
+              >
+                Tasks Only
+              </button>
+              <button
+                onClick={() => setGanttView('gantt')}
+                style={{
+                  padding: '1rem 2rem',
+                  border: '3px solid #000000',
+                  background: ganttView === 'gantt' ? '#000000' : '#ffffff',
+                  color: ganttView === 'gantt' ? '#ffffff' : '#000000',
+                  borderRadius: '8px 8px 0 0',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  borderBottom: ganttView === 'gantt' ? '3px solid #000000' : '3px solid #000000'
+                }}
+              >
+                Gantt & Timeline
+              </button>
             </div>
+
+            {/* Tasks Only Tab Content */}
+            {ganttView === 'task' && (
+              <div>
+                <div className="view-description">
+                  <h3>Tasks Overview</h3>
+                  <p>Detailed task cards with statistics dashboard, assignee info, priorities, and due dates. Perfect for focused task management without timeline complexity.</p>
+                </div>
+                
+                {/* Task Statistics Dashboard */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: '1rem', 
+                  margin: '2rem', 
+                  marginBottom: '3rem' 
+                }}>
+                  <div style={{ 
+                    background: '#ffffff', 
+                    border: '2px solid #000000', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem', 
+                    textAlign: 'center' 
+                  }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem', fontWeight: 'bold', color: '#000000' }}>{tasks.length}</h4>
+                    <p style={{ margin: '0', color: '#666666', fontWeight: '500' }}>Total Tasks</p>
+                  </div>
+                  <div style={{ 
+                    background: '#ffffff', 
+                    border: '2px solid #000000', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem', 
+                    textAlign: 'center' 
+                  }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem', fontWeight: 'bold', color: '#000000' }}>{tasks.filter(t => t.status === 'done').length}</h4>
+                    <p style={{ margin: '0', color: '#666666', fontWeight: '500' }}>Completed</p>
+                  </div>
+                  <div style={{ 
+                    background: '#ffffff', 
+                    border: '2px solid #000000', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem', 
+                    textAlign: 'center' 
+                  }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem', fontWeight: 'bold', color: '#000000' }}>{tasks.filter(t => t.status === 'in_progress').length}</h4>
+                    <p style={{ margin: '0', color: '#666666', fontWeight: '500' }}>In Progress</p>
+                  </div>
+                  <div style={{ 
+                    background: '#ffffff', 
+                    border: '2px solid #000000', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem', 
+                    textAlign: 'center' 
+                  }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem', fontWeight: 'bold', color: '#000000' }}>{tasks.filter(t => isOverdue(t.due_date)).length}</h4>
+                    <p style={{ margin: '0', color: '#666666', fontWeight: '500' }}>Overdue</p>
+                  </div>
+                </div>
+
+                {/* Task Cards Grid */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+                  gap: '1.5rem', 
+                  padding: '0 2rem' 
+                }}>
+                  {tasks.length === 0 ? (
+                    <div style={{ 
+                      gridColumn: '1 / -1', 
+                      textAlign: 'center', 
+                      padding: '3rem', 
+                      color: '#666666' 
+                    }}>
+                      <p>No tasks available. Create your first task to get started!</p>
+                    </div>
+                  ) : (
+                    tasks.map((task) => (
+                      <div 
+                        key={task.id} 
+                        onClick={(e) => handleTaskClick(task, e)}
+                        style={{ 
+                          background: '#ffffff', 
+                          border: '2px solid #000000', 
+                          borderRadius: '8px', 
+                          padding: '1.5rem', 
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                          <h4 style={{ 
+                            margin: '0', 
+                            fontSize: '1.1rem', 
+                            fontWeight: 'bold', 
+                            color: '#000000',
+                            lineHeight: '1.3'
+                          }}>{task.name}</h4>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: task.status === 'done' ? '#d1d5db' : 
+                                       task.status === 'review' ? '#e5e7eb' :
+                                       task.status === 'in_progress' ? '#f3f4f6' : '#ffffff',
+                            color: '#000000',
+                            border: '1px solid #000000'
+                          }}>
+                            {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
+                          </span>
+                        </div>
+                        
+                        {task.description && (
+                          <p style={{ 
+                            margin: '0 0 1rem 0', 
+                            color: '#666666', 
+                            fontSize: '0.9rem',
+                            lineHeight: '1.4'
+                          }}>{task.description}</p>
+                        )}
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: task.priority === 'urgent' ? '#111827' : 
+                                       task.priority === 'high' ? '#374151' :
+                                       task.priority === 'medium' ? '#6b7280' : '#9ca3af',
+                            color: '#ffffff'
+                          }}>
+                            {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
+                          </span>
+                          
+                          {task.assignee && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                background: '#000000',
+                                color: '#ffffff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                              }}>
+                                {task.assignee.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span style={{ fontSize: '0.85rem', color: '#666666' }}>{task.assignee.name}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {(task.start_date || task.due_date) && (
+                          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: '#666666' }}>
+                            {task.start_date && (
+                              <div>
+                                <strong>Start:</strong> {formatDate(task.start_date)}
+                              </div>
+                            )}
+                            {task.due_date && (
+                              <div style={{ color: isOverdue(task.due_date) ? '#ef4444' : '#666666' }}>
+                                <strong>Due:</strong> {formatDate(task.due_date)}
+                                {isOverdue(task.due_date) && ' (Overdue)'}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Gantt & Timeline Tab Content */}
+            {ganttView === 'gantt' && (
+              <div>
+                <div className="view-description">
+                  <h3>Gantt Chart & Timeline</h3>
+                  <p>Visualize project timeline with task scheduling from start date to due date. See task dependencies, durations, and project timeline at a glance.</p>
+                </div>
             
-            <div className="gantt-header-controls">
+                <div className="gantt-header-controls">
               <div className="gantt-controls">
                 <button className="gantt-btn">
                   <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
@@ -2992,6 +3219,8 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </div>
+              </div>
+            )}
           </div>
         )}
 
