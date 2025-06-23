@@ -1841,278 +1841,253 @@ Your report is now available in the system.`);
 
       {/* Weekly Report Form Modal */}
       {showWeeklyReportForm && (
-        <div className="modal-overlay" onClick={handleWeeklyReportClose}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Weekly Report</h2>
+        <div className="weekly-report-overlay" onClick={handleWeeklyReportClose}>
+          <div className="weekly-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="weekly-report-header">
+              <h1 className="weekly-report-title">Weekly Report</h1>
               <button
                 onClick={handleWeeklyReportClose}
-                className="modal-close-btn"
+                className="weekly-close-btn"
                 title="Close"
               >
-                <XMarkIcon style={{ width: '24px', height: '24px' }} />
+                ×
               </button>
             </div>
             
-            <div className="modal-body">
+            <div className="weekly-report-body">
               {/* Week Info Display */}
-              <div style={{ 
-                background: '#f8fafc', 
-                border: '2px solid #e2e8f0', 
-                borderRadius: '8px', 
-                padding: '1rem', 
-                marginBottom: '1.5rem',
-                textAlign: 'center'
-              }}>
-                <h3 style={{ 
-                  color: '#000000', 
-                  fontSize: '1.125rem', 
-                  fontWeight: 'bold', 
-                  margin: '0 0 0.5rem 0' 
-                }}>
-                  {weeklyReportData.dateRangeDisplay}
-                </h3>
-                <p style={{ 
-                  color: '#666666', 
-                  fontSize: '0.875rem', 
-                  margin: 0 
-                }}>
-                  Submit your weekly progress report
-                </p>
+              <div className="week-info-banner">
+                <h2 className="week-title">{weeklyReportData.dateRangeDisplay}</h2>
+                <p className="week-subtitle">Submit your weekly progress report</p>
               </div>
 
               {/* Weekly Report Form */}
-              <form onSubmit={handleWeeklyReportSubmit}>
-                <div className="form-group">
-                  <label className="form-label">
-                    Project / Team *
-                  </label>
-                  <select
-                    className="form-select"
-                    required
-                    value={weeklyReportData.projectId}
-                    onChange={(e) => setWeeklyReportData({
-                      ...weeklyReportData,
-                      projectId: Number(e.target.value)
-                    })}
-                  >
-                    <option value={0}>Choose your project or team...</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    Key Activities Completed *
-                  </label>
-                  <div className="dynamic-field-container">
-                    {weeklyReportData.keyActivities.map((activity, index) => (
-                      <div key={index} className="dynamic-field-row">
-                        <input
-                          type="text"
-                          className="form-input dynamic-input"
-                          required={index === 0}
-                          placeholder={index === 0 ? "Main task or deliverable completed..." : "Additional activity..."}
-                          value={activity}
-                          onChange={(e) => updateReportField('keyActivities', index, e.target.value)}
-                        />
-                        {weeklyReportData.keyActivities.length > 1 && (
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() => removeReportField('keyActivities', index)}
-                            title="Remove this item"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="add-field-btn"
-                      onClick={() => addReportField('keyActivities')}
+              <form onSubmit={handleWeeklyReportSubmit} className="weekly-report-form">
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="weekly-label">Project / Team *</label>
+                    <select
+                      className="weekly-select"
+                      required
+                      value={weeklyReportData.projectId}
+                      onChange={(e) => setWeeklyReportData({
+                        ...weeklyReportData,
+                        projectId: Number(e.target.value)
+                      })}
                     >
-                      + Add another activity
-                    </button>
+                      <option value={0}>Choose your project or team...</option>
+                      {projects.map(project => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    Ongoing Tasks
-                  </label>
-                  <div className="dynamic-field-container">
-                    {weeklyReportData.ongoingTasks.map((task, index) => (
-                      <div key={index} className="dynamic-field-row">
-                        <input
-                          type="text"
-                          className="form-input dynamic-input"
-                          placeholder={index === 0 ? "Task in progress..." : "Additional ongoing task..."}
-                          value={task}
-                          onChange={(e) => updateReportField('ongoingTasks', index, e.target.value)}
-                        />
-                        {weeklyReportData.ongoingTasks.length > 1 && (
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() => removeReportField('ongoingTasks', index)}
-                            title="Remove this item"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="add-field-btn"
-                      onClick={() => addReportField('ongoingTasks')}
-                    >
-                      + Add ongoing task
-                    </button>
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="weekly-label">KEY ACTIVITIES COMPLETED *</label>
+                    <div className="weekly-field-container">
+                      {weeklyReportData.keyActivities.map((activity, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            required={index === 0}
+                            placeholder={index === 0 ? "Main task or deliverable completed..." : "Additional activity..."}
+                            value={activity}
+                            onChange={(e) => updateReportField('keyActivities', index, e.target.value)}
+                          />
+                          {weeklyReportData.keyActivities.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeReportField('keyActivities', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addReportField('keyActivities')}
+                      >
+                        Add another activity
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    Challenges / Issues
-                  </label>
-                  <div className="dynamic-field-container">
-                    {weeklyReportData.challenges.map((challenge, index) => (
-                      <div key={index} className="dynamic-field-row">
-                        <input
-                          type="text"
-                          className="form-input dynamic-input"
-                          placeholder={index === 0 ? "Any blocker or challenge..." : "Additional challenge..."}
-                          value={challenge}
-                          onChange={(e) => updateReportField('challenges', index, e.target.value)}
-                        />
-                        {weeklyReportData.challenges.length > 1 && (
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() => removeReportField('challenges', index)}
-                            title="Remove this item"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="add-field-btn"
-                      onClick={() => addReportField('challenges')}
-                    >
-                      + Add challenge
-                    </button>
+                <div className="form-row">
+                  <div className="form-group half-width">
+                    <label className="weekly-label">ONGOING TASKS</label>
+                    <div className="weekly-field-container">
+                      {weeklyReportData.ongoingTasks.map((task, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Task in progress..." : "Additional ongoing task..."}
+                            value={task}
+                            onChange={(e) => updateReportField('ongoingTasks', index, e.target.value)}
+                          />
+                          {weeklyReportData.ongoingTasks.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeReportField('ongoingTasks', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addReportField('ongoingTasks')}
+                      >
+                        Add ongoing task
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group half-width">
+                    <label className="weekly-label">CHALLENGES / ISSUES</label>
+                    <div className="weekly-field-container">
+                      {weeklyReportData.challenges.map((challenge, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Any blocker or challenge..." : "Additional challenge..."}
+                            value={challenge}
+                            onChange={(e) => updateReportField('challenges', index, e.target.value)}
+                          />
+                          {weeklyReportData.challenges.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeReportField('challenges', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addReportField('challenges')}
+                      >
+                        Add challenge
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    Team Performance / KPIs
-                  </label>
-                  <div className="dynamic-field-container">
-                    {weeklyReportData.teamPerformance.map((kpi, index) => (
-                      <div key={index} className="dynamic-field-row">
-                        <input
-                          type="text"
-                          className="form-input dynamic-input"
-                          placeholder={index === 0 ? "Performance metric or KPI..." : "Additional KPI..."}
-                          value={kpi}
-                          onChange={(e) => updateReportField('teamPerformance', index, e.target.value)}
-                        />
-                        {weeklyReportData.teamPerformance.length > 1 && (
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() => removeReportField('teamPerformance', index)}
-                            title="Remove this item"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="add-field-btn"
-                      onClick={() => addReportField('teamPerformance')}
-                    >
-                      + Add KPI
-                    </button>
+                <div className="form-row">
+                  <div className="form-group half-width">
+                    <label className="weekly-label">TEAM PERFORMANCE / KPIS</label>
+                    <div className="weekly-field-container">
+                      {weeklyReportData.teamPerformance.map((kpi, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Performance metric or KPI..." : "Additional KPI..."}
+                            value={kpi}
+                            onChange={(e) => updateReportField('teamPerformance', index, e.target.value)}
+                          />
+                          {weeklyReportData.teamPerformance.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeReportField('teamPerformance', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addReportField('teamPerformance')}
+                      >
+                        Add KPI
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group half-width">
+                    <label className="weekly-label">NEXT WEEK'S PRIORITIES</label>
+                    <div className="weekly-field-container">
+                      {weeklyReportData.nextWeekPriorities.map((priority, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Key priority for next week..." : "Additional priority..."}
+                            value={priority}
+                            onChange={(e) => updateReportField('nextWeekPriorities', index, e.target.value)}
+                          />
+                          {weeklyReportData.nextWeekPriorities.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeReportField('nextWeekPriorities', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addReportField('nextWeekPriorities')}
+                      >
+                        Add priority
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    Next Week's Priorities
-                  </label>
-                  <div className="dynamic-field-container">
-                    {weeklyReportData.nextWeekPriorities.map((priority, index) => (
-                      <div key={index} className="dynamic-field-row">
-                        <input
-                          type="text"
-                          className="form-input dynamic-input"
-                          placeholder={index === 0 ? "Key priority for next week..." : "Additional priority..."}
-                          value={priority}
-                          onChange={(e) => updateReportField('nextWeekPriorities', index, e.target.value)}
-                        />
-                        {weeklyReportData.nextWeekPriorities.length > 1 && (
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() => removeReportField('nextWeekPriorities', index)}
-                            title="Remove this item"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="add-field-btn"
-                      onClick={() => addReportField('nextWeekPriorities')}
-                    >
-                      + Add priority
-                    </button>
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="weekly-label">OTHER NOTES</label>
+                    <textarea
+                      className="weekly-textarea"
+                      placeholder="Additional observations, suggestions, or miscellaneous notes..."
+                      value={weeklyReportData.otherNotes}
+                      onChange={(e) => setWeeklyReportData({
+                        ...weeklyReportData,
+                        otherNotes: e.target.value
+                      })}
+                    />
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    Other Notes
-                  </label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Additional observations, suggestions, or miscellaneous notes..."
-                    value={weeklyReportData.otherNotes}
-                    onChange={(e) => setWeeklyReportData({
-                      ...weeklyReportData,
-                      otherNotes: e.target.value
-                    })}
-                    style={{ minHeight: '80px' }}
-                  />
-                </div>
-
-                <div className="form-buttons">
+                <div className="weekly-form-buttons">
                   <button
                     type="button"
                     onClick={handleWeeklyReportClose}
-                    className="btn btn-secondary"
+                    className="weekly-btn-cancel"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="weekly-btn-submit"
                   >
                     Submit Report
                   </button>
@@ -2235,84 +2210,333 @@ Your report is now available in the system.`);
       
       {/* Enhanced Weekly Report Form Styles */}
       <style jsx>{`
-        .dynamic-field-container {
-          background: #ffffff;
-          border-radius: 4px;
-          padding: 16px;
-          border: 2px solid #000000;
-        }
-        
-        .dynamic-field-row {
-          display: flex;
-          align-items: center;
-          margin-bottom: 8px;
-          gap: 8px;
-        }
-        
-        .dynamic-field-row:last-of-type {
-          margin-bottom: 12px;
-        }
-        
-        .dynamic-input {
-          flex: 1;
-          border: 2px solid #000000;
-          border-radius: 4px;
-          padding: 10px 12px;
-          font-size: 14px;
-          transition: all 0.2s ease;
-          background: white;
-        }
-        
-        .dynamic-input:focus {
-          border-color: #000000;
-          outline: none;
-        }
-        
-        .dynamic-input::placeholder {
-          color: #666666;
-        }
-        
-        .remove-btn {
-          background: #ffffff;
-          color: #000000;
-          border: 2px solid #000000;
-          border-radius: 50%;
-          width: 24px;
-          height: 24px;
+        .weekly-report-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.85);
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: 2rem;
+          z-index: 1000;
+          backdrop-filter: blur(4px);
+        }
+        
+        .weekly-report-modal {
+          background: #ffffff;
+          border: 3px solid #000000;
+          border-radius: 0;
+          width: 100%;
+          max-width: 1200px;
+          max-height: 90vh;
+          overflow: hidden;
+          box-shadow: 8px 8px 0px #000000;
+        }
+        
+        .weekly-report-header {
+          background: #000000;
+          color: #ffffff;
+          padding: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 3px solid #000000;
+        }
+        
+        .weekly-report-title {
+          font-size: 2rem;
+          font-weight: bold;
+          margin: 0;
+          letter-spacing: -0.025em;
+        }
+        
+        .weekly-close-btn {
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #ffffff;
+          width: 40px;
+          height: 40px;
+          border-radius: 0;
           cursor: pointer;
-          font-size: 12px;
+          font-size: 24px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-close-btn:hover {
+          background: #f5f5f5;
+          transform: scale(1.1);
+        }
+        
+        .weekly-report-body {
+          padding: 3rem;
+          max-height: calc(90vh - 120px);
+          overflow-y: auto;
+          background: #ffffff;
+        }
+        
+        .week-info-banner {
+          background: #f8f9fa;
+          border: 3px solid #000000;
+          padding: 2rem;
+          text-align: center;
+          margin-bottom: 3rem;
+          border-radius: 0;
+        }
+        
+        .week-title {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #000000;
+          margin: 0 0 0.5rem 0;
+          letter-spacing: -0.025em;
+        }
+        
+        .week-subtitle {
+          font-size: 1rem;
+          color: #666666;
+          margin: 0;
+        }
+        
+        .weekly-report-form {
+          display: flex;
+          flex-direction: column;
+          gap: 2.5rem;
+        }
+        
+        .form-row {
+          display: flex;
+          gap: 2rem;
+          width: 100%;
+        }
+        
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        .form-group.full-width {
+          flex: 1;
+        }
+        
+        .form-group.half-width {
+          flex: 1;
+        }
+        
+        .weekly-label {
+          font-size: 0.9rem;
+          font-weight: bold;
+          color: #000000;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin: 0;
+          padding-bottom: 0.5rem;
+        }
+        
+        .weekly-select {
+          width: 100%;
+          padding: 1rem 1.25rem;
+          border: 3px solid #000000;
+          border-radius: 0;
+          font-size: 1rem;
+          background: #ffffff;
+          color: #000000;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-select:focus {
+          outline: none;
+          border-color: #000000;
+          box-shadow: 4px 4px 0px #e5e5e5;
+        }
+        
+        .weekly-field-container {
+          background: #ffffff;
+          border: 3px solid #000000;
+          padding: 1.5rem;
+          border-radius: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        .weekly-field-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .weekly-input {
+          flex: 1;
+          padding: 0.875rem 1.125rem;
+          border: 2px solid #000000;
+          border-radius: 0;
+          font-size: 0.95rem;
+          background: #ffffff;
+          color: #000000;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-input:focus {
+          outline: none;
+          border-color: #000000;
+          box-shadow: 2px 2px 0px #e5e5e5;
+        }
+        
+        .weekly-input::placeholder {
+          color: #888888;
+        }
+        
+        .weekly-remove-btn {
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #000000;
+          width: 32px;
+          height: 32px;
+          border-radius: 0;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           transition: all 0.2s ease;
           flex-shrink: 0;
         }
         
-        .remove-btn:hover {
-          background: #f0f0f0;
+        .weekly-remove-btn:hover {
+          background: #f5f5f5;
           transform: scale(1.1);
         }
         
-        .add-field-btn {
+        .weekly-add-btn {
+          background: #f8f9fa;
+          color: #000000;
+          border: 2px solid #000000;
+          border-radius: 0;
+          padding: 0.75rem 1.25rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          align-self: flex-start;
+        }
+        
+        .weekly-add-btn:hover {
+          background: #e9ecef;
+          transform: translateY(-2px);
+          box-shadow: 2px 2px 0px #000000;
+        }
+        
+        .weekly-textarea {
+          width: 100%;
+          min-height: 120px;
+          padding: 1rem 1.25rem;
+          border: 3px solid #000000;
+          border-radius: 0;
+          font-size: 0.95rem;
+          background: #ffffff;
+          color: #000000;
+          resize: vertical;
+          font-family: inherit;
+          line-height: 1.5;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-textarea:focus {
+          outline: none;
+          border-color: #000000;
+          box-shadow: 4px 4px 0px #e5e5e5;
+        }
+        
+        .weekly-textarea::placeholder {
+          color: #888888;
+        }
+        
+        .weekly-form-buttons {
+          display: flex;
+          gap: 1.5rem;
+          justify-content: flex-end;
+          padding-top: 2rem;
+          border-top: 2px solid #e5e5e5;
+        }
+        
+        .weekly-btn-cancel {
           background: #ffffff;
           color: #000000;
           border: 2px solid #000000;
-          border-radius: 4px;
-          padding: 8px 12px;
-          font-size: 13px;
+          border-radius: 0;
+          padding: 1rem 2rem;
+          font-size: 1rem;
+          font-weight: 600;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 6px;
           transition: all 0.2s ease;
-          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
         }
         
-        .add-field-btn:hover {
-          background: #f0f0f0;
-          transform: translateY(-1px);
+        .weekly-btn-cancel:hover {
+          background: #f5f5f5;
+          transform: translateY(-2px);
+          box-shadow: 3px 3px 0px #000000;
         }
         
+        .weekly-btn-submit {
+          background: #000000;
+          color: #ffffff;
+          border: 2px solid #000000;
+          border-radius: 0;
+          padding: 1rem 2rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+        
+        .weekly-btn-submit:hover {
+          background: #333333;
+          transform: translateY(-2px);
+          box-shadow: 3px 3px 0px #666666;
+        }
+        
+        @media (max-width: 768px) {
+          .weekly-report-overlay {
+            padding: 1rem;
+          }
+          
+          .weekly-report-modal {
+            max-width: 100%;
+          }
+          
+          .weekly-report-header {
+            padding: 1.5rem;
+          }
+          
+          .weekly-report-title {
+            font-size: 1.5rem;
+          }
+          
+          .weekly-report-body {
+            padding: 2rem;
+          }
+          
+          .form-row {
+            flex-direction: column;
+            gap: 1.5rem;
+          }
+          
+          .weekly-form-buttons {
+            flex-direction: column;
+          }
+        }
 
       `}</style>
     </div>
