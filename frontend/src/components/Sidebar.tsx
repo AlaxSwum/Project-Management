@@ -234,6 +234,45 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         });
         setShowAbsenceForm(false);
         
+        // Create notifications for HR users
+        try {
+          // Get all HR/admin users
+          const { data: hrUsers, error: hrError } = await supabase
+            .from('auth_user')
+            .select('id, first_name, last_name, email')
+            .or('is_staff.eq.true,is_superuser.eq.true');
+          
+          if (!hrError && hrUsers && hrUsers.length > 0) {
+            // Create notifications for each HR user
+            const notifications = hrUsers.map(hrUser => ({
+              recipient_id: hrUser.id,
+              sender_id: user.id,
+              type: 'leave_request_submitted',
+              title: 'New Leave Request',
+              message: `${user.name || user.email?.split('@')[0]} has submitted a ${daysDiff}-day leave request for ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+              data: {
+                leave_request_id: data[0]?.id,
+                employee_name: user.name || user.email?.split('@')[0],
+                employee_email: user.email,
+                days: daysDiff,
+                start_date: absenceFormData.startDate,
+                end_date: absenceFormData.endDate,
+                leave_type: absenceFormData.leaveType
+              }
+            }));
+            
+            const { error: notifyError } = await supabase
+              .from('notifications')
+              .insert(notifications);
+            
+            if (notifyError) {
+              console.error('Error creating HR notifications:', notifyError);
+            }
+          }
+        } catch (notifyError) {
+          console.error('Error notifying HR users:', notifyError);
+        }
+        
         alert(`Leave request submitted successfully! 
         
 Your request for ${daysDiff} days has been sent to HR for approval.
@@ -279,27 +318,56 @@ You will be notified once HR reviews your request.`);
     router.push('/weekly-report');
   };
 
-  // Notification/Inbox functions (disabled for Direct Supabase version)
+  // Notification/Inbox functions using Supabase
   const fetchNotifications = async () => {
+    if (!user?.id) return;
+    
     setIsLoadingNotifications(true);
     try {
-      // TODO: Implement Supabase-based notifications system
-      console.log('Notifications system not implemented yet');
-      setNotifications([]);
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data: notificationsData, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        setNotifications([]);
+      } else {
+        setNotifications(notificationsData || []);
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
     } finally {
       setIsLoadingNotifications(false);
     }
   };
 
   const fetchUnreadCount = async () => {
+    if (!user?.id) return;
+    
     try {
-      // TODO: Implement Supabase-based notification count
-      console.log('Notification count system not implemented yet');
-      setUnreadCount(0);
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
+      
+      if (error) {
+        console.error('Error fetching unread count:', error);
+        setUnreadCount(0);
+      } else {
+        setUnreadCount(count || 0);
+      }
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
     }
   };
 
@@ -312,18 +380,26 @@ You will be notified once HR reviews your request.`);
 
   const markNotificationAsRead = async (notificationId: number) => {
     try {
-      // TODO: Implement Supabase-based notification read status
-      console.log('Mark notification as read not implemented yet');
+      const supabase = (await import('@/lib/supabase')).supabase;
       
-      // Update local state
-      setNotifications(notifications.map(notif => 
-        notif.id === notificationId 
-          ? { ...notif, is_read: true }
-          : notif
-      ));
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
       
-      // Update unread count
-      fetchUnreadCount();
+      if (error) {
+        console.error('Error marking notification as read:', error);
+      } else {
+        // Update local state
+        setNotifications(notifications.map(notif => 
+          notif.id === notificationId 
+            ? { ...notif, is_read: true }
+            : notif
+        ));
+        
+        // Update unread count
+        fetchUnreadCount();
+      }
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -355,19 +431,20 @@ You will be notified once HR reviews your request.`);
   };
 
   // Fetch unread count on component mount and periodically
-  // Disabled for first prototype
-  /* useEffect(() => {
-    const fetchData = async () => {
-      await fetchUnreadCount();
-    };
-    
-    fetchData();
-    
-    // Fetch unread count every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-    
-    return () => clearInterval(interval);
-  }, []); */
+  useEffect(() => {
+    if (user?.id) {
+      const fetchData = async () => {
+        await fetchUnreadCount();
+      };
+      
+      fetchData();
+      
+      // Fetch unread count every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -398,8 +475,7 @@ You will be notified once HR reviews your request.`);
   const hrNavItems = [
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
     { name: 'Weekly Report', href: '/weekly-report', icon: ClipboardDocumentListIcon },
-    { name: 'Absence', href: '/absence', icon: DocumentTextIcon },
-    { name: 'Employee Absent', href: '/employee-absent', icon: CalendarDaysIcon },
+    { name: 'Absence Management', href: '/employee-absent', icon: CalendarDaysIcon },
   ];
 
   const inboxItem = { 

@@ -42,36 +42,34 @@ export default function EmployeeAbsentPage() {
   const fetchLeaveRequests = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now - replace with actual API call when backend is ready
-      const mockLeaveRequests = [
-        {
-          id: 1,
-          employee_name: 'John Doe',
-          employee_email: 'john.doe@company.com',
-          project_name: 'Website Redesign',
-          start_date: '2025-06-25',
-          end_date: '2025-06-27',
-          leave_type: 'vacation',
-          reason: 'Family vacation',
-          days_requested: 3,
-          status: 'pending',
-          created_at: '2025-06-22T10:00:00Z'
-        },
-        {
-          id: 2,
-          employee_name: 'Jane Smith',
-          employee_email: 'jane.smith@company.com',
-          project_name: 'Mobile App Development',
-          start_date: '2025-06-30',
-          end_date: '2025-07-02',
-          leave_type: 'sick',
-          reason: 'Medical appointment',
-          days_requested: 3,
-          status: 'approved',
-          created_at: '2025-06-20T14:30:00Z'
-        }
-      ];
-      setLeaveRequests(mockLeaveRequests);
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data: requests, error } = await supabase
+        .from('leave_requests')
+        .select(`
+          id,
+          employee_id,
+          employee_name,
+          employee_email,
+          project_id,
+          project_name,
+          start_date,
+          end_date,
+          leave_type,
+          reason,
+          notes,
+          days_requested,
+          status,
+          created_at,
+          approved_by
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setLeaveRequests(requests || []);
     } catch (err: any) {
       setError('Failed to fetch leave requests');
       console.error('Leave requests error:', err);
@@ -82,17 +80,69 @@ export default function EmployeeAbsentPage() {
 
   const handleStatusChange = async (requestId: number, newStatus: 'approved' | 'rejected') => {
     try {
-      // Update local state immediately for better UX
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Find the request to get employee details
+      const request = leaveRequests.find(req => req.id === requestId);
+      if (!request) {
+        setError('Leave request not found');
+        return;
+      }
+      
+      // Update the leave request status in database
+      const { data: updatedRequest, error: updateError } = await supabase
+        .from('leave_requests')
+        .update({ 
+          status: newStatus, 
+          approved_by: user?.id 
+        })
+        .eq('id', requestId)
+        .select()
+        .single();
+      
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // Update local state
       setLeaveRequests(requests => 
         requests.map(req => 
-          req.id === requestId ? { ...req, status: newStatus } : req
+          req.id === requestId ? { ...req, status: newStatus, approved_by: user?.id } : req
         )
       );
       
-      // TODO: Make API call to update status in database
-      // await updateLeaveRequestStatus(requestId, newStatus);
+      // Create notification for the employee
+      const notificationTitle = newStatus === 'approved' 
+        ? 'Leave Request Approved' 
+        : 'Leave Request Rejected';
       
-      console.log(`Leave request ${requestId} ${newStatus}`);
+      const notificationMessage = newStatus === 'approved'
+        ? `Your ${request.days_requested}-day leave request from ${new Date(request.start_date).toLocaleDateString()} to ${new Date(request.end_date).toLocaleDateString()} has been approved.`
+        : `Your ${request.days_requested}-day leave request from ${new Date(request.start_date).toLocaleDateString()} to ${new Date(request.end_date).toLocaleDateString()} has been rejected.`;
+      
+      const { error: notifyError } = await supabase
+        .from('notifications')
+        .insert([{
+          recipient_id: request.employee_id,
+          sender_id: user?.id,
+          type: newStatus === 'approved' ? 'leave_request_approved' : 'leave_request_rejected',
+          title: notificationTitle,
+          message: notificationMessage,
+          data: {
+            leave_request_id: requestId,
+            status: newStatus,
+            days: request.days_requested,
+            start_date: request.start_date,
+            end_date: request.end_date,
+            leave_type: request.leave_type
+          }
+        }]);
+      
+      if (notifyError) {
+        console.error('Error creating notification:', notifyError);
+      }
+      
+      console.log(`Leave request ${requestId} ${newStatus} successfully`);
     } catch (err) {
       console.error('Error updating leave request status:', err);
       setError('Failed to update leave request status');
@@ -389,7 +439,7 @@ export default function EmployeeAbsentPage() {
           <header className="header">
             <h1 className="header-title">
               <CalendarDaysIcon style={{ width: '32px', height: '32px' }} />
-              Employee Absence Requests
+              Absence Management
             </h1>
             <p style={{ color: '#666666', marginTop: '0.25rem' }}>
               Review and manage employee leave requests
