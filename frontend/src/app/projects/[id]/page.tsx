@@ -3155,8 +3155,18 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
                 
-                <div className="gantt-grid-container" style={{ minWidth: '800px' }}>
-                  <div className="gantt-vertical-grid">
+                <div className="gantt-grid-container" style={{ 
+                  minWidth: '800px',
+                  position: 'relative'
+                }}>
+                  <div className="gantt-vertical-grid" style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    pointerEvents: 'none'
+                  }}>
                     {Array.from({ length: 28 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
@@ -3164,7 +3174,8 @@ export default function ProjectDetailPage() {
                         top: 0,
                         bottom: 0,
                         width: '1px',
-                        background: '#e5e7eb'
+                        background: '#e5e7eb',
+                        zIndex: 1
                       }}></div>
                     ))}
                   </div>
