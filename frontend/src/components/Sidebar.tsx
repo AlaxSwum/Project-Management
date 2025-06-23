@@ -131,23 +131,29 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     setShowAbsenceForm(true);
     closeDropdown();
     
-    // Fetch current leave balance
+    // Fetch current leave balance from Supabase
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/leave-balance/', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+      const supabase = (await import('@/lib/supabase')).supabase;
       
-      if (response.ok) {
-        const balanceData = await response.json();
+      const { data: balanceData, error } = await supabase
+        .from('employee_leave_balance')
+        .select('available_days, used_days')
+        .eq('employee_id', user?.id)
+        .single();
+      
+      if (error) {
+        console.log('No leave balance record found, using defaults');
+        setAvailableLeave(14);
+        setUsedLeave(0);
+      } else {
         setAvailableLeave(balanceData.available_days || 14);
         setUsedLeave(balanceData.used_days || 0);
-      } else {
-        console.error('Failed to fetch leave balance');
       }
     } catch (error) {
       console.error('Error fetching leave balance:', error);
+      // Use defaults if error
+      setAvailableLeave(14);
+      setUsedLeave(0);
     }
   };
 
@@ -195,20 +201,28 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
       });
 
-      // Store in Supabase database via Django API
-      const response = await fetch('http://127.0.0.1:8000/api/leave-requests/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify(leaveRequest)
-      });
+      // Store in Supabase database directly
+      const supabase = (await import('@/lib/supabase')).supabase;
       
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      const { data, error } = await supabase
+        .from('leave_requests')
+        .insert([{
+          employee_id: user.id,
+          employee_name: user.name || user.username || 'Unknown',
+          employee_email: user.email,
+          project_id: leaveRequest.project_id,
+          project_name: leaveRequest.project_name,
+          start_date: leaveRequest.start_date,
+          end_date: leaveRequest.end_date,
+          leave_type: leaveRequest.leave_type,
+          reason: leaveRequest.reason,
+          notes: leaveRequest.notes,
+          days_requested: daysDiff,
+          status: 'pending'
+        }])
+        .select();
 
-      if (response.ok) {
+      if (!error) {
         // Reset form and close modal
         setAbsenceFormData({
           startDate: '',
@@ -220,9 +234,6 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         });
         setShowAbsenceForm(false);
         
-        // Refresh notification count after successful submission
-        fetchUnreadCount();
-        
         alert(`Leave request submitted successfully! 
         
 Your request for ${daysDiff} days has been sent to HR for approval.
@@ -233,23 +244,8 @@ Period: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}
 
 You will be notified once HR reviews your request.`);
       } else {
-        const errorText = await response.text();
-        console.error('Error response:', response.status, response.statusText);
-        console.error('Error details:', errorText);
-        
-        let errorMessage = 'Failed to submit leave request';
-        try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (errorData.detail) {
-            errorMessage = errorData.detail;
-          }
-        } catch (e) {
-          errorMessage = errorText || 'Unknown error occurred';
-        }
-        
-        throw new Error(errorMessage);
+        console.error('Error submitting leave request:', error);
+        throw new Error(error.message || 'Failed to submit leave request');
       }
     } catch (error) {
       console.error('Error submitting leave request:', error);
@@ -283,22 +279,13 @@ You will be notified once HR reviews your request.`);
     router.push('/weekly-report');
   };
 
-  // Notification/Inbox functions
+  // Notification/Inbox functions (disabled for Direct Supabase version)
   const fetchNotifications = async () => {
     setIsLoadingNotifications(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/notifications/', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      
-      if (response.ok) {
-        const notificationsData = await response.json();
-        setNotifications(notificationsData);
-      } else {
-        console.error('Failed to fetch notifications');
-      }
+      // TODO: Implement Supabase-based notifications system
+      console.log('Notifications system not implemented yet');
+      setNotifications([]);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -308,16 +295,9 @@ You will be notified once HR reviews your request.`);
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/notifications/unread-count/', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      
-      if (response.ok) {
-        const countData = await response.json();
-        setUnreadCount(countData.count || 0);
-      }
+      // TODO: Implement Supabase-based notification count
+      console.log('Notification count system not implemented yet');
+      setUnreadCount(0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
@@ -332,24 +312,18 @@ You will be notified once HR reviews your request.`);
 
   const markNotificationAsRead = async (notificationId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/notifications/${notificationId}/read/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+      // TODO: Implement Supabase-based notification read status
+      console.log('Mark notification as read not implemented yet');
       
-      if (response.ok) {
-        // Update local state
-        setNotifications(notifications.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, is_read: true }
-            : notif
-        ));
-        
-        // Update unread count
-        fetchUnreadCount();
-      }
+      // Update local state
+      setNotifications(notifications.map(notif => 
+        notif.id === notificationId 
+          ? { ...notif, is_read: true }
+          : notif
+      ));
+      
+      // Update unread count
+      fetchUnreadCount();
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
