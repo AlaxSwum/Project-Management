@@ -3147,7 +3147,7 @@ export default function ProjectDetailPage() {
                   <div className="gantt-bars-enhanced" style={{ minWidth: '800px' }}>
                     {tasks.length === 0 ? (
                       <div className="gantt-bars-empty">
-                        <p>Create tasks to see them on the timeline</p>
+                        <p>FIXED TIMELINE - Create tasks to see them here (4 weeks only)</p>
                       </div>
                     ) : (
                       tasks.map((task, taskIndex) => {
