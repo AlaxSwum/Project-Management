@@ -92,13 +92,10 @@ export default function ProjectDetailPage() {
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt' | 'todo'>('board');
   const [ganttView, setGanttView] = useState<'task' | 'gantt'>('task');
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(() => {
-    // Start from current Monday
+    // Start from the 1st day of current month
     const today = new Date();
-    const currentDay = today.getDay();
-    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset);
-    return monday;
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    return firstDayOfMonth;
   });
   const [showCreateTask, setShowCreateTask] = useState(false);
 
@@ -330,13 +327,13 @@ export default function ProjectDetailPage() {
 
   const handlePreviousMonth = () => {
     const newDate = new Date(timelineStartDate);
-    newDate.setDate(newDate.getDate() - 28); // Go back 4 weeks
+    newDate.setMonth(newDate.getMonth() - 1, 1); // Go to 1st day of previous month
     setTimelineStartDate(newDate);
   };
 
   const handleNextMonth = () => {
     const newDate = new Date(timelineStartDate);
-    newDate.setDate(newDate.getDate() + 28); // Go forward 4 weeks
+    newDate.setMonth(newDate.getMonth() + 1, 1); // Go to 1st day of next month
     setTimelineStartDate(newDate);
   };
 
@@ -3099,7 +3096,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="gantt-week-headers">
                     {Array.from({ length: 4 }, (_, weekIndex) => {
-                      // Calculate week start from timelineStartDate
+                      // Calculate week start from timelineStartDate (1st of month)
                       const startOfWeek = new Date(timelineStartDate);
                       startOfWeek.setDate(timelineStartDate.getDate() + (weekIndex * 7));
                       
@@ -3183,7 +3180,7 @@ export default function ProjectDetailPage() {
                         const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                         const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
                         
-                        // Calculate position relative to timeline start
+                        // Calculate position relative to timeline start (1st of month)
                         const timelineStart = new Date(timelineStartDate);
                         
                         const daysFromStart = Math.ceil((taskStartDate.getTime() - timelineStart.getTime()) / (24 * 60 * 60 * 1000));
