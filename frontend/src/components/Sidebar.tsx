@@ -1868,11 +1868,10 @@ Your report is now available in the system.`);
               <form onSubmit={handleWeeklyReportSubmit}>
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">🏢</span>
                     Project / Team *
                   </label>
                   <select
-                    className="form-select modern-select"
+                    className="form-select"
                     required
                     value={weeklyReportData.projectId}
                     onChange={(e) => setWeeklyReportData({
@@ -1891,7 +1890,6 @@ Your report is now available in the system.`);
 
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">✅</span>
                     Key Activities Completed *
                   </label>
                   <div className="dynamic-field-container">
@@ -1922,15 +1920,13 @@ Your report is now available in the system.`);
                       className="add-field-btn"
                       onClick={() => addReportField('keyActivities')}
                     >
-                      <span className="plus-icon">+</span>
-                      Add another activity
+                      + Add another activity
                     </button>
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">🔄</span>
                     Ongoing Tasks
                   </label>
                   <div className="dynamic-field-container">
@@ -1960,15 +1956,13 @@ Your report is now available in the system.`);
                       className="add-field-btn"
                       onClick={() => addReportField('ongoingTasks')}
                     >
-                      <span className="plus-icon">+</span>
-                      Add ongoing task
+                      + Add ongoing task
                     </button>
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">⚠️</span>
                     Challenges / Issues
                   </label>
                   <div className="dynamic-field-container">
@@ -1998,15 +1992,13 @@ Your report is now available in the system.`);
                       className="add-field-btn"
                       onClick={() => addReportField('challenges')}
                     >
-                      <span className="plus-icon">+</span>
-                      Add challenge
+                      + Add challenge
                     </button>
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">📊</span>
                     Team Performance / KPIs
                   </label>
                   <div className="dynamic-field-container">
@@ -2036,15 +2028,13 @@ Your report is now available in the system.`);
                       className="add-field-btn"
                       onClick={() => addReportField('teamPerformance')}
                     >
-                      <span className="plus-icon">+</span>
-                      Add KPI
+                      + Add KPI
                     </button>
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">🎯</span>
                     Next Week's Priorities
                   </label>
                   <div className="dynamic-field-container">
@@ -2074,19 +2064,17 @@ Your report is now available in the system.`);
                       className="add-field-btn"
                       onClick={() => addReportField('nextWeekPriorities')}
                     >
-                      <span className="plus-icon">+</span>
-                      Add priority
+                      + Add priority
                     </button>
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">
-                    <span className="label-icon">📝</span>
                     Other Notes
                   </label>
                   <textarea
-                    className="form-textarea modern-textarea"
+                    className="form-textarea"
                     placeholder="Additional observations, suggestions, or miscellaneous notes..."
                     value={weeklyReportData.otherNotes}
                     onChange={(e) => setWeeklyReportData({
@@ -2101,15 +2089,15 @@ Your report is now available in the system.`);
                   <button
                     type="button"
                     onClick={handleWeeklyReportClose}
-                    className="btn btn-secondary modern-btn"
+                    className="btn btn-secondary"
                   >
-                    <span>Cancel</span>
+                    Cancel
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary modern-btn"
+                    className="btn btn-primary"
                   >
-                    <span>📄 Submit Report</span>
+                    Submit Report
                   </button>
                 </div>
               </form>
@@ -2230,38 +2218,11 @@ Your report is now available in the system.`);
       
       {/* Enhanced Weekly Report Form Styles */}
       <style jsx>{`
-        .label-icon {
-          margin-right: 8px;
-          font-size: 16px;
-        }
-        
-        .modern-select {
-          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-          border: 2px solid #dee2e6;
-          border-radius: 12px;
-          padding: 12px 16px;
-          font-size: 14px;
-          transition: all 0.3s ease;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-          background-position: right 12px center;
-          background-repeat: no-repeat;
-          background-size: 16px;
-          padding-right: 40px;
-          width: 100%;
-        }
-        
-        .modern-select:focus {
-          border-color: #4f46e5;
-          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-          outline: none;
-        }
-        
         .dynamic-field-container {
-          background: #f8f9fa;
-          border-radius: 12px;
+          background: #ffffff;
+          border-radius: 4px;
           padding: 16px;
-          border: 1px solid #e9ecef;
+          border: 2px solid #000000;
         }
         
         .dynamic-field-row {
@@ -2277,8 +2238,8 @@ Your report is now available in the system.`);
         
         .dynamic-input {
           flex: 1;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
+          border: 2px solid #000000;
+          border-radius: 4px;
           padding: 10px 12px;
           font-size: 14px;
           transition: all 0.2s ease;
@@ -2286,20 +2247,18 @@ Your report is now available in the system.`);
         }
         
         .dynamic-input:focus {
-          border-color: #4f46e5;
-          box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+          border-color: #000000;
           outline: none;
         }
         
         .dynamic-input::placeholder {
-          color: #9ca3af;
-          font-style: italic;
+          color: #666666;
         }
         
         .remove-btn {
-          background: #ef4444;
-          color: white;
-          border: none;
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #000000;
           border-radius: 50%;
           width: 24px;
           height: 24px;
@@ -2313,15 +2272,15 @@ Your report is now available in the system.`);
         }
         
         .remove-btn:hover {
-          background: #dc2626;
+          background: #f0f0f0;
           transform: scale(1.1);
         }
         
         .add-field-btn {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #000000;
+          border-radius: 4px;
           padding: 8px 12px;
           font-size: 13px;
           cursor: pointer;
@@ -2333,72 +2292,11 @@ Your report is now available in the system.`);
         }
         
         .add-field-btn:hover {
-          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+          background: #f0f0f0;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         
-        .plus-icon {
-          font-size: 16px;
-          font-weight: bold;
-        }
-        
-        .modern-textarea {
-          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-          border: 2px solid #dee2e6;
-          border-radius: 12px;
-          padding: 12px 16px;
-          font-size: 14px;
-          transition: all 0.3s ease;
-          resize: vertical;
-          width: 100%;
-        }
-        
-        .modern-textarea:focus {
-          border-color: #4f46e5;
-          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-          outline: none;
-          background: white;
-        }
-        
-        .modern-textarea::placeholder {
-          color: #9ca3af;
-          font-style: italic;
-        }
-        
-        .modern-btn {
-          border-radius: 10px;
-          padding: 12px 20px;
-          font-weight: 500;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-        
-        .modern-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn-primary.modern-btn {
-          background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-          border: none;
-        }
-        
-        .btn-primary.modern-btn:hover {
-          background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-        }
-        
-        .btn-secondary.modern-btn {
-          background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-          border: none;
-        }
-        
-        .btn-secondary.modern-btn:hover {
-          background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-        }
+
       `}</style>
     </div>
   );
