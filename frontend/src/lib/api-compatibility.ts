@@ -290,7 +290,7 @@ export const taskService = {
 
   async deleteTask(id: number) {
     try {
-      const { data, error } = await supabaseDb.deleteTask(id);
+    const { data, error } = await supabaseDb.deleteTask(id);
       if (error) {
         console.error('Error in deleteTask:', error);
         
@@ -306,7 +306,7 @@ export const taskService = {
           throw new Error(`Failed to delete task: ${errorMessage}`);
         }
       }
-      return data;
+    return data;
     } catch (error) {
       console.error('Exception in taskService.deleteTask:', error);
       throw error;
@@ -820,19 +820,19 @@ export const reportingService = {
     } catch (error) {
       console.error('Error in getTeamKpiReport:', error);
       // Return fallback data to prevent crashes
-      return {
+    return {
         summary: {
           total_team_members: 0,
           average_completion_rate: 0,
           total_tasks_across_team: 0,
           total_finished_tasks: 0,
-          total_projects: 0,
-          active_projects: 0,
-          completed_projects: 0,
+      total_projects: 0,
+      active_projects: 0,
+      completed_projects: 0,
           overdue_tasks: 0
         },
         team_report: []
-      };
+    };
     }
   },
 
@@ -874,7 +874,7 @@ export const reportingService = {
         return userTasks.some((t: any) => t.project_id === p.id);
       });
 
-      return {
+    return {
         user_info: {
           id: user.id,
           name: user.name || user.email?.split('@')[0] || 'Unknown User',
@@ -922,11 +922,11 @@ export const reportingService = {
       };
     } catch (error) {
       console.error('Error in getTeamPerformanceAnalytics:', error);
-      return {
-        performance_trend: [],
-        productivity_metrics: {},
-        team_workload: []
-      };
+    return {
+      performance_trend: [],
+      productivity_metrics: {},
+      team_workload: []
+    };
     }
   }
 }; 

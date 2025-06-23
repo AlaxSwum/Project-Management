@@ -197,7 +197,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
 
       // Get project name if project is selected
       const selectedProject = projects.find(p => p.id === absenceFormData.projectId);
-      
+
       // Submit leave request to database
       const leaveRequest = {
         start_date: absenceFormData.startDate,
@@ -419,7 +419,7 @@ You will be notified once HR reviews your request.`);
           other_notes: weeklyReportData.otherNotes.trim() || null
         }])
         .select();
-
+      
       if (!error) {
         // Reset form and close modal
         setWeeklyReportData({
@@ -527,7 +527,7 @@ Your report is now available in the system.`);
         .limit(20);
       
       if (error) {
-        console.error('Error fetching notifications:', error);
+      console.error('Error fetching notifications:', error);
         setNotifications([]);
       } else {
         setNotifications(notificationsData || []);
@@ -626,16 +626,16 @@ Your report is now available in the system.`);
   // Fetch unread count on component mount and periodically
   useEffect(() => {
     if (user?.id) {
-      const fetchData = async () => {
-        await fetchUnreadCount();
-      };
-      
-      fetchData();
-      
-      // Fetch unread count every 30 seconds
-      const interval = setInterval(fetchUnreadCount, 30000);
-      
-      return () => clearInterval(interval);
+    const fetchData = async () => {
+      await fetchUnreadCount();
+    };
+    
+    fetchData();
+    
+    // Fetch unread count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    
+    return () => clearInterval(interval);
     }
   }, [user?.id]);
 

@@ -758,9 +758,9 @@ export const supabaseDb = {
       }
 
       // Now delete the main task
-      const { data, error } = await supabase
-        .from('projects_task')
-        .delete()
+    const { data, error } = await supabase
+      .from('projects_task')
+      .delete()
         .eq('id', id);
 
       if (error) {
@@ -788,9 +788,9 @@ export const supabaseDb = {
   // Meetings
   getMeetings: async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects_meeting')
-        .select(`
+    const { data, error } = await supabase
+      .from('projects_meeting')
+      .select(`
           id,
           title,
           description,
@@ -861,10 +861,10 @@ export const supabaseDb = {
         updated_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('projects_meeting')
+    const { data, error } = await supabase
+      .from('projects_meeting')
         .insert([meetingToInsert])
-        .select()
+      .select()
 
       if (error) {
         console.error('Error creating meeting:', error);
@@ -921,11 +921,11 @@ export const supabaseDb = {
       if (meetingData.duration) updateData.duration = meetingData.duration;
       if (meetingData.attendees !== undefined) updateData.attendees = meetingData.attendees;
 
-      const { data, error } = await supabase
-        .from('projects_meeting')
+    const { data, error } = await supabase
+      .from('projects_meeting')
         .update(updateData)
-        .eq('id', id)
-        .select()
+      .eq('id', id)
+      .select()
 
       if (error) {
         console.error('Error updating meeting:', error);

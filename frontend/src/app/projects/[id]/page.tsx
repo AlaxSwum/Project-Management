@@ -1977,7 +1977,8 @@ export default function ProjectDetailPage() {
             background: #ffffff;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
           }
           
           .gantt-timeline-header-enhanced {
@@ -2000,10 +2001,10 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-week-headers {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            display: flex;
             background: #f0f0f0;
             border-bottom: 2px solid #000000;
+            min-width: max-content;
           }
           
           .week-header {
@@ -2016,6 +2017,8 @@ export default function ProjectDetailPage() {
             text-transform: uppercase;
             letter-spacing: 0.05em;
             background: #f0f0f0;
+            min-width: 150px;
+            flex: 0 0 150px;
           }
           
           .week-header:last-child {
@@ -2023,9 +2026,9 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-date-grid {
-            display: grid;
-            grid-template-columns: repeat(30, 1fr);
+            display: flex;
             background: #ffffff;
+            min-width: max-content;
           }
           
           .gantt-date-cell {
@@ -2033,6 +2036,8 @@ export default function ProjectDetailPage() {
             text-align: center;
             border-right: 1px solid #000000;
             transition: background-color 0.2s ease;
+            min-width: 40px;
+            flex: 0 0 40px;
           }
           
           .gantt-date-cell:last-child {
@@ -2070,6 +2075,7 @@ export default function ProjectDetailPage() {
             flex: 1;
             position: relative;
             overflow-y: auto;
+            overflow-x: visible;
             background: #ffffff;
           }
           

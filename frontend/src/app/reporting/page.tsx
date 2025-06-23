@@ -225,9 +225,7 @@ export default function ReportingPage() {
       
       const projectInvolvement = memberProjects?.map(mp => ({
         project_id: mp.project_id,
-        project_name: Array.isArray(mp.projects_project) 
-          ? (mp.projects_project[0]?.name || 'Unknown')
-          : (mp.projects_project?.name || 'Unknown')
+        project_name: (mp.projects_project as any)?.name || 'Unknown'
       })) || [];
       
       // Prepare overdue task details

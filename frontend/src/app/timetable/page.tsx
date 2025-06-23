@@ -2596,22 +2596,22 @@ export default function TimetablePage() {
                 
                 {/* Selected Attendees Display */}
                 {newMeeting.attendee_ids.length > 0 && (
-                  <div style={{ 
+                <div style={{ 
                     display: 'flex', 
                     flexWrap: 'wrap', 
                     gap: '0.5rem', 
                     marginBottom: '0.75rem',
-                    padding: '0.75rem',
+                  padding: '0.75rem',
                     backgroundColor: '#f9fafb',
                     border: '1px solid #e5e7eb',
                     borderRadius: '6px'
-                  }}>
+                }}>
                     {newMeeting.attendee_ids.map(memberId => {
                       const member = projectMembers.find(m => m.id === memberId);
                       return member ? (
                         <span key={memberId} style={{
                           display: 'inline-flex',
-                          alignItems: 'center',
+                          alignItems: 'center', 
                           gap: '0.5rem',
                           padding: '0.25rem 0.75rem',
                           backgroundColor: '#000000',
@@ -2630,7 +2630,7 @@ export default function TimetablePage() {
                               background: 'none',
                               border: 'none',
                               color: '#ffffff',
-                              cursor: 'pointer',
+                          cursor: 'pointer',
                               fontSize: '1rem',
                               lineHeight: '1'
                             }}
@@ -2673,7 +2673,7 @@ export default function TimetablePage() {
                             cursor: 'pointer',
                             backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
                             borderLeft: isSelected ? '4px solid #000000' : '4px solid transparent'
-                          }}
+                        }}
                         >
                           <input
                             type="checkbox"
@@ -2684,12 +2684,12 @@ export default function TimetablePage() {
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: '500', color: '#000000' }}>
                               {member.name}
-                            </div>
+                    </div>
                             <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                               {member.email}
-                            </div>
-                          </div>
-                        </div>
+                    </div>
+                </div>
+                </div>
                       );
                     })}
                   </div>
