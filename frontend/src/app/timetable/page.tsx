@@ -1694,9 +1694,11 @@ export default function TimetablePage() {
             width: 100%;
             max-width: 600px;
             max-height: 90vh;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             border-radius: 8px;
             animation: slideIn 0.3s ease-out;
+            overflow: hidden;
           }
           @keyframes slideIn {
             from { transform: translateY(-20px) scale(0.95); opacity: 0; }
@@ -1708,6 +1710,8 @@ export default function TimetablePage() {
             justify-content: space-between;
             padding: 1.5rem 1.5rem 1rem 1.5rem;
             border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            background: #ffffff;
           }
           .modal-title {
             font-size: 1.25rem;
@@ -1736,6 +1740,9 @@ export default function TimetablePage() {
           }
           .modal-form {
             padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
           }
           .form-group {
             margin-bottom: 1.5rem;

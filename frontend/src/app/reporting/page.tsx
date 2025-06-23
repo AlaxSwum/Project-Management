@@ -33,8 +33,170 @@ export default function ReportingPage() {
   const fetchReportingData = async () => {
     try {
       setIsLoading(true);
-      const reportData = await reportingService.getTeamKpiReport();
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Check if user is HR/admin
+      const userRole = user?.role || (user as any)?.user_metadata?.role;
+      if (userRole !== 'hr' && userRole !== 'admin') {
+        setError('Access denied: You need HR or Admin privileges to view team reports');
+        return;
+      }
+      
+      // Step 1: Get projects that the current HR/admin user is a member of
+      const { data: currentUserProjects, error: userProjectsError } = await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', user?.id);
+      
+      if (userProjectsError) {
+        console.error('User projects fetch error:', userProjectsError);
+        throw userProjectsError;
+      }
+      
+      console.log('HR/Admin user is member of projects:', currentUserProjects?.map(p => p.project_id) || []);
+      
+      if (!currentUserProjects || currentUserProjects.length === 0) {
+        // HR/admin user is not assigned to any projects, show empty state
+        console.log('HR/Admin user has no project assignments, showing empty data');
+        setTeamReport({
+          summary: {
+            total_team_members: 0,
+            average_completion_rate: 0,
+            total_tasks_across_team: 0,
+            total_finished_tasks: 0
+          },
+          team_report: []
+        });
+        return;
+      }
+      
+      const adminProjectIds = currentUserProjects.map(p => p.project_id);
+      
+      // Step 2: Get all employees who are members of the same projects
+      const { data: sharedProjectMembers, error: membersError } = await supabase
+        .from('projects_project_members')
+        .select(`
+          user_id,
+          auth_user:user_id (
+            id,
+            name,
+            email,
+            role
+          )
+        `)
+        .in('project_id', adminProjectIds);
+      
+      if (membersError) {
+        console.error('Shared project members fetch error:', membersError);
+        throw membersError;
+      }
+      
+      // Extract unique employee IDs
+      const sharedEmployeeIds = new Set();
+      const employeeData = new Map();
+      
+      sharedProjectMembers?.forEach((member: any) => {
+        if (member.auth_user && !sharedEmployeeIds.has(member.user_id)) {
+          sharedEmployeeIds.add(member.user_id);
+          employeeData.set(member.user_id, member.auth_user);
+        }
+      });
+      
+      console.log('Employees sharing projects with HR/Admin:', sharedEmployeeIds.size);
+      
+      if (sharedEmployeeIds.size === 0) {
+        // No shared employees found
+        console.log('No employees found sharing projects with HR/Admin user');
+        setTeamReport({
+          summary: {
+            total_team_members: 0,
+            average_completion_rate: 0,
+            total_tasks_across_team: 0,
+            total_finished_tasks: 0
+          },
+          team_report: []
+        });
+        return;
+      }
+      
+      // Step 3: Fetch tasks data for shared employees only
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('projects_task')
+        .select(`
+          id,
+          assignee_id,
+          status,
+          due_date,
+          created_at,
+          name,
+          description,
+          priority,
+          project_id,
+          projects_project:project_id (
+            id,
+            name
+          )
+        `)
+        .in('assignee_id', Array.from(sharedEmployeeIds));
+      
+      if (tasksError) {
+        console.error('Tasks fetch error:', tasksError);
+        throw tasksError;
+      }
+      
+      // Step 4: Calculate KPIs for each employee
+      const teamReportData = [];
+      let totalTasks = 0;
+      let totalFinishedTasks = 0;
+      let totalCompletionRates = 0;
+      
+      for (const employeeId of sharedEmployeeIds) {
+        const employee = employeeData.get(employeeId);
+        const employeeTasks = tasksData?.filter(task => task.assignee_id === employeeId) || [];
+        
+        const finishedTasks = employeeTasks.filter(task => task.status === 'completed').length;
+        const unfinishedTasks = employeeTasks.filter(task => task.status !== 'completed').length;
+        const overdueTasks = employeeTasks.filter(task => {
+          if (task.status === 'completed') return false;
+          if (!task.due_date) return false;
+          return new Date(task.due_date) < new Date();
+        }).length;
+        
+        const activeProjects = new Set(employeeTasks.map(task => task.project_id)).size;
+        const completionRate = employeeTasks.length > 0 ? Math.round((finishedTasks / employeeTasks.length) * 100) : 0;
+        
+        totalTasks += employeeTasks.length;
+        totalFinishedTasks += finishedTasks;
+        totalCompletionRates += completionRate;
+        
+        teamReportData.push({
+          user_id: employeeId,
+          user_name: employee.name,
+          user_role: employee.role,
+          user_position: employee.role,
+          finished_tasks: finishedTasks,
+          unfinished_tasks: unfinishedTasks,
+          overdue_tasks: overdueTasks,
+          active_projects: activeProjects,
+          completion_rate: completionRate
+        });
+      }
+      
+      const averageCompletionRate = sharedEmployeeIds.size > 0 ? Math.round(totalCompletionRates / sharedEmployeeIds.size) : 0;
+      
+      const reportData = {
+        summary: {
+          total_team_members: sharedEmployeeIds.size,
+          average_completion_rate: averageCompletionRate,
+          total_tasks_across_team: totalTasks,
+          total_finished_tasks: totalFinishedTasks
+        },
+        team_report: teamReportData
+      };
+      
+      console.log('Generated team report for shared project members:', reportData);
       setTeamReport(reportData);
+      
     } catch (err: any) {
       setError('Failed to fetch reporting data');
       console.error('Reporting error:', err);
@@ -45,9 +207,119 @@ export default function ReportingPage() {
 
   const handleMemberClick = async (memberId: number) => {
     try {
-      const memberDetail = await reportingService.getMemberDetailedReport(memberId);
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Verify the member is in shared projects with current user
+      const { data: currentUserProjects, error: userProjectsError } = await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', user?.id);
+      
+      if (userProjectsError || !currentUserProjects) {
+        setError('Failed to verify project access');
+        return;
+      }
+      
+      const adminProjectIds = currentUserProjects.map(p => p.project_id);
+      
+      // Check if member is in any shared projects
+      const { data: memberProjects, error: memberProjectsError } = await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', memberId)
+        .in('project_id', adminProjectIds);
+      
+      if (memberProjectsError || !memberProjects || memberProjects.length === 0) {
+        setError('Access denied: This member is not in your shared projects');
+        return;
+      }
+      
+      // Fetch member basic info
+      const { data: memberInfo, error: memberError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role')
+        .eq('id', memberId)
+        .single();
+      
+      if (memberError) {
+        console.error('Member info fetch error:', memberError);
+        throw memberError;
+      }
+      
+      // Fetch member's tasks from shared projects only
+      const { data: memberTasks, error: tasksError } = await supabase
+        .from('projects_task')
+        .select(`
+          id,
+          name,
+          description,
+          status,
+          priority,
+          due_date,
+          created_at,
+          project_id,
+          projects_project:project_id (
+            id,
+            name
+          )
+        `)
+        .eq('assignee_id', memberId)
+        .in('project_id', adminProjectIds);
+      
+      if (tasksError) {
+        console.error('Member tasks fetch error:', tasksError);
+        throw tasksError;
+      }
+      
+      // Calculate task summary
+      const totalTasks = memberTasks?.length || 0;
+      const completedTasks = memberTasks?.filter(task => task.status === 'completed').length || 0;
+      const inProgressTasks = memberTasks?.filter(task => task.status === 'in_progress').length || 0;
+      const todoTasks = memberTasks?.filter(task => task.status === 'todo').length || 0;
+      const overdueTasks = memberTasks?.filter(task => {
+        if (task.status === 'completed') return false;
+        if (!task.due_date) return false;
+        return new Date(task.due_date) < new Date();
+      }) || [];
+      
+      // Get project involvement
+      const projectInvolvement = memberProjects.map(mp => {
+        const project = currentUserProjects.find(p => p.project_id === mp.project_id);
+        return { project_id: mp.project_id, project_name: project?.name || 'Unknown' };
+      });
+      
+      // Prepare overdue task details
+      const overdueTaskDetails = overdueTasks.map(task => ({
+        name: task.name,
+        description: task.description,
+        due_date: task.due_date,
+        priority: task.priority,
+        project_name: task.projects_project?.name || 'Unknown',
+        days_overdue: Math.ceil((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 60 * 60 * 24))
+      }));
+      
+      const memberDetail = {
+        user_info: {
+          id: memberInfo.id,
+          name: memberInfo.name,
+          email: memberInfo.email,
+          role: memberInfo.role
+        },
+        task_summary: {
+          total_tasks: totalTasks,
+          completed_tasks: completedTasks,
+          in_progress_tasks: inProgressTasks,
+          todo_tasks: todoTasks,
+          overdue_tasks: overdueTasks.length
+        },
+        project_involvement: projectInvolvement,
+        overdue_task_details: overdueTaskDetails
+      };
+      
+      console.log('Generated member detail report:', memberDetail);
       setSelectedMember(memberDetail);
       setShowDetailModal(true);
+      
     } catch (err: any) {
       setError('Failed to fetch member details');
       console.error('Member detail error:', err);
@@ -310,7 +582,7 @@ export default function ReportingPage() {
               Team Reporting & KPIs
             </h1>
             <p style={{ color: '#666666', marginTop: '0.25rem' }}>
-              Monitor team performance, task completion rates, and individual productivity metrics
+              Monitor performance of team members from your shared projects
             </p>
           </header>
 
@@ -329,7 +601,7 @@ export default function ReportingPage() {
                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#000000' }}>
                       {teamReport.summary.total_team_members}
                     </div>
-                    <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Team Members</div>
+                    <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Shared Project Members</div>
                   </div>
 
                   <div className="overview-card">
