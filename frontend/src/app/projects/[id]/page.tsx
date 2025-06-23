@@ -372,16 +372,22 @@ export default function ProjectDetailPage() {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: #ffffff;
+            overflow-x: hidden;
+            max-width: 100vw;
           }
           .project-container {
             min-height: 100vh;
             display: flex;
             background: #f8fafc;
+            overflow-x: hidden;
+            max-width: 100vw;
           }
           .main-content {
             flex: 1;
             margin-left: 256px;
             background: transparent;
+            overflow-x: hidden;
+            max-width: calc(100vw - 256px);
           }
           .header {
             background: rgba(255, 255, 255, 0.95);
@@ -1007,6 +1013,8 @@ export default function ProjectDetailPage() {
           }
           .main-content-area {
             padding: 2rem;
+            overflow-x: hidden;
+            max-width: 100%;
           }
           .error-message {
             background: #ffffff;
