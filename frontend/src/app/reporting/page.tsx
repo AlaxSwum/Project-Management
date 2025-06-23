@@ -291,7 +291,7 @@ export default function ReportingPage() {
       // Get project involvement
       const projectInvolvement = memberProjects.map(mp => {
         const project = currentUserProjects.find(p => p.project_id === mp.project_id);
-        return { project_id: mp.project_id, project_name: project?.projects_project?.name || 'Unknown' };
+        return { project_id: mp.project_id, project_name: project?.projects_project?.[0]?.name || 'Unknown' };
       });
       
       // Prepare overdue task details
