@@ -192,7 +192,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             border: 2px solid #000000;
             border-radius: 12px;
             width: 100%;
-            max-width: min(900px, calc(100vw - 1.5rem));
+            max-width: min(1200px, calc(100vw - 1.5rem));
             height: 85vh;
             max-height: 85vh;
             display: flex;
@@ -741,7 +741,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem' }}>
                   <div className="form-group">
                     <label className="form-label">Start Date</label>
                     <input
@@ -759,6 +759,19 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                       value={editedTask.due_date}
                       onChange={(e) => setEditedTask({ ...editedTask, due_date: e.target.value })}
                       className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Estimated Hours</label>
+                    <input
+                      type="number"
+                      value={editedTask.estimated_hours}
+                      onChange={(e) => setEditedTask({ ...editedTask, estimated_hours: e.target.value })}
+                      className="form-input"
+                      placeholder="Duration in hours"
+                      min="0"
+                      step="0.5"
                     />
                   </div>
                 </div>
