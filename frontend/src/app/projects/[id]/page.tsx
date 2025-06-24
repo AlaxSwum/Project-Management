@@ -1031,7 +1031,7 @@ export default function ProjectDetailPage() {
           }
           .main-content-area {
             padding: 2rem;
-            overflow-x: hidden;
+            overflow-x: auto;
             max-width: 100%;
           }
           .error-message {
@@ -3081,14 +3081,19 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            <div className="gantt-chart-enhanced">
+            <div className="gantt-chart-enhanced" style={{
+              width: '100%',
+              maxWidth: '100%',
+              overflow: 'visible'
+            }}>
               <div className="gantt-timeline-enhanced" style={{ 
                 width: '100%', 
                 maxWidth: '100%',
                 overflowX: 'auto',
                 overflowY: 'hidden',
                 border: '2px solid #000000',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                scrollbarWidth: 'thin'
               }}>
                 <div className="gantt-timeline-header-enhanced" style={{ minWidth: '1120px' }}>
                   <div className="gantt-month-header">

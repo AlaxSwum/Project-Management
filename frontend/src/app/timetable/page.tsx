@@ -2578,13 +2578,14 @@ export default function TimetablePage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Duration (min)</label>
+                  <label className="form-label">Duration</label>
                   <input
                     type="number"
                     min="15"
                     max="480"
                     step="15"
                     className="form-input"
+                    placeholder="Minutes"
                     value={newMeeting.duration}
                     onChange={(e) => setNewMeeting({ ...newMeeting, duration: Number(e.target.value) })}
                   />
