@@ -134,7 +134,7 @@ export default function MeetingDetailModal({
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             width: 100%;
-            max-width: 550px;
+            max-width: 750px;
             max-height: 85vh;
             overflow-y: auto;
             animation: slideIn 0.3s ease-out;
@@ -144,7 +144,7 @@ export default function MeetingDetailModal({
           .meeting-modal-fixed {
             border: 1px solid #e5e7eb !important;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-            max-width: 550px !important;
+            max-width: 750px !important;
             background: #ffffff !important;
           }
           .meeting-modal-fixed .modal-content {
@@ -543,7 +543,7 @@ export default function MeetingDetailModal({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Date</label>
                   <input
@@ -565,10 +565,11 @@ export default function MeetingDetailModal({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Duration (min)</label>
+                  <label className="form-label">Duration</label>
                   <input
                     type="number"
                     className="form-input"
+                    placeholder="Minutes"
                     value={editedMeeting.duration}
                     onChange={(e) => setEditedMeeting({...editedMeeting, duration: parseInt(e.target.value)})}
                   />

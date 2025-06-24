@@ -1692,7 +1692,7 @@ export default function TimetablePage() {
             background: #ffffff;
             border: 2px solid #000000;
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
@@ -1799,7 +1799,7 @@ export default function TimetablePage() {
           }
           .form-grid-3 {
             display: grid;
-            grid-template-columns: 1fr 1fr 100px;
+            grid-template-columns: 1fr 1fr 140px;
             gap: 1rem;
           }
           .form-actions {
