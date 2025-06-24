@@ -2817,11 +2817,11 @@ export default function ProjectDetailPage() {
             {/* Tasks Tab Content - Gantt Left Sidebar */}
             {ganttView === 'task' && (
               <div>
-                <div className="view-description">
+            <div className="view-description">
                   <h3>Tasks</h3>
                   <p>Task list with assignee, duration, and details. This shows the task information from the Gantt chart.</p>
-                </div>
-                
+            </div>
+            
                 <div className="gantt-sidebar-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
                   <div className="gantt-sidebar-header-enhanced" style={{ 
                     display: 'flex', 
@@ -2840,7 +2840,7 @@ export default function ProjectDetailPage() {
                       borderRight: '2px solid #000000'
                     }}>
                       TASK
-                    </div>
+                </div>
                     <div style={{ 
                       flex: '1', 
                       padding: '1rem', 
@@ -2853,7 +2853,7 @@ export default function ProjectDetailPage() {
                       borderRight: '2px solid #000000'
                     }}>
                       DURATION
-                    </div>
+              </div>
                     <div style={{ 
                       flex: '2', 
                       padding: '1rem', 
@@ -2866,7 +2866,7 @@ export default function ProjectDetailPage() {
                       borderRight: '2px solid #000000'
                     }}>
                       ASSIGNEE
-                    </div>
+            </div>
                     <div style={{ 
                       flex: '1.5', 
                       padding: '1rem', 
@@ -2879,7 +2879,7 @@ export default function ProjectDetailPage() {
                       borderRight: '2px solid #000000'
                     }}>
                       STATUS
-                    </div>
+                </div>
                     <div style={{ 
                       flex: '1.5', 
                       padding: '1rem', 
@@ -2899,7 +2899,7 @@ export default function ProjectDetailPage() {
                      borderTop: 'none',
                      overflow: 'hidden'
                    }}>
-                     {tasks.length === 0 ? (
+                  {tasks.length === 0 ? (
                        <div className="gantt-empty-state" style={{
                          padding: '3rem',
                          textAlign: 'center',
@@ -2908,14 +2908,14 @@ export default function ProjectDetailPage() {
                        }}>
                          <p style={{ margin: '0', fontSize: '1.1rem' }}>📝 No tasks available</p>
                          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to get started!</p>
-                       </div>
-                     ) : (
-                       tasks.map((task) => {
-                        const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
-                        const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                        const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
-                        
-                        return (
+                    </div>
+                  ) : (
+                    tasks.map((task) => {
+                      const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
+                      const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                      const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
+                      
+                      return (
                           <div 
                             key={task.id} 
                             className="gantt-task-row-enhanced"
@@ -2961,7 +2961,7 @@ export default function ProjectDetailPage() {
                                        {isOverdue(task.due_date) && ' (Overdue)'}
                                      </span>
                                    )}
-                                 </div>
+                            </div>
                                </div>
                                <div className="gantt-task-duration" style={{ 
                                  flex: '1', 
@@ -2984,7 +2984,7 @@ export default function ProjectDetailPage() {
                                  padding: '1rem',
                                  borderRight: '2px solid #000000'
                                }}>
-                                 {task.assignee ? (
+                              {task.assignee ? (
                                    <>
                                      <div className="assignee-avatar-enhanced" style={{
                                        width: '32px',
@@ -2998,14 +2998,14 @@ export default function ProjectDetailPage() {
                                        fontSize: '0.9rem',
                                        fontWeight: '600'
                                      }}>
-                                       {task.assignee.name.charAt(0).toUpperCase()}
-                                     </div>
+                                  {task.assignee.name.charAt(0).toUpperCase()}
+                                </div>
                                      <span style={{ fontSize: '0.9rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name}</span>
                                    </>
-                                 ) : (
+                              ) : (
                                    <span className="unassigned" style={{ color: '#666666', fontStyle: 'italic' }}>Unassigned</span>
-                                 )}
-                               </div>
+                              )}
+                            </div>
                                <div style={{ 
                                  flex: '1.5', 
                                  display: 'flex', 
@@ -3043,13 +3043,13 @@ export default function ProjectDetailPage() {
                                    {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
                                  </span>
                                </div>
-                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
+              </div>
               </div>
             )}
 
@@ -3090,38 +3090,38 @@ export default function ProjectDetailPage() {
                 border: '2px solid #000000',
                 boxSizing: 'border-box'
               }}>
-                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '800px' }}>
+                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '1120px' }}>
                   <div className="gantt-month-header">
                     <div className="month-label">{timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
                   </div>
-                  <div className="gantt-week-headers">
+                  <div className="gantt-week-headers" style={{ display: 'flex', width: '1120px' }}>
                     {Array.from({ length: 4 }, (_, weekIndex) => {
                       // Calculate week start from timelineStartDate (1st of month)
                       const startOfWeek = new Date(timelineStartDate);
                       startOfWeek.setDate(timelineStartDate.getDate() + (weekIndex * 7));
                       
-                      // Calculate actual week number of the year
-                      const yearStart = new Date(startOfWeek.getFullYear(), 0, 1);
-                      const daysSinceYearStart = Math.floor((startOfWeek.getTime() - yearStart.getTime()) / (24 * 60 * 60 * 1000));
-                      const actualWeekNumber = Math.ceil((daysSinceYearStart + yearStart.getDay() + 1) / 7);
+                      // Use simple month-based week numbering (Week 1, 2, 3, 4)
+                      const monthWeekNumber = weekIndex + 1;
                       
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
+                          width: '280px',
                           padding: '0.5rem',
                           borderRight: weekIndex < 3 ? '1px solid #000000' : 'none',
                           fontWeight: '600',
                           textAlign: 'center',
-                          background: '#f3f4f6'
+                          background: '#f3f4f6',
+                          boxSizing: 'border-box'
                         }}>
-                          Week {actualWeekNumber}
+                          Week {monthWeekNumber}
                           <div style={{ fontSize: '0.75rem', color: '#666666' }}>
                             {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </div>
+                      </div>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="gantt-date-grid">
+                  <div className="gantt-date-grid" style={{ display: 'flex', width: '1120px' }}>
                     {Array.from({ length: 28 }, (_, i) => {
                       // Calculate date from timelineStartDate
                       const date = new Date(timelineStartDate);
@@ -3135,12 +3135,15 @@ export default function ProjectDetailPage() {
                           key={i} 
                           className={`gantt-date-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}
                           style={{
+                            width: '40px',
                             minWidth: '40px',
+                            maxWidth: '40px',
                             padding: '0.5rem',
                             borderRight: i < 27 ? '1px solid #e5e7eb' : 'none',
                             borderBottom: '1px solid #000000',
                             textAlign: 'center',
-                            background: isToday ? '#fef3c7' : isWeekend ? '#f9fafb' : '#ffffff'
+                            background: isToday ? '#fef3c7' : isWeekend ? '#f9fafb' : '#ffffff',
+                            boxSizing: 'border-box'
                           }}
                         >
                           <div className="date-number" style={{ fontWeight: '600', fontSize: '0.9rem' }}>
@@ -3156,7 +3159,7 @@ export default function ProjectDetailPage() {
                 </div>
                 
                 <div className="gantt-grid-container" style={{ 
-                  minWidth: '800px',
+                  minWidth: '1120px',
                   position: 'relative',
                   minHeight: tasks.length > 0 ? `${tasks.length * 40}px` : '200px'
                 }}>
@@ -3164,25 +3167,25 @@ export default function ProjectDetailPage() {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: '100%',
+                    width: '1120px',
                     height: '100%',
                     pointerEvents: 'none',
                     zIndex: 1
                   }}>
-                    {Array.from({ length: 28 }, (_, i) => (
+                    {Array.from({ length: 29 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
                         left: `${(i * 40)}px`,
                         top: 0,
                         height: '100%',
                         width: '1px',
-                        background: '#e5e7eb'
+                        background: i === 0 || i === 28 ? '#000000' : '#e5e7eb'
                       }}></div>
                     ))}
                   </div>
                   
                   <div className="gantt-bars-enhanced" style={{ 
-                    minWidth: '800px',
+                    minWidth: '1120px',
                     position: 'relative',
                     zIndex: 2
                   }}>
@@ -3408,7 +3411,7 @@ export default function ProjectDetailPage() {
                 border: '2px solid #000000', 
                 padding: '2rem', 
                 width: '100%', 
-                maxWidth: '600px', 
+                maxWidth: '800px', 
                 borderRadius: '12px', 
                 maxHeight: '90vh', 
                 overflowY: 'auto', 
