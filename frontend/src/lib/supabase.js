@@ -434,7 +434,7 @@ export const supabaseDb = {
         tags,
         created_at,
         updated_at,
-        assignee_id,
+        assignee_ids,
         created_by_id,
         project_id,
         projects_project!inner(id, name)
@@ -450,19 +450,20 @@ export const supabaseDb = {
     if (data && !error) {
       const enrichedData = await Promise.all(
         data.map(async (task) => {
-          const assigneePromise = task.assignee_id 
-            ? supabase.from('auth_user').select('id, name, email').eq('id', task.assignee_id).single()
-            : Promise.resolve({ data: null });
+          const assigneesPromise = task.assignee_ids && task.assignee_ids.length > 0
+            ? supabase.from('auth_user').select('id, name, email, role').in('id', task.assignee_ids)
+            : Promise.resolve({ data: [] });
           
           const createdByPromise = task.created_by_id
             ? supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
             : Promise.resolve({ data: null });
 
-          const [assigneeResult, createdByResult] = await Promise.all([assigneePromise, createdByPromise]);
+          const [assigneesResult, createdByResult] = await Promise.all([assigneesPromise, createdByPromise]);
 
           return {
             ...task,
-            assignee: assigneeResult.data,
+            assignees: assigneesResult.data || [],
+            assignee: (assigneesResult.data && assigneesResult.data.length > 0) ? assigneesResult.data[0] : null, // Backwards compatibility
             created_by: createdByResult.data,
             project: task.projects_project
           };
@@ -511,12 +512,12 @@ export const supabaseDb = {
           tags,
           created_at,
           updated_at,
-          assignee_id,
+          assignee_ids,
           created_by_id,
           project_id,
           projects_project!inner(id, name)
         `)
-        .eq('assignee_id', userId)
+        .contains('assignee_ids', [userId])
         .in('project_id', accessibleProjectIds)
       
       // Enrich with user data
@@ -578,7 +579,7 @@ export const supabaseDb = {
         updated_at: new Date().toISOString(),
         position: nextPosition,
         // Set defaults for optional fields
-        assignee_id: taskData.assignee_id || null,
+        assignee_ids: taskData.assignee_ids || [],
         estimated_hours: taskData.estimated_hours || null,
         actual_hours: taskData.actual_hours || null,
         tags: taskData.tags || '',
@@ -605,13 +606,14 @@ export const supabaseDb = {
       const newTask = taskResult[0];
 
       // ✅ Enrich the task with user data before returning
-      const assignee = taskData.assignee_id ? 
-        await supabase.from('auth_user').select('id, name, email').eq('id', taskData.assignee_id).single() : 
-        { data: null };
+      const assignees = taskData.assignee_ids && taskData.assignee_ids.length > 0 ? 
+        await supabase.from('auth_user').select('id, name, email, role').in('id', taskData.assignee_ids) : 
+        { data: [] };
 
       const enrichedTask = {
         ...newTask,
-        assignee: assignee.data,
+        assignees: assignees.data || [],
+        assignee: (assignees.data && assignees.data.length > 0) ? assignees.data[0] : null, // Backwards compatibility
         created_by: {
           id: user.id,
           name: user.user_metadata?.name || user.email,
@@ -653,9 +655,9 @@ export const supabaseDb = {
       }
 
       // ✅ Enrich the updated task with user data like createTask and getTasks do
-      const assigneePromise = updatedTask.assignee_id 
-        ? supabase.from('auth_user').select('id, name, email').eq('id', updatedTask.assignee_id).single()
-        : Promise.resolve({ data: null });
+      const assigneesPromise = updatedTask.assignee_ids && updatedTask.assignee_ids.length > 0
+        ? supabase.from('auth_user').select('id, name, email, role').in('id', updatedTask.assignee_ids)
+        : Promise.resolve({ data: [] });
       
       const createdByPromise = updatedTask.created_by_id
         ? supabase.from('auth_user').select('id, name, email').eq('id', updatedTask.created_by_id).single()
@@ -665,8 +667,8 @@ export const supabaseDb = {
         ? supabase.from('projects_project').select('id, name').eq('id', updatedTask.project_id).single()
         : Promise.resolve({ data: null });
 
-      const [assigneeResult, createdByResult, projectResult] = await Promise.all([
-        assigneePromise, 
+      const [assigneesResult, createdByResult, projectResult] = await Promise.all([
+        assigneesPromise, 
         createdByPromise, 
         projectPromise
       ]);
@@ -674,7 +676,8 @@ export const supabaseDb = {
       // Return enriched task data matching the format from getTasks/createTask
       const enrichedTask = {
         ...updatedTask,
-        assignee: assigneeResult.data,
+        assignees: assigneesResult.data || [],
+        assignee: (assigneesResult.data && assigneesResult.data.length > 0) ? assigneesResult.data[0] : null, // Backwards compatibility
         created_by: createdByResult.data,
         project: projectResult.data,
         tags_list: updatedTask.tags ? updatedTask.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
@@ -698,7 +701,7 @@ export const supabaseDb = {
       // First check if the task exists and user has permission to delete it
       const { data: taskCheck, error: checkError } = await supabase
         .from('projects_task')
-        .select('id, created_by_id, assignee_id, project_id')
+        .select('id, created_by_id, assignee_ids, project_id')
         .eq('id', id)
         .single();
 
@@ -713,10 +716,10 @@ export const supabaseDb = {
       // Check if user has permission to delete this task
       // User can delete if they are:
       // 1. The creator of the task, OR
-      // 2. The assignee of the task, OR  
+      // 2. One of the assignees of the task, OR  
       // 3. A member of the project (we'll check project membership)
-      const canDelete = taskCheck.created_by_id === user.id || 
-                       taskCheck.assignee_id === user.id;
+      const isAssignee = taskCheck.assignee_ids && taskCheck.assignee_ids.includes(user.id);
+      const canDelete = taskCheck.created_by_id === user.id || isAssignee;
 
       if (!canDelete) {
         // Check if user is a member of the project

@@ -795,7 +795,7 @@ export const reportingService = {
       // Calculate team report by user
       const teamReport = allUsers.map((user: any) => {
         const userTasks = tasks.filter((t: any) => 
-          t.assignee_id === user.id || t.created_by === user.id
+          (t.assignee_ids && t.assignee_ids.includes(user.id)) || t.created_by === user.id
         );
         
         const finishedTasks = userTasks.filter((t: any) => t.status === 'done').length;
@@ -886,7 +886,7 @@ export const reportingService = {
       if (tasksError) throw tasksError;
 
       const userTasks = (allTasks || []).filter((t: any) => 
-        t.assignee_id === userId || t.created_by === userId
+        (t.assignee_ids && t.assignee_ids.includes(userId)) || t.created_by === userId
       );
 
       // Separate overdue tasks for detailed view
