@@ -44,7 +44,8 @@ interface Task {
   start_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;
-  assignee: User | null;
+  assignees: User[];  // Changed from single assignee to multiple assignees
+  assignee?: User | null;  // Keep for backwards compatibility
   created_by: User;
   tags_list: string[];
   created_at: string;
@@ -109,7 +110,8 @@ export default function ProjectDetailPage() {
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
-    assignee_id: 0,
+    assignee_ids: [] as number[],  // Changed to support multiple assignees
+    assignee_id: 0,  // Keep for backwards compatibility
     priority: 'medium',
     start_date: '',
     due_date: '',
@@ -159,8 +161,14 @@ export default function ProjectDetailPage() {
         status: 'todo',
       };
 
-      if (newTask.assignee_id && newTask.assignee_id !== 0) {
-        taskData.assignee_id = newTask.assignee_id;
+      // Handle multiple assignees
+      if (newTask.assignee_ids && newTask.assignee_ids.length > 0) {
+        taskData.assignee_ids = newTask.assignee_ids;
+      }
+      
+      // Backwards compatibility: if assignee_ids is empty but assignee_id is set, use it
+      if ((!newTask.assignee_ids || newTask.assignee_ids.length === 0) && newTask.assignee_id && newTask.assignee_id !== 0) {
+        taskData.assignee_ids = [newTask.assignee_id];
       }
 
       if (newTask.start_date && newTask.start_date.trim() !== '') {
@@ -181,6 +189,7 @@ export default function ProjectDetailPage() {
       setNewTask({
         name: '',
         description: '',
+        assignee_ids: [],
         assignee_id: 0,
         priority: 'medium',
         start_date: '',
@@ -474,13 +483,13 @@ export default function ProjectDetailPage() {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           
-                      .todo-view {
+          .todo-view {
               padding: 0 !important;
               background: transparent !important;
               min-height: auto !important;
-            }
-            
-            .todo-container {
+          }
+          
+          .todo-container {
               max-width: 100% !important;
               margin: 0 auto !important;
               padding: 0 !important;
@@ -617,7 +626,7 @@ export default function ProjectDetailPage() {
               font-size: 0.9rem !important;
               margin: 0 !important;
               font-style: italic !important;
-            }
+          }
           .view-btn {
             padding: 0.5rem;
             border: none;
@@ -3338,12 +3347,62 @@ export default function ProjectDetailPage() {
                                   <h4 className="task-title">{task.name}</h4>
                           </div>
                               
-                              {task.assignee && (
+                              {((task.assignees && task.assignees.length > 0) || task.assignee) && (
                                     <div className="task-meta-item" style={{ marginTop: '0.5rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    {task.assignees && task.assignees.length > 0 ? (
+                                      <>
+                                        {task.assignees.slice(0, 3).map((assignee, index) => (
+                                          <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            <div className="assignee-avatar" style={{ 
+                                              width: '24px', 
+                                              height: '24px',
+                                              fontSize: '0.7rem',
+                                              marginLeft: index > 0 ? '-8px' : '0',
+                                              zIndex: task.assignees.length - index,
+                                              position: 'relative',
+                                              border: '2px solid #ffffff'
+                                            }}>
+                                              {assignee.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            {index === 0 && task.assignees.length === 1 && (
+                                              <span style={{ fontSize: '0.8rem' }}>{assignee.name}</span>
+                                            )}
+                                          </div>
+                                        ))}
+                                        {task.assignees.length > 3 && (
+                                          <div style={{ 
+                                            width: '24px', 
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            background: '#6b7280',
+                                            color: '#ffffff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.6rem',
+                                            fontWeight: '600',
+                                            marginLeft: '-8px',
+                                            border: '2px solid #ffffff'
+                                          }}>
+                                            +{task.assignees.length - 3}
+                                          </div>
+                                        )}
+                                        {task.assignees.length > 1 && (
+                                          <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '0.25rem' }}>
+                                            {task.assignees.length} assignees
+                                          </span>
+                                        )}
+                                      </>
+                                    ) : task.assignee ? (
+                                      <>
                                       <div className="assignee-avatar">
                                         {task.assignee.name.charAt(0).toUpperCase()}
                                       </div>
                                       <span>{task.assignee.name}</span>
+                                      </>
+                                    ) : null}
+                                  </div>
                                 </div>
                               )}
                         </div>
@@ -3429,12 +3488,42 @@ export default function ProjectDetailPage() {
                             <span className={`task-status-badge status-${task.status}`}>
                               {TASK_STATUSES.find(s => s.value === task.status)?.label}
                             </span>
-                            {task.assignee && (
-                              <span className="task-assignee">
+                            {((task.assignees && task.assignees.length > 0) || task.assignee) && (
+                              <span className="task-assignee" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                {task.assignees && task.assignees.length > 0 ? (
+                                  <>
+                                    {task.assignees.slice(0, 2).map((assignee, index) => (
+                                      <div key={assignee.id} className="assignee-avatar-sm" style={{ 
+                                        marginLeft: index > 0 ? '-6px' : '0',
+                                        zIndex: task.assignees.length - index,
+                                        position: 'relative',
+                                        border: '1px solid #ffffff'
+                                      }}>
+                                        {assignee.name.charAt(0).toUpperCase()}
+                                      </div>
+                                    ))}
+                                    {task.assignees.length > 2 && (
+                                      <div className="assignee-avatar-sm" style={{ 
+                                        background: '#6b7280',
+                                        marginLeft: '-6px',
+                                        border: '1px solid #ffffff',
+                                        fontSize: '0.5rem'
+                                      }}>
+                                        +{task.assignees.length - 2}
+                                      </div>
+                                    )}
+                                    <span style={{ fontSize: '0.75rem', marginLeft: '0.25rem' }}>
+                                      {task.assignees.length === 1 ? task.assignees[0].name : `${task.assignees.length} assignees`}
+                                    </span>
+                                  </>
+                                ) : task.assignee ? (
+                                  <>
                                 <div className="assignee-avatar-sm">
                                   {task.assignee.name.charAt(0).toUpperCase()}
                                 </div>
                                 {task.assignee.name}
+                                  </>
+                                ) : null}
                               </span>
                             )}
                             <span className={`task-priority priority-${task.priority}`}>
@@ -3566,7 +3655,7 @@ export default function ProjectDetailPage() {
                       textAlign: 'left'
                     }}>
                       TASK
-                    </div>
+                </div>
                     <div style={{ 
                       padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
@@ -3579,7 +3668,7 @@ export default function ProjectDetailPage() {
                       textAlign: 'center'
                     }}>
                       DURATION
-                    </div>
+              </div>
                     <div style={{ 
                       padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
@@ -3592,7 +3681,7 @@ export default function ProjectDetailPage() {
                       textAlign: 'center'
                     }}>
                       ASSIGNEE
-                    </div>
+            </div>
                     <div style={{ 
                       padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
@@ -3605,7 +3694,7 @@ export default function ProjectDetailPage() {
                       textAlign: 'center'
                     }}>
                       STATUS
-                    </div>
+                </div>
                     <div style={{ 
                       padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
@@ -3681,8 +3770,8 @@ export default function ProjectDetailPage() {
                                  {task.description && (
                                    <span style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.2' }}>
                                      {task.description.substring(0, 25)}{task.description.length > 25 ? '...' : ''}
-                                   </span>
-                                 )}
+                                     </span>
+                                   )}
                                </div>
                                <div className="gantt-task-duration" style={{ 
                                  display: 'flex', 
@@ -4194,19 +4283,97 @@ export default function ProjectDetailPage() {
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">Assignee</label>
-                  <select
-                        className="form-select"
-                    value={newTask.assignee_id}
-                        onChange={(e) => setNewTask({ ...newTask, assignee_id: Number(e.target.value) })}
-                  >
-                    <option value={0}>Unassigned</option>
-                        {project.members.map(member => (
-                      <option key={member.id} value={member.id}>
+                      <label className="form-label">Assignees</label>
+                      <div style={{ 
+                        border: '2px solid #e5e7eb', 
+                        borderRadius: '8px', 
+                        padding: '0.75rem',
+                        background: '#ffffff',
+                        minHeight: '120px',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}>
+                        {project.members.length === 0 ? (
+                          <div style={{ color: '#6b7280', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
+                            No team members available
+                          </div>
+                        ) : (
+                          project.members.map(member => (
+                            <label 
+                              key={member.id} 
+                              style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.5rem',
+                                padding: '0.5rem',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+                                transition: 'background-color 0.2s ease',
+                                marginBottom: '0.25rem'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={newTask.assignee_ids.includes(member.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewTask({ 
+                                      ...newTask, 
+                                      assignee_ids: [...newTask.assignee_ids, member.id] 
+                                    });
+                                  } else {
+                                    setNewTask({ 
+                                      ...newTask, 
+                                      assignee_ids: newTask.assignee_ids.filter(id => id !== member.id)
+                                    });
+                                  }
+                                }}
+                                style={{ 
+                                  marginRight: '0.5rem',
+                                  accentColor: '#000000'
+                                }}
+                              />
+                              <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                background: newTask.assignee_ids.includes(member.id) ? '#000000' : '#f3f4f6',
+                                color: newTask.assignee_ids.includes(member.id) ? '#ffffff' : '#000000',
+                                border: '2px solid #000000',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.875rem',
+                                fontWeight: '600'
+                              }}>
+                                {member.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span style={{ 
+                                fontSize: '0.9rem', 
+                                fontWeight: '500',
+                                color: newTask.assignee_ids.includes(member.id) ? '#000000' : '#374151'
+                              }}>
                         {member.name}
-                      </option>
-                    ))}
-                  </select>
+                              </span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                      {newTask.assignee_ids.length > 0 && (
+                        <div style={{ 
+                          marginTop: '0.5rem', 
+                          padding: '0.5rem', 
+                          background: '#f0f9ff', 
+                          border: '1px solid #3b82f6', 
+                          borderRadius: '4px',
+                          fontSize: '0.875rem',
+                          color: '#1e40af'
+                        }}>
+                          <strong>{newTask.assignee_ids.length} assignee{newTask.assignee_ids.length === 1 ? '' : 's'} selected</strong>
+                        </div>
+                      )}
                 </div>
 
                     <div className="form-group">

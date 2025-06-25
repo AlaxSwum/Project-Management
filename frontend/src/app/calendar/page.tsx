@@ -45,7 +45,8 @@ interface Task {
   start_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;
-  assignee: User | null;
+  assignees: User[];  // Changed from single assignee to multiple assignees
+  assignee?: User | null;  // Keep for backwards compatibility
   created_by: User;
   tags_list: string[];
   created_at: string;

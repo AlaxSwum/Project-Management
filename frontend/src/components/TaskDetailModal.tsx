@@ -32,7 +32,8 @@ interface Task {
   start_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;
-  assignee: User | null;
+  assignees: User[];  // Changed from single assignee to multiple assignees
+  assignee?: User | null;  // Keep for backwards compatibility
   created_by: User | null;
   tags_list: string[];
   created_at: string;
@@ -74,7 +75,8 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
     due_date: task.due_date || '',
     start_date: task.start_date || '',
     estimated_hours: task.estimated_hours || '',
-    assignee_id: task.assignee?.id || 0,
+    assignee_ids: task.assignees ? task.assignees.map(a => a.id) : (task.assignee ? [task.assignee.id] : []),
+    assignee_id: task.assignee?.id || 0,  // Keep for backwards compatibility
     tags: task.tags_list.join(', '),
   });
 
@@ -87,6 +89,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
       due_date: task.due_date || '',
       start_date: task.start_date || '',
       estimated_hours: task.estimated_hours || '',
+      assignee_ids: task.assignees ? task.assignees.map(a => a.id) : (task.assignee ? [task.assignee.id] : []),
       assignee_id: task.assignee?.id || 0,
       tags: task.tags_list.join(', '),
     });
@@ -130,12 +133,13 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
         ...editedTask,
         tags: editedTask.tags,
         estimated_hours: editedTask.estimated_hours ? Number(editedTask.estimated_hours) : null,
-        assignee_id: editedTask.assignee_id && editedTask.assignee_id !== 0 ? Number(editedTask.assignee_id) : null,
+        assignee_ids: editedTask.assignee_ids && editedTask.assignee_ids.length > 0 ? editedTask.assignee_ids : null,
+        assignee_id: editedTask.assignee_id && editedTask.assignee_id !== 0 ? Number(editedTask.assignee_id) : null,  // Keep for backwards compatibility
         due_date: editedTask.due_date || null,
         start_date: editedTask.start_date || null,
       };
       
-      console.log('Saving task with assignee_id:', taskData.assignee_id); // Debug log
+      console.log('Saving task with assignee_ids:', taskData.assignee_ids); // Debug log
       await onSave(taskData);
       setIsEditing(false);
     } catch (error) {
@@ -710,19 +714,97 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Assignee</label>
-                    <select
-                      value={editedTask.assignee_id}
-                      onChange={(e) => setEditedTask({ ...editedTask, assignee_id: Number(e.target.value) })}
-                      className="form-select"
-                    >
-                      <option value={0}>Unassigned</option>
-                      {users.map(user => (
-                        <option key={user.id} value={user.id}>
-                          {user.name}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="form-label">Assignees</label>
+                    <div style={{ 
+                      border: '2px solid #e5e7eb', 
+                      borderRadius: '8px', 
+                      padding: '0.75rem',
+                      background: '#ffffff',
+                      minHeight: '100px',
+                      maxHeight: '150px',
+                      overflowY: 'auto'
+                    }}>
+                      {users.length === 0 ? (
+                        <div style={{ color: '#6b7280', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
+                          No team members available
+                        </div>
+                      ) : (
+                        users.map(user => (
+                          <label 
+                            key={user.id} 
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.5rem',
+                              padding: '0.4rem',
+                              cursor: 'pointer',
+                              borderRadius: '4px',
+                              transition: 'background-color 0.2s ease',
+                              marginBottom: '0.2rem'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={editedTask.assignee_ids.includes(user.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setEditedTask({ 
+                                    ...editedTask, 
+                                    assignee_ids: [...editedTask.assignee_ids, user.id] 
+                                  });
+                                } else {
+                                  setEditedTask({ 
+                                    ...editedTask, 
+                                    assignee_ids: editedTask.assignee_ids.filter(id => id !== user.id)
+                                  });
+                                }
+                              }}
+                              style={{ 
+                                marginRight: '0.5rem',
+                                accentColor: '#000000'
+                              }}
+                            />
+                            <div style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: editedTask.assignee_ids.includes(user.id) ? '#000000' : '#f3f4f6',
+                              color: editedTask.assignee_ids.includes(user.id) ? '#ffffff' : '#000000',
+                              border: '2px solid #000000',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.8rem',
+                              fontWeight: '600'
+                            }}>
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <span style={{ 
+                              fontSize: '0.85rem', 
+                              fontWeight: '500',
+                              color: editedTask.assignee_ids.includes(user.id) ? '#000000' : '#374151'
+                            }}>
+                              {user.name}
+                            </span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    {editedTask.assignee_ids.length > 0 && (
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        padding: '0.4rem', 
+                        background: '#f0f9ff', 
+                        border: '1px solid #3b82f6', 
+                        borderRadius: '4px',
+                        fontSize: '0.8rem',
+                        color: '#1e40af'
+                      }}>
+                        <strong>{editedTask.assignee_ids.length} assignee{editedTask.assignee_ids.length === 1 ? '' : 's'} selected</strong>
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -812,9 +894,44 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                   <div className="task-detail-item">
                     <UserIcon className="task-detail-icon" style={{ width: '20px', height: '20px' }} />
                     <div className="task-detail-content">
-                      <div className="task-detail-label">Assignee</div>
+                      <div className="task-detail-label">{task.assignees && task.assignees.length > 1 ? 'Assignees' : 'Assignee'}</div>
                       <div className="task-detail-value">
-                        {task.assignee?.name || 'Unassigned'}
+                        {task.assignees && task.assignees.length > 0 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {task.assignees.map((assignee, index) => (
+                              <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <div style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  background: '#000000',
+                                  color: '#ffffff',
+                                  border: '2px solid #ffffff',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.7rem',
+                                  fontWeight: '600',
+                                  marginLeft: index > 0 ? '-8px' : '0',
+                                  zIndex: task.assignees.length - index,
+                                  position: 'relative'
+                                }}>
+                                  {assignee.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+                                  {assignee.name}
+                                </span>
+                                {index < task.assignees.length - 1 && task.assignees.length > 1 && (
+                                  <span style={{ color: '#6b7280' }}>,</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : task.assignee ? (
+                          task.assignee.name
+                        ) : (
+                          'Unassigned'
+                        )}
                       </div>
                     </div>
                   </div>
