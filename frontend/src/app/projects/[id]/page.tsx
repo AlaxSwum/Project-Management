@@ -161,14 +161,17 @@ export default function ProjectDetailPage() {
         status: 'todo',
       };
 
-      // Handle multiple assignees
+      // Temporary workaround: Use single assignee_id while database is being fixed
       if (newTask.assignee_ids && newTask.assignee_ids.length > 0) {
-        taskData.assignee_ids = newTask.assignee_ids;
+        // For now, just use the first selected assignee
+        taskData.assignee_id = newTask.assignee_ids[0];
+        console.log('Using first assignee as workaround:', taskData.assignee_id);
       }
       
       // Backwards compatibility: if assignee_ids is empty but assignee_id is set, use it
       if ((!newTask.assignee_ids || newTask.assignee_ids.length === 0) && newTask.assignee_id && newTask.assignee_id !== 0) {
-        taskData.assignee_ids = [newTask.assignee_id];
+        taskData.assignee_id = newTask.assignee_id;
+        console.log('Using backwards compatibility assignee_id:', taskData.assignee_id);
       }
 
       if (newTask.start_date && newTask.start_date.trim() !== '') {
