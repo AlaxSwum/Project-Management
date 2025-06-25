@@ -489,17 +489,17 @@ export default function ProjectDetailPage() {
             .todo-stats-grid {
               display: grid !important;
               grid-template-columns: repeat(3, 1fr) !important;
-              gap: 0.5rem !important;
-              margin-bottom: 1rem !important;
+              gap: 0.375rem !important;
+              margin-bottom: 0.75rem !important;
             }
             
             .todo-stat-card {
               background: #ffffff !important;
               border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-              padding: 0.75rem 0.5rem !important;
+              border-radius: 6px !important;
+              padding: 0.5rem 0.25rem !important;
               text-align: center !important;
-              min-height: 60px !important;
+              min-height: 45px !important;
               display: flex !important;
               flex-direction: column !important;
               justify-content: center !important;
@@ -507,7 +507,7 @@ export default function ProjectDetailPage() {
             }
             
             .todo-stat-number {
-              font-size: 1.25rem !important;
+              font-size: 1rem !important;
               font-weight: 700 !important;
               color: #000000 !important;
               margin: 0 !important;
@@ -515,13 +515,13 @@ export default function ProjectDetailPage() {
             }
             
             .todo-stat-label {
-              font-size: 0.65rem !important;
+              font-size: 0.6rem !important;
               font-weight: 600 !important;
               color: #6b7280 !important;
-              margin-top: 0.25rem !important;
+              margin-top: 0.2rem !important;
               text-transform: uppercase !important;
               letter-spacing: 0.025em !important;
-              line-height: 1.2 !important;
+              line-height: 1.1 !important;
             }
             
             .todo-controls {
@@ -2599,10 +2599,34 @@ export default function ProjectDetailPage() {
               border-bottom: 2px solid #000000;
             }
             .gantt-sidebar-header-enhanced {
-              grid-template-columns: 2fr 1fr 1fr;
+              display: grid !important;
+              grid-template-columns: 2fr 0.8fr 1.2fr 0.8fr 0.8fr !important;
+              gap: 0 !important;
             }
             .gantt-task-info-enhanced {
-              grid-template-columns: 2fr 1fr 1fr;
+              display: grid !important;
+              grid-template-columns: 2fr 0.8fr 1.2fr 0.8fr 0.8fr !important;
+              gap: 0 !important;
+            }
+            
+            .gantt-sidebar-enhanced {
+              width: 100% !important;
+              overflow-x: auto !important;
+              scrollbar-width: thin !important;
+              -ms-overflow-style: none !important;
+            }
+            
+            .gantt-sidebar-enhanced::-webkit-scrollbar {
+              height: 4px !important;
+            }
+            
+            .gantt-sidebar-enhanced::-webkit-scrollbar-track {
+              background: #f1f1f1 !important;
+            }
+            
+            .gantt-sidebar-enhanced::-webkit-scrollbar-thumb {
+              background: #888 !important;
+              border-radius: 2px !important;
             }
             .gantt-week-headers {
               grid-template-columns: repeat(2, 1fr);
@@ -3523,71 +3547,74 @@ export default function ProjectDetailPage() {
             
                 <div className="gantt-sidebar-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
                   <div className="gantt-sidebar-header-enhanced" style={{ 
-                    display: 'flex', 
+                    display: 'grid', 
+                    gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr 0.8fr',
                     background: '#ffffff', 
                     border: '2px solid #000000',
-                    borderBottom: '2px solid #000000'
+                    borderBottom: '2px solid #000000',
+                    minWidth: '100%',
+                    width: '100%'
                   }}>
                     <div style={{ 
-                      flex: '3', 
-                      padding: '1rem', 
+                      padding: '0.75rem 0.5rem', 
                       fontWeight: '700', 
                       color: '#000000', 
-                      fontSize: '1rem',
+                      fontSize: '0.8rem',
                       display: 'flex',
                       alignItems: 'center',
-                      borderRight: '2px solid #000000'
+                      borderRight: '2px solid #000000',
+                      textAlign: 'left'
                     }}>
                       TASK
-                </div>
+                    </div>
                     <div style={{ 
-                      flex: '1', 
-                      padding: '1rem', 
+                      padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
                       color: '#000000', 
-                      fontSize: '1rem',
+                      fontSize: '0.8rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRight: '2px solid #000000'
+                      borderRight: '2px solid #000000',
+                      textAlign: 'center'
                     }}>
                       DURATION
-              </div>
+                    </div>
                     <div style={{ 
-                      flex: '2', 
-                      padding: '1rem', 
+                      padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
                       color: '#000000', 
-                      fontSize: '1rem',
+                      fontSize: '0.8rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRight: '2px solid #000000'
+                      borderRight: '2px solid #000000',
+                      textAlign: 'center'
                     }}>
                       ASSIGNEE
-            </div>
+                    </div>
                     <div style={{ 
-                      flex: '1.5', 
-                      padding: '1rem', 
+                      padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
                       color: '#000000', 
-                      fontSize: '1rem',
+                      fontSize: '0.8rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRight: '2px solid #000000'
+                      borderRight: '2px solid #000000',
+                      textAlign: 'center'
                     }}>
                       STATUS
-                </div>
+                    </div>
                     <div style={{ 
-                      flex: '1.5', 
-                      padding: '1rem', 
+                      padding: '0.75rem 0.25rem', 
                       fontWeight: '700', 
                       color: '#000000', 
-                      fontSize: '1rem',
+                      fontSize: '0.8rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      textAlign: 'center'
                     }}>
                       PRIORITY
                     </div>
@@ -3636,110 +3663,109 @@ export default function ProjectDetailPage() {
                             }}
                           >
                                                          <div className="gantt-task-info-enhanced" style={{ 
-                               display: 'flex', 
+                               display: 'grid',
+                               gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr 0.8fr',
                                width: '100%',
-                               background: '#ffffff'
+                               background: '#ffffff',
+                               minHeight: '50px'
                              }}>
                                <div className="gantt-task-name-enhanced" style={{ 
-                                 flex: '3', 
                                  display: 'flex', 
                                  flexDirection: 'column', 
-                                 gap: '0.25rem',
-                                 padding: '1rem',
-                                 borderRight: '2px solid #000000'
+                                 gap: '0.2rem',
+                                 padding: '0.75rem 0.5rem',
+                                 borderRight: '2px solid #000000',
+                                 justifyContent: 'center'
                                }}>
-                                 <span className="task-title" style={{ fontWeight: '600', color: '#000000', fontSize: '1rem' }}>{task.name}</span>
+                                 <span className="task-title" style={{ fontWeight: '600', color: '#000000', fontSize: '0.8rem', lineHeight: '1.2' }}>{task.name}</span>
                                  {task.description && (
-                                   <span style={{ fontSize: '0.85rem', color: '#666666', lineHeight: '1.3' }}>{task.description}</span>
+                                   <span style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.2' }}>
+                                     {task.description.substring(0, 25)}{task.description.length > 25 ? '...' : ''}
+                                   </span>
                                  )}
-                                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
-                                   {task.start_date && <span>Start: {formatDate(task.start_date)}</span>}
-                                   {task.due_date && (
-                                     <span style={{ color: isOverdue(task.due_date) ? '#ef4444' : '#666666' }}>
-                                       Due: {formatDate(task.due_date)}
-                                       {isOverdue(task.due_date) && ' (Overdue)'}
-                                     </span>
-                                   )}
-                            </div>
                                </div>
                                <div className="gantt-task-duration" style={{ 
-                                 flex: '1', 
                                  display: 'flex', 
                                  alignItems: 'center', 
                                  justifyContent: 'center', 
                                  fontWeight: '600',
-                                 fontSize: '1rem',
+                                 fontSize: '0.75rem',
                                  color: '#000000',
-                                 borderRight: '2px solid #000000'
+                                 borderRight: '2px solid #000000',
+                                 padding: '0.75rem 0.25rem'
                                }}>
                                  {durationInDays}d
                                </div>
                                <div className="gantt-task-assignee" style={{ 
-                                 flex: '2', 
                                  display: 'flex', 
                                  alignItems: 'center', 
                                  justifyContent: 'center',
-                                 gap: '0.5rem',
-                                 padding: '1rem',
+                                 gap: '0.25rem',
+                                 padding: '0.75rem 0.25rem',
                                  borderRight: '2px solid #000000'
                                }}>
                               {task.assignee ? (
                                    <>
                                      <div className="assignee-avatar-enhanced" style={{
-                                       width: '32px',
-                                       height: '32px',
+                                       width: '18px',
+                                       height: '18px',
                                        borderRadius: '50%',
-                                       background: '#000000',
-                                       color: '#ffffff',
+                                       background: '#f3f4f6',
+                                       color: '#000000',
+                                       border: '1px solid #000000',
                                        display: 'flex',
                                        alignItems: 'center',
                                        justifyContent: 'center',
-                                       fontSize: '0.9rem',
+                                       fontSize: '0.6rem',
                                        fontWeight: '600'
                                      }}>
                                   {task.assignee.name.charAt(0).toUpperCase()}
                                 </div>
-                                     <span style={{ fontSize: '0.9rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name}</span>
+                                     <span style={{ fontSize: '0.7rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name.split(' ')[0]}</span>
                                    </>
                               ) : (
-                                   <span className="unassigned" style={{ color: '#666666', fontStyle: 'italic' }}>Unassigned</span>
+                                   <span className="unassigned" style={{ color: '#6b7280', fontStyle: 'italic', fontSize: '0.7rem' }}>-</span>
                               )}
                             </div>
                                <div style={{ 
-                                 flex: '1.5', 
                                  display: 'flex', 
                                  alignItems: 'center', 
                                  justifyContent: 'center',
-                                 borderRight: '2px solid #000000'
+                                 borderRight: '2px solid #000000',
+                                 padding: '0.75rem 0.25rem'
                                }}>
                                  <span style={{
-                                   padding: '0.5rem 1rem',
-                                   borderRadius: '4px',
-                                   fontSize: '0.8rem',
+                                   padding: '0.2rem 0.4rem',
+                                   borderRadius: '12px',
+                                   fontSize: '0.6rem',
                                    fontWeight: '600',
                                    background: '#ffffff',
                                    color: '#000000',
-                                   border: '2px solid #000000'
+                                   border: '1px solid #000000',
+                                   textTransform: 'uppercase',
+                                   letterSpacing: '0.025em'
                                  }}>
-                                   {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
+                                   {TASK_STATUSES.find(s => s.value === task.status)?.label.substring(0, 4) || task.status.substring(0, 4)}
                                  </span>
                                </div>
                                <div style={{ 
-                                 flex: '1.5', 
                                  display: 'flex', 
                                  alignItems: 'center', 
-                                 justifyContent: 'center'
+                                 justifyContent: 'center',
+                                 padding: '0.75rem 0.25rem'
                                }}>
                                  <span style={{
-                                   padding: '0.5rem 1rem',
-                                   borderRadius: '4px',
-                                   fontSize: '0.8rem',
+                                   padding: '0.2rem 0.4rem',
+                                   borderRadius: '12px',
+                                   fontSize: '0.6rem',
                                    fontWeight: '600',
                                    background: '#ffffff',
                                    color: '#000000',
-                                   border: '2px solid #000000'
+                                   border: '1px solid #000000',
+                                   textTransform: 'uppercase',
+                                   letterSpacing: '0.025em'
                                  }}>
-                                   {PRIORITY_LEVELS.find(p => p.value === task.priority)?.label || task.priority}
+                                   {task.priority.substring(0, 3)}
                                  </span>
                                </div>
                           </div>
