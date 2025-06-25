@@ -13,7 +13,7 @@ import {
   CloudArrowUpIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
-import { listDriveFiles, searchDriveFiles, uploadToDrive, createDriveFolder } from '@/lib/api-compatibility';
+import { listDriveFiles, searchDriveFiles, uploadToDrive, uploadMultipleToDrive, createDriveFolder } from '@/lib/api-compatibility';
 
 interface DriveFile {
   id: string;
@@ -62,8 +62,9 @@ export default function GoogleDriveExplorer({
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ uploaded: 0, total: 0, currentFile: '' });
 
   // Google Drive is now available to everyone without individual authentication
   // Using service account approach - no OAuth popup required
@@ -221,23 +222,43 @@ export default function GoogleDriveExplorer({
     }
   };
 
-  // Upload file
-  const uploadFileToFolder = async (file: File, folderId: string) => {
+  // Upload files
+  const uploadFilesToFolder = async (files: File[], folderId: string) => {
     setUploading(true);
+    setUploadProgress({ uploaded: 0, total: files.length, currentFile: '' });
+    
     try {
-      const result = await uploadToDrive(file, folderId);
+      const results = await uploadMultipleToDrive(
+        files, 
+        folderId, 
+        (uploaded, total, currentFile) => {
+          setUploadProgress({ uploaded, total, currentFile });
+        }
+      );
+      
       setShowUploadDialog(false);
-      setUploadFile(null);
+      setUploadFiles([]);
+      setUploadProgress({ uploaded: 0, total: 0, currentFile: '' });
       
       // Show success message
-      alert(`File "${file.name}" uploaded successfully to "${selectedFolderName}"`);
+      const fileNames = files.map(f => f.name).join(', ');
+      const message = files.length === 1 
+        ? `File "${files[0].name}" uploaded successfully to "${selectedFolderName}"`
+        : `${files.length} files uploaded successfully to "${selectedFolderName}"`;
+      alert(message);
       
-      return result;
+      // Refresh the file list to show the newly uploaded files
+      if (selectedFolderId) {
+        fetchFiles(selectedFolderId);
+      }
+      
+      return results;
     } catch (error) {
-      console.error('Error uploading file:', error);
-      setError(error instanceof Error ? error.message : 'Failed to upload file');
+      console.error('Error uploading files:', error);
+      setError(error instanceof Error ? error.message : 'Failed to upload files');
     } finally {
       setUploading(false);
+      setUploadProgress({ uploaded: 0, total: 0, currentFile: '' });
     }
   };
 
@@ -258,16 +279,16 @@ export default function GoogleDriveExplorer({
 
   // Handle file selection for upload
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadFile(file);
+    const files = e.target.files;
+    if (files) {
+      setUploadFiles(Array.from(files));
     }
   };
 
   // Handle upload
   const handleUpload = () => {
-    if (uploadFile && selectedFolderId) {
-      uploadFileToFolder(uploadFile, selectedFolderId);
+    if (uploadFiles.length > 0 && selectedFolderId) {
+      uploadFilesToFolder(uploadFiles, selectedFolderId);
     }
   };
 
@@ -908,14 +929,88 @@ export default function GoogleDriveExplorer({
             <div className="file-input">
               <input
                 type="file"
+                multiple
                 onChange={handleFileSelect}
                 accept="*/*"
               />
             </div>
             
-            {uploadFile && (
+            {uploadFiles.length > 0 && (
               <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                Selected: <strong>{uploadFile.name}</strong> ({Math.round(uploadFile.size / 1024)} KB)
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <strong>Selected {uploadFiles.length} file{uploadFiles.length === 1 ? '' : 's'}:</strong>
+                </div>
+                <div style={{ maxHeight: '150px', overflowY: 'auto', background: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                  {uploadFiles.map((file, index) => (
+                    <div key={index} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      padding: '0.25rem 0',
+                      borderBottom: index < uploadFiles.length - 1 ? '1px solid #e5e7eb' : 'none'
+                    }}>
+                      <span style={{ flex: 1, marginRight: '0.5rem', fontSize: '0.8rem' }}>{file.name}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        ({Math.round(file.size / 1024)} KB)
+                      </span>
+                      <button
+                        onClick={() => {
+                          const newFiles = uploadFiles.filter((_, i) => i !== index);
+                          setUploadFiles(newFiles);
+                        }}
+                        style={{
+                          marginLeft: '0.5rem',
+                          background: '#ef4444',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '0.25rem 0.5rem',
+                          fontSize: '0.7rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                  Total size: <strong>{Math.round(uploadFiles.reduce((sum, file) => sum + file.size, 0) / 1024)} KB</strong>
+                </div>
+                              </div>
+              )}
+            
+            {uploading && uploadProgress.total > 0 && (
+              <div style={{ 
+                marginBottom: '1rem', 
+                padding: '0.75rem', 
+                background: '#f0f9ff', 
+                border: '1px solid #3b82f6', 
+                borderRadius: '6px' 
+              }}>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: '#1e40af' }}>
+                  Upload Progress: {uploadProgress.uploaded} of {uploadProgress.total} files
+                </div>
+                <div style={{ 
+                  width: '100%', 
+                  height: '8px', 
+                  background: '#e5e7eb', 
+                  borderRadius: '4px', 
+                  overflow: 'hidden',
+                  marginBottom: '0.5rem'
+                }}>
+                  <div style={{
+                    width: `${(uploadProgress.uploaded / uploadProgress.total) * 100}%`,
+                    height: '100%',
+                    background: '#3b82f6',
+                    transition: 'width 0.3s ease'
+                  }}></div>
+                </div>
+                {uploadProgress.currentFile && uploadProgress.currentFile !== 'Complete' && (
+                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                    Currently uploading: <strong>{uploadProgress.currentFile}</strong>
+                  </div>
+                )}
               </div>
             )}
             
@@ -923,7 +1018,7 @@ export default function GoogleDriveExplorer({
               <button
                 onClick={() => {
                   setShowUploadDialog(false);
-                  setUploadFile(null);
+                  setUploadFiles([]);
                 }}
                 className="dialog-btn dialog-btn-secondary"
               >
@@ -932,9 +1027,14 @@ export default function GoogleDriveExplorer({
               <button
                 onClick={handleUpload}
                 className="dialog-btn dialog-btn-primary"
-                disabled={!uploadFile || uploading}
+                disabled={uploadFiles.length === 0 || uploading}
               >
-                {uploading ? 'Uploading...' : 'Upload'}
+                {uploading 
+                  ? (uploadProgress.total > 1 
+                    ? `Uploading ${uploadProgress.uploaded}/${uploadProgress.total} files...` 
+                    : 'Uploading...')
+                  : `Upload ${uploadFiles.length} file${uploadFiles.length === 1 ? '' : 's'}`
+                }
               </button>
             </div>
           </div>

@@ -499,6 +499,37 @@ export async function uploadToDrive(file: File, folderId: string): Promise<any> 
   }
 }
 
+export async function uploadMultipleToDrive(
+  files: File[], 
+  folderId: string, 
+  onProgress?: (uploaded: number, total: number, currentFile: string) => void
+): Promise<any[]> {
+  try {
+    const results = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Call progress callback if provided
+      if (onProgress) {
+        onProgress(i, files.length, file.name);
+      }
+      
+      const result = await googleDriveServiceAccount.uploadFile(file, folderId);
+      results.push(result);
+    }
+    
+    // Final progress callback
+    if (onProgress) {
+      onProgress(files.length, files.length, 'Complete');
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Error uploading multiple files to drive:', error);
+    throw error;
+  }
+}
+
 export async function createDriveFolder(name: string, parentId: string | null = null): Promise<any> {
   try {
     // Use service account - no individual authentication needed
