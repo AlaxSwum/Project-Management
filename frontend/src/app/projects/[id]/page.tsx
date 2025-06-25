@@ -474,16 +474,150 @@ export default function ProjectDetailPage() {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           
-          .todo-view {
-            padding: 2rem;
-            background: #f8fafc;
-            min-height: 600px;
-          }
-          
-          .todo-container {
-            max-width: 100%;
-            margin: 0 auto;
-          }
+                      .todo-view {
+              padding: 0 !important;
+              background: transparent !important;
+              min-height: auto !important;
+            }
+            
+            .todo-container {
+              max-width: 100% !important;
+              margin: 0 auto !important;
+              padding: 0 !important;
+            }
+            
+            .todo-stats-grid {
+              display: grid !important;
+              grid-template-columns: repeat(3, 1fr) !important;
+              gap: 0.5rem !important;
+              margin-bottom: 1rem !important;
+            }
+            
+            .todo-stat-card {
+              background: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 8px !important;
+              padding: 0.75rem 0.5rem !important;
+              text-align: center !important;
+              min-height: 60px !important;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: center !important;
+              align-items: center !important;
+            }
+            
+            .todo-stat-number {
+              font-size: 1.25rem !important;
+              font-weight: 700 !important;
+              color: #000000 !important;
+              margin: 0 !important;
+              line-height: 1 !important;
+            }
+            
+            .todo-stat-label {
+              font-size: 0.65rem !important;
+              font-weight: 600 !important;
+              color: #6b7280 !important;
+              margin-top: 0.25rem !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.025em !important;
+              line-height: 1.2 !important;
+            }
+            
+            .todo-controls {
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 0.75rem !important;
+              margin-bottom: 1rem !important;
+            }
+            
+            .todo-add-btn {
+              background: #000000 !important;
+              color: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 8px !important;
+              padding: 0.75rem !important;
+              font-weight: 600 !important;
+              font-size: 0.9rem !important;
+              cursor: pointer !important;
+              transition: all 0.2s ease !important;
+              text-align: center !important;
+              touch-action: manipulation !important;
+              -webkit-tap-highlight-color: transparent !important;
+            }
+            
+            .todo-add-btn:hover {
+              transform: translateY(-1px) !important;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            .todo-view-toggle {
+              display: flex !important;
+              gap: 0.25rem !important;
+              background: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 8px !important;
+              padding: 0.25rem !important;
+            }
+            
+            .todo-view-btn {
+              flex: 1 !important;
+              padding: 0.5rem !important;
+              border: none !important;
+              background: transparent !important;
+              color: #6b7280 !important;
+              border-radius: 4px !important;
+              cursor: pointer !important;
+              font-size: 0.8rem !important;
+              font-weight: 600 !important;
+              transition: all 0.2s ease !important;
+              text-align: center !important;
+            }
+            
+            .todo-view-btn.active {
+              background: #000000 !important;
+              color: #ffffff !important;
+            }
+            
+            .todo-filters {
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 0.5rem !important;
+              margin-bottom: 1rem !important;
+            }
+            
+            .todo-filter-select {
+              padding: 0.75rem !important;
+              border: 2px solid #000000 !important;
+              border-radius: 8px !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+              font-size: 0.9rem !important;
+              font-weight: 500 !important;
+              cursor: pointer !important;
+            }
+            
+            .todo-empty-state {
+              text-align: center !important;
+              padding: 3rem 1rem !important;
+              background: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 12px !important;
+              color: #6b7280 !important;
+            }
+            
+            .todo-empty-state h3 {
+              font-size: 1.1rem !important;
+              font-weight: 600 !important;
+              color: #000000 !important;
+              margin: 0 0 0.5rem 0 !important;
+            }
+            
+            .todo-empty-state p {
+              font-size: 0.9rem !important;
+              margin: 0 !important;
+              font-style: italic !important;
+            }
           .view-btn {
             padding: 0.5rem;
             border: none;
@@ -2403,7 +2537,43 @@ export default function ProjectDetailPage() {
               padding: 1rem;
             }
             .timeline-stats {
-              grid-template-columns: 1fr;
+              display: grid !important;
+              grid-template-columns: repeat(4, 1fr) !important;
+              gap: 0.5rem !important;
+              width: 100% !important;
+              margin-bottom: 1rem !important;
+            }
+            
+            .stat-card {
+              background: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 8px !important;
+              padding: 0.75rem 0.5rem !important;
+              text-align: center !important;
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              justify-content: center !important;
+              min-height: 60px !important;
+              box-shadow: none !important;
+            }
+            
+            .stat-label {
+              font-size: 0.65rem !important;
+              font-weight: 600 !important;
+              color: #6b7280 !important;
+              margin-bottom: 0.25rem !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.025em !important;
+              line-height: 1.2 !important;
+            }
+            
+            .stat-value {
+              font-size: 1.25rem !important;
+              font-weight: 700 !important;
+              color: #000000 !important;
+              margin: 0 !important;
+              line-height: 1 !important;
             }
             .timeline-grid-header, .timeline-row {
               grid-template-columns: 1fr;
@@ -2614,6 +2784,185 @@ export default function ProjectDetailPage() {
               max-width: 100vw !important;
               box-sizing: border-box !important;
               width: 100% !important;
+            }
+            
+            .timeline-view {
+              padding: 0 !important;
+              background: transparent !important;
+            }
+            
+            .timeline-header-controls {
+              padding: 0 !important;
+              margin-bottom: 1rem !important;
+              background: transparent !important;
+            }
+            
+            .timeline-grid {
+              background: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 12px !important;
+              overflow: hidden !important;
+              margin-bottom: 1rem !important;
+            }
+            
+            .timeline-grid-header {
+              background: #f9fafb !important;
+              border-bottom: 2px solid #000000 !important;
+              padding: 0.75rem !important;
+              font-weight: 700 !important;
+              font-size: 0.8rem !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.025em !important;
+            }
+            
+            .timeline-row {
+              border-bottom: 1px solid #e5e7eb !important;
+              padding: 0.75rem !important;
+              transition: all 0.2s ease !important;
+            }
+            
+            .timeline-row:hover {
+              background: #f9fafb !important;
+            }
+            
+            .timeline-row:last-child {
+              border-bottom: none !important;
+            }
+            
+            .timeline-task-info {
+              margin-bottom: 0.5rem !important;
+            }
+            
+            .task-name {
+              font-size: 0.9rem !important;
+              font-weight: 600 !important;
+              color: #000000 !important;
+              margin-bottom: 0.375rem !important;
+              line-height: 1.3 !important;
+            }
+            
+            .task-details {
+              display: flex !important;
+              flex-wrap: wrap !important;
+              gap: 0.375rem !important;
+              align-items: center !important;
+            }
+            
+            .task-status-badge {
+              padding: 0.25rem 0.5rem !important;
+              border-radius: 4px !important;
+              font-size: 0.65rem !important;
+              font-weight: 600 !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.025em !important;
+              border: 1px solid #000000 !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+            }
+            
+            .task-assignee {
+              display: flex !important;
+              align-items: center !important;
+              gap: 0.25rem !important;
+              font-size: 0.75rem !important;
+              color: #6b7280 !important;
+            }
+            
+            .assignee-avatar-sm {
+              width: 16px !important;
+              height: 16px !important;
+              border-radius: 50% !important;
+              background: #f3f4f6 !important;
+              border: 1px solid #000000 !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              font-size: 0.6rem !important;
+              font-weight: 600 !important;
+              color: #000000 !important;
+            }
+            
+            .task-priority {
+              padding: 0.25rem 0.5rem !important;
+              border-radius: 4px !important;
+              font-size: 0.65rem !important;
+              font-weight: 600 !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.025em !important;
+              border: 1px solid #000000 !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+            }
+            
+            .timeline-chart {
+              margin-top: 0.5rem !important;
+            }
+            
+            .timeline-bar-container {
+              position: relative !important;
+              background: #f3f4f6 !important;
+              border: 1px solid #e5e7eb !important;
+              border-radius: 6px !important;
+              overflow: hidden !important;
+              height: 24px !important;
+              margin-bottom: 0.375rem !important;
+            }
+            
+            .timeline-bar {
+              height: 100% !important;
+              position: relative !important;
+              border-radius: 6px !important;
+              background: #e5e7eb !important;
+              transition: all 0.3s ease !important;
+            }
+            
+            .timeline-progress {
+              height: 100% !important;
+              border-radius: 6px !important;
+              transition: all 0.3s ease !important;
+            }
+            
+            .timeline-dates {
+              display: flex !important;
+              justify-content: space-between !important;
+              align-items: center !important;
+              font-size: 0.7rem !important;
+              color: #6b7280 !important;
+            }
+            
+            .start-date {
+              font-weight: 500 !important;
+            }
+            
+            .due-date {
+              font-weight: 500 !important;
+            }
+            
+            .due-date.overdue {
+              color: #ef4444 !important;
+              font-weight: 600 !important;
+            }
+            
+            .info-card {
+              margin: 1rem 0 !important;
+              padding: 0.875rem !important;
+              background: #ffffff !important;
+              border: 2px solid #000000 !important;
+              border-radius: 8px !important;
+            }
+            
+            .info-card h4 {
+              font-size: 0.85rem !important;
+              font-weight: 600 !important;
+              color: #000000 !important;
+              margin: 0 0 0.375rem 0 !important;
+            }
+            
+            .info-card p {
+              font-size: 0.75rem !important;
+              color: #6b7280 !important;
+              margin: 0 !important;
+              line-height: 1.4 !important;
             }
             
             .view-description {
@@ -3107,9 +3456,9 @@ export default function ProjectDetailPage() {
             </div>
             
             <div className="timeline-info">
-              <div className="info-card" style={{ background: '#f0fdf4', border: '2px solid #22c55e', borderRadius: '8px', padding: '1rem', margin: '1rem 0' }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#15803d', margin: '0 0 0.5rem 0' }}>📊 Progress Indicators</h4>
-                <p style={{ fontSize: '0.8rem', margin: '0', color: '#15803d', lineHeight: '1.4' }}>
+              <div className="info-card" style={{ background: '#ffffff', border: '2px solid #000000', borderRadius: '8px', padding: '1rem', margin: '1rem 0' }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#000000', margin: '0 0 0.5rem 0' }}>Progress Indicators</h4>
+                <p style={{ fontSize: '0.8rem', margin: '0', color: '#6b7280', lineHeight: '1.4' }}>
                   Progress bars show completion status: <strong>To Do (10%)</strong>, <strong>In Progress (50%)</strong>, 
                   <strong>Review (80%)</strong>, <strong>Done (100%)</strong>. Overdue tasks are highlighted in red.
                 </p>
@@ -3256,7 +3605,7 @@ export default function ProjectDetailPage() {
                          color: '#6b7280',
                          background: '#f9fafb'
                        }}>
-                         <p style={{ margin: '0', fontSize: '1.1rem' }}>📝 No tasks available</p>
+                         <p style={{ margin: '0', fontSize: '1.1rem' }}>No tasks available</p>
                          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to get started!</p>
                     </div>
                   ) : (
