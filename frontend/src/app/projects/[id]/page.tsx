@@ -110,8 +110,7 @@ export default function ProjectDetailPage() {
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
-    assignee_ids: [] as number[],  // Changed to support multiple assignees
-    assignee_id: 0,  // Keep for backwards compatibility
+    assignee_ids: [] as number[],  // Multiple assignees support
     priority: 'medium',
     start_date: '',
     due_date: '',
@@ -161,17 +160,14 @@ export default function ProjectDetailPage() {
         status: 'todo',
       };
 
-      // Temporary workaround: Use single assignee_id while database is being fixed
+      // Handle multiple assignees using assignee_ids array
       if (newTask.assignee_ids && newTask.assignee_ids.length > 0) {
-        // For now, just use the first selected assignee
-        taskData.assignee_id = newTask.assignee_ids[0];
-        console.log('Using first assignee as workaround:', taskData.assignee_id);
-      }
-      
-      // Backwards compatibility: if assignee_ids is empty but assignee_id is set, use it
-      if ((!newTask.assignee_ids || newTask.assignee_ids.length === 0) && newTask.assignee_id && newTask.assignee_id !== 0) {
-        taskData.assignee_id = newTask.assignee_id;
-        console.log('Using backwards compatibility assignee_id:', taskData.assignee_id);
+        taskData.assignee_ids = newTask.assignee_ids;
+        console.log('Using assignee_ids array:', taskData.assignee_ids);
+      } else {
+        // Default to empty array if no assignees selected
+        taskData.assignee_ids = [];
+        console.log('No assignees selected, using empty array');
       }
 
       if (newTask.start_date && newTask.start_date.trim() !== '') {
@@ -193,7 +189,6 @@ export default function ProjectDetailPage() {
         name: '',
         description: '',
         assignee_ids: [],
-        assignee_id: 0,
         priority: 'medium',
         start_date: '',
         due_date: '',
