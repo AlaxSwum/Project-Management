@@ -4318,21 +4318,29 @@ export default function ProjectDetailPage() {
                                 type="checkbox"
                                 checked={newTask.assignee_ids.includes(member.id)}
                                 onChange={(e) => {
+                                  console.log('Checkbox clicked for member:', member.name, 'Checked:', e.target.checked);
+                                  console.log('Current assignee_ids:', newTask.assignee_ids);
+                                  
                                   if (e.target.checked) {
+                                    const newAssigneeIds = [...newTask.assignee_ids, member.id];
+                                    console.log('Adding member, new assignee_ids:', newAssigneeIds);
                                     setNewTask({ 
                                       ...newTask, 
-                                      assignee_ids: [...newTask.assignee_ids, member.id] 
+                                      assignee_ids: newAssigneeIds
                                     });
                                   } else {
+                                    const newAssigneeIds = newTask.assignee_ids.filter(id => id !== member.id);
+                                    console.log('Removing member, new assignee_ids:', newAssigneeIds);
                                     setNewTask({ 
                                       ...newTask, 
-                                      assignee_ids: newTask.assignee_ids.filter(id => id !== member.id)
+                                      assignee_ids: newAssigneeIds
                                     });
                                   }
                                 }}
                                 style={{ 
                                   marginRight: '0.5rem',
-                                  accentColor: '#000000'
+                                  accentColor: '#000000',
+                                  transform: 'scale(1.2)'
                                 }}
                               />
                               <div style={{
@@ -4364,14 +4372,24 @@ export default function ProjectDetailPage() {
                       {newTask.assignee_ids.length > 0 && (
                         <div style={{ 
                           marginTop: '0.5rem', 
-                          padding: '0.5rem', 
-                          background: '#f0f9ff', 
-                          border: '1px solid #3b82f6', 
-                          borderRadius: '4px',
-                          fontSize: '0.875rem',
-                          color: '#1e40af'
+                          padding: '0.75rem', 
+                          background: newTask.assignee_ids.length > 1 ? '#dcfce7' : '#f0f9ff', 
+                          border: newTask.assignee_ids.length > 1 ? '2px solid #16a34a' : '1px solid #3b82f6', 
+                          borderRadius: '6px',
+                          fontSize: '0.9rem',
+                          color: newTask.assignee_ids.length > 1 ? '#15803d' : '#1e40af',
+                          fontWeight: '600'
                         }}>
-                          <strong>{newTask.assignee_ids.length} assignee{newTask.assignee_ids.length === 1 ? '' : 's'} selected</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {newTask.assignee_ids.length > 1 && <span style={{ fontSize: '1.2rem' }}>✅</span>}
+                            <strong>
+                              {newTask.assignee_ids.length} assignee{newTask.assignee_ids.length === 1 ? '' : 's'} selected
+                              {newTask.assignee_ids.length > 1 && ' (Multiple assignees!)'}
+                            </strong>
+                          </div>
+                          <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', opacity: 0.8 }}>
+                            Selected: {project.members.filter(m => newTask.assignee_ids.includes(m.id)).map(m => m.name).join(', ')}
+                          </div>
                         </div>
                       )}
                 </div>
