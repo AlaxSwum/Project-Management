@@ -202,19 +202,29 @@ export default function MeetingNotesModal({
             <strong>Meeting:</strong> {meetingNotes.title}
           </span>
           <span className="meta-item">
-            <strong>Date:</strong> {new Date(meetingNotes.date).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
+            <strong>Date:</strong> {(() => {
+              // Parse date string manually to avoid timezone issues
+              const [year, month, day] = meetingNotes.date.split('-').map(Number);
+              const date = new Date(year, month - 1, day);
+              return date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              });
+            })()}
           </span>
           <span className="meta-item">
             <strong>Time:</strong> {meetingNotes.time}
           </span>
           {meetingNotes.follow_up_date && (
             <span className="meta-item">
-              <strong>Follow-up Date:</strong> {new Date(meetingNotes.follow_up_date).toLocaleDateString()}
+              <strong>Follow-up Date:</strong> {(() => {
+                // Parse date string manually to avoid timezone issues
+                const [year, month, day] = meetingNotes.follow_up_date.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                return date.toLocaleDateString();
+              })()}
             </span>
           )}
         </div>

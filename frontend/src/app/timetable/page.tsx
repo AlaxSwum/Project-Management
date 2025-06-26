@@ -368,7 +368,9 @@ export default function TimetablePage() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse date string manually to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -402,20 +404,38 @@ export default function TimetablePage() {
     : meetings;
 
   const upcomingMeetings = filteredMeetings.filter(m => {
-    const meetingDateTime = new Date(`${m.date}T${m.time}`);
+    // Parse date and time manually to avoid timezone issues
+    const [year, month, day] = m.date.split('-').map(Number);
+    const [hours, minutes] = m.time.split(':').map(Number);
+    const meetingDateTime = new Date(year, month - 1, day, hours, minutes);
     return meetingDateTime >= new Date();
   }).sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`);
-    const dateB = new Date(`${b.date}T${b.time}`);
+    const [yearA, monthA, dayA] = a.date.split('-').map(Number);
+    const [hoursA, minutesA] = a.time.split(':').map(Number);
+    const dateA = new Date(yearA, monthA - 1, dayA, hoursA, minutesA);
+    
+    const [yearB, monthB, dayB] = b.date.split('-').map(Number);
+    const [hoursB, minutesB] = b.time.split(':').map(Number);
+    const dateB = new Date(yearB, monthB - 1, dayB, hoursB, minutesB);
+    
     return dateA.getTime() - dateB.getTime();
   });
 
   const pastMeetings = filteredMeetings.filter(m => {
-    const meetingDateTime = new Date(`${m.date}T${m.time}`);
+    // Parse date and time manually to avoid timezone issues
+    const [year, month, day] = m.date.split('-').map(Number);
+    const [hours, minutes] = m.time.split(':').map(Number);
+    const meetingDateTime = new Date(year, month - 1, day, hours, minutes);
     return meetingDateTime < new Date();
   }).sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`);
-    const dateB = new Date(`${b.date}T${b.time}`);
+    const [yearA, monthA, dayA] = a.date.split('-').map(Number);
+    const [hoursA, minutesA] = a.time.split(':').map(Number);
+    const dateA = new Date(yearA, monthA - 1, dayA, hoursA, minutesA);
+    
+    const [yearB, monthB, dayB] = b.date.split('-').map(Number);
+    const [hoursB, minutesB] = b.time.split(':').map(Number);
+    const dateB = new Date(yearB, monthB - 1, dayB, hoursB, minutesB);
+    
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -462,7 +482,11 @@ export default function TimetablePage() {
   };
 
   const getMeetingsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // Use local date formatting to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     return filteredMeetings.filter(meeting => meeting.date === dateStr);
   };
 
@@ -2316,7 +2340,11 @@ export default function TimetablePage() {
                           }
                         }}
                         onClick={() => {
-                          const dateStr = date.toISOString().split('T')[0];
+                          // Use local date formatting to avoid timezone issues
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const dateStr = `${year}-${month}-${day}`;
                           setNewMeeting({
                             ...newMeeting,
                             date: dateStr,
