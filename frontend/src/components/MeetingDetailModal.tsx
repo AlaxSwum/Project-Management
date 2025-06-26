@@ -33,9 +33,8 @@ interface Meeting {
   };
   attendees?: string;
   attendees_list?: string[];
+  attendee_ids?: number[];
 }
-
-// Use the MeetingNoteType from the service instead of defining it here
 
 interface MeetingDetailModalProps {
   meeting: Meeting;
@@ -43,6 +42,8 @@ interface MeetingDetailModalProps {
   onUpdate: (meetingData: any) => Promise<void>;
   onDelete: (meetingId: number) => Promise<void>;
   projectMembers?: any[];
+  projects?: any[];
+  onProjectChange?: (projectId: number) => void;
 }
 
 export default function MeetingDetailModal({
@@ -50,7 +51,9 @@ export default function MeetingDetailModal({
   onClose,
   onUpdate,
   onDelete,
-  projectMembers = []
+  projectMembers = [],
+  projects = [],
+  onProjectChange
 }: MeetingDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
@@ -60,8 +63,17 @@ export default function MeetingDetailModal({
     date: meeting.date,
     time: meeting.time,
     duration: meeting.duration,
+    project_id: meeting.project_id || 0,
     attendees: meeting.attendees || '',
+    attendee_ids: meeting.attendee_ids || [],
   });
+
+  // Fetch project members when project changes
+  useEffect(() => {
+    if (isEditing && editedMeeting.project_id && onProjectChange) {
+      onProjectChange(editedMeeting.project_id);
+    }
+  }, [editedMeeting.project_id, isEditing, onProjectChange]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -94,7 +106,11 @@ export default function MeetingDetailModal({
 
   const handleSave = async () => {
     try {
-      await onUpdate(editedMeeting);
+      await onUpdate({
+        ...editedMeeting,
+        project: editedMeeting.project_id,
+        attendee_ids: editedMeeting.attendee_ids.length > 0 ? editedMeeting.attendee_ids : undefined,
+      });
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update meeting:', error);
@@ -112,7 +128,21 @@ export default function MeetingDetailModal({
     }
   };
 
-
+  const getAttendeesList = () => {
+    if (meeting.attendee_ids && meeting.attendee_ids.length > 0) {
+      return meeting.attendee_ids.map(id => {
+        const member = projectMembers.find(m => m.id === id);
+        return member ? member.name : `User ${id}`;
+      });
+    }
+    if (meeting.attendees_list && meeting.attendees_list.length > 0) {
+      return meeting.attendees_list;
+    }
+    if (meeting.attendees && typeof meeting.attendees === 'string') {
+      return meeting.attendees.split(',').map(a => a.trim()).filter(a => a);
+    }
+    return [];
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -147,25 +177,10 @@ export default function MeetingDetailModal({
             max-width: 750px !important;
             background: #ffffff !important;
           }
-          .meeting-modal-fixed .modal-content {
+          .modal-content {
+            padding: 0;
             border: none !important;
             box-shadow: none !important;
-            padding: 1rem 1.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 1rem !important;
-          }
-          .meeting-modal-fixed .info-row {
-            border: 1px solid #e5e7eb !important;
-            background: #f8fafc !important;
-            width: 100% !important;
-            max-width: 480px !important;
-          }
-          .meeting-modal-fixed .meeting-info {
-            width: 100% !important;
-            max-width: 480px !important;
-            margin-bottom: 0 !important;
           }
           .modal-header {
             padding: 1rem 1.5rem;
@@ -207,7 +222,7 @@ export default function MeetingDetailModal({
           .action-btn.save { background: #000000; color: #ffffff; }
           .action-btn.delete { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
           .action-btn.close { background: #fef2f2; border-color: #fecaca; }
-          .modal-content {
+          .modal-body {
             padding: 1rem 1.5rem;
           }
           .meeting-info {
@@ -264,12 +279,16 @@ export default function MeetingDetailModal({
             outline: none;
             border-color: #000000;
           }
+          .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 140px;
+            gap: 1rem;
+          }
           .meeting-notes-section {
             padding-top: 1.5rem;
             margin-top: 1.5rem;
             margin-bottom: 2rem;
             width: 100%;
-            max-width: 480px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
           }
@@ -302,92 +321,6 @@ export default function MeetingDetailModal({
           .toggle-notes-btn:hover {
             background: #333333;
           }
-          .notes-form {
-            background: #f8fafc;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-          }
-          .array-field {
-            margin-bottom: 1rem;
-          }
-          .array-item {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            align-items: flex-start;
-          }
-          .array-input {
-            flex: 1;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 0.875rem;
-          }
-          .array-btn {
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            background: #ffffff;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .array-btn:hover {
-            border-color: #000000;
-          }
-          .array-btn.add {
-            background: #000000;
-            color: #ffffff;
-            border-color: #000000;
-          }
-          .attendees-section {
-            margin-bottom: 1rem;
-          }
-          .attendees-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-          }
-          .attendee-tag {
-            background: #e5e7eb;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-          }
-          .attendee-remove {
-            cursor: pointer;
-            color: #dc2626;
-            font-weight: 600;
-          }
-          .attendee-input-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-          }
-          .project-members {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-          }
-          .member-btn {
-            padding: 0.25rem 0.5rem;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          .member-btn:hover {
-            background: #e5e7eb;
-          }
           .form-actions {
             display: flex;
             gap: 1rem;
@@ -418,6 +351,23 @@ export default function MeetingDetailModal({
           }
           .btn-secondary:hover {
             border-color: #000000;
+          }
+          .attendees-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
+          .attendee-tag {
+            background: #e5e7eb;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #000000;
+          }
+          @media (max-width: 768px) {
+            .form-grid-3 {
+              grid-template-columns: 1fr;
+            }
           }
           @keyframes fadeIn {
             from { opacity: 0; }
@@ -473,144 +423,295 @@ export default function MeetingDetailModal({
         </div>
 
         <div className="modal-content">
-          {!isEditing ? (
-            <div className="meeting-info">
-              <div className="info-row">
-                <CalendarDaysIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
-                <div className="info-content">
-                  <div className="info-label">Date</div>
-                  <div className="info-value">{formatDate(meeting.date)}</div>
-                </div>
-              </div>
-              
-              <div className="info-row">
-                <ClockIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
-                <div className="info-content">
-                  <div className="info-label">Time & Duration</div>
-                  <div className="info-value">
-                    {formatTime(meeting.time)} • {formatDuration(meeting.duration)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="info-row">
-                <DocumentTextIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
-                <div className="info-content">
-                  <div className="info-label">Project</div>
-                  <div className="info-value">{meeting.project_name}</div>
-                </div>
-              </div>
-
-              {meeting.description && (
+          <div className="modal-body">
+            {!isEditing ? (
+              <div className="meeting-info">
                 <div className="info-row">
-                  <ClipboardDocumentListIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                  <CalendarDaysIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
                   <div className="info-content">
-                    <div className="info-label">Description</div>
-                    <div className="info-value">{meeting.description}</div>
+                    <div className="info-label">Date</div>
+                    <div className="info-value">{formatDate(meeting.date)}</div>
                   </div>
                 </div>
-              )}
-
-              {meeting.attendees_list && meeting.attendees_list.length > 0 && (
+                
                 <div className="info-row">
-                  <UserGroupIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                  <ClockIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
                   <div className="info-content">
-                    <div className="info-label">Attendees</div>
-                    <div className="info-value">{meeting.attendees_list.join(', ')}</div>
+                    <div className="info-label">Time & Duration</div>
+                    <div className="info-value">
+                      {formatTime(meeting.time)} • {formatDuration(meeting.duration)}
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div>
-              <div className="form-group">
-                <label className="form-label">Meeting Title</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={editedMeeting.title}
-                  onChange={(e) => setEditedMeeting({...editedMeeting, title: e.target.value})}
-                />
-              </div>
 
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-textarea"
-                  rows={3}
-                  value={editedMeeting.description}
-                  onChange={(e) => setEditedMeeting({...editedMeeting, description: e.target.value})}
-                />
-              </div>
+                <div className="info-row">
+                  <DocumentTextIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                  <div className="info-content">
+                    <div className="info-label">Project</div>
+                    <div className="info-value">{meeting.project_name}</div>
+                  </div>
+                </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px', gap: '1rem' }}>
+                {meeting.description && (
+                  <div className="info-row">
+                    <ListBulletIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="info-content">
+                      <div className="info-label">Description</div>
+                      <div className="info-value">{meeting.description}</div>
+                    </div>
+                  </div>
+                )}
+
+                {getAttendeesList().length > 0 && (
+                  <div className="info-row">
+                    <UserGroupIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="info-content">
+                      <div className="info-label">Attendees</div>
+                      <div className="attendees-list">
+                        {getAttendeesList().map((attendee, index) => (
+                          <span key={index} className="attendee-tag">
+                            {attendee}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="edit-form">
                 <div className="form-group">
-                  <label className="form-label">Date</label>
+                  <label className="form-label">Meeting Title *</label>
                   <input
-                    type="date"
+                    type="text"
+                    required
                     className="form-input"
-                    value={editedMeeting.date}
-                    onChange={(e) => setEditedMeeting({...editedMeeting, date: e.target.value})}
+                    placeholder="Enter meeting title..."
+                    value={editedMeeting.title}
+                    onChange={(e) => setEditedMeeting({ ...editedMeeting, title: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Time</label>
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={editedMeeting.time}
-                    onChange={(e) => setEditedMeeting({...editedMeeting, time: e.target.value})}
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="What will be discussed in this meeting?"
+                    value={editedMeeting.description}
+                    onChange={(e) => setEditedMeeting({ ...editedMeeting, description: e.target.value })}
+                    style={{ minHeight: '80px', resize: 'vertical' }}
                   />
+                </div>
+
+                {projects.length > 0 && (
+                  <div className="form-group">
+                    <label className="form-label">Project *</label>
+                    <select
+                      required
+                      className="form-select"
+                      value={editedMeeting.project_id}
+                      onChange={(e) => setEditedMeeting({ ...editedMeeting, project_id: Number(e.target.value), attendee_ids: [] })}
+                    >
+                      <option value={0}>Select a project</option>
+                      {projects.map((project: any) => (
+                        <option key={project.id} value={project.id}>{project.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="form-grid-3">
+                  <div className="form-group">
+                    <label className="form-label">Date *</label>
+                    <input
+                      type="date"
+                      required
+                      className="form-input"
+                      value={editedMeeting.date}
+                      onChange={(e) => setEditedMeeting({ ...editedMeeting, date: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Time *</label>
+                    <input
+                      type="time"
+                      required
+                      className="form-input"
+                      value={editedMeeting.time}
+                      onChange={(e) => setEditedMeeting({ ...editedMeeting, time: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Duration</label>
+                    <input
+                      type="number"
+                      min="15"
+                      max="480"
+                      step="15"
+                      className="form-input"
+                      placeholder="Minutes"
+                      value={editedMeeting.duration}
+                      onChange={(e) => setEditedMeeting({ ...editedMeeting, duration: Number(e.target.value) })}
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Duration</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="Minutes"
-                    value={editedMeeting.duration}
-                    onChange={(e) => setEditedMeeting({...editedMeeting, duration: parseInt(e.target.value)})}
-                  />
+                  <label className="form-label">Invite Attendees (Optional)</label>
+                  
+                  {/* Selected Attendees Display */}
+                  {editedMeeting.attendee_ids.length > 0 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '0.5rem', 
+                      marginBottom: '0.75rem',
+                      padding: '0.75rem',
+                      backgroundColor: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px'
+                    }}>
+                      {editedMeeting.attendee_ids.map(memberId => {
+                        const member = projectMembers.find(m => m.id === memberId);
+                        return member ? (
+                          <span key={memberId} style={{
+                            display: 'inline-flex',
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: '#000000',
+                            color: '#ffffff',
+                            borderRadius: '20px',
+                            fontSize: '0.875rem'
+                          }}>
+                            {member.name}
+                            <button
+                              type="button"
+                              onClick={() => setEditedMeeting(prev => ({
+                                ...prev,
+                                attendee_ids: prev.attendee_ids.filter(id => id !== memberId)
+                              }))}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#ffffff',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                lineHeight: '1'
+                              }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+
+                  {/* Member Selection */}
+                  {projectMembers.length > 0 ? (
+                    <div style={{
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '6px',
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}>
+                      {projectMembers.map(member => {
+                        const isSelected = editedMeeting.attendee_ids.includes(member.id);
+                        return (
+                          <div
+                            key={member.id}
+                            onClick={() => {
+                              setEditedMeeting(prev => ({
+                                ...prev,
+                                attendee_ids: isSelected 
+                                  ? prev.attendee_ids.filter(id => id !== member.id)
+                                  : [...prev.attendee_ids, member.id]
+                              }));
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              padding: '0.75rem',
+                              borderBottom: '1px solid #e5e7eb',
+                              cursor: 'pointer',
+                              backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
+                              borderLeft: isSelected ? '4px solid #000000' : '4px solid transparent'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: '500', color: '#000000' }}>
+                                {member.name}
+                              </div>
+                              <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                {member.email}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{
+                      padding: '2rem',
+                      textAlign: 'center',
+                      color: '#6b7280',
+                      border: '2px dashed #e5e7eb',
+                      borderRadius: '6px'
+                    }}>
+                      {editedMeeting.project_id ? 'Loading project members...' : 'Select a project to see available members'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-actions">
+                  <button onClick={handleSave} className="btn btn-primary">
+                    Update Meeting
+                  </button>
+                  <button onClick={() => setIsEditing(false)} className="btn btn-secondary">
+                    Cancel
+                  </button>
                 </div>
               </div>
+            )}
 
-              <div className="form-group">
-                <label className="form-label">Attendees</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter attendees separated by commas"
-                  value={editedMeeting.attendees}
-                  onChange={(e) => setEditedMeeting({...editedMeeting, attendees: e.target.value})}
-                />
+            {/* Meeting Notes Section */}
+            <div className="meeting-notes-section">
+              <div className="notes-header">
+                <div className="notes-title">
+                  <ClipboardDocumentListIcon style={{ width: '20px', height: '20px' }} />
+                  Meeting Notes
+                </div>
+                <button
+                  onClick={() => setShowNotesModal(true)}
+                  className="toggle-notes-btn"
+                >
+                  Meeting Notes
+                </button>
               </div>
-            </div>
-          )}
-
-          {/* Meeting Notes Section */}
-          <div className="meeting-notes-section">
-            <div className="notes-header">
-              <h3 className="notes-title">
-                <DocumentTextIcon style={{ width: '20px', height: '20px' }} />
-                Meeting Notes
-              </h3>
-              <button
-                onClick={() => setShowNotesModal(true)}
-                className="toggle-notes-btn"
-              >
-                Meeting Notes
-              </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Meeting Notes Modal */}
       {showNotesModal && (
         <MeetingNotesModal
-          meeting={meeting}
+          meeting={{
+            id: meeting.id,
+            title: meeting.title,
+            date: meeting.date,
+            time: meeting.time,
+            duration: meeting.duration,
+            attendees_list: getAttendeesList()
+          }}
           onClose={() => setShowNotesModal(false)}
           projectMembers={projectMembers}
         />

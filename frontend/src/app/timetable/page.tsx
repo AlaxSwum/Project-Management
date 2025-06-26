@@ -45,6 +45,7 @@ interface Meeting {
   updated_at: string;
   attendees?: string;
   attendees_list?: string[];
+  attendee_ids?: number[]; // Add this field for proper attendee assignment
 }
 
 export default function TimetablePage() {
@@ -121,10 +122,11 @@ export default function TimetablePage() {
         }
       });
       
-      // Filter meetings for confidentiality - only show meetings where user is:
+      // Filter meetings for visibility - show meetings where user is:
       // 1. The creator of the meeting, OR 
-      // 2. Listed as an attendee, OR
-      // 3. Has access to the project AND is specifically assigned
+      // 2. Listed as an attendee by ID (attendee_ids), OR
+      // 3. Listed as an attendee by name/email (attendees), OR  
+      // 4. Has access to the project AND is specifically assigned
       const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
         const projectId = meeting.project_id || meeting.project;
         
@@ -138,11 +140,15 @@ export default function TimetablePage() {
           return true;
         }
         
-        // Show if user is in attendees list
+        // IMPORTANT: Check if user is assigned via attendee_ids (primary method)
+        if (meeting.attendee_ids && Array.isArray(meeting.attendee_ids) && user?.id && meeting.attendee_ids.includes(user.id)) {
+          return true;
+        }
+        
+        // Fallback: Check if user is in attendees string/list (legacy method)
         const attendeesList = meeting.attendees_list || 
           (meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()) : []);
         
-        // Check if user's name or email is in attendees
         const userInAttendees = attendeesList.some(attendee => 
           attendee.toLowerCase().includes(user?.name?.toLowerCase() || '') ||
           attendee.toLowerCase().includes(user?.email?.toLowerCase() || '')
@@ -152,7 +158,7 @@ export default function TimetablePage() {
           return true;
         }
         
-        // For additional security, don't show meetings where user is not explicitly involved
+        // Don't show meetings where user is not explicitly involved
         return false;
       });
       
@@ -2472,6 +2478,10 @@ export default function TimetablePage() {
           onUpdate={handleUpdateMeetingFromDetail}
           onDelete={handleDeleteMeetingFromDetail}
           projectMembers={projectMembers}
+          projects={projects}
+          onProjectChange={(projectId: number) => {
+            fetchProjectMembers(projectId);
+          }}
         />
       )}
 

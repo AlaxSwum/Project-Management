@@ -801,6 +801,7 @@ export const supabaseDb = {
           time,
           duration,
           attendees,
+          attendee_ids,
           created_at,
           updated_at,
           created_by_id,
@@ -830,7 +831,8 @@ export const supabaseDb = {
             project_id: meeting.project_id,
             project_name: projectResult.data?.name || 'Unknown Project',
             created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
-            attendees_list: meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : []
+            attendees_list: meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
+            attendee_ids: meeting.attendee_ids || []  // Include attendee_ids in response
           };
         })
       );
@@ -859,6 +861,7 @@ export const supabaseDb = {
         time: meetingData.time,
         duration: meetingData.duration || 60,
         attendees: meetingData.attendees || '',
+        attendee_ids: meetingData.attendee_ids || null,  // Add attendee_ids support
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -898,7 +901,8 @@ export const supabaseDb = {
             name: user.user_metadata?.name || user.email,
             email: user.email
           },
-          attendees_list: newMeeting.attendees ? newMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : []
+          attendees_list: newMeeting.attendees ? newMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
+          attendee_ids: newMeeting.attendee_ids || []  // Include attendee_ids in response
         },
         error: null
       };
@@ -923,6 +927,7 @@ export const supabaseDb = {
       if (meetingData.time) updateData.time = meetingData.time;
       if (meetingData.duration) updateData.duration = meetingData.duration;
       if (meetingData.attendees !== undefined) updateData.attendees = meetingData.attendees;
+      if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;  // Add attendee_ids support
 
     const { data, error } = await supabase
       .from('projects_meeting')
@@ -959,7 +964,8 @@ export const supabaseDb = {
           project_id: updatedMeeting.project_id,
           project_name: projectResult.data?.name || 'Unknown Project',
           created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
-          attendees_list: updatedMeeting.attendees ? updatedMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : []
+          attendees_list: updatedMeeting.attendees ? updatedMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
+          attendee_ids: updatedMeeting.attendee_ids || []  // Include attendee_ids in response
         },
         error: null
       };
