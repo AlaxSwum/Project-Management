@@ -791,7 +791,7 @@ export const supabaseDb = {
   // Meetings
   getMeetings: async () => {
     try {
-    // Query meetings without attendee_ids column (since it doesn't exist yet)
+    // Query meetings with attendee_ids column
     const { data, error } = await supabase
       .from('projects_meeting')
       .select(`
@@ -801,7 +801,7 @@ export const supabaseDb = {
           date,
           time,
           duration,
-          attendees,
+          attendee_ids,
           created_at,
           updated_at,
           created_by_id,
@@ -831,8 +831,8 @@ export const supabaseDb = {
             project_id: meeting.project_id,
             project_name: projectResult.data?.name || 'Unknown Project',
             created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
-            attendees_list: meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
-            attendee_ids: []  // Empty array since column doesn't exist yet
+            attendees_list: [], // Legacy field for backward compatibility
+            attendee_ids: meeting.attendee_ids || []
           };
         })
       );
@@ -852,7 +852,7 @@ export const supabaseDb = {
         return { data: null, error: new Error('Authentication required') };
       }
 
-      // Prepare meeting data with creator info (no attendee_ids column yet)
+      // Prepare meeting data with creator info (using attendee_ids column)
       const meetingToInsert = {
         title: meetingData.title,
         description: meetingData.description || '',
@@ -860,7 +860,7 @@ export const supabaseDb = {
         date: meetingData.date,
         time: meetingData.time,
         duration: meetingData.duration || 60,
-        attendees: meetingData.attendees || '',
+        attendee_ids: meetingData.attendee_ids || null,
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -900,8 +900,8 @@ export const supabaseDb = {
             name: user.user_metadata?.name || user.email,
             email: user.email
           },
-          attendees_list: newMeeting.attendees ? newMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
-          attendee_ids: []  // Empty array since column doesn't exist yet
+          attendees_list: [], // Legacy field for backward compatibility
+          attendee_ids: newMeeting.attendee_ids || []
         },
         error: null
       };
@@ -918,14 +918,14 @@ export const supabaseDb = {
         updated_at: new Date().toISOString()
       };
 
-      // Add fields that are being updated (no attendee_ids column yet)
+      // Add fields that are being updated (using attendee_ids column)
       if (meetingData.title) updateData.title = meetingData.title;
       if (meetingData.description !== undefined) updateData.description = meetingData.description;
       if (meetingData.project) updateData.project_id = meetingData.project;
       if (meetingData.date) updateData.date = meetingData.date;
       if (meetingData.time) updateData.time = meetingData.time;
       if (meetingData.duration) updateData.duration = meetingData.duration;
-      if (meetingData.attendees !== undefined) updateData.attendees = meetingData.attendees;
+      if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;
 
     const { data, error } = await supabase
       .from('projects_meeting')
@@ -962,8 +962,8 @@ export const supabaseDb = {
           project_id: updatedMeeting.project_id,
           project_name: projectResult.data?.name || 'Unknown Project',
           created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
-          attendees_list: updatedMeeting.attendees ? updatedMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
-          attendee_ids: []  // Empty array since column doesn't exist yet
+          attendees_list: [], // Legacy field for backward compatibility
+          attendee_ids: updatedMeeting.attendee_ids || []
         },
         error: null
       };
