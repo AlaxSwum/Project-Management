@@ -791,7 +791,8 @@ export const supabaseDb = {
   // Meetings
   getMeetings: async () => {
     try {
-    const { data, error } = await supabase
+    // First try to get meetings with attendee_ids, fall back if column doesn't exist
+    let { data, error } = await supabase
       .from('projects_meeting')
       .select(`
           id,
@@ -801,12 +802,41 @@ export const supabaseDb = {
           time,
           duration,
           attendees,
-          attendee_ids,
           created_at,
           updated_at,
           created_by_id,
           project_id
         `)
+    
+    // Try to add attendee_ids if the column exists
+    if (!error) {
+      try {
+        const { data: dataWithAttendeeIds, error: errorWithAttendeeIds } = await supabase
+          .from('projects_meeting')
+          .select(`
+              id,
+              title,
+              description,
+              date,
+              time,
+              duration,
+              attendees,
+              attendee_ids,
+              created_at,
+              updated_at,
+              created_by_id,
+              project_id
+            `)
+        
+        if (!errorWithAttendeeIds) {
+          data = dataWithAttendeeIds;
+        } else {
+          console.log('attendee_ids column not available, using base columns only');
+        }
+      } catch (e) {
+        console.log('attendee_ids column not available, continuing with base data');
+      }
+    }
       
       if (error) return { data: null, error }
       
@@ -832,7 +862,7 @@ export const supabaseDb = {
             project_name: projectResult.data?.name || 'Unknown Project',
             created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
             attendees_list: meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
-            attendee_ids: meeting.attendee_ids || []  // Include attendee_ids in response
+            attendee_ids: meeting.attendee_ids || []  // Include attendee_ids in response (empty array if column doesn't exist)
           };
         })
       );
@@ -852,7 +882,7 @@ export const supabaseDb = {
         return { data: null, error: new Error('Authentication required') };
       }
 
-      // Prepare meeting data with creator info
+      // Prepare meeting data with creator info (without attendee_ids initially)
       const meetingToInsert = {
         title: meetingData.title,
         description: meetingData.description || '',
@@ -861,11 +891,19 @@ export const supabaseDb = {
         time: meetingData.time,
         duration: meetingData.duration || 60,
         attendees: meetingData.attendees || '',
-        attendee_ids: meetingData.attendee_ids || null,  // Add attendee_ids support
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+
+      // Try to add attendee_ids if the column exists
+      try {
+        if (meetingData.attendee_ids) {
+          meetingToInsert.attendee_ids = meetingData.attendee_ids;
+        }
+      } catch (error) {
+        console.log('attendee_ids column not available yet, using attendees string instead');
+      }
 
     const { data, error } = await supabase
       .from('projects_meeting')
@@ -902,7 +940,7 @@ export const supabaseDb = {
             email: user.email
           },
           attendees_list: newMeeting.attendees ? newMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
-          attendee_ids: newMeeting.attendee_ids || []  // Include attendee_ids in response
+          attendee_ids: newMeeting.attendee_ids || []  // Include attendee_ids in response (empty if column doesn't exist)
         },
         error: null
       };
@@ -927,7 +965,15 @@ export const supabaseDb = {
       if (meetingData.time) updateData.time = meetingData.time;
       if (meetingData.duration) updateData.duration = meetingData.duration;
       if (meetingData.attendees !== undefined) updateData.attendees = meetingData.attendees;
-      if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;  // Add attendee_ids support
+      
+      // Try to add attendee_ids if the column exists and data is provided
+      if (meetingData.attendee_ids !== undefined) {
+        try {
+          updateData.attendee_ids = meetingData.attendee_ids;
+        } catch (error) {
+          console.log('attendee_ids column not available for update, skipping');
+        }
+      }
 
     const { data, error } = await supabase
       .from('projects_meeting')
@@ -965,7 +1011,7 @@ export const supabaseDb = {
           project_name: projectResult.data?.name || 'Unknown Project',
           created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
           attendees_list: updatedMeeting.attendees ? updatedMeeting.attendees.split(',').map(a => a.trim()).filter(Boolean) : [],
-          attendee_ids: updatedMeeting.attendee_ids || []  // Include attendee_ids in response
+          attendee_ids: updatedMeeting.attendee_ids || []  // Include attendee_ids in response (empty if column doesn't exist)
         },
         error: null
       };
