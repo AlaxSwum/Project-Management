@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { reportingService } from '@/lib/api-compatibility';
 import {
   EyeIcon,
@@ -11,7 +11,7 @@ import {
 import Sidebar from '@/components/Sidebar';
 
 export default function ReportingPage() {
-  // const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [teamReport, setTeamReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,118 +20,25 @@ export default function ReportingPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
-    // Remove authentication checks - make accessible to everyone
+    // Require authentication for project-based access control
+    if (authLoading) return;
+    
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
     fetchReportingData();
-  }, []);
+  }, [isAuthenticated, authLoading, router]);
 
   const fetchReportingData = async () => {
     try {
       setIsLoading(true);
-      const supabase = (await import('@/lib/supabase')).supabase;
       
-      // Remove role-based access control - make accessible to everyone
-      console.log('Fetching public team reporting data for all users');
+      // Use the reporting service with project-based access control
+      console.log('Fetching team reporting data for authenticated user');
       
-      // Step 1: Fetch ALL tasks from ALL projects
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('projects_task')
-        .select(`
-          id,
-          assignee_id,
-          status,
-          due_date,
-          created_at,
-          name,
-          description,
-          priority,
-          project_id,
-          projects_project:project_id (
-            id,
-            name
-          )
-        `);
-      
-      if (tasksError) {
-        console.error('Tasks fetch error:', tasksError);
-        throw tasksError;
-      }
-      
-      // Step 2: Get unique employee IDs from all tasks
-      const allEmployeeIds = [...new Set(tasksData?.map(task => task.assignee_id).filter(id => id) || [])];
-      
-      // Step 3: Fetch employee details for all employees who have tasks
-      let employeeData = new Map();
-      if (allEmployeeIds.length > 0) {
-        const { data: employeesData, error: employeesError } = await supabase
-          .from('auth_user')
-          .select('id, name, email, role')
-          .in('id', allEmployeeIds);
-        
-        if (employeesError) {
-          console.error('Employees fetch error:', employeesError);
-          throw employeesError;
-        }
-        
-        employeesData?.forEach(emp => {
-          employeeData.set(emp.id, emp);
-        });
-      }
-      
-      console.log('Total employees with tasks:', allEmployeeIds.length);
-      
-      // Step 4: Calculate KPIs for each employee
-      const teamReportData = [];
-      let totalTasks = 0;
-      let totalFinishedTasks = 0;
-      let totalCompletionRates = 0;
-      
-      for (const employeeId of allEmployeeIds) {
-        const employee = employeeData.get(employeeId);
-        if (!employee) continue; // Skip if employee data not found
-        
-        const employeeTasks = tasksData?.filter(task => task.assignee_id === employeeId) || [];
-        
-        const finishedTasks = employeeTasks.filter(task => task.status === 'completed').length;
-        const unfinishedTasks = employeeTasks.filter(task => task.status !== 'completed').length;
-        const overdueTasks = employeeTasks.filter(task => {
-          if (task.status === 'completed') return false;
-          if (!task.due_date) return false;
-          return new Date(task.due_date) < new Date();
-        }).length;
-        
-        const activeProjects = new Set(employeeTasks.map(task => task.project_id)).size;
-        const completionRate = employeeTasks.length > 0 ? Math.round((finishedTasks / employeeTasks.length) * 100) : 0;
-        
-        totalTasks += employeeTasks.length;
-        totalFinishedTasks += finishedTasks;
-        totalCompletionRates += completionRate;
-        
-        teamReportData.push({
-          user_id: employeeId,
-          user_name: employee.name,
-          user_role: employee.role,
-          user_position: employee.role,
-          finished_tasks: finishedTasks,
-          unfinished_tasks: unfinishedTasks,
-          overdue_tasks: overdueTasks,
-          active_projects: activeProjects,
-          completion_rate: completionRate
-        });
-      }
-      
-      const averageCompletionRate = allEmployeeIds.length > 0 ? Math.round(totalCompletionRates / allEmployeeIds.length) : 0;
-      
-      const reportData = {
-        summary: {
-          total_team_members: allEmployeeIds.length,
-          average_completion_rate: averageCompletionRate,
-          total_tasks_across_team: totalTasks,
-          total_finished_tasks: totalFinishedTasks
-        },
-        team_report: teamReportData
-      };
-      
-      console.log('Generated public team report for all employees:', reportData);
+      const reportData = await reportingService.getTeamKpiReport();
+      console.log('Generated team report:', reportData);
       setTeamReport(reportData);
       
     } catch (err: any) {
@@ -144,107 +51,10 @@ export default function ReportingPage() {
 
   const handleMemberClick = async (memberId: number) => {
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      console.log('Fetching member detail for:', memberId);
       
-      // Fetch member basic info
-      const { data: memberInfo, error: memberError } = await supabase
-        .from('auth_user')
-        .select('id, name, email, role')
-        .eq('id', memberId)
-        .single();
-      
-      if (memberError) {
-        console.error('Member info fetch error:', memberError);
-        throw memberError;
-      }
-      
-      // Fetch ALL member's tasks from ALL projects (public access)
-      const { data: memberTasks, error: tasksError } = await supabase
-        .from('projects_task')
-        .select(`
-          id,
-          name,
-          description,
-          status,
-          priority,
-          due_date,
-          created_at,
-          project_id,
-          projects_project:project_id (
-            id,
-            name
-          )
-        `)
-        .eq('assignee_id', memberId);
-      
-      if (tasksError) {
-        console.error('Member tasks fetch error:', tasksError);
-        throw tasksError;
-      }
-      
-      // Calculate task summary
-      const totalTasks = memberTasks?.length || 0;
-      const completedTasks = memberTasks?.filter(task => task.status === 'completed').length || 0;
-      const inProgressTasks = memberTasks?.filter(task => task.status === 'in_progress').length || 0;
-      const todoTasks = memberTasks?.filter(task => task.status === 'todo').length || 0;
-      const overdueTasks = memberTasks?.filter(task => {
-        if (task.status === 'completed') return false;
-        if (!task.due_date) return false;
-        return new Date(task.due_date) < new Date();
-      }) || [];
-      
-      // Get project involvement from all projects member is assigned to
-      const { data: memberProjects, error: memberProjectsError } = await supabase
-        .from('projects_project_members')
-        .select(`
-          project_id,
-          projects_project:project_id (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', memberId);
-      
-      if (memberProjectsError) {
-        console.error('Member projects fetch error:', memberProjectsError);
-        throw memberProjectsError;
-      }
-      
-      const projectInvolvement = memberProjects?.map(mp => ({
-        project_id: mp.project_id,
-        project_name: (mp.projects_project as any)?.name || 'Unknown'
-      })) || [];
-      
-      // Prepare overdue task details
-      const overdueTaskDetails = overdueTasks.map(task => ({
-        name: task.name,
-        description: task.description,
-        due_date: task.due_date,
-        priority: task.priority,
-        project_name: Array.isArray(task.projects_project) 
-          ? (task.projects_project[0]?.name || 'Unknown')
-          : (task.projects_project ? String(task.projects_project) : 'Unknown'),
-        days_overdue: Math.ceil((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 60 * 60 * 24))
-      }));
-      
-      const memberDetail = {
-        user_info: {
-          id: memberInfo.id,
-          name: memberInfo.name,
-          email: memberInfo.email,
-          role: memberInfo.role
-        },
-        task_summary: {
-          total_tasks: totalTasks,
-          completed_tasks: completedTasks,
-          in_progress_tasks: inProgressTasks,
-          todo_tasks: todoTasks,
-          overdue_tasks: overdueTasks.length
-        },
-        project_involvement: projectInvolvement,
-        overdue_task_details: overdueTaskDetails
-      };
-      
+      // Use the reporting service with project-based access control
+      const memberDetail = await reportingService.getMemberDetailedReport(memberId);
       console.log('Generated member detail report:', memberDetail);
       setSelectedMember(memberDetail);
       setShowDetailModal(true);
@@ -262,7 +72,19 @@ export default function ReportingPage() {
     return '#6b7280';
   };
 
-  // Remove authentication loading state check - make accessible to everyone
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
@@ -499,7 +321,7 @@ export default function ReportingPage() {
               Team Reporting & KPIs
             </h1>
             <p style={{ color: '#666666', marginTop: '0.25rem' }}>
-              Monitor performance of team members from your shared projects
+              Monitor performance of team members in your accessible projects only
             </p>
           </header>
 
@@ -518,7 +340,7 @@ export default function ReportingPage() {
                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#000000' }}>
                       {teamReport.summary.total_team_members}
                     </div>
-                    <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Shared Project Members</div>
+                    <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Your Project Team Members</div>
                   </div>
 
                   <div className="overview-card">
