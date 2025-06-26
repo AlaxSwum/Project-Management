@@ -752,25 +752,29 @@ export const todoService = {
   }
 };
 
-// Reporting service - Implemented with Supabase data
+// Reporting service - Implemented with Supabase data - Made accessible to everyone
 export const reportingService = {
   getTeamKpiReport: async () => {
     try {
-      const userId = await getCurrentUserId();
-      if (!userId) {
-        throw new Error('Authentication required');
-      }
+      // Remove authentication requirement - make accessible to everyone
+      console.log('Fetching public team KPI report');
 
-      // Get projects user has access to
-      const { data: projects, error: projectsError } = await supabaseDb.getProjects(userId);
+      // Get all projects (public access)
+      const { data: projects, error: projectsError } = await supabase.from('projects_project')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (projectsError) throw projectsError;
 
-      // Get all tasks from accessible projects
-      const { data: allTasks, error: tasksError } = await supabaseDb.getTasks();
+      // Get all tasks (public access)
+      const { data: allTasks, error: tasksError } = await supabase.from('projects_task')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (tasksError) throw tasksError;
 
-      // Get all users
-      const { data: users, error: usersError } = await supabaseDb.getUsers();
+      // Get all users (public access)
+      const { data: users, error: usersError } = await supabase.from('auth_user')
+        .select('*')
+        .order('name', { ascending: true });
       if (usersError) throw usersError;
 
       const accessibleProjects = projects || [];
@@ -869,20 +873,21 @@ export const reportingService = {
 
   getMemberDetailedReport: async (userId: number) => {
     try {
-      const currentUserId = await getCurrentUserId();
-      if (!currentUserId) {
-        throw new Error('Authentication required');
-      }
+      // Remove authentication requirement - make accessible to everyone
+      console.log('Fetching public member detailed report for user:', userId);
 
-      // Get user info
-      const { data: users, error: usersError } = await supabaseDb.getUsers();
+      // Get user info (public access)
+      const { data: users, error: usersError } = await supabase.from('auth_user')
+        .select('*')
+        .eq('id', userId);
       if (usersError) throw usersError;
       
-      const user = (users || []).find((u: any) => u.id === userId);
+      const user = (users || [])[0];
       if (!user) throw new Error('User not found');
 
-      // Get all tasks for this user
-      const { data: allTasks, error: tasksError } = await supabaseDb.getTasks();
+      // Get all tasks for this user (public access)
+      const { data: allTasks, error: tasksError } = await supabase.from('projects_task')
+        .select('*');
       if (tasksError) throw tasksError;
 
       const userTasks = (allTasks || []).filter((t: any) => 
@@ -897,8 +902,9 @@ export const reportingService = {
         return dueDate < now && t.status !== 'done';
       });
 
-      // Get projects info
-      const { data: projects, error: projectsError } = await supabaseDb.getProjects(currentUserId);
+      // Get projects info (public access)
+      const { data: projects, error: projectsError } = await supabase.from('projects_project')
+        .select('*');
       if (projectsError) throw projectsError;
 
       const userProjects = (projects || []).filter((p: any) => {
@@ -945,7 +951,7 @@ export const reportingService = {
 
   getTeamPerformanceAnalytics: async () => {
     try {
-      // Return basic analytics structure for now
+      // Return basic analytics structure for now (public access)
       return {
         performance_trend: [],
         productivity_metrics: {},

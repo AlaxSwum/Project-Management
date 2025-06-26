@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+// import { useAuth } from '@/contexts/AuthContext';
 import { reportingService } from '@/lib/api-compatibility';
 import {
   EyeIcon,
@@ -11,7 +11,7 @@ import {
 import Sidebar from '@/components/Sidebar';
 
 export default function ReportingPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  // const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [teamReport, setTeamReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,30 +20,17 @@ export default function ReportingPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
-    // Don't redirect if auth is still loading
-    if (authLoading) return;
-    
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Remove authentication checks - make accessible to everyone
     fetchReportingData();
-  }, [isAuthenticated, authLoading, router]);
+  }, []);
 
   const fetchReportingData = async () => {
     try {
       setIsLoading(true);
       const supabase = (await import('@/lib/supabase')).supabase;
       
-      // Check if user is HR/admin
-      const userRole = user?.role || (user as any)?.user_metadata?.role;
-      if (userRole !== 'hr' && userRole !== 'admin') {
-        setError('Access denied: You need HR or Admin privileges to view team reports');
-        return;
-      }
-      
-      // For Admin/HR: Get ALL employees and their tasks across ALL projects
-      console.log('Admin/HR user - fetching all employee task data');
+      // Remove role-based access control - make accessible to everyone
+      console.log('Fetching public team reporting data for all users');
       
       // Step 1: Fetch ALL tasks from ALL projects
       const { data: tasksData, error: tasksError } = await supabase
@@ -144,7 +131,7 @@ export default function ReportingPage() {
         team_report: teamReportData
       };
       
-      console.log('Generated team report for all employees:', reportData);
+      console.log('Generated public team report for all employees:', reportData);
       setTeamReport(reportData);
       
     } catch (err: any) {
@@ -171,7 +158,7 @@ export default function ReportingPage() {
         throw memberError;
       }
       
-      // Fetch ALL member's tasks from ALL projects (admin access)
+      // Fetch ALL member's tasks from ALL projects (public access)
       const { data: memberTasks, error: tasksError } = await supabase
         .from('projects_task')
         .select(`
@@ -275,19 +262,7 @@ export default function ReportingPage() {
     return '#6b7280';
   };
 
-  // Show loading state while auth is initializing
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
+  // Remove authentication loading state check - make accessible to everyone
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
