@@ -128,20 +128,55 @@ export default function MeetingDetailModal({
     }
   };
 
-  const getAttendeesList = () => {
-    if (meeting.attendee_ids && meeting.attendee_ids.length > 0) {
-      return meeting.attendee_ids.map(id => {
+  const [attendeeNames, setAttendeeNames] = useState<string[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+
+  // Fetch all users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const { userService } = await import('../lib/api-compatibility');
+        const allUsers = await userService.getUsers();
+        setUsers(allUsers || []);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+        setUsers([]);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Update attendee names when users are loaded or meeting data changes
+  useEffect(() => {
+    if (meeting.attendee_ids && meeting.attendee_ids.length > 0 && users.length > 0) {
+      const names = meeting.attendee_ids.map(id => {
+        // First check users from database
+        const user = users.find((u: any) => u.id === id);
+        if (user) {
+          return user.name || user.email?.split('@')[0] || 'Unknown User';
+        }
+        
+        // Fallback to project members
         const member = projectMembers.find(m => m.id === id);
-        return member ? member.name : `User ${id}`;
+        if (member) {
+          return member.name;
+        }
+        
+        return `User ${id}`;
       });
+      setAttendeeNames(names);
+    } else if (meeting.attendees_list && meeting.attendees_list.length > 0) {
+      setAttendeeNames(meeting.attendees_list);
+    } else if (meeting.attendees && typeof meeting.attendees === 'string') {
+      setAttendeeNames(meeting.attendees.split(',').map(a => a.trim()).filter(a => a));
+    } else {
+      setAttendeeNames([]);
     }
-    if (meeting.attendees_list && meeting.attendees_list.length > 0) {
-      return meeting.attendees_list;
-    }
-    if (meeting.attendees && typeof meeting.attendees === 'string') {
-      return meeting.attendees.split(',').map(a => a.trim()).filter(a => a);
-    }
-    return [];
+  }, [meeting.attendee_ids, meeting.attendees_list, meeting.attendees, projectMembers, users]);
+
+  const getAttendeesList = () => {
+    return attendeeNames;
   };
 
   return (
@@ -164,8 +199,8 @@ export default function MeetingDetailModal({
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             width: 100%;
-            max-width: 750px;
-            max-height: 85vh;
+            max-width: 450px;
+            max-height: 90vh;
             overflow-y: auto;
             animation: slideIn 0.3s ease-out;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -174,7 +209,7 @@ export default function MeetingDetailModal({
           .meeting-modal-fixed {
             border: 1px solid #e5e7eb !important;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-            max-width: 750px !important;
+            max-width: 450px !important;
             background: #ffffff !important;
           }
           .modal-content {
@@ -183,7 +218,7 @@ export default function MeetingDetailModal({
             box-shadow: none !important;
           }
           .modal-header {
-            padding: 1rem 1.5rem;
+            padding: 1rem;
             border-bottom: 2px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
@@ -223,18 +258,18 @@ export default function MeetingDetailModal({
           .action-btn.delete { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
           .action-btn.close { background: #fef2f2; border-color: #fecaca; }
           .modal-body {
-            padding: 1rem 1.5rem;
+            padding: 1rem;
           }
           .meeting-info {
             display: grid;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
           }
           .info-row {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem;
+            padding: 0.6rem;
             background: #f8fafc;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
@@ -285,9 +320,9 @@ export default function MeetingDetailModal({
             gap: 1rem;
           }
           .meeting-notes-section {
-            padding-top: 1.5rem;
-            margin-top: 1.5rem;
-            margin-bottom: 2rem;
+            padding-top: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
             width: 100%;
             text-align: center;
             border-top: 1px solid #e5e7eb;
@@ -355,18 +390,29 @@ export default function MeetingDetailModal({
           .attendees-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.4rem;
           }
           .attendee-tag {
-            background: #e5e7eb;
+            background: #000000;
+            color: #ffffff;
             padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: #000000;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
           }
           @media (max-width: 768px) {
+            .meeting-modal {
+              max-width: 95vw;
+              margin: 1rem;
+            }
             .form-grid-3 {
               grid-template-columns: 1fr;
+            }
+            .modal-header {
+              padding: 0.75rem;
+            }
+            .modal-body {
+              padding: 0.75rem;
             }
           }
           @keyframes fadeIn {
