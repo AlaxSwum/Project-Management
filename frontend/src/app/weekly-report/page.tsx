@@ -116,47 +116,80 @@ export default function WeeklyReportPage() {
         if (reportsError) throw reportsError;
         setReports(userReports || []);
       } else {
-        // For HR/admin view: Show ALL weekly reports from ALL employees
-        console.log('Admin/HR user - fetching all weekly reports and employees');
+        // For HR/admin view: Show weekly reports from accessible team members only
+        console.log('Admin/HR user - fetching reports from accessible team members');
         
-        // Step 1: Fetch ALL weekly reports (no filtering by projects)
-        const { data: allReports, error: reportsError } = await supabase
+        // Step 1: Get user's accessible projects (projects they're assigned to as members)
+        const { data: userProjects, error: projectsError } = await supabase
+          .from('projects_project_members')
+          .select('project_id')
+          .eq('user_id', user?.id);
+        
+        if (projectsError) {
+          console.error('User projects fetch error:', projectsError);
+          throw projectsError;
+        }
+        
+        const accessibleProjectIds = userProjects?.map(p => p.project_id) || [];
+        console.log('User accessible projects:', accessibleProjectIds);
+        
+        if (accessibleProjectIds.length === 0) {
+          // User has no accessible projects, show empty state
+          setReports([]);
+          setEmployees([]);
+          setWeekFolders([]);
+          return;
+        }
+        
+        // Step 2: Get all team members from accessible projects
+        const { data: accessibleMembers, error: membersError } = await supabase
+          .from('projects_project_members')
+          .select(`
+            user_id,
+            auth_user!inner(id, name, email, role)
+          `)
+          .in('project_id', accessibleProjectIds);
+        
+        if (membersError) {
+          console.error('Accessible members fetch error:', membersError);
+          throw membersError;
+        }
+        
+        // Extract unique member IDs and their info
+        const accessibleMemberIds = [...new Set(accessibleMembers?.map(m => m.user_id) || [])];
+        const accessibleTeamMembers = accessibleMembers?.map(m => m.auth_user).filter(Boolean) || [];
+        
+        console.log('Accessible team members:', accessibleMemberIds.length);
+        
+        if (accessibleMemberIds.length === 0) {
+          // No accessible team members, show empty state
+          setReports([]);
+          setEmployees([]);
+          setWeekFolders([]);
+          return;
+        }
+        
+        // Step 3: Fetch weekly reports only from accessible team members
+        const { data: filteredReports, error: reportsError } = await supabase
           .from('weekly_reports')
           .select('*')
+          .in('employee_id', accessibleMemberIds)
           .order('year', { ascending: false })
           .order('week_number', { ascending: false });
         
         if (reportsError) {
-          console.error('All reports fetch error:', reportsError);
+          console.error('Filtered reports fetch error:', reportsError);
           throw reportsError;
         }
         
-        // Step 2: Get ALL employees who have submitted reports
-        const employeeIds = [...new Set(allReports?.map(report => report.employee_id) || [])];
+        console.log('Admin view - Filtered reports from accessible team members:', filteredReports?.length || 0);
+        console.log('Admin view - Accessible team members count:', accessibleTeamMembers.length);
         
-        let allEmployees: any[] = [];
-        if (employeeIds.length > 0) {
-          const { data: employeesData, error: employeesError } = await supabase
-            .from('auth_user')
-            .select('id, name, email, role')
-            .in('id', employeeIds);
-          
-          if (employeesError) {
-            console.error('Employees fetch error:', employeesError);
-            throw employeesError;
-          }
-          
-          allEmployees = employeesData || [];
-        }
-        
-        console.log('Admin view - Total reports:', allReports?.length || 0);
-        console.log('Admin view - Total employees with reports:', allEmployees.length);
-        
-        setReports(allReports || []);
-        setEmployees(allEmployees);
+        setReports(filteredReports || []);
+        setEmployees(accessibleTeamMembers);
         
         // Organize reports by week for admin view
-        organizeReportsByWeek(allReports || [], allEmployees);
+        organizeReportsByWeek(filteredReports || [], accessibleTeamMembers);
       }
     } catch (err: any) {
       console.error('Error fetching data:', err);
@@ -506,7 +539,7 @@ export default function WeeklyReportPage() {
             </h1>
             <p style={{ color: '#666666', marginTop: '0.25rem' }}>
               {viewMode === 'admin' 
-                ? 'Monitor weekly reports from all employees across all projects'
+                ? 'Monitor weekly reports from team members in your assigned projects'
                 : 'View your submitted weekly reports'
               }
             </p>
@@ -537,7 +570,7 @@ export default function WeeklyReportPage() {
                   </div>
                   <div className="stat-item">
                     <div className="stat-number">{employees.length}</div>
-                    <div className="stat-label">Total Employees</div>
+                    <div className="stat-label">Team Members</div>
                   </div>
                   <div className="stat-item">
                     <div className="stat-number">{reports.length}</div>
@@ -549,9 +582,9 @@ export default function WeeklyReportPage() {
                   <div className="empty-state">
                     <ClipboardDocumentListIcon style={{ width: '80px', height: '80px', color: '#e5e7eb', margin: '0 auto 1rem' }} />
                     <h3>No Weekly Reports Found</h3>
-                    <p>No weekly reports have been submitted by any employees yet.</p>
+                    <p>No weekly reports have been submitted by team members in your assigned projects yet.</p>
                     <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem' }}>
-                      As an admin, you can view all weekly reports from all employees across all projects.
+                      You can view weekly reports from team members in projects you're assigned to.
                     </div>
                   </div>
                 ) : (
