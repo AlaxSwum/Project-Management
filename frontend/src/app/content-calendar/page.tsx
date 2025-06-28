@@ -1,628 +1,235 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import { 
-  PlusIcon, 
-  PencilIcon, 
-  TrashIcon, 
-  UserPlusIcon,
-  CheckIcon,
-  XMarkIcon,
-  CalendarIcon,
-  ClockIcon,
-  FolderIcon,
-  ChevronRightIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import Sidebar from '@/components/Sidebar'
+import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 
 interface ContentCalendarItem {
-  id: number;
-  date: string;
-  content_type: string;
-  category: string;
-  social_media: string;
-  content_title: string;
-  assigned_to: number[];
-  content_deadline: string | null;
-  graphic_deadline: string | null;
-  status: string;
-  description?: string;
-  folder_id?: number | null;
-  assignees?: User[];
-  created_by: User;
-  created_at: string;
-  updated_at: string;
+  id: number
+  date: string
+  content_type: string
+  category: string
+  social_media: string
+  content_title: string
+  assigned_to: number[]
+  content_deadline: string | null
+  graphic_deadline: string | null
+  status: string
+  description?: string
+  folder_id?: number | null
+  assignees?: User[]
+  created_by: User
+  created_at: string
+  updated_at: string
 }
 
 interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
-interface ContentCalendarMember {
-  id: number;
-  user_id: number;
-  role: string;
-  user: User;
+  id: number
+  name: string
+  email: string
+  role: string
 }
 
 interface ContentCalendarFolder {
-  id: number;
-  name: string;
-  description?: string;
-  parent_folder_id?: number;
-  folder_type: string;
-  color: string;
-  sort_order: number;
-  level: number;
-  path: string;
-  created_by_id: number;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
+  id: number
+  name: string
+  description?: string
+  parent_folder_id?: number
+  folder_type: string
+  color: string
+  sort_order: number
+  level: number
+  path: string
+  created_by_id: number
+  created_at: string
+  updated_at: string
+  is_active: boolean
 }
 
-const CONTENT_TYPES = [
-  'Video Content',
-  'Content',
-  'Graphic',
-  'Post',
-  'Story',
-  'Reel',
-  'Live Stream',
-  'Blog Post',
-  'Infographic'
-];
-
-const CATEGORIES = [
-  'Case Study',
-  'Class Announcement',
-  'Knowledge Sharing',
-  'Event Announcement',
-  'Engagement',
-  'Demo Video',
-  'My Day',
-  'Posting Part of Lessons',
-  'Scholarship',
-  'Student Success',
-  'Success Story',
-  'Day Announcement',
-  'Comic'
-];
-
-const SOCIAL_MEDIA_PLATFORMS = [
-  'Facebook',
-  'Instagram',
-  'TikTok',
-  'LinkedIn',
-  'YouTube',
-  'Twitter'
-];
-
-const STATUS_OPTIONS = [
-  'planning',
-  'in_progress',
-  'review',
-  'completed'
-];
-
 export default function ContentCalendarPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
-  
-  const [contentItems, setContentItems] = useState<ContentCalendarItem[]>([]);
-  const [calendarMembers, setCalendarMembers] = useState<ContentCalendarMember[]>([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [folders, setFolders] = useState<ContentCalendarFolder[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [hasAccess, setHasAccess] = useState(false);
-  const [userRole, setUserRole] = useState('member');
-  
-  // Form states
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showMemberForm, setShowMemberForm] = useState(false);
-  const [showFolderForm, setShowFolderForm] = useState(false);
-  const [editingItem, setEditingItem] = useState<ContentCalendarItem | null>(null);
-  const [newItem, setNewItem] = useState({
-    date: '',
-    content_type: 'Content',
-    category: 'Class Announcement',
-    social_media: 'Facebook',
-    content_title: '',
-    assigned_to: [] as number[],
-    content_deadline: '',
-    graphic_deadline: '',
-    description: '',
-    status: 'planning',
-    folder_id: null as number | null
-  });
-  const [newFolder, setNewFolder] = useState({
-    name: '',
-    description: '',
-    parent_folder_id: null as number | null,
-    folder_type: 'folder'
-  });
+  const { user, isAuthenticated, authLoading } = useAuth()
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasAccess, setHasAccess] = useState(false)
+  const [userRole, setUserRole] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [contentItems, setContentItems] = useState<ContentCalendarItem[]>([])
+  const [folders, setFolders] = useState<ContentCalendarFolder[]>([])
+  const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set())
 
-  // Access control check
   const checkAccess = async () => {
-    if (!user?.id) {
-      console.log('❌ Content Calendar Access: No user ID found');
-      return;
-    }
-
-    console.log('🔍 Content Calendar Access Check:', {
-      userId: user.id,
-      userEmail: user.email,
-      userRole: user.role
-    });
+    if (!user?.id) return
 
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const supabase = (await import('@/lib/supabase')).supabase
       
-      // Check if user is a member of content calendar
-      console.log('📋 Checking content calendar membership...');
+      // Check if user is a project member for content calendar access
       const { data: memberData, error: memberError } = await supabase
-        .from('content_calendar_members')
-        .select(`
-          *,
-          auth_user(id, name, email, role)
-        `)
+        .from('project_members')
+        .select('id, role')
         .eq('user_id', user.id)
-        .single();
+        .single()
 
-      console.log('📋 Membership check result:', { memberData, memberError });
-
-      if (memberError && memberError.code !== 'PGRST116') {
-        throw memberError;
-      }
-
-      if (memberData) {
-        console.log('✅ User is a content calendar member with role:', memberData.role);
-        setHasAccess(true);
-        setUserRole(memberData.role);
+      if (memberData && !memberError) {
+        setHasAccess(true)
+        setUserRole(memberData.role)
       } else {
-        console.log('👤 Not a member, checking superuser/staff permissions...');
-        // Check if user has admin/superuser/staff permissions from database
         const { data: userData, error: userError } = await supabase
           .from('auth_user')
           .select('id, name, email, role, is_superuser, is_staff')
           .eq('id', user.id)
-          .single();
-
-        console.log('👤 User database check result:', { userData, userError });
+          .single()
 
         if (userError) {
-          console.error('❌ Error fetching user data:', userError);
-          setHasAccess(false);
-          return;
+          setHasAccess(false)
+          return
         }
 
-        // Grant access if user is superuser, staff, or has admin/hr role
-        const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
-        console.log('🔐 Permission check:', {
-          is_superuser: userData.is_superuser,
-          is_staff: userData.is_staff,
-          role: userData.role,
-          hasPermission
-        });
-
+        const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
+        
         if (hasPermission) {
-          console.log('✅ Access granted via superuser/staff/admin permissions');
-          setHasAccess(true);
-          setUserRole('admin');
+          setHasAccess(true)
+          setUserRole('admin')
         } else {
-          console.log('❌ Access denied - insufficient permissions');
-          setHasAccess(false);
+          setHasAccess(false)
         }
       }
     } catch (err) {
-      console.error('❌ Error checking access:', err);
-      setError('Failed to check access permissions');
+      console.error('Error checking access:', err)
+      setError('Failed to check access permissions')
     }
-  };
+  }
 
-  // Fetch data
   const fetchData = async () => {
-    if (!hasAccess || !user?.id) return;
+    if (!hasAccess || !user?.id) return
 
     try {
-      const { supabaseDb } = await import('@/lib/supabase');
+      const { supabaseDb } = await import('@/lib/supabase')
       
-      // Fetch content calendar items (with or without folder filter)
-      let itemsData;
-      if (selectedFolder) {
-        const result = await supabaseDb.getContentCalendarItemsWithFolders(selectedFolder);
-        itemsData = result.data;
-      } else {
-        const result = await supabaseDb.getContentCalendarItems();
-        itemsData = result.data;
-      }
+      const { data: itemsData } = await supabaseDb.getContentCalendarItems()
+      const { data: foldersData } = await supabaseDb.getContentCalendarFolders()
 
-      // Fetch all users for assignee details
-      const { data: usersData } = await supabaseDb.getUsers();
-
-      // Fetch calendar members
-      const { data: membersData } = await supabaseDb.getContentCalendarMembers();
-
-      // Fetch folders
-      const { data: foldersData } = await supabaseDb.getContentCalendarFolders();
-
-      // Enrich items with assignee details
-      const enrichedItems = (itemsData || []).map((item: any) => {
-        const assignees = (item.assigned_to || [])
-          .map((userId: number) => usersData?.find(user => user.id === userId))
-          .filter(Boolean);
-        
-        const createdBy = usersData?.find(user => user.id === item.created_by_id) || {
-          id: 0,
-          name: 'Unknown User',
-          email: '',
-          role: 'member'
-        };
-
-        return {
-          ...item,
-          assignees,
-          created_by: createdBy
-        };
-      });
-
-      const transformedMembers = (membersData || []).map((member: any) => ({
-        ...member,
-        user: member.auth_user
-      }));
-
-      setContentItems(enrichedItems);
-      setCalendarMembers(transformedMembers);
-      setAllUsers(usersData || []);
-      setFolders(foldersData || []);
+      setContentItems(itemsData || [])
+      setFolders(foldersData || [])
       
-      // Auto-expand year folders
       const yearFolders = (foldersData || [])
         .filter((folder: ContentCalendarFolder) => folder.folder_type === 'year')
-        .map((folder: ContentCalendarFolder) => folder.id);
-      setExpandedFolders(new Set(yearFolders));
+        .map((folder: ContentCalendarFolder) => folder.id)
+      setExpandedFolders(new Set(yearFolders))
     } catch (err) {
-      console.error('Error fetching data:', err);
-      setError('Failed to load content calendar data');
+      console.error('Error fetching data:', err)
+      setError('Failed to load content calendar data')
     }
-  };
+  }
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading) return
     
     if (!isAuthenticated) {
-      router.push('/login');
-      return;
+      router.push('/login')
+      return
     }
 
-    checkAccess();
-  }, [isAuthenticated, authLoading, user?.id, router]);
+    checkAccess()
+  }, [isAuthenticated, authLoading, user?.id, router])
 
   useEffect(() => {
     if (hasAccess) {
-      fetchData().finally(() => setIsLoading(false));
+      fetchData().finally(() => setIsLoading(false))
     } else if (!authLoading) {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [hasAccess, user?.id, selectedFolder]);
-
-  // Folder management functions
-  const handleCreateFolder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user?.id) return;
-
-    try {
-      const { supabaseDb } = await import('@/lib/supabase');
-      
-      const { data, error } = await supabaseDb.createContentCalendarFolder({
-        ...newFolder,
-        parent_folder_id: newFolder.parent_folder_id || selectedFolder
-      });
-
-      if (error) throw error;
-
-      await fetchData();
-      
-      setNewFolder({
-        name: '',
-        description: '',
-        parent_folder_id: null,
-        folder_type: 'folder'
-      });
-      setShowFolderForm(false);
-      setError('');
-    } catch (err) {
-      console.error('Error creating folder:', err);
-      setError('Failed to create folder');
-    }
-  };
+  }, [hasAccess, user?.id, selectedFolder])
 
   const toggleFolderExpansion = (folderId: number) => {
-    const newExpanded = new Set(expandedFolders);
+    const newExpanded = new Set(expandedFolders)
     if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId);
+      newExpanded.delete(folderId)
     } else {
-      newExpanded.add(folderId);
+      newExpanded.add(folderId)
     }
-    setExpandedFolders(newExpanded);
-  };
-
-  const selectFolder = (folderId: number | null) => {
-    setSelectedFolder(folderId);
-  };
-
-  // Create content item
-  const handleCreateItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user?.id) return;
-
-    try {
-      const { supabaseDb } = await import('@/lib/supabase');
-      
-      const { data, error } = await supabaseDb.createContentCalendarItem({
-        ...newItem,
-        assigned_to: newItem.assigned_to.length > 0 ? newItem.assigned_to : null,
-        content_deadline: newItem.content_deadline || null,
-        graphic_deadline: newItem.graphic_deadline || null,
-        description: newItem.description || null,
-        folder_id: newItem.folder_id || selectedFolder
-      });
-
-      if (error) throw error;
-
-      await fetchData();
-      
-      setNewItem({
-        date: '',
-        content_type: 'Content',
-        category: 'Class Announcement',
-        social_media: 'Facebook',
-        content_title: '',
-        assigned_to: [],
-        content_deadline: '',
-        graphic_deadline: '',
-        description: '',
-        status: 'planning',
-        folder_id: null
-      });
-      setShowCreateForm(false);
-      setError('');
-    } catch (err) {
-      console.error('Error creating item:', err);
-      setError('Failed to create content item');
-    }
-  };
-
-  // Update content item
-  const handleUpdateItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!editingItem) return;
-
-    try {
-      const { supabaseDb } = await import('@/lib/supabase');
-      
-      const { error } = await supabaseDb.updateContentCalendarItem(editingItem.id, {
-        date: newItem.date,
-        content_type: newItem.content_type,
-        category: newItem.category,
-        social_media: newItem.social_media,
-        content_title: newItem.content_title,
-        assigned_to: newItem.assigned_to.length > 0 ? newItem.assigned_to : null,
-        content_deadline: newItem.content_deadline || null,
-        graphic_deadline: newItem.graphic_deadline || null,
-        description: newItem.description || null,
-        status: newItem.status,
-        folder_id: newItem.folder_id
-      });
-
-      if (error) throw error;
-
-      await fetchData();
-      setEditingItem(null);
-      setShowCreateForm(false);
-      setError('');
-    } catch (err) {
-      console.error('Error updating item:', err);
-      setError('Failed to update content item');
-    }
-  };
-
-  // Delete content item
-  const handleDeleteItem = async (itemId: number) => {
-    if (!confirm('Are you sure you want to delete this content item?')) return;
-
-    try {
-      const { supabaseDb } = await import('@/lib/supabase');
-      
-      const { error } = await supabaseDb.deleteContentCalendarItem(itemId);
-
-      if (error) throw error;
-
-      await fetchData();
-      setError('');
-    } catch (err) {
-      console.error('Error deleting item:', err);
-      setError('Failed to delete content item');
-    }
-  };
-
-  // Add member to content calendar
-  const handleAddMember = async (userId: number, role: string) => {
-    try {
-      const { supabaseDb } = await import('@/lib/supabase');
-      
-      const { error } = await supabaseDb.addContentCalendarMember(userId, role);
-
-      if (error) throw error;
-
-      await fetchData();
-      setShowMemberForm(false);
-    } catch (err) {
-      console.error('Error adding member:', err);
-      setError('Failed to add member');
-    }
-  };
-
-  // Remove member from content calendar
-  const handleRemoveMember = async (memberId: number) => {
-    if (!confirm('Are you sure you want to remove this member?')) return;
-
-    try {
-      const { supabaseDb } = await import('@/lib/supabase');
-      
-      const { error } = await supabaseDb.removeContentCalendarMember(memberId);
-
-      if (error) throw error;
-
-      await fetchData();
-    } catch (err) {
-      console.error('Error removing member:', err);
-      setError('Failed to remove member');
-    }
-  };
-
-  const handleEditItem = (item: ContentCalendarItem) => {
-    setEditingItem(item);
-    setNewItem({
-      date: item.date,
-      content_type: item.content_type,
-      category: item.category,
-      social_media: item.social_media,
-      content_title: item.content_title,
-      assigned_to: item.assigned_to || [],
-      content_deadline: item.content_deadline || '',
-      graphic_deadline: item.graphic_deadline || '',
-      description: item.description || '',
-      status: item.status,
-      folder_id: (item as any).folder_id || null
-    });
-    setShowCreateForm(true);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return '#000000';
-      case 'review': return '#666666';
-      case 'in_progress': return '#999999';
-      default: return '#cccccc';
-    }
-  };
-
-  const isAdmin = userRole === 'admin';
-
-  // Loading state
-  if (authLoading || isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh',
-        background: '#ffffff'
-      }}>
-        <div style={{ 
-          width: '32px', 
-          height: '32px', 
-          border: '3px solid #cccccc', 
-          borderTop: '3px solid #000000', 
-          borderRadius: '50%', 
-          animation: 'spin 1s linear infinite' 
-        }}></div>
-      </div>
-    );
+    setExpandedFolders(newExpanded)
   }
 
-  // Access denied
+  const selectFolder = (folderId: number | null) => {
+    setSelectedFolder(folderId)
+  }
+
+  if (authLoading || isLoading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#ffffff', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #cccccc', 
+            borderTop: '3px solid #000000', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
+      </div>
+    )
+  }
+
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div className="main-content-area">
-          <div style={{ 
-            padding: '2rem', 
-            maxWidth: '600px', 
-            margin: '0 auto',
-            textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        background: '#ffffff'
-      }}>
-        <h1 style={{ 
-          fontSize: '2rem', 
-          fontWeight: 'bold', 
-          marginBottom: '1rem',
-          color: '#000000'
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#ffffff', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
         }}>
-          Access Denied
-        </h1>
-        <p style={{ 
-          fontSize: '1.1rem', 
-          color: '#666666', 
-          marginBottom: '2rem'
-        }}>
-          You don't have permission to access the Content Calendar.
-          Please contact an administrator to request access.
-        </p>
-        <button
-          onClick={() => router.push('/dashboard')}
-          style={{
-            padding: '1rem 2rem',
-            background: '#000000',
-            color: '#ffffff',
-            border: '2px solid #000000',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = '#ffffff';
-            e.currentTarget.style.color = '#000000';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = '#000000';
-            e.currentTarget.style.color = '#ffffff';
-          }}
-        >
-          Back to Dashboard
-        </button>
+          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#000000' }}>
+              Access Denied
+            </h1>
+            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem' }}>
+              You don't have permission to access the Content Calendar.
+              Please contact an administrator to request access.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{
+                padding: '1rem 2rem',
+                background: '#000000',
+                color: '#ffffff',
+                border: '2px solid #000000',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Back to Dashboard
+            </button>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar projects={[]} onCreateProject={() => {}} />
-      <div className="main-content-area" style={{ 
-        padding: '2rem', 
-        background: '#ffffff', 
-        flex: 1
-      }}>
+    <>
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -630,825 +237,423 @@ export default function ContentCalendarPage() {
             100% { transform: rotate(360deg); }
           }
           
-          .content-calendar-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border: 2px solid #000000;
-            border-radius: 8px;
-            overflow: hidden;
+          /* Ensure content doesn't get covered by sidebar */
+          .content-calendar-main {
+            margin-left: 256px !important;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
             background: #ffffff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           }
           
-          .content-calendar-table th,
-          .content-calendar-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-right: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 0.85rem;
-            vertical-align: top;
+          /* Ultra-prominent folder navigation styles */
+          .ultra-folder-nav {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%) !important;
+            border: 4px solid #000000 !important;
+            border-radius: 16px !important;
+            padding: 2rem !important;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4) !important;
+            position: relative !important;
+            width: 500px !important;
+            min-height: 600px !important;
           }
           
-          .content-calendar-table th {
-            background: #000000;
-            color: #ffffff;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 0.75rem;
-          }
-          
-          .content-calendar-table th:last-child,
-          .content-calendar-table td:last-child {
-            border-right: none;
-          }
-          
-          .content-calendar-table tr:last-child td {
-            border-bottom: none;
-          }
-          
-          .content-calendar-table tbody tr:hover {
-            background: #f9fafb;
-          }
-          
-          .status-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border: 1px solid;
-            display: inline-block;
-          }
-          
-          .assignee-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-          }
-          
-          .assignee-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #000000;
-            color: #ffffff;
-            border: 1px solid #000000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            font-weight: 600;
-          }
-          
-          .action-btn {
-            padding: 0.5rem;
-            border: 1px solid #000000;
-            border-radius: 4px;
-            background: #ffffff;
-            color: #000000;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-right: 0.5rem;
-          }
-          
-          .action-btn:hover {
-            background: #000000;
-            color: #ffffff;
-          }
-          
-          .action-btn.delete:hover {
-            background: #dc2626;
-            border-color: #dc2626;
-          }
-          
-          .btn {
-            padding: 0.75rem 1.5rem;
-            border: 2px solid #000000;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-          }
-          
-          .btn-primary {
-            background: #000000;
-            color: #ffffff;
-          }
-          
-          .btn-primary:hover {
-            background: #ffffff;
-            color: #000000;
-          }
-          
-          .btn-secondary {
-            background: #ffffff;
-            color: #000000;
-          }
-          
-          .btn-secondary:hover {
-            background: #000000;
-            color: #ffffff;
-          }
-          
-          .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-          }
-          
-          .modal-content {
-            background: #ffffff;
-            border: 3px solid #000000;
-            border-radius: 12px;
-            padding: 2rem;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-          }
-          
-          .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-          }
-          
-          .form-group {
-            margin-bottom: 1rem;
-          }
-          
-          .form-label {
-            display: block;
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-          }
-          
-          .form-input,
-          .form-select,
-          .form-textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #000000;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            background: #ffffff;
-            color: #000000;
-          }
-          
-          .form-input:focus,
-          .form-select:focus,
-          .form-textarea:focus {
-            outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-          }
-          
-          .checkbox-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.5rem;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 2px solid #000000;
-            border-radius: 6px;
-            padding: 1rem;
-          }
-          
-          .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          
-          .checkbox-item input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #000000;
+          .folder-corner-accent {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: #fbbf24;
+            clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
           }
         `
       }} />
-
-      {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '2rem',
-        borderBottom: '2px solid #000000',
-        paddingBottom: '1rem'
-      }}>
-        <div>
-          <h1 style={{ 
-            fontSize: '2rem', 
-            fontWeight: 'bold', 
-            margin: '0',
-            color: '#000000'
-          }}>
-            Content Calendar
-          </h1>
-          <p style={{ 
-            fontSize: '1rem', 
-            color: '#666666', 
-            margin: '0.5rem 0 0 0'
-          }}>
-            Manage your social media content planning and scheduling
-          </p>
-        </div>
+      
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          {isAdmin && (
+        <div className="content-calendar-main" style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#ffffff', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '2rem',
+            borderBottom: '3px solid #000000',
+            paddingBottom: '1rem'
+          }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '900', 
+                margin: '0', 
+                color: '#000000',
+                textTransform: 'uppercase'
+              }}>
+                📅 Content Calendar
+              </h1>
+              <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
+                Manage your social media content planning and scheduling
+              </p>
+            </div>
+            
             <button
-              onClick={() => setShowMemberForm(true)}
-              className="btn btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              <UserPlusIcon style={{ width: '16px', height: '16px' }} />
-              Manage Members
-            </button>
-          )}
-          
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setNewItem({
-                date: '',
-                content_type: 'Content',
-                category: 'Class Announcement',
-                social_media: 'Facebook',
-                content_title: '',
-                assigned_to: [],
-                content_deadline: '',
-                graphic_deadline: '',
-                description: '',
-                status: 'planning',
-                folder_id: null
-              });
-              setShowCreateForm(true);
-            }}
-            className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <PlusIcon style={{ width: '16px', height: '16px' }} />
-            Add Content
-          </button>
-        </div>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <div style={{ 
-          background: '#fef2f2', 
-          border: '2px solid #dc2626', 
-          borderRadius: '8px', 
-          padding: '1rem', 
-          marginBottom: '1rem',
-          color: '#dc2626',
-          fontWeight: '600'
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Members Info */}
-      <div style={{ 
-        background: '#f9fafb', 
-        border: '2px solid #000000', 
-        borderRadius: '8px', 
-        padding: '1rem', 
-        marginBottom: '2rem'
-      }}>
-        <h3 style={{ 
-          fontSize: '1rem', 
-          fontWeight: '600', 
-          margin: '0 0 0.5rem 0',
-          color: '#000000'
-        }}>
-          Team Members ({calendarMembers.length})
-        </h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {calendarMembers.map(member => (
-            <span
-              key={member.id}
               style={{
-                padding: '0.25rem 0.5rem',
-                background: member.role === 'admin' ? '#000000' : '#ffffff',
-                color: member.role === 'admin' ? '#ffffff' : '#000000',
-                border: '1px solid #000000',
-                borderRadius: '4px',
-                fontSize: '0.75rem',
-                fontWeight: '600'
+                padding: '1rem 2rem',
+                background: '#000000',
+                color: '#ffffff',
+                border: '3px solid #000000',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                textTransform: 'uppercase'
               }}
             >
-              {member.user.name} ({member.role})
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Content Calendar Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <table className="content-calendar-table">
-          <thead>
-            <tr>
-              <th style={{ minWidth: '100px' }}>Date</th>
-              <th style={{ minWidth: '120px' }}>Content Type</th>
-              <th style={{ minWidth: '120px' }}>Category</th>
-              <th style={{ minWidth: '100px' }}>Social Media</th>
-              <th style={{ minWidth: '200px' }}>Content Title</th>
-              <th style={{ minWidth: '120px' }}>Assigned To</th>
-              <th style={{ minWidth: '120px' }}>Content Deadline</th>
-              <th style={{ minWidth: '120px' }}>Graphic Deadline</th>
-              <th style={{ minWidth: '100px' }}>Status</th>
-              <th style={{ minWidth: '120px' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contentItems.length === 0 ? (
-              <tr>
-                <td colSpan={10} style={{ 
-                  textAlign: 'center', 
-                  padding: '2rem',
-                  color: '#666666',
-                  fontStyle: 'italic'
-                }}>
-                  No content items found. Create your first content item to get started.
-                </td>
-              </tr>
-            ) : (
-              contentItems.map(item => (
-                <tr key={item.id}>
-                  <td>{formatDate(item.date)}</td>
-                  <td>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: '#f3f4f6',
-                      border: '1px solid #000000',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600'
-                    }}>
-                      {item.content_type}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: '#ffffff',
-                      border: '1px solid #666666',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem'
-                    }}>
-                      {item.category}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: '#f9fafb',
-                      border: '1px solid #000000',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600'
-                    }}>
-                      {item.social_media}
-                    </span>
-                  </td>
-                  <td style={{ 
-                    fontWeight: '600',
-                    color: '#000000',
-                    maxWidth: '200px',
-                    wordWrap: 'break-word'
-                  }}>
-                    {item.content_title}
-                  </td>
-                  <td>
-                    <div className="assignee-list">
-                      {item.assignees && item.assignees.length > 0 ? (
-                        item.assignees.map(assignee => (
-                          <div
-                            key={assignee.id}
-                            className="assignee-avatar"
-                            title={assignee.name}
-                          >
-                            {assignee.name.charAt(0).toUpperCase()}
-                          </div>
-                        ))
-                      ) : (
-                        <span style={{ 
-                          color: '#666666', 
-                          fontStyle: 'italic',
-                          fontSize: '0.75rem'
-                        }}>
-                          Unassigned
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <CalendarIcon style={{ width: '14px', height: '14px', color: '#666666' }} />
-                      <span style={{ fontSize: '0.75rem' }}>
-                        {formatDate(item.content_deadline)}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <ClockIcon style={{ width: '14px', height: '14px', color: '#666666' }} />
-                      <span style={{ fontSize: '0.75rem' }}>
-                        {formatDate(item.graphic_deadline)}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span 
-                      className="status-badge"
-                      style={{
-                        backgroundColor: '#ffffff',
-                        color: getStatusColor(item.status),
-                        borderColor: getStatusColor(item.status)
-                      }}
-                    >
-                      {item.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button
-                        onClick={() => handleEditItem(item)}
-                        className="action-btn"
-                        title="Edit"
-                      >
-                        <PencilIcon style={{ width: '14px', height: '14px' }} />
-                      </button>
-                      
-                      {(isAdmin || item.created_by.id === user?.id) && (
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="action-btn delete"
-                          title="Delete"
-                        >
-                          <TrashIcon style={{ width: '14px', height: '14px' }} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Create/Edit Form Modal */}
-      {showCreateForm && (
-        <div className="modal-overlay" onClick={() => setShowCreateForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 'bold', 
-              marginBottom: '1.5rem',
-              color: '#000000'
-            }}>
-              {editingItem ? 'Edit Content Item' : 'Create New Content Item'}
-            </h2>
-
-            <form onSubmit={editingItem ? handleUpdateItem : handleCreateItem}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Date *</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={newItem.date}
-                    onChange={(e) => setNewItem({ ...newItem, date: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Content Type *</label>
-                  <select
-                    className="form-select"
-                    value={newItem.content_type}
-                    onChange={(e) => setNewItem({ ...newItem, content_type: e.target.value })}
-                    required
-                  >
-                    {CONTENT_TYPES.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Category *</label>
-                  <select
-                    className="form-select"
-                    value={newItem.category}
-                    onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                    required
-                  >
-                    {CATEGORIES.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Social Media *</label>
-                  <select
-                    className="form-select"
-                    value={newItem.social_media}
-                    onChange={(e) => setNewItem({ ...newItem, social_media: e.target.value })}
-                    required
-                  >
-                    {SOCIAL_MEDIA_PLATFORMS.map(platform => (
-                      <option key={platform} value={platform}>{platform}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Content Deadline</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={newItem.content_deadline}
-                    onChange={(e) => setNewItem({ ...newItem, content_deadline: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Graphic Deadline</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={newItem.graphic_deadline}
-                    onChange={(e) => setNewItem({ ...newItem, graphic_deadline: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Content Title *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={newItem.content_title}
-                  onChange={(e) => setNewItem({ ...newItem, content_title: e.target.value })}
-                  placeholder="Enter content title..."
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Assigned To</label>
-                <div className="checkbox-group">
-                  {calendarMembers.map(member => (
-                    <div key={member.id} className="checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={newItem.assigned_to.includes(member.user.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewItem({
-                              ...newItem,
-                              assigned_to: [...newItem.assigned_to, member.user.id]
-                            });
-                          } else {
-                            setNewItem({
-                              ...newItem,
-                              assigned_to: newItem.assigned_to.filter(id => id !== member.user.id)
-                            });
-                          }
-                        }}
-                      />
-                      <label style={{ fontSize: '0.85rem', fontWeight: '500' }}>
-                        {member.user.name}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Status</label>
-                <select
-                  className="form-select"
-                  value={newItem.status}
-                  onChange={(e) => setNewItem({ ...newItem, status: e.target.value })}
-                >
-                  {STATUS_OPTIONS.map(status => (
-                    <option key={status} value={status}>
-                      {status.replace('_', ' ').toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-textarea"
-                  value={newItem.description}
-                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                  placeholder="Additional details about the content..."
-                  rows={3}
-                />
-              </div>
-
-              <div style={{ 
-                display: 'flex', 
-                gap: '1rem', 
-                justifyContent: 'flex-end',
-                marginTop: '2rem',
-                paddingTop: '1rem',
-                borderTop: '2px solid #000000'
-              }}>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                >
-                  {editingItem ? 'Update Content' : 'Create Content'}
-                </button>
-              </div>
-            </form>
+              ✨ ADD CONTENT
+            </button>
           </div>
-        </div>
-      )}
 
-      {/* Member Management Modal */}
-      {showMemberForm && isAdmin && (
-        <div className="modal-overlay" onClick={() => setShowMemberForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 'bold', 
-              marginBottom: '1.5rem',
-              color: '#000000'
+          {/* Debug Info */}
+          <div style={{
+            background: '#f0f0f0',
+            border: '2px solid #000000',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1rem',
+            fontSize: '0.8rem',
+            fontFamily: 'monospace'
+          }}>
+            🔍 DEBUG: Folders={folders.length} | Items={contentItems.length} | Selected={selectedFolder} | User={user?.email}
+          </div>
+
+          {error && (
+            <div style={{ 
+              background: '#fef2f2', 
+              border: '3px solid #dc2626', 
+              borderRadius: '12px', 
+              padding: '1.5rem', 
+              marginBottom: '2rem',
+              color: '#dc2626',
+              fontWeight: '700',
+              fontSize: '1.1rem'
             }}>
-              Manage Content Calendar Members
-            </h2>
+              ⚠️ {error}
+            </div>
+          )}
 
-            {/* Current Members */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ 
-                fontSize: '1rem', 
-                fontWeight: '600', 
-                marginBottom: '1rem',
-                color: '#000000'
+          {/* MAIN LAYOUT: Ultra-Prominent Folder Navigation + Content */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '500px 1fr',
+            gap: '3rem',
+            marginBottom: '2rem'
+          }}>
+            
+            {/* ULTRA-PROMINENT FOLDER NAVIGATION */}
+            <div className="ultra-folder-nav">
+              <div className="folder-corner-accent" />
+              
+              {/* DRAMATIC HEADER */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                marginBottom: '2rem',
+                position: 'relative',
+                zIndex: 1
               }}>
-                Current Members
+                <span style={{ fontSize: '3rem' }}>📁</span>
+                <h2 style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: '900', 
+                  margin: '0', 
+                  color: '#ffffff',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.15em',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                }}>
+                  FOLDER SYSTEM
+                </h2>
+              </div>
+              
+              {/* STATUS BOX */}
+              <div style={{
+                background: folders.length > 0 ? 'linear-gradient(45deg, #10b981, #059669)' : 'linear-gradient(45deg, #f59e0b, #d97706)',
+                border: '4px solid #ffffff',
+                borderRadius: '16px',
+                padding: '2rem',
+                marginBottom: '2rem',
+                textAlign: 'center',
+                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)'
+              }}>
+                <div style={{ 
+                  color: '#ffffff', 
+                  fontWeight: '900', 
+                  fontSize: '1.5rem',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+                }}>
+                  {folders.length > 0 ? '🎉 FOLDERS ACTIVE!' : '⚠️ SETUP REQUIRED'}
+                </div>
+                <div style={{ 
+                  color: '#ffffff', 
+                  fontSize: '1rem', 
+                  marginTop: '1rem', 
+                  fontWeight: '700'
+                }}>
+                  📊 Found: {folders.length} folders | Root: {folders.filter(f => !f.parent_folder_id).length}
+                </div>
+                {folders.length === 0 && (
+                  <div style={{
+                    background: '#ffffff',
+                    color: '#000000',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    marginTop: '1.5rem',
+                    fontSize: '0.9rem',
+                    fontWeight: '800',
+                    border: '2px solid #000000'
+                  }}>
+                    🔧 RUN SQL SETUP SCRIPT
+                    <br />
+                    Create 2025 → month structure
+                  </div>
+                )}
+              </div>
+              
+              {/* ALL FILES BUTTON */}
+              <div
+                onClick={() => selectFolder(null)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1.5rem',
+                  cursor: 'pointer',
+                  borderRadius: '16px',
+                  border: '4px solid #ffffff',
+                  background: selectedFolder === null ? 'linear-gradient(45deg, #ffffff, #f3f4f6)' : 'rgba(255,255,255,0.1)',
+                  color: selectedFolder === null ? '#000000' : '#ffffff',
+                  fontWeight: '900',
+                  marginBottom: '2rem',
+                  fontSize: '1.2rem',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.3s ease',
+                  boxShadow: selectedFolder === null ? '0 6px 12px rgba(0,0,0,0.2)' : 'none'
+                }}
+              >
+                <FolderIcon style={{ width: '32px', height: '32px' }} />
+                <span>📄 ALL FILES</span>
+              </div>
+              
+              {/* FOLDER TREE */}
+              <div style={{ 
+                background: '#ffffff', 
+                borderRadius: '16px', 
+                padding: '2rem',
+                border: '3px solid #000000',
+                boxShadow: '0 6px 12px rgba(0,0,0,0.2)'
+              }}>
+                {folders.length === 0 ? (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+                    border: '3px solid #ffffff',
+                    borderRadius: '16px',
+                    padding: '3rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: '#ffffff', fontSize: '2rem', marginBottom: '1rem' }}>
+                      🚫 NO STRUCTURE
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '1rem', lineHeight: '1.8' }}>
+                      Expected after SQL setup:
+                      <br />
+                      📂 2025 → 📅 January, February, March...
+                    </div>
+                  </div>
+                ) : (
+                  folders
+                    .filter(folder => folder.parent_folder_id === null)
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map(folder => (
+                      <div key={folder.id} style={{ marginBottom: '1.5rem' }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          padding: '1.5rem',
+                          cursor: 'pointer',
+                          borderRadius: '12px',
+                          background: selectedFolder === folder.id ? '#000000' : '#f3f4f6',
+                          color: selectedFolder === folder.id ? '#ffffff' : '#000000',
+                          fontWeight: '800',
+                          border: '3px solid #000000',
+                          fontSize: '1.1rem'
+                        }}>
+                          <button
+                            onClick={() => toggleFolderExpansion(folder.id)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: 'inherit',
+                              padding: '0'
+                            }}
+                          >
+                            {expandedFolders.has(folder.id) ? (
+                              <ChevronDownIcon style={{ width: '24px', height: '24px' }} />
+                            ) : (
+                              <ChevronRightIcon style={{ width: '24px', height: '24px' }} />
+                            )}
+                          </button>
+                          
+                          <FolderIcon style={{ width: '32px', height: '32px' }} />
+                          
+                          <span
+                            onClick={() => selectFolder(folder.id)}
+                            style={{ fontSize: '1.2rem', flex: 1 }}
+                          >
+                            📅 {folder.name}
+                          </span>
+                        </div>
+                        
+                        {expandedFolders.has(folder.id) && (
+                          <div style={{ marginLeft: '3rem', marginTop: '1rem' }}>
+                            {folders
+                              .filter(child => child.parent_folder_id === folder.id)
+                              .sort((a, b) => a.sort_order - b.sort_order)
+                              .map(child => (
+                                <div
+                                  key={child.id}
+                                  onClick={() => selectFolder(child.id)}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '1rem',
+                                    padding: '1rem 1.5rem',
+                                    cursor: 'pointer',
+                                    borderRadius: '8px',
+                                    background: selectedFolder === child.id ? '#000000' : 'transparent',
+                                    color: selectedFolder === child.id ? '#ffffff' : '#555555',
+                                    fontSize: '1rem',
+                                    marginBottom: '0.5rem',
+                                    border: selectedFolder === child.id ? '2px solid #000000' : '2px solid #e5e7eb',
+                                    fontWeight: selectedFolder === child.id ? '800' : '600'
+                                  }}
+                                >
+                                  <CalendarIcon style={{ width: '24px', height: '24px' }} />
+                                  <span>📅 {child.name}</span>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+            
+            {/* CONTENT AREA */}
+            <div style={{ 
+              background: '#f9fafb', 
+              border: '3px solid #000000', 
+              borderRadius: '16px', 
+              padding: '2rem',
+              minHeight: '600px'
+            }}>
+              <h3 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '800', 
+                margin: '0 0 1.5rem 0', 
+                color: '#000000',
+                textTransform: 'uppercase'
+              }}>
+                📝 Content Items ({contentItems.length})
               </h3>
               
-              {calendarMembers.length === 0 ? (
-                <p style={{ color: '#666666', fontStyle: 'italic' }}>
-                  No members found.
-                </p>
-              ) : (
+              {selectedFolder && (
                 <div style={{ 
-                  border: '2px solid #000000', 
-                  borderRadius: '8px', 
-                  overflow: 'hidden'
+                  background: '#000000',
+                  color: '#ffffff',
+                  border: '3px solid #000000',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  marginBottom: '2rem',
+                  fontSize: '1.1rem',
+                  fontWeight: '800'
                 }}>
-                  {calendarMembers.map(member => (
+                  <span>📁 VIEWING: </span>
+                  <span style={{ color: '#fbbf24' }}>
+                    {folders.find(f => f.id === selectedFolder)?.name || 'Unknown'}
+                  </span>
+                </div>
+              )}
+              
+              {contentItems.length === 0 ? (
+                <div style={{
+                  background: '#ffffff',
+                  border: '3px solid #cccccc',
+                  borderRadius: '16px',
+                  padding: '4rem',
+                  textAlign: 'center',
+                  color: '#666666'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>📄</div>
+                  <h4 style={{ fontSize: '1.5rem', fontWeight: '700', margin: '0 0 1rem 0' }}>
+                    No Content Found
+                  </h4>
+                  <p style={{ margin: '0', fontStyle: 'italic', fontSize: '1.1rem' }}>
+                    Create your first content item to get started.
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  background: '#ffffff',
+                  border: '3px solid #000000',
+                  borderRadius: '16px',
+                  padding: '2rem'
+                }}>
+                  {contentItems.map((item, index) => (
                     <div
-                      key={member.id}
+                      key={item.id}
                       style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '1rem',
-                        borderBottom: '1px solid #e5e7eb',
-                        background: '#ffffff'
+                        padding: '1.5rem',
+                        borderBottom: index < contentItems.length - 1 ? '2px solid #e5e7eb' : 'none'
                       }}
                     >
-                      <div>
-                        <div style={{ fontWeight: '600', color: '#000000' }}>
-                          {member.user.name}
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: '#666666' }}>
-                          {member.user.email} • {member.role}
-                        </div>
+                      <div style={{ 
+                        fontWeight: '800', 
+                        color: '#000000', 
+                        fontSize: '1.2rem', 
+                        marginBottom: '0.75rem'
+                      }}>
+                        📝 {item.content_title}
                       </div>
-                      
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="action-btn delete"
-                        title="Remove member"
-                      >
-                        <XMarkIcon style={{ width: '16px', height: '16px' }} />
-                      </button>
+                      <div style={{ 
+                        color: '#666666', 
+                        fontSize: '0.9rem', 
+                        display: 'flex', 
+                        gap: '1.5rem',
+                        fontWeight: '600'
+                      }}>
+                        <span>🎯 {item.content_type}</span>
+                        <span>📱 {item.social_media}</span>
+                        <span>⚡ {item.status}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Add New Members */}
-            <div>
-              <h3 style={{ 
-                fontSize: '1rem', 
-                fontWeight: '600', 
-                marginBottom: '1rem',
-                color: '#000000'
-              }}>
-                Add New Members
-              </h3>
-              
-              <div style={{ 
-                border: '2px solid #000000', 
-                borderRadius: '8px', 
-                overflow: 'hidden',
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }}>
-                {allUsers
-                  .filter(user => !calendarMembers.some(member => member.user.id === user.id))
-                  .map(user => (
-                    <div
-                      key={user.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '1rem',
-                        borderBottom: '1px solid #e5e7eb',
-                        background: '#ffffff'
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: '600', color: '#000000' }}>
-                          {user.name}
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: '#666666' }}>
-                          {user.email} • {user.role}
-                        </div>
-                      </div>
-                      
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          onClick={() => handleAddMember(user.id, 'member')}
-                          className="action-btn"
-                          title="Add as member"
-                        >
-                          Member
-                        </button>
-                        <button
-                          onClick={() => handleAddMember(user.id, 'admin')}
-                          className="action-btn"
-                          title="Add as admin"
-                        >
-                          Admin
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'flex-end',
-              marginTop: '2rem',
-              paddingTop: '1rem',
-              borderTop: '2px solid #000000'
-            }}>
-              <button
-                onClick={() => setShowMemberForm(false)}
-                className="btn btn-primary"
-              >
-                Done
-              </button>
-            </div>
           </div>
         </div>
-      )}
       </div>
-    </div>
-  );
+    </>
+  )
 } 

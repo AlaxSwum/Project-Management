@@ -1356,8 +1356,8 @@ export const supabaseDb = {
   // Content Calendar Folders - Hierarchical organization
   getContentCalendarFolders: async () => {
     try {
-      // Get folder tree view for hierarchical display
-      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_tree`, {
+      // Get folders from the actual table instead of view
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folders?is_active=eq.true&order=sort_order.asc`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1367,14 +1367,17 @@ export const supabaseDb = {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error(`Failed to fetch folders: ${response.status}`);
+        // If the table doesn't exist, return empty array
+        return { data: [], error: null };
       }
 
       const data = await response.json();
       return { data: data || [], error: null };
     } catch (error) {
       console.error('Error in getContentCalendarFolders:', error);
-      return { data: [], error };
+      // Return empty array instead of failing completely
+      return { data: [], error: null };
     }
   },
 

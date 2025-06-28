@@ -83,6 +83,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAbsenceForm, setShowAbsenceForm] = useState(false);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
@@ -179,6 +180,22 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
 
   const closeDropdown = () => {
     setIsDropdownOpen(false);
+  };
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+    closeDropdown(); // Close dropdown when toggling sidebar
+    
+    // Dynamically adjust content margin
+    setTimeout(() => {
+      const contentElements = document.querySelectorAll('[style*="marginLeft: 256px"]');
+      contentElements.forEach(element => {
+        const htmlElement = element as HTMLElement;
+        if (htmlElement.style.marginLeft) {
+          htmlElement.style.marginLeft = !isCollapsed ? '64px' : '256px';
+        }
+      });
+    }, 0);
   };
 
   const handleAbsenceForm = async () => {
@@ -718,10 +735,19 @@ Your report is now available in the system.`);
             border-right: 2px solid #000000;
             display: flex;
             flex-direction: column;
+            transition: width 0.3s ease;
+            z-index: 100;
+          }
+          .sidebar.collapsed {
+            width: 64px;
           }
           .sidebar-header {
             padding: 1.5rem;
             border-bottom: 1px solid #000000;
+            transition: padding 0.3s ease;
+          }
+          .sidebar.collapsed .sidebar-header {
+            padding: 1rem 0.5rem;
           }
           .sidebar-header-content {
             display: flex;
@@ -729,14 +755,53 @@ Your report is now available in the system.`);
             justify-content: space-between;
             margin-bottom: 1.5rem;
           }
+          .sidebar.collapsed .sidebar-header-content {
+            margin-bottom: 1rem;
+            justify-content: center;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
           .sidebar-title {
             font-size: 1.25rem;
             font-weight: bold;
             color: #000000;
             margin: 0;
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .sidebar-title {
+            opacity: 0;
+            pointer-events: none;
+          }
+          .sidebar-toggle {
+            padding: 0.5rem;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 36px;
+            min-height: 36px;
+          }
+          .sidebar-toggle:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
           }
           .sidebar-add-container {
             position: relative;
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .sidebar-add-container {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            left: -9999px;
           }
           .sidebar-add-btn {
             padding: 0.5rem;
@@ -1048,6 +1113,56 @@ Your report is now available in the system.`);
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
           }
+          
+          /* Global content adjustment for sidebar */
+          body {
+            margin: 0;
+            padding: 0;
+          }
+          
+          /* Apply margin adjustments to any content next to sidebar */
+          .sidebar ~ * {
+            margin-left: 256px;
+            transition: margin-left 0.3s ease;
+          }
+          
+          /* Adjust for collapsed sidebar */
+          .sidebar.collapsed ~ * {
+            margin-left: 64px;
+          }
+          
+          /* Override for specific content containers */
+          [style*="marginLeft: 256px"] {
+            margin-left: 256px !important;
+            transition: margin-left 0.3s ease;
+          }
+          
+          /* Tooltip for collapsed nav items */
+          .nav-item.tooltip-container {
+            position: relative;
+          }
+          .nav-item:hover .nav-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+          }
+          .nav-tooltip {
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: #000000;
+            color: #ffffff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+            margin-left: 0.5rem;
+          }
           .sidebar-search {
             width: 100%;
             padding: 0.75rem;
@@ -1057,6 +1172,15 @@ Your report is now available in the system.`);
             font-size: 0.9rem;
             color: #000000;
             box-sizing: border-box;
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .sidebar-search {
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
           }
           .sidebar-search:focus {
             outline: none;
@@ -1085,6 +1209,12 @@ Your report is now available in the system.`);
             text-decoration: none;
             color: #666666;
             margin-bottom: 0.25rem;
+            position: relative;
+            justify-content: flex-start;
+          }
+          .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 0.75rem 0.5rem;
           }
           .nav-item:hover {
             background: #f0f0f0;
@@ -1099,6 +1229,19 @@ Your report is now available in the system.`);
             width: 20px;
             height: 20px;
             margin-right: 0.75rem;
+            flex-shrink: 0;
+          }
+          .sidebar.collapsed .nav-icon {
+            margin-right: 0;
+          }
+          .nav-text {
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .nav-text {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            left: -9999px;
           }
           .projects-toggle {
             display: flex;
@@ -1115,13 +1258,43 @@ Your report is now available in the system.`);
             cursor: pointer;
             transition: all 0.2s ease;
             margin-bottom: 0.25rem;
+            position: relative;
+          }
+          .sidebar.collapsed .projects-toggle {
+            justify-content: center;
+            padding: 0.75rem 0.5rem;
           }
           .projects-toggle:hover {
             background: #f0f0f0;
             color: #000000;
           }
+          .projects-toggle-text {
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .projects-toggle-text {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            left: -9999px;
+          }
+          .projects-toggle-icon {
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .projects-toggle-icon {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            left: -9999px;
+          }
           .projects-list {
             margin-left: 0.5rem;
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .projects-list {
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
           }
           .project-item {
             display: flex;
@@ -1166,6 +1339,24 @@ Your report is now available in the system.`);
           .project-count {
             font-size: 0.75rem;
             color: #666666;
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .project-count {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            left: -9999px;
+          }
+          .nav-section-header {
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .nav-section-header {
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
           }
           .sidebar-footer {
             padding: 1rem;
@@ -1194,6 +1385,13 @@ Your report is now available in the system.`);
           .user-info {
             min-width: 0;
             flex: 1;
+            transition: opacity 0.3s ease;
+          }
+          .sidebar.collapsed .user-info {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            left: -9999px;
           }
           .user-name {
             font-size: 0.9rem;
@@ -1271,6 +1469,16 @@ Your report is now available in the system.`);
             
             .sidebar.open {
               transform: translateX(0);
+            }
+            
+            /* Hide sidebar toggle on mobile */
+            .sidebar-toggle {
+              display: none;
+            }
+            
+            /* Reset main content margin on mobile */
+            .main-content-area {
+              margin-left: 0 !important;
             }
             
             .mobile-menu-button {
@@ -1493,10 +1701,17 @@ Your report is now available in the system.`);
         onClick={closeMobileMenu}
       />
       
-      <div className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+      <div className={`sidebar ${isMobileMenuOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         {/* Header */}
         <div className="sidebar-header">
           <div className="sidebar-header-content">
+            <button
+              onClick={toggleSidebar}
+              className="sidebar-toggle"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <Bars3Icon style={{ width: '20px', height: '20px' }} />
+            </button>
             <h1 className="sidebar-title">Projects</h1>
             <div className="sidebar-add-container" ref={dropdownRef}>
               <button
@@ -1539,14 +1754,14 @@ Your report is now available in the system.`);
                 onClick={closeMobileMenu}
               >
                 <item.icon className="nav-icon" />
-                {item.name}
+                <span className="nav-text">{item.name}</span>
               </Link>
             ))}
             
             {/* HR Navigation Items */}
             {(user?.role === 'hr' || user?.role === 'admin' || (user as any)?.user_metadata?.role === 'hr' || (user as any)?.user_metadata?.role === 'admin') ? (
               <>
-                <div style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>HR Tools</span>
                 </div>
                 {hrNavItems.map((item) => (
@@ -1557,13 +1772,13 @@ Your report is now available in the system.`);
                     onClick={closeMobileMenu}
                   >
                     <item.icon className="nav-icon" />
-                    {item.name}
+                    <span className="nav-text">{item.name}</span>
                   </Link>
                 ))}
               </>
             ) : (
               <>
-                <div style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Personal</span>
                 </div>
                 {hrNavItems.slice(0, 2).map((item) => (
@@ -1574,7 +1789,7 @@ Your report is now available in the system.`);
                     onClick={closeMobileMenu}
                   >
                     <item.icon className="nav-icon" />
-                    {item.name}
+                    <span className="nav-text">{item.name}</span>
                   </Link>
                 ))}
               </>
@@ -1617,12 +1832,14 @@ Your report is now available in the system.`);
               onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
               className="projects-toggle"
             >
-              <span>My Projects</span>
-              {isProjectsExpanded ? (
-                <ChevronUpIcon style={{ width: '16px', height: '16px' }} />
-              ) : (
-                <ChevronDownIcon style={{ width: '16px', height: '16px' }} />
-              )}
+              <span className="projects-toggle-text">My Projects</span>
+              <span className="projects-toggle-icon">
+                {isProjectsExpanded ? (
+                  <ChevronUpIcon style={{ width: '16px', height: '16px' }} />
+                ) : (
+                  <ChevronDownIcon style={{ width: '16px', height: '16px' }} />
+                )}
+              </span>
             </button>
 
             {isProjectsExpanded && (
