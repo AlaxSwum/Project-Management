@@ -491,9 +491,9 @@ export default function ContentCalendarPage() {
                   <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
                     {item.content_title}
                   </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
-                  </div>
+                                     <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                     {item.assigned_to && item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
+                   </div>
                   <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
                     {item.content_deadline ? formatDate(item.content_deadline) : '-'}
                   </div>
@@ -740,7 +740,7 @@ export default function ContentCalendarPage() {
                       maxHeight: '120px',
                       overflow: 'auto'
                     }}>
-                      {members.map(member => (
+                      {(members || []).map(member => (
                         <label key={member.user_id} style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
@@ -750,17 +750,17 @@ export default function ContentCalendarPage() {
                         }}>
                           <input
                             type="checkbox"
-                            checked={formData.assigned_to.includes(member.user_id)}
+                            checked={(formData.assigned_to || []).includes(member.user_id)}
                             onChange={(e) => {
                               if (e.target.checked) {
                                 setFormData({
                                   ...formData,
-                                  assigned_to: [...formData.assigned_to, member.user_id]
+                                  assigned_to: [...(formData.assigned_to || []), member.user_id]
                                 })
                               } else {
                                 setFormData({
                                   ...formData,
-                                  assigned_to: formData.assigned_to.filter(id => id !== member.user_id)
+                                  assigned_to: (formData.assigned_to || []).filter(id => id !== member.user_id)
                                 })
                               }
                             }}
@@ -870,7 +870,7 @@ export default function ContentCalendarPage() {
                     maxHeight: '200px',
                     overflow: 'auto'
                   }}>
-                    {members.map(member => (
+                    {(members || []).map(member => (
                       <div key={member.user_id} style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -911,8 +911,8 @@ export default function ContentCalendarPage() {
                     maxHeight: '200px',
                     overflow: 'auto'
                   }}>
-                    {allUsers
-                      .filter(user => !members.some(member => member.user_id === user.id))
+                    {(allUsers || [])
+                      .filter(user => !(members || []).some(member => member.user_id === user.id))
                       .map(user => (
                         <div key={user.id} style={{
                           display: 'flex',
