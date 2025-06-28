@@ -474,8 +474,7 @@ export default function ContentCalendarPage() {
                   gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
                   gap: '0',
                   borderBottom: '1px solid #e5e7eb',
-                  fontSize: '0.8rem',
-                  '&:hover': { background: '#f9f9f9' }
+                  fontSize: '0.8rem'
                 }}>
                   <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
                     {formatDate(item.date)}
