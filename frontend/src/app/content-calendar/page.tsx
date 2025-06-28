@@ -49,7 +49,7 @@ interface ContentCalendarFolder {
 }
 
 export default function ContentCalendarPage() {
-  const { user, isAuthenticated, authLoading } = useAuth()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
