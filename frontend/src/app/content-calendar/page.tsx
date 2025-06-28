@@ -648,18 +648,17 @@ export default function ContentCalendarPage() {
                     <div
                       key={folder.id}
                       onClick={() => enterFolder(folder)}
-                      style={{
-                        padding: '1rem',
-                        background: '#f9f9f9',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        transition: 'all 0.2s ease',
-                        ':hover': { borderColor: '#000000' }
-                      }}
+                                             style={{
+                         padding: '1rem',
+                         background: '#f9f9f9',
+                         border: '2px solid #e5e7eb',
+                         borderRadius: '8px',
+                         cursor: 'pointer',
+                         display: 'flex',
+                         alignItems: 'center',
+                         gap: '0.75rem',
+                         transition: 'all 0.2s ease'
+                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = '#000000'
                         e.currentTarget.style.background = '#f0f0f0'
