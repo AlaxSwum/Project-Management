@@ -144,8 +144,21 @@ export default function ContentCalendarPage() {
         setHasAccess(true);
         setUserRole(memberData.role);
       } else {
-        // Check if user is admin/HR role
-        if (user.role === 'admin' || user.role === 'hr') {
+        // Check if user has admin/superuser/staff permissions from database
+        const { data: userData, error: userError } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, is_superuser, is_staff')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) {
+          console.error('Error fetching user data:', userError);
+          setHasAccess(false);
+          return;
+        }
+
+        // Grant access if user is superuser, staff, or has admin/hr role
+        if (userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr') {
           setHasAccess(true);
           setUserRole('admin');
         } else {
@@ -176,7 +189,7 @@ export default function ContentCalendarPage() {
       // Fetch all users for assignee details
       const { data: usersData, error: usersError } = await supabase
         .from('auth_user')
-        .select('id, name, email, role')
+        .select('id, name, email, role, is_superuser, is_staff')
         .eq('is_active', true);
 
       if (usersError) throw usersError;
@@ -186,7 +199,7 @@ export default function ContentCalendarPage() {
         .from('content_calendar_members')
         .select(`
           *,
-          auth_user(id, name, email, role)
+          auth_user(id, name, email, role, is_superuser, is_staff)
         `);
 
       if (membersError) throw membersError;
