@@ -299,13 +299,14 @@ export default function ContentCalendarPage() {
       const { supabaseDb } = await import('@/lib/supabase')
       await supabaseDb.createContentCalendarFolder({
         ...folderFormData,
+        parent_folder_id: currentFolder?.id || null, // Create as subfolder if inside a folder
         sort_order: folders.length + 1
       })
       await fetchData()
       setFolderFormData({
         name: '',
         description: '',
-        folder_type: 'month',
+        folder_type: currentFolder ? 'week' : 'month', // Reset with appropriate default
         color: '#ffffff'
       })
       setShowFolderForm(false)
@@ -481,7 +482,15 @@ export default function ContentCalendarPage() {
             
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
-                onClick={() => setShowFolderForm(true)}
+                onClick={() => {
+                  setFolderFormData({
+                    name: '',
+                    description: '',
+                    folder_type: currentFolder ? 'week' : 'month', // Default to 'week' for subfolders
+                    color: '#ffffff'
+                  })
+                  setShowFolderForm(true)
+                }}
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#ffffff',
@@ -1306,50 +1315,81 @@ export default function ContentCalendarPage() {
                   marginBottom: '1.5rem',
                   color: '#000000'
                 }}>
-                  Create New Folder
+                  {currentFolder ? `Create Subfolder in ${currentFolder.name}` : 'Create New Folder'}
                 </h2>
+
+                {currentFolder && (
+                  <div style={{
+                    background: '#f0f0f0',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
+                    fontSize: '0.9rem',
+                    color: '#666666'
+                  }}>
+                    <strong>Parent Folder:</strong> {currentFolder.name}
+                    <br />
+                    This folder will be created inside "{currentFolder.name}"
+                  </div>
+                )}
 
                 <form onSubmit={handleCreateFolder}>
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
                       Folder Name
                     </label>
-                    <input
-                      type="text"
-                      value={folderFormData.name}
-                      onChange={(e) => setFolderFormData({ ...folderFormData, name: e.target.value })}
-                      placeholder="e.g., January 2025, Summer Campaign, Product Launch"
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
+                                          <input
+                        type="text"
+                        value={folderFormData.name}
+                        onChange={(e) => setFolderFormData({ ...folderFormData, name: e.target.value })}
+                        placeholder={currentFolder 
+                          ? `e.g., Week 1, Campaign A, Social Posts` 
+                          : `e.g., January 2025, Summer Campaign, Product Launch`
+                        }
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      />
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
                       Folder Type
                     </label>
-                    <select
-                      value={folderFormData.folder_type}
-                      onChange={(e) => setFolderFormData({ ...folderFormData, folder_type: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      <option value="month">Monthly</option>
-                      <option value="campaign">Campaign</option>
-                      <option value="project">Project</option>
-                      <option value="category">Category</option>
-                    </select>
+                                          <select
+                        value={folderFormData.folder_type}
+                        onChange={(e) => setFolderFormData({ ...folderFormData, folder_type: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        {currentFolder ? (
+                          <>
+                            <option value="week">Weekly</option>
+                            <option value="campaign">Campaign</option>
+                            <option value="project">Project</option>
+                            <option value="category">Category</option>
+                            <option value="month">Monthly</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="month">Monthly</option>
+                            <option value="campaign">Campaign</option>
+                            <option value="project">Project</option>
+                            <option value="category">Category</option>
+                          </>
+                        )}
+                      </select>
                   </div>
 
                   <div style={{ marginBottom: '1.5rem' }}>
@@ -1402,7 +1442,7 @@ export default function ContentCalendarPage() {
                         cursor: 'pointer'
                       }}
                     >
-                      Create Folder
+                      {currentFolder ? 'Create Subfolder' : 'Create Folder'}
                     </button>
                   </div>
                 </form>
