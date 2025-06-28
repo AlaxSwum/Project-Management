@@ -11,7 +11,10 @@ import {
   CheckIcon,
   XMarkIcon,
   CalendarIcon,
-  ClockIcon
+  ClockIcon,
+  FolderIcon,
+  ChevronRightIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
 interface ContentCalendarItem {
@@ -26,6 +29,7 @@ interface ContentCalendarItem {
   graphic_deadline: string | null;
   status: string;
   description?: string;
+  folder_id?: number | null;
   assignees?: User[];
   created_by: User;
   created_at: string;
@@ -44,6 +48,22 @@ interface ContentCalendarMember {
   user_id: number;
   role: string;
   user: User;
+}
+
+interface ContentCalendarFolder {
+  id: number;
+  name: string;
+  description?: string;
+  parent_folder_id?: number;
+  folder_type: string;
+  color: string;
+  sort_order: number;
+  level: number;
+  path: string;
+  created_by_id: number;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
 }
 
 const CONTENT_TYPES = [
@@ -97,6 +117,9 @@ export default function ContentCalendarPage() {
   const [contentItems, setContentItems] = useState<ContentCalendarItem[]>([]);
   const [calendarMembers, setCalendarMembers] = useState<ContentCalendarMember[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [folders, setFolders] = useState<ContentCalendarFolder[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [hasAccess, setHasAccess] = useState(false);
@@ -105,6 +128,7 @@ export default function ContentCalendarPage() {
   // Form states
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showMemberForm, setShowMemberForm] = useState(false);
+  const [showFolderForm, setShowFolderForm] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentCalendarItem | null>(null);
   const [newItem, setNewItem] = useState({
     date: '',
@@ -116,7 +140,14 @@ export default function ContentCalendarPage() {
     content_deadline: '',
     graphic_deadline: '',
     description: '',
-    status: 'planning'
+    status: 'planning',
+    folder_id: null as number | null
+  });
+  const [newFolder, setNewFolder] = useState({
+    name: '',
+    description: '',
+    parent_folder_id: null as number | null,
+    folder_type: 'folder'
   });
 
   // Access control check
@@ -202,36 +233,29 @@ export default function ContentCalendarPage() {
     if (!hasAccess || !user?.id) return;
 
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      // Fetch content calendar items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('content_calendar')
-        .select('*')
-        .order('date', { ascending: true });
-
-      if (itemsError) throw itemsError;
+      // Fetch content calendar items (with or without folder filter)
+      let itemsData;
+      if (selectedFolder) {
+        const result = await supabaseDb.getContentCalendarItemsWithFolders(selectedFolder);
+        itemsData = result.data;
+      } else {
+        const result = await supabaseDb.getContentCalendarItems();
+        itemsData = result.data;
+      }
 
       // Fetch all users for assignee details
-      const { data: usersData, error: usersError } = await supabase
-        .from('auth_user')
-        .select('id, name, email, role, is_superuser, is_staff')
-        .eq('is_active', true);
-
-      if (usersError) throw usersError;
+      const { data: usersData } = await supabaseDb.getUsers();
 
       // Fetch calendar members
-      const { data: membersData, error: membersError } = await supabase
-        .from('content_calendar_members')
-        .select(`
-          *,
-          auth_user(id, name, email, role, is_superuser, is_staff)
-        `);
+      const { data: membersData } = await supabaseDb.getContentCalendarMembers();
 
-      if (membersError) throw membersError;
+      // Fetch folders
+      const { data: foldersData } = await supabaseDb.getContentCalendarFolders();
 
       // Enrich items with assignee details
-      const enrichedItems = (itemsData || []).map(item => {
+      const enrichedItems = (itemsData || []).map((item: any) => {
         const assignees = (item.assigned_to || [])
           .map((userId: number) => usersData?.find(user => user.id === userId))
           .filter(Boolean);
@@ -250,7 +274,7 @@ export default function ContentCalendarPage() {
         };
       });
 
-      const transformedMembers = (membersData || []).map(member => ({
+      const transformedMembers = (membersData || []).map((member: any) => ({
         ...member,
         user: member.auth_user
       }));
@@ -258,6 +282,13 @@ export default function ContentCalendarPage() {
       setContentItems(enrichedItems);
       setCalendarMembers(transformedMembers);
       setAllUsers(usersData || []);
+      setFolders(foldersData || []);
+      
+      // Auto-expand year folders
+      const yearFolders = (foldersData || [])
+        .filter((folder: ContentCalendarFolder) => folder.folder_type === 'year')
+        .map((folder: ContentCalendarFolder) => folder.id);
+      setExpandedFolders(new Set(yearFolders));
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load content calendar data');
@@ -281,7 +312,53 @@ export default function ContentCalendarPage() {
     } else if (!authLoading) {
       setIsLoading(false);
     }
-  }, [hasAccess, user?.id]);
+  }, [hasAccess, user?.id, selectedFolder]);
+
+  // Folder management functions
+  const handleCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user?.id) return;
+
+    try {
+      const { supabaseDb } = await import('@/lib/supabase');
+      
+      const { data, error } = await supabaseDb.createContentCalendarFolder({
+        ...newFolder,
+        parent_folder_id: newFolder.parent_folder_id || selectedFolder
+      });
+
+      if (error) throw error;
+
+      await fetchData();
+      
+      setNewFolder({
+        name: '',
+        description: '',
+        parent_folder_id: null,
+        folder_type: 'folder'
+      });
+      setShowFolderForm(false);
+      setError('');
+    } catch (err) {
+      console.error('Error creating folder:', err);
+      setError('Failed to create folder');
+    }
+  };
+
+  const toggleFolderExpansion = (folderId: number) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderId)) {
+      newExpanded.delete(folderId);
+    } else {
+      newExpanded.add(folderId);
+    }
+    setExpandedFolders(newExpanded);
+  };
+
+  const selectFolder = (folderId: number | null) => {
+    setSelectedFolder(folderId);
+  };
 
   // Create content item
   const handleCreateItem = async (e: React.FormEvent) => {
@@ -290,19 +367,16 @@ export default function ContentCalendarPage() {
     if (!user?.id) return;
 
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .insert([{
-          ...newItem,
-          assigned_to: newItem.assigned_to.length > 0 ? newItem.assigned_to : null,
-          content_deadline: newItem.content_deadline || null,
-          graphic_deadline: newItem.graphic_deadline || null,
-          description: newItem.description || null,
-          created_by_id: user.id
-        }])
-        .select();
+      const { data, error } = await supabaseDb.createContentCalendarItem({
+        ...newItem,
+        assigned_to: newItem.assigned_to.length > 0 ? newItem.assigned_to : null,
+        content_deadline: newItem.content_deadline || null,
+        graphic_deadline: newItem.graphic_deadline || null,
+        description: newItem.description || null,
+        folder_id: newItem.folder_id || selectedFolder
+      });
 
       if (error) throw error;
 
@@ -318,7 +392,8 @@ export default function ContentCalendarPage() {
         content_deadline: '',
         graphic_deadline: '',
         description: '',
-        status: 'planning'
+        status: 'planning',
+        folder_id: null
       });
       setShowCreateForm(false);
       setError('');
@@ -335,23 +410,21 @@ export default function ContentCalendarPage() {
     if (!editingItem) return;
 
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { error } = await supabase
-        .from('content_calendar')
-        .update({
-          date: newItem.date,
-          content_type: newItem.content_type,
-          category: newItem.category,
-          social_media: newItem.social_media,
-          content_title: newItem.content_title,
-          assigned_to: newItem.assigned_to.length > 0 ? newItem.assigned_to : null,
-          content_deadline: newItem.content_deadline || null,
-          graphic_deadline: newItem.graphic_deadline || null,
-          description: newItem.description || null,
-          status: newItem.status
-        })
-        .eq('id', editingItem.id);
+      const { error } = await supabaseDb.updateContentCalendarItem(editingItem.id, {
+        date: newItem.date,
+        content_type: newItem.content_type,
+        category: newItem.category,
+        social_media: newItem.social_media,
+        content_title: newItem.content_title,
+        assigned_to: newItem.assigned_to.length > 0 ? newItem.assigned_to : null,
+        content_deadline: newItem.content_deadline || null,
+        graphic_deadline: newItem.graphic_deadline || null,
+        description: newItem.description || null,
+        status: newItem.status,
+        folder_id: newItem.folder_id
+      });
 
       if (error) throw error;
 
@@ -370,12 +443,9 @@ export default function ContentCalendarPage() {
     if (!confirm('Are you sure you want to delete this content item?')) return;
 
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { error } = await supabase
-        .from('content_calendar')
-        .delete()
-        .eq('id', itemId);
+      const { error } = await supabaseDb.deleteContentCalendarItem(itemId);
 
       if (error) throw error;
 
@@ -390,14 +460,9 @@ export default function ContentCalendarPage() {
   // Add member to content calendar
   const handleAddMember = async (userId: number, role: string) => {
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { error } = await supabase
-        .from('content_calendar_members')
-        .insert([{
-          user_id: userId,
-          role: role
-        }]);
+      const { error } = await supabaseDb.addContentCalendarMember(userId, role);
 
       if (error) throw error;
 
@@ -414,12 +479,9 @@ export default function ContentCalendarPage() {
     if (!confirm('Are you sure you want to remove this member?')) return;
 
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { error } = await supabase
-        .from('content_calendar_members')
-        .delete()
-        .eq('id', memberId);
+      const { error } = await supabaseDb.removeContentCalendarMember(memberId);
 
       if (error) throw error;
 
@@ -442,7 +504,8 @@ export default function ContentCalendarPage() {
       content_deadline: item.content_deadline || '',
       graphic_deadline: item.graphic_deadline || '',
       description: item.description || '',
-      status: item.status
+      status: item.status,
+      folder_id: (item as any).folder_id || null
     });
     setShowCreateForm(true);
   };
@@ -827,7 +890,8 @@ export default function ContentCalendarPage() {
                 content_deadline: '',
                 graphic_deadline: '',
                 description: '',
-                status: 'planning'
+                status: 'planning',
+                folder_id: null
               });
               setShowCreateForm(true);
             }}

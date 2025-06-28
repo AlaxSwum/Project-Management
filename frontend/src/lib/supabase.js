@@ -1351,6 +1351,259 @@ export const supabaseDb = {
       console.error('Exception in removeContentCalendarMember:', error);
       return { data: null, error };
     }
+  },
+
+  // Content Calendar Folders - Hierarchical organization
+  getContentCalendarFolders: async () => {
+    try {
+      // Get folder tree view for hierarchical display
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_tree`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error in getContentCalendarFolders:', error);
+      return { data: [], error };
+    }
+  },
+
+  createContentCalendarFolder: async (folderData) => {
+    try {
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      const folderToInsert = {
+        ...folderData,
+        created_by_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true
+      };
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folders`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(folderToInsert)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Exception in createContentCalendarFolder:', error);
+      return { data: null, error };
+    }
+  },
+
+  updateContentCalendarFolder: async (folderId, folderData) => {
+    try {
+      const updateData = {
+        ...folderData,
+        updated_at: new Date().toISOString()
+      };
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folders?id=eq.${folderId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Exception in updateContentCalendarFolder:', error);
+      return { data: null, error };
+    }
+  },
+
+  deleteContentCalendarFolder: async (folderId) => {
+    try {
+      // Soft delete by setting is_active to false
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folders?id=eq.${folderId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      return { data: null, error: null };
+    } catch (error) {
+      console.error('Exception in deleteContentCalendarFolder:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Folder Member Management
+  getContentCalendarFolderMembers: async (folderId) => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}&select=*,auth_user(id,name,email,role)`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error in getContentCalendarFolderMembers:', error);
+      return { data: [], error };
+    }
+  },
+
+  addContentCalendarFolderMember: async (folderId, userId, permissions) => {
+    try {
+      // Check if user is already a member of this folder
+      const checkResponse = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}&user_id=eq.${userId}`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (checkResponse.ok) {
+        const existingMembers = await checkResponse.json();
+        if (existingMembers && existingMembers.length > 0) {
+          return { data: null, error: new Error('User is already a member of this folder') };
+        }
+      }
+
+      const memberData = {
+        folder_id: folderId,
+        user_id: userId,
+        role: permissions.role || 'viewer',
+        can_create: permissions.can_create || false,
+        can_edit: permissions.can_edit || false,
+        can_delete: permissions.can_delete || false,
+        can_manage_members: permissions.can_manage_members || false
+      };
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(memberData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Exception in addContentCalendarFolderMember:', error);
+      return { data: null, error };
+    }
+  },
+
+  removeContentCalendarFolderMember: async (membershipId) => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?id=eq.${membershipId}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      return { data: null, error: null };
+    } catch (error) {
+      console.error('Exception in removeContentCalendarFolderMember:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Get content items with folder hierarchy
+  getContentCalendarItemsWithFolders: async (folderId) => {
+    try {
+      let url = `${supabaseUrl}/rest/v1/content_calendar_hierarchy?order=date.asc`;
+      
+      if (folderId) {
+        url += `&folder_id=eq.${folderId}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error in getContentCalendarItemsWithFolders:', error);
+      return { data: [], error };
+    }
   }
 }
 
