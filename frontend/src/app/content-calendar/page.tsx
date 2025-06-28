@@ -53,8 +53,11 @@ export default function ContentCalendarPage() {
   const [contentItems, setContentItems] = useState<ContentCalendarItem[]>([])
   const [members, setMembers] = useState<ContentCalendarMember[]>([])
   const [allUsers, setAllUsers] = useState<User[]>([])
+  const [folders, setFolders] = useState<any[]>([])
+  const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showMemberModal, setShowMemberModal] = useState(false)
+  const [showFolderForm, setShowFolderForm] = useState(false)
   const [editingItem, setEditingItem] = useState<ContentCalendarItem | null>(null)
   const [formData, setFormData] = useState({
     date: '',
@@ -67,6 +70,12 @@ export default function ContentCalendarPage() {
     graphic_deadline: '',
     status: 'planning',
     description: ''
+  })
+  const [folderFormData, setFolderFormData] = useState({
+    name: '',
+    description: '',
+    folder_type: 'month',
+    color: '#ffffff'
   })
 
   const checkAccess = async () => {
@@ -122,10 +131,12 @@ export default function ContentCalendarPage() {
       const { data: itemsData } = await supabaseDb.getContentCalendarItems()
       const { data: membersData } = await supabaseDb.getContentCalendarMembers()
       const { data: usersData } = await supabaseDb.getUsers()
+      const { data: foldersData } = await supabaseDb.getContentCalendarFolders()
 
       setContentItems(itemsData || [])
       setMembers(membersData || [])
       setAllUsers(usersData || [])
+      setFolders(foldersData || [])
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load content calendar data')
@@ -205,6 +216,29 @@ export default function ContentCalendarPage() {
     } catch (err) {
       console.error('Error removing member:', err)
       setError('Failed to remove member')
+    }
+  }
+
+  const handleCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.createContentCalendarFolder({
+        ...folderFormData,
+        sort_order: folders.length + 1
+      })
+      await fetchData()
+      setFolderFormData({
+        name: '',
+        description: '',
+        folder_type: 'month',
+        color: '#ffffff'
+      })
+      setShowFolderForm(false)
+    } catch (err) {
+      console.error('Error creating folder:', err)
+      setError('Failed to create folder')
     }
   }
 
@@ -371,6 +405,26 @@ export default function ContentCalendarPage() {
             </div>
             
             <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => setShowFolderForm(true)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#ffffff',
+                  color: '#000000',
+                  border: '2px solid #666666',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FolderIcon style={{ width: '16px', height: '16px' }} />
+                Create Folder
+              </button>
+              
               {userRole === 'admin' && (
                 <button
                   onClick={() => setShowMemberModal(true)}
@@ -428,6 +482,85 @@ export default function ContentCalendarPage() {
               {error}
             </div>
           )}
+
+          {/* Folder Navigation */}
+          <div style={{
+            background: '#ffffff',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            padding: '1.5rem',
+            marginBottom: '2rem'
+          }}>
+            <h3 style={{ 
+              fontSize: '1.1rem', 
+              fontWeight: '600', 
+              marginBottom: '1rem',
+              color: '#000000'
+            }}>
+              Folders {folders.length > 0 && `(${folders.length})`}
+            </h3>
+            
+            {folders.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem',
+                color: '#666666',
+                border: '1px dashed #e5e7eb',
+                borderRadius: '6px'
+              }}>
+                <FolderIcon style={{ width: '24px', height: '24px', margin: '0 auto 1rem' }} />
+                <p style={{ margin: '0 0 1rem 0' }}>No folders created yet</p>
+                <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                  Create folders to organize your content by month, campaign, or category
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                <button
+                  onClick={() => setSelectedFolder(null)}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    background: selectedFolder === null ? '#000000' : '#ffffff',
+                    color: selectedFolder === null ? '#ffffff' : '#000000',
+                    border: '2px solid #000000',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <FolderIcon style={{ width: '16px', height: '16px' }} />
+                  All Content
+                </button>
+                
+                {folders.map(folder => (
+                  <button
+                    key={folder.id}
+                    onClick={() => setSelectedFolder(folder.id)}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      background: selectedFolder === folder.id ? '#000000' : '#ffffff',
+                      color: selectedFolder === folder.id ? '#ffffff' : '#000000',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '6px',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <FolderIcon style={{ width: '16px', height: '16px' }} />
+                    {folder.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Content Table */}
           <div style={{
@@ -963,6 +1096,138 @@ export default function ContentCalendarPage() {
                     Close
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Folder Creation Form Modal */}
+          {showFolderForm && (
+            <div style={{
+              position: 'fixed',
+              top: '0',
+              left: '0',
+              right: '0',
+              bottom: '0',
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: '#ffffff',
+                border: '2px solid #000000',
+                borderRadius: '8px',
+                padding: '2rem',
+                width: '90%',
+                maxWidth: '500px'
+              }}>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 'bold', 
+                  marginBottom: '1.5rem',
+                  color: '#000000'
+                }}>
+                  Create New Folder
+                </h2>
+
+                <form onSubmit={handleCreateFolder}>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                      Folder Name
+                    </label>
+                    <input
+                      type="text"
+                      value={folderFormData.name}
+                      onChange={(e) => setFolderFormData({ ...folderFormData, name: e.target.value })}
+                      placeholder="e.g., January 2025, Summer Campaign, Product Launch"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                      Folder Type
+                    </label>
+                    <select
+                      value={folderFormData.folder_type}
+                      onChange={(e) => setFolderFormData({ ...folderFormData, folder_type: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      <option value="month">Monthly</option>
+                      <option value="campaign">Campaign</option>
+                      <option value="project">Project</option>
+                      <option value="category">Category</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      value={folderFormData.description}
+                      onChange={(e) => setFolderFormData({ ...folderFormData, description: e.target.value })}
+                      placeholder="Brief description of this folder's purpose"
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowFolderForm(false)}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: '#ffffff',
+                        color: '#000000',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: '#000000',
+                        color: '#ffffff',
+                        border: '2px solid #000000',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Create Folder
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
