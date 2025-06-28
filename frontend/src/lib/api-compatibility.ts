@@ -853,16 +853,14 @@ export const reportingService = {
 
       // Calculate team report by accessible users only
       const teamReport = accessibleUsers.map((user: any) => {
-        const userTasks = accessibleTasks.filter((t: any) => {
-          // Handle both single assignee and multiple assignees
-          if (t.assignee_ids && Array.isArray(t.assignee_ids)) {
-            return t.assignee_ids.includes(user.id);
-          }
-          if (t.assignee_id) {
-            return t.assignee_id === user.id;
-          }
-          return t.created_by === user.id || t.created_by_id === user.id;
-        });
+              const userTasks = accessibleTasks.filter((t: any) => {
+        // Handle multiple assignees (assignee_ids array)
+        if (t.assignee_ids && Array.isArray(t.assignee_ids)) {
+          return t.assignee_ids.includes(user.id);
+        }
+        // Fallback: check if user created the task
+        return t.created_by === user.id || t.created_by_id === user.id;
+      });
         
         const finishedTasks = userTasks.filter((t: any) => t.status === 'done' || t.status === 'completed').length;
         const unfinishedTasks = userTasks.filter((t: any) => t.status !== 'done' && t.status !== 'completed').length;
@@ -986,13 +984,11 @@ export const reportingService = {
       );
 
       const userTasks = accessibleTasks.filter((t: any) => {
-        // Handle both single assignee and multiple assignees
+        // Handle multiple assignees (assignee_ids array)
         if (t.assignee_ids && Array.isArray(t.assignee_ids)) {
           return t.assignee_ids.includes(userId);
         }
-        if (t.assignee_id) {
-          return t.assignee_id === userId;
-        }
+        // Fallback: check if user created the task
         return t.created_by === userId || t.created_by_id === userId;
       });
 

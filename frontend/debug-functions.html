@@ -183,8 +183,8 @@
                 // Test tasks query
                 const { data: tasks, error } = await supabase
                     .from('projects_task')
-                    .select('id, name, status, project_id, assignee_id')
-                    .eq('assignee_id', currentUser.id);
+                    .select('id, name, status, project_id, assignee_ids')
+                    .contains('assignee_ids', [currentUser.id]);
                 
                 if (error) {
                     log('db-result', `Tasks Error: ${error.message}`, true);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   XMarkIcon, 
   PencilIcon, 
@@ -68,15 +68,33 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState('task'); // New state for active tab
+  // Helper function to format date to YYYY-MM-DD for date inputs
+  const formatDateForInput = useCallback((dateValue: string | null) => {
+    if (!dateValue) return '';
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    // If it's a full ISO string, extract just the date part
+    if (dateValue.includes('T')) {
+      return dateValue.split('T')[0];
+    }
+    // Parse and convert to YYYY-MM-DD
+    const date = new Date(dateValue);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+    return '';
+  }, []);
+
   const [editedTask, setEditedTask] = useState({
     name: task.name,
     description: task.description,
     priority: task.priority,
-    due_date: task.due_date || '',
-    start_date: task.start_date || '',
+    due_date: formatDateForInput(task.due_date),
+    start_date: formatDateForInput(task.start_date),
     estimated_hours: task.estimated_hours || '',
     assignee_ids: task.assignees ? task.assignees.map(a => a.id) : (task.assignee ? [task.assignee.id] : []),
-    assignee_id: task.assignee?.id || 0,  // Keep for backwards compatibility
     tags: task.tags_list.join(', '),
   });
 
@@ -86,14 +104,13 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
       name: task.name,
       description: task.description,
       priority: task.priority,
-      due_date: task.due_date || '',
-      start_date: task.start_date || '',
+      due_date: formatDateForInput(task.due_date),
+      start_date: formatDateForInput(task.start_date),
       estimated_hours: task.estimated_hours || '',
       assignee_ids: task.assignees ? task.assignees.map(a => a.id) : (task.assignee ? [task.assignee.id] : []),
-      assignee_id: task.assignee?.id || 0,
       tags: task.tags_list.join(', '),
     });
-  }, [task]);
+  }, [task, formatDateForInput]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not set';
@@ -129,17 +146,37 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
 
   const handleSave = async () => {
     try {
+      // Fix date format to ensure it's in YYYY-MM-DD format
+      const formatDate = (dateValue: string) => {
+        if (!dateValue) return null;
+        // If it's already in YYYY-MM-DD format, return as is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+          return dateValue;
+        }
+        // If it's a full ISO string, extract just the date part
+        if (dateValue.includes('T')) {
+          return dateValue.split('T')[0];
+        }
+        // If it's in MM-DD-YYYY or other format, convert to YYYY-MM-DD
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+        return null;
+      };
+
       const taskData = {
         ...editedTask,
         tags: editedTask.tags,
         estimated_hours: editedTask.estimated_hours ? Number(editedTask.estimated_hours) : null,
-        assignee_ids: editedTask.assignee_ids && editedTask.assignee_ids.length > 0 ? editedTask.assignee_ids : null,
-        assignee_id: editedTask.assignee_id && editedTask.assignee_id !== 0 ? Number(editedTask.assignee_id) : null,  // Keep for backwards compatibility
-        due_date: editedTask.due_date || null,
-        start_date: editedTask.start_date || null,
+        assignee_ids: editedTask.assignee_ids && editedTask.assignee_ids.length > 0 ? editedTask.assignee_ids : [],
+        // Remove assignee_id completely - only use assignee_ids for multiple assignee support
+        due_date: formatDate(editedTask.due_date),
+        start_date: formatDate(editedTask.start_date),
       };
       
       console.log('Saving task with assignee_ids:', taskData.assignee_ids); // Debug log
+      console.log('Saving task with formatted dates:', { due_date: taskData.due_date, start_date: taskData.start_date }); // Debug log
       await onSave(taskData);
       setIsEditing(false);
     } catch (error) {
