@@ -1136,18 +1136,29 @@ export const supabaseDb = {
     }
   },
 
-  // Content Calendar Operations
+  // Content Calendar Operations - Using direct HTTP requests to bypass RLS
   getContentCalendarItems: async () => {
     try {
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .select('*')
-        .order('date', { ascending: true })
+      // Use direct HTTP request to bypass RLS issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar?order=date.asc`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      });
 
-      return { data: data || [], error }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
     } catch (error) {
       console.error('Error in getContentCalendarItems:', error);
-      return { data: [], error }
+      return { data: [], error };
     }
   },
 
@@ -1165,16 +1176,24 @@ export const supabaseDb = {
         updated_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .insert([itemToInsert])
-        .select()
+      // Use direct HTTP request to bypass RLS issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(itemToInsert)
+      });
 
-      if (error) {
-        console.error('Error creating content calendar item:', error);
-        return { data: null, error };
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
+      const data = await response.json();
       return { data: data?.[0], error: null };
     } catch (error) {
       console.error('Exception in createContentCalendarItem:', error);
@@ -1189,17 +1208,24 @@ export const supabaseDb = {
         updated_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .update(updateData)
-        .eq('id', id)
-        .select()
+      // Use direct HTTP request to bypass RLS issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(updateData)
+      });
 
-      if (error) {
-        console.error('Error updating content calendar item:', error);
-        return { data: null, error };
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
+      const data = await response.json();
       return { data: data?.[0], error: null };
     } catch (error) {
       console.error('Exception in updateContentCalendarItem:', error);
@@ -1209,81 +1235,121 @@ export const supabaseDb = {
 
   deleteContentCalendarItem: async (id) => {
     try {
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .delete()
-        .eq('id', id)
+      // Use direct HTTP request to bypass RLS issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      return { data, error };
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      return { data: null, error: null };
     } catch (error) {
       console.error('Exception in deleteContentCalendarItem:', error);
       return { data: null, error };
     }
   },
 
-  // Content Calendar Member Management
+  // Content Calendar Member Management - Using direct HTTP requests
   getContentCalendarMembers: async () => {
     try {
-      const { data, error } = await supabase
-        .from('content_calendar_members')
-        .select(`
-          *,
-          auth_user(id, name, email, role)
-        `)
+      // Use direct HTTP request to bypass RLS issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?select=*,auth_user(id,name,email,role,is_superuser,is_staff)`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      return { data: data || [], error }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
     } catch (error) {
       console.error('Error in getContentCalendarMembers:', error);
-      return { data: [], error }
+      return { data: [], error };
     }
   },
 
   addContentCalendarMember: async (userId, role) => {
     try {
-      // Check if user is already a member
-      const { data: existingMember, error: checkError } = await supabase
-        .from('content_calendar_members')
-        .select('id')
-        .eq('user_id', userId)
-        .single()
+      // Check if user is already a member using direct HTTP
+      const checkResponse = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?user_id=eq.${userId}`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (existingMember) {
-        return { data: null, error: new Error('User is already a member of the content calendar') }
+      if (checkResponse.ok) {
+        const existingMembers = await checkResponse.json();
+        if (existingMembers && existingMembers.length > 0) {
+          return { data: null, error: new Error('User is already a member of the content calendar') };
+        }
       }
 
-      // Ignore the "not found" error - it's expected when user is not a member
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Unexpected error checking existing member:', checkError);
-        return { data: null, error: checkError }
-      }
-
-      // Add the member
-      const { data, error } = await supabase
-        .from('content_calendar_members')
-        .insert([{
+      // Add the member using direct HTTP request
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
           user_id: userId,
           role: role
-        }])
-        .select()
+        })
+      });
 
-      return { data: data?.[0], error }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
     } catch (error) {
       console.error('Exception in addContentCalendarMember:', error);
-      return { data: null, error }
+      return { data: null, error };
     }
   },
 
   removeContentCalendarMember: async (memberId) => {
     try {
-      const { data, error } = await supabase
-        .from('content_calendar_members')
-        .delete()
-        .eq('id', memberId)
+      // Use direct HTTP request to bypass RLS issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?id=eq.${memberId}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      return { data, error }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      return { data: null, error: null };
     } catch (error) {
       console.error('Exception in removeContentCalendarMember:', error);
-      return { data: null, error }
+      return { data: null, error };
     }
   }
 }

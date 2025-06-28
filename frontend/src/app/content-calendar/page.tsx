@@ -121,12 +121,22 @@ export default function ContentCalendarPage() {
 
   // Access control check
   const checkAccess = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('❌ Content Calendar Access: No user ID found');
+      return;
+    }
+
+    console.log('🔍 Content Calendar Access Check:', {
+      userId: user.id,
+      userEmail: user.email,
+      userRole: user.role
+    });
 
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       
       // Check if user is a member of content calendar
+      console.log('📋 Checking content calendar membership...');
       const { data: memberData, error: memberError } = await supabase
         .from('content_calendar_members')
         .select(`
@@ -136,14 +146,18 @@ export default function ContentCalendarPage() {
         .eq('user_id', user.id)
         .single();
 
+      console.log('📋 Membership check result:', { memberData, memberError });
+
       if (memberError && memberError.code !== 'PGRST116') {
         throw memberError;
       }
 
       if (memberData) {
+        console.log('✅ User is a content calendar member with role:', memberData.role);
         setHasAccess(true);
         setUserRole(memberData.role);
       } else {
+        console.log('👤 Not a member, checking superuser/staff permissions...');
         // Check if user has admin/superuser/staff permissions from database
         const { data: userData, error: userError } = await supabase
           .from('auth_user')
@@ -151,22 +165,34 @@ export default function ContentCalendarPage() {
           .eq('id', user.id)
           .single();
 
+        console.log('👤 User database check result:', { userData, userError });
+
         if (userError) {
-          console.error('Error fetching user data:', userError);
+          console.error('❌ Error fetching user data:', userError);
           setHasAccess(false);
           return;
         }
 
         // Grant access if user is superuser, staff, or has admin/hr role
-        if (userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr') {
+        const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+        console.log('🔐 Permission check:', {
+          is_superuser: userData.is_superuser,
+          is_staff: userData.is_staff,
+          role: userData.role,
+          hasPermission
+        });
+
+        if (hasPermission) {
+          console.log('✅ Access granted via superuser/staff/admin permissions');
           setHasAccess(true);
           setUserRole('admin');
         } else {
+          console.log('❌ Access denied - insufficient permissions');
           setHasAccess(false);
         }
       }
     } catch (err) {
-      console.error('Error checking access:', err);
+      console.error('❌ Error checking access:', err);
       setError('Failed to check access permissions');
     }
   };
