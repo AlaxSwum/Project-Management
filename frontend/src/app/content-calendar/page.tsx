@@ -893,13 +893,13 @@ export default function ContentCalendarPage() {
 
                 <form onSubmit={handleSubmit}>
                   {/* Basic Information Section */}
-                  <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ marginBottom: '3rem' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.75rem',
-                      marginBottom: '1.5rem',
-                      paddingBottom: '0.75rem',
+                      marginBottom: '2rem',
+                      paddingBottom: '1rem',
                       borderBottom: '1px solid #e5e7eb'
                     }}>
                       <div style={{
@@ -919,9 +919,9 @@ export default function ContentCalendarPage() {
                       </h3>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Published Date</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Published Date</label>
                         <input
                           type="date"
                           value={formData.date}
@@ -939,7 +939,7 @@ export default function ContentCalendarPage() {
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Content Type</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Content Type</label>
                         <select
                           value={formData.content_type}
                           onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
@@ -961,9 +961,9 @@ export default function ContentCalendarPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Category</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Category</label>
                         <select
                           value={formData.category}
                           onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -985,7 +985,7 @@ export default function ContentCalendarPage() {
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Social Media Platform</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Social Media Platform</label>
                         <select
                           value={formData.social_media}
                           onChange={(e) => setFormData({ ...formData, social_media: e.target.value })}
@@ -1007,8 +1007,8 @@ export default function ContentCalendarPage() {
                       </div>
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Content Title</label>
+                    <div style={{ marginBottom: '2rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Content Title</label>
                       <input
                         type="text"
                         value={formData.content_title}
@@ -1028,13 +1028,13 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Deadlines Section */}
-                  <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ marginBottom: '3rem' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.75rem',
-                      marginBottom: '1.5rem',
-                      paddingBottom: '0.75rem',
+                      marginBottom: '2rem',
+                      paddingBottom: '1rem',
                       borderBottom: '1px solid #e5e7eb'
                     }}>
                       <div style={{
@@ -1054,9 +1054,9 @@ export default function ContentCalendarPage() {
                       </h3>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Content Deadline</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Content Deadline</label>
                         <input
                           type="date"
                           value={formData.content_deadline}
@@ -1073,7 +1073,7 @@ export default function ContentCalendarPage() {
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Graphic Deadline</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Graphic Deadline</label>
                         <input
                           type="date"
                           value={formData.graphic_deadline}
@@ -1092,13 +1092,13 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Organization Section */}
-                  <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ marginBottom: '3rem' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.75rem',
-                      marginBottom: '1.5rem',
-                      paddingBottom: '0.75rem',
+                      marginBottom: '2rem',
+                      paddingBottom: '1rem',
                       borderBottom: '1px solid #e5e7eb'
                     }}>
                       <div style={{
@@ -1118,9 +1118,9 @@ export default function ContentCalendarPage() {
                       </h3>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Status</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Status</label>
                         <select
                           value={formData.status}
                           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -1140,7 +1140,7 @@ export default function ContentCalendarPage() {
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Folder</label>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Folder</label>
                         <select
                           value={formData.folder_id || ''}
                           onChange={(e) => setFormData({ ...formData, folder_id: e.target.value ? parseInt(e.target.value) : null })}
@@ -1161,8 +1161,8 @@ export default function ContentCalendarPage() {
                       </div>
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Assign To</label>
+                    <div style={{ marginBottom: '2rem' }}>
+                      <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Assign To</label>
                       <div style={{ 
                         border: '2px solid #e5e7eb', 
                         borderRadius: '8px', 
@@ -1211,13 +1211,13 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Description Section */}
-                  <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ marginBottom: '3rem' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.75rem',
-                      marginBottom: '1.5rem',
-                      paddingBottom: '0.75rem',
+                      marginBottom: '2rem',
+                      paddingBottom: '1rem',
                       borderBottom: '1px solid #e5e7eb'
                     }}>
                       <div style={{
@@ -1237,8 +1237,8 @@ export default function ContentCalendarPage() {
                       </h3>
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Description</label>
+                    <div style={{ marginBottom: '2rem' }}>
+                      <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Description</label>
                       <textarea
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1261,11 +1261,11 @@ export default function ContentCalendarPage() {
                   {/* Action Buttons */}
                   <div style={{ 
                     display: 'flex', 
-                    gap: '1rem', 
+                    gap: '1.5rem', 
                     justifyContent: 'center',
-                    paddingTop: '2rem',
+                    paddingTop: '2.5rem',
                     borderTop: '1px solid #f0f0f0',
-                    marginTop: '1.5rem'
+                    marginTop: '2rem'
                   }}>
                     <button
                       type="button"
