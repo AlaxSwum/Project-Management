@@ -1134,6 +1134,157 @@ export const supabaseDb = {
       console.error('Exception in createTaskComment:', error);
       return { data: null, error };
     }
+  },
+
+  // Content Calendar Operations
+  getContentCalendarItems: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content_calendar')
+        .select('*')
+        .order('date', { ascending: true })
+
+      return { data: data || [], error }
+    } catch (error) {
+      console.error('Error in getContentCalendarItems:', error);
+      return { data: [], error }
+    }
+  },
+
+  createContentCalendarItem: async (itemData) => {
+    try {
+      const { user } = await supabaseAuth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('Authentication required') };
+      }
+
+      const itemToInsert = {
+        ...itemData,
+        created_by_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('content_calendar')
+        .insert([itemToInsert])
+        .select()
+
+      if (error) {
+        console.error('Error creating content calendar item:', error);
+        return { data: null, error };
+      }
+
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Exception in createContentCalendarItem:', error);
+      return { data: null, error };
+    }
+  },
+
+  updateContentCalendarItem: async (id, itemData) => {
+    try {
+      const updateData = {
+        ...itemData,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('content_calendar')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+
+      if (error) {
+        console.error('Error updating content calendar item:', error);
+        return { data: null, error };
+      }
+
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Exception in updateContentCalendarItem:', error);
+      return { data: null, error };
+    }
+  },
+
+  deleteContentCalendarItem: async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('content_calendar')
+        .delete()
+        .eq('id', id)
+
+      return { data, error };
+    } catch (error) {
+      console.error('Exception in deleteContentCalendarItem:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Content Calendar Member Management
+  getContentCalendarMembers: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content_calendar_members')
+        .select(`
+          *,
+          auth_user(id, name, email, role)
+        `)
+
+      return { data: data || [], error }
+    } catch (error) {
+      console.error('Error in getContentCalendarMembers:', error);
+      return { data: [], error }
+    }
+  },
+
+  addContentCalendarMember: async (userId, role) => {
+    try {
+      // Check if user is already a member
+      const { data: existingMember, error: checkError } = await supabase
+        .from('content_calendar_members')
+        .select('id')
+        .eq('user_id', userId)
+        .single()
+
+      if (existingMember) {
+        return { data: null, error: new Error('User is already a member of the content calendar') }
+      }
+
+      // Ignore the "not found" error - it's expected when user is not a member
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Unexpected error checking existing member:', checkError);
+        return { data: null, error: checkError }
+      }
+
+      // Add the member
+      const { data, error } = await supabase
+        .from('content_calendar_members')
+        .insert([{
+          user_id: userId,
+          role: role
+        }])
+        .select()
+
+      return { data: data?.[0], error }
+    } catch (error) {
+      console.error('Exception in addContentCalendarMember:', error);
+      return { data: null, error }
+    }
+  },
+
+  removeContentCalendarMember: async (memberId) => {
+    try {
+      const { data, error } = await supabase
+        .from('content_calendar_members')
+        .delete()
+        .eq('id', memberId)
+
+      return { data, error }
+    } catch (error) {
+      console.error('Exception in removeContentCalendarMember:', error);
+      return { data: null, error }
+    }
   }
 }
 
