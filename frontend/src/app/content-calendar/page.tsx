@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/Sidebar';
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -555,12 +556,14 @@ export default function ContentCalendarPage() {
   // Access denied
   if (!hasAccess) {
     return (
-      <div style={{ 
-        padding: '2rem', 
-        maxWidth: '600px', 
-        margin: '0 auto',
-        textAlign: 'center',
-        minHeight: '100vh',
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="main-content-area">
+          <div style={{ 
+            padding: '2rem', 
+            maxWidth: '600px', 
+            margin: '0 auto',
+            textAlign: 'center',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -606,16 +609,20 @@ export default function ContentCalendarPage() {
         >
           Back to Dashboard
         </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      background: '#ffffff', 
-      minHeight: '100vh'
-    }}>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar projects={[]} onCreateProject={() => {}} />
+      <div className="main-content-area" style={{ 
+        padding: '2rem', 
+        background: '#ffffff', 
+        flex: 1
+      }}>
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -1441,6 +1448,7 @@ export default function ContentCalendarPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 } 
