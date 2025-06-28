@@ -276,7 +276,16 @@ export const taskService = {
 
   async updateTask(id: number, taskData: any) {
     // TODO: Add task-level access control - verify user can edit this task
-    const { data, error } = await supabaseDb.updateTask(id, taskData);
+    
+    // Filter out any assignee_id field to prevent database column errors
+    // Only allow assignee_ids (plural) for multiple assignee support
+    const filteredTaskData = { ...taskData };
+    if ('assignee_id' in filteredTaskData) {
+      console.warn('Filtering out deprecated assignee_id field from task update data');
+      delete filteredTaskData.assignee_id;
+    }
+    
+    const { data, error } = await supabaseDb.updateTask(id, filteredTaskData);
     if (error) throw error;
     return transformTaskData(data);
   },
