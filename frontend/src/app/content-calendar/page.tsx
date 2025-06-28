@@ -720,7 +720,7 @@ export default function ContentCalendarPage() {
                 fontSize: '0.85rem',
                 color: '#000000'
               }}>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DATE</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PUBLISHED DATE</div>
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TYPE</div>
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CATEGORY</div>
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
@@ -857,40 +857,71 @@ export default function ContentCalendarPage() {
             }}>
               <div style={{
                 background: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                padding: '2rem',
-                width: '90%',
-                maxWidth: '600px',
-                maxHeight: '90vh',
-                overflow: 'auto'
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '2.5rem',
+                width: '95%',
+                maxWidth: '700px',
+                maxHeight: '95vh',
+                overflow: 'auto',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
               }}>
-                <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 'bold', 
-                  marginBottom: '1.5rem',
-                  color: '#000000'
+                <div style={{
+                  textAlign: 'center',
+                  marginBottom: '2.5rem',
+                  paddingBottom: '1.5rem',
+                  borderBottom: '2px solid #f0f0f0'
                 }}>
-                  {editingItem ? 'Edit Content Item' : 'Add New Content Item'}
-                </h2>
+                  <h2 style={{ 
+                    fontSize: '1.8rem', 
+                    fontWeight: '700', 
+                    margin: '0 0 0.5rem 0',
+                    color: '#000000',
+                    letterSpacing: '-0.025em'
+                  }}>
+                    {editingItem ? 'Edit Content Item' : 'Add New Content Item'}
+                  </h2>
+                  <p style={{
+                    fontSize: '1rem',
+                    color: '#666666',
+                    margin: '0',
+                    fontWeight: '400'
+                  }}>
+                    {editingItem ? 'Update your content details below' : 'Fill in the details to create a new content item'}
+                  </p>
+                </div>
 
                 <form onSubmit={handleSubmit}>
                   {/* Basic Information Section */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ 
-                      fontSize: '1.1rem', 
-                      fontWeight: '600', 
-                      marginBottom: '1.25rem', 
-                      color: '#000000',
-                      borderBottom: '1px solid #e5e7eb',
-                      paddingBottom: '0.5rem'
+                  <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '1.5rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid #e5e7eb'
                     }}>
-                      Basic Information
-                    </h3>
+                      <div style={{
+                        width: '4px',
+                        height: '24px',
+                        backgroundColor: '#000000',
+                        borderRadius: '2px'
+                      }}></div>
+                      <h3 style={{ 
+                        fontSize: '1.2rem', 
+                        fontWeight: '700', 
+                        margin: '0',
+                        color: '#000000',
+                        letterSpacing: '-0.015em'
+                      }}>
+                        Basic Information
+                      </h3>
+                    </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Published Date</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Published Date</label>
                         <input
                           type="date"
                           value={formData.date}
@@ -997,17 +1028,31 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Deadlines Section */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ 
-                      fontSize: '1.1rem', 
-                      fontWeight: '600', 
-                      marginBottom: '1.25rem', 
-                      color: '#000000',
-                      borderBottom: '1px solid #e5e7eb',
-                      paddingBottom: '0.5rem'
+                  <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '1.5rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid #e5e7eb'
                     }}>
-                      Deadlines
-                    </h3>
+                      <div style={{
+                        width: '4px',
+                        height: '24px',
+                        backgroundColor: '#000000',
+                        borderRadius: '2px'
+                      }}></div>
+                      <h3 style={{ 
+                        fontSize: '1.2rem', 
+                        fontWeight: '700', 
+                        margin: '0',
+                        color: '#000000',
+                        letterSpacing: '-0.015em'
+                      }}>
+                        Deadlines
+                      </h3>
+                    </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                       <div>
@@ -1047,17 +1092,31 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Organization Section */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ 
-                      fontSize: '1.1rem', 
-                      fontWeight: '600', 
-                      marginBottom: '1.25rem', 
-                      color: '#000000',
-                      borderBottom: '1px solid #e5e7eb',
-                      paddingBottom: '0.5rem'
+                  <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '1.5rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid #e5e7eb'
                     }}>
-                      Organization
-                    </h3>
+                      <div style={{
+                        width: '4px',
+                        height: '24px',
+                        backgroundColor: '#000000',
+                        borderRadius: '2px'
+                      }}></div>
+                      <h3 style={{ 
+                        fontSize: '1.2rem', 
+                        fontWeight: '700', 
+                        margin: '0',
+                        color: '#000000',
+                        letterSpacing: '-0.015em'
+                      }}>
+                        Organization
+                      </h3>
+                    </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                       <div>
@@ -1152,17 +1211,31 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Description Section */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ 
-                      fontSize: '1.1rem', 
-                      fontWeight: '600', 
-                      marginBottom: '1.25rem', 
-                      color: '#000000',
-                      borderBottom: '1px solid #e5e7eb',
-                      paddingBottom: '0.5rem'
+                  <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '1.5rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid #e5e7eb'
                     }}>
-                      Additional Details
-                    </h3>
+                      <div style={{
+                        width: '4px',
+                        height: '24px',
+                        backgroundColor: '#000000',
+                        borderRadius: '2px'
+                      }}></div>
+                      <h3 style={{ 
+                        fontSize: '1.2rem', 
+                        fontWeight: '700', 
+                        margin: '0',
+                        color: '#000000',
+                        letterSpacing: '-0.015em'
+                      }}>
+                        Additional Details
+                      </h3>
+                    </div>
 
                     <div style={{ marginBottom: '1.5rem' }}>
                       <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Description</label>
@@ -1188,34 +1261,38 @@ export default function ContentCalendarPage() {
                   {/* Action Buttons */}
                   <div style={{ 
                     display: 'flex', 
-                    gap: '1.5rem', 
-                    justifyContent: 'flex-end',
-                    paddingTop: '1.5rem',
-                    borderTop: '1px solid #e5e7eb',
-                    marginTop: '1rem'
+                    gap: '1rem', 
+                    justifyContent: 'center',
+                    paddingTop: '2rem',
+                    borderTop: '1px solid #f0f0f0',
+                    marginTop: '1.5rem'
                   }}>
                     <button
                       type="button"
                       onClick={resetForm}
                       style={{
-                        padding: '1rem 2rem',
-                        background: '#ffffff',
-                        color: '#000000',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
+                        padding: '1rem 2.5rem',
+                        background: '#f8f9fa',
+                        color: '#374151',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '10px',
+                        fontSize: '1rem',
                         fontWeight: '600',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        minWidth: '120px'
+                        minWidth: '140px',
+                        fontFamily: 'inherit',
+                        outline: 'none'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f5f5f5';
-                        e.currentTarget.style.borderColor = '#d1d5db';
+                        e.currentTarget.style.backgroundColor = '#e5e7eb';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = '#ffffff';
-                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       Cancel
@@ -1223,25 +1300,31 @@ export default function ContentCalendarPage() {
                     <button
                       type="submit"
                       style={{
-                        padding: '1rem 2rem',
+                        padding: '1rem 2.5rem',
                         background: '#000000',
                         color: '#ffffff',
-                        border: '2px solid #000000',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
+                        border: '1px solid #000000',
+                        borderRadius: '10px',
+                        fontSize: '1rem',
                         fontWeight: '600',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        minWidth: '120px'
+                        minWidth: '140px',
+                        fontFamily: 'inherit',
+                        outline: 'none'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#1f1f1f';
+                        e.currentTarget.style.backgroundColor = '#1f2937';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.25)';
                       }}
                       onMouseOut={(e) => {
                         e.currentTarget.style.backgroundColor = '#000000';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
-                      {editingItem ? 'Update' : 'Create'}
+                      {editingItem ? 'Update Content' : 'Create Content'}
                     </button>
                   </div>
                 </form>
