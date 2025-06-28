@@ -18,6 +18,7 @@ interface ContentCalendarItem {
   graphic_deadline: string | null
   status: string
   description?: string
+  folder_id?: number | null
   assignees?: User[]
   created_by: User
   created_at: string
@@ -55,6 +56,9 @@ export default function ContentCalendarPage() {
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [folders, setFolders] = useState<any[]>([])
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
+  const [currentFolder, setCurrentFolder] = useState<any | null>(null)
+  const [folderPath, setFolderPath] = useState<any[]>([])
+  const [filteredItems, setFilteredItems] = useState<ContentCalendarItem[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [showMemberModal, setShowMemberModal] = useState(false)
   const [showFolderForm, setShowFolderForm] = useState(false)
@@ -69,7 +73,8 @@ export default function ContentCalendarPage() {
     content_deadline: '',
     graphic_deadline: '',
     status: 'planning',
-    description: ''
+    description: '',
+    folder_id: null as number | null
   })
   const [folderFormData, setFolderFormData] = useState({
     name: '',
@@ -134,12 +139,70 @@ export default function ContentCalendarPage() {
       const { data: foldersData } = await supabaseDb.getContentCalendarFolders()
 
       setContentItems(itemsData || [])
-      setMembers(membersData || [])
+      
+      // Transform members data to ensure user object exists
+      const transformedMembers = (membersData || []).map(member => ({
+        ...member,
+        user: member.auth_user || member.user || {
+          id: member.user_id,
+          name: 'Unknown User',
+          email: '',
+          role: 'member'
+        }
+      }))
+      setMembers(transformedMembers)
       setAllUsers(usersData || [])
       setFolders(foldersData || [])
+      
+      // Filter items based on current folder
+      filterItemsByFolder(itemsData || [], selectedFolder)
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load content calendar data')
+    }
+  }
+
+  const filterItemsByFolder = (items: ContentCalendarItem[], folderId: number | null) => {
+    if (folderId === null) {
+      setFilteredItems(items)
+    } else {
+      const filtered = items.filter(item => item.folder_id === folderId)
+      setFilteredItems(filtered)
+    }
+  }
+
+  const enterFolder = (folder: any) => {
+    setCurrentFolder(folder)
+    setSelectedFolder(folder.id)
+    setFolderPath([...folderPath, folder])
+    filterItemsByFolder(contentItems, folder.id)
+  }
+
+  const goToFolder = (folder: any | null) => {
+    if (folder === null) {
+      // Go to root
+      setCurrentFolder(null)
+      setSelectedFolder(null)
+      setFolderPath([])
+      filterItemsByFolder(contentItems, null)
+    } else {
+      // Go to specific folder in path
+      const folderIndex = folderPath.findIndex(f => f.id === folder.id)
+      const newPath = folderPath.slice(0, folderIndex + 1)
+      setCurrentFolder(folder)
+      setSelectedFolder(folder.id)
+      setFolderPath(newPath)
+      filterItemsByFolder(contentItems, folder.id)
+    }
+  }
+
+  const getCurrentFolderContents = () => {
+    if (currentFolder === null) {
+      // Show root level folders
+      return folders.filter(folder => !folder.parent_folder_id)
+    } else {
+      // Show subfolders of current folder
+      return folders.filter(folder => folder.parent_folder_id === currentFolder.id)
     }
   }
 
@@ -161,6 +224,11 @@ export default function ContentCalendarPage() {
       setIsLoading(false)
     }
   }, [hasAccess, user?.id])
+
+  useEffect(() => {
+    // Update filtered items when content items change
+    filterItemsByFolder(contentItems, selectedFolder)
+  }, [contentItems, selectedFolder])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -253,7 +321,8 @@ export default function ContentCalendarPage() {
       content_deadline: '',
       graphic_deadline: '',
       status: 'planning',
-      description: ''
+      description: '',
+      folder_id: currentFolder?.id || null
     })
     setEditingItem(null)
     setShowAddForm(false)
@@ -270,7 +339,8 @@ export default function ContentCalendarPage() {
       content_deadline: item.content_deadline || '',
       graphic_deadline: item.graphic_deadline || '',
       status: item.status,
-      description: item.description || ''
+      description: item.description || '',
+      folder_id: item.folder_id || null
     })
     setEditingItem(item)
     setShowAddForm(true)
@@ -448,7 +518,13 @@ export default function ContentCalendarPage() {
               )}
               
               <button
-                onClick={() => setShowAddForm(true)}
+                onClick={() => {
+                  setFormData({
+                    ...formData,
+                    folder_id: currentFolder?.id || null
+                  })
+                  setShowAddForm(true)
+                }}
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#000000',
@@ -483,7 +559,7 @@ export default function ContentCalendarPage() {
             </div>
           )}
 
-          {/* Folder Navigation */}
+          {/* Hierarchical Folder Navigation */}
           <div style={{
             background: '#ffffff',
             border: '2px solid #e5e7eb',
@@ -491,73 +567,150 @@ export default function ContentCalendarPage() {
             padding: '1.5rem',
             marginBottom: '2rem'
           }}>
-            <h3 style={{ 
-              fontSize: '1.1rem', 
-              fontWeight: '600', 
+            {/* Breadcrumb Navigation */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
               marginBottom: '1rem',
-              color: '#000000'
+              fontSize: '0.9rem',
+              color: '#666666'
             }}>
-              Folders {folders.length > 0 && `(${folders.length})`}
-            </h3>
-            
-            {folders.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '2rem',
-                color: '#666666',
-                border: '1px dashed #e5e7eb',
-                borderRadius: '6px'
-              }}>
-                <FolderIcon style={{ width: '24px', height: '24px', margin: '0 auto 1rem' }} />
-                <p style={{ margin: '0 0 1rem 0' }}>No folders created yet</p>
-                <p style={{ margin: '0', fontSize: '0.9rem' }}>
-                  Create folders to organize your content by month, campaign, or category
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                <button
-                  onClick={() => setSelectedFolder(null)}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    background: selectedFolder === null ? '#000000' : '#ffffff',
-                    color: selectedFolder === null ? '#ffffff' : '#000000',
-                    border: '2px solid #000000',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <FolderIcon style={{ width: '16px', height: '16px' }} />
-                  All Content
-                </button>
-                
-                {folders.map(folder => (
+              <button
+                onClick={() => goToFolder(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: currentFolder === null ? '#000000' : '#666666',
+                  fontWeight: currentFolder === null ? '600' : '400',
+                  textDecoration: currentFolder === null ? 'none' : 'underline',
+                  cursor: 'pointer',
+                  padding: '0'
+                }}
+              >
+                Content Calendar
+              </button>
+              
+              {folderPath.map((folder, index) => (
+                <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>/</span>
                   <button
-                    key={folder.id}
-                    onClick={() => setSelectedFolder(folder.id)}
+                    onClick={() => goToFolder(folder)}
                     style={{
-                      padding: '0.75rem 1rem',
-                      background: selectedFolder === folder.id ? '#000000' : '#ffffff',
-                      color: selectedFolder === folder.id ? '#ffffff' : '#000000',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem',
-                      fontWeight: '600',
+                      background: 'transparent',
+                      border: 'none',
+                      color: index === folderPath.length - 1 ? '#000000' : '#666666',
+                      fontWeight: index === folderPath.length - 1 ? '600' : '400',
+                      textDecoration: index === folderPath.length - 1 ? 'none' : 'underline',
                       cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
+                      padding: '0'
                     }}
                   >
-                    <FolderIcon style={{ width: '16px', height: '16px' }} />
                     {folder.name}
                   </button>
-                ))}
+                </span>
+              ))}
+            </div>
+
+            {/* Current Folder Contents */}
+            <div style={{ marginBottom: '1rem' }}>
+              <h3 style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: '600', 
+                marginBottom: '1rem',
+                color: '#000000'
+              }}>
+                {currentFolder ? `${currentFolder.name}` : 'All Folders'} 
+                {currentFolder === null && folders.length > 0 && ` (${folders.length} total)`}
+              </h3>
+              
+              {getCurrentFolderContents().length === 0 && folders.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '2rem',
+                  color: '#666666',
+                  border: '1px dashed #e5e7eb',
+                  borderRadius: '6px'
+                }}>
+                  <FolderIcon style={{ width: '24px', height: '24px', margin: '0 auto 1rem' }} />
+                  <p style={{ margin: '0 0 1rem 0' }}>No folders created yet</p>
+                  <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                    Create folders to organize your content by month, campaign, or category
+                  </p>
+                </div>
+              ) : (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                  gap: '1rem' 
+                }}>
+                  {getCurrentFolderContents().map(folder => (
+                    <div
+                      key={folder.id}
+                      onClick={() => enterFolder(folder)}
+                      style={{
+                        padding: '1rem',
+                        background: '#f9f9f9',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        transition: 'all 0.2s ease',
+                        ':hover': { borderColor: '#000000' }
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#000000'
+                        e.currentTarget.style.background = '#f0f0f0'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e7eb'
+                        e.currentTarget.style.background = '#f9f9f9'
+                      }}
+                    >
+                      <FolderIcon style={{ width: '20px', height: '20px', color: '#666666' }} />
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#000000' }}>
+                          {folder.name}
+                        </div>
+                        {folder.description && (
+                          <div style={{ fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
+                            {folder.description}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Content Items in Current Folder */}
+            {currentFolder && (
+              <div style={{
+                padding: '1rem',
+                background: '#f9f9f9',
+                border: '1px solid #e5e7eb',
+                borderRadius: '6px'
+              }}>
+                <h4 style={{ 
+                  fontSize: '1rem', 
+                  fontWeight: '600', 
+                  marginBottom: '0.5rem',
+                  color: '#000000'
+                }}>
+                  Content Items ({filteredItems.length})
+                </h4>
+                {filteredItems.length === 0 ? (
+                  <p style={{ margin: '0', color: '#666666', fontSize: '0.9rem' }}>
+                    No content items in this folder. Click "Add Content" to create one.
+                  </p>
+                ) : (
+                  <p style={{ margin: '0', color: '#666666', fontSize: '0.9rem' }}>
+                    {filteredItems.length} content item{filteredItems.length !== 1 ? 's' : ''} in this folder
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -591,17 +744,20 @@ export default function ContentCalendarPage() {
               <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
             </div>
 
-            {contentItems.length === 0 ? (
+            {(currentFolder ? filteredItems : contentItems).length === 0 ? (
               <div style={{ 
                 padding: '3rem', 
                 textAlign: 'center', 
                 color: '#666666',
                 fontSize: '1.1rem'
               }}>
-                No content items found. Click "Add Content" to get started.
+                {currentFolder 
+                  ? `No content items in ${currentFolder.name}. Click "Add Content" to create one.`
+                  : 'No content items found. Click "Add Content" to get started.'
+                }
               </div>
             ) : (
-              contentItems.map((item) => (
+              (currentFolder ? filteredItems : contentItems).map((item) => (
                 <div key={item.id} style={{
                   display: 'grid',
                   gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
@@ -845,23 +1001,45 @@ export default function ContentCalendarPage() {
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {STATUSES.map(status => (
-                        <option key={status} value={status}>{getStatusLabel(status)}</option>
-                      ))}
-                    </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Status</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        {STATUSES.map(status => (
+                          <option key={status} value={status}>{getStatusLabel(status)}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Folder</label>
+                      <select
+                        value={formData.folder_id || ''}
+                        onChange={(e) => setFormData({ ...formData, folder_id: e.target.value ? parseInt(e.target.value) : null })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        <option value="">No folder</option>
+                        {folders.map(folder => (
+                          <option key={folder.id} value={folder.id}>{folder.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>
