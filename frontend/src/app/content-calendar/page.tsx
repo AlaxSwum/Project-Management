@@ -141,7 +141,7 @@ export default function ContentCalendarPage() {
       setContentItems(itemsData || [])
       
       // Transform members data to ensure user object exists
-      const transformedMembers = (membersData || []).map(member => ({
+      const transformedMembers = (membersData || []).map((member: any) => ({
         ...member,
         user: member.auth_user || member.user || {
           id: member.user_id,
