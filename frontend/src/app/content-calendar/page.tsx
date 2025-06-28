@@ -152,7 +152,12 @@ export default function ContentCalendarPage() {
       }))
       setMembers(transformedMembers)
       setAllUsers(usersData || [])
-      setFolders(foldersData || [])
+      
+      // Remove duplicates from folders (in case of database issues)
+      const uniqueFolders = (foldersData || []).filter((folder, index, self) => 
+        index === self.findIndex(f => f.name === folder.name && f.folder_type === folder.folder_type)
+      )
+      setFolders(uniqueFolders)
       
       // Filter items based on current folder
       filterItemsByFolder(itemsData || [], selectedFolder)
@@ -540,7 +545,7 @@ export default function ContentCalendarPage() {
                 }}
               >
                 <PlusIcon style={{ width: '16px', height: '16px' }} />
-                Add Content
+                {currentFolder ? `Add to ${currentFolder.name}` : 'Add Content'}
               </button>
             </div>
           </div>
@@ -685,151 +690,147 @@ export default function ContentCalendarPage() {
               )}
             </div>
 
-            {/* Content Items in Current Folder */}
-            {currentFolder && (
-              <div style={{
-                padding: '1rem',
-                background: '#f9f9f9',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px'
-              }}>
-                <h4 style={{ 
-                  fontSize: '1rem', 
-                  fontWeight: '600', 
-                  marginBottom: '0.5rem',
-                  color: '#000000'
-                }}>
-                  Content Items ({filteredItems.length})
-                </h4>
-                {filteredItems.length === 0 ? (
-                  <p style={{ margin: '0', color: '#666666', fontSize: '0.9rem' }}>
-                    No content items in this folder. Click "Add Content" to create one.
-                  </p>
-                ) : (
-                  <p style={{ margin: '0', color: '#666666', fontSize: '0.9rem' }}>
-                    {filteredItems.length} content item{filteredItems.length !== 1 ? 's' : ''} in this folder
-                  </p>
-                )}
-              </div>
-            )}
+
           </div>
 
-          {/* Content Table */}
-          <div style={{
-            background: '#ffffff',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
-            overflow: 'hidden'
-          }}>
+                    {/* Content Table - Only show when inside a folder */}
+          {currentFolder && (
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
-              gap: '0',
-              background: '#f9f9f9',
-              borderBottom: '2px solid #e5e7eb',
-              fontWeight: '700',
-              fontSize: '0.85rem',
-              color: '#000000'
+              background: '#ffffff',
+              border: '2px solid #e5e7eb',
+              borderRadius: '8px',
+              overflow: 'hidden'
             }}>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DATE</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TYPE</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CATEGORY</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TITLE</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>ASSIGNED</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CONTENT DUE</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>GRAPHIC DUE</div>
-              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STATUS</div>
-              <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
-            </div>
-
-            {(currentFolder ? filteredItems : contentItems).length === 0 ? (
-              <div style={{ 
-                padding: '3rem', 
-                textAlign: 'center', 
-                color: '#666666',
-                fontSize: '1.1rem'
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
+                gap: '0',
+                background: '#f9f9f9',
+                borderBottom: '2px solid #e5e7eb',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                color: '#000000'
               }}>
-                {currentFolder 
-                  ? `No content items in ${currentFolder.name}. Click "Add Content" to create one.`
-                  : 'No content items found. Click "Add Content" to get started.'
-                }
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DATE</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TYPE</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CATEGORY</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TITLE</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>ASSIGNED</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CONTENT DUE</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>GRAPHIC DUE</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STATUS</div>
+                <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
               </div>
-            ) : (
-              (currentFolder ? filteredItems : contentItems).map((item) => (
-                <div key={item.id} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
-                  gap: '0',
-                  borderBottom: '1px solid #e5e7eb',
-                  fontSize: '0.8rem'
+
+              {filteredItems.length === 0 ? (
+                <div style={{ 
+                  padding: '3rem', 
+                  textAlign: 'center', 
+                  color: '#666666',
+                  fontSize: '1.1rem'
                 }}>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {formatDate(item.date)}
-                  </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.content_type}
-                  </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.category}
-                  </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.social_media}
-                  </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.content_title}
-                  </div>
-                                     <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                     {item.assigned_to && item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
-                   </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.content_deadline ? formatDate(item.content_deadline) : '-'}
-                  </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    {item.graphic_deadline ? formatDate(item.graphic_deadline) : '-'}
-                  </div>
-                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: '#f9f9f9',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600'
-                    }}>
-                      {getStatusLabel(item.status)}
-                    </span>
-                  </div>
-                  <div style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => startEdit(item)}
-                      style={{
-                        padding: '0.25rem',
-                        background: 'transparent',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <PencilIcon style={{ width: '14px', height: '14px' }} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      style={{
-                        padding: '0.25rem',
-                        background: 'transparent',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <TrashIcon style={{ width: '14px', height: '14px' }} />
-                    </button>
-                  </div>
+                  No content items in {currentFolder.name}. Click "Add Content" to create one.
                 </div>
-              ))
-            )}
-          </div>
+              ) : (
+                filteredItems.map((item) => (
+                  <div key={item.id} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
+                    gap: '0',
+                    borderBottom: '1px solid #e5e7eb',
+                    fontSize: '0.8rem'
+                  }}>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {formatDate(item.date)}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.content_type}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.category}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.social_media}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.content_title}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                       {item.assigned_to && item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
+                     </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.content_deadline ? formatDate(item.content_deadline) : '-'}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.graphic_deadline ? formatDate(item.graphic_deadline) : '-'}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        background: '#f9f9f9',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}>
+                        {getStatusLabel(item.status)}
+                      </span>
+                    </div>
+                    <div style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => startEdit(item)}
+                        style={{
+                          padding: '0.25rem',
+                          background: 'transparent',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <PencilIcon style={{ width: '14px', height: '14px' }} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        style={{
+                          padding: '0.25rem',
+                          background: 'transparent',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <TrashIcon style={{ width: '14px', height: '14px' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Root view message - only show folders, no content table */}
+          {!currentFolder && (
+            <div style={{
+              background: '#f9f9f9',
+              border: '2px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '3rem',
+              textAlign: 'center',
+              color: '#666666'
+            }}>
+              <FolderIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#999999' }} />
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0 0 1rem 0', color: '#000000' }}>
+                Choose a Folder to View Content
+              </h3>
+              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0' }}>
+                Click on a folder above to see its content items and manage your social media content.
+              </p>
+              <p style={{ fontSize: '0.9rem', margin: '0' }}>
+                Create new folders to organize content by month, campaign, or category.
+              </p>
+            </div>
+          )}
 
           {/* Add/Edit Form Modal */}
           {showAddForm && (
