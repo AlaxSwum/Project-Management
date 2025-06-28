@@ -875,255 +875,347 @@ export default function ContentCalendarPage() {
                 </h2>
 
                 <form onSubmit={handleSubmit}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Date</label>
-                      <input
-                        type="date"
-                        value={formData.date}
-                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Content Type</label>
-                      <select
-                        value={formData.content_type}
-                        onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <option value="">Select type</option>
-                        {CONTENT_TYPES.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Category</label>
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <option value="">Select category</option>
-                        {CATEGORIES.map(category => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Social Media Platform</label>
-                      <select
-                        value={formData.social_media}
-                        onChange={(e) => setFormData({ ...formData, social_media: e.target.value })}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <option value="">Select platform</option>
-                        {SOCIAL_MEDIA.map(platform => (
-                          <option key={platform} value={platform}>{platform}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Content Title</label>
-                    <input
-                      type="text"
-                      value={formData.content_title}
-                      onChange={(e) => setFormData({ ...formData, content_title: e.target.value })}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Content Deadline</label>
-                      <input
-                        type="date"
-                        value={formData.content_deadline}
-                        onChange={(e) => setFormData({ ...formData, content_deadline: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Graphic Deadline</label>
-                      <input
-                        type="date"
-                        value={formData.graphic_deadline}
-                        onChange={(e) => setFormData({ ...formData, graphic_deadline: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Status</label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        {STATUSES.map(status => (
-                          <option key={status} value={status}>{getStatusLabel(status)}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Folder</label>
-                      <select
-                        value={formData.folder_id || ''}
-                        onChange={(e) => setFormData({ ...formData, folder_id: e.target.value ? parseInt(e.target.value) : null })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e5e7eb',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <option value="">No folder</option>
-                        {folders.map(folder => (
-                          <option key={folder.id} value={folder.id}>{folder.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Assign To</label>
-                    <div style={{ 
-                      border: '2px solid #e5e7eb', 
-                      borderRadius: '6px', 
-                      padding: '0.75rem',
-                      maxHeight: '120px',
-                      overflow: 'auto'
+                  {/* Basic Information Section */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ 
+                      fontSize: '1.1rem', 
+                      fontWeight: '600', 
+                      marginBottom: '1.25rem', 
+                      color: '#000000',
+                      borderBottom: '1px solid #e5e7eb',
+                      paddingBottom: '0.5rem'
                     }}>
-                      {(members || []).map(member => (
-                        <label key={member.user_id} style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.5rem',
-                          marginBottom: '0.5rem',
-                          cursor: 'pointer'
-                        }}>
-                          <input
-                            type="checkbox"
-                            checked={(formData.assigned_to || []).includes(member.user_id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData({
-                                  ...formData,
-                                  assigned_to: [...(formData.assigned_to || []), member.user_id]
-                                })
-                              } else {
-                                setFormData({
-                                  ...formData,
-                                  assigned_to: (formData.assigned_to || []).filter(id => id !== member.user_id)
-                                })
-                              }
-                            }}
-                            style={{ width: '16px', height: '16px' }}
-                          />
-                          <span style={{ fontSize: '0.9rem' }}>
-                            {member.user.name} ({member.user.email})
-                          </span>
-                        </label>
-                      ))}
+                      Basic Information
+                    </h3>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Published Date</label>
+                        <input
+                          type="date"
+                          value={formData.date}
+                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                          required
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Content Type</label>
+                        <select
+                          value={formData.content_type}
+                          onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
+                          required
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          <option value="">Select type</option>
+                          {CONTENT_TYPES.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Category</label>
+                        <select
+                          value={formData.category}
+                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                          required
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          <option value="">Select category</option>
+                          {CATEGORIES.map(category => (
+                            <option key={category} value={category}>{category}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Social Media Platform</label>
+                        <select
+                          value={formData.social_media}
+                          onChange={(e) => setFormData({ ...formData, social_media: e.target.value })}
+                          required
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          <option value="">Select platform</option>
+                          {SOCIAL_MEDIA.map(platform => (
+                            <option key={platform} value={platform}>{platform}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Content Title</label>
+                      <input
+                        type="text"
+                        value={formData.content_title}
+                        onChange={(e) => setFormData({ ...formData, content_title: e.target.value })}
+                        required
+                        placeholder="Enter the content title..."
+                        style={{
+                          width: '100%',
+                          padding: '0.9rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '0.95rem',
+                          backgroundColor: '#fafafa'
+                        }}
+                      />
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Description</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        resize: 'vertical'
-                      }}
-                    />
+                  {/* Deadlines Section */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ 
+                      fontSize: '1.1rem', 
+                      fontWeight: '600', 
+                      marginBottom: '1.25rem', 
+                      color: '#000000',
+                      borderBottom: '1px solid #e5e7eb',
+                      paddingBottom: '0.5rem'
+                    }}>
+                      Deadlines
+                    </h3>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Content Deadline</label>
+                        <input
+                          type="date"
+                          value={formData.content_deadline}
+                          onChange={(e) => setFormData({ ...formData, content_deadline: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Graphic Deadline</label>
+                        <input
+                          type="date"
+                          value={formData.graphic_deadline}
+                          onChange={(e) => setFormData({ ...formData, graphic_deadline: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                  {/* Organization Section */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ 
+                      fontSize: '1.1rem', 
+                      fontWeight: '600', 
+                      marginBottom: '1.25rem', 
+                      color: '#000000',
+                      borderBottom: '1px solid #e5e7eb',
+                      paddingBottom: '0.5rem'
+                    }}>
+                      Organization
+                    </h3>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Status</label>
+                        <select
+                          value={formData.status}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          {STATUSES.map(status => (
+                            <option key={status} value={status}>{getStatusLabel(status)}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Folder</label>
+                        <select
+                          value={formData.folder_id || ''}
+                          onChange={(e) => setFormData({ ...formData, folder_id: e.target.value ? parseInt(e.target.value) : null })}
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          <option value="">No folder</option>
+                          {folders.map(folder => (
+                            <option key={folder.id} value={folder.id}>{folder.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Assign To</label>
+                      <div style={{ 
+                        border: '2px solid #e5e7eb', 
+                        borderRadius: '8px', 
+                        padding: '1rem',
+                        maxHeight: '140px',
+                        overflow: 'auto',
+                        backgroundColor: '#fafafa'
+                      }}>
+                        {(members || []).map(member => (
+                          <label key={member.user_id} style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.75rem',
+                            marginBottom: '0.75rem',
+                            cursor: 'pointer',
+                            padding: '0.5rem',
+                            borderRadius: '4px',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #e5e7eb'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={(formData.assigned_to || []).includes(member.user_id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData({
+                                    ...formData,
+                                    assigned_to: [...(formData.assigned_to || []), member.user_id]
+                                  })
+                                } else {
+                                  setFormData({
+                                    ...formData,
+                                    assigned_to: (formData.assigned_to || []).filter(id => id !== member.user_id)
+                                  })
+                                }
+                              }}
+                              style={{ width: '18px', height: '18px' }}
+                            />
+                            <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>
+                              {member.user.name} ({member.user.email})
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description Section */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ 
+                      fontSize: '1.1rem', 
+                      fontWeight: '600', 
+                      marginBottom: '1.25rem', 
+                      color: '#000000',
+                      borderBottom: '1px solid #e5e7eb',
+                      paddingBottom: '0.5rem'
+                    }}>
+                      Additional Details
+                    </h3>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '0.95rem' }}>Description</label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={4}
+                        placeholder="Add any additional notes or descriptions..."
+                        style={{
+                          width: '100%',
+                          padding: '1rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '0.95rem',
+                          resize: 'vertical',
+                          backgroundColor: '#fafafa',
+                          lineHeight: '1.5'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '1.5rem', 
+                    justifyContent: 'flex-end',
+                    paddingTop: '1.5rem',
+                    borderTop: '1px solid #e5e7eb',
+                    marginTop: '1rem'
+                  }}>
                     <button
                       type="button"
                       onClick={resetForm}
                       style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '1rem 2rem',
                         background: '#ffffff',
                         color: '#000000',
                         border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
+                        borderRadius: '8px',
+                        fontSize: '0.95rem',
                         fontWeight: '600',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        minWidth: '120px'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f5f5f5';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                        e.currentTarget.style.borderColor = '#e5e7eb';
                       }}
                     >
                       Cancel
@@ -1131,14 +1223,22 @@ export default function ContentCalendarPage() {
                     <button
                       type="submit"
                       style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '1rem 2rem',
                         background: '#000000',
                         color: '#ffffff',
                         border: '2px solid #000000',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
+                        borderRadius: '8px',
+                        fontSize: '0.95rem',
                         fontWeight: '600',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        minWidth: '120px'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = '#1f1f1f';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = '#000000';
                       }}
                     >
                       {editingItem ? 'Update' : 'Create'}
