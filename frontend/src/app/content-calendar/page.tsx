@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
-import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 interface ContentCalendarItem {
   id: number
@@ -18,7 +18,6 @@ interface ContentCalendarItem {
   graphic_deadline: string | null
   status: string
   description?: string
-  folder_id?: number | null
   assignees?: User[]
   created_by: User
   created_at: string
@@ -32,21 +31,17 @@ interface User {
   role: string
 }
 
-interface ContentCalendarFolder {
+interface ContentCalendarMember {
   id: number
-  name: string
-  description?: string
-  parent_folder_id?: number
-  folder_type: string
-  color: string
-  sort_order: number
-  level: number
-  path: string
-  created_by_id: number
-  created_at: string
-  updated_at: string
-  is_active: boolean
+  user_id: number
+  role: string
+  user: User
 }
+
+const CONTENT_TYPES = ['Article', 'Video', 'Image', 'Infographic', 'Story', 'Reel', 'Post']
+const CATEGORIES = ['Marketing', 'Educational', 'Promotional', 'Entertainment', 'News', 'Tutorial']
+const SOCIAL_MEDIA = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn', 'TikTok', 'YouTube', 'Pinterest']
+const STATUSES = ['planning', 'in_progress', 'review', 'completed']
 
 export default function ContentCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -56,9 +51,23 @@ export default function ContentCalendarPage() {
   const [userRole, setUserRole] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [contentItems, setContentItems] = useState<ContentCalendarItem[]>([])
-  const [folders, setFolders] = useState<ContentCalendarFolder[]>([])
-  const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set())
+  const [members, setMembers] = useState<ContentCalendarMember[]>([])
+  const [allUsers, setAllUsers] = useState<User[]>([])
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [showMemberModal, setShowMemberModal] = useState(false)
+  const [editingItem, setEditingItem] = useState<ContentCalendarItem | null>(null)
+  const [formData, setFormData] = useState({
+    date: '',
+    content_type: '',
+    category: '',
+    social_media: '',
+    content_title: '',
+    assigned_to: [] as number[],
+    content_deadline: '',
+    graphic_deadline: '',
+    status: 'planning',
+    description: ''
+  })
 
   const checkAccess = async () => {
     if (!user?.id) return
@@ -66,9 +75,9 @@ export default function ContentCalendarPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
-      // Check if user is a project member for content calendar access
+      // Check if user is a content calendar member
       const { data: memberData, error: memberError } = await supabase
-        .from('project_members')
+        .from('content_calendar_members')
         .select('id, role')
         .eq('user_id', user.id)
         .single()
@@ -77,6 +86,7 @@ export default function ContentCalendarPage() {
         setHasAccess(true)
         setUserRole(memberData.role)
       } else {
+        // Check if user is admin/HR
         const { data: userData, error: userError } = await supabase
           .from('auth_user')
           .select('id, name, email, role, is_superuser, is_staff')
@@ -110,15 +120,12 @@ export default function ContentCalendarPage() {
       const { supabaseDb } = await import('@/lib/supabase')
       
       const { data: itemsData } = await supabaseDb.getContentCalendarItems()
-      const { data: foldersData } = await supabaseDb.getContentCalendarFolders()
+      const { data: membersData } = await supabaseDb.getContentCalendarMembers()
+      const { data: usersData } = await supabaseDb.getUsers()
 
       setContentItems(itemsData || [])
-      setFolders(foldersData || [])
-      
-      const yearFolders = (foldersData || [])
-        .filter((folder: ContentCalendarFolder) => folder.folder_type === 'year')
-        .map((folder: ContentCalendarFolder) => folder.id)
-      setExpandedFolders(new Set(yearFolders))
+      setMembers(membersData || [])
+      setAllUsers(usersData || [])
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load content calendar data')
@@ -142,20 +149,111 @@ export default function ContentCalendarPage() {
     } else if (!authLoading) {
       setIsLoading(false)
     }
-  }, [hasAccess, user?.id, selectedFolder])
+  }, [hasAccess, user?.id])
 
-  const toggleFolderExpansion = (folderId: number) => {
-    const newExpanded = new Set(expandedFolders)
-    if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId)
-    } else {
-      newExpanded.add(folderId)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      
+      if (editingItem) {
+        await supabaseDb.updateContentCalendarItem(editingItem.id, formData)
+      } else {
+        await supabaseDb.createContentCalendarItem(formData)
+      }
+      
+      await fetchData()
+      resetForm()
+    } catch (err) {
+      console.error('Error saving item:', err)
+      setError('Failed to save content item')
     }
-    setExpandedFolders(newExpanded)
   }
 
-  const selectFolder = (folderId: number | null) => {
-    setSelectedFolder(folderId)
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this content item?')) return
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.deleteContentCalendarItem(id)
+      await fetchData()
+    } catch (err) {
+      console.error('Error deleting item:', err)
+      setError('Failed to delete content item')
+    }
+  }
+
+  const handleAddMember = async (userId: number) => {
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.addContentCalendarMember(userId, 'member')
+      await fetchData()
+    } catch (err) {
+      console.error('Error adding member:', err)
+      setError('Failed to add member')
+    }
+  }
+
+  const handleRemoveMember = async (userId: number) => {
+    if (!confirm('Are you sure you want to remove this member?')) return
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.removeContentCalendarMember(userId)
+      await fetchData()
+    } catch (err) {
+      console.error('Error removing member:', err)
+      setError('Failed to remove member')
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      date: '',
+      content_type: '',
+      category: '',
+      social_media: '',
+      content_title: '',
+      assigned_to: [],
+      content_deadline: '',
+      graphic_deadline: '',
+      status: 'planning',
+      description: ''
+    })
+    setEditingItem(null)
+    setShowAddForm(false)
+  }
+
+  const startEdit = (item: ContentCalendarItem) => {
+    setFormData({
+      date: item.date,
+      content_type: item.content_type,
+      category: item.category,
+      social_media: item.social_media,
+      content_title: item.content_title,
+      assigned_to: item.assigned_to,
+      content_deadline: item.content_deadline || '',
+      graphic_deadline: item.graphic_deadline || '',
+      status: item.status,
+      description: item.description || ''
+    })
+    setEditingItem(item)
+    setShowAddForm(true)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'planning': return 'Planning'
+      case 'in_progress': return 'In Progress'
+      case 'review': return 'Review'
+      case 'completed': return 'Completed'
+      default: return status
+    }
   }
 
   if (authLoading || isLoading) {
@@ -236,43 +334,13 @@ export default function ContentCalendarPage() {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
-          
-          /* Ensure content doesn't get covered by sidebar */
-          .content-calendar-main {
-            margin-left: 256px !important;
-            transition: margin-left 0.3s ease;
-            min-height: 100vh;
-            background: #ffffff;
-          }
-          
-          /* Ultra-prominent folder navigation styles */
-          .ultra-folder-nav {
-            background: linear-gradient(135deg, #000000 0%, #333333 100%) !important;
-            border: 4px solid #000000 !important;
-            border-radius: 16px !important;
-            padding: 2rem !important;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4) !important;
-            position: relative !important;
-            width: 500px !important;
-            min-height: 600px !important;
-          }
-          
-          .folder-corner-accent {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 60px;
-            height: 60px;
-            background: #fbbf24;
-            clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
-          }
         `
       }} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         
-        <div className="content-calendar-main" style={{ 
+        <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#ffffff', 
@@ -285,373 +353,620 @@ export default function ContentCalendarPage() {
             justifyContent: 'space-between', 
             alignItems: 'center', 
             marginBottom: '2rem',
-            borderBottom: '3px solid #000000',
+            borderBottom: '2px solid #e5e7eb',
             paddingBottom: '1rem'
           }}>
             <div>
               <h1 style={{ 
-                fontSize: '2.5rem', 
-                fontWeight: '900', 
+                fontSize: '2rem', 
+                fontWeight: 'bold', 
                 margin: '0', 
-                color: '#000000',
-                textTransform: 'uppercase'
+                color: '#000000'
               }}>
-                📅 Content Calendar
+                Content Calendar
               </h1>
               <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
                 Manage your social media content planning and scheduling
               </p>
             </div>
             
-            <button
-              style={{
-                padding: '1rem 2rem',
-                background: '#000000',
-                color: '#ffffff',
-                border: '3px solid #000000',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: '800',
-                cursor: 'pointer',
-                textTransform: 'uppercase'
-              }}
-            >
-              ✨ ADD CONTENT
-            </button>
-          </div>
-
-          {/* Debug Info */}
-          <div style={{
-            background: '#f0f0f0',
-            border: '2px solid #000000',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            fontSize: '0.8rem',
-            fontFamily: 'monospace'
-          }}>
-            🔍 DEBUG: Folders={folders.length} | Items={contentItems.length} | Selected={selectedFolder} | User={user?.email}
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => setShowMemberModal(true)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#ffffff',
+                    color: '#000000',
+                    border: '2px solid #000000',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <UserGroupIcon style={{ width: '16px', height: '16px' }} />
+                  Manage Members
+                </button>
+              )}
+              
+              <button
+                onClick={() => setShowAddForm(true)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#000000',
+                  color: '#ffffff',
+                  border: '2px solid #000000',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                Add Content
+              </button>
+            </div>
           </div>
 
           {error && (
             <div style={{ 
-              background: '#fef2f2', 
-              border: '3px solid #dc2626', 
-              borderRadius: '12px', 
-              padding: '1.5rem', 
+              background: '#f9f9f9', 
+              border: '2px solid #000000', 
+              borderRadius: '6px', 
+              padding: '1rem', 
               marginBottom: '2rem',
-              color: '#dc2626',
-              fontWeight: '700',
-              fontSize: '1.1rem'
+              color: '#000000',
+              fontWeight: '600'
             }}>
-              ⚠️ {error}
+              {error}
             </div>
           )}
 
-          {/* MAIN LAYOUT: Ultra-Prominent Folder Navigation + Content */}
+          {/* Content Table */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '500px 1fr',
-            gap: '3rem',
-            marginBottom: '2rem'
+            background: '#ffffff',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            overflow: 'hidden'
           }}>
-            
-            {/* ULTRA-PROMINENT FOLDER NAVIGATION */}
-            <div className="ultra-folder-nav">
-              <div className="folder-corner-accent" />
-              
-              {/* DRAMATIC HEADER */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '2rem',
-                position: 'relative',
-                zIndex: 1
-              }}>
-                <span style={{ fontSize: '3rem' }}>📁</span>
-                <h2 style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: '900', 
-                  margin: '0', 
-                  color: '#ffffff',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.15em',
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                }}>
-                  FOLDER SYSTEM
-                </h2>
-              </div>
-              
-              {/* STATUS BOX */}
-              <div style={{
-                background: folders.length > 0 ? 'linear-gradient(45deg, #10b981, #059669)' : 'linear-gradient(45deg, #f59e0b, #d97706)',
-                border: '4px solid #ffffff',
-                borderRadius: '16px',
-                padding: '2rem',
-                marginBottom: '2rem',
-                textAlign: 'center',
-                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)'
-              }}>
-                <div style={{ 
-                  color: '#ffffff', 
-                  fontWeight: '900', 
-                  fontSize: '1.5rem',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-                }}>
-                  {folders.length > 0 ? '🎉 FOLDERS ACTIVE!' : '⚠️ SETUP REQUIRED'}
-                </div>
-                <div style={{ 
-                  color: '#ffffff', 
-                  fontSize: '1rem', 
-                  marginTop: '1rem', 
-                  fontWeight: '700'
-                }}>
-                  📊 Found: {folders.length} folders | Root: {folders.filter(f => !f.parent_folder_id).length}
-                </div>
-                {folders.length === 0 && (
-                  <div style={{
-                    background: '#ffffff',
-                    color: '#000000',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    marginTop: '1.5rem',
-                    fontSize: '0.9rem',
-                    fontWeight: '800',
-                    border: '2px solid #000000'
-                  }}>
-                    🔧 RUN SQL SETUP SCRIPT
-                    <br />
-                    Create 2025 → month structure
-                  </div>
-                )}
-              </div>
-              
-              {/* ALL FILES BUTTON */}
-              <div
-                onClick={() => selectFolder(null)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1.5rem',
-                  cursor: 'pointer',
-                  borderRadius: '16px',
-                  border: '4px solid #ffffff',
-                  background: selectedFolder === null ? 'linear-gradient(45deg, #ffffff, #f3f4f6)' : 'rgba(255,255,255,0.1)',
-                  color: selectedFolder === null ? '#000000' : '#ffffff',
-                  fontWeight: '900',
-                  marginBottom: '2rem',
-                  fontSize: '1.2rem',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.3s ease',
-                  boxShadow: selectedFolder === null ? '0 6px 12px rgba(0,0,0,0.2)' : 'none'
-                }}
-              >
-                <FolderIcon style={{ width: '32px', height: '32px' }} />
-                <span>📄 ALL FILES</span>
-              </div>
-              
-              {/* FOLDER TREE */}
-              <div style={{ 
-                background: '#ffffff', 
-                borderRadius: '16px', 
-                padding: '2rem',
-                border: '3px solid #000000',
-                boxShadow: '0 6px 12px rgba(0,0,0,0.2)'
-              }}>
-                {folders.length === 0 ? (
-                  <div style={{
-                    background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-                    border: '3px solid #ffffff',
-                    borderRadius: '16px',
-                    padding: '3rem',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ color: '#ffffff', fontSize: '2rem', marginBottom: '1rem' }}>
-                      🚫 NO STRUCTURE
-                    </div>
-                    <div style={{ color: '#ffffff', fontSize: '1rem', lineHeight: '1.8' }}>
-                      Expected after SQL setup:
-                      <br />
-                      📂 2025 → 📅 January, February, March...
-                    </div>
-                  </div>
-                ) : (
-                  folders
-                    .filter(folder => folder.parent_folder_id === null)
-                    .sort((a, b) => a.sort_order - b.sort_order)
-                    .map(folder => (
-                      <div key={folder.id} style={{ marginBottom: '1.5rem' }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem',
-                          padding: '1.5rem',
-                          cursor: 'pointer',
-                          borderRadius: '12px',
-                          background: selectedFolder === folder.id ? '#000000' : '#f3f4f6',
-                          color: selectedFolder === folder.id ? '#ffffff' : '#000000',
-                          fontWeight: '800',
-                          border: '3px solid #000000',
-                          fontSize: '1.1rem'
-                        }}>
-                          <button
-                            onClick={() => toggleFolderExpansion(folder.id)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: 'inherit',
-                              padding: '0'
-                            }}
-                          >
-                            {expandedFolders.has(folder.id) ? (
-                              <ChevronDownIcon style={{ width: '24px', height: '24px' }} />
-                            ) : (
-                              <ChevronRightIcon style={{ width: '24px', height: '24px' }} />
-                            )}
-                          </button>
-                          
-                          <FolderIcon style={{ width: '32px', height: '32px' }} />
-                          
-                          <span
-                            onClick={() => selectFolder(folder.id)}
-                            style={{ fontSize: '1.2rem', flex: 1 }}
-                          >
-                            📅 {folder.name}
-                          </span>
-                        </div>
-                        
-                        {expandedFolders.has(folder.id) && (
-                          <div style={{ marginLeft: '3rem', marginTop: '1rem' }}>
-                            {folders
-                              .filter(child => child.parent_folder_id === folder.id)
-                              .sort((a, b) => a.sort_order - b.sort_order)
-                              .map(child => (
-                                <div
-                                  key={child.id}
-                                  onClick={() => selectFolder(child.id)}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                    padding: '1rem 1.5rem',
-                                    cursor: 'pointer',
-                                    borderRadius: '8px',
-                                    background: selectedFolder === child.id ? '#000000' : 'transparent',
-                                    color: selectedFolder === child.id ? '#ffffff' : '#555555',
-                                    fontSize: '1rem',
-                                    marginBottom: '0.5rem',
-                                    border: selectedFolder === child.id ? '2px solid #000000' : '2px solid #e5e7eb',
-                                    fontWeight: selectedFolder === child.id ? '800' : '600'
-                                  }}
-                                >
-                                  <CalendarIcon style={{ width: '24px', height: '24px' }} />
-                                  <span>📅 {child.name}</span>
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                )}
-              </div>
-            </div>
-            
-            {/* CONTENT AREA */}
-            <div style={{ 
-              background: '#f9fafb', 
-              border: '3px solid #000000', 
-              borderRadius: '16px', 
-              padding: '2rem',
-              minHeight: '600px'
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
+              gap: '0',
+              background: '#f9f9f9',
+              borderBottom: '2px solid #e5e7eb',
+              fontWeight: '700',
+              fontSize: '0.85rem',
+              color: '#000000'
             }}>
-              <h3 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: '800', 
-                margin: '0 0 1.5rem 0', 
-                color: '#000000',
-                textTransform: 'uppercase'
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DATE</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TYPE</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CATEGORY</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TITLE</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>ASSIGNED</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CONTENT DUE</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>GRAPHIC DUE</div>
+              <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STATUS</div>
+              <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
+            </div>
+
+            {contentItems.length === 0 ? (
+              <div style={{ 
+                padding: '3rem', 
+                textAlign: 'center', 
+                color: '#666666',
+                fontSize: '1.1rem'
               }}>
-                📝 Content Items ({contentItems.length})
-              </h3>
-              
-              {selectedFolder && (
-                <div style={{ 
-                  background: '#000000',
-                  color: '#ffffff',
-                  border: '3px solid #000000',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  marginBottom: '2rem',
-                  fontSize: '1.1rem',
-                  fontWeight: '800'
+                No content items found. Click "Add Content" to get started.
+              </div>
+            ) : (
+              contentItems.map((item) => (
+                <div key={item.id} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
+                  gap: '0',
+                  borderBottom: '1px solid #e5e7eb',
+                  fontSize: '0.8rem',
+                  '&:hover': { background: '#f9f9f9' }
                 }}>
-                  <span>📁 VIEWING: </span>
-                  <span style={{ color: '#fbbf24' }}>
-                    {folders.find(f => f.id === selectedFolder)?.name || 'Unknown'}
-                  </span>
-                </div>
-              )}
-              
-              {contentItems.length === 0 ? (
-                <div style={{
-                  background: '#ffffff',
-                  border: '3px solid #cccccc',
-                  borderRadius: '16px',
-                  padding: '4rem',
-                  textAlign: 'center',
-                  color: '#666666'
-                }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>📄</div>
-                  <h4 style={{ fontSize: '1.5rem', fontWeight: '700', margin: '0 0 1rem 0' }}>
-                    No Content Found
-                  </h4>
-                  <p style={{ margin: '0', fontStyle: 'italic', fontSize: '1.1rem' }}>
-                    Create your first content item to get started.
-                  </p>
-                </div>
-              ) : (
-                <div style={{
-                  background: '#ffffff',
-                  border: '3px solid #000000',
-                  borderRadius: '16px',
-                  padding: '2rem'
-                }}>
-                  {contentItems.map((item, index) => (
-                    <div
-                      key={item.id}
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {formatDate(item.date)}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.content_type}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.category}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.social_media}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.content_title}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.content_deadline ? formatDate(item.content_deadline) : '-'}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    {item.graphic_deadline ? formatDate(item.graphic_deadline) : '-'}
+                  </div>
+                  <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <span style={{
+                      padding: '0.25rem 0.5rem',
+                      background: '#f9f9f9',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}>
+                      {getStatusLabel(item.status)}
+                    </span>
+                  </div>
+                  <div style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => startEdit(item)}
                       style={{
-                        padding: '1.5rem',
-                        borderBottom: index < contentItems.length - 1 ? '2px solid #e5e7eb' : 'none'
+                        padding: '0.25rem',
+                        background: 'transparent',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
                       }}
                     >
-                      <div style={{ 
-                        fontWeight: '800', 
-                        color: '#000000', 
-                        fontSize: '1.2rem', 
-                        marginBottom: '0.75rem'
-                      }}>
-                        📝 {item.content_title}
-                      </div>
-                      <div style={{ 
-                        color: '#666666', 
-                        fontSize: '0.9rem', 
-                        display: 'flex', 
-                        gap: '1.5rem',
-                        fontWeight: '600'
-                      }}>
-                        <span>🎯 {item.content_type}</span>
-                        <span>📱 {item.social_media}</span>
-                        <span>⚡ {item.status}</span>
-                      </div>
-                    </div>
-                  ))}
+                      <PencilIcon style={{ width: '14px', height: '14px' }} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      style={{
+                        padding: '0.25rem',
+                        background: 'transparent',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <TrashIcon style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
+              ))
+            )}
           </div>
+
+          {/* Add/Edit Form Modal */}
+          {showAddForm && (
+            <div style={{
+              position: 'fixed',
+              top: '0',
+              left: '0',
+              right: '0',
+              bottom: '0',
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: '#ffffff',
+                border: '2px solid #000000',
+                borderRadius: '8px',
+                padding: '2rem',
+                width: '90%',
+                maxWidth: '600px',
+                maxHeight: '90vh',
+                overflow: 'auto'
+              }}>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 'bold', 
+                  marginBottom: '1.5rem',
+                  color: '#000000'
+                }}>
+                  {editingItem ? 'Edit Content Item' : 'Add New Content Item'}
+                </h2>
+
+                <form onSubmit={handleSubmit}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Date</label>
+                      <input
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Content Type</label>
+                      <select
+                        value={formData.content_type}
+                        onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        <option value="">Select type</option>
+                        {CONTENT_TYPES.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        <option value="">Select category</option>
+                        {CATEGORIES.map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Social Media Platform</label>
+                      <select
+                        value={formData.social_media}
+                        onChange={(e) => setFormData({ ...formData, social_media: e.target.value })}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        <option value="">Select platform</option>
+                        {SOCIAL_MEDIA.map(platform => (
+                          <option key={platform} value={platform}>{platform}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Content Title</label>
+                    <input
+                      type="text"
+                      value={formData.content_title}
+                      onChange={(e) => setFormData({ ...formData, content_title: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Content Deadline</label>
+                      <input
+                        type="date"
+                        value={formData.content_deadline}
+                        onChange={(e) => setFormData({ ...formData, content_deadline: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Graphic Deadline</label>
+                      <input
+                        type="date"
+                        value={formData.graphic_deadline}
+                        onChange={(e) => setFormData({ ...formData, graphic_deadline: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      {STATUSES.map(status => (
+                        <option key={status} value={status}>{getStatusLabel(status)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Assign To</label>
+                    <div style={{ 
+                      border: '2px solid #e5e7eb', 
+                      borderRadius: '6px', 
+                      padding: '0.75rem',
+                      maxHeight: '120px',
+                      overflow: 'auto'
+                    }}>
+                      {members.map(member => (
+                        <label key={member.user_id} style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          marginBottom: '0.5rem',
+                          cursor: 'pointer'
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={formData.assigned_to.includes(member.user_id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({
+                                  ...formData,
+                                  assigned_to: [...formData.assigned_to, member.user_id]
+                                })
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  assigned_to: formData.assigned_to.filter(id => id !== member.user_id)
+                                })
+                              }
+                            }}
+                            style={{ width: '16px', height: '16px' }}
+                          />
+                          <span style={{ fontSize: '0.9rem' }}>
+                            {member.user.name} ({member.user.email})
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Description</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: '#ffffff',
+                        color: '#000000',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: '#000000',
+                        color: '#ffffff',
+                        border: '2px solid #000000',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingItem ? 'Update' : 'Create'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Member Management Modal */}
+          {showMemberModal && userRole === 'admin' && (
+            <div style={{
+              position: 'fixed',
+              top: '0',
+              left: '0',
+              right: '0',
+              bottom: '0',
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: '#ffffff',
+                border: '2px solid #000000',
+                borderRadius: '8px',
+                padding: '2rem',
+                width: '90%',
+                maxWidth: '600px',
+                maxHeight: '90vh',
+                overflow: 'auto'
+              }}>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 'bold', 
+                  marginBottom: '1.5rem',
+                  color: '#000000'
+                }}>
+                  Manage Content Calendar Members
+                </h2>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>Current Members</h3>
+                  <div style={{ 
+                    border: '2px solid #e5e7eb', 
+                    borderRadius: '6px',
+                    maxHeight: '200px',
+                    overflow: 'auto'
+                  }}>
+                    {members.map(member => (
+                      <div key={member.user_id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.75rem',
+                        borderBottom: '1px solid #e5e7eb'
+                      }}>
+                        <div>
+                          <span style={{ fontWeight: '600' }}>{member.user.name}</span>
+                          <span style={{ color: '#666666', fontSize: '0.9rem', marginLeft: '0.5rem' }}>
+                            ({member.user.email})
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveMember(member.user_id)}
+                          style={{
+                            padding: '0.25rem 0.5rem',
+                            background: '#ffffff',
+                            color: '#000000',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>Add New Members</h3>
+                  <div style={{ 
+                    border: '2px solid #e5e7eb', 
+                    borderRadius: '6px',
+                    maxHeight: '200px',
+                    overflow: 'auto'
+                  }}>
+                    {allUsers
+                      .filter(user => !members.some(member => member.user_id === user.id))
+                      .map(user => (
+                        <div key={user.id} style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.75rem',
+                          borderBottom: '1px solid #e5e7eb'
+                        }}>
+                          <div>
+                            <span style={{ fontWeight: '600' }}>{user.name}</span>
+                            <span style={{ color: '#666666', fontSize: '0.9rem', marginLeft: '0.5rem' }}>
+                              ({user.email})
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleAddMember(user.id)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              background: '#000000',
+                              color: '#ffffff',
+                              border: '1px solid #000000',
+                              borderRadius: '4px',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Add
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowMemberModal(false)}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#000000',
+                      color: '#ffffff',
+                      border: '2px solid #000000',
+                      borderRadius: '6px',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
