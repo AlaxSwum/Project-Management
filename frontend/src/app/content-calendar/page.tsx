@@ -154,7 +154,7 @@ export default function ContentCalendarPage() {
       setAllUsers(usersData || [])
       
       // Remove duplicates from folders (in case of database issues)
-      const uniqueFolders = (foldersData || []).filter((folder: any, index, self) => 
+      const uniqueFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => 
         index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
       )
       setFolders(uniqueFolders)
