@@ -16,7 +16,8 @@ import {
   EyeIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  PlusIcon
+  PlusIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 
@@ -62,6 +63,16 @@ export default function WeeklyReportPage() {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
   const [selectedReport, setSelectedReport] = useState<WeeklyReport | null>(null);
   const [showReportDetail, setShowReportDetail] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingReport, setEditingReport] = useState<WeeklyReport | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    keyActivities: [''],
+    ongoingTasks: [''],
+    challenges: [''],
+    teamPerformance: [''],
+    nextWeekPriorities: [''],
+    otherNotes: ''
+  });
   const [viewMode, setViewMode] = useState<'user' | 'admin'>('user');
 
   useEffect(() => {
@@ -250,6 +261,125 @@ export default function WeeklyReportPage() {
   const handleViewReport = (report: WeeklyReport) => {
     setSelectedReport(report);
     setShowReportDetail(true);
+  };
+
+  const handleEditReport = (report: WeeklyReport) => {
+    setEditingReport(report);
+    
+    // Parse existing data into form format
+    const parseField = (text: string | null) => {
+      if (!text) return [''];
+      // Remove bullet points and split by newlines
+      const items = text.replace(/^•\s*/gm, '').split('\n').filter(item => item.trim());
+      return items.length > 0 ? items : [''];
+    };
+
+    setEditFormData({
+      keyActivities: parseField(report.key_activities),
+      ongoingTasks: parseField(report.ongoing_tasks),
+      challenges: parseField(report.challenges),
+      teamPerformance: parseField(report.team_performance),
+      nextWeekPriorities: parseField(report.next_week_priorities),
+      otherNotes: report.other_notes || ''
+    });
+    
+    setShowEditForm(true);
+  };
+
+  const handleEditFormClose = () => {
+    setShowEditForm(false);
+    setEditingReport(null);
+    setEditFormData({
+      keyActivities: [''],
+      ongoingTasks: [''],
+      challenges: [''],
+      teamPerformance: [''],
+      nextWeekPriorities: [''],
+      otherNotes: ''
+    });
+  };
+
+  const updateEditField = (fieldName: keyof typeof editFormData, index: number, value: string) => {
+    if (fieldName === 'otherNotes') return; // Skip for non-array fields
+    
+    setEditFormData(prev => ({
+      ...prev,
+      [fieldName]: (prev[fieldName] as string[]).map((item: string, i: number) => 
+        i === index ? value : item
+      )
+    }));
+  };
+
+  const addEditField = (fieldName: keyof typeof editFormData) => {
+    if (fieldName === 'otherNotes') return; // Skip for non-array fields
+    
+    setEditFormData(prev => ({
+      ...prev,
+      [fieldName]: [...(prev[fieldName] as string[]), '']
+    }));
+  };
+
+  const removeEditField = (fieldName: keyof typeof editFormData, index: number) => {
+    if (fieldName === 'otherNotes') return; // Skip for non-array fields
+    
+    setEditFormData(prev => ({
+      ...prev,
+      [fieldName]: (prev[fieldName] as string[]).filter((_: string, i: number) => i !== index)
+    }));
+  };
+
+  const handleUpdateReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingReport) return;
+
+    const keyActivitiesText = editFormData.keyActivities.filter(item => item.trim()).join('\n• ');
+    if (!keyActivitiesText) {
+      alert('Please fill in at least one key activity.');
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Convert arrays to formatted text
+      const formatArrayField = (array: string[]) => {
+        const filtered = array.filter(item => item.trim());
+        return filtered.length > 0 ? '• ' + filtered.join('\n• ') : null;
+      };
+      
+      const { error } = await supabase
+        .from('weekly_reports')
+        .update({
+          key_activities: formatArrayField(editFormData.keyActivities),
+          ongoing_tasks: formatArrayField(editFormData.ongoingTasks),
+          challenges: formatArrayField(editFormData.challenges),
+          team_performance: formatArrayField(editFormData.teamPerformance),
+          next_week_priorities: formatArrayField(editFormData.nextWeekPriorities),
+          other_notes: editFormData.otherNotes.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingReport.id);
+      
+      if (!error) {
+        // Refresh data and close modal
+        await fetchData();
+        handleEditFormClose();
+        
+        alert(`Weekly report updated successfully! 
+        
+Your report for ${editingReport.date_range_display} has been saved.
+
+Updated Key Activities: ${keyActivitiesText.substring(0, 100)}${keyActivitiesText.length > 100 ? '...' : ''}
+
+Your changes are now saved in the system.`);
+      } else {
+        throw new Error(error.message || 'Failed to update weekly report');
+      }
+    } catch (error) {
+      console.error('Error updating weekly report:', error);
+      alert('Failed to update weekly report. Please try again.');
+    }
   };
 
   const getMissingEmployees = (weekReports: WeeklyReport[], allEmployees: any[]) => {
@@ -660,13 +790,25 @@ export default function WeeklyReportPage() {
                                       </div>
                                     </div>
                                     
-                                    <button
-                                      onClick={() => handleViewReport(report)}
-                                      className="view-btn"
-                                    >
-                                      <EyeIcon style={{ width: '12px', height: '12px', marginRight: '0.25rem', display: 'inline' }} />
-                                      View
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <button
+                                        onClick={() => handleViewReport(report)}
+                                        className="view-btn"
+                                      >
+                                        <EyeIcon style={{ width: '12px', height: '12px', marginRight: '0.25rem', display: 'inline' }} />
+                                        View
+                                      </button>
+                                      {(viewMode === 'admin' || report.employee_id === user?.id) && (
+                                        <button
+                                          onClick={() => handleEditReport(report)}
+                                          className="view-btn"
+                                          style={{ background: '#e5e7eb', borderColor: '#9ca3af' }}
+                                        >
+                                          <PencilIcon style={{ width: '12px', height: '12px', marginRight: '0.25rem', display: 'inline' }} />
+                                          Edit
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                   
                                   <div style={{ fontSize: '0.75rem', color: '#666666' }}>
@@ -746,14 +888,24 @@ export default function WeeklyReportPage() {
                             </p>
                           </div>
                           
-                          <button
-                            onClick={() => handleViewReport(report)}
-                            className="view-btn"
-                            style={{ padding: '0.5rem 1rem' }}
-                          >
-                            <EyeIcon style={{ width: '16px', height: '16px', marginRight: '0.5rem', display: 'inline' }} />
-                            View Report
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => handleViewReport(report)}
+                              className="view-btn"
+                              style={{ padding: '0.5rem 1rem' }}
+                            >
+                              <EyeIcon style={{ width: '16px', height: '16px', marginRight: '0.5rem', display: 'inline' }} />
+                              View Report
+                            </button>
+                            <button
+                              onClick={() => handleEditReport(report)}
+                              className="view-btn"
+                              style={{ padding: '0.5rem 1rem', background: '#e5e7eb', borderColor: '#9ca3af' }}
+                            >
+                              <PencilIcon style={{ width: '16px', height: '16px', marginRight: '0.5rem', display: 'inline' }} />
+                              Edit
+                            </button>
+                          </div>
                         </div>
                         
                         <div style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '0.75rem' }}>
@@ -924,6 +1076,586 @@ export default function WeeklyReportPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Report Form Modal */}
+      {showEditForm && editingReport && (
+        <div className="weekly-report-overlay" onClick={handleEditFormClose}>
+          <div className="weekly-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="weekly-report-header">
+              <h1 className="weekly-report-title">Edit Weekly Report</h1>
+              <button
+                onClick={handleEditFormClose}
+                className="weekly-close-btn"
+                title="Close"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="weekly-report-body">
+              {/* Week Info Display */}
+              <div className="week-info-banner">
+                <h2 className="week-title">{editingReport.date_range_display}</h2>
+                <p className="week-subtitle">Edit your weekly progress report</p>
+              </div>
+
+              {/* Weekly Report Form */}
+              <form onSubmit={handleUpdateReport} className="weekly-report-form">
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="weekly-label">Project / Team</label>
+                    <div style={{ 
+                      padding: '1rem 1.25rem', 
+                      border: '3px solid #000000', 
+                      background: '#f8f9fa', 
+                      fontSize: '1rem',
+                      color: '#666666'
+                    }}>
+                      {editingReport.project_name}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="weekly-label">KEY ACTIVITIES COMPLETED *</label>
+                    <div className="weekly-field-container">
+                      {editFormData.keyActivities.map((activity, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            required={index === 0}
+                            placeholder={index === 0 ? "Main task or deliverable completed..." : "Additional activity..."}
+                            value={activity}
+                            onChange={(e) => updateEditField('keyActivities', index, e.target.value)}
+                          />
+                          {editFormData.keyActivities.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeEditField('keyActivities', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addEditField('keyActivities')}
+                      >
+                        Add another activity
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group half-width">
+                    <label className="weekly-label">ONGOING TASKS</label>
+                    <div className="weekly-field-container">
+                      {editFormData.ongoingTasks.map((task, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Task still in progress..." : "Additional task..."}
+                            value={task}
+                            onChange={(e) => updateEditField('ongoingTasks', index, e.target.value)}
+                          />
+                          {editFormData.ongoingTasks.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeEditField('ongoingTasks', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addEditField('ongoingTasks')}
+                      >
+                        Add task
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group half-width">
+                    <label className="weekly-label">CHALLENGES / ISSUES</label>
+                    <div className="weekly-field-container">
+                      {editFormData.challenges.map((challenge, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Any blocker or challenge..." : "Additional challenge..."}
+                            value={challenge}
+                            onChange={(e) => updateEditField('challenges', index, e.target.value)}
+                          />
+                          {editFormData.challenges.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeEditField('challenges', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addEditField('challenges')}
+                      >
+                        Add challenge
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group half-width">
+                    <label className="weekly-label">TEAM PERFORMANCE / KPIs</label>
+                    <div className="weekly-field-container">
+                      {editFormData.teamPerformance.map((performance, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Metrics or performance indicator..." : "Additional KPI..."}
+                            value={performance}
+                            onChange={(e) => updateEditField('teamPerformance', index, e.target.value)}
+                          />
+                          {editFormData.teamPerformance.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeEditField('teamPerformance', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addEditField('teamPerformance')}
+                      >
+                        Add KPI
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group half-width">
+                    <label className="weekly-label">NEXT WEEK'S PRIORITIES</label>
+                    <div className="weekly-field-container">
+                      {editFormData.nextWeekPriorities.map((priority, index) => (
+                        <div key={index} className="weekly-field-row">
+                          <input
+                            type="text"
+                            className="weekly-input"
+                            placeholder={index === 0 ? "Priority for upcoming week..." : "Additional priority..."}
+                            value={priority}
+                            onChange={(e) => updateEditField('nextWeekPriorities', index, e.target.value)}
+                          />
+                          {editFormData.nextWeekPriorities.length > 1 && (
+                            <button
+                              type="button"
+                              className="weekly-remove-btn"
+                              onClick={() => removeEditField('nextWeekPriorities', index)}
+                              title="Remove this item"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="weekly-add-btn"
+                        onClick={() => addEditField('nextWeekPriorities')}
+                      >
+                        Add priority
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="weekly-label">OTHER NOTES</label>
+                    <textarea
+                      className="weekly-textarea"
+                      placeholder="Additional observations, suggestions, or miscellaneous notes..."
+                      value={editFormData.otherNotes}
+                      onChange={(e) => setEditFormData({
+                        ...editFormData,
+                        otherNotes: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+
+                <div className="weekly-form-buttons">
+                  <button
+                    type="button"
+                    onClick={handleEditFormClose}
+                    className="weekly-btn-cancel"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="weekly-btn-submit"
+                  >
+                    Update Report
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Styles for Edit Form */}
+      <style jsx>{`
+        .weekly-report-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.85);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          z-index: 1000;
+          backdrop-filter: blur(4px);
+        }
+        
+        .weekly-report-modal {
+          background: #ffffff;
+          border: 3px solid #000000;
+          border-radius: 0;
+          width: 100%;
+          max-width: 1200px;
+          max-height: 95vh;
+          overflow: hidden;
+          box-shadow: 8px 8px 0px #000000;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .weekly-report-header {
+          background: #000000;
+          color: #ffffff;
+          padding: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 3px solid #000000;
+        }
+        
+        .weekly-report-title {
+          font-size: 2rem;
+          font-weight: bold;
+          margin: 0;
+          letter-spacing: -0.025em;
+        }
+        
+        .weekly-close-btn {
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #ffffff;
+          width: 40px;
+          height: 40px;
+          border-radius: 0;
+          cursor: pointer;
+          font-size: 24px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-close-btn:hover {
+          background: #f5f5f5;
+          transform: scale(1.1);
+        }
+        
+        .weekly-report-body {
+          padding: 2rem 3rem 3rem 3rem;
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          background: #ffffff;
+          scroll-behavior: smooth;
+        }
+        
+        .week-info-banner {
+          background: #f8f9fa;
+          border: 3px solid #000000;
+          padding: 2rem;
+          text-align: center;
+          margin-bottom: 3rem;
+          border-radius: 0;
+        }
+        
+        .week-title {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #000000;
+          margin: 0 0 0.5rem 0;
+          letter-spacing: -0.025em;
+        }
+        
+        .week-subtitle {
+          font-size: 1rem;
+          color: #666666;
+          margin: 0;
+        }
+        
+        .weekly-report-form {
+          display: flex;
+          flex-direction: column;
+          gap: 2.5rem;
+          padding-bottom: 2rem;
+        }
+        
+        .form-row {
+          display: flex;
+          gap: 2rem;
+          width: 100%;
+        }
+        
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        .form-group.full-width {
+          flex: 1;
+        }
+        
+        .form-group.half-width {
+          flex: 1;
+        }
+        
+        .weekly-label {
+          font-size: 0.9rem;
+          font-weight: bold;
+          color: #000000;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin: 0;
+          padding-bottom: 0.5rem;
+        }
+        
+        .weekly-field-container {
+          background: #ffffff;
+          border: 3px solid #000000;
+          padding: 1.5rem;
+          border-radius: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        .weekly-field-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .weekly-input {
+          flex: 1;
+          padding: 0.875rem 1.125rem;
+          border: 2px solid #000000;
+          border-radius: 0;
+          font-size: 0.95rem;
+          background: #ffffff;
+          color: #000000;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-input:focus {
+          outline: none;
+          border-color: #000000;
+          box-shadow: 2px 2px 0px #e5e5e5;
+        }
+        
+        .weekly-input::placeholder {
+          color: #888888;
+        }
+        
+        .weekly-remove-btn {
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #000000;
+          width: 32px;
+          height: 32px;
+          border-radius: 0;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+        
+        .weekly-remove-btn:hover {
+          background: #f5f5f5;
+          transform: scale(1.1);
+        }
+        
+        .weekly-add-btn {
+          background: #f8f9fa;
+          color: #000000;
+          border: 2px solid #000000;
+          border-radius: 0;
+          padding: 0.75rem 1.25rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          align-self: flex-start;
+        }
+        
+        .weekly-add-btn:hover {
+          background: #e9ecef;
+          transform: translateY(-2px);
+          box-shadow: 2px 2px 0px #000000;
+        }
+        
+        .weekly-textarea {
+          width: 100%;
+          min-height: 120px;
+          padding: 1rem 1.25rem;
+          border: 3px solid #000000;
+          border-radius: 0;
+          font-size: 0.95rem;
+          background: #ffffff;
+          color: #000000;
+          resize: vertical;
+          font-family: inherit;
+          line-height: 1.5;
+          transition: all 0.2s ease;
+        }
+        
+        .weekly-textarea:focus {
+          outline: none;
+          border-color: #000000;
+          box-shadow: 4px 4px 0px #e5e5e5;
+        }
+        
+        .weekly-textarea::placeholder {
+          color: #888888;
+        }
+        
+        .weekly-form-buttons {
+          display: flex;
+          gap: 1.5rem;
+          justify-content: flex-end;
+          padding: 2rem 0 1rem 0;
+          margin-top: 2rem;
+          border-top: 2px solid #e5e5e5;
+        }
+        
+        .weekly-btn-cancel {
+          background: #ffffff;
+          color: #000000;
+          border: 2px solid #000000;
+          border-radius: 0;
+          padding: 1rem 2rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+        
+        .weekly-btn-cancel:hover {
+          background: #f5f5f5;
+          transform: translateY(-2px);
+          box-shadow: 3px 3px 0px #000000;
+        }
+        
+        .weekly-btn-submit {
+          background: #000000;
+          color: #ffffff;
+          border: 2px solid #000000;
+          border-radius: 0;
+          padding: 1rem 2rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+        
+        .weekly-btn-submit:hover {
+          background: #333333;
+          transform: translateY(-2px);
+          box-shadow: 3px 3px 0px #666666;
+        }
+        
+        @media (max-width: 768px) {
+          .weekly-report-overlay {
+            padding: 1rem;
+          }
+          
+          .weekly-report-modal {
+            max-width: 100%;
+            max-height: 98vh;
+          }
+          
+          .weekly-report-header {
+            padding: 1.5rem;
+          }
+          
+          .weekly-report-title {
+            font-size: 1.5rem;
+          }
+          
+          .weekly-report-body {
+            padding: 1.5rem;
+          }
+          
+          .form-row {
+            flex-direction: column;
+            gap: 1.5rem;
+          }
+          
+          .weekly-form-buttons {
+            flex-direction: column;
+            gap: 1rem;
+          }
+          
+          .weekly-btn-cancel,
+          .weekly-btn-submit {
+            width: 100%;
+            text-align: center;
+          }
+        }
+      `}</style>
     </div>
   );
 } 
