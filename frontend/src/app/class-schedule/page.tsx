@@ -15,6 +15,7 @@ interface ClassScheduleItem {
   days: string[]
   time_range: string
   platform: string
+  instructor_name: string
   instructor_info: string
   post_date: string
   folder_id?: number | null
@@ -68,6 +69,7 @@ export default function ClassSchedulePage() {
     days: [] as string[],
     time_range: '',
     platform: '',
+    instructor_name: '',
     instructor_info: '',
     post_date: '',
     folder_id: null as number | null
@@ -377,6 +379,7 @@ export default function ClassSchedulePage() {
       days: [],
       time_range: '',
       platform: '',
+      instructor_name: '',
       instructor_info: '',
       post_date: '',
       folder_id: currentFolder?.id || null
@@ -394,6 +397,7 @@ export default function ClassSchedulePage() {
       days: item.days,
       time_range: item.time_range,
       platform: item.platform,
+      instructor_name: item.instructor_name,
       instructor_info: item.instructor_info,
       post_date: item.post_date,
       folder_id: item.folder_id || null
@@ -750,7 +754,7 @@ export default function ClassSchedulePage() {
             }}>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '130px 1fr 120px 100px 120px 120px 120px 120px 100px',
+                gridTemplateColumns: '120px 1fr 100px 100px 100px 100px 120px 1fr 100px 80px',
                 gap: '0',
                 background: '#f9f9f9',
                 borderBottom: '2px solid #e5e7eb',
@@ -764,7 +768,8 @@ export default function ClassSchedulePage() {
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DAYS</div>
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TIME</div>
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>INSTRUCTOR</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>INSTRUCTOR NAME</div>
+                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>INSTRUCTOR INFO</div>
                 <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>POST DATE</div>
                 <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
               </div>
@@ -782,7 +787,7 @@ export default function ClassSchedulePage() {
                 filteredItems.map((item) => (
                   <div key={item.id} style={{
                     display: 'grid',
-                    gridTemplateColumns: '130px 1fr 120px 100px 120px 120px 120px 120px 100px',
+                    gridTemplateColumns: '120px 1fr 100px 100px 100px 100px 120px 1fr 100px 80px',
                     gap: '0',
                     borderBottom: '1px solid #e5e7eb',
                     fontSize: '0.8rem'
@@ -793,7 +798,7 @@ export default function ClassSchedulePage() {
                     <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
                       <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{item.class_name}</div>
                       <div style={{ fontSize: '0.7rem', color: '#666666' }}>
-                        {item.class_info.length > 50 ? `${item.class_info.substring(0, 50)}...` : item.class_info}
+                        {item.class_info && item.class_info.length > 50 ? `${item.class_info.substring(0, 50)}...` : item.class_info}
                       </div>
                     </div>
                     <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
@@ -809,7 +814,10 @@ export default function ClassSchedulePage() {
                       {item.platform}
                     </div>
                     <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                      {item.instructor_info.length > 30 ? `${item.instructor_info.substring(0, 30)}...` : item.instructor_info}
+                      {item.instructor_name || '-'}
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                      {item.instructor_info && item.instructor_info.length > 30 ? `${item.instructor_info.substring(0, 30)}...` : item.instructor_info || '-'}
                     </div>
                     <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
                       {formatDate(item.post_date)}
@@ -962,7 +970,8 @@ export default function ClassSchedulePage() {
                             border: '2px solid #e5e7eb',
                             borderRadius: '8px',
                             fontSize: '0.95rem',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: '#fafafa',
+                            boxSizing: 'border-box'
                           }}
                         />
                       </div>
@@ -980,7 +989,8 @@ export default function ClassSchedulePage() {
                             border: '2px solid #e5e7eb',
                             borderRadius: '8px',
                             fontSize: '0.95rem',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: '#fafafa',
+                            boxSizing: 'border-box'
                           }}
                         />
                       </div>
@@ -1000,7 +1010,8 @@ export default function ClassSchedulePage() {
                           borderRadius: '8px',
                           fontSize: '0.95rem',
                           resize: 'vertical',
-                          backgroundColor: '#fafafa'
+                          backgroundColor: '#fafafa',
+                          boxSizing: 'border-box'
                         }}
                       />
                     </div>
@@ -1046,7 +1057,8 @@ export default function ClassSchedulePage() {
                             border: '2px solid #e5e7eb',
                             borderRadius: '8px',
                             fontSize: '0.95rem',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: '#fafafa',
+                            boxSizing: 'border-box'
                           }}
                         >
                           <option value="">Select duration</option>
@@ -1070,7 +1082,8 @@ export default function ClassSchedulePage() {
                             border: '2px solid #e5e7eb',
                             borderRadius: '8px',
                             fontSize: '0.95rem',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: '#fafafa',
+                            boxSizing: 'border-box'
                           }}
                         />
                       </div>
@@ -1136,7 +1149,8 @@ export default function ClassSchedulePage() {
                             border: '2px solid #e5e7eb',
                             borderRadius: '8px',
                             fontSize: '0.95rem',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: '#fafafa',
+                            boxSizing: 'border-box'
                           }}
                         >
                           <option value="">Select platform</option>
@@ -1159,7 +1173,8 @@ export default function ClassSchedulePage() {
                             border: '2px solid #e5e7eb',
                             borderRadius: '8px',
                             fontSize: '0.95rem',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: '#fafafa',
+                            boxSizing: 'border-box'
                           }}
                         />
                       </div>
@@ -1194,6 +1209,25 @@ export default function ClassSchedulePage() {
                     </div>
 
                     <div style={{ marginBottom: '2rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Instructor Name</label>
+                      <input
+                        type="text"
+                        value={formData.instructor_name}
+                        onChange={(e) => setFormData({ ...formData, instructor_name: e.target.value })}
+                        placeholder="Enter instructor's full name"
+                        style={{
+                          width: '100%',
+                          padding: '0.9rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '0.95rem',
+                          backgroundColor: '#fafafa',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '2rem' }}>
                       <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Instructor Information</label>
                       <textarea
                         value={formData.instructor_info}
@@ -1208,7 +1242,8 @@ export default function ClassSchedulePage() {
                           fontSize: '0.95rem',
                           resize: 'vertical',
                           backgroundColor: '#fafafa',
-                          lineHeight: '1.5'
+                          lineHeight: '1.5',
+                          boxSizing: 'border-box'
                         }}
                       />
                     </div>
@@ -1224,7 +1259,8 @@ export default function ClassSchedulePage() {
                           border: '2px solid #e5e7eb',
                           borderRadius: '8px',
                           fontSize: '0.95rem',
-                          backgroundColor: '#fafafa'
+                          backgroundColor: '#fafafa',
+                          boxSizing: 'border-box'
                         }}
                       >
                         <option value="">No folder</option>
