@@ -228,10 +228,10 @@ export default function ClassSchedulePage() {
   const getCurrentFolderContents = () => {
     if (currentFolder === null) {
       // Show root level folders
-      return folders.filter(folder => !folder.parent_folder_id)
+      return folders.filter(folder => !folder.parent_id)
     } else {
       // Show subfolders of current folder
-      return folders.filter(folder => folder.parent_folder_id === currentFolder.id)
+      return folders.filter(folder => folder.parent_id === currentFolder.id)
     }
   }
 
