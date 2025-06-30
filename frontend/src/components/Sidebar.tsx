@@ -24,6 +24,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   TableCellsIcon,
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -698,6 +699,7 @@ Your report is now available in the system.`);
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
     { name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon },
+    { name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon },
   ];
 
   // HR-only navigation items (will be blank pages for now)
