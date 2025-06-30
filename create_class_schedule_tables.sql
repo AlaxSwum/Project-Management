@@ -36,12 +36,13 @@ CREATE TABLE IF NOT EXISTS public.class_schedule (
     created_by INTEGER REFERENCES public.auth_user(id) ON DELETE SET NULL
 );
 
--- Create default root folders
+-- Create default root folders (using NULL for created_by to avoid foreign key issues)
 INSERT INTO public.class_schedule_folders (name, description, parent_id, created_by) VALUES
-('Programming Classes', 'Software development and programming courses', NULL, 1),
-('Business Classes', 'Business and management training sessions', NULL, 1),
-('Design Classes', 'UI/UX and graphic design workshops', NULL, 1),
-('Language Classes', 'Foreign language learning sessions', NULL, 1);
+('Programming Classes', 'Software development and programming courses', NULL, NULL),
+('Business Classes', 'Business and management training sessions', NULL, NULL),
+('Design Classes', 'UI/UX and graphic design workshops', NULL, NULL),
+('Language Classes', 'Foreign language learning sessions', NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_class_schedule_folders_parent_id ON public.class_schedule_folders(parent_id);

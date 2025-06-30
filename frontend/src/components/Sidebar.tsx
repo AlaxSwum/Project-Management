@@ -86,6 +86,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAbsenceForm, setShowAbsenceForm] = useState(false);
+  const [hasClassScheduleAccess, setHasClassScheduleAccess] = useState(false);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',
@@ -96,6 +97,48 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   });
   const [availableLeave, setAvailableLeave] = useState(14); // 14 days per employee
   const [usedLeave, setUsedLeave] = useState(0);
+
+  // Check Class Schedule access
+  const checkClassScheduleAccess = async () => {
+    if (!user?.id) {
+      setHasClassScheduleAccess(false);
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Check if user is a class schedule member
+      const { data: memberData, error: memberError } = await supabase
+        .from('class_schedule_members')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberData && !memberError) {
+        setHasClassScheduleAccess(true);
+        return;
+      }
+
+      // Check if user is admin/HR
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role, is_superuser, is_staff')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) {
+        setHasClassScheduleAccess(false);
+        return;
+      }
+
+      const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+      setHasClassScheduleAccess(hasPermission);
+    } catch (err) {
+      console.error('Error checking class schedule access:', err);
+      setHasClassScheduleAccess(false);
+    }
+  };
 
   // Fetch leave balance on component mount and user change
   const fetchLeaveBalance = async () => {
@@ -126,10 +169,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     }
   };
 
-  // Fetch balance when user changes
+  // Fetch balance and check access when user changes
   useEffect(() => {
     if (user?.id) {
       fetchLeaveBalance();
+      checkClassScheduleAccess();
+    } else {
+      setHasClassScheduleAccess(false);
     }
   }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -692,14 +738,20 @@ Your report is now available in the system.`);
     };
   }, [isDropdownOpen]);
 
-  const mainNavItems = [
+  // Base navigation items available to all users
+  const baseNavItems = [
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
     { name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon },
-    { name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon },
+  ];
+
+  // Conditionally add Class Schedule if user has access
+  const mainNavItems = [
+    ...baseNavItems,
+    ...(hasClassScheduleAccess ? [{ name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon }] : [])
   ];
 
   // HR-only navigation items (will be blank pages for now)
