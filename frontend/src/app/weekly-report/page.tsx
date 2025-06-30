@@ -449,12 +449,12 @@ Your changes are now saved in the system.`);
           }
           .stats-bar {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             margin-bottom: 2rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
+            padding: 1.5rem;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 0;
           }
           .stat-item {
             text-align: center;
@@ -470,22 +470,24 @@ Your changes are now saved in the system.`);
             color: #666666;
           }
           .week-folder {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            border: 2px solid #000000;
+            border-radius: 0;
+            margin-bottom: 1.5rem;
             overflow: hidden;
+            background: #ffffff;
           }
           .week-folder-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem 1.5rem;
-            background: #f9fafb;
+            padding: 1.5rem 2rem;
+            background: #000000;
             cursor: pointer;
             transition: all 0.2s ease;
+            color: #ffffff;
           }
           .week-folder-header:hover {
-            background: #f3f4f6;
+            background: #333333;
           }
           .week-folder-info {
             display: flex;
@@ -502,27 +504,31 @@ Your changes are now saved in the system.`);
             display: flex;
             align-items: center;
             gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            border: 1px solid #ffffff;
           }
           .submission-badge.complete {
-            background: #d1fae5;
-            color: #065f46;
+            background: #ffffff;
+            color: #000000;
           }
           .submission-badge.partial {
-            background: #fef3c7;
-            color: #92400e;
+            background: #cccccc;
+            color: #000000;
           }
           .submission-badge.none {
-            background: #fef2f2;
-            color: #991b1b;
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #ffffff;
           }
           .week-folder-content {
-            padding: 1.5rem;
-            border-top: 1px solid #e5e7eb;
-            background: #ffffff;
+            padding: 2rem;
+            border-top: 2px solid #000000;
+            background: #f8f9fa;
           }
           .reports-grid {
             display: grid;
@@ -531,14 +537,15 @@ Your changes are now saved in the system.`);
             margin-bottom: 1.5rem;
           }
           .report-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1rem;
+            border: 2px solid #000000;
+            border-radius: 0;
+            padding: 1.5rem;
             transition: all 0.2s ease;
+            background: #ffffff;
           }
           .report-card:hover {
-            border-color: #000000;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0px #000000;
           }
           .report-header {
             display: flex;
@@ -564,17 +571,42 @@ Your changes are now saved in the system.`);
             font-size: 0.875rem;
           }
           .view-btn {
-            padding: 0.375rem 0.75rem;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 0;
             cursor: pointer;
             font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
             transition: all 0.2s ease;
+            color: #000000;
           }
           .view-btn:hover {
-            background: #e5e7eb;
-            border-color: #9ca3af;
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 2px 2px 0px #666666;
+          }
+          .edit-btn {
+            padding: 0.5rem 1rem;
+            background: #000000;
+            border: 2px solid #000000;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            transition: all 0.2s ease;
+            color: #ffffff;
+          }
+          .edit-btn:hover {
+            background: #333333;
+            border-color: #333333;
+            transform: translateY(-1px);
+            box-shadow: 2px 2px 0px #666666;
           }
           .missing-section {
             margin-top: 1.5rem;
@@ -614,15 +646,15 @@ Your changes are now saved in the system.`);
             gap: 1.5rem;
           }
           .user-report-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1.5rem;
+            border: 2px solid #000000;
+            border-radius: 0;
+            padding: 2rem;
             transition: all 0.2s ease;
+            background: #ffffff;
           }
           .user-report-card:hover {
-            border-color: #000000;
-            transform: translateY(-2px);
-            box-shadow: 4px 4px 0px #000000;
+            transform: translateY(-3px);
+            box-shadow: 6px 6px 0px #000000;
           }
           
           @media (max-width: 768px) {
@@ -731,15 +763,15 @@ Your changes are now saved in the system.`);
                         >
                           <div className="week-folder-info">
                             {isExpanded ? (
-                              <FolderOpenIcon style={{ width: '24px', height: '24px', color: '#f59e0b' }} />
+                              <FolderOpenIcon style={{ width: '24px', height: '24px', color: '#ffffff' }} />
                             ) : (
-                              <FolderIcon style={{ width: '24px', height: '24px', color: '#6b7280' }} />
+                              <FolderIcon style={{ width: '24px', height: '24px', color: '#ffffff' }} />
                             )}
                             <div>
-                              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
+                              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: '#ffffff' }}>
                                 {folder.dateRangeDisplay}
                               </h3>
-                              <p style={{ margin: 0, fontSize: '0.875rem', color: '#666666' }}>
+                              <p style={{ margin: 0, fontSize: '0.875rem', color: '#cccccc' }}>
                                 Week {folder.weekNumber}, {folder.year}
                               </p>
                             </div>
@@ -759,9 +791,9 @@ Your changes are now saved in the system.`);
                             </span>
                             
                             {isExpanded ? (
-                              <ChevronDownIcon style={{ width: '20px', height: '20px' }} />
+                              <ChevronDownIcon style={{ width: '20px', height: '20px', color: '#ffffff' }} />
                             ) : (
-                              <ChevronRightIcon style={{ width: '20px', height: '20px' }} />
+                              <ChevronRightIcon style={{ width: '20px', height: '20px', color: '#ffffff' }} />
                             )}
                           </div>
                         </div>
@@ -790,21 +822,18 @@ Your changes are now saved in the system.`);
                                       </div>
                                     </div>
                                     
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.75rem' }}>
                                       <button
                                         onClick={() => handleViewReport(report)}
                                         className="view-btn"
                                       >
-                                        <EyeIcon style={{ width: '12px', height: '12px', marginRight: '0.25rem', display: 'inline' }} />
                                         View
                                       </button>
                                       {(viewMode === 'admin' || report.employee_id === user?.id) && (
                                         <button
                                           onClick={() => handleEditReport(report)}
-                                          className="view-btn"
-                                          style={{ background: '#e5e7eb', borderColor: '#9ca3af' }}
+                                          className="edit-btn"
                                         >
-                                          <PencilIcon style={{ width: '12px', height: '12px', marginRight: '0.25rem', display: 'inline' }} />
                                           Edit
                                         </button>
                                       )}
@@ -888,22 +917,20 @@ Your changes are now saved in the system.`);
                             </p>
                           </div>
                           
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                             <button
                               onClick={() => handleViewReport(report)}
                               className="view-btn"
-                              style={{ padding: '0.5rem 1rem' }}
+                              style={{ padding: '0.75rem 1.25rem' }}
                             >
-                              <EyeIcon style={{ width: '16px', height: '16px', marginRight: '0.5rem', display: 'inline' }} />
                               View Report
                             </button>
                             <button
                               onClick={() => handleEditReport(report)}
-                              className="view-btn"
-                              style={{ padding: '0.5rem 1rem', background: '#e5e7eb', borderColor: '#9ca3af' }}
+                              className="edit-btn"
+                              style={{ padding: '0.75rem 1.25rem' }}
                             >
-                              <PencilIcon style={{ width: '16px', height: '16px', marginRight: '0.5rem', display: 'inline' }} />
-                              Edit
+                              Edit Report
                             </button>
                           </div>
                         </div>
