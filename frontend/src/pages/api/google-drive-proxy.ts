@@ -359,7 +359,7 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
 
     const uploadPromise = drive.files.create(uploadOptions);
 
-    const response = await Promise.race([uploadPromise, uploadTimeout]);
+    const response: any = await Promise.race([uploadPromise, uploadTimeout]);
 
     console.log('✅ File uploaded successfully:', response.data);
     return res.status(200).json(response.data);
