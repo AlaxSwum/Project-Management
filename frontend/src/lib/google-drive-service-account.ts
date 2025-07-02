@@ -242,6 +242,31 @@ class GoogleDriveServiceAccount {
     }
   }
 
+  // List shared drives using service account
+  async listSharedDrives(): Promise<any[]> {
+    try {
+      const response = await fetch('/api/google-drive-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'listSharedDrives'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to list shared drives: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.drives || [];
+    } catch (error) {
+      console.error('Error listing shared drives:', error);
+      throw error;
+    }
+  }
+
   // Check if service account is configured
   isConfigured(): boolean {
     const credentials = this.getCredentials();

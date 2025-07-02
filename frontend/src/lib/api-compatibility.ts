@@ -549,6 +549,16 @@ export async function createDriveFolder(name: string, parentId: string | null = 
   }
 }
 
+export async function listSharedDrives(): Promise<any[]> {
+  try {
+    // List available shared drives
+    return await googleDriveServiceAccount.listSharedDrives();
+  } catch (error) {
+    console.error('Error listing shared drives:', error);
+    throw error;
+  }
+}
+
 // Todo service for managing project todo items
 export const todoService = {
   async getTodos(projectId: number) {

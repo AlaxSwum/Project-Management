@@ -77,6 +77,9 @@ export default async function handler(
       case 'testAuth':
         return handleTestAuth(req, res);
       
+      case 'listSharedDrives':
+        return handleListSharedDrives(req, res);
+      
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
@@ -91,26 +94,54 @@ async function handleListFiles(req: NextApiRequest, res: NextApiResponse, folder
     console.log('🔍 DEBUG: Attempting to list files for folder:', folderId || 'root');
     
     let query;
+    let listOptions: any = {
+      fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, size, webViewLink, parents, shared, ownedByMe, driveId)',
+      orderBy: 'folder,name'
+    };
+
     if (!folderId || folderId === 'root') {
-      // For root folder, show both owned files and shared files
+      // For root folder, show both owned files and shared files, including shared drives
       query = `trashed=false and (sharedWithMe=true or 'root' in parents)`;
-      console.log('🔍 DEBUG: Using root query to include shared folders');
+      console.log('🔍 DEBUG: Using root query to include shared folders and drives');
+      listOptions.includeItemsFromAllDrives = true;
+      listOptions.supportsAllDrives = true;
     } else {
       // For specific folder, list its contents
       query = `'${folderId}' in parents and trashed=false`;
+      
+      // Check if this folder is in a shared drive
+      try {
+        const folderInfo = await drive.files.get({ 
+          fileId: folderId,
+          fields: 'driveId',
+          supportsAllDrives: true
+        });
+        
+        if (folderInfo.data.driveId) {
+          console.log('🔍 DEBUG: Listing files in shared drive:', folderInfo.data.driveId);
+          listOptions.includeItemsFromAllDrives = true;
+          listOptions.supportsAllDrives = true;
+        }
+      } catch (folderError) {
+        console.log('🔍 DEBUG: Folder not in shared drive or not accessible');
+      }
     }
     
+    listOptions.q = query;
     console.log('🔍 DEBUG: Using query:', query);
+    console.log('🔍 DEBUG: List options:', listOptions);
     
-    const response = await drive.files.list({
-      q: query,
-      fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, size, webViewLink, parents, shared, ownedByMe)',
-      orderBy: 'folder,name'
-    });
+    const response = await drive.files.list(listOptions);
 
     const files = response.data.files || [];
     console.log('🔍 DEBUG: Found', files.length, 'files');
-    console.log('🔍 DEBUG: Files:', files.map(f => ({ name: f.name, type: f.mimeType, shared: f.shared, ownedByMe: f.ownedByMe })));
+    console.log('🔍 DEBUG: Files:', files.map(f => ({ 
+      name: f.name, 
+      type: f.mimeType, 
+      shared: f.shared, 
+      ownedByMe: f.ownedByMe,
+      driveId: f.driveId 
+    })));
     
     return res.status(200).json({ files });
   } catch (error) {
@@ -149,18 +180,53 @@ async function handleCreateFolder(req: NextApiRequest, res: NextApiResponse, nam
       mimeType: 'application/vnd.google-apps.folder',
     };
 
+    let createOptions: any = {
+      requestBody: metadata,
+      fields: 'id, name, mimeType, modifiedTime, webViewLink, parents, driveId',
+    };
+
     if (parentId && parentId !== 'root') {
       metadata.parents = [parentId];
+      
+      // Check if parent is in a shared drive
+      try {
+        const parentInfo = await drive.files.get({ 
+          fileId: parentId,
+          fields: 'driveId',
+          supportsAllDrives: true
+        });
+        
+        if (parentInfo.data.driveId) {
+          console.log('🔍 DEBUG: Creating folder in shared drive:', parentInfo.data.driveId);
+          createOptions.supportsAllDrives = true;
+        }
+      } catch (parentError) {
+        console.log('🔍 DEBUG: Parent not in shared drive or not accessible');
+      }
     }
 
-    const response = await drive.files.create({
-      requestBody: metadata,
-      fields: 'id, name, mimeType, modifiedTime, webViewLink, parents',
-    });
+    const response = await drive.files.create(createOptions);
 
     return res.status(200).json(response.data);
   } catch (error) {
     console.error('Error creating folder:', error);
+    
+    // Check for storage quota error
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as any;
+      if (apiError.response?.status === 403 && 
+          apiError.response?.data?.error?.errors?.some((e: any) => 
+            e.reason === 'storageQuotaExceeded' || e.reason === 'quotaExceeded'
+          )) {
+        return res.status(403).json({
+          error: 'Service Account Storage Limitation',
+          details: 'Service accounts cannot create folders in regular Google Drive. Please use Google Shared Drives instead.',
+          solution: 'Convert your Google Drive folders to Shared Drives (Team Drives) to enable folder creation.',
+          documentation: 'https://developers.google.com/workspace/drive/api/guides/about-shareddrives'
+        });
+      }
+    }
+    
     return res.status(500).json({ error: 'Failed to create folder' });
   }
 }
@@ -251,8 +317,17 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
     // Validate parent folder exists if specified
     if (parentId && parentId !== 'root') {
       try {
-        await drive.files.get({ fileId: parentId });
-        console.log('🔍 DEBUG: Parent folder exists and is accessible');
+        const folderInfo = await drive.files.get({ 
+          fileId: parentId,
+          fields: 'id, name, mimeType, parents, driveId'
+        });
+        console.log('🔍 DEBUG: Parent folder info:', folderInfo.data);
+        
+        // Check if this is a shared drive
+        if (folderInfo.data.driveId) {
+          console.log('🔍 DEBUG: Uploading to shared drive:', folderInfo.data.driveId);
+          metadata.driveId = folderInfo.data.driveId;
+        }
       } catch (folderError) {
         console.error('❌ ERROR: Parent folder not accessible:', folderError);
         return res.status(400).json({ 
@@ -268,14 +343,21 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
       setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000);
     });
 
-    const uploadPromise = drive.files.create({
+    const uploadOptions: any = {
       requestBody: metadata,
       media: {
         mimeType: mimeType || 'application/octet-stream',
         body: bufferStream,
       },
       fields: 'id, name, mimeType, modifiedTime, size, webViewLink, parents',
-    });
+    };
+
+    // If uploading to a shared drive, add the supportsAllDrives parameter
+    if (metadata.driveId) {
+      uploadOptions.supportsAllDrives = true;
+    }
+
+    const uploadPromise = drive.files.create(uploadOptions);
 
     const response = await Promise.race([uploadPromise, uploadTimeout]);
 
@@ -298,6 +380,19 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
       console.error('❌ Google API Error:', apiError.response?.data);
       console.error('❌ Google API Status:', apiError.response?.status);
       console.error('❌ Google API Headers:', apiError.response?.headers);
+      
+      // Check for storage quota error
+      if (apiError.response?.status === 403 && 
+          apiError.response?.data?.error?.errors?.some((e: any) => 
+            e.reason === 'storageQuotaExceeded' || e.reason === 'quotaExceeded'
+          )) {
+        return res.status(403).json({
+          error: 'Service Account Storage Limitation',
+          details: 'Service accounts cannot upload to regular Google Drive folders. Please use Google Shared Drives instead.',
+          solution: 'Convert your Google Drive folders to Shared Drives (Team Drives) to enable uploads.',
+          documentation: 'https://developers.google.com/workspace/drive/api/guides/about-shareddrives'
+        });
+      }
     }
     
     return res.status(500).json({ 
@@ -309,6 +404,31 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
         parentId,
         bufferSize: fileData ? Buffer.from(fileData, 'base64').length : 0
       }
+    });
+  }
+}
+
+async function handleListSharedDrives(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    console.log('🔍 DEBUG: Listing shared drives...');
+    
+    const response = await drive.drives.list({
+      fields: 'nextPageToken, drives(id, name, createdTime, capabilities)'
+    });
+
+    const drives = response.data.drives || [];
+    console.log('🔍 DEBUG: Found', drives.length, 'shared drives');
+    console.log('🔍 DEBUG: Shared drives:', drives.map(d => ({ name: d.name, id: d.id })));
+    
+    return res.status(200).json({ drives });
+  } catch (error) {
+    console.error('❌ ERROR listing shared drives:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ ERROR details:', errorMessage);
+    return res.status(500).json({ 
+      error: 'Failed to list shared drives',
+      details: errorMessage,
+      debug: true 
     });
   }
 }
