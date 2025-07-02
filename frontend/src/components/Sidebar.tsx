@@ -25,6 +25,7 @@ import {
   ExclamationCircleIcon,
   TableCellsIcon,
   AcademicCapIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -88,6 +89,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [showAbsenceForm, setShowAbsenceForm] = useState(false);
   const [hasClassScheduleAccess, setHasClassScheduleAccess] = useState(false);
   const [hasContentCalendarAccess, setHasContentCalendarAccess] = useState(false);
+  const [hasClassesAccess, setHasClassesAccess] = useState(false);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',
@@ -213,6 +215,63 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     }
   };
 
+  // Check Classes access
+  const checkClassesAccess = async () => {
+    if (!user?.id) {
+      setHasClassesAccess(false);
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      console.log('🔍 Checking Classes access for user:', user.id, user.email);
+      
+      // Check if user is a classes member
+      const { data: memberData, error: memberError } = await supabase
+        .from('classes_members')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('📋 Classes member check:', { memberData, memberError });
+
+      if (memberData && !memberError) {
+        console.log('✅ Classes access granted: User is a member');
+        setHasClassesAccess(true);
+        return;
+      }
+
+      // Check if user is admin/HR
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role, is_superuser, is_staff')
+        .eq('id', user.id)
+        .single();
+
+      console.log('👤 Classes user data check:', userData);
+
+      if (userError) {
+        console.log('❌ Classes access denied: User data error');
+        setHasClassesAccess(false);
+        return;
+      }
+
+      const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+      console.log('🔐 Classes admin/HR check:', {
+        is_superuser: userData.is_superuser,
+        is_staff: userData.is_staff,
+        role: userData.role,
+        hasPermission
+      });
+      
+      setHasClassesAccess(hasPermission);
+    } catch (err) {
+      console.error('Error checking classes access:', err);
+      setHasClassesAccess(false);
+    }
+  };
+
   // Fetch leave balance on component mount and user change
   const fetchLeaveBalance = async () => {
     if (!user?.id) return;
@@ -248,9 +307,11 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       fetchLeaveBalance();
       checkClassScheduleAccess();
       checkContentCalendarAccess();
+      checkClassesAccess();
     } else {
       setHasClassScheduleAccess(false);
       setHasContentCalendarAccess(false);
+      setHasClassesAccess(false);
     }
   }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -826,7 +887,8 @@ Your report is now available in the system.`);
   const mainNavItems = [
     ...baseNavItems,
     ...(hasContentCalendarAccess ? [{ name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon }] : []),
-    ...(hasClassScheduleAccess ? [{ name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon }] : [])
+    ...(hasClassScheduleAccess ? [{ name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon }] : []),
+    ...(hasClassesAccess ? [{ name: 'Classes', href: '/classes', icon: UserIcon }] : [])
   ];
 
   // HR-only navigation items (will be blank pages for now)
