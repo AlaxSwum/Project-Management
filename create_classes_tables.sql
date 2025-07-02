@@ -215,4 +215,4 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 -- This will show in the query results
 SELECT 
     'Classes Setup Complete!' as status,
-    (SELECT COUNT(*) FROM classes_members) as admin_members_added; 
+    (SELECT COUNT(*) FROM classes_members) as admin_members_added; image.png

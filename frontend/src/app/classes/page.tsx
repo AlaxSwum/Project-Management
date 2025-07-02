@@ -1470,19 +1470,10 @@ export default function ClassesPage() {
                       </span>
                     </div>
                     <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                      <div style={{ marginBottom: '0.5rem' }}>{item.class_type}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <CalendarIcon style={{ width: '14px', height: '14px' }} />
-                        {formatDate(item.class_date)}
-                        {item.start_time && ` at ${formatTime(item.start_time)}`}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <MapPinIcon style={{ width: '14px', height: '14px' }} />
-                        {item.location}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <UsersIcon style={{ width: '14px', height: '14px' }} />
-                        {item.current_participants}/{item.max_participants} students
+                      <div style={{ marginBottom: '1rem' }}>{item.class_type}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#059669' }}>
+                        <UsersIcon style={{ width: '16px', height: '16px' }} />
+                        {item.current_participants} students enrolled
                       </div>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#059669', fontWeight: '600' }}>
