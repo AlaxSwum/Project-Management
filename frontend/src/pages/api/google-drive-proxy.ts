@@ -238,15 +238,37 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
 
     // Convert base64 to buffer
     const fileBuffer = Buffer.from(fileData, 'base64');
+    
+    console.log('🔍 DEBUG: File buffer size:', fileBuffer.length);
 
-    // Create a readable stream from the buffer
-    const { Readable } = require('stream');
-    const bufferStream = new Readable();
-    bufferStream.push(fileBuffer);
-    bufferStream.push(null); // End the stream
+    // Create a proper readable stream from the buffer
+    const stream = require('stream');
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(fileBuffer);
 
-    // Upload to Google Drive
-    const response = await drive.files.create({
+    console.log('🔍 DEBUG: About to upload to Google Drive...');
+
+    // Validate parent folder exists if specified
+    if (parentId && parentId !== 'root') {
+      try {
+        await drive.files.get({ fileId: parentId });
+        console.log('🔍 DEBUG: Parent folder exists and is accessible');
+      } catch (folderError) {
+        console.error('❌ ERROR: Parent folder not accessible:', folderError);
+        return res.status(400).json({ 
+          error: 'Parent folder not found or not accessible',
+          details: 'Please make sure the folder is shared with the service account',
+          parentId 
+        });
+      }
+    }
+
+    // Upload to Google Drive with timeout
+    const uploadTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000);
+    });
+
+    const uploadPromise = drive.files.create({
       requestBody: metadata,
       media: {
         mimeType: mimeType || 'application/octet-stream',
@@ -255,14 +277,38 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
       fields: 'id, name, mimeType, modifiedTime, size, webViewLink, parents',
     });
 
+    const response = await Promise.race([uploadPromise, uploadTimeout]);
+
     console.log('✅ File uploaded successfully:', response.data);
     return res.status(200).json(response.data);
     
   } catch (error) {
     console.error('❌ ERROR uploading file:', error);
+    
+    // Enhanced error logging
+    if (error instanceof Error) {
+      console.error('❌ Error name:', error.name);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+    }
+    
+    // Check for specific Google API errors
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as any;
+      console.error('❌ Google API Error:', apiError.response?.data);
+      console.error('❌ Google API Status:', apiError.response?.status);
+      console.error('❌ Google API Headers:', apiError.response?.headers);
+    }
+    
     return res.status(500).json({ 
       error: 'Failed to upload file',
-      details: error instanceof Error ? error.message : String(error)
+      details: error instanceof Error ? error.message : String(error),
+      debug: {
+        fileName,
+        mimeType,
+        parentId,
+        bufferSize: fileData ? Buffer.from(fileData, 'base64').length : 0
+      }
     });
   }
 }
