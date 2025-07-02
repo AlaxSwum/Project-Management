@@ -415,7 +415,8 @@ export default function ClassesPage() {
       setShowFolderForm(false)
     } catch (err) {
       console.error('Error creating folder:', err)
-      setError(`Failed to create folder: ${err.message || err}`)
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      setError(`Failed to create folder: ${errorMessage}`)
     }
   }
 
