@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
-import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ClockIcon, MapPinIcon, UsersIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ClockIcon, MapPinIcon, UsersIcon, CurrencyDollarIcon, PhoneIcon, LinkIcon } from '@heroicons/react/24/outline'
 
 interface ClassItem {
   id: number
@@ -32,6 +32,38 @@ interface ClassItem {
   updated_at: string
 }
 
+interface Student {
+  id: number
+  class_id: number
+  student_name: string
+  email: string
+  phone_number: string
+  facebook_link: string
+  payment_method: 'Kpay' | 'Aya Pay' | 'Wave Pay'
+  payment_type: 'full' | 'split'
+  course_fee: number
+  discount_amount: number
+  discount_percentage: number
+  full_payment_amount: number | null
+  full_payment_date: string | null
+  number_of_splits: number
+  split_1_amount: number | null
+  split_1_date: string | null
+  split_2_amount: number | null
+  split_2_date: string | null
+  split_3_amount: number | null
+  split_3_date: string | null
+  split_4_amount: number | null
+  split_4_date: string | null
+  total_amount: number
+  paid_amount: number
+  remaining_amount: number
+  enrollment_status: string
+  payment_status: string
+  enrolled_at: string
+  notes: string
+}
+
 interface User {
   id: number
   name: string
@@ -51,6 +83,7 @@ const TARGET_AUDIENCES = ['Executives', 'Marketing Team', 'Sales Team', 'HR Team
 const DURATIONS = ['1 hour', '2 hours', '3 hours', 'Half day', 'Full day', '2 days', '1 week']
 const LOCATIONS = ['Conference Room A', 'Conference Room B', 'Training Center', 'Online - Zoom', 'Online - Teams', 'External Venue', 'Hybrid']
 const STATUSES = ['planning', 'open_registration', 'full', 'in_progress', 'completed', 'cancelled']
+const PAYMENT_METHODS = ['Kpay', 'Aya Pay', 'Wave Pay']
 
 export default function ClassesPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -60,17 +93,23 @@ export default function ClassesPage() {
   const [userRole, setUserRole] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [classItems, setClassItems] = useState<ClassItem[]>([])
+  const [students, setStudents] = useState<Student[]>([])
   const [members, setMembers] = useState<ClassesMember[]>([])
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [folders, setFolders] = useState<any[]>([])
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
+  const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null)
   const [currentFolder, setCurrentFolder] = useState<any | null>(null)
   const [folderPath, setFolderPath] = useState<any[]>([])
   const [filteredItems, setFilteredItems] = useState<ClassItem[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showStudentForm, setShowStudentForm] = useState(false)
   const [showMemberModal, setShowMemberModal] = useState(false)
   const [showFolderForm, setShowFolderForm] = useState(false)
   const [editingItem, setEditingItem] = useState<ClassItem | null>(null)
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  
+  // Class Form Data
   const [formData, setFormData] = useState({
     class_title: '',
     class_type: '',
@@ -91,6 +130,32 @@ export default function ClassesPage() {
     materials_needed: '',
     folder_id: null as number | null
   })
+
+  // Student Form Data
+  const [studentFormData, setStudentFormData] = useState({
+    student_name: '',
+    email: '',
+    phone_number: '',
+    facebook_link: '',
+    payment_method: 'Kpay' as 'Kpay' | 'Aya Pay' | 'Wave Pay',
+    payment_type: 'full' as 'full' | 'split',
+    course_fee: 0,
+    discount_amount: 0,
+    discount_percentage: 0,
+    full_payment_amount: 0,
+    full_payment_date: '',
+    number_of_splits: 2,
+    split_1_amount: 0,
+    split_1_date: '',
+    split_2_amount: 0,
+    split_2_date: '',
+    split_3_amount: 0,
+    split_3_date: '',
+    split_4_amount: 0,
+    split_4_date: '',
+    notes: ''
+  })
+
   const [folderFormData, setFolderFormData] = useState({
     name: '',
     description: '',
@@ -173,6 +238,19 @@ export default function ClassesPage() {
 
       if (itemsError) throw itemsError
 
+      // Fetch students for selected class
+      if (selectedClass) {
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('classes_participants')
+          .select('*')
+          .eq('class_id', selectedClass.id)
+          .order('enrolled_at', { ascending: false })
+
+        if (!studentsError) {
+          setStudents(studentsData || [])
+        }
+      }
+
       // Fetch classes members
       const { data: membersData, error: membersError } = await supabase
         .from('classes_members')
@@ -224,7 +302,7 @@ export default function ClassesPage() {
 
   const filterItemsByFolder = (items: ClassItem[], folderId: number | null) => {
     if (folderId === null) {
-      setFilteredItems(items)
+      setFilteredItems([]) // Don't show classes at root level
     } else {
       const filtered = items.filter(item => item.folder_id === folderId)
       setFilteredItems(filtered)
@@ -235,7 +313,14 @@ export default function ClassesPage() {
     setCurrentFolder(folder)
     setSelectedFolder(folder.id)
     setFolderPath([...folderPath, folder])
+    setSelectedClass(null) // Reset selected class when entering folder
     filterItemsByFolder(classItems, folder.id)
+  }
+
+  const enterClass = (classItem: ClassItem) => {
+    setSelectedClass(classItem)
+    // Fetch students for this class
+    fetchData()
   }
 
   const goToFolder = (folder: any | null) => {
@@ -243,6 +328,7 @@ export default function ClassesPage() {
       // Go to root
       setCurrentFolder(null)
       setSelectedFolder(null)
+      setSelectedClass(null)
       setFolderPath([])
       filterItemsByFolder(classItems, null)
     } else {
@@ -251,6 +337,7 @@ export default function ClassesPage() {
       const newPath = folderPath.slice(0, folderIndex + 1)
       setCurrentFolder(folder)
       setSelectedFolder(folder.id)
+      setSelectedClass(null)
       setFolderPath(newPath)
       filterItemsByFolder(classItems, folder.id)
     }
@@ -264,6 +351,34 @@ export default function ClassesPage() {
       // Show subfolders of current folder
       return folders.filter(folder => folder.parent_folder_id === currentFolder.id)
     }
+  }
+
+  // Calculate total amount based on discount and course fee
+  const calculateTotalAmount = () => {
+    const { course_fee, discount_amount, discount_percentage } = studentFormData
+    if (discount_percentage > 0) {
+      return course_fee - (course_fee * discount_percentage / 100)
+    }
+    return course_fee - discount_amount
+  }
+
+  // Auto-split calculation
+  const calculateSplitAmounts = () => {
+    const totalAmount = calculateTotalAmount()
+    const { number_of_splits } = studentFormData
+    const splitAmount = Math.round((totalAmount / number_of_splits) * 100) / 100
+    
+    const updates: any = {}
+    for (let i = 1; i <= 4; i++) {
+      if (i <= number_of_splits) {
+        updates[`split_${i}_amount`] = splitAmount
+      } else {
+        updates[`split_${i}_amount`] = 0
+        updates[`split_${i}_date`] = ''
+      }
+    }
+    
+    setStudentFormData(prev => ({ ...prev, ...updates }))
   }
 
   useEffect(() => {
@@ -283,12 +398,19 @@ export default function ClassesPage() {
     } else if (!authLoading) {
       setIsLoading(false)
     }
-  }, [hasAccess, user?.id])
+  }, [hasAccess, user?.id, selectedClass])
 
   useEffect(() => {
     // Update filtered items when class items change
     filterItemsByFolder(classItems, selectedFolder)
   }, [classItems, selectedFolder])
+
+  // Auto-calculate splits when payment type, course fee, or discount changes
+  useEffect(() => {
+    if (studentFormData.payment_type === 'split') {
+      calculateSplitAmounts()
+    }
+  }, [studentFormData.course_fee, studentFormData.discount_amount, studentFormData.discount_percentage, studentFormData.number_of_splits, studentFormData.payment_type])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -324,6 +446,128 @@ export default function ClassesPage() {
     } catch (err) {
       console.error('Error saving class:', err)
       setError('Failed to save class')
+    }
+  }
+
+  const handleStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      
+      const submitData = {
+        ...studentFormData,
+        class_id: selectedClass?.id,
+        enrolled_by: user?.id
+      }
+      
+      if (editingStudent) {
+        const { error } = await supabase
+          .from('classes_participants')
+          .update(submitData)
+          .eq('id', editingStudent.id)
+        
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('classes_participants')
+          .insert(submitData)
+        
+        if (error) throw error
+      }
+      
+      await fetchData()
+      resetStudentForm()
+    } catch (err) {
+      console.error('Error saving student:', err)
+      setError('Failed to save student enrollment')
+    }
+  }
+
+  const resetStudentForm = () => {
+    setStudentFormData({
+      student_name: '',
+      email: '',
+      phone_number: '',
+      facebook_link: '',
+      payment_method: 'Kpay',
+      payment_type: 'full',
+      course_fee: 0,
+      discount_amount: 0,
+      discount_percentage: 0,
+      full_payment_amount: 0,
+      full_payment_date: '',
+      number_of_splits: 2,
+      split_1_amount: 0,
+      split_1_date: '',
+      split_2_amount: 0,
+      split_2_date: '',
+      split_3_amount: 0,
+      split_3_date: '',
+      split_4_amount: 0,
+      split_4_date: '',
+      notes: ''
+    })
+    setEditingStudent(null)
+    setShowStudentForm(false)
+  }
+
+  const handleDeleteStudent = async (id: number) => {
+    if (!confirm('Are you sure you want to remove this student?')) return
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      const { error } = await supabase
+        .from('classes_participants')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      await fetchData()
+    } catch (err) {
+      console.error('Error deleting student:', err)
+      setError('Failed to delete student')
+    }
+  }
+
+  const startEditStudent = (student: Student) => {
+    setStudentFormData({
+      student_name: student.student_name,
+      email: student.email,
+      phone_number: student.phone_number || '',
+      facebook_link: student.facebook_link || '',
+      payment_method: student.payment_method,
+      payment_type: student.payment_type,
+      course_fee: student.course_fee,
+      discount_amount: student.discount_amount || 0,
+      discount_percentage: student.discount_percentage || 0,
+      full_payment_amount: student.full_payment_amount || 0,
+      full_payment_date: student.full_payment_date || '',
+      number_of_splits: student.number_of_splits,
+      split_1_amount: student.split_1_amount || 0,
+      split_1_date: student.split_1_date || '',
+      split_2_amount: student.split_2_amount || 0,
+      split_2_date: student.split_2_date || '',
+      split_3_amount: student.split_3_amount || 0,
+      split_3_date: student.split_3_date || '',
+      split_4_amount: student.split_4_amount || 0,
+      split_4_date: student.split_4_date || '',
+      notes: student.notes || ''
+    })
+    setEditingStudent(student)
+    setShowStudentForm(true)
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US').format(amount) + ' MMK'
+  }
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return '#065f46'
+      case 'partial': return '#d97706'
+      case 'unpaid': return '#dc2626'
+      default: return '#6b7280'
     }
   }
 
@@ -825,134 +1069,297 @@ export default function ClassesPage() {
             </div>
           )}
 
-          {/* Classes Table */}
-          {currentFolder && (
-            <div style={{
-              background: '#ffffff',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              overflow: 'hidden'
-            }}>
+          {/* Student Management - When Class is Selected */}
+          {selectedClass && (
+            <div>
+              {/* Class Info Header */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: '200px 150px 120px 150px 100px 100px 120px 150px 100px 80px',
-                gap: '0',
-                background: '#f9f9f9',
-                borderBottom: '2px solid #e5e7eb',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                color: '#000000'
+                background: '#f8fafc',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '1.5rem',
+                marginBottom: '2rem'
               }}>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CLASS TITLE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TYPE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>AUDIENCE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DATE & TIME</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DURATION</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>LOCATION</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>INSTRUCTOR</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CAPACITY</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STATUS</div>
-                <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0', color: '#1e293b' }}>
+                      {selectedClass.class_title}
+                    </h2>
+                    <p style={{ margin: '0.5rem 0 0 0', color: '#64748b' }}>
+                      {selectedClass.class_type} • {formatDate(selectedClass.class_date)} • {selectedClass.location}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedClass(null)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#e2e8f0',
+                      color: '#475569',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ← Back to Classes
+                  </button>
+                </div>
               </div>
 
-              {filteredItems.map(item => (
-                <div key={item.id} style={{
+              {/* Student Enrollment Button */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: '0', color: '#1e293b' }}>
+                  Student Enrollment ({students.length})
+                </h3>
+                <button
+                  onClick={() => setShowStudentForm(true)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#059669',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <PlusIcon style={{ width: '16px', height: '16px' }} />
+                  Enroll Student
+                </button>
+              </div>
+
+              {/* Students Table */}
+              <div style={{
+                background: '#ffffff',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '200px 150px 120px 150px 100px 100px 120px 150px 100px 80px',
+                  gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 80px',
                   gap: '0',
-                  borderBottom: '1px solid #f3f4f6',
-                  fontSize: '0.85rem'
+                  background: '#f8fafc',
+                  borderBottom: '2px solid #e5e7eb',
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  color: '#1e293b'
                 }}>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6' }}>
-                    <div style={{ fontWeight: '600', color: '#000000' }}>{item.class_title}</div>
-                    {item.class_description && (
-                      <div style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                        {item.class_description.substring(0, 60)}...
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    {item.class_type}
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    {item.target_audience}
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    <div>{formatDate(item.class_date)}</div>
-                    {item.start_time && item.end_time && (
-                      <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                        {formatTime(item.start_time)} - {formatTime(item.end_time)}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    {item.duration}
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <MapPinIcon style={{ width: '12px', height: '12px' }} />
-                      {item.location}
-                    </div>
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    {item.instructor_name}
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6', color: '#666666' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <UsersIcon style={{ width: '12px', height: '12px' }} />
-                      {item.current_participants}/{item.max_participants}
-                    </div>
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f3f4f6' }}>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      background: getStatusColor(item.status) + '20',
-                      color: getStatusColor(item.status)
-                    }}>
-                      {getStatusLabel(item.status)}
-                    </span>
-                  </div>
-                  <div style={{ padding: '1rem 0.75rem', display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => startEdit(item)}
-                      style={{
-                        padding: '0.25rem',
-                        background: 'none',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        color: '#666666'
-                      }}
-                      title="Edit class"
-                    >
-                      <PencilIcon style={{ width: '12px', height: '12px' }} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      style={{
-                        padding: '0.25rem',
-                        background: 'none',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        color: '#dc2626'
-                      }}
-                      title="Delete class"
-                    >
-                      <TrashIcon style={{ width: '12px', height: '12px' }} />
-                    </button>
-                  </div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STUDENT NAME</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CONTACT</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PAYMENT METHOD</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>COURSE FEE</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TOTAL AMOUNT</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PAID AMOUNT</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STATUS</div>
+                  <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
                 </div>
-              ))}
+
+                {students.map(student => (
+                  <div key={student.id} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 80px',
+                    gap: '0',
+                    borderBottom: '1px solid #f1f5f9',
+                    fontSize: '0.85rem'
+                  }}>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
+                      <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.student_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                        {student.email}
+                      </div>
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                        <PhoneIcon style={{ width: '12px', height: '12px' }} />
+                        {student.phone_number}
+                      </div>
+                      {student.facebook_link && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <LinkIcon style={{ width: '12px', height: '12px' }} />
+                          Facebook
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
+                      <div>{student.payment_method}</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        {student.payment_type === 'split' ? `${student.number_of_splits} splits` : 'Full payment'}
+                      </div>
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
+                      {formatCurrency(student.course_fee)}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#1e293b', fontWeight: '600' }}>
+                      {formatCurrency(student.total_amount)}
+                      {(student.discount_amount > 0 || student.discount_percentage > 0) && (
+                        <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.25rem' }}>
+                          {student.discount_percentage > 0 ? `${student.discount_percentage}% discount` : `${formatCurrency(student.discount_amount)} off`}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#1e293b', fontWeight: '600' }}>
+                      {formatCurrency(student.paid_amount)}
+                      {student.remaining_amount > 0 && (
+                        <div style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                          {formatCurrency(student.remaining_amount)} remaining
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        background: getPaymentStatusColor(student.payment_status) + '20',
+                        color: getPaymentStatusColor(student.payment_status)
+                      }}>
+                        {student.payment_status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', display: 'flex', gap: '0.25rem' }}>
+                      <button
+                        onClick={() => startEditStudent(student)}
+                        style={{
+                          padding: '0.25rem',
+                          background: 'none',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#666666'
+                        }}
+                        title="Edit student"
+                      >
+                        <PencilIcon style={{ width: '12px', height: '12px' }} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id)}
+                        style={{
+                          padding: '0.25rem',
+                          background: 'none',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#dc2626'
+                        }}
+                        title="Remove student"
+                      >
+                        <TrashIcon style={{ width: '12px', height: '12px' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {students.length === 0 && (
+                  <div style={{
+                    padding: '3rem',
+                    textAlign: 'center',
+                    color: '#64748b'
+                  }}>
+                    <UserGroupIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', opacity: 0.5 }} />
+                    <p>No students enrolled in this class yet.</p>
+                    <button
+                      onClick={() => setShowStudentForm(true)}
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem 1.5rem',
+                        background: '#059669',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Enroll First Student
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Classes List - When Folder Selected but No Class Selected */}
+          {currentFolder && !selectedClass && (
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#1e293b' }}>
+                Classes in {currentFolder.name}
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '1rem'
+              }}>
+                {filteredItems.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => enterClass(item)}
+                    style={{
+                      padding: '1.5rem',
+                      background: '#ffffff',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#059669'
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb'
+                      e.currentTarget.style.transform = 'translateY(0)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                      <h4 style={{ margin: '0', fontSize: '1.1rem', fontWeight: '600', color: '#1e293b' }}>
+                        {item.class_title}
+                      </h4>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        background: getStatusColor(item.status) + '20',
+                        color: getStatusColor(item.status)
+                      }}>
+                        {getStatusLabel(item.status)}
+                      </span>
+                    </div>
+                    <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                      <div style={{ marginBottom: '0.5rem' }}>{item.class_type}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <CalendarIcon style={{ width: '14px', height: '14px' }} />
+                        {formatDate(item.class_date)}
+                        {item.start_time && ` at ${formatTime(item.start_time)}`}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <MapPinIcon style={{ width: '14px', height: '14px' }} />
+                        {item.location}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <UsersIcon style={{ width: '14px', height: '14px' }} />
+                        {item.current_participants}/{item.max_participants} students
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#059669', fontWeight: '600' }}>
+                      Click to manage students →
+                    </div>
+                  </div>
+                ))}
+              </div>
 
               {filteredItems.length === 0 && (
                 <div style={{
+                  background: '#f8fafc',
+                  border: '2px dashed #cbd5e1',
+                  borderRadius: '8px',
                   padding: '3rem',
                   textAlign: 'center',
-                  color: '#666666'
+                  color: '#64748b'
                 }}>
                   <CalendarIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', opacity: 0.5 }} />
                   <p>No classes found in this folder.</p>
@@ -961,7 +1368,7 @@ export default function ClassesPage() {
                     style={{
                       marginTop: '1rem',
                       padding: '0.75rem 1.5rem',
-                      background: '#000000',
+                      background: '#1e293b',
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '6px',
@@ -975,18 +1382,20 @@ export default function ClassesPage() {
             </div>
           )}
 
-          {/* No folder selected message */}
-          {!currentFolder && (
+          {/* Root Level - Only Folders */}
+          {!currentFolder && !selectedClass && (
             <div style={{
-              background: '#f9f9f9',
-              border: '2px dashed #d1d5db',
+              background: '#f8fafc',
+              border: '2px dashed #cbd5e1',
               borderRadius: '8px',
               padding: '3rem',
               textAlign: 'center',
-              color: '#666666'
+              color: '#64748b'
             }}>
               <FolderIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', opacity: 0.5 }} />
-              <p>Select a folder to view and manage classes.</p>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem', fontWeight: '600' }}>Student Management System</h3>
+              <p>Select a folder to view classes and manage student enrollments.</p>
+              <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>Folders organize your classes by category (e.g., PR Workshops, Media Training, etc.)</p>
             </div>
           )}
         </div>
@@ -1547,6 +1956,435 @@ export default function ClassesPage() {
                   }}
                 >
                   Create Folder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Student Enrollment Form Modal */}
+      {showStudentForm && selectedClass && (
+        <div style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '8px',
+            padding: '2rem',
+            maxWidth: '700px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1e293b' }}>
+              {editingStudent ? 'Edit Student Enrollment' : 'Enroll New Student'}
+            </h2>
+            <p style={{ color: '#64748b', marginBottom: '2rem' }}>
+              Class: {selectedClass.class_title}
+            </p>
+
+            <form onSubmit={handleStudentSubmit}>
+              {/* Student Information */}
+              <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '8px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#1e293b' }}>
+                  Student Information
+                </h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Student Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={studentFormData.student_name}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={studentFormData.email}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={studentFormData.phone_number}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Facebook Link
+                    </label>
+                    <input
+                      type="url"
+                      value={studentFormData.facebook_link}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
+                      placeholder="https://facebook.com/username"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Information */}
+              <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f0fdf4', borderRadius: '8px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#1e293b' }}>
+                  Payment Information
+                </h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Payment Method *
+                    </label>
+                    <select
+                      value={studentFormData.payment_method}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_method: e.target.value as any })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      {PAYMENT_METHODS.map(method => (
+                        <option key={method} value={method}>{method}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Course Fee (MMK) *
+                    </label>
+                    <input
+                      type="number"
+                      value={studentFormData.course_fee}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
+                      required
+                      min="0"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Payment Type *
+                    </label>
+                    <select
+                      value={studentFormData.payment_type}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      <option value="full">Full Payment</option>
+                      <option value="split">Split Payment</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Discount Section */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem', padding: '1rem', background: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Discount Amount (MMK)
+                    </label>
+                    <input
+                      type="number"
+                      value={studentFormData.discount_amount}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, discount_amount: Number(e.target.value), discount_percentage: 0 })}
+                      min="0"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                      Discount Percentage (%)
+                    </label>
+                    <input
+                      type="number"
+                      value={studentFormData.discount_percentage}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, discount_percentage: Number(e.target.value), discount_amount: 0 })}
+                      min="0"
+                      max="100"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Calculation Display */}
+                <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '6px', border: '1px solid #bbf7d0', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span>Course Fee:</span>
+                    <span style={{ fontWeight: '600' }}>{formatCurrency(studentFormData.course_fee)}</span>
+                  </div>
+                  {(studentFormData.discount_amount > 0 || studentFormData.discount_percentage > 0) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#059669' }}>
+                      <span>Discount:</span>
+                      <span style={{ fontWeight: '600' }}>
+                        -{formatCurrency(studentFormData.discount_percentage > 0 
+                          ? studentFormData.course_fee * studentFormData.discount_percentage / 100 
+                          : studentFormData.discount_amount
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #bbf7d0', paddingTop: '0.5rem', fontSize: '1.1rem', fontWeight: '700' }}>
+                    <span>Total Amount:</span>
+                    <span>{formatCurrency(calculateTotalAmount())}</span>
+                  </div>
+                </div>
+
+                {/* Full Payment Section */}
+                {studentFormData.payment_type === 'full' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                        Payment Amount (MMK)
+                      </label>
+                      <input
+                        type="number"
+                        value={studentFormData.full_payment_amount}
+                        onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_amount: Number(e.target.value) })}
+                        min="0"
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                        Payment Date
+                      </label>
+                      <input
+                        type="date"
+                        value={studentFormData.full_payment_date}
+                        onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_date: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Split Payment Section */}
+                {studentFormData.payment_type === 'split' && (
+                  <div>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                        Number of Splits
+                      </label>
+                      <select
+                        value={studentFormData.number_of_splits}
+                        onChange={(e) => setStudentFormData({ ...studentFormData, number_of_splits: Number(e.target.value) })}
+                        style={{
+                          width: '200px',
+                          padding: '0.75rem',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        <option value={2}>2 Splits</option>
+                        <option value={3}>3 Splits</option>
+                        <option value={4}>4 Splits</option>
+                      </select>
+                    </div>
+
+                    {/* Split Payment Inputs */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                      {[1, 2, 3, 4].slice(0, studentFormData.number_of_splits).map(split => (
+                        <div key={split} style={{ padding: '1rem', background: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                            Split {split}
+                          </h4>
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
+                              Amount (MMK)
+                            </label>
+                            <input
+                              type="number"
+                              value={studentFormData[`split_${split}_amount` as keyof typeof studentFormData] as number}
+                              onChange={(e) => setStudentFormData({ 
+                                ...studentFormData, 
+                                [`split_${split}_amount`]: Number(e.target.value) 
+                              })}
+                              min="0"
+                              style={{
+                                width: '100%',
+                                padding: '0.5rem',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '4px',
+                                fontSize: '0.8rem'
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
+                              Date
+                            </label>
+                            <input
+                              type="date"
+                              value={studentFormData[`split_${split}_date` as keyof typeof studentFormData] as string}
+                              onChange={(e) => setStudentFormData({ 
+                                ...studentFormData, 
+                                [`split_${split}_date`]: e.target.value 
+                              })}
+                              style={{
+                                width: '100%',
+                                padding: '0.5rem',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '4px',
+                                fontSize: '0.8rem'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                  Notes
+                </label>
+                <textarea
+                  value={studentFormData.notes}
+                  onChange={(e) => setStudentFormData({ ...studentFormData, notes: e.target.value })}
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={resetStudentForm}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#ffffff',
+                    color: '#64748b',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#059669',
+                    color: '#ffffff',
+                    border: '2px solid #059669',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {editingStudent ? 'Update Enrollment' : 'Enroll Student'}
                 </button>
               </div>
             </form>
