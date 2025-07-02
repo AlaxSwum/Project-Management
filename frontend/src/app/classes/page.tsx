@@ -383,15 +383,28 @@ export default function ClassesPage() {
     
     try {
       const supabase = (await import('@/lib/supabase')).supabase
-      const { error } = await supabase
+      
+      console.log('🗂️ Creating folder with data:', {
+        ...folderFormData,
+        parent_folder_id: currentFolder?.id || null,
+        created_by_id: user?.id
+      })
+      
+      const { data, error } = await supabase
         .from('classes_folders')
         .insert({
           ...folderFormData,
           parent_folder_id: currentFolder?.id || null,
           created_by_id: user?.id
         })
+        .select()
       
-      if (error) throw error
+      if (error) {
+        console.error('🚨 Supabase error details:', error)
+        throw error
+      }
+      
+      console.log('✅ Folder created successfully:', data)
       await fetchData()
       setFolderFormData({
         name: '',
@@ -402,7 +415,7 @@ export default function ClassesPage() {
       setShowFolderForm(false)
     } catch (err) {
       console.error('Error creating folder:', err)
-      setError('Failed to create folder')
+      setError(`Failed to create folder: ${err.message || err}`)
     }
   }
 
