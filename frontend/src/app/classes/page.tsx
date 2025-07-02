@@ -419,10 +419,26 @@ export default function ClassesPage() {
       const supabase = (await import('@/lib/supabase')).supabase
       
       const submitData = {
-        ...formData,
-        learning_objectives: formData.learning_objectives.filter(obj => obj.trim() !== ''),
-        max_participants: Number(formData.max_participants),
+        class_title: formData.class_title,
+        class_description: formData.class_description,
+        // Provide default values for fields not in the simplified form
+        class_type: 'General Training',
+        target_audience: 'All Staff',
+        class_date: new Date().toISOString().split('T')[0], // Today's date
+        start_time: '09:00',
+        end_time: '17:00',
+        duration: 'Full day',
+        location: 'TBD',
+        instructor_name: 'TBD',
+        instructor_bio: '',
+        learning_objectives: [formData.class_description.substring(0, 100) + '...'],
+        prerequisites: '',
+        max_participants: 50,
         current_participants: 0,
+        status: 'planning',
+        registration_deadline: null,
+        materials_needed: '',
+        folder_id: currentFolder?.id || null,
         created_by_id: user?.id
       }
       
@@ -1429,226 +1445,16 @@ export default function ClassesPage() {
             </h2>
 
             <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Class Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.class_title}
-                    onChange={(e) => setFormData({ ...formData, class_title: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Class Type *
-                  </label>
-                  <select
-                    value={formData.class_type}
-                    onChange={(e) => setFormData({ ...formData, class_type: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    <option value="">Select class type</option>
-                    {CLASS_TYPES.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Target Audience *
-                  </label>
-                  <select
-                    value={formData.target_audience}
-                    onChange={(e) => setFormData({ ...formData, target_audience: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    <option value="">Select target audience</option>
-                    {TARGET_AUDIENCES.map(audience => (
-                      <option key={audience} value={audience}>{audience}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    {STATUSES.map(status => (
-                      <option key={status} value={status}>{getStatusLabel(status)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Class Date *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.class_date}
-                    onChange={(e) => setFormData({ ...formData, class_date: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.start_time}
-                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    End Time
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.end_time}
-                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Duration
-                  </label>
-                  <select
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    <option value="">Select duration</option>
-                    {DURATIONS.map(duration => (
-                      <option key={duration} value={duration}>{duration}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Location
-                  </label>
-                  <select
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    <option value="">Select location</option>
-                    {LOCATIONS.map(location => (
-                      <option key={location} value={location}>{location}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Max Participants
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.max_participants}
-                    onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) || 0 })}
-                    min="1"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                  Instructor Name
+                  Class Name *
                 </label>
                 <input
                   type="text"
-                  value={formData.instructor_name}
-                  onChange={(e) => setFormData({ ...formData, instructor_name: e.target.value })}
+                  value={formData.class_title}
+                  onChange={(e) => setFormData({ ...formData, class_title: e.target.value })}
+                  required
+                  placeholder="Enter class name (e.g., PR Writing Workshop, Media Interview Training)"
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -1657,154 +1463,25 @@ export default function ClassesPage() {
                     fontSize: '0.9rem'
                   }}
                 />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                  Instructor Bio
-                </label>
-                <textarea
-                  value={formData.instructor_bio}
-                  onChange={(e) => setFormData({ ...formData, instructor_bio: e.target.value })}
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    resize: 'vertical'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                  Class Description
-                </label>
-                <textarea
-                  value={formData.class_description}
-                  onChange={(e) => setFormData({ ...formData, class_description: e.target.value })}
-                  rows={4}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    resize: 'vertical'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                  Learning Objectives
-                </label>
-                {formData.learning_objectives.map((objective, index) => (
-                  <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <input
-                      type="text"
-                      value={objective}
-                      onChange={(e) => updateLearningObjective(index, e.target.value)}
-                      placeholder={`Learning objective ${index + 1}`}
-                      style={{
-                        flex: 1,
-                        padding: '0.75rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                    {formData.learning_objectives.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeLearningObjective(index)}
-                        style={{
-                          padding: '0.75rem',
-                          background: '#dc2626',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addLearningObjective}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#f3f4f6',
-                    color: '#000000',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem'
-                  }}
-                >
-                  Add Learning Objective
-                </button>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Prerequisites
-                  </label>
-                  <textarea
-                    value={formData.prerequisites}
-                    onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
-                    rows={3}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem',
-                      resize: 'vertical'
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Materials Needed
-                  </label>
-                  <textarea
-                    value={formData.materials_needed}
-                    onChange={(e) => setFormData({ ...formData, materials_needed: e.target.value })}
-                    rows={3}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem',
-                      resize: 'vertical'
-                    }}
-                  />
-                </div>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                  Registration Deadline
+                  Class Description *
                 </label>
-                <input
-                  type="date"
-                  value={formData.registration_deadline}
-                  onChange={(e) => setFormData({ ...formData, registration_deadline: e.target.value })}
+                <textarea
+                  value={formData.class_description}
+                  onChange={(e) => setFormData({ ...formData, class_description: e.target.value })}
+                  required
+                  rows={4}
+                  placeholder="Describe what this class covers, learning objectives, and what students will gain..."
                   style={{
                     width: '100%',
                     padding: '0.75rem',
                     border: '2px solid #e5e7eb',
                     borderRadius: '6px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    resize: 'vertical'
                   }}
                 />
               </div>
