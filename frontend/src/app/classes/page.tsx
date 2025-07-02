@@ -1395,7 +1395,7 @@ export default function ClassesPage() {
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
-                      {formatCurrency(students.reduce((sum, student) => sum + student.course_fee, 0))}
+                      {/* Empty - no course fee total */}
                     </div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
                       {formatCurrency(students.reduce((sum, student) => sum + student.total_amount, 0))}
