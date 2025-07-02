@@ -1195,20 +1195,22 @@ export default function ClassesPage() {
                 background: '#ffffff',
                 border: '2px solid #e5e7eb',
                 borderRadius: '8px',
-                overflow: 'hidden'
+                overflow: 'auto'
               }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 120px',
+                  gridTemplateColumns: '180px 120px 120px 120px 100px 120px 120px 100px 120px',
                   gap: '0',
                   background: '#f8fafc',
                   borderBottom: '2px solid #e5e7eb',
                   fontWeight: '700',
                   fontSize: '0.85rem',
-                  color: '#1e293b'
+                  color: '#1e293b',
+                  minWidth: '1000px'
                 }}>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STUDENT NAME</div>
-                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CONTACT</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PHONE</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>FACEBOOK</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PAYMENT METHOD</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>COURSE FEE</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TOTAL AMOUNT</div>
@@ -1217,32 +1219,51 @@ export default function ClassesPage() {
                   <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
                 </div>
 
-                                 {students.map(student => (
+                                                  {students.map(student => (
                    <div key={student.id} style={{
                      display: 'grid',
-                     gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 120px',
+                     gridTemplateColumns: '180px 120px 120px 120px 100px 120px 120px 100px 120px',
                      gap: '0',
                      borderBottom: '1px solid #f1f5f9',
-                     fontSize: '0.85rem'
+                     fontSize: '0.85rem',
+                     minWidth: '1000px'
                    }}>
-                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
-                      <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.student_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
-                        {student.email}
-                      </div>
-                    </div>
-                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                        <PhoneIcon style={{ width: '12px', height: '12px' }} />
-                        {student.phone_number}
-                      </div>
-                      {student.facebook_link && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <LinkIcon style={{ width: '12px', height: '12px' }} />
-                          Facebook
-                        </div>
-                      )}
-                    </div>
+                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
+                       <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.student_name}</div>
+                       <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                         {student.email}
+                       </div>
+                     </div>
+                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                         <PhoneIcon style={{ width: '12px', height: '12px' }} />
+                         <span style={{ fontSize: '0.8rem' }}>{student.phone_number || 'N/A'}</span>
+                       </div>
+                     </div>
+                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
+                       {student.facebook_link ? (
+                         <a
+                           href={student.facebook_link}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           style={{
+                             display: 'flex',
+                             alignItems: 'center',
+                             gap: '0.25rem',
+                             color: '#3b82f6',
+                             textDecoration: 'none',
+                             fontSize: '0.8rem'
+                           }}
+                           onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                           onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                         >
+                           <LinkIcon style={{ width: '12px', height: '12px' }} />
+                           Facebook
+                         </a>
+                       ) : (
+                         <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>N/A</span>
+                       )}
+                     </div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
                       <div>{student.payment_method}</div>
                       <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
@@ -1351,6 +1372,50 @@ export default function ClassesPage() {
                     >
                       Enroll First Student
                     </button>
+                  </div>
+                )}
+
+                {/* Total Summary */}
+                {students.length > 0 && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '180px 120px 120px 120px 100px 120px 120px 100px 120px',
+                    gap: '0',
+                    background: '#f0f9ff',
+                    borderTop: '2px solid #0284c7',
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    color: '#0c4a6e',
+                    minWidth: '1000px'
+                  }}>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
+                      TOTAL ({students.length} students)
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
+                      {formatCurrency(students.reduce((sum, student) => sum + student.course_fee, 0))}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
+                      {formatCurrency(students.reduce((sum, student) => sum + student.total_amount, 0))}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
+                      {formatCurrency(students.reduce((sum, student) => sum + student.paid_amount, 0))}
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        background: '#dcfce7',
+                        color: '#16a34a'
+                      }}>
+                        REVENUE
+                      </span>
+                    </div>
+                    <div style={{ padding: '1rem 0.75rem' }}></div>
                   </div>
                 )}
               </div>
@@ -1713,15 +1778,15 @@ export default function ClassesPage() {
           justifyContent: 'center',
           zIndex: 50
         }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '8px',
-            padding: '2rem',
-            maxWidth: '700px',
-            width: '90%',
-            maxHeight: '90vh',
-            overflow: 'auto'
-          }}>
+                     <div style={{
+             background: '#ffffff',
+             borderRadius: '8px',
+             padding: 'clamp(1rem, 4vw, 2rem)',
+             maxWidth: 'min(800px, 95vw)',
+             width: '100%',
+             maxHeight: '90vh',
+             overflow: 'auto'
+           }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1e293b' }}>
               {editingStudent ? 'Edit Student Enrollment' : 'Enroll New Student'}
             </h2>
@@ -1736,84 +1801,93 @@ export default function ClassesPage() {
                   Student Information
                 </h3>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Student Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={studentFormData.student_name}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
+                                 <div style={{ 
+                   display: 'grid', 
+                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                   gap: '1rem', 
+                   marginBottom: '1rem' 
+                 }}>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Student Name *
+                     </label>
+                     <input
+                       type="text"
+                       value={studentFormData.student_name}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
+                       required
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      value={studentFormData.email}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
-                </div>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Email *
+                     </label>
+                     <input
+                       type="email"
+                       value={studentFormData.email}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
+                       required
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
+                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={studentFormData.phone_number}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
+                 <div style={{ 
+                   display: 'grid', 
+                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                   gap: '1rem' 
+                 }}>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Phone Number
+                     </label>
+                     <input
+                       type="tel"
+                       value={studentFormData.phone_number}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Facebook Link
-                    </label>
-                    <input
-                      type="url"
-                      value={studentFormData.facebook_link}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
-                      placeholder="https://facebook.com/username"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
-                </div>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Facebook Link
+                     </label>
+                     <input
+                       type="url"
+                       value={studentFormData.facebook_link}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
+                       placeholder="https://facebook.com/username"
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
+                 </div>
               </div>
 
               {/* Payment Information */}
@@ -1822,111 +1896,125 @@ export default function ClassesPage() {
                   Payment Information
                 </h3>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Payment Method *
-                    </label>
-                    <select
-                      value={studentFormData.payment_method}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_method: e.target.value as any })}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {PAYMENT_METHODS.map(method => (
-                        <option key={method} value={method}>{method}</option>
-                      ))}
-                    </select>
-                  </div>
+                                 <div style={{ 
+                   display: 'grid', 
+                   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                   gap: '1rem', 
+                   marginBottom: '1rem' 
+                 }}>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Payment Method *
+                     </label>
+                     <select
+                       value={studentFormData.payment_method}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, payment_method: e.target.value as any })}
+                       required
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     >
+                       {PAYMENT_METHODS.map(method => (
+                         <option key={method} value={method}>{method}</option>
+                       ))}
+                     </select>
+                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Course Fee (MMK) *
-                    </label>
-                    <input
-                      type="number"
-                      value={studentFormData.course_fee}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
-                      required
-                      min="0"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Course Fee (MMK) *
+                     </label>
+                     <input
+                       type="number"
+                       value={studentFormData.course_fee}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
+                       required
+                       min="0"
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Payment Type *
-                    </label>
-                    <select
-                      value={studentFormData.payment_type}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      <option value="full">Full Payment</option>
-                      <option value="split">Split Payment</option>
-                    </select>
-                  </div>
-                </div>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Payment Type *
+                     </label>
+                     <select
+                       value={studentFormData.payment_type}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     >
+                       <option value="full">Full Payment</option>
+                       <option value="split">Split Payment</option>
+                     </select>
+                   </div>
+                 </div>
 
-                {/* Discount Section */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem', padding: '1rem', background: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Discount Amount (MMK)
-                    </label>
-                    <input
-                      type="number"
-                      value={studentFormData.discount_amount}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, discount_amount: Number(e.target.value), discount_percentage: 0 })}
-                      min="0"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
+                 {/* Discount Section */}
+                 <div style={{ 
+                   display: 'grid', 
+                   gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                   gap: '1rem', 
+                   marginBottom: '1rem', 
+                   padding: '1rem', 
+                   background: '#ffffff', 
+                   borderRadius: '6px', 
+                   border: '1px solid #e2e8f0' 
+                 }}>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Discount Amount (MMK)
+                     </label>
+                     <input
+                       type="number"
+                       value={studentFormData.discount_amount}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, discount_amount: Number(e.target.value), discount_percentage: 0 })}
+                       min="0"
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                      Discount Percentage (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={studentFormData.discount_percentage}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, discount_percentage: Number(e.target.value), discount_amount: 0 })}
-                      min="0"
-                      max="100"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem'
-                      }}
-                    />
-                  </div>
-                </div>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                       Discount Percentage (%)
+                     </label>
+                     <input
+                       type="number"
+                       value={studentFormData.discount_percentage}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, discount_percentage: Number(e.target.value), discount_amount: 0 })}
+                       min="0"
+                       max="100"
+                       style={{
+                         width: '100%',
+                         padding: '0.75rem',
+                         border: '2px solid #e2e8f0',
+                         borderRadius: '6px',
+                         fontSize: '0.9rem'
+                       }}
+                     />
+                   </div>
+                 </div>
 
                 {/* Payment Calculation Display */}
                 <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '6px', border: '1px solid #bbf7d0', marginBottom: '1rem' }}>
@@ -1951,47 +2039,51 @@ export default function ClassesPage() {
                   </div>
                 </div>
 
-                {/* Full Payment Section */}
-                {studentFormData.payment_type === 'full' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                        Payment Amount (MMK)
-                      </label>
-                      <input
-                        type="number"
-                        value={studentFormData.full_payment_amount}
-                        onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_amount: Number(e.target.value) })}
-                        min="0"
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e2e8f0',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                    </div>
+                                 {/* Full Payment Section */}
+                 {studentFormData.payment_type === 'full' && (
+                   <div style={{ 
+                     display: 'grid', 
+                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                     gap: '1rem' 
+                   }}>
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                         Payment Amount (MMK)
+                       </label>
+                       <input
+                         type="number"
+                         value={studentFormData.full_payment_amount}
+                         onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_amount: Number(e.target.value) })}
+                         min="0"
+                         style={{
+                           width: '100%',
+                           padding: '0.75rem',
+                           border: '2px solid #e2e8f0',
+                           borderRadius: '6px',
+                           fontSize: '0.9rem'
+                         }}
+                       />
+                     </div>
 
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                        Payment Date
-                      </label>
-                      <input
-                        type="date"
-                        value={studentFormData.full_payment_date}
-                        onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_date: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e2e8f0',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                         Payment Date
+                       </label>
+                       <input
+                         type="date"
+                         value={studentFormData.full_payment_date}
+                         onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_date: e.target.value })}
+                         style={{
+                           width: '100%',
+                           padding: '0.75rem',
+                           border: '2px solid #e2e8f0',
+                           borderRadius: '6px',
+                           fontSize: '0.9rem'
+                         }}
+                       />
+                     </div>
+                   </div>
+                 )}
 
                 {/* Split Payment Section */}
                 {studentFormData.payment_type === 'split' && (
@@ -2017,57 +2109,67 @@ export default function ClassesPage() {
                       </select>
                     </div>
 
-                    {/* Split Payment Inputs */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                      {[1, 2, 3, 4].slice(0, studentFormData.number_of_splits).map(split => (
-                        <div key={split} style={{ padding: '1rem', background: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                          <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                            Split {split}
-                          </h4>
-                          <div style={{ marginBottom: '0.5rem' }}>
-                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
-                              Amount (MMK)
-                            </label>
-                            <input
-                              type="number"
-                              value={studentFormData[`split_${split}_amount` as keyof typeof studentFormData] as number}
-                              onChange={(e) => setStudentFormData({ 
-                                ...studentFormData, 
-                                [`split_${split}_amount`]: Number(e.target.value) 
-                              })}
-                              min="0"
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '4px',
-                                fontSize: '0.8rem'
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
-                              Date
-                            </label>
-                            <input
-                              type="date"
-                              value={studentFormData[`split_${split}_date` as keyof typeof studentFormData] as string}
-                              onChange={(e) => setStudentFormData({ 
-                                ...studentFormData, 
-                                [`split_${split}_date`]: e.target.value 
-                              })}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '4px',
-                                fontSize: '0.8rem'
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                                         {/* Split Payment Inputs */}
+                     <div style={{ 
+                       display: 'grid', 
+                       gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+                       gap: '1rem' 
+                     }}>
+                       {[1, 2, 3, 4].slice(0, studentFormData.number_of_splits).map(split => (
+                         <div key={split} style={{ 
+                           padding: '1rem', 
+                           background: '#ffffff', 
+                           borderRadius: '6px', 
+                           border: '1px solid #e2e8f0',
+                           minWidth: '200px'
+                         }}>
+                           <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
+                             Split {split}
+                           </h4>
+                           <div style={{ marginBottom: '0.5rem' }}>
+                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
+                               Amount (MMK)
+                             </label>
+                             <input
+                               type="number"
+                               value={studentFormData[`split_${split}_amount` as keyof typeof studentFormData] as number}
+                               onChange={(e) => setStudentFormData({ 
+                                 ...studentFormData, 
+                                 [`split_${split}_amount`]: Number(e.target.value) 
+                               })}
+                               min="0"
+                               style={{
+                                 width: '100%',
+                                 padding: '0.5rem',
+                                 border: '1px solid #e2e8f0',
+                                 borderRadius: '4px',
+                                 fontSize: '0.8rem'
+                               }}
+                             />
+                           </div>
+                           <div>
+                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
+                               Date
+                             </label>
+                             <input
+                               type="date"
+                               value={studentFormData[`split_${split}_date` as keyof typeof studentFormData] as string}
+                               onChange={(e) => setStudentFormData({ 
+                                 ...studentFormData, 
+                                 [`split_${split}_date`]: e.target.value 
+                               })}
+                               style={{
+                                 width: '100%',
+                                 padding: '0.5rem',
+                                 border: '1px solid #e2e8f0',
+                                 borderRadius: '4px',
+                                 fontSize: '0.8rem'
+                               }}
+                             />
+                           </div>
+                         </div>
+                       ))}
+                     </div>
                   </div>
                 )}
               </div>
