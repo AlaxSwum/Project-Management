@@ -399,10 +399,10 @@ async function handleUploadFile(req: NextApiRequest, res: NextApiResponse) {
       error: 'Failed to upload file',
       details: error instanceof Error ? error.message : String(error),
       debug: {
-        fileName,
-        mimeType,
-        parentId,
-        bufferSize: fileData ? Buffer.from(fileData, 'base64').length : 0
+        fileName: req.body.fileName,
+        mimeType: req.body.mimeType,
+        parentId: req.body.parentId,
+        bufferSize: req.body.fileData ? Buffer.from(req.body.fileData, 'base64').length : 0
       }
     });
   }
