@@ -471,32 +471,62 @@ export default function ClassesPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
-      const submitData = {
+      // Convert empty date strings to null to avoid PostgreSQL date errors
+      const cleanData = {
         ...studentFormData,
         class_id: selectedClass?.id,
-        enrolled_by: user?.id
+        enrolled_by: user?.id,
+        // Convert empty strings to null for date fields
+        full_payment_date: studentFormData.full_payment_date === '' ? null : studentFormData.full_payment_date,
+        split_1_date: studentFormData.split_1_date === '' ? null : studentFormData.split_1_date,
+        split_2_date: studentFormData.split_2_date === '' ? null : studentFormData.split_2_date,
+        split_3_date: studentFormData.split_3_date === '' ? null : studentFormData.split_3_date,
+        split_4_date: studentFormData.split_4_date === '' ? null : studentFormData.split_4_date,
+        // Ensure numeric fields are properly converted
+        course_fee: Number(studentFormData.course_fee) || 0,
+        discount_amount: Number(studentFormData.discount_amount) || 0,
+        discount_percentage: Number(studentFormData.discount_percentage) || 0,
+        full_payment_amount: studentFormData.payment_type === 'full' ? Number(studentFormData.full_payment_amount) || 0 : null,
+        split_1_amount: studentFormData.payment_type === 'split' && studentFormData.number_of_splits >= 1 ? Number(studentFormData.split_1_amount) || 0 : null,
+        split_2_amount: studentFormData.payment_type === 'split' && studentFormData.number_of_splits >= 2 ? Number(studentFormData.split_2_amount) || 0 : null,
+        split_3_amount: studentFormData.payment_type === 'split' && studentFormData.number_of_splits >= 3 ? Number(studentFormData.split_3_amount) || 0 : null,
+        split_4_amount: studentFormData.payment_type === 'split' && studentFormData.number_of_splits >= 4 ? Number(studentFormData.split_4_amount) || 0 : null
       }
+
+      console.log('💾 Saving student data:', cleanData)
       
       if (editingStudent) {
+        console.log('✏️ Updating existing student:', editingStudent.id)
         const { error } = await supabase
           .from('classes_participants')
-          .update(submitData)
+          .update(cleanData)
           .eq('id', editingStudent.id)
         
-        if (error) throw error
+        if (error) {
+          console.error('❌ Update error:', error)
+          throw error
+        }
+        console.log('✅ Student updated successfully')
       } else {
+        console.log('➕ Creating new student enrollment')
         const { error } = await supabase
           .from('classes_participants')
-          .insert(submitData)
+          .insert(cleanData)
         
-        if (error) throw error
+        if (error) {
+          console.error('❌ Insert error:', error)
+          throw error
+        }
+        console.log('✅ Student enrolled successfully')
       }
       
       await fetchData()
       resetStudentForm()
+      setError(null) // Clear any previous errors
     } catch (err) {
       console.error('Error saving student:', err)
-      setError('Failed to save student enrollment')
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      setError(`Failed to save student: ${errorMessage}`)
     }
   }
 
@@ -547,6 +577,7 @@ export default function ClassesPage() {
   }
 
   const startEditStudent = (student: Student) => {
+    console.log('✏️ Editing student:', student)
     setStudentFormData({
       student_name: student.student_name,
       email: student.email,
@@ -572,6 +603,18 @@ export default function ClassesPage() {
     })
     setEditingStudent(student)
     setShowStudentForm(true)
+  }
+
+  const quickUpdatePayment = (student: Student) => {
+    // Pre-fill form for quick payment updates
+    startEditStudent(student)
+    // Scroll to payment section when form opens
+    setTimeout(() => {
+      const paymentSection = document.querySelector('[data-payment-section]')
+      if (paymentSection) {
+        paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 
   const formatCurrency = (amount: number) => {
@@ -1156,7 +1199,7 @@ export default function ClassesPage() {
               }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 80px',
+                  gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 120px',
                   gap: '0',
                   background: '#f8fafc',
                   borderBottom: '2px solid #e5e7eb',
@@ -1174,14 +1217,14 @@ export default function ClassesPage() {
                   <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
                 </div>
 
-                {students.map(student => (
-                  <div key={student.id} style={{
-                    display: 'grid',
-                    gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 80px',
-                    gap: '0',
-                    borderBottom: '1px solid #f1f5f9',
-                    fontSize: '0.85rem'
-                  }}>
+                                 {students.map(student => (
+                   <div key={student.id} style={{
+                     display: 'grid',
+                     gridTemplateColumns: '200px 180px 120px 100px 120px 120px 100px 120px',
+                     gap: '0',
+                     borderBottom: '1px solid #f1f5f9',
+                     fontSize: '0.85rem'
+                   }}>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
                       <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.student_name}</div>
                       <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
@@ -1239,6 +1282,22 @@ export default function ClassesPage() {
                     </div>
                     <div style={{ padding: '1rem 0.75rem', display: 'flex', gap: '0.25rem' }}>
                       <button
+                        onClick={() => quickUpdatePayment(student)}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          background: '#059669',
+                          border: '1px solid #059669',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#ffffff',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}
+                        title="Update payment"
+                      >
+                        <CurrencyDollarIcon style={{ width: '12px', height: '12px' }} />
+                      </button>
+                      <button
                         onClick={() => startEditStudent(student)}
                         style={{
                           padding: '0.25rem',
@@ -1248,7 +1307,7 @@ export default function ClassesPage() {
                           cursor: 'pointer',
                           color: '#666666'
                         }}
-                        title="Edit student"
+                        title="Edit student details"
                       >
                         <PencilIcon style={{ width: '12px', height: '12px' }} />
                       </button>
@@ -1758,7 +1817,7 @@ export default function ClassesPage() {
               </div>
 
               {/* Payment Information */}
-              <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f0fdf4', borderRadius: '8px' }}>
+              <div data-payment-section style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f0fdf4', borderRadius: '8px' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#1e293b' }}>
                   Payment Information
                 </h3>
