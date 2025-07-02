@@ -109,6 +109,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       
+      console.log('🔍 Checking Class Schedule access for user:', user.id, user.email);
+      
       // Check if user is a class schedule member
       const { data: memberData, error: memberError } = await supabase
         .from('class_schedule_members')
@@ -116,7 +118,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .single();
 
+      console.log('📋 Class Schedule member check:', { memberData, memberError });
+
       if (memberData && !memberError) {
+        console.log('✅ Class Schedule access granted: User is a member');
         setHasClassScheduleAccess(true);
         return;
       }
@@ -128,12 +133,22 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('id', user.id)
         .single();
 
+      console.log('👤 User data check:', userData);
+
       if (userError) {
+        console.log('❌ Class Schedule access denied: User data error');
         setHasClassScheduleAccess(false);
         return;
       }
 
       const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+      console.log('🔐 Class Schedule admin/HR check:', {
+        is_superuser: userData.is_superuser,
+        is_staff: userData.is_staff,
+        role: userData.role,
+        hasPermission
+      });
+      
       setHasClassScheduleAccess(hasPermission);
     } catch (err) {
       console.error('Error checking class schedule access:', err);
@@ -151,6 +166,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       
+      console.log('🔍 Checking Content Calendar access for user:', user.id, user.email);
+      
       // Check if user is a content calendar member
       const { data: memberData, error: memberError } = await supabase
         .from('content_calendar_members')
@@ -158,7 +175,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .single();
 
+      console.log('📋 Content Calendar member check:', { memberData, memberError });
+
       if (memberData && !memberError) {
+        console.log('✅ Content Calendar access granted: User is a member');
         setHasContentCalendarAccess(true);
         return;
       }
@@ -170,12 +190,22 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('id', user.id)
         .single();
 
+      console.log('👤 User data check:', userData);
+
       if (userError) {
+        console.log('❌ Content Calendar access denied: User data error');
         setHasContentCalendarAccess(false);
         return;
       }
 
       const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+      console.log('🔐 Content Calendar admin/HR check:', {
+        is_superuser: userData.is_superuser,
+        is_staff: userData.is_staff,
+        role: userData.role,
+        hasPermission
+      });
+      
       setHasContentCalendarAccess(hasPermission);
     } catch (err) {
       console.error('Error checking content calendar access:', err);
