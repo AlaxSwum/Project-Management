@@ -87,6 +87,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAbsenceForm, setShowAbsenceForm] = useState(false);
   const [hasClassScheduleAccess, setHasClassScheduleAccess] = useState(false);
+  const [hasContentCalendarAccess, setHasContentCalendarAccess] = useState(false);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',
@@ -140,6 +141,48 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     }
   };
 
+  // Check Content Calendar access
+  const checkContentCalendarAccess = async () => {
+    if (!user?.id) {
+      setHasContentCalendarAccess(false);
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Check if user is a content calendar member
+      const { data: memberData, error: memberError } = await supabase
+        .from('content_calendar_members')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberData && !memberError) {
+        setHasContentCalendarAccess(true);
+        return;
+      }
+
+      // Check if user is admin/HR
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role, is_superuser, is_staff')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) {
+        setHasContentCalendarAccess(false);
+        return;
+      }
+
+      const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+      setHasContentCalendarAccess(hasPermission);
+    } catch (err) {
+      console.error('Error checking content calendar access:', err);
+      setHasContentCalendarAccess(false);
+    }
+  };
+
   // Fetch leave balance on component mount and user change
   const fetchLeaveBalance = async () => {
     if (!user?.id) return;
@@ -174,8 +217,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     if (user?.id) {
       fetchLeaveBalance();
       checkClassScheduleAccess();
+      checkContentCalendarAccess();
     } else {
       setHasClassScheduleAccess(false);
+      setHasContentCalendarAccess(false);
     }
   }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -745,12 +790,12 @@ Your report is now available in the system.`);
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
-    { name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon },
   ];
 
-  // Conditionally add Class Schedule if user has access
+  // Conditionally add Content Calendar and Class Schedule based on user access
   const mainNavItems = [
     ...baseNavItems,
+    ...(hasContentCalendarAccess ? [{ name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon }] : []),
     ...(hasClassScheduleAccess ? [{ name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon }] : [])
   ];
 
