@@ -67,6 +67,9 @@ export default function CalendarPage() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showDayTasks, setShowDayTasks] = useState(false);
+  const [selectedDayTasks, setSelectedDayTasks] = useState<Task[]>([]);
+  const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -253,6 +256,12 @@ export default function CalendarPage() {
     } catch (err) {
       console.error('Failed to delete task:', err);
     }
+  };
+
+  const handleShowMoreTasks = (date: Date, tasks: Task[]) => {
+    setSelectedDayDate(date);
+    setSelectedDayTasks(tasks);
+    setShowDayTasks(true);
   };
 
 
@@ -2103,7 +2112,14 @@ export default function CalendarPage() {
                           </div>
                         ))}
                         {(dayTasks || []).length > 3 && (
-                          <div className="more-tasks">
+                          <div 
+                            className="more-tasks"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShowMoreTasks(cellDate, dayTasks || []);
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
                             +{(dayTasks || []).length - 3} more
                           </div>
                         )}
@@ -2137,6 +2153,134 @@ export default function CalendarPage() {
                 onStatusChange={updateTaskStatus}
                 onDelete={handleDeleteTask}
               />
+            )}
+            
+            {/* Day Tasks Modal */}
+            {showDayTasks && selectedDayDate && (
+              <div className="modal-overlay" onClick={() => {
+                setShowDayTasks(false);
+                setSelectedDayDate(null);
+                setSelectedDayTasks([]);
+              }}>
+                <div className="enhanced-task-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h3>
+                      Tasks for {selectedDayDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDayTasks(false);
+                        setSelectedDayDate(null);
+                        setSelectedDayTasks([]);
+                      }}
+                      className="close-btn"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  <div className="task-details-section" style={{ maxHeight: '100%', overflow: 'auto' }}>
+                    {selectedDayTasks.length === 0 ? (
+                      <div className="empty-comments">
+                        <p>No tasks scheduled for this day</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {selectedDayTasks.map(task => (
+                          <div 
+                            key={task.id} 
+                            className="task-item"
+                            style={{
+                              padding: '1rem',
+                              border: '2px solid #e5e7eb',
+                              borderRadius: '8px',
+                              background: '#ffffff',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              borderLeft: `4px solid ${getStatusColor(task.status)}`
+                            }}
+                            onClick={() => {
+                              setShowDayTasks(false);
+                              setSelectedDayDate(null);
+                              setSelectedDayTasks([]);
+                              handleTaskModalOpen(task);
+                            }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.background = '#f9fafb';
+                              e.currentTarget.style.borderColor = '#000000';
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.background = '#ffffff';
+                              e.currentTarget.style.borderColor = '#e5e7eb';
+                            }}
+                          >
+                            <div className="task-status-row">
+                              <span className={`status-badge status-${task.status}`}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                              <span className={`priority-badge priority-${task.priority}`}>
+                                {getPriorityIcon(task.priority)}
+                                {task.priority}
+                              </span>
+                            </div>
+                            
+                            <div style={{ marginBottom: '0.75rem' }}>
+                              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#000000' }}>
+                                {task.name}
+                              </h4>
+                              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#666666' }}>
+                                {task.project_name}
+                              </p>
+                            </div>
+                            
+                            {task.description && (
+                              <p style={{ 
+                                margin: '0.5rem 0', 
+                                fontSize: '0.875rem', 
+                                color: '#374151', 
+                                lineHeight: '1.4' 
+                              }}>
+                                {task.description}
+                              </p>
+                            )}
+                            
+                            <div className="task-metadata">
+                              {task.assignee && (
+                                <div className="meta-item">
+                                  <span className="label">Assigned to:</span>
+                                  <span className="value">{task.assignee.name}</span>
+                                </div>
+                              )}
+                              {task.estimated_hours && (
+                                <div className="meta-item">
+                                  <span className="label">Estimated:</span>
+                                  <span className="value">{task.estimated_hours}h</span>
+                                </div>
+                              )}
+                              {task.tags_list && task.tags_list.length > 0 && (
+                                <div className="meta-item">
+                                  <span className="label">Tags:</span>
+                                  <div className="tags">
+                                    {task.tags_list.map((tag, index) => (
+                                      <span key={index} className="tag">{tag}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </main>
         </div>

@@ -66,6 +66,9 @@ export default function TimetablePage() {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
   const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showDayMeetings, setShowDayMeetings] = useState(false);
+  const [selectedDayMeetings, setSelectedDayMeetings] = useState<Meeting[]>([]);
+  const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [newMeeting, setNewMeeting] = useState({
     title: '',
     description: '',
@@ -525,6 +528,12 @@ export default function TimetablePage() {
       return meeting.attendees.split(',').map(a => a.trim()).filter(a => a);
     }
     return [];
+  };
+
+  const handleShowMoreMeetings = (date: Date, meetings: Meeting[]) => {
+    setSelectedDayDate(date);
+    setSelectedDayMeetings(meetings);
+    setShowDayMeetings(true);
   };
 
   // Show loading state while auth is initializing
@@ -2430,15 +2439,32 @@ export default function TimetablePage() {
                             ))}
                             
                             {dayMeetings.length > (calendarMode === 'week' ? 5 : 2) && (
-                              <div className="calendar-more-meetings" style={{ 
-                                fontSize: '0.7rem', 
-                                color: '#666666',
-                                fontWeight: '600',
-                                textAlign: 'center',
-                                padding: '0.25rem',
-                                background: '#f0f0f0',
-                                borderRadius: '4px'
-                              }}>
+                              <div 
+                                className="calendar-more-meetings" 
+                                style={{ 
+                                  fontSize: '0.7rem', 
+                                  color: '#666666',
+                                  fontWeight: '600',
+                                  textAlign: 'center',
+                                  padding: '0.25rem',
+                                  background: '#f0f0f0',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShowMoreMeetings(date, dayMeetings);
+                                }}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.background = '#e0e0e0';
+                                  e.currentTarget.style.color = '#000000';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.background = '#f0f0f0';
+                                  e.currentTarget.style.color = '#666666';
+                                }}
+                              >
                                 +{dayMeetings.length - (calendarMode === 'week' ? 5 : 2)} more
                               </div>
                             )}
@@ -2511,6 +2537,157 @@ export default function TimetablePage() {
             fetchProjectMembers(projectId);
           }}
         />
+      )}
+
+      {/* Day Meetings Modal */}
+      {showDayMeetings && selectedDayDate && (
+        <div className="modal-overlay" onClick={() => {
+          setShowDayMeetings(false);
+          setSelectedDayDate(null);
+          setSelectedDayMeetings([]);
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                Meetings for {selectedDayDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDayMeetings(false);
+                  setSelectedDayDate(null);
+                  setSelectedDayMeetings([]);
+                }}
+                className="modal-close-btn"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {selectedDayMeetings.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#666666', padding: '2rem' }}>
+                  No meetings scheduled for this day
+                </p>
+              ) : (
+                <div className="meetings-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {selectedDayMeetings.map(meeting => (
+                    <div 
+                      key={meeting.id} 
+                      className="meeting-item"
+                      style={{
+                        padding: '1rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        background: '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => {
+                        setShowDayMeetings(false);
+                        setSelectedDayDate(null);
+                        setSelectedDayMeetings([]);
+                        handleMeetingClick(meeting);
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = '#f5f5f5';
+                        e.currentTarget.style.borderColor = '#000000';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = '#ffffff';
+                        e.currentTarget.style.borderColor = '#e0e0e0';
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#000000' }}>
+                            {meeting.title}
+                          </h4>
+                          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#666666' }}>
+                            {meeting.project_name}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowDayMeetings(false);
+                              setSelectedDayDate(null);
+                              setSelectedDayMeetings([]);
+                              handleEditMeeting(meeting);
+                            }}
+                            style={{
+                              padding: '0.25rem',
+                              border: '1px solid #e0e0e0',
+                              background: '#ffffff',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem'
+                            }}
+                            title="Edit meeting"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMeeting(meeting.id);
+                              setSelectedDayMeetings(selectedDayMeetings.filter(m => m.id !== meeting.id));
+                            }}
+                            style={{
+                              padding: '0.25rem',
+                              border: '1px solid #e0e0e0',
+                              background: '#ffffff',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem'
+                            }}
+                            title="Delete meeting"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#666666' }}>
+                        <span>🕐 {formatTime(meeting.time)}</span>
+                        <span>⏱️ {formatDuration(meeting.duration)}</span>
+                        <span>👤 {meeting.created_by.name}</span>
+                      </div>
+                      
+                      {meeting.description && (
+                        <p style={{ 
+                          margin: '0.5rem 0 0 0', 
+                          fontSize: '0.875rem', 
+                          color: '#333333', 
+                          lineHeight: '1.4' 
+                        }}>
+                          {meeting.description}
+                        </p>
+                      )}
+                      
+                      {getAttendeesList(meeting).length > 0 && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#666666' }}>
+                            Attendees: 
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: '#333333' }}>
+                            {getAttendeesList(meeting).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Create/Edit Meeting Modal */}
