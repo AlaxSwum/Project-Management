@@ -7,8 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Project Management",
-  description: "Modern project management platform",
+  title: "ProjectFlow - Modern Project Management",
+  description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className={`${inter.className} h-full antialiased`}>
+      <body className={`${inter.className} h-full antialiased`} style={{ background: '#F5F5ED' }}>
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"
@@ -28,7 +28,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <AuthProvider>
-          <div className="min-h-full bg-gray-50">
+          <div className="min-h-full" style={{ background: '#F5F5ED' }}>
             {children}
           </div>
         </AuthProvider>

@@ -29,326 +29,171 @@ export default function LoginPage() {
   };
 
   return (
-    <div>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #000000;
-            min-height: 100vh;
-          }
-          .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-          }
-          .login-card {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-            max-width: 400px;
-          }
-          .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-          }
-          .login-title {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 0.5rem;
-          }
-          .login-subtitle {
-            color: #666666;
-            font-size: 0.95rem;
-          }
-          .login-subtitle a {
-            color: #000000;
-            text-decoration: none;
-            font-weight: 500;
-          }
-          .login-subtitle a:hover {
-            text-decoration: underline;
-          }
-          .form-group {
-            margin-bottom: 1.5rem;
-          }
-          .form-label {
-            display: block;
-            font-weight: 500;
-            color: #000000;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-          }
-          .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            box-sizing: border-box;
-          }
-          .form-input:focus {
-            outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-          }
-          .form-input::placeholder {
-            color: #9ca3af;
-          }
-          .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-          }
-          .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-          }
-          .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .checkbox-group input {
-            width: 16px;
-            height: 16px;
-          }
-          .forgot-link {
-            color: #000000;
-            text-decoration: none;
-            font-weight: 500;
-          }
-          .forgot-link:hover {
-            text-decoration: underline;
-          }
-          .login-button {
-            width: 100%;
-            background: #000000;
-            color: white;
-            border: none;
-            padding: 0.875rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-          }
-          .login-button:hover:not(:disabled) {
-            background: #333333;
-            transform: translateY(-1px);
-          }
-          .login-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
-          .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          .login-footer {
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            color: #666666;
-          }
-          .login-footer a {
-            color: #000000;
-            text-decoration: none;
-            font-weight: 500;
-          }
-          .login-footer a:hover {
-            text-decoration: underline;
-          }
-          
-          /* Mobile Responsive Styles */
-          @media (max-width: 768px) {
-            .login-container {
-              padding: 0.5rem;
-            }
-            
-            .login-card {
-              padding: 2rem;
-              border-radius: 12px;
-            }
-            
-            .login-title {
-              font-size: 1.75rem;
-            }
-            
-            .form-options {
-              flex-direction: column;
-              gap: 1rem;
-              align-items: flex-start;
-            }
-            
-            .checkbox-group {
-              align-self: flex-start;
-            }
-            
-            .forgot-link {
-              align-self: flex-end;
-            }
-          }
-          
-          @media (max-width: 480px) {
-            .login-container {
-              padding: 0.25rem;
-            }
-            
-            .login-card {
-              padding: 1.5rem;
-              border-radius: 8px;
-              max-width: 100%;
-            }
-            
-            .login-title {
-              font-size: 1.5rem;
-            }
-            
-            .login-subtitle {
-              font-size: 0.9rem;
-            }
-            
-            .form-input {
-              padding: 0.875rem 1rem;
-              font-size: 1.1rem;
-            }
-            
-            .login-button {
-              padding: 1rem;
-              font-size: 1.1rem;
-            }
-            
-            .form-options {
-              font-size: 0.85rem;
-            }
-            
-            .login-footer {
-              font-size: 0.85rem;
-              margin-top: 1.5rem;
-            }
-          }
-        `
-      }} />
-      
-      <div className="login-container">
-        <div className="login-card">
-          {/* Header */}
-          <div className="login-header">
-            <h1 className="login-title">Welcome back</h1>
-            <p className="login-subtitle">
-              Don't have an account?{' '}
-              <Link href="/register">Sign up</Link>
-            </p>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ background: '#F5F5ED' }}>
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <div className="flex justify-center">
+            <h1 className="text-3xl font-bold" style={{ color: '#FFB333' }}>
+              ProjectFlow
+            </h1>
           </div>
-
-          {/* Error Alert */}
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+            Sign in to your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <Link href="/register" className="font-medium transition-colors" style={{ color: '#FFB333' }}>
+              start your 14-day free trial
+            </Link>
+          </p>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
           {error && (
-            <div className="error-message">
-              {error}
+            <div className="mb-6 p-4 rounded-lg border border-red-200 bg-red-50">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-red-700 text-sm">{error}</span>
+              </div>
             </div>
           )}
-
-          {/* Login Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="form-input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
+                style={{ 
+                  '--tw-ring-color': '#FFB333',
+                  '--tw-ring-opacity': '0.3'
+                } as React.CSSProperties}
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="form-input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
+                style={{ 
+                  '--tw-ring-color': '#FFB333',
+                  '--tw-ring-opacity': '0.3'
+                } as React.CSSProperties}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
-            <div className="form-options">
-              <div className="checkbox-group">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 focus:ring-2"
+                  style={{ 
+                    '--tw-ring-color': '#FFB333',
+                    color: '#FFB333'
+                  } as React.CSSProperties}
                 />
-                <label htmlFor="remember-me">Remember me</label>
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Remember me
+                </label>
               </div>
 
-              <Link href="/forgot-password" className="forgot-link">
-                Forgot your password?
-              </Link>
+              <div className="text-sm">
+                <Link href="/forgot-password" className="font-medium transition-colors" style={{ color: '#FFB333' }}>
+                  Forgot your password?
+                </Link>
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className="login-button"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="spinner" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in'
-              )}
-            </button>
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  background: isLoading ? '#FFD480' : '#FFB333',
+                  '--tw-ring-color': '#FFB333',
+                  boxShadow: isLoading ? 'none' : '0 4px 12px rgba(255, 179, 51, 0.3)'
+                } as React.CSSProperties}
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Sign in
+                  </div>
+                )}
+              </button>
+            </div>
           </form>
+          
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
 
-          {/* Footer */}
-          <div className="login-footer">
-            By signing in, you agree to our{' '}
-            <Link href="/terms">Terms of Service</Link>{' '}
-            and{' '}
-            <Link href="/privacy">Privacy Policy</Link>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span className="ml-2">Google</span>
+              </button>
+
+              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.024-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.347-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.764-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z"/>
+                </svg>
+                <span className="ml-2">Microsoft</span>
+              </button>
+            </div>
           </div>
+        </div>
+        
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link href="/register" className="font-medium transition-colors" style={{ color: '#FFB333' }}>
+              Sign up now
+            </Link>
+          </p>
         </div>
       </div>
     </div>
