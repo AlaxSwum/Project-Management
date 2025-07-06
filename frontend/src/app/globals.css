@@ -4,33 +4,39 @@
 @tailwind utilities;
 
 :root {
-  --primary: #FFB333;
-  --primary-light: #FFD480;
-  --secondary: #5884FD;
-  --secondary-light: #8BA4FE;
-  --accent: #C483D9;
-  --accent-light: #D9A3E6;
-  --orange: #F87239;
-  --orange-light: #FBA173;
-  --background: #F5F5ED;
-  --surface: #FFFFFF;
-  --surface-light: #FAFAFA;
-  --text-primary: #1F2937;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
-  --border: #E5E7EB;
-  --border-light: #F3F4F6;
-  --error: #EF4444;
-  --success: #10B981;
-  --warning: #F59E0B;
+  --primary: #FFB333 !important;
+  --primary-light: #FFD480 !important;
+  --secondary: #5884FD !important;
+  --secondary-light: #8BA4FE !important;
+  --accent: #C483D9 !important;
+  --accent-light: #D9A3E6 !important;
+  --orange: #F87239 !important;
+  --orange-light: #FBA173 !important;
+  --background: #F5F5ED !important;
+  --surface: #FFFFFF !important;
+  --surface-light: #FAFAFA !important;
+  --text-primary: #1F2937 !important;
+  --text-secondary: #6B7280 !important;
+  --text-muted: #9CA3AF !important;
+  --border: #E5E7EB !important;
+  --border-light: #F3F4F6 !important;
+  --error: #EF4444 !important;
+  --success: #10B981 !important;
+  --warning: #F59E0B !important;
+}
+
+/* Force override any cached styles */
+html, body {
+  background: #F5F5ED !important;
+  color: #1F2937 !important;
 }
 
 /* Base styles */
 body {
   @apply antialiased;
-  background: var(--background);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: var(--background) !important;
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
 }
 
 /* Smooth scrolling */
@@ -41,8 +47,43 @@ html {
 /* Modern focus styles */
 *:focus {
   @apply outline-none ring-2 ring-offset-2;
-  ring-color: var(--primary);
-  ring-offset-color: var(--background);
+  ring-color: var(--primary) !important;
+  ring-offset-color: var(--background) !important;
+}
+
+/* Force button styling */
+button[type="submit"], .btn-primary {
+  background: #FFB333 !important;
+  color: white !important;
+  border: 1px solid #FFB333 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+button[type="submit"]:hover, .btn-primary:hover {
+  background: #FFD480 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3) !important;
+}
+
+/* Force input styling */
+input[type="email"], input[type="password"], input[type="text"], input[type="tel"], select {
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  border: 2px solid #E5E7EB !important;
+  border-radius: 0.5rem !important;
+  font-size: 1rem !important;
+  transition: all 0.2s ease !important;
+  background: white !important;
+  color: #1F2937 !important;
+}
+
+input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="tel"]:focus, select:focus {
+  outline: none !important;
+  border-color: #FFB333 !important;
+  box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1) !important;
 }
 
 /* Custom utility classes */
@@ -52,81 +93,81 @@ html {
     @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 ease-in-out
            disabled:opacity-50 disabled:cursor-not-allowed
            focus:ring-2 focus:ring-offset-2 shadow-sm;
-    background: var(--primary);
-    color: white;
-    border: 1px solid var(--primary);
+    background: var(--primary) !important;
+    color: white !important;
+    border: 1px solid var(--primary) !important;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--primary-light);
+    background: var(--primary-light) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3) !important;
   }
 
   .btn-secondary {
     @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 ease-in-out
            disabled:opacity-50 disabled:cursor-not-allowed
            focus:ring-2 focus:ring-offset-2 shadow-sm;
-    background: var(--secondary);
-    color: white;
-    border: 1px solid var(--secondary);
+    background: var(--secondary) !important;
+    color: white !important;
+    border: 1px solid var(--secondary) !important;
   }
 
   .btn-secondary:hover:not(:disabled) {
-    background: var(--secondary-light);
+    background: var(--secondary-light) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(88, 132, 253, 0.3);
+    box-shadow: 0 4px 12px rgba(88, 132, 253, 0.3) !important;
   }
 
   .btn-outline {
     @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 ease-in-out
            disabled:opacity-50 disabled:cursor-not-allowed
            focus:ring-2 focus:ring-offset-2 shadow-sm;
-    background: transparent;
-    color: var(--primary);
-    border: 2px solid var(--primary);
+    background: transparent !important;
+    color: var(--primary) !important;
+    border: 2px solid var(--primary) !important;
   }
 
   .btn-outline:hover:not(:disabled) {
-    background: var(--primary);
-    color: white;
+    background: var(--primary) !important;
+    color: white !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3) !important;
   }
 
   .btn-ghost {
     @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 ease-in-out
            disabled:opacity-50 disabled:cursor-not-allowed
            focus:ring-2 focus:ring-offset-2;
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid transparent;
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid transparent !important;
   }
 
   .btn-ghost:hover:not(:disabled) {
-    background: var(--border-light);
-    color: var(--text-primary);
+    background: var(--border-light) !important;
+    color: var(--text-primary) !important;
   }
 
   /* Input field styles */
   .input-field {
     @apply w-full px-4 py-3 rounded-lg border transition-all duration-200 ease-in-out
            placeholder:text-gray-400;
-    background: var(--surface);
-    border-color: var(--border);
-    color: var(--text-primary);
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
   }
 
   .input-field:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1) !important;
   }
 
   /* Card styles */
   .card {
     @apply rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 ease-in-out;
-    background: var(--surface);
-    border-color: var(--border);
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
   }
 
   .card-hover {
@@ -135,7 +176,7 @@ html {
 
   .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
   }
 
   /* Status badge styles */
@@ -144,56 +185,56 @@ html {
   }
 
   .status-todo {
-    background: #F3F4F6;
-    color: #6B7280;
+    background: #F3F4F6 !important;
+    color: #6B7280 !important;
   }
 
   .status-in-progress {
-    background: rgba(88, 132, 253, 0.1);
-    color: var(--secondary);
+    background: rgba(88, 132, 253, 0.1) !important;
+    color: var(--secondary) !important;
   }
 
   .status-in-review {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--warning);
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: var(--warning) !important;
   }
 
   .status-done {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success);
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: var(--success) !important;
   }
 
   /* Priority badge styles */
   .priority-low {
-    color: var(--text-muted);
+    color: var(--text-muted) !important;
   }
 
   .priority-medium {
-    color: var(--secondary);
+    color: var(--secondary) !important;
   }
 
   .priority-high {
-    color: var(--orange);
+    color: var(--orange) !important;
   }
 
   .priority-urgent {
-    color: var(--error);
+    color: var(--error) !important;
   }
 
   /* Modern navigation */
   .nav-item {
     @apply flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
   }
 
   .nav-item:hover {
-    background: rgba(255, 179, 51, 0.1);
-    color: var(--primary);
+    background: rgba(255, 179, 51, 0.1) !important;
+    color: var(--primary) !important;
   }
 
   .nav-item.active {
-    background: var(--primary);
-    color: white;
+    background: var(--primary) !important;
+    color: white !important;
   }
 
   /* Form styles */
@@ -203,17 +244,17 @@ html {
 
   .form-label {
     @apply block text-sm font-medium;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
   }
 
   .form-error {
     @apply text-xs mt-1;
-    color: var(--error);
+    color: var(--error) !important;
   }
 
   .form-help {
     @apply text-xs mt-1;
-    color: var(--text-muted);
+    color: var(--text-muted) !important;
   }
 
   /* Animation utilities */
@@ -232,20 +273,20 @@ html {
   /* Loading skeleton */
   .skeleton {
     @apply animate-pulse rounded;
-    background: var(--border-light);
+    background: var(--border-light) !important;
   }
 
   /* Gradient backgrounds */
   .gradient-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, var(--primary), var(--primary-light)) !important;
   }
 
   .gradient-secondary {
-    background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-light)) !important;
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    background: linear-gradient(135deg, var(--accent), var(--accent-light)) !important;
   }
 }
 
@@ -287,29 +328,29 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--border-light);
+  background: var(--border-light) !important;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--border) !important;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--text-muted) !important;
 }
 
 /* Modal styles */
 .modal-backdrop {
   @apply fixed inset-0 flex items-center justify-center p-4 z-50 animate-fade-in;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(8px);
 }
 
 .modal-content {
   @apply rounded-xl shadow-2xl animate-slide-up;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -318,41 +359,41 @@ html {
 .tooltip {
   @apply invisible absolute rounded py-1 px-2 -translate-y-full opacity-0 transition-all duration-200 z-50
          group-hover:visible group-hover:opacity-100 whitespace-nowrap text-xs;
-  background: var(--text-primary);
-  color: var(--surface);
+  background: var(--text-primary) !important;
+  color: var(--surface) !important;
 }
 
 /* Table styles */
 .table-container {
   @apply overflow-x-auto rounded-xl border shadow-sm;
-  background: var(--surface);
-  border-color: var(--border);
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
 }
 
 .table {
   @apply min-w-full divide-y;
-  border-color: var(--border);
+  border-color: var(--border) !important;
 }
 
 .table th {
   @apply px-6 py-3 text-left text-xs font-medium uppercase tracking-wider;
-  background: var(--surface-light);
-  color: var(--text-secondary);
+  background: var(--surface-light) !important;
+  color: var(--text-secondary) !important;
 }
 
 .table td {
   @apply px-6 py-4 whitespace-nowrap text-sm;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
 }
 
 .table tr:hover {
-  background: var(--surface-light);
+  background: var(--surface-light) !important;
 }
 
 /* Project management specific styles */
 .project-card {
   @apply card-hover p-6;
-  background: var(--surface);
+  background: var(--surface) !important;
 }
 
 .project-status {
@@ -360,42 +401,42 @@ html {
 }
 
 .project-status.planning {
-  background: rgba(196, 131, 217, 0.1);
-  color: var(--accent);
+  background: rgba(196, 131, 217, 0.1) !important;
+  color: var(--accent) !important;
 }
 
 .project-status.active {
-  background: rgba(88, 132, 253, 0.1);
-  color: var(--secondary);
+  background: rgba(88, 132, 253, 0.1) !important;
+  color: var(--secondary) !important;
 }
 
 .project-status.completed {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success) !important;
 }
 
 .project-status.on-hold {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: var(--warning) !important;
 }
 
 /* Progress bar styles */
 .progress-bar {
   @apply w-full h-2 rounded-full overflow-hidden;
-  background: var(--border-light);
+  background: var(--border-light) !important;
 }
 
 .progress-fill {
   @apply h-full transition-all duration-300 ease-in-out rounded-full;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  background: linear-gradient(90deg, var(--primary), var(--primary-light)) !important;
 }
 
 .progress-fill.secondary {
-  background: linear-gradient(90deg, var(--secondary), var(--secondary-light));
+  background: linear-gradient(90deg, var(--secondary), var(--secondary-light)) !important;
 }
 
 .progress-fill.accent {
-  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  background: linear-gradient(90deg, var(--accent), var(--accent-light)) !important;
 }
 
 /* Responsive utilities */
