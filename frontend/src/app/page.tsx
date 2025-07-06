@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export default function WelcomePage() {
-  return (
-    <div style={{ 
+    return (
+      <div style={{ 
       minHeight: '100vh', 
       background: '#F5F5ED',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
@@ -52,7 +52,7 @@ export default function WelcomePage() {
                 padding: '0.5rem 1rem', 
                 color: '#FFFFFF', 
                 background: '#FFB333',
-                border: 'none',
+              border: 'none', 
                 borderRadius: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: '600',
@@ -61,7 +61,7 @@ export default function WelcomePage() {
                 boxShadow: '0 2px 4px rgba(255, 179, 51, 0.2)'
               }}>
                 Get Started
-              </button>
+          </button>
             </Link>
           </div>
         </div>
@@ -583,8 +583,8 @@ export default function WelcomePage() {
             }}>
               © 2024 ProjectFlow. All rights reserved.
             </p>
-          </div>
         </div>
+      </div>
       </footer>
     </div>
   );
