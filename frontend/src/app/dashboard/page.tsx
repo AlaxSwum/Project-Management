@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService } from '@/lib/api-compatibility';
-import { PlusIcon, UsersIcon, CalendarIcon, ChartBarIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UsersIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 
@@ -76,12 +76,6 @@ export default function DashboardPage() {
       setError('Failed to create project');
     }
   };
-
-  // Calculate dashboard stats
-  const totalProjects = projects.length;
-  const activeTasks = projects.reduce((sum, project) => sum + (project.task_count || 0), 0);
-  const completedTasks = projects.reduce((sum, project) => sum + (project.completed_task_count || 0), 0);
-  const teamMembers = projects.reduce((sum, project) => sum + (project.members?.length || 0), 0);
 
   // Show loading state while auth is initializing
   if (authLoading) {
@@ -199,32 +193,6 @@ export default function DashboardPage() {
           font-size: 1rem;
         }
         
-        .header-stats {
-          display: flex;
-          gap: 2rem;
-          align-items: center;
-        }
-        
-        .quick-stat {
-          text-align: center;
-        }
-        
-        .quick-stat-value {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1F2937;
-          margin: 0;
-        }
-        
-        .quick-stat-label {
-          font-size: 0.75rem;
-          color: #6B7280;
-          margin: 0;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 500;
-        }
-        
         .create-button {
           background: linear-gradient(135deg, #FFB333, #FFD480);
           color: #FFFFFF;
@@ -267,104 +235,6 @@ export default function DashboardPage() {
           padding: 2rem;
           max-width: 1200px;
           margin: 0 auto;
-        }
-        
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 2.5rem;
-        }
-        
-        .stat-card {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 16px;
-          padding: 1.5rem;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-          position: relative;
-          overflow: hidden;
-          transition: all 0.3s ease;
-        }
-        
-        .stat-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 3px;
-          transition: opacity 0.3s ease;
-        }
-        
-        .stat-card.primary::before {
-          background: linear-gradient(90deg, #FFB333, #FFD480);
-        }
-        
-        .stat-card.blue::before {
-          background: linear-gradient(90deg, #5884FD, #8BA4FE);
-        }
-        
-        .stat-card.purple::before {
-          background: linear-gradient(90deg, #C483D9, #D9A3E6);
-        }
-        
-        .stat-card.orange::before {
-          background: linear-gradient(90deg, #F87239, #FBA173);
-        }
-        
-        .stat-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
-        }
-        
-        .stat-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1rem;
-        }
-        
-        .stat-icon {
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #FFFFFF;
-        }
-        
-        .stat-icon.primary {
-          background: linear-gradient(135deg, #FFB333, #FFD480);
-        }
-        
-        .stat-icon.blue {
-          background: linear-gradient(135deg, #5884FD, #8BA4FE);
-        }
-        
-        .stat-icon.purple {
-          background: linear-gradient(135deg, #C483D9, #D9A3E6);
-        }
-        
-        .stat-icon.orange {
-          background: linear-gradient(135deg, #F87239, #FBA173);
-        }
-        
-        .stat-value {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1F2937;
-          margin: 0;
-          font-family: 'Inter', sans-serif;
-        }
-        
-        .stat-label {
-          font-size: 0.875rem;
-          color: #6B7280;
-          margin: 0;
-          font-weight: 500;
         }
         
         .error-message {
@@ -866,10 +736,6 @@ export default function DashboardPage() {
             align-items: stretch;
           }
           
-          .header-stats {
-            justify-content: space-around;
-          }
-          
           .create-button {
             width: 100%;
             justify-content: center;
@@ -878,11 +744,6 @@ export default function DashboardPage() {
           
           .main-content-area {
             padding: 1rem;
-          }
-          
-          .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
           }
           
           .projects-grid {
@@ -947,16 +808,6 @@ export default function DashboardPage() {
                   <h1>Welcome back, {user?.name || 'User'}</h1>
                   <p>Here's what's happening with your projects today</p>
                 </div>
-                <div className="header-stats">
-                  <div className="quick-stat">
-                    <p className="quick-stat-value">{totalProjects}</p>
-                    <p className="quick-stat-label">Projects</p>
-                  </div>
-                  <div className="quick-stat">
-                    <p className="quick-stat-value">{activeTasks}</p>
-                    <p className="quick-stat-label">Active Tasks</p>
-                  </div>
-                </div>
               </div>
               <button
                 onClick={() => setShowCreateForm(true)}
@@ -977,49 +828,6 @@ export default function DashboardPage() {
                 {error}
               </div>
             )}
-
-            {/* Dashboard Stats */}
-            <div className="stats-grid">
-              <div className="stat-card primary">
-                <div className="stat-header">
-                  <div className="stat-icon primary">
-                    <ChartBarIcon style={{ width: '24px', height: '24px' }} />
-                  </div>
-                </div>
-                <p className="stat-value">{totalProjects}</p>
-                <p className="stat-label">Total Projects</p>
-              </div>
-              
-              <div className="stat-card blue">
-                <div className="stat-header">
-                  <div className="stat-icon blue">
-                    <ClockIcon style={{ width: '24px', height: '24px' }} />
-                  </div>
-                </div>
-                <p className="stat-value">{activeTasks}</p>
-                <p className="stat-label">Active Tasks</p>
-              </div>
-              
-              <div className="stat-card orange">
-                <div className="stat-header">
-                  <div className="stat-icon orange">
-                    <CheckCircleIcon style={{ width: '24px', height: '24px' }} />
-                  </div>
-                </div>
-                <p className="stat-value">{completedTasks}</p>
-                <p className="stat-label">Completed Tasks</p>
-              </div>
-              
-              <div className="stat-card purple">
-                <div className="stat-header">
-                  <div className="stat-icon purple">
-                    <UsersIcon style={{ width: '24px', height: '24px' }} />
-                  </div>
-                </div>
-                <p className="stat-value">{teamMembers}</p>
-                <p className="stat-label">Team Members</p>
-              </div>
-            </div>
 
             {showCreateForm && (
               <div className="modal-overlay">
