@@ -72,34 +72,6 @@ export default function RegisterPage() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
     }}>
       <div style={{ maxWidth: '32rem', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <h1 style={{ 
-              fontSize: '1.875rem', 
-              fontWeight: 'bold', 
-              color: '#FFB333',
-              margin: 0
-            }}>
-              ProjectFlow
-            </h1>
-          </div>
-          <h2 style={{ 
-            fontSize: '1.875rem', 
-            fontWeight: 'bold', 
-            color: '#1F2937',
-            margin: '0 0 0.5rem 0'
-          }}>
-            Create your account
-          </h2>
-          <p style={{ 
-            fontSize: '0.875rem', 
-            color: '#6B7280',
-            margin: 0
-          }}>
-            Join thousands of teams already using ProjectFlow
-          </p>
-        </div>
-        
         <div style={{ 
           background: '#FFFFFF', 
           borderRadius: '0.75rem', 
@@ -414,48 +386,6 @@ export default function RegisterPage() {
                   }}
                 />
               </div>
-            </div>
-            
-            <div>
-              <label htmlFor="role" style={{ 
-                display: 'block', 
-                fontSize: '0.875rem', 
-                fontWeight: '500', 
-                color: '#374151', 
-                marginBottom: '0.5rem'
-              }}>
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '2px solid #D1D5DB',
-                  borderRadius: '0.5rem',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s ease',
-                  background: '#FFFFFF',
-                  color: '#1F2937',
-                  boxSizing: 'border-box',
-                  outline: 'none'
-                }}
-                value={formData.role}
-                onChange={handleChange}
-                onFocus={(e) => {
-                  (e.target as HTMLSelectElement).style.borderColor = '#FFB333';
-                  (e.target as HTMLSelectElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1)';
-                }}
-                onBlur={(e) => {
-                  (e.target as HTMLSelectElement).style.borderColor = '#D1D5DB';
-                  (e.target as HTMLSelectElement).style.boxShadow = 'none';
-                }}
-              >
-                <option value="employee">Employee</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-              </select>
             </div>
 
             <div>
