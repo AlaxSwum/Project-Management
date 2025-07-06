@@ -39,6 +39,17 @@ export default function LoginPage() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
     }}>
       <div style={{ maxWidth: '28rem', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: 'bold', 
+            color: '#1F2937',
+            margin: 0
+          }}>
+            Login
+          </h1>
+        </div>
+        
         <div style={{ 
           background: '#FFFFFF', 
           borderRadius: '0.75rem', 
@@ -91,7 +102,6 @@ export default function LoginPage() {
                   boxSizing: 'border-box',
                   outline: 'none'
                 }}
-                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onFocus={(e) => {
@@ -132,7 +142,6 @@ export default function LoginPage() {
                   boxSizing: 'border-box',
                   outline: 'none'
                 }}
-                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onFocus={(e) => {

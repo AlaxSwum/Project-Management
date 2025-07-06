@@ -9,8 +9,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -36,7 +35,7 @@ export default function RegisterPage() {
     try {
       // Transform data to match AuthContext expectations
       const registrationData = {
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        name: formData.name,
         email: formData.email,
         password: formData.password,
         password_confirm: formData.confirmPassword,
@@ -72,6 +71,17 @@ export default function RegisterPage() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
     }}>
       <div style={{ maxWidth: '32rem', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: 'bold', 
+            color: '#1F2937',
+            margin: 0
+          }}>
+            Register
+          </h1>
+        </div>
+        
         <div style={{ 
           background: '#FFFFFF', 
           borderRadius: '0.75rem', 
@@ -97,88 +107,44 @@ export default function RegisterPage() {
           )}
           
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label htmlFor="firstName" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#374151', 
-                  marginBottom: '0.5rem'
-                }}>
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: '2px solid #D1D5DB',
-                    borderRadius: '0.5rem',
-                    fontSize: '1rem',
-                    transition: 'all 0.2s ease',
-                    background: '#FFFFFF',
-                    color: '#1F2937',
-                    boxSizing: 'border-box',
-                    outline: 'none'
-                  }}
-                  placeholder="John"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  onFocus={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = '#FFB333';
-                    (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = '#D1D5DB';
-                    (e.target as HTMLInputElement).style.boxShadow = 'none';
-                  }}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="lastName" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#374151', 
-                  marginBottom: '0.5rem'
-                }}>
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: '2px solid #D1D5DB',
-                    borderRadius: '0.5rem',
-                    fontSize: '1rem',
-                    transition: 'all 0.2s ease',
-                    background: '#FFFFFF',
-                    color: '#1F2937',
-                    boxSizing: 'border-box',
-                    outline: 'none'
-                  }}
-                  placeholder="Doe"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  onFocus={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = '#FFB333';
-                    (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    (e.target as HTMLInputElement).style.borderColor = '#D1D5DB';
-                    (e.target as HTMLInputElement).style.boxShadow = 'none';
-                  }}
-                />
-              </div>
+            <div>
+              <label htmlFor="name" style={{ 
+                display: 'block', 
+                fontSize: '0.875rem', 
+                fontWeight: '500', 
+                color: '#374151', 
+                marginBottom: '0.5rem'
+              }}>
+                Full Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '2px solid #D1D5DB',
+                  borderRadius: '0.5rem',
+                  fontSize: '1rem',
+                  transition: 'all 0.2s ease',
+                  background: '#FFFFFF',
+                  color: '#1F2937',
+                  boxSizing: 'border-box',
+                  outline: 'none'
+                }}
+                value={formData.name}
+                onChange={handleChange}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = '#FFB333';
+                  (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1)';
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = '#D1D5DB';
+                  (e.target as HTMLInputElement).style.boxShadow = 'none';
+                }}
+              />
             </div>
             
             <div>
@@ -208,7 +174,6 @@ export default function RegisterPage() {
                   boxSizing: 'border-box',
                   outline: 'none'
                 }}
-                placeholder="john@company.com"
                 value={formData.email}
                 onChange={handleChange}
                 onFocus={(e) => {
@@ -250,7 +215,6 @@ export default function RegisterPage() {
                     boxSizing: 'border-box',
                     outline: 'none'
                   }}
-                  placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
                   onFocus={(e) => {
@@ -291,7 +255,6 @@ export default function RegisterPage() {
                     boxSizing: 'border-box',
                     outline: 'none'
                   }}
-                  placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   onFocus={(e) => {
@@ -333,7 +296,6 @@ export default function RegisterPage() {
                     boxSizing: 'border-box',
                     outline: 'none'
                   }}
-                  placeholder="+1 (555) 000-0000"
                   value={formData.phone}
                   onChange={handleChange}
                   onFocus={(e) => {
@@ -373,7 +335,6 @@ export default function RegisterPage() {
                     boxSizing: 'border-box',
                     outline: 'none'
                   }}
-                  placeholder="Software Engineer"
                   value={formData.position}
                   onChange={handleChange}
                   onFocus={(e) => {
