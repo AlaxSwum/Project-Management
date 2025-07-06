@@ -122,20 +122,20 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div className="form-group">
-              <label htmlFor="email" className="form-label">
+                <label htmlFor="email" className="form-label">
                 Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
                 className="input-field"
                 placeholder="Enter your email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
 
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                   onChange={handleChange}
                 />
               </div>
-            </div>
+              </div>
 
             {/* Optional Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

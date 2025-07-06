@@ -3,7 +3,7 @@
 import Link from 'next/link';
 
 export default function WelcomePage() {
-  return (
+    return (
     <div className="min-h-screen bg-[#F5F5ED] font-inter">
       {/* Professional Navigation */}
       <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -18,8 +18,8 @@ export default function WelcomePage() {
                   </svg>
                 </div>
                 <h1 className="text-xl font-bold text-gray-900">ProjectHub</h1>
-              </div>
-            </div>
+        </div>
+      </div>
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
@@ -214,7 +214,7 @@ export default function WelcomePage() {
                 <li><a href="#" className="hover:text-gray-900 transition-colors">API</a></li>
                 <li><a href="#" className="hover:text-gray-900 transition-colors">Integrations</a></li>
               </ul>
-            </div>
+        </div>
 
             <div>
               <h3 className="font-semibold text-gray-900 mb-4">Company</h3>
@@ -224,8 +224,8 @@ export default function WelcomePage() {
                 <li><a href="#" className="hover:text-gray-900 transition-colors">Careers</a></li>
                 <li><a href="#" className="hover:text-gray-900 transition-colors">Contact</a></li>
               </ul>
-            </div>
-
+          </div>
+          
             <div>
               <h3 className="font-semibold text-gray-900 mb-4">Support</h3>
               <ul className="space-y-2 text-sm text-gray-600">
@@ -236,7 +236,7 @@ export default function WelcomePage() {
               </ul>
             </div>
           </div>
-
+          
           <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
             <p>&copy; 2025 ProjectHub. All rights reserved.</p>
           </div>

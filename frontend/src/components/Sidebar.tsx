@@ -956,7 +956,7 @@ Your report is now available in the system.`);
           
           .sidebar-header {
             padding: 1.5rem 1.25rem;
-            background: linear-gradient(135deg, #FFB333 0%, #F87239 100%);
+            background: #FFB333;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
@@ -1002,9 +1002,9 @@ Your report is now available in the system.`);
           .sidebar-title {
             font-size: 1.5rem;
             font-weight: 800;
-            color: #FFFFFF;
+            color: #1F2937;
             margin: 0;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-shadow: none;
             transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             letter-spacing: -0.025em;
           }
@@ -1017,12 +1017,12 @@ Your report is now available in the system.`);
           
           .sidebar-toggle {
             padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.9);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            color: #FFFFFF;
+            color: #1F2937;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1033,7 +1033,7 @@ Your report is now available in the system.`);
           }
           
           .sidebar-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 1);
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
           }
@@ -1055,9 +1055,9 @@ Your report is now available in the system.`);
           
           .sidebar-add-btn {
             padding: 0.75rem;
-            color: #FFFFFF;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #1F2937;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.9);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1071,13 +1071,13 @@ Your report is now available in the system.`);
           }
           
           .sidebar-add-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 1);
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
           }
           
           .sidebar-add-btn.active {
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 1);
             transform: translateY(-1px);
           }
           
@@ -1167,11 +1167,11 @@ Your report is now available in the system.`);
           .sidebar-search {
             width: 100%;
             padding: 0.875rem 1rem;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.9);
             border-radius: 12px;
             font-size: 0.875rem;
-            color: #FFFFFF;
+            color: #1F2937;
             box-sizing: border-box;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backdrop-filter: blur(10px);
@@ -1180,14 +1180,14 @@ Your report is now available in the system.`);
           }
           
           .sidebar-search::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(31, 41, 55, 0.6);
           }
           
           .sidebar-search:focus {
             outline: none;
-            background: rgba(255, 255, 255, 0.4);
-            border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 1);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
           }
           
           .sidebar.collapsed .sidebar-search {
