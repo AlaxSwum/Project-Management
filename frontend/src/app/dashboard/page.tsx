@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService } from '@/lib/api-compatibility';
-import { PlusIcon, UsersIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UsersIcon, CalendarIcon, SparklesIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 
@@ -88,21 +88,59 @@ export default function DashboardPage() {
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            position: relative;
+            overflow: hidden;
           }
+          
+          .loading-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 179, 51, 0.1) 0%, transparent 70%);
+            animation: float 8s ease-in-out infinite;
+          }
+          
+          .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 1;
+          }
+          
           .spinner {
-            width: 2rem;
-            height: 2rem;
-            border: 3px solid transparent;
-            border-top: 3px solid #FFB333;
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid rgba(255, 179, 51, 0.2);
+            border-top: 4px solid #FFB333;
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
+          
+          .loading-text {
+            color: #6B7280;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+          }
+          
           @keyframes spin {
             to { transform: rotate(360deg); }
           }
+          
+          @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+          }
         `}</style>
         <div className="loading-container">
-          <div className="spinner"></div>
+          <div className="spinner-container">
+            <div className="spinner"></div>
+            <p className="loading-text">Loading your workspace...</p>
+          </div>
         </div>
       </>
     );
@@ -126,23 +164,23 @@ export default function DashboardPage() {
         .dashboard-container::before {
           content: '';
           position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle, rgba(255, 179, 51, 0.05) 0%, transparent 70%);
-          animation: float 12s ease-in-out infinite;
+          top: -30%;
+          left: -20%;
+          width: 140%;
+          height: 140%;
+          background: radial-gradient(circle, rgba(255, 179, 51, 0.06) 0%, transparent 60%);
+          animation: float 15s ease-in-out infinite;
         }
         
         .dashboard-container::after {
           content: '';
           position: absolute;
-          top: 20%;
-          right: -30%;
-          width: 60%;
-          height: 60%;
-          background: radial-gradient(circle, rgba(196, 131, 217, 0.04) 0%, transparent 70%);
-          animation: float 15s ease-in-out infinite reverse;
+          bottom: -30%;
+          right: -20%;
+          width: 100%;
+          height: 100%;
+          background: radial-gradient(circle, rgba(196, 131, 217, 0.05) 0%, transparent 50%);
+          animation: float 20s ease-in-out infinite reverse;
         }
         
         .main-content {
@@ -154,61 +192,97 @@ export default function DashboardPage() {
         }
         
         .header {
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 2rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+          padding: 3rem 2rem;
           position: sticky;
           top: 0;
           z-index: 20;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
         }
         
         .header-content {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
         }
         
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
+        .welcome-section {
+          position: relative;
+        }
+        
+        .welcome-section::before {
+          content: '';
+          position: absolute;
+          top: -0.5rem;
+          left: -1rem;
+          width: 4px;
+          height: calc(100% + 1rem);
+          background: linear-gradient(180deg, #FFB333, #FFD480);
+          border-radius: 2px;
+          opacity: 0.7;
         }
         
         .welcome-section h1 {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1F2937;
-          margin: 0 0 0.5rem 0;
+          font-size: 2.5rem;
+          font-weight: 800;
+          background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin: 0 0 0.75rem 0;
           font-family: 'Inter', sans-serif;
-          letter-spacing: -0.025em;
+          letter-spacing: -0.03em;
+          line-height: 1.1;
         }
         
         .welcome-section p {
           color: #6B7280;
           margin: 0;
-          font-size: 1rem;
+          font-size: 1.125rem;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+        }
+        
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .project-count {
+          background: rgba(255, 179, 51, 0.1);
+          border: 1px solid rgba(255, 179, 51, 0.2);
+          padding: 0.75rem 1.25rem;
+          border-radius: 16px;
+          color: #92400E;
+          font-weight: 600;
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
         }
         
         .create-button {
           background: linear-gradient(135deg, #FFB333, #FFD480);
           color: #FFFFFF;
           border: none;
-          padding: 1rem 1.5rem;
-          border-radius: 12px;
+          padding: 1rem 2rem;
+          border-radius: 16px;
           font-weight: 600;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+          gap: 0.75rem;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 8px 25px rgba(255, 179, 51, 0.25);
           position: relative;
           overflow: hidden;
           font-family: 'Inter', sans-serif;
+          font-size: 1rem;
         }
         
         .create-button::before {
@@ -219,12 +293,12 @@ export default function DashboardPage() {
           width: 100%;
           height: 100%;
           background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transition: left 0.5s ease;
+          transition: left 0.6s ease;
         }
         
         .create-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(255, 179, 51, 0.4);
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 15px 40px rgba(255, 179, 51, 0.35);
         }
         
         .create-button:hover::before {
@@ -232,8 +306,30 @@ export default function DashboardPage() {
         }
         
         .main-content-area {
-          padding: 2rem;
-          max-width: 1200px;
+          padding: 4rem 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+        
+        .content-header {
+          margin-bottom: 3rem;
+          text-align: center;
+        }
+        
+        .content-title {
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: #1F2937;
+          margin: 0 0 0.75rem 0;
+          font-family: 'Inter', sans-serif;
+          letter-spacing: -0.02em;
+        }
+        
+        .content-subtitle {
+          color: #6B7280;
+          font-size: 1.125rem;
+          margin: 0;
+          max-width: 600px;
           margin: 0 auto;
         }
         
@@ -241,13 +337,14 @@ export default function DashboardPage() {
           background: rgba(239, 68, 68, 0.1);
           border: 1px solid rgba(239, 68, 68, 0.2);
           color: #DC2626;
-          padding: 1rem;
-          border-radius: 12px;
-          margin-bottom: 1.5rem;
+          padding: 1.25rem;
+          border-radius: 16px;
+          margin-bottom: 2rem;
           font-weight: 500;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.75rem;
+          font-size: 0.95rem;
         }
         
         .modal-overlay {
@@ -269,7 +366,7 @@ export default function DashboardPage() {
           width: 100%;
           max-width: 600px;
           max-height: 90vh;
-          border-radius: 20px;
+          border-radius: 24px;
           border: 1px solid rgba(255, 255, 255, 0.2);
           box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
           animation: slideIn 0.3s ease-out;
@@ -295,8 +392,8 @@ export default function DashboardPage() {
         }
         
         .modal-close-btn {
-          width: 2rem;
-          height: 2rem;
+          width: 2.5rem;
+          height: 2.5rem;
           border: none;
           background: rgba(243, 244, 246, 0.8);
           border-radius: 50%;
@@ -359,7 +456,7 @@ export default function DashboardPage() {
         
         .form-input {
           width: 100%;
-          padding: 0.875rem 1rem;
+          padding: 1rem 1.25rem;
           border: 2px solid #E5E7EB;
           border-radius: 12px;
           font-size: 0.875rem;
@@ -383,7 +480,7 @@ export default function DashboardPage() {
         
         .form-textarea {
           width: 100%;
-          padding: 0.875rem 1rem;
+          padding: 1rem 1.25rem;
           border: 2px solid #E5E7EB;
           border-radius: 12px;
           font-size: 0.875rem;
@@ -392,7 +489,7 @@ export default function DashboardPage() {
           background: rgba(255, 255, 255, 0.8);
           color: #1F2937;
           resize: vertical;
-          min-height: 80px;
+          min-height: 100px;
         }
         
         .form-textarea:focus {
@@ -403,7 +500,7 @@ export default function DashboardPage() {
         
         .form-select {
           width: 100%;
-          padding: 0.875rem 1rem;
+          padding: 1rem 1.25rem;
           border: 2px solid #E5E7EB;
           border-radius: 12px;
           font-size: 0.875rem;
@@ -423,14 +520,14 @@ export default function DashboardPage() {
         .color-swatches {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
-          gap: 0.75rem;
+          gap: 1rem;
         }
         
         .color-swatch {
-          width: 40px;
-          height: 40px;
-          border: 2px solid #E5E7EB;
-          border-radius: 12px;
+          width: 48px;
+          height: 48px;
+          border: 3px solid #E5E7EB;
+          border-radius: 16px;
           cursor: pointer;
           transition: all 0.3s ease;
           position: relative;
@@ -439,14 +536,14 @@ export default function DashboardPage() {
         .color-swatch:hover {
           transform: scale(1.1);
           border-color: #FFB333;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
         
         .color-swatch.selected {
           border-color: #FFB333;
           border-width: 3px;
           transform: scale(1.05);
-          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.2);
+          box-shadow: 0 0 0 4px rgba(255, 179, 51, 0.2);
         }
         
         .color-swatch.selected::after {
@@ -457,8 +554,8 @@ export default function DashboardPage() {
           transform: translate(-50%, -50%);
           color: white;
           font-weight: bold;
-          font-size: 0.875rem;
-          text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+          font-size: 1rem;
+          text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
         }
         
         .form-actions {
@@ -474,7 +571,7 @@ export default function DashboardPage() {
           background: linear-gradient(135deg, #FFB333, #FFD480);
           color: #FFFFFF;
           border: none;
-          padding: 0.875rem 1.5rem;
+          padding: 1rem 1.5rem;
           border-radius: 12px;
           font-weight: 600;
           cursor: pointer;
@@ -498,7 +595,7 @@ export default function DashboardPage() {
           background: rgba(255, 255, 255, 0.8);
           color: #6B7280;
           border: 2px solid #E5E7EB;
-          padding: 0.875rem 1.5rem;
+          padding: 1rem 1.5rem;
           border-radius: 12px;
           font-weight: 600;
           cursor: pointer;
@@ -516,72 +613,111 @@ export default function DashboardPage() {
         .loading-container {
           display: flex;
           justify-content: center;
-          padding: 3rem 0;
+          padding: 4rem 0;
         }
         
         .spinner {
-          width: 2rem;
-          height: 2rem;
-          border: 3px solid rgba(255, 179, 51, 0.2);
-          border-top: 3px solid #FFB333;
+          width: 2.5rem;
+          height: 2.5rem;
+          border: 4px solid rgba(255, 179, 51, 0.2);
+          border-top: 4px solid #FFB333;
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
         
         .empty-state {
           text-align: center;
-          padding: 4rem 2rem;
+          padding: 6rem 2rem;
+          position: relative;
+        }
+        
+        .empty-state::before {
+          content: '';
+          position: absolute;
+          top: 2rem;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(circle, rgba(255, 179, 51, 0.1) 0%, transparent 70%);
+          border-radius: 50%;
+          z-index: -1;
         }
         
         .empty-icon {
-          width: 80px;
-          height: 80px;
-          background: rgba(255, 179, 51, 0.1);
+          width: 120px;
+          height: 120px;
+          background: linear-gradient(135deg, rgba(255, 179, 51, 0.1), rgba(255, 179, 51, 0.05));
           border: 2px solid rgba(255, 179, 51, 0.2);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto 1.5rem;
-          transition: all 0.3s ease;
+          margin: 0 auto 2rem;
+          transition: all 0.4s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .empty-icon::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: linear-gradient(45deg, transparent, rgba(255, 179, 51, 0.1), transparent);
+          animation: shimmer 3s ease-in-out infinite;
         }
         
         .empty-icon:hover {
-          background: rgba(255, 179, 51, 0.15);
+          background: linear-gradient(135deg, rgba(255, 179, 51, 0.15), rgba(255, 179, 51, 0.08));
           transform: scale(1.05);
+          border-color: rgba(255, 179, 51, 0.3);
         }
         
         .empty-title {
-          font-size: 1.5rem;
+          font-size: 2rem;
           font-weight: 700;
           color: #1F2937;
-          margin-bottom: 0.5rem;
+          margin-bottom: 1rem;
           font-family: 'Inter', sans-serif;
+          letter-spacing: -0.02em;
         }
         
         .empty-description {
           color: #6B7280;
-          margin-bottom: 2rem;
-          font-size: 1rem;
+          margin-bottom: 2.5rem;
+          font-size: 1.125rem;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+          line-height: 1.6;
+        }
+        
+        .empty-actions {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
         }
         
         .projects-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+          gap: 2rem;
         }
         
         .project-card {
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
-          border-radius: 16px;
-          padding: 1.5rem;
+          border-radius: 20px;
+          padding: 2rem;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
           overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         }
         
         .project-card::before {
@@ -590,18 +726,38 @@ export default function DashboardPage() {
           top: 0;
           left: 0;
           right: 0;
-          height: 3px;
+          height: 4px;
           background: linear-gradient(90deg, #FFB333, #FFD480);
           opacity: 0;
           transition: opacity 0.3s ease;
         }
         
+        .project-card::after {
+          content: '';
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 179, 51, 0.1);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: all 0.3s ease;
+        }
+        
         .project-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
         
         .project-card:hover::before {
+          opacity: 1;
+        }
+        
+        .project-card:hover::after {
           opacity: 1;
         }
         
@@ -609,16 +765,17 @@ export default function DashboardPage() {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
         }
         
         .project-title {
           font-weight: 700;
           color: #1F2937;
-          margin-bottom: 0.5rem;
-          font-size: 1.125rem;
+          margin-bottom: 0.75rem;
+          font-size: 1.25rem;
           font-family: 'Inter', sans-serif;
           line-height: 1.4;
+          letter-spacing: -0.01em;
         }
         
         .project-badges {
@@ -631,47 +788,61 @@ export default function DashboardPage() {
         .project-badge {
           background: rgba(255, 179, 51, 0.1);
           border: 1px solid rgba(255, 179, 51, 0.2);
-          padding: 0.25rem 0.75rem;
+          padding: 0.375rem 0.875rem;
           border-radius: 12px;
           text-transform: capitalize;
           font-weight: 500;
           color: #92400E;
+          letter-spacing: 0.025em;
         }
         
         .project-description {
           color: #6B7280;
-          font-size: 0.875rem;
-          margin-bottom: 1rem;
-          line-height: 1.5;
+          font-size: 0.95rem;
+          margin-bottom: 1.5rem;
+          line-height: 1.6;
         }
         
         .progress-section {
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
         }
         
         .progress-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 0.5rem;
-          font-size: 0.75rem;
+          margin-bottom: 0.75rem;
+          font-size: 0.8rem;
           color: #6B7280;
           font-weight: 500;
         }
         
         .progress-bar {
           width: 100%;
-          height: 8px;
+          height: 10px;
           background: rgba(229, 231, 235, 0.5);
-          border-radius: 4px;
+          border-radius: 6px;
           overflow: hidden;
+          position: relative;
+        }
+        
+        .progress-bar::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          animation: shimmer 2s ease-in-out infinite;
         }
         
         .progress-fill {
           height: 100%;
           background: linear-gradient(90deg, #FFB333, #FFD480);
-          border-radius: 4px;
-          transition: width 0.5s ease;
+          border-radius: 6px;
+          transition: width 0.6s ease;
+          position: relative;
         }
         
         .project-footer {
@@ -680,26 +851,30 @@ export default function DashboardPage() {
           align-items: center;
           font-size: 0.875rem;
           color: #6B7280;
+          padding-top: 1rem;
+          border-top: 1px solid rgba(229, 231, 235, 0.3);
         }
         
         .project-stats {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 1.5rem;
         }
         
         .project-stat {
           display: flex;
           align-items: center;
-          gap: 0.25rem;
+          gap: 0.375rem;
+          font-weight: 500;
         }
         
         .project-due {
           font-size: 0.75rem;
           color: #92400E;
           background: rgba(255, 179, 51, 0.1);
-          padding: 0.25rem 0.5rem;
-          border-radius: 8px;
+          padding: 0.375rem 0.75rem;
+          border-radius: 10px;
+          font-weight: 500;
         }
         
         @keyframes fadeIn {
@@ -718,7 +893,12 @@ export default function DashboardPage() {
         
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(3deg); }
+          50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
         
         @media (max-width: 768px) {
@@ -727,38 +907,43 @@ export default function DashboardPage() {
           }
           
           .header {
-            padding: 1rem;
+            padding: 2rem 1rem;
           }
           
           .header-content {
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
             align-items: stretch;
+          }
+          
+          .header-actions {
+            justify-content: space-between;
           }
           
           .create-button {
             width: 100%;
             justify-content: center;
-            padding: 1rem;
+            padding: 1.25rem;
           }
           
           .main-content-area {
-            padding: 1rem;
+            padding: 2rem 1rem;
           }
           
           .projects-grid {
             grid-template-columns: 1fr;
-            gap: 1rem;
+            gap: 1.5rem;
           }
           
           .project-card {
-            padding: 1rem;
+            padding: 1.5rem;
           }
           
           .modal-content {
             max-width: 95vw;
             margin: 0.5rem;
             max-height: 95vh;
+            border-radius: 16px;
           }
           
           .color-swatches {
@@ -768,19 +953,40 @@ export default function DashboardPage() {
           .form-actions {
             flex-direction: column;
           }
+          
+          .empty-state {
+            padding: 4rem 1rem;
+          }
+          
+          .empty-icon {
+            width: 100px;
+            height: 100px;
+          }
+          
+          .empty-title {
+            font-size: 1.75rem;
+          }
         }
         
         @media (max-width: 480px) {
           .header {
-            padding: 0.75rem;
+            padding: 1.5rem 1rem;
+          }
+          
+          .welcome-section h1 {
+            font-size: 2rem;
           }
           
           .main-content-area {
-            padding: 0.75rem;
+            padding: 1.5rem 1rem;
+          }
+          
+          .projects-grid {
+            gap: 1rem;
           }
           
           .project-card {
-            padding: 0.75rem;
+            padding: 1.25rem;
           }
           
           .color-swatches {
@@ -788,8 +994,13 @@ export default function DashboardPage() {
           }
           
           .color-swatch {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
+          }
+          
+          .empty-actions {
+            flex-direction: column;
+            align-items: stretch;
           }
         }
       `}</style>
@@ -803,19 +1014,25 @@ export default function DashboardPage() {
         <div className="main-content">
           <header className="header">
             <div className="header-content">
-              <div className="header-left">
-                <div className="welcome-section">
-                  <h1>Welcome back, {user?.name || 'User'}</h1>
-                  <p>Here's what's happening with your projects today</p>
-                </div>
+              <div className="welcome-section">
+                <h1>Welcome back, {user?.name || 'User'}</h1>
+                <p>Manage your projects with style and efficiency</p>
               </div>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="create-button"
-              >
-                <PlusIcon style={{ width: '20px', height: '20px' }} />
-                Create Project
-              </button>
+              <div className="header-actions">
+                {projects.length > 0 && (
+                  <div className="project-count">
+                    <SparklesIcon style={{ width: '16px', height: '16px' }} />
+                    {projects.length} Active Project{projects.length !== 1 ? 's' : ''}
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="create-button"
+                >
+                  <PlusIcon style={{ width: '20px', height: '20px' }} />
+                  Create Project
+                </button>
+              </div>
             </div>
           </header>
 
@@ -826,6 +1043,15 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {error}
+              </div>
+            )}
+
+            {projects.length > 0 && (
+              <div className="content-header">
+                <h2 className="content-title">Your Projects</h2>
+                <p className="content-subtitle">
+                  Track progress, manage tasks, and collaborate with your team across all your active projects.
+                </p>
               </div>
             )}
 
@@ -951,17 +1177,21 @@ export default function DashboardPage() {
             ) : projects.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">
-                  <PlusIcon style={{ width: '40px', height: '40px', color: '#FFB333' }} />
+                  <SparklesIcon style={{ width: '60px', height: '60px', color: '#FFB333' }} />
                 </div>
-                <h3 className="empty-title">No projects yet</h3>
-                <p className="empty-description">Create your first project to get started with project management</p>
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="create-button"
-                >
-                  <PlusIcon style={{ width: '20px', height: '20px' }} />
-                  Create Your First Project
-                </button>
+                <h3 className="empty-title">Ready to start something amazing?</h3>
+                <p className="empty-description">
+                  Create your first project and begin organizing your work with our powerful project management tools.
+                </p>
+                <div className="empty-actions">
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="create-button"
+                  >
+                    <PlusIcon style={{ width: '20px', height: '20px' }} />
+                    Create Your First Project
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="projects-grid">
