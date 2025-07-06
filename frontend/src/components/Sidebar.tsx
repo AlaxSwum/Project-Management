@@ -956,8 +956,8 @@ Your report is now available in the system.`);
           
           .sidebar-header {
             padding: 1.5rem 1.25rem;
-            background: #FFB333;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            border-bottom: 1px solid rgba(196, 131, 217, 0.2);
             transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
             overflow: hidden;
@@ -1017,25 +1017,26 @@ Your report is now available in the system.`);
           
           .sidebar-toggle {
             padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            background: rgba(255, 179, 51, 0.1);
+            border: 1px solid rgba(255, 179, 51, 0.2);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            color: #1F2937;
+            color: #F87239;
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             min-width: 44px;
             min-height: 44px;
           }
           
           .sidebar-toggle:hover {
-            background: rgba(255, 255, 255, 1);
+            background: rgba(255, 179, 51, 0.2);
+            border-color: rgba(255, 179, 51, 0.4);
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(255, 179, 51, 0.2);
           }
           
           .sidebar-toggle:active {
@@ -1055,14 +1056,14 @@ Your report is now available in the system.`);
           
           .sidebar-add-btn {
             padding: 0.75rem;
-            color: #1F2937;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            color: #F87239;
+            background: rgba(255, 179, 51, 0.1);
+            border: 1px solid rgba(255, 179, 51, 0.2);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1071,13 +1072,15 @@ Your report is now available in the system.`);
           }
           
           .sidebar-add-btn:hover {
-            background: rgba(255, 255, 255, 1);
+            background: rgba(255, 179, 51, 0.2);
+            border-color: rgba(255, 179, 51, 0.4);
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(255, 179, 51, 0.2);
           }
           
           .sidebar-add-btn.active {
-            background: rgba(255, 255, 255, 1);
+            background: rgba(255, 179, 51, 0.3);
+            border-color: rgba(255, 179, 51, 0.5);
             transform: translateY(-1px);
           }
           
@@ -1167,11 +1170,11 @@ Your report is now available in the system.`);
           .sidebar-search {
             width: 100%;
             padding: 0.875rem 1rem;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(196, 131, 217, 0.2);
             border-radius: 12px;
             font-size: 0.875rem;
-            color: #1F2937;
+            color: #374151;
             box-sizing: border-box;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backdrop-filter: blur(10px);
@@ -1180,14 +1183,14 @@ Your report is now available in the system.`);
           }
           
           .sidebar-search::placeholder {
-            color: rgba(31, 41, 55, 0.6);
+            color: #9CA3AF;
           }
           
           .sidebar-search:focus {
             outline: none;
-            background: rgba(255, 255, 255, 1);
-            border-color: rgba(255, 255, 255, 1);
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 179, 51, 0.5);
+            box-shadow: 0 0 0 4px rgba(255, 179, 51, 0.1);
           }
           
           .sidebar.collapsed .sidebar-search {
