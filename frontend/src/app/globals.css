@@ -5,72 +5,95 @@
 @tailwind utilities;
 
 :root {
-  /* Enhanced color palette */
+  /* Professional Project Management Color Palette */
   --primary: #FFB333 !important;
   --primary-light: #FFD480 !important;
   --primary-dark: #E69A00 !important;
-  --secondary: #5884FD !important;
-  --secondary-light: #8BA4FE !important;
-  --secondary-dark: #4169E1 !important;
-  --accent: #C483D9 !important;
-  --accent-light: #D9A3E6 !important;
-  --accent-dark: #A855F7 !important;
+  --secondary: #C483D9 !important;
+  --secondary-light: #D9A3E6 !important;
+  --secondary-dark: #A855F7 !important;
+  --blue: #5884FD !important;
+  --blue-light: #8BA4FE !important;
+  --blue-dark: #4169E1 !important;
   --orange: #F87239 !important;
   --orange-light: #FBA173 !important;
   --orange-dark: #E65100 !important;
   
-  /* Enhanced neutral colors */
+  /* Professional neutral colors */
   --background: #F5F5ED !important;
   --surface: #FFFFFF !important;
   --surface-light: #FEFEFE !important;
   --surface-dark: #F8F9FA !important;
   --surface-elevated: #FFFFFF !important;
+  --surface-subtle: #FAFAFA !important;
   
-  /* Enhanced text colors */
+  /* Professional text colors */
   --text-primary: #1F2937 !important;
   --text-secondary: #6B7280 !important;
   --text-muted: #9CA3AF !important;
   --text-light: #D1D5DB !important;
+  --text-inverse: #FFFFFF !important;
   
-  /* Enhanced border colors */
+  /* Professional border colors */
   --border: #E5E7EB !important;
   --border-light: #F3F4F6 !important;
   --border-dark: #D1D5DB !important;
+  --border-accent: #E5E7EB !important;
   
-  /* Status colors */
-  --error: #EF4444 !important;
-  --success: #10B981 !important;
-  --warning: #F59E0B !important;
-  --info: #3B82F6 !important;
+  /* Status colors for project management */
+  --status-todo: #9CA3AF !important;
+  --status-in-progress: #5884FD !important;
+  --status-review: #FFB333 !important;
+  --status-completed: #10B981 !important;
+  --status-blocked: #EF4444 !important;
+  --status-cancelled: #6B7280 !important;
   
-  /* Enhanced shadows */
+  /* Priority colors */
+  --priority-low: #10B981 !important;
+  --priority-medium: #FFB333 !important;
+  --priority-high: #F87239 !important;
+  --priority-urgent: #EF4444 !important;
+  
+  /* Enhanced shadows for depth */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06) !important;
   
-  /* Enhanced gradients */
-  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-light)) !important;
-  --gradient-secondary: linear-gradient(135deg, var(--secondary), var(--secondary-light)) !important;
-  --gradient-accent: linear-gradient(135deg, var(--accent), var(--accent-light)) !important;
-  --gradient-surface: linear-gradient(135deg, var(--surface), var(--surface-light)) !important;
+  /* Professional gradients */
+  --gradient-primary: linear-gradient(135deg, #FFB333, #FFD480) !important;
+  --gradient-secondary: linear-gradient(135deg, #C483D9, #D9A3E6) !important;
+  --gradient-blue: linear-gradient(135deg, #5884FD, #8BA4FE) !important;
+  --gradient-orange: linear-gradient(135deg, #F87239, #FBA173) !important;
+  --gradient-surface: linear-gradient(135deg, #FFFFFF, #FEFEFE) !important;
+  --gradient-background: linear-gradient(135deg, #F5F5ED, #F8F9FA) !important;
   
-  /* Animation timings */
+  /* Animation timings for smooth UX */
   --transition-fast: 0.15s ease-out !important;
   --transition-normal: 0.25s ease-out !important;
   --transition-slow: 0.35s ease-out !important;
   --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
   
-  /* Border radius */
+  /* Professional border radius */
   --radius-sm: 0.375rem !important;
   --radius-md: 0.5rem !important;
   --radius-lg: 0.75rem !important;
   --radius-xl: 1rem !important;
   --radius-2xl: 1.5rem !important;
+  --radius-full: 9999px !important;
+  
+  /* Professional spacing */
+  --spacing-xs: 0.25rem !important;
+  --spacing-sm: 0.5rem !important;
+  --spacing-md: 1rem !important;
+  --spacing-lg: 1.5rem !important;
+  --spacing-xl: 2rem !important;
+  --spacing-2xl: 3rem !important;
 }
 
-/* Enhanced base styles */
+/* Professional base styles */
 * {
   box-sizing: border-box;
 }
@@ -89,7 +112,7 @@ html, body {
   font-variation-settings: 'opsz' 32;
 }
 
-/* Enhanced typography */
+/* Professional typography */
 body {
   @apply antialiased;
   background: var(--background) !important;
@@ -103,28 +126,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Professional heading styles */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif !important;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.025em;
   color: var(--text-primary) !important;
 }
 
-h1 { font-size: 2.25rem; font-weight: 700; }
-h2 { font-size: 1.875rem; font-weight: 600; }
-h3 { font-size: 1.5rem; font-weight: 600; }
-h4 { font-size: 1.25rem; font-weight: 600; }
-h5 { font-size: 1.125rem; font-weight: 500; }
-h6 { font-size: 1rem; font-weight: 500; }
+h1 { font-size: 2.5rem; font-weight: 700; }
+h2 { font-size: 2rem; font-weight: 650; }
+h3 { font-size: 1.75rem; font-weight: 600; }
+h4 { font-size: 1.5rem; font-weight: 600; }
+h5 { font-size: 1.25rem; font-weight: 600; }
+h6 { font-size: 1.125rem; font-weight: 500; }
 
-/* Enhanced smooth scrolling */
+/* Professional smooth scrolling */
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 2rem;
 }
 
-/* Enhanced focus styles */
+/* Professional focus styles */
 *:focus {
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.2) !important;
@@ -132,10 +156,15 @@ html {
   transition: box-shadow var(--transition-fast) !important;
 }
 
-/* Enhanced button styling */
+*:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Professional button styling */
 button[type="submit"], .btn-primary {
   background: var(--gradient-primary) !important;
-  color: white !important;
+  color: var(--text-inverse) !important;
   border: none !important;
   padding: 0.875rem 1.75rem !important;
   border-radius: var(--radius-lg) !important;
@@ -146,6 +175,7 @@ button[type="submit"], .btn-primary {
   box-shadow: var(--shadow-sm) !important;
   position: relative !important;
   overflow: hidden !important;
+  cursor: pointer !important;
 }
 
 button[type="submit"]:hover, .btn-primary:hover {
@@ -160,7 +190,7 @@ button[type="submit"]:active, .btn-primary:active {
   transition: all var(--transition-fast) !important;
 }
 
-/* Enhanced input styling */
+/* Professional input styling */
 input[type="email"], input[type="password"], input[type="text"], input[type="tel"], select, textarea {
   width: 100% !important;
   padding: 0.875rem 1rem !important;
@@ -187,13 +217,13 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   box-shadow: var(--shadow-md) !important;
 }
 
-/* Enhanced utility classes */
+/* Professional PM System Components */
 @layer components {
-  /* Enhanced button styles */
+  /* Professional button styles */
   .btn-primary {
     @apply px-6 py-3 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed;
     background: var(--gradient-primary) !important;
-    color: white !important;
+    color: var(--text-inverse) !important;
     border: none !important;
     border-radius: var(--radius-lg) !important;
     font-size: 0.875rem !important;
@@ -203,6 +233,7 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
     transition: all var(--transition-normal) !important;
     position: relative !important;
     overflow: hidden !important;
+    cursor: pointer !important;
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -220,7 +251,7 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   .btn-secondary {
     @apply px-6 py-3 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed;
     background: var(--gradient-secondary) !important;
-    color: white !important;
+    color: var(--text-inverse) !important;
     border: none !important;
     border-radius: var(--radius-lg) !important;
     font-size: 0.875rem !important;
@@ -232,6 +263,44 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
 
   .btn-secondary:hover:not(:disabled) {
     background: var(--gradient-secondary) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+
+  .btn-blue {
+    @apply px-6 py-3 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--gradient-blue) !important;
+    color: var(--text-inverse) !important;
+    border: none !important;
+    border-radius: var(--radius-lg) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.025em !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: all var(--transition-normal) !important;
+  }
+
+  .btn-blue:hover:not(:disabled) {
+    background: var(--gradient-blue) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+
+  .btn-orange {
+    @apply px-6 py-3 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--gradient-orange) !important;
+    color: var(--text-inverse) !important;
+    border: none !important;
+    border-radius: var(--radius-lg) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.025em !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: all var(--transition-normal) !important;
+  }
+
+  .btn-orange:hover:not(:disabled) {
+    background: var(--gradient-orange) !important;
     transform: translateY(-2px) !important;
     box-shadow: var(--shadow-lg) !important;
   }
@@ -350,15 +419,16 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
     transition: all var(--transition-fast) !important;
   }
 
-  /* Enhanced status badge styles */
+  /* Professional PM status badges */
   .status-badge {
     @apply px-3 py-1 text-xs font-medium inline-flex items-center gap-1;
-    border-radius: var(--radius-2xl) !important;
+    border-radius: var(--radius-full) !important;
     font-weight: 600 !important;
     letter-spacing: 0.025em !important;
     transition: all var(--transition-normal) !important;
     position: relative !important;
     overflow: hidden !important;
+    text-transform: uppercase !important;
   }
 
   .status-badge::before {
@@ -377,27 +447,72 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   }
 
   .status-todo {
-    background: var(--surface-dark) !important;
-    color: var(--text-muted) !important;
-    border: 1px solid var(--border) !important;
+    background: rgba(156, 163, 175, 0.15) !important;
+    color: var(--status-todo) !important;
+    border: 1px solid rgba(156, 163, 175, 0.3) !important;
   }
 
   .status-in-progress {
-    background: rgba(88, 132, 253, 0.1) !important;
-    color: var(--secondary-dark) !important;
-    border: 1px solid rgba(88, 132, 253, 0.2) !important;
+    background: rgba(88, 132, 253, 0.15) !important;
+    color: var(--status-in-progress) !important;
+    border: 1px solid rgba(88, 132, 253, 0.3) !important;
   }
 
-  .status-in-review {
-    background: rgba(245, 158, 11, 0.1) !important;
-    color: var(--warning) !important;
-    border: 1px solid rgba(245, 158, 11, 0.2) !important;
+  .status-review {
+    background: rgba(255, 179, 51, 0.15) !important;
+    color: var(--status-review) !important;
+    border: 1px solid rgba(255, 179, 51, 0.3) !important;
   }
 
-  .status-done {
-    background: rgba(16, 185, 129, 0.1) !important;
-    color: var(--success) !important;
-    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  .status-completed {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: var(--status-completed) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  }
+
+  .status-blocked {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: var(--status-blocked) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  }
+
+  .status-cancelled {
+    background: rgba(107, 114, 128, 0.15) !important;
+    color: var(--status-cancelled) !important;
+    border: 1px solid rgba(107, 114, 128, 0.3) !important;
+  }
+
+  /* Professional priority badges */
+  .priority-badge {
+    @apply px-2 py-1 text-xs font-medium inline-flex items-center gap-1;
+    border-radius: var(--radius-md) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.025em !important;
+    transition: all var(--transition-normal) !important;
+  }
+
+  .priority-low {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: var(--priority-low) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  }
+
+  .priority-medium {
+    background: rgba(255, 179, 51, 0.15) !important;
+    color: var(--priority-medium) !important;
+    border: 1px solid rgba(255, 179, 51, 0.3) !important;
+  }
+
+  .priority-high {
+    background: rgba(248, 114, 57, 0.15) !important;
+    color: var(--priority-high) !important;
+    border: 1px solid rgba(248, 114, 57, 0.3) !important;
+  }
+
+  .priority-urgent {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: var(--priority-urgent) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
   }
 
   /* Priority badge styles */
