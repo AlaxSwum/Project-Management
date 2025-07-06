@@ -29,70 +29,431 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5ED] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header with Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-[#FFB333] to-[#FFD480] rounded-xl flex items-center justify-center mr-3">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <span className="text-2xl font-bold text-gray-900">ProjectHub</span>
-          </Link>
-        </div>
+    <>
+      <style jsx>{`
+        .login-container {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .login-container::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(255, 179, 51, 0.1) 0%, transparent 70%);
+          animation: float 6s ease-in-out infinite;
+        }
+        
+        .login-container::after {
+          content: '';
+          position: absolute;
+          top: 20%;
+          right: -30%;
+          width: 60%;
+          height: 60%;
+          background: radial-gradient(circle, rgba(196, 131, 217, 0.08) 0%, transparent 70%);
+          animation: float 8s ease-in-out infinite reverse;
+        }
+        
+        .login-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border-radius: 24px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 2rem;
+          width: 100%;
+          max-width: 420px;
+          position: relative;
+          overflow: hidden;
+          z-index: 1;
+        }
+        
+        .login-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+        
+        .logo-container {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        
+        .logo-link {
+          display: inline-flex;
+          align-items: center;
+          text-decoration: none;
+          transition: transform 0.3s ease;
+        }
+        
+        .logo-link:hover {
+          transform: scale(1.05);
+        }
+        
+        .logo-icon {
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg, #FFB333, #FFD480);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 12px;
+          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+        }
+        
+        .logo-text {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1F2937;
+          font-family: 'Inter', sans-serif;
+        }
+        
+        .title-section {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        
+        .title {
+          font-size: 1.875rem;
+          font-weight: 700;
+          color: #1F2937;
+          margin-bottom: 0.5rem;
+          font-family: 'Inter', sans-serif;
+        }
+        
+        .subtitle {
+          color: #6B7280;
+          font-size: 1rem;
+        }
+        
+        .error-message {
+          margin-bottom: 1.5rem;
+          padding: 1rem;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+        }
+        
+        .error-icon {
+          width: 1.25rem;
+          height: 1.25rem;
+          color: #EF4444;
+          margin-right: 0.5rem;
+        }
+        
+        .error-text {
+          color: #DC2626;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+        
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+        
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        
+        .form-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #1F2937;
+          font-family: 'Inter', sans-serif;
+        }
+        
+        .form-input {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          border: 2px solid #E5E7EB;
+          border-radius: 12px;
+          font-size: 0.875rem;
+          font-family: 'Inter', sans-serif;
+          transition: all 0.3s ease;
+          background: #FFFFFF;
+          color: #1F2937;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-input:focus {
+          outline: none;
+          border-color: #FFB333;
+          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          transform: translateY(-1px);
+        }
+        
+        .form-input:hover {
+          border-color: #D1D5DB;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-input::placeholder {
+          color: #9CA3AF;
+        }
+        
+        .remember-forgot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin: 0.5rem 0;
+        }
+        
+        .remember-me {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .checkbox {
+          width: 1rem;
+          height: 1rem;
+          border: 2px solid #D1D5DB;
+          border-radius: 4px;
+          background: #FFFFFF;
+          cursor: pointer;
+        }
+        
+        .checkbox:checked {
+          background: #FFB333;
+          border-color: #FFB333;
+        }
+        
+        .checkbox-label {
+          font-size: 0.875rem;
+          color: #6B7280;
+          cursor: pointer;
+        }
+        
+        .forgot-link {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #FFB333;
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
+        
+        .forgot-link:hover {
+          color: #E69A00;
+        }
+        
+        .submit-button {
+          width: 100%;
+          padding: 0.875rem 1.5rem;
+          background: linear-gradient(135deg, #FFB333, #FFD480);
+          color: #FFFFFF;
+          border: none;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 600;
+          font-family: 'Inter', sans-serif;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .submit-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(255, 179, 51, 0.4);
+        }
+        
+        .submit-button:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        
+        .submit-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        
+        .spinner {
+          display: inline-block;
+          width: 1.25rem;
+          height: 1.25rem;
+          border: 2px solid transparent;
+          border-top: 2px solid #FFFFFF;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-right: 0.5rem;
+        }
+        
+        .divider {
+          margin: 2rem 0;
+          position: relative;
+        }
+        
+        .divider-line {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+        }
+        
+        .divider-border {
+          width: 100%;
+          border-top: 1px solid #E5E7EB;
+        }
+        
+        .divider-text {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          font-size: 0.875rem;
+        }
+        
+        .divider-label {
+          padding: 0 0.5rem;
+          background: rgba(255, 255, 255, 0.95);
+          color: #6B7280;
+        }
+        
+        .signup-section {
+          text-align: center;
+        }
+        
+        .signup-text {
+          color: #6B7280;
+          font-size: 0.875rem;
+        }
+        
+        .signup-link {
+          font-weight: 600;
+          color: #FFB333;
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
+        
+        .signup-link:hover {
+          color: #E69A00;
+        }
+        
+        .footer {
+          margin-top: 2rem;
+          text-align: center;
+        }
+        
+        .footer-text {
+          font-size: 0.875rem;
+          color: #9CA3AF;
+          line-height: 1.5;
+        }
+        
+        .footer-link {
+          color: #FFB333;
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+          color: #E69A00;
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+          .login-card {
+            padding: 1.5rem;
+            margin: 1rem;
+          }
+          
+          .title {
+            font-size: 1.5rem;
+          }
+          
+          .remember-forgot {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+          }
+        }
+      `}</style>
+      
+      <div className="login-container">
+        <div className="login-card">
+          {/* Logo */}
+          <div className="logo-container">
+            <Link href="/" className="logo-link">
+              <div className="logo-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#FFFFFF' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <span className="logo-text">ProjectHub</span>
+            </Link>
+          </div>
 
-        {/* Login Card */}
-        <div className="card-hover bg-white shadow-xl border-0 p-8">
           {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your ProjectHub account</p>
+          <div className="title-section">
+            <h1 className="title">Welcome Back</h1>
+            <p className="subtitle">Sign in to your ProjectHub account</p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-red-700 text-sm font-medium">{error}</span>
-              </div>
+            <div className="error-message">
+              <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="error-text">{error}</span>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+          <form onSubmit={handleSubmit} className="form">
+            {/* Email */}
             <div className="form-group">
-              <label htmlFor="email" className="form-label">
-                Email Address
-              </label>
+              <label htmlFor="email" className="form-label">Email Address</label>
               <input
                 id="email"
                 name="email"
                 type="email"
                 required
-                className="input-field"
+                className="form-input"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
+              <label htmlFor="password" className="form-label">Password</label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 required
-                className="input-field"
+                className="form-input"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -100,19 +461,12 @@ export default function LoginPage() {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 text-[#FFB333] bg-white border-gray-300 rounded focus:ring-[#FFB333] focus:ring-2"
-                />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
+            <div className="remember-forgot">
+              <label className="remember-me">
+                <input type="checkbox" className="checkbox" />
+                <span className="checkbox-label">Remember me</span>
               </label>
-
-              <Link 
-                href="/forgot-password" 
-                className="text-sm font-medium text-[#FFB333] hover:text-[#E69A00] transition-colors"
-              >
+              <Link href="/forgot-password" className="forgot-link">
                 Forgot password?
               </Link>
             </div>
@@ -121,16 +475,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full btn-primary py-3 text-base ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="submit-button"
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                <>
+                  <span className="spinner"></span>
                   Signing in...
-                </div>
+                </>
               ) : (
                 'Sign In'
               )}
@@ -138,25 +489,20 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="my-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">New to ProjectHub?</span>
-              </div>
+          <div className="divider">
+            <div className="divider-line">
+              <div className="divider-border"></div>
+            </div>
+            <div className="divider-text">
+              <span className="divider-label">New to ProjectHub?</span>
             </div>
           </div>
 
           {/* Sign Up Link */}
-          <div className="text-center">
-            <p className="text-gray-600">
+          <div className="signup-section">
+            <p className="signup-text">
               Don't have an account?{' '}
-              <Link 
-                href="/register" 
-                className="font-semibold text-[#FFB333] hover:text-[#E69A00] transition-colors"
-              >
+              <Link href="/register" className="signup-link">
                 Create account
               </Link>
             </p>
@@ -164,19 +510,15 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="footer">
+          <p className="footer-text">
             By signing in, you agree to our{' '}
-            <Link href="/terms" className="text-[#FFB333] hover:text-[#E69A00] transition-colors">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-[#FFB333] hover:text-[#E69A00] transition-colors">
-              Privacy Policy
-            </Link>
+            <Link href="/terms" className="footer-link">Terms of Service</Link>
+            {' '}and{' '}
+            <Link href="/privacy" className="footer-link">Privacy Policy</Link>
           </p>
         </div>
       </div>
-    </div>
+    </>
   );
 } 
