@@ -87,8 +87,8 @@ export default function RegisterPage() {
           left: -50%;
           width: 200%;
           height: 200%;
-          background: radial-gradient(circle, rgba(255, 179, 51, 0.1) 0%, transparent 70%);
-          animation: float 6s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(255, 179, 51, 0.08) 0%, transparent 70%);
+          animation: float 8s ease-in-out infinite;
         }
         
         .register-container::after {
@@ -98,19 +98,19 @@ export default function RegisterPage() {
           right: -30%;
           width: 60%;
           height: 60%;
-          background: radial-gradient(circle, rgba(196, 131, 217, 0.08) 0%, transparent 70%);
-          animation: float 8s ease-in-out infinite reverse;
+          background: radial-gradient(circle, rgba(196, 131, 217, 0.06) 0%, transparent 70%);
+          animation: float 10s ease-in-out infinite reverse;
         }
         
         .register-card {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
-          border-radius: 24px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          border-radius: 20px;
+          box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 2rem;
+          padding: 3rem 2.5rem;
           width: 100%;
-          max-width: 500px;
+          max-width: 520px;
           position: relative;
           overflow: hidden;
           z-index: 1;
@@ -126,63 +126,30 @@ export default function RegisterPage() {
           background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
         }
         
-        .logo-container {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-        
-        .logo-link {
-          display: inline-flex;
-          align-items: center;
-          text-decoration: none;
-          transition: transform 0.3s ease;
-        }
-        
-        .logo-link:hover {
-          transform: scale(1.05);
-        }
-        
-        .logo-icon {
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, #FFB333, #FFD480);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 12px;
-          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
-        }
-        
-        .logo-text {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1F2937;
-          font-family: 'Inter', sans-serif;
-        }
-        
         .title-section {
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 2.5rem;
         }
         
         .title {
-          font-size: 1.875rem;
+          font-size: 2rem;
           font-weight: 700;
           color: #1F2937;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
           font-family: 'Inter', sans-serif;
+          letter-spacing: -0.025em;
         }
         
         .subtitle {
           color: #6B7280;
           font-size: 1rem;
+          line-height: 1.5;
         }
         
         .error-message {
           margin-bottom: 1.5rem;
           padding: 1rem;
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(239, 68, 68, 0.08);
           border: 1px solid rgba(239, 68, 68, 0.2);
           border-radius: 12px;
           display: flex;
@@ -194,6 +161,7 @@ export default function RegisterPage() {
           height: 1.25rem;
           color: #EF4444;
           margin-right: 0.5rem;
+          flex-shrink: 0;
         }
         
         .error-text {
@@ -229,7 +197,7 @@ export default function RegisterPage() {
         
         .form-input {
           width: 100%;
-          padding: 0.875rem 1rem;
+          padding: 1rem;
           border: 2px solid #E5E7EB;
           border-radius: 12px;
           font-size: 0.875rem;
@@ -237,19 +205,19 @@ export default function RegisterPage() {
           transition: all 0.3s ease;
           background: #FFFFFF;
           color: #1F2937;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         .form-input:focus {
           outline: none;
           border-color: #FFB333;
-          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
           transform: translateY(-1px);
         }
         
         .form-input:hover {
           border-color: #D1D5DB;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
         }
         
         .form-input::placeholder {
@@ -277,6 +245,7 @@ export default function RegisterPage() {
           cursor: pointer;
           margin-top: 0.25rem;
           flex-shrink: 0;
+          transition: all 0.2s ease;
         }
         
         .checkbox:checked {
@@ -303,7 +272,7 @@ export default function RegisterPage() {
         
         .submit-button {
           width: 100%;
-          padding: 0.875rem 1.5rem;
+          padding: 1rem 1.5rem;
           background: linear-gradient(135deg, #FFB333, #FFD480);
           color: #FFFFFF;
           border: none;
@@ -318,9 +287,24 @@ export default function RegisterPage() {
           overflow: hidden;
         }
         
+        .submit-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transition: left 0.5s ease;
+        }
+        
         .submit-button:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(255, 179, 51, 0.4);
+        }
+        
+        .submit-button:hover:not(:disabled)::before {
+          left: 100%;
         }
         
         .submit-button:active:not(:disabled) {
@@ -344,7 +328,7 @@ export default function RegisterPage() {
         }
         
         .divider {
-          margin: 2rem 0;
+          margin: 2.5rem 0;
           position: relative;
         }
         
@@ -368,7 +352,7 @@ export default function RegisterPage() {
         }
         
         .divider-label {
-          padding: 0 0.5rem;
+          padding: 0 1rem;
           background: rgba(255, 255, 255, 0.95);
           color: #6B7280;
         }
@@ -393,57 +377,9 @@ export default function RegisterPage() {
           color: #E69A00;
         }
         
-        .features-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1rem;
-          margin-top: 2rem;
-        }
-        
-        .feature-card {
-          padding: 1rem;
-          background: rgba(255, 255, 255, 0.6);
-          border-radius: 12px;
-          text-align: center;
-          transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover {
-          transform: translateY(-2px);
-        }
-        
-        .feature-icon {
-          width: 32px;
-          height: 32px;
-          margin: 0 auto 0.5rem;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #FFFFFF;
-        }
-        
-        .feature-icon.primary {
-          background: linear-gradient(135deg, #FFB333, #FFD480);
-        }
-        
-        .feature-icon.blue {
-          background: linear-gradient(135deg, #5884FD, #8BA4FE);
-        }
-        
-        .feature-icon.purple {
-          background: linear-gradient(135deg, #C483D9, #D9A3E6);
-        }
-        
-        .feature-text {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #1F2937;
-        }
-        
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
+          50% { transform: translateY(-20px) rotate(3deg); }
         }
         
         @keyframes spin {
@@ -453,53 +389,32 @@ export default function RegisterPage() {
         
         @media (max-width: 768px) {
           .register-card {
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             margin: 1rem;
           }
           
           .title {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
           }
           
           .form-row {
             grid-template-columns: 1fr;
           }
-          
-          .features-grid {
-            grid-template-columns: 1fr;
-          }
         }
         
         @media (max-width: 640px) {
-          .features-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-          }
-          
-          .feature-card {
-            padding: 0.75rem;
+          .register-card {
+            padding: 2rem 1.5rem;
           }
         }
       `}</style>
       
       <div className="register-container">
         <div className="register-card">
-          {/* Logo */}
-          <div className="logo-container">
-            <Link href="/" className="logo-link">
-              <div className="logo-icon">
-                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#FFFFFF' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <span className="logo-text">ProjectHub</span>
-            </Link>
-          </div>
-
           {/* Title */}
           <div className="title-section">
             <h1 className="title">Create Account</h1>
-            <p className="subtitle">Join ProjectHub and start managing projects professionally</p>
+            <p className="subtitle">Get started with your new account</p>
           </div>
 
           {/* Error Message */}
@@ -654,41 +569,10 @@ export default function RegisterPage() {
           {/* Sign In Link */}
           <div className="signin-section">
             <p className="signin-text">
-              Ready to sign in?{' '}
               <Link href="/login" className="signin-link">
                 Sign in here
               </Link>
             </p>
-          </div>
-        </div>
-
-        {/* Features Preview */}
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon primary">
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="feature-text">Task Management</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon blue">
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-            <p className="feature-text">Team Collaboration</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon purple">
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <p className="feature-text">Analytics</p>
           </div>
         </div>
       </div>

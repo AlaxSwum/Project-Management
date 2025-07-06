@@ -49,8 +49,8 @@ export default function LoginPage() {
           left: -50%;
           width: 200%;
           height: 200%;
-          background: radial-gradient(circle, rgba(255, 179, 51, 0.1) 0%, transparent 70%);
-          animation: float 6s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(255, 179, 51, 0.08) 0%, transparent 70%);
+          animation: float 8s ease-in-out infinite;
         }
         
         .login-container::after {
@@ -60,17 +60,17 @@ export default function LoginPage() {
           right: -30%;
           width: 60%;
           height: 60%;
-          background: radial-gradient(circle, rgba(196, 131, 217, 0.08) 0%, transparent 70%);
-          animation: float 8s ease-in-out infinite reverse;
+          background: radial-gradient(circle, rgba(196, 131, 217, 0.06) 0%, transparent 70%);
+          animation: float 10s ease-in-out infinite reverse;
         }
         
         .login-card {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
-          border-radius: 24px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          border-radius: 20px;
+          box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 2rem;
+          padding: 3rem 2.5rem;
           width: 100%;
           max-width: 420px;
           position: relative;
@@ -88,63 +88,30 @@ export default function LoginPage() {
           background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
         }
         
-        .logo-container {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-        
-        .logo-link {
-          display: inline-flex;
-          align-items: center;
-          text-decoration: none;
-          transition: transform 0.3s ease;
-        }
-        
-        .logo-link:hover {
-          transform: scale(1.05);
-        }
-        
-        .logo-icon {
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, #FFB333, #FFD480);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 12px;
-          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
-        }
-        
-        .logo-text {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1F2937;
-          font-family: 'Inter', sans-serif;
-        }
-        
         .title-section {
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 2.5rem;
         }
         
         .title {
-          font-size: 1.875rem;
+          font-size: 2rem;
           font-weight: 700;
           color: #1F2937;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
           font-family: 'Inter', sans-serif;
+          letter-spacing: -0.025em;
         }
         
         .subtitle {
           color: #6B7280;
           font-size: 1rem;
+          line-height: 1.5;
         }
         
         .error-message {
           margin-bottom: 1.5rem;
           padding: 1rem;
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(239, 68, 68, 0.08);
           border: 1px solid rgba(239, 68, 68, 0.2);
           border-radius: 12px;
           display: flex;
@@ -156,6 +123,7 @@ export default function LoginPage() {
           height: 1.25rem;
           color: #EF4444;
           margin-right: 0.5rem;
+          flex-shrink: 0;
         }
         
         .error-text {
@@ -185,7 +153,7 @@ export default function LoginPage() {
         
         .form-input {
           width: 100%;
-          padding: 0.875rem 1rem;
+          padding: 1rem;
           border: 2px solid #E5E7EB;
           border-radius: 12px;
           font-size: 0.875rem;
@@ -193,19 +161,19 @@ export default function LoginPage() {
           transition: all 0.3s ease;
           background: #FFFFFF;
           color: #1F2937;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         .form-input:focus {
           outline: none;
           border-color: #FFB333;
-          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
           transform: translateY(-1px);
         }
         
         .form-input:hover {
           border-color: #D1D5DB;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
         }
         
         .form-input::placeholder {
@@ -232,6 +200,7 @@ export default function LoginPage() {
           border-radius: 4px;
           background: #FFFFFF;
           cursor: pointer;
+          transition: all 0.2s ease;
         }
         
         .checkbox:checked {
@@ -259,7 +228,7 @@ export default function LoginPage() {
         
         .submit-button {
           width: 100%;
-          padding: 0.875rem 1.5rem;
+          padding: 1rem 1.5rem;
           background: linear-gradient(135deg, #FFB333, #FFD480);
           color: #FFFFFF;
           border: none;
@@ -274,9 +243,24 @@ export default function LoginPage() {
           overflow: hidden;
         }
         
+        .submit-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transition: left 0.5s ease;
+        }
+        
         .submit-button:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(255, 179, 51, 0.4);
+        }
+        
+        .submit-button:hover:not(:disabled)::before {
+          left: 100%;
         }
         
         .submit-button:active:not(:disabled) {
@@ -300,7 +284,7 @@ export default function LoginPage() {
         }
         
         .divider {
-          margin: 2rem 0;
+          margin: 2.5rem 0;
           position: relative;
         }
         
@@ -324,7 +308,7 @@ export default function LoginPage() {
         }
         
         .divider-label {
-          padding: 0 0.5rem;
+          padding: 0 1rem;
           background: rgba(255, 255, 255, 0.95);
           color: #6B7280;
         }
@@ -349,30 +333,9 @@ export default function LoginPage() {
           color: #E69A00;
         }
         
-        .footer {
-          margin-top: 2rem;
-          text-align: center;
-        }
-        
-        .footer-text {
-          font-size: 0.875rem;
-          color: #9CA3AF;
-          line-height: 1.5;
-        }
-        
-        .footer-link {
-          color: #FFB333;
-          text-decoration: none;
-          transition: color 0.3s ease;
-        }
-        
-        .footer-link:hover {
-          color: #E69A00;
-        }
-        
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
+          50% { transform: translateY(-20px) rotate(3deg); }
         }
         
         @keyframes spin {
@@ -382,12 +345,12 @@ export default function LoginPage() {
         
         @media (max-width: 640px) {
           .login-card {
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             margin: 1rem;
           }
           
           .title {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
           }
           
           .remember-forgot {
@@ -400,22 +363,10 @@ export default function LoginPage() {
       
       <div className="login-container">
         <div className="login-card">
-          {/* Logo */}
-          <div className="logo-container">
-            <Link href="/" className="logo-link">
-              <div className="logo-icon">
-                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#FFFFFF' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <span className="logo-text">ProjectHub</span>
-            </Link>
-          </div>
-
           {/* Title */}
           <div className="title-section">
             <h1 className="title">Welcome Back</h1>
-            <p className="subtitle">Sign in to your ProjectHub account</p>
+            <p className="subtitle">Sign in to continue to your dashboard</p>
           </div>
 
           {/* Error Message */}
@@ -494,29 +445,18 @@ export default function LoginPage() {
               <div className="divider-border"></div>
             </div>
             <div className="divider-text">
-              <span className="divider-label">New to ProjectHub?</span>
+              <span className="divider-label">Don't have an account?</span>
             </div>
           </div>
 
           {/* Sign Up Link */}
           <div className="signup-section">
             <p className="signup-text">
-              Don't have an account?{' '}
               <Link href="/register" className="signup-link">
-                Create account
+                Create your account
               </Link>
             </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="footer">
-          <p className="footer-text">
-            By signing in, you agree to our{' '}
-            <Link href="/terms" className="footer-link">Terms of Service</Link>
-            {' '}and{' '}
-            <Link href="/privacy" className="footer-link">Privacy Policy</Link>
-          </p>
         </div>
       </div>
     </>

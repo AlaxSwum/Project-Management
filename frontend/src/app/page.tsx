@@ -17,7 +17,7 @@ export default function WelcomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <h1 className="text-xl font-bold text-gray-900">ProjectHub</h1>
+                <h1 className="text-xl font-bold text-gray-900">PM System</h1>
         </div>
       </div>
 
@@ -175,7 +175,7 @@ export default function WelcomePage() {
             Ready to streamline your projects?
           </h2>
           <p className="text-xl text-gray-300 mb-8">
-            Join thousands of teams who have transformed their project management with ProjectHub.
+            Join thousands of teams who have transformed their project management workflow.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register" className="btn-primary px-8 py-4 text-lg">
@@ -199,7 +199,7 @@ export default function WelcomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <span className="text-lg font-bold text-gray-900">ProjectHub</span>
+                <span className="text-lg font-bold text-gray-900">PM System</span>
               </div>
               <p className="text-gray-600 text-sm">
                 Professional project management platform for modern teams.
@@ -238,7 +238,7 @@ export default function WelcomePage() {
           </div>
           
           <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
-            <p>&copy; 2025 ProjectHub. All rights reserved.</p>
+            <p>&copy; 2025 PM System. All rights reserved.</p>
           </div>
         </div>
       </footer>
