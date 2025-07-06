@@ -14,8 +14,9 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    company: '',
-    role: 'team_member',
+    phone: '',
+    role: 'member',
+    position: '',
     acceptTerms: false
   });
   const [error, setError] = useState('');
@@ -48,10 +49,21 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(formData);
+      // Transform form data to match AuthContext expectations
+      const registerData = {
+        email: formData.email,
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        phone: formData.phone,
+        role: formData.role,
+        position: formData.position,
+        password: formData.password,
+        password_confirm: formData.confirmPassword
+      };
+
+      await register(registerData);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create account');
+      setError(err.message || 'Failed to create account');
     } finally {
       setIsLoading(false);
     }
@@ -153,45 +165,67 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
-                Company <span className="text-gray-500">(optional)</span>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone number <span className="text-gray-500">(optional)</span>
               </label>
               <input
-                id="company"
-                name="company"
-                type="text"
+                id="phone"
+                name="phone"
+                type="tel"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
                 style={{ 
                   '--tw-ring-color': '#FFB333',
                   '--tw-ring-opacity': '0.3'
                 } as React.CSSProperties}
-                placeholder="Company name"
-                value={formData.company}
+                placeholder="Phone number"
+                value={formData.phone}
                 onChange={handleChange}
               />
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 bg-white"
-                style={{ 
-                  '--tw-ring-color': '#FFB333',
-                  '--tw-ring-opacity': '0.3'
-                } as React.CSSProperties}
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="team_member">Team Member</option>
-                <option value="project_manager">Project Manager</option>
-                <option value="team_lead">Team Lead</option>
-                <option value="admin">Admin</option>
-                <option value="executive">Executive</option>
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 bg-white"
+                  style={{ 
+                    '--tw-ring-color': '#FFB333',
+                    '--tw-ring-opacity': '0.3'
+                  } as React.CSSProperties}
+                  value={formData.role}
+                  onChange={handleChange}
+                >
+                  <option value="member">Team Member</option>
+                  <option value="developer">Developer</option>
+                  <option value="designer">Designer</option>
+                  <option value="manager">Project Manager</option>
+                  <option value="analyst">Business Analyst</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-2">
+                  Position <span className="text-gray-500">(optional)</span>
+                </label>
+                <input
+                  id="position"
+                  name="position"
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
+                  style={{ 
+                    '--tw-ring-color': '#FFB333',
+                    '--tw-ring-opacity': '0.3'
+                  } as React.CSSProperties}
+                  placeholder="Job title"
+                  value={formData.position}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
