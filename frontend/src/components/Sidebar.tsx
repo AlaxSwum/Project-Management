@@ -1104,6 +1104,13 @@ Your report is now available in the system.`);
             overflow: hidden;
           }
           
+          .sidebar.collapsed .dropdown-menu {
+            position: fixed;
+            top: 120px;
+            left: 80px;
+            right: auto;
+          }
+          
           .dropdown-menu.show {
             opacity: 1;
             visibility: visible;
@@ -1167,41 +1174,7 @@ Your report is now available in the system.`);
             color: #FFB333;
           }
           
-          .sidebar-search {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(196, 131, 217, 0.2);
-            border-radius: 12px;
-            font-size: 0.875rem;
-            color: #374151;
-            box-sizing: border-box;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            backdrop-filter: blur(10px);
-            position: relative;
-            z-index: 2;
-          }
-          
-          .sidebar-search::placeholder {
-            color: #9CA3AF;
-          }
-          
-          .sidebar-search:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(255, 179, 51, 0.5);
-            box-shadow: 0 0 0 4px rgba(255, 179, 51, 0.1);
-          }
-          
-          .sidebar.collapsed .sidebar-search {
-            opacity: 0;
-            pointer-events: none;
-            height: 0;
-            padding: 0;
-            margin: 0;
-            border: none;
-            transform: scale(0.8);
-          }
+
           
           .sidebar-nav {
             flex: 1;
@@ -1987,12 +1960,7 @@ Your report is now available in the system.`);
             </div>
           </div>
 
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Search..."
-            className="sidebar-search"
-          />
+
         </div>
 
         {/* Navigation */}
