@@ -1343,16 +1343,20 @@ Your report is now available in the system.`);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.875rem 1rem;
+            padding: 0.75rem 1rem;
             font-size: 0.875rem;
             font-weight: 600;
-            color: #6B7280;
+            color: #374151;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             border-radius: 12px;
-            margin-bottom: 0.5rem;
+            margin: 0.5rem 0 1rem 0;
             position: relative;
             overflow: hidden;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
           }
           
           .projects-toggle::before {
@@ -1362,30 +1366,40 @@ Your report is now available in the system.`);
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #C483D9, #5884FD);
+            background: linear-gradient(135deg, #FFB333, #F87239);
             opacity: 0;
             transition: opacity 0.3s ease;
           }
           
           .projects-toggle:hover::before {
-            opacity: 0.1;
+            opacity: 0.08;
           }
           
           .projects-toggle:hover {
-            color: #C483D9;
+            color: #F87239;
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 179, 51, 0.15);
           }
           
           .projects-toggle span {
             position: relative;
             z-index: 1;
+            font-weight: 500;
+            letter-spacing: 0.025em;
           }
           
           .projects-toggle svg {
             width: 16px;
             height: 16px;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             position: relative;
             z-index: 1;
+            opacity: 0.7;
+          }
+          
+          .projects-toggle:hover svg {
+            opacity: 1;
           }
           
           .projects-toggle.expanded svg {
