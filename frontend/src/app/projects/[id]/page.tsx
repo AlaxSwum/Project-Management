@@ -473,38 +473,46 @@ export default function ProjectDetailPage() {
           }
           
           .header-title {
-            font-size: 3rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #FFB333 0%, #F87239 50%, #C483D9 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FFB333;
             margin: 0;
-            text-shadow: none;
-            letter-spacing: -0.05em;
-            line-height: 1.1;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
             position: relative;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+          }
+          
+          .header-title:hover {
+            color: #F87239;
+            transform: translateX(8px);
           }
           
           .header-title::after {
             content: '';
             position: absolute;
-            bottom: -8px;
+            bottom: -6px;
             left: 0;
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(90deg, #FFB333, #C483D9);
+            width: 60px;
+            height: 3px;
+            background: #C483D9;
             border-radius: 2px;
-            opacity: 0.6;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+          }
+          
+          .header-title:hover::after {
+            width: 120px;
+            background: #5884FD;
           }
           
           .header-subtitle {
             color: #6B7280;
             text-transform: capitalize;
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 500;
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
             letter-spacing: 0.025em;
+            transition: all 0.3s ease;
           }
           
           .header-actions {
@@ -522,40 +530,24 @@ export default function ProjectDetailPage() {
           
           .action-btn {
             padding: 1rem 1.5rem;
-            border-radius: 16px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             font-size: 0.875rem;
             position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-          }
-          
-          .action-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255, 179, 51, 0.1), rgba(196, 131, 217, 0.1));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-          }
-          
-          .action-btn:hover::before {
-            opacity: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid transparent;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
           }
           
           .action-btn:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
           }
           
           .action-btn:active {
@@ -564,12 +556,11 @@ export default function ProjectDetailPage() {
           .view-toggle {
             display: flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
             padding: 0.5rem;
-            border: 1px solid rgba(255, 179, 51, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(20px);
+            border: 2px solid #F5F5ED;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
           }
           
           .todo-view {
@@ -720,26 +711,26 @@ export default function ProjectDetailPage() {
             padding: 0.75rem 1rem;
             border: none;
             background: transparent;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             color: #6B7280;
-            font-weight: 500;
+            font-weight: 600;
             font-size: 0.875rem;
             position: relative;
-            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-direction: column;
+            min-height: 60px;
           }
           
-          .view-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #FFB333, #F87239);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+          .view-btn svg {
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+            opacity: 0.7;
           }
           
           .view-btn:hover {
@@ -747,59 +738,57 @@ export default function ProjectDetailPage() {
             transform: translateY(-2px);
           }
           
-          .view-btn.active {
-            background: linear-gradient(135deg, #FFB333, #F87239);
-            color: #FFFFFF;
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 24px rgba(255, 179, 51, 0.4);
-          }
-          
-          .view-btn.active::before {
+          .view-btn:hover svg {
             opacity: 1;
+            transform: scale(1.1);
           }
           
-          .members-btn {
-            background: rgba(255, 255, 255, 0.9);
-            color: #5884FD;
-            border: 1px solid rgba(88, 132, 253, 0.3);
-            position: relative;
-            z-index: 1;
-          }
-          
-          .members-btn:hover {
-            background: rgba(88, 132, 253, 0.1);
-            border-color: #5884FD;
-            color: #5884FD;
-          }
-          
-          .delete-btn {
-            background: rgba(255, 255, 255, 0.9);
-            color: #EF4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            position: relative;
-            z-index: 1;
-          }
-          
-          .delete-btn:hover {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: #EF4444;
-            color: #EF4444;
-          }
-          
-          .add-task-btn {
-            background: linear-gradient(135deg, #FFB333 0%, #F87239 100%);
+          .view-btn.active {
+            background: #FFB333;
             color: #FFFFFF;
-            border: 1px solid rgba(255, 179, 51, 0.3);
-            position: relative;
-            z-index: 1;
+            transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(255, 179, 51, 0.3);
           }
           
+          .view-btn.active svg {
+            opacity: 1;
+            color: #FFFFFF;
+            transform: scale(1.05);
+          }
+          
+          .members-btn {
+            background: rgba(255, 255, 255, 0.95);
+            color: #5884FD;
+            border-color: #5884FD;
+          }
+          
+          .members-btn:hover {
+            background: #5884FD;
+            color: #FFFFFF;
+            border-color: #5884FD;
+          }
+          
+          .delete-btn {
+            background: rgba(255, 255, 255, 0.95);
+            color: #EF4444;
+            border-color: #EF4444;
+          }
+          
+          .delete-btn:hover {
+            background: #EF4444;
+            color: #FFFFFF;
+            border-color: #EF4444;
+          }
+          
+          .add-task-btn {
+            background: #FFB333;
+            color: #FFFFFF;
+            border-color: #FFB333;
+          }
+          
           .add-task-btn:hover {
-            background: linear-gradient(135deg, #F87239 0%, #FFB333 100%);
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 16px 40px rgba(255, 179, 51, 0.4);
-            animation: glow 2s ease-in-out infinite alternate;
+            background: #F87239;
+            border-color: #F87239;
           }
           .project-stats {
             display: flex;
@@ -858,7 +847,7 @@ export default function ProjectDetailPage() {
           .member-avatar {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #FFB333 0%, #F87239 50%, #C483D9 100%);
+            background: #FFB333;
             color: #FFFFFF;
             border: 3px solid #FFFFFF;
             border-radius: 50%;
@@ -871,11 +860,23 @@ export default function ProjectDetailPage() {
             z-index: 1;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             margin-left: -8px;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
           }
           
           .member-avatar:first-child {
             margin-left: 0;
+          }
+          
+          .member-avatar:nth-child(2) {
+            background: #F87239;
+          }
+          
+          .member-avatar:nth-child(3) {
+            background: #C483D9;
+          }
+          
+          .member-avatar:nth-child(4) {
+            background: #5884FD;
           }
           
           .member-avatar:hover {
@@ -885,7 +886,7 @@ export default function ProjectDetailPage() {
           }
           
           .member-avatar.more-members {
-            background: linear-gradient(135deg, #6B7280, #4B5563);
+            background: #6B7280;
             font-size: 0.75rem;
             z-index: 0;
           }
@@ -895,6 +896,191 @@ export default function ProjectDetailPage() {
             color: #6B7280;
             font-weight: 600;
             margin-left: 0.5rem;
+          }
+          
+          /* Modal and Form Styling */
+          .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease-out;
+          }
+          
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          
+          @keyframes slideUp {
+            from { 
+              opacity: 0;
+              transform: translateY(20px) scale(0.95);
+            }
+            to { 
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+          
+          .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid #FFB333;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+          }
+          
+          .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #FFB333, #F87239, #C483D9, #5884FD);
+            border-radius: 16px 16px 0 0;
+          }
+          
+          .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #374151;
+            margin: 0 0 1.5rem 0;
+            letter-spacing: -0.025em;
+          }
+          
+          .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+          }
+          
+          .form-label {
+            font-size: 0.925rem;
+            font-weight: 600;
+            color: #374151;
+            letter-spacing: 0.025em;
+          }
+          
+          .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid rgba(245, 245, 237, 0.8);
+            border-radius: 8px;
+            font-size: 0.925rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(10px);
+          }
+          
+          .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #FFB333;
+            box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
+            background: #FFFFFF;
+          }
+          
+          .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+          }
+          
+          .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid rgba(245, 245, 237, 0.6);
+          }
+          
+          .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.925rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .btn-primary {
+            background: #FFB333;
+            color: #FFFFFF;
+            border: 2px solid #FFB333;
+          }
+          
+          .btn-primary:hover {
+            background: #F87239;
+            border-color: #F87239;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 179, 51, 0.3);
+          }
+          
+          .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #6B7280;
+            border: 2px solid #E5E7EB;
+          }
+          
+          .btn-secondary:hover {
+            background: #F9FAFB;
+            color: #374151;
+            border-color: #D1D5DB;
+            transform: translateY(-2px);
+          }
+          
+          /* Enhanced seamless flow animations */
+          .main-content-area > * {
+            animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+          }
+          
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .status-column:nth-child(1) { animation-delay: 0.1s; }
+          .status-column:nth-child(2) { animation-delay: 0.2s; }
+          .status-column:nth-child(3) { animation-delay: 0.3s; }
+          .status-column:nth-child(4) { animation-delay: 0.4s; }
+          
+          .task-card {
+            animation: slideInTask 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            opacity: 0;
+          }
+          
+          @keyframes slideInTask {
+            from {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
           }
           /* Mobile Responsive Styles */
           @media (max-width: 768px) {
@@ -1352,40 +1538,96 @@ export default function ProjectDetailPage() {
             border: 1px solid #e5e7eb;
           }
           .main-content-area {
-            padding: 2rem;
+            padding: 2rem 3rem;
             overflow-x: auto;
             max-width: 100%;
+            position: relative;
           }
+          
+          .main-content-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+              radial-gradient(circle at 25% 25%, rgba(255, 179, 51, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 75% 75%, rgba(196, 131, 217, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+          }
+          
           .error-message {
-            background: #ffffff;
-            border: 2px solid #ef4444;
-            color: #dc2626;
-            padding: 1rem;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #EF4444;
+            color: #DC2626;
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
-            font-weight: 500;
-            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
           }
+          
           .board-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+            gap: 1.5rem;
             min-height: 600px;
+            position: relative;
+            z-index: 1;
           }
+          
           .status-column {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #F5F5ED;
+            border-radius: 16px;
             padding: 1.5rem;
             min-height: 600px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
           }
+          
+          .status-column::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #FFB333;
+            transition: all 0.4s ease;
+          }
+          
+          .status-column:nth-child(2)::before {
+            background: #5884FD;
+          }
+          
+          .status-column:nth-child(3)::before {
+            background: #F87239;
+          }
+          
+          .status-column:nth-child(4)::before {
+            background: #C483D9;
+          }
+          
+          .status-column:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+            border-color: rgba(255, 179, 51, 0.3);
+          }
+          
           .status-column.drag-over {
-            border-color: #3b82f6;
-            background: #eff6ff;
-            transform: scale(1.02);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
+            border-color: #FFB333;
+            background: rgba(255, 179, 51, 0.05);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(255, 179, 51, 0.2);
           }
           .status-header {
             display: flex;
@@ -1393,31 +1635,41 @@ export default function ProjectDetailPage() {
             justify-content: space-between;
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid #f3f4f6;
+            border-bottom: 2px solid rgba(245, 245, 237, 0.6);
+            position: relative;
+            z-index: 1;
           }
+          
           .status-title-wrapper {
             display: flex;
             align-items: center;
             gap: 0.75rem;
           }
+          
           .status-icon {
             font-size: 1.25rem;
+            transition: all 0.3s ease;
           }
+          
           .status-title {
             font-weight: 700;
-            color: #000000;
+            color: #374151;
             font-size: 1.1rem;
+            letter-spacing: -0.025em;
+            transition: all 0.3s ease;
           }
+          
           .status-count {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border: 2px solid #000000;
-            padding: 0.25rem 0.75rem;
+            background: rgba(255, 179, 51, 0.1);
+            border: 2px solid #FFB333;
+            padding: 0.375rem 0.75rem;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 700;
-            color: #000000;
+            color: #FFB333;
             min-width: 24px;
             text-align: center;
+            transition: all 0.3s ease;
           }
           .tasks-list {
             display: flex;
@@ -1426,38 +1678,66 @@ export default function ProjectDetailPage() {
             min-height: 400px;
           }
           .task-card {
-            background: #ffffff;
-            border: 2px solid #e5e7eb;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(245, 245, 237, 0.8);
             border-radius: 12px;
-            padding: 1rem;
+            padding: 1.25rem;
             cursor: grab;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             position: relative;
             overflow: hidden;
             min-height: 80px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
           }
+          
+          .task-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #FFB333;
+            opacity: 0;
+            transition: all 0.3s ease;
+          }
+          
           .task-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: #000000;
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+            border-color: rgba(255, 179, 51, 0.4);
           }
+          
+          .task-card:hover::before {
+            opacity: 1;
+          }
+          
           .task-card:active {
             cursor: grabbing;
           }
+          
           .task-card.dragging {
-            opacity: 0.5;
-            transform: rotate(5deg);
+            opacity: 0.6;
+            transform: rotate(5deg) scale(1.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
           }
           .task-header {
             margin-bottom: 0.75rem;
           }
           .task-title {
             font-weight: 600;
-            color: #000000;
+            color: #374151;
             font-size: 1rem;
             line-height: 1.4;
             flex: 1;
             margin-right: 0.5rem;
+            letter-spacing: -0.025em;
+            transition: all 0.3s ease;
+          }
+          
+          .task-card:hover .task-title {
+            color: #FFB333;
           }
           .task-actions {
             display: flex;
