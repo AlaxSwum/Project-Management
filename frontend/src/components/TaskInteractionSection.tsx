@@ -103,16 +103,19 @@ export default function TaskInteractionSection({ task, activeSection = 'comments
     <>
       <style dangerouslySetInnerHTML={{
         __html: `
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+          
           .task-interaction-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
-            background: #ffffff;
+            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
             overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           }
 
           /* Comments Section */
@@ -125,79 +128,142 @@ export default function TaskInteractionSection({ task, activeSection = 'comments
             max-width: 100%;
             box-sizing: border-box;
             overflow: hidden;
+            gap: 0;
           }
+          
           .comments-list {
             flex: 1;
-            padding: 0 0 1.5rem 0;
+            padding: 1rem;
             overflow-y: auto;
-            min-height: 0;
+            min-height: 200px;
+            max-height: calc(100% - 120px);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 179, 51, 0.3) transparent;
           }
+          
+          .comments-list::-webkit-scrollbar {
+            width: 8px;
+          }
+          
+          .comments-list::-webkit-scrollbar-track {
+            background: rgba(255, 179, 51, 0.1);
+            border-radius: 4px;
+          }
+          
+          .comments-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 179, 51, 0.3);
+            border-radius: 4px;
+          }
+          
+          .comments-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 179, 51, 0.5);
+          }
+          
           .empty-comments, .empty-files {
             text-align: center;
-            padding: 3rem 2rem;
-            color: #6b7280;
+            padding: 2rem 1rem;
+            color: #6B7280;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 179, 51, 0.2);
+            margin: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
           }
+          
           .empty-comments p, .empty-files p {
             margin: 0.5rem 0;
+            font-weight: 500;
           }
+          
+          .empty-comments p:first-of-type, .empty-files p:first-of-type {
+            font-weight: 600;
+            color: #374151;
+            font-size: 1rem;
+          }
+          
           .comment-item {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #f3f4f6;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 179, 51, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
           }
+          
+          .comment-item:hover {
+            border-color: rgba(255, 179, 51, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+          }
+          
           .comment-item:last-child {
-            border-bottom: none;
             margin-bottom: 0;
           }
+          
           .comment-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
           }
+          
           .author-avatar, .current-user-avatar {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border: 2px solid #000000;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #FFB333, #F87239);
+            border: 2px solid #FFFFFF;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #000000;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #FFFFFF;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
           }
+          
           .comment-meta {
             display: flex;
             flex-direction: column;
             gap: 0.125rem;
           }
+          
           .author-name {
             font-weight: 600;
-            color: #000000;
-            font-size: 0.875rem;
-          }
-          .comment-time {
-            font-size: 0.75rem;
-            color: #6b7280;
-          }
-          .comment-content {
-            margin-left: 2.75rem;
-            font-size: 0.875rem;
             color: #374151;
-            line-height: 1.5;
+            font-size: 0.925rem;
+            letter-spacing: -0.025em;
           }
+          
+          .comment-time {
+            font-size: 0.8rem;
+            color: #6B7280;
+            font-weight: 500;
+          }
+          
+          .comment-content {
+            margin-left: 0;
+            font-size: 0.925rem;
+            color: #374151;
+            line-height: 1.6;
+            font-weight: 500;
+          }
+          
           .add-comment {
-            border-top: 1px solid #e5e7eb;
-            padding: 1.5rem 0 0 0;
-            background: #ffffff;
+            border-top: 2px solid rgba(255, 179, 51, 0.2);
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
             flex-shrink: 0;
+            backdrop-filter: blur(10px);
           }
+          
           .comment-input-container {
             display: flex;
             align-items: flex-start;
@@ -206,43 +272,64 @@ export default function TaskInteractionSection({ task, activeSection = 'comments
             max-width: 100%;
             box-sizing: border-box;
           }
+          
           .comment-input {
             flex: 1;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            line-height: 1.4;
+            padding: 1rem;
+            border: 2px solid rgba(255, 179, 51, 0.3);
+            border-radius: 12px;
+            font-size: 0.925rem;
+            line-height: 1.5;
             resize: vertical;
             min-height: 80px;
             max-width: 100%;
             width: 100%;
             box-sizing: border-box;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: #374151;
+            font-weight: 500;
+            font-family: inherit;
           }
+          
           .comment-input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #FFB333;
+            box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
+            background: #FFFFFF;
           }
+          
+          .comment-input::placeholder {
+            color: #9CA3AF;
+            font-weight: 500;
+          }
+          
           .send-comment-btn {
-            background: #000000;
-            color: #ffffff;
+            background: linear-gradient(135deg, #FFB333, #F87239);
+            color: #FFFFFF;
             border: none;
-            padding: 0.75rem;
-            border-radius: 8px;
+            padding: 1rem;
+            border-radius: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(255, 179, 51, 0.3);
           }
+          
           .send-comment-btn:hover:not(:disabled) {
-            background: #374151;
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #F87239, #DC2626);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(255, 179, 51, 0.4);
           }
+          
           .send-comment-btn:disabled {
-            background: #d1d5db;
+            background: linear-gradient(135deg, #D1D5DB, #9CA3AF);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
 
           /* Files Section */
@@ -255,6 +342,94 @@ export default function TaskInteractionSection({ task, activeSection = 'comments
             max-width: 100%;
             box-sizing: border-box;
             overflow: hidden;
+            padding: 1rem;
+            gap: 1rem;
+          }
+          
+          .files-header {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 179, 51, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+          }
+          
+          .files-header h3 {
+            margin: 0 0 0.5rem 0;
+            color: #FFB333;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+          }
+          
+          .files-header p {
+            margin: 0;
+            color: #6B7280;
+            font-size: 0.925rem;
+            font-weight: 500;
+            line-height: 1.5;
+          }
+          
+          .drive-explorer-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 179, 51, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          /* Loading state */
+          .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #6B7280;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 179, 51, 0.2);
+            margin: 1rem;
+            backdrop-filter: blur(10px);
+          }
+          
+          /* Mobile optimizations */
+          @media (max-width: 768px) {
+            .comments-list {
+              padding: 0.75rem;
+            }
+            
+            .comment-item {
+              padding: 0.75rem;
+            }
+            
+            .add-comment {
+              padding: 0.75rem;
+            }
+            
+            .comment-input {
+              min-height: 60px;
+              font-size: 0.875rem;
+            }
+            
+            .author-avatar, .current-user-avatar {
+              width: 32px;
+              height: 32px;
+              font-size: 0.8rem;
+            }
+            
+            .files-section {
+              padding: 0.75rem;
+            }
+            
+            .files-header {
+              padding: 1rem;
+            }
           }
         `
       }} />
@@ -265,7 +440,7 @@ export default function TaskInteractionSection({ task, activeSection = 'comments
           <div className="comments-section">
             <div className="comments-list">
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                <div className="loading-state">
                   Loading comments...
                 </div>
               ) : comments.length === 0 ? (
@@ -325,22 +500,29 @@ export default function TaskInteractionSection({ task, activeSection = 'comments
         {/* Files Section */}
         {activeSection === 'files' && (
           <div className="files-section">
-            <GoogleDriveExplorer
-              onFileSelect={(file) => {
-                console.log('Selected file:', file);
-                // Optionally open file in new tab
-                if (file.webViewLink) {
-                  window.open(file.webViewLink, '_blank');
-                }
-              }}
-              onFolderSelect={(folderId, folderName) => {
-                console.log('Selected folder:', { folderId, folderName });
-              }}
-              allowFileSelection={true}
-              allowFolderSelection={true}
-              showCreateFolder={true}
-              mode="select"
-            />
+            <div className="files-header">
+              <h3>📁 Files & Documents</h3>
+              <p>Browse and organize your project files. Click on folders to expand them and view files inside.</p>
+            </div>
+            
+            <div className="drive-explorer-container">
+              <GoogleDriveExplorer
+                onFileSelect={(file) => {
+                  console.log('Selected file:', file);
+                  // Optionally open file in new tab
+                  if (file.webViewLink) {
+                    window.open(file.webViewLink, '_blank');
+                  }
+                }}
+                onFolderSelect={(folderId, folderName) => {
+                  console.log('Selected folder:', { folderId, folderName });
+                }}
+                allowFileSelection={true}
+                allowFolderSelection={true}
+                showCreateFolder={true}
+                mode="select"
+              />
+            </div>
           </div>
         )}
       </div>

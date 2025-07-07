@@ -344,23 +344,27 @@ export default function GoogleDriveExplorer({
     <div className="google-drive-explorer">
       <style dangerouslySetInnerHTML={{
         __html: `
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+          
           .google-drive-explorer {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 179, 51, 0.3);
+            border-radius: 16px;
             overflow: hidden;
-            height: 700px;
-            max-height: 700px;
+            height: 100%;
+            max-height: 500px;
             display: flex;
             flex-direction: column;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           }
           .drive-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 2px solid #e5e7eb;
-            background: #f9fafb;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 2px solid rgba(255, 179, 51, 0.2);
+            background: linear-gradient(135deg, #FFB333, #F87239);
             flex-shrink: 0;
+            color: #FFFFFF;
           }
           .drive-search {
             position: relative;
@@ -372,24 +376,33 @@ export default function GoogleDriveExplorer({
           .drive-search input {
             width: 100%;
             max-width: 100%;
-            padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+            padding: 0.875rem 0.875rem 0.875rem 2.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            font-size: 0.925rem;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: #374151;
+            font-weight: 500;
           }
           .drive-search input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            background: #FFFFFF;
+          }
+          .drive-search input::placeholder {
+            color: #9CA3AF;
+            font-weight: 500;
           }
           .drive-search-icon {
             position: absolute;
-            left: 0.75rem;
+            left: 0.875rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #6b7280;
+            color: #FFFFFF;
             width: 20px;
             height: 20px;
           }
@@ -403,23 +416,32 @@ export default function GoogleDriveExplorer({
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            background: #ffffff;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
             cursor: pointer;
             font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            color: #374151;
+            backdrop-filter: blur(10px);
           }
           .drive-action-btn:hover {
-            border-color: #000000;
-            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            background: #FFFFFF;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
           }
           .drive-action-btn.primary {
-            background: #000000;
-            color: #ffffff;
-            border-color: #000000;
+            background: rgba(255, 255, 255, 0.95);
+            color: #F87239;
+            border-color: rgba(255, 255, 255, 0.8);
+            font-weight: 700;
+          }
+          .drive-action-btn.primary:hover {
+            background: #FFFFFF;
+            color: #DC2626;
           }
           .drive-action-btn:disabled {
             opacity: 0.5;
@@ -442,21 +464,39 @@ export default function GoogleDriveExplorer({
             overflow: hidden;
             display: flex;
             min-height: 0;
+            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
           }
           .folder-tree-panel {
             width: 50%;
-            border-right: 2px solid #e5e7eb;
+            border-right: 2px solid rgba(255, 179, 51, 0.2);
             padding: 1rem;
             overflow-y: auto;
             max-height: 100%;
             display: flex;
             flex-direction: column;
+            background: rgba(255, 255, 255, 0.5);
           }
           .folder-tree {
             flex: 1;
             overflow-y: auto;
             min-height: 0;
-            max-height: 550px;
+            max-height: 350px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 179, 51, 0.3) transparent;
+          }
+          .folder-tree::-webkit-scrollbar {
+            width: 8px;
+          }
+          .folder-tree::-webkit-scrollbar-track {
+            background: rgba(255, 179, 51, 0.1);
+            border-radius: 4px;
+          }
+          .folder-tree::-webkit-scrollbar-thumb {
+            background: rgba(255, 179, 51, 0.3);
+            border-radius: 4px;
+          }
+          .folder-tree::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 179, 51, 0.5);
           }
           .files-panel {
             width: 50%;
@@ -465,6 +505,7 @@ export default function GoogleDriveExplorer({
             max-height: 100%;
             display: flex;
             flex-direction: column;
+            background: rgba(255, 255, 255, 0.3);
           }
           .drive-file-list {
             flex: 1;
@@ -474,15 +515,16 @@ export default function GoogleDriveExplorer({
             padding: 0;
           }
           .panel-title {
-            font-weight: 600;
-            color: #000000;
+            font-weight: 700;
+            color: #FFB333;
             margin-bottom: 1rem;
-            font-size: 0.9rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e5e7eb;
+            font-size: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(255, 179, 51, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            letter-spacing: -0.025em;
           }
           .panel-title-text {
             display: flex;
