@@ -353,26 +353,25 @@ export default function DashboardPage() {
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(12px);
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 1rem;
-          z-index: 50;
-          animation: fadeIn 0.3s ease-out;
+          z-index: 9999;
+          animation: fadeIn 0.2s ease-out;
         }
         
         .modal-content {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
+          background: #FFFFFF;
           width: 100%;
-          max-width: 600px;
+          max-width: 520px;
           max-height: 90vh;
-          border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-          animation: slideIn 0.3s ease-out;
+          border-radius: 16px;
+          border: 1px solid #E5E7EB;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          animation: slideIn 0.2s ease-out;
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -382,66 +381,69 @@ export default function DashboardPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 2rem 2rem 1rem 2rem;
-          border-bottom: 1px solid rgba(229, 231, 235, 0.3);
+          padding: 1.5rem 2rem;
+          border-bottom: 1px solid #E5E7EB;
+          background: #F9FAFB;
         }
         
         .modal-title {
-          font-size: 1.5rem;
-          font-weight: 700;
+          font-size: 1.25rem;
+          font-weight: 600;
           color: #1F2937;
           margin: 0;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
         }
         
         .modal-close-btn {
-          width: 2.5rem;
-          height: 2.5rem;
+          width: 2rem;
+          height: 2rem;
           border: none;
-          background: rgba(243, 244, 246, 0.8);
-          border-radius: 50%;
+          background: #FFFFFF;
+          border: 1px solid #E5E7EB;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.25rem;
-          font-weight: bold;
+          font-size: 1rem;
+          font-weight: 500;
           color: #6B7280;
           cursor: pointer;
           transition: all 0.2s ease;
         }
         
         .modal-close-btn:hover {
-          background: rgba(229, 231, 235, 0.8);
+          background: #F3F4F6;
           color: #374151;
-          transform: scale(1.1);
+          border-color: #D1D5DB;
         }
         
         .project-form {
-          padding: 0 2rem 2rem 2rem;
+          padding: 2rem;
           flex: 1;
           overflow-y: auto;
         }
         
         .form-section {
-          margin-bottom: 2rem;
-        }
-        
-        .section-header {
           margin-bottom: 1.5rem;
         }
         
+        .section-header {
+          margin-bottom: 1rem;
+        }
+        
         .section-title {
-          font-size: 1.125rem;
+          font-size: 1rem;
           font-weight: 600;
           color: #1F2937;
           margin: 0 0 0.25rem 0;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
         }
         
         .section-subtitle {
-          font-size: 0.875rem;
-          color: #6B7280;
+          font-size: 0.75rem;
+          color: #9CA3AF;
           margin: 0;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
         }
         
         .form-group {
@@ -459,22 +461,20 @@ export default function DashboardPage() {
         
         .form-input {
           width: 100%;
-          padding: 1rem 1.25rem;
-          border: 2px solid #E5E7EB;
-          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
           font-size: 0.875rem;
-          font-family: 'Inter', sans-serif;
-          transition: all 0.3s ease;
-          background: rgba(255, 255, 255, 0.8);
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
+          transition: all 0.2s ease;
+          background: #FFFFFF;
           color: #1F2937;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         .form-input:focus {
           outline: none;
           border-color: #FFB333;
-          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
-          transform: translateY(-1px);
+          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
         }
         
         .form-input::placeholder {
@@ -483,35 +483,35 @@ export default function DashboardPage() {
         
         .form-textarea {
           width: 100%;
-          padding: 1rem 1.25rem;
-          border: 2px solid #E5E7EB;
-          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
           font-size: 0.875rem;
-          font-family: 'Inter', sans-serif;
-          transition: all 0.3s ease;
-          background: rgba(255, 255, 255, 0.8);
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
+          transition: all 0.2s ease;
+          background: #FFFFFF;
           color: #1F2937;
           resize: vertical;
-          min-height: 100px;
+          min-height: 80px;
         }
         
         .form-textarea:focus {
           outline: none;
           border-color: #FFB333;
-          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
         }
         
         .form-select {
           width: 100%;
-          padding: 1rem 1.25rem;
-          border: 2px solid #E5E7EB;
-          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
           font-size: 0.875rem;
-          font-family: 'Inter', sans-serif;
-          background: rgba(255, 255, 255, 0.8);
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
+          background: #FFFFFF;
           color: #1F2937;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
         }
         
         .form-select:focus {
@@ -520,97 +520,96 @@ export default function DashboardPage() {
           box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
         }
         
-        .color-swatches {
+        .color-options {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 1rem;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 0.75rem;
         }
         
-        .color-swatch {
-          width: 48px;
-          height: 48px;
-          border: 3px solid #E5E7EB;
-          border-radius: 16px;
+        .color-option {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem;
+          border: 1px solid #E5E7EB;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
+          transition: all 0.2s ease;
+          background: #FFFFFF;
         }
         
-        .color-swatch:hover {
-          transform: scale(1.1);
+        .color-option:hover {
           border-color: #FFB333;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+          background: #FFFBF6;
         }
         
-        .color-swatch.selected {
+        .color-option.selected {
           border-color: #FFB333;
-          border-width: 3px;
-          transform: scale(1.05);
-          box-shadow: 0 0 0 4px rgba(255, 179, 51, 0.2);
+          background: rgba(255, 179, 51, 0.05);
         }
         
-        .color-swatch.selected::after {
-          content: '✓';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          color: white;
-          font-weight: bold;
-          font-size: 1rem;
-          text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        .color-indicator {
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          flex-shrink: 0;
+        }
+        
+        .color-label {
+          font-size: 0.875rem;
+          color: #374151;
+          font-weight: 500;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
         }
         
         .form-actions {
           display: flex;
-          gap: 1rem;
-          margin-top: 2rem;
+          gap: 0.75rem;
+          margin-top: 1.5rem;
           padding-top: 1.5rem;
-          border-top: 1px solid rgba(229, 231, 235, 0.3);
+          border-top: 1px solid #E5E7EB;
         }
         
         .btn-primary {
           flex: 1;
-          background: linear-gradient(135deg, #FFB333, #FFD480);
+          background: #FFB333;
           color: #FFFFFF;
           border: none;
-          padding: 1rem 1.5rem;
-          border-radius: 12px;
-          font-weight: 600;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          font-size: 1rem;
-          font-family: 'Inter', sans-serif;
-          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+          font-size: 0.875rem;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
         }
         
         .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(255, 179, 51, 0.4);
+          background: #F29F0A;
         }
         
         .btn-secondary {
           flex: 1;
-          background: rgba(255, 255, 255, 0.8);
+          background: #FFFFFF;
           color: #6B7280;
-          border: 2px solid #E5E7EB;
-          padding: 1rem 1.5rem;
-          border-radius: 12px;
-          font-weight: 600;
+          border: 1px solid #D1D5DB;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.3s ease;
-          font-size: 1rem;
-          font-family: 'Inter', sans-serif;
+          transition: all 0.2s ease;
+          font-size: 0.875rem;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
         }
         
         .btn-secondary:hover {
-          background: rgba(243, 244, 246, 0.8);
-          border-color: #D1D5DB;
-          transform: translateY(-1px);
+          background: #F9FAFB;
+          border-color: #9CA3AF;
         }
         
         .loading-container {
@@ -1051,7 +1050,6 @@ export default function DashboardPage() {
 
             {projects.length > 0 && (
               <div className="content-header">
-                <h2 className="content-title">Your Projects</h2>
               </div>
             )}
 
@@ -1127,27 +1125,26 @@ export default function DashboardPage() {
                       
                       <div className="form-group">
                         <label className="form-label">Project Color</label>
-                        <div className="color-swatches">
+                        <div className="color-options">
                           {[
-                            { name: 'Primary Yellow', value: '#FFB333' },
+                            { name: 'Yellow', value: '#FFB333' },
                             { name: 'Blue', value: '#5884FD' },
                             { name: 'Purple', value: '#C483D9' },
                             { name: 'Orange', value: '#F87239' },
                             { name: 'Green', value: '#10B981' },
-                            { name: 'Red', value: '#EF4444' },
-                            { name: 'Teal', value: '#14B8A6' },
-                            { name: 'Indigo', value: '#6366F1' },
-                            { name: 'Pink', value: '#EC4899' },
                             { name: 'Gray', value: '#6B7280' }
                           ].map((color) => (
-                            <button
+                            <div
                               key={color.value}
-                              type="button"
-                              className={`color-swatch ${newProject.color === color.value ? 'selected' : ''}`}
-                              style={{ backgroundColor: color.value }}
+                              className={`color-option ${newProject.color === color.value ? 'selected' : ''}`}
                               onClick={() => setNewProject({ ...newProject, color: color.value })}
-                              title={color.name}
-                            />
+                            >
+                              <div 
+                                className="color-indicator" 
+                                style={{ backgroundColor: color.value }} 
+                              />
+                              <span className="color-label">{color.name}</span>
+                            </div>
                           ))}
                         </div>
                       </div>

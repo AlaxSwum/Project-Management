@@ -1088,19 +1088,19 @@ Your report is now available in the system.`);
             position: absolute;
             top: 110%;
             right: 0;
-            z-index: 200;
+            z-index: 9999;
             background: #FFFFFF;
-            border: 1px solid rgba(196, 131, 217, 0.2);
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
             min-width: 200px;
             margin-top: 0.5rem;
-            padding: 0.5rem;
+            padding: 0.75rem;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px) scale(0.95);
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(15px);
             overflow: hidden;
           }
           
