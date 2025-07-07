@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1085,23 +1086,22 @@ Your report is now available in the system.`);
           }
           
           .dropdown-menu {
-            position: absolute;
-            top: 110%;
-            right: 0;
-            z-index: 9999;
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            z-index: 99999;
             background: #FFFFFF;
             border: 1px solid #E5E7EB;
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
             min-width: 200px;
-            margin-top: 0.5rem;
             padding: 0.75rem;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px) scale(0.95);
             transition: all 0.2s ease;
             backdrop-filter: blur(15px);
-            overflow: hidden;
+            overflow: visible;
           }
           
           .sidebar.collapsed .dropdown-menu {
@@ -1947,16 +1947,6 @@ Your report is now available in the system.`);
               >
                 <PlusIcon style={{ width: '20px', height: '20px' }} />
               </button>
-              <div className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
-                <button onClick={handleAbsenceForm} className="dropdown-item">
-                  <DocumentTextIcon className="dropdown-icon" />
-                  Absence Form
-                </button>
-                <button onClick={handleWeeklyReport} className="dropdown-item">
-                  <ClipboardDocumentListIcon className="dropdown-icon" />
-                  Weekly Report Form
-                </button>
-              </div>
             </div>
           </div>
 
@@ -2115,6 +2105,98 @@ Your report is now available in the system.`);
           </div>
         </div>
       </div>
+
+      {/* Dropdown Portal - Render outside sidebar */}
+      {isDropdownOpen && typeof window !== 'undefined' && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: isCollapsed ? '120px' : '120px',
+            left: isCollapsed ? '80px' : '240px',
+            zIndex: 999999,
+            background: '#FFFFFF',
+            border: '1px solid #E5E7EB',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+            minWidth: '200px',
+            padding: '0.75rem',
+            backdropFilter: 'blur(15px)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button 
+            onClick={() => {
+              handleAbsenceForm();
+              closeDropdown();
+            }} 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.875rem 1rem',
+              fontSize: '0.875rem',
+              color: '#374151',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'none',
+              width: '100%',
+              textAlign: 'left',
+              borderRadius: '12px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease'
+            }} 
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#FFB333';
+              e.currentTarget.style.transform = 'translateX(4px)';
+              e.currentTarget.style.background = 'rgba(255, 179, 51, 0.1)';
+            }} 
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#374151';
+              e.currentTarget.style.transform = 'translateX(0)';
+              e.currentTarget.style.background = 'none';
+            }}
+          >
+            <DocumentTextIcon style={{ width: '18px', height: '18px' }} />
+            Absence Form
+          </button>
+          <button 
+            onClick={() => {
+              handleWeeklyReport();
+              closeDropdown();
+            }} 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.875rem 1rem',
+              fontSize: '0.875rem',
+              color: '#374151',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'none',
+              width: '100%',
+              textAlign: 'left',
+              borderRadius: '12px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease'
+            }} 
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#FFB333';
+              e.currentTarget.style.transform = 'translateX(4px)';
+              e.currentTarget.style.background = 'rgba(255, 179, 51, 0.1)';
+            }} 
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#374151';
+              e.currentTarget.style.transform = 'translateX(0)';
+              e.currentTarget.style.background = 'none';
+            }}
+          >
+            <ClipboardDocumentListIcon style={{ width: '18px', height: '18px' }} />
+            Weekly Report Form
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Absence Form Modal */}
       {showAbsenceForm && (
