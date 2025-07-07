@@ -1454,10 +1454,12 @@ Your report is now available in the system.`);
           }
           
           .project-name {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: auto;
             font-weight: 500;
+            line-height: 1.3;
           }
           
           .project-count {
@@ -1565,18 +1567,20 @@ Your report is now available in the system.`);
             font-weight: 600;
             color: #374151;
             margin: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            line-height: 1.3;
           }
           
           .user-email {
             font-size: 0.75rem;
             color: #9CA3AF;
             margin: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            line-height: 1.3;
           }
           
           .logout-btn {
@@ -2067,7 +2071,12 @@ Your report is now available in the system.`);
                         className="project-color"
                         style={{ backgroundColor: project.color || '#000000' }}
                       />
-                      <span className="project-name">{project.name}</span>
+                      <span className="project-name" style={{
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'normal',
+                        lineHeight: '1.3'
+                      }}>{project.name}</span>
                     </div>
                     <span className="project-count">
                       {project.completed_task_count || 0}/{project.task_count || 0}

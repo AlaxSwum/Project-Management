@@ -3646,7 +3646,14 @@ export default function ProjectDetailPage() {
           <header className="header">
             <div className="header-content">
                 <div>
-                <h1 className="header-title">{project.name}</h1>
+                <h1 className="header-title" style={{
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word', 
+                  whiteSpace: 'normal',
+                  lineHeight: '1.2',
+                  maxWidth: '100%',
+                  hyphens: 'auto'
+                }}>{project.name}</h1>
                 <p className="header-subtitle">{project.project_type} • {project.status}</p>
               </div>
               
@@ -4559,7 +4566,15 @@ export default function ProjectDetailPage() {
                                  borderRight: '2px solid #000000',
                                  justifyContent: 'center'
                                }}>
-                                 <span className="task-title" style={{ fontWeight: '600', color: '#000000', fontSize: '0.8rem', lineHeight: '1.2' }}>{task.name}</span>
+                                 <span className="task-title" style={{ 
+                                   fontWeight: '600', 
+                                   color: '#000000', 
+                                   fontSize: '0.8rem', 
+                                   lineHeight: '1.2',
+                                   wordWrap: 'break-word',
+                                   overflowWrap: 'break-word',
+                                   whiteSpace: 'normal'
+                                 }}>{task.name}</span>
                                  {task.description && (
                                    <span style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.2' }}>
                                      {task.description.substring(0, 25)}{task.description.length > 25 ? '...' : ''}

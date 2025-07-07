@@ -1200,7 +1200,13 @@ export default function DashboardPage() {
                   >
                     <div className="project-header">
                       <div style={{ flex: 1 }}>
-                        <h3 className="project-title">{project.name}</h3>
+                        <h3 className="project-title" style={{
+                          wordWrap: 'break-word',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.3',
+                          hyphens: 'auto'
+                        }}>{project.name}</h3>
                         <div className="project-badges">
                           <span className="project-badge">
                             {project.project_type?.replace('_', ' ') || 'General'}
