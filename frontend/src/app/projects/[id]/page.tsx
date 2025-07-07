@@ -3894,42 +3894,178 @@ export default function ProjectDetailPage() {
 
         {viewMode === 'timeline' && (
           <div className="timeline-view">
-            <div className="view-description">
-              <h3>Timeline View</h3>
-              <p>Track task progress over time with visual progress bars. See start dates, due dates, completion status, and identify overdue tasks at a glance.</p>
-                                    </div>
+            <div className="view-description" style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              padding: '2rem',
+              borderRadius: '16px',
+              border: '2px solid rgba(255, 179, 51, 0.2)',
+              marginBottom: '2rem',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+            }}>
+              <h3 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '700', 
+                color: '#FFB333', 
+                margin: '0 0 0.75rem 0',
+                letterSpacing: '-0.025em'
+              }}>Timeline View</h3>
+              <p style={{ 
+                color: '#6B7280', 
+                margin: '0', 
+                lineHeight: '1.6',
+                fontSize: '1rem'
+              }}>Track task progress over time with visual progress bars. See start dates, due dates, completion status, and identify overdue tasks at a glance.</p>
+            </div>
             
-            <div className="timeline-header-controls">
-              <div className="timeline-stats">
-                <div className="stat-card">
-                  <div className="stat-label">Total Tasks</div>
-                  <div className="stat-value">{tasks.length}</div>
+            <div className="timeline-header-controls" style={{ marginBottom: '2rem' }}>
+              <div className="timeline-stats" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.5rem'
+              }}>
+                <div className="stat-card" style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  border: '2px solid #FFB333',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div className="stat-label" style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#6B7280',
+                    marginBottom: '0.5rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>Total Tasks</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    color: '#FFB333'
+                  }}>{tasks.length}</div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-label">Completed</div>
-                  <div className="stat-value">{tasks.filter(t => t.status === 'done').length}</div>
+                <div className="stat-card" style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  border: '2px solid #10B981',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div className="stat-label" style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#6B7280',
+                    marginBottom: '0.5rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>Completed</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    color: '#10B981'
+                  }}>{tasks.filter(t => t.status === 'done').length}</div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-label">In Progress</div>
-                  <div className="stat-value">{tasks.filter(t => t.status === 'in_progress').length}</div>
+                <div className="stat-card" style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  border: '2px solid #5884FD',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div className="stat-label" style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#6B7280',
+                    marginBottom: '0.5rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>In Progress</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    color: '#5884FD'
+                  }}>{tasks.filter(t => t.status === 'in_progress').length}</div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-label">Overdue</div>
-                  <div className="stat-value">{tasks.filter(t => isOverdue(t.due_date)).length}</div>
+                <div className="stat-card" style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  border: '2px solid #EF4444',
+                  textAlign: 'center',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div className="stat-label" style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#6B7280',
+                    marginBottom: '0.5rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>Overdue</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    color: '#EF4444'
+                  }}>{tasks.filter(t => isOverdue(t.due_date)).length}</div>
                 </div>
               </div>
             </div>
 
-            <div className="timeline-grid">
-              <div className="timeline-grid-header">
-                <div className="timeline-task-column">Task</div>
-                <div className="timeline-chart-column">Timeline</div>
+            <div className="timeline-grid" style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              border: '2px solid rgba(255, 179, 51, 0.2)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+            }}>
+              <div className="timeline-grid-header" style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 2fr',
+                background: 'linear-gradient(135deg, #FFB333, #F87239)',
+                color: '#FFFFFF',
+                fontWeight: '700',
+                padding: '1.5rem',
+                borderBottom: '2px solid rgba(255, 179, 51, 0.3)'
+              }}>
+                <div className="timeline-task-column" style={{ 
+                  fontSize: '1rem',
+                  letterSpacing: '0.05em'
+                }}>Task</div>
+                <div className="timeline-chart-column" style={{ 
+                  fontSize: '1rem',
+                  letterSpacing: '0.05em'
+                }}>Timeline</div>
               </div>
               
-              <div className="timeline-grid-body">
+              <div className="timeline-grid-body" style={{
+                padding: '0'
+              }}>
                 {tasks.length === 0 ? (
-                  <div style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>
-                    No tasks available
+                  <div style={{ 
+                    padding: '3rem', 
+                    textAlign: 'center', 
+                    color: '#6B7280',
+                    background: 'rgba(255, 255, 255, 0.5)'
+                  }}>
+                    <div style={{
+                      fontSize: '1.125rem',
+                      fontWeight: '600',
+                      marginBottom: '0.5rem'
+                    }}>No tasks available</div>
+                    <div style={{ fontSize: '0.925rem' }}>Create your first task to see the timeline</div>
                   </div>
                 ) : (
                   tasks.map((task) => {
@@ -3940,86 +4076,210 @@ export default function ProjectDetailPage() {
                                    task.status === 'in_progress' ? 50 : 10;
                     
                     return (
-                      <div key={task.id} className="timeline-row">
-                        <div className="timeline-task-info">
-                          <div className="task-name">{task.name}</div>
-                          <div className="task-details">
-                            <span className={`task-status-badge status-${task.status}`}>
+                      <div key={task.id} className="timeline-row" style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 2fr',
+                        borderBottom: '1px solid rgba(255, 179, 51, 0.1)',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer'
+                      }} 
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 179, 51, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}>
+                        <div className="timeline-task-info" style={{
+                          padding: '1.5rem',
+                          borderRight: '1px solid rgba(255, 179, 51, 0.1)'
+                        }}>
+                          <div className="task-name" style={{
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#374151',
+                            marginBottom: '0.75rem',
+                            letterSpacing: '-0.025em'
+                          }}>{task.name}</div>
+                          <div className="task-details" style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem',
+                            alignItems: 'center'
+                          }}>
+                            <span className={`task-status-badge status-${task.status}`} style={{
+                              padding: '0.375rem 0.875rem',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              background: task.status === 'done' ? '#10B981' : 
+                                         task.status === 'in_progress' ? '#5884FD' : 
+                                         task.status === 'review' ? '#F59E0B' : '#6B7280',
+                              color: '#FFFFFF'
+                            }}>
                               {TASK_STATUSES.find(s => s.value === task.status)?.label}
                             </span>
                             {((task.assignees && task.assignees.length > 0) || task.assignee) && (
-                              <span className="task-assignee" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <span className="task-assignee" style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.5rem',
+                                fontSize: '0.875rem',
+                                color: '#6B7280',
+                                fontWeight: '500'
+                              }}>
                                 {task.assignees && task.assignees.length > 0 ? (
                                   <>
                                     {task.assignees.slice(0, 2).map((assignee, index) => (
                                       <div key={assignee.id} className="assignee-avatar-sm" style={{ 
-                                        marginLeft: index > 0 ? '-6px' : '0',
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        background: index === 0 ? '#FFB333' : '#5884FD',
+                                        color: '#FFFFFF',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginLeft: index > 0 ? '-8px' : '0',
                                         zIndex: task.assignees.length - index,
                                         position: 'relative',
-                                        border: '1px solid #ffffff'
+                                        border: '2px solid #FFFFFF'
                                       }}>
                                         {assignee.name.charAt(0).toUpperCase()}
                                       </div>
                                     ))}
                                     {task.assignees.length > 2 && (
                                       <div className="assignee-avatar-sm" style={{ 
-                                        background: '#6b7280',
-                                        marginLeft: '-6px',
-                                        border: '1px solid #ffffff',
-                                        fontSize: '0.5rem'
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        background: '#C483D9',
+                                        color: '#FFFFFF',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginLeft: '-8px',
+                                        border: '2px solid #FFFFFF',
+                                        zIndex: 1
                                       }}>
                                         +{task.assignees.length - 2}
                                       </div>
                                     )}
-                                    <span style={{ fontSize: '0.75rem', marginLeft: '0.25rem' }}>
+                                    <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#374151' }}>
                                       {task.assignees.length === 1 ? task.assignees[0].name : `${task.assignees.length} assignees`}
                                     </span>
                                   </>
                                 ) : task.assignee ? (
                                   <>
-                                <div className="assignee-avatar-sm">
-                                  {task.assignee.name.charAt(0).toUpperCase()}
-                                </div>
-                                {task.assignee.name}
+                                    <div className="assignee-avatar-sm" style={{
+                                      width: '24px',
+                                      height: '24px',
+                                      borderRadius: '50%',
+                                      background: '#FFB333',
+                                      color: '#FFFFFF',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '600',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '2px solid #FFFFFF'
+                                    }}>
+                                      {task.assignee.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span style={{ color: '#374151' }}>{task.assignee.name}</span>
                                   </>
                                 ) : null}
                               </span>
                             )}
-                            <span className={`task-priority priority-${task.priority}`}>
+                            <span className={`task-priority priority-${task.priority}`} style={{
+                              padding: '0.375rem 0.875rem',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              background: task.priority === 'high' ? '#EF4444' : 
+                                         task.priority === 'medium' ? '#F59E0B' : 
+                                         task.priority === 'urgent' ? '#DC2626' : '#10B981',
+                              color: '#FFFFFF'
+                            }}>
                               {task.priority}
                             </span>
                           </div>
                                 </div>
 
-                        <div className="timeline-chart">
-                          <div className="timeline-bar-container">
+                        <div className="timeline-chart" style={{
+                          padding: '1.5rem'
+                        }}>
+                          <div className="timeline-bar-container" style={{
+                            marginBottom: '1rem'
+                          }}>
                             <div 
                               className="timeline-bar"
-                                      style={{
-                                backgroundColor: getStatusConfig(task.status).color,
-                                width: `${Math.max(progress, 5)}%`
+                              style={{
+                                width: '100%',
+                                height: '12px',
+                                background: 'rgba(255, 179, 51, 0.1)',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                border: '2px solid rgba(255, 179, 51, 0.2)',
+                                position: 'relative'
                               }}
                             >
                               <div 
                                 className="timeline-progress"
                                 style={{ 
-                                  width: `${progress}%`,
-                                  backgroundColor: task.status === 'done' ? '#10b981' : '#3b82f6'
+                                  width: `${Math.max(progress, 5)}%`,
+                                  height: '100%',
+                                  background: task.status === 'done' ? 'linear-gradient(90deg, #10B981, #059669)' : 
+                                             task.status === 'in_progress' ? 'linear-gradient(90deg, #5884FD, #3B82F6)' : 
+                                             task.status === 'review' ? 'linear-gradient(90deg, #F59E0B, #D97706)' : 
+                                             'linear-gradient(90deg, #FFB333, #F87239)',
+                                  borderRadius: '6px',
+                                  transition: 'width 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+                                  position: 'relative',
+                                  overflow: 'hidden'
                                 }}
-                              />
+                              >
+                                <div style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                                  animation: 'shimmer 2s infinite'
+                                }} />
+                              </div>
                             </div>
-                            <div className="timeline-dates">
-                              <span className="start-date">
-                                {startDate.toLocaleDateString()}
+                            <div className="timeline-dates" style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              fontSize: '0.875rem',
+                              marginTop: '0.75rem'
+                            }}>
+                              <span className="start-date" style={{
+                                color: '#6B7280',
+                                fontWeight: '500'
+                              }}>
+                                Start: {startDate.toLocaleDateString()}
                               </span>
                               {dueDate && (
-                                <span className={`due-date ${isOverdue(task.due_date) ? 'overdue' : ''}`}>
+                                <span className={`due-date ${isOverdue(task.due_date) ? 'overdue' : ''}`} style={{
+                                  color: isOverdue(task.due_date) ? '#EF4444' : '#6B7280',
+                                  fontWeight: '500'
+                                }}>
                                   Due: {dueDate.toLocaleDateString()}
                                 </span>
                               )}
                             </div>
                           </div>
-                                </div>
+                        </div>
                         </div>
                       );
                           })
@@ -4027,12 +4287,31 @@ export default function ProjectDetailPage() {
                   </div>
             </div>
             
-            <div className="timeline-info">
-              <div className="info-card" style={{ background: '#ffffff', border: '2px solid #000000', borderRadius: '8px', padding: '1rem', margin: '1rem 0' }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#000000', margin: '0 0 0.5rem 0' }}>Progress Indicators</h4>
-                <p style={{ fontSize: '0.8rem', margin: '0', color: '#6b7280', lineHeight: '1.4' }}>
-                  Progress bars show completion status: <strong>To Do (10%)</strong>, <strong>In Progress (50%)</strong>, 
-                  <strong>Review (80%)</strong>, <strong>Done (100%)</strong>. Overdue tasks are highlighted in red.
+            <div className="timeline-info" style={{ marginTop: '2rem' }}>
+              <div className="info-card" style={{ 
+                background: 'rgba(255, 255, 255, 0.9)', 
+                border: '2px solid rgba(255, 179, 51, 0.2)', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+              }}>
+                <h4 style={{ 
+                  fontSize: '1rem', 
+                  fontWeight: '700', 
+                  color: '#FFB333', 
+                  margin: '0 0 0.75rem 0',
+                  letterSpacing: '-0.025em'
+                }}>Progress Indicators</h4>
+                <p style={{ 
+                  fontSize: '0.925rem', 
+                  margin: '0', 
+                  color: '#6B7280', 
+                  lineHeight: '1.6',
+                  fontWeight: '500'
+                }}>
+                  Progress bars show completion status: <strong style={{ color: '#6B7280' }}>To Do (10%)</strong>, <strong style={{ color: '#5884FD' }}>In Progress (50%)</strong>, 
+                  <strong style={{ color: '#F59E0B' }}>Review (80%)</strong>, <strong style={{ color: '#10B981' }}>Done (100%)</strong>. Overdue tasks are highlighted in <strong style={{ color: '#EF4444' }}>red</strong>.
                 </p>
               </div>
             </div>
@@ -4044,24 +4323,44 @@ export default function ProjectDetailPage() {
             {/* Tab Navigation */}
             <div style={{ 
               display: 'flex', 
-              gap: '1rem', 
-              marginBottom: '2rem', 
-              padding: '0 2rem',
-              borderBottom: '2px solid #e5e7eb'
+              gap: '1.5rem', 
+              marginBottom: '2rem',
+              background: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: '16px',
+              padding: '1rem',
+              border: '2px solid rgba(255, 179, 51, 0.2)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
             }}>
               <button
                 onClick={() => setGanttView('task')}
                 style={{
                   padding: '1rem 2rem',
-                  border: '3px solid #000000',
-                  background: ganttView === 'task' ? '#000000' : '#ffffff',
-                  color: ganttView === 'task' ? '#ffffff' : '#000000',
-                  borderRadius: '8px 8px 0 0',
+                  border: '2px solid #FFB333',
+                  background: ganttView === 'task' ? '#FFB333' : 'rgba(255, 255, 255, 0.9)',
+                  color: ganttView === 'task' ? '#FFFFFF' : '#FFB333',
+                  borderRadius: '12px',
                   fontWeight: '600',
-                  fontSize: '1rem',
+                  fontSize: '0.925rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  borderBottom: ganttView === 'task' ? '3px solid #000000' : '3px solid #000000'
+                  transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+                  letterSpacing: '0.025em',
+                  transform: ganttView === 'task' ? 'translateY(-2px)' : 'translateY(0)',
+                  boxShadow: ganttView === 'task' ? '0 8px 24px rgba(255, 179, 51, 0.3)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (ganttView !== 'task') {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = '#FFB333';
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (ganttView !== 'task') {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                    e.currentTarget.style.color = '#FFB333';
+                  }
                 }}
               >
                 Tasks
@@ -4070,15 +4369,31 @@ export default function ProjectDetailPage() {
                 onClick={() => setGanttView('gantt')}
                 style={{
                   padding: '1rem 2rem',
-                  border: '3px solid #000000',
-                  background: ganttView === 'gantt' ? '#000000' : '#ffffff',
-                  color: ganttView === 'gantt' ? '#ffffff' : '#000000',
-                  borderRadius: '8px 8px 0 0',
+                  border: '2px solid #FFB333',
+                  background: ganttView === 'gantt' ? '#FFB333' : 'rgba(255, 255, 255, 0.9)',
+                  color: ganttView === 'gantt' ? '#FFFFFF' : '#FFB333',
+                  borderRadius: '12px',
                   fontWeight: '600',
-                  fontSize: '1rem',
+                  fontSize: '0.925rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  borderBottom: ganttView === 'gantt' ? '3px solid #000000' : '3px solid #000000'
+                  transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+                  letterSpacing: '0.025em',
+                  transform: ganttView === 'gantt' ? 'translateY(-2px)' : 'translateY(0)',
+                  boxShadow: ganttView === 'gantt' ? '0 8px 24px rgba(255, 179, 51, 0.3)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (ganttView !== 'gantt') {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = '#FFB333';
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (ganttView !== 'gantt') {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                    e.currentTarget.style.color = '#FFB333';
+                  }
                 }}
               >
                 Gantt Chart
@@ -4088,10 +4403,29 @@ export default function ProjectDetailPage() {
             {/* Tasks Tab Content - Gantt Left Sidebar */}
             {ganttView === 'task' && (
               <div>
-            <div className="view-description">
-                  <h3>Tasks</h3>
-                  <p>Task list with assignee, duration, and details. This shows the task information from the Gantt chart.</p>
-            </div>
+                <div className="view-description" style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '2rem',
+                  borderRadius: '16px',
+                  border: '2px solid rgba(255, 179, 51, 0.2)',
+                  marginBottom: '2rem',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+                }}>
+                  <h3 style={{ 
+                    fontSize: '1.5rem', 
+                    fontWeight: '700', 
+                    color: '#FFB333', 
+                    margin: '0 0 0.75rem 0',
+                    letterSpacing: '-0.025em'
+                  }}>Tasks</h3>
+                  <p style={{ 
+                    color: '#6B7280', 
+                    margin: '0', 
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>Task list with assignee, duration, and details. This shows the task information from the Gantt chart.</p>
+                </div>
             
                 <div className="gantt-sidebar-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
                   <div className="gantt-sidebar-header-enhanced" style={{ 
@@ -4329,9 +4663,28 @@ export default function ProjectDetailPage() {
             {/* Gantt Chart Tab Content - Timeline Only */}
             {ganttView === 'gantt' && (
               <div>
-                <div className="view-description">
-                  <h3>Gantt Chart</h3>
-                  <p>Timeline view with calendar and task bars. Shows the scheduling and duration visualization from the Gantt chart.</p>
+                <div className="view-description" style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '2rem',
+                  borderRadius: '16px',
+                  border: '2px solid rgba(255, 179, 51, 0.2)',
+                  marginBottom: '2rem',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+                }}>
+                  <h3 style={{ 
+                    fontSize: '1.5rem', 
+                    fontWeight: '700', 
+                    color: '#FFB333', 
+                    margin: '0 0 0.75rem 0',
+                    letterSpacing: '-0.025em'
+                  }}>Gantt Chart</h3>
+                  <p style={{ 
+                    color: '#6B7280', 
+                    margin: '0', 
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>Timeline view with calendar and task bars. Shows the scheduling and duration visualization from the Gantt chart.</p>
                 </div>
             
                 <div className="gantt-header-controls">
