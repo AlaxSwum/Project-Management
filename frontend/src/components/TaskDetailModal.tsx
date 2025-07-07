@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   XMarkIcon, 
   PencilIcon, 
@@ -211,8 +212,8 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
     { id: 'files', label: 'Files & Upload', icon: <PaperClipIcon style={{ width: '16px', height: '16px' }} /> }
   ];
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
+  const modalContent = (
+    <div className="task-modal-overlay" onClick={onClose}>
       <style dangerouslySetInnerHTML={{
         __html: `
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -247,7 +248,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            z-index: 1000;
+            z-index: 100000;
             animation: fadeIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           }
@@ -267,6 +268,8 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1);
             position: relative;
             overflow: hidden;
+            margin: 0 auto;
+            z-index: 100001;
           }
           
           .task-modal-content::before {
@@ -706,7 +709,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            z-index: 1100;
+            z-index: 100002;
             animation: fadeIn 0.3s ease-out;
           }
           
@@ -771,11 +774,14 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           @media (max-width: 768px) {
             .task-modal-overlay {
               padding: 0.75rem;
+              z-index: 100000;
             }
             .task-modal-content {
               max-width: calc(100vw - 1.5rem);
               border-radius: 16px;
               height: 90vh;
+              margin: 0 auto;
+              z-index: 100001;
             }
             .task-modal-header {
               padding: 1.5rem;
@@ -1270,4 +1276,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
       )}
     </div>
   );
+
+  // Use portal to render modal outside of any container that might have z-index stacking context issues
+  return typeof window !== 'undefined' ? createPortal(modalContent, document.body) : null;
 } 
