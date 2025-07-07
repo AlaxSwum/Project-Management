@@ -1052,9 +1052,6 @@ export default function DashboardPage() {
             {projects.length > 0 && (
               <div className="content-header">
                 <h2 className="content-title">Your Projects</h2>
-                <p className="content-subtitle">
-                  Track progress, manage tasks, and collaborate with your team across all your active projects.
-                </p>
               </div>
             )}
 
