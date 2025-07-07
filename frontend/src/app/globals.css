@@ -1,4 +1,5 @@
-/* Project Management App Styles - Enhanced Modern Professional Theme */
+/* Project Management App Styles - Enhanced Modern Professional Theme with Mabry Pro */
+@import url('../font/mabry-pro/mabry-pro-optimized.css');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
@@ -103,21 +104,21 @@
   box-sizing: border-box;
 }
 
-/* Force override any cached styles */
+/* Force override any cached styles with Mabry Pro */
 html, body {
   background: var(--background) !important;
   color: var(--text-primary) !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
   font-feature-settings: 'cv11', 'ss01';
   font-variation-settings: 'opsz' 32;
 }
 
-/* Professional typography */
+/* Professional typography with Mabry Pro */
 body {
   @apply antialiased;
   background: var(--background) !important;
   color: var(--text-primary) !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
   font-weight: 400;
   line-height: 1.6;
   letter-spacing: -0.01em;
@@ -126,9 +127,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Professional heading styles */
+/* Professional heading styles with Mabry Pro */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Mabry Pro', 'Inter', sans-serif !important;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.025em;
@@ -197,7 +198,7 @@ input[type="email"], input[type="password"], input[type="text"], input[type="tel
   border: 2px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
   font-size: 0.875rem !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Mabry Pro', 'Inter', sans-serif !important;
   transition: all var(--transition-normal) !important;
   background: var(--surface) !important;
   color: var(--text-primary) !important;
@@ -349,7 +350,7 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
     border-radius: var(--radius-lg) !important;
     color: var(--text-primary) !important;
     font-size: 0.875rem !important;
-    font-family: 'Inter', sans-serif !important;
+    font-family: 'Mabry Pro', 'Inter', sans-serif !important;
     transition: all var(--transition-normal) !important;
     box-shadow: var(--shadow-sm) !important;
   }

@@ -227,24 +227,27 @@ export default function DashboardPage() {
         }
         
         .welcome-section h1 {
-          font-size: 2.5rem;
-          font-weight: 800;
+          font-size: 3rem;
+          font-weight: 900;
           background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin: 0 0 0.75rem 0;
-          font-family: 'Inter', sans-serif;
+          margin: 0 0 1rem 0;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
           letter-spacing: -0.03em;
           line-height: 1.1;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .welcome-section p {
           color: #6B7280;
           margin: 0;
-          font-size: 1.125rem;
+          font-size: 1.25rem;
           font-weight: 400;
           letter-spacing: -0.01em;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
+          opacity: 0.9;
         }
         
         .header-actions {
@@ -772,10 +775,10 @@ export default function DashboardPage() {
           font-weight: 700;
           color: #1F2937;
           margin-bottom: 0.75rem;
-          font-size: 1.25rem;
-          font-family: 'Inter', sans-serif;
-          line-height: 1.4;
-          letter-spacing: -0.01em;
+          font-size: 1.375rem;
+          font-family: 'Mabry Pro', 'Inter', sans-serif;
+          line-height: 1.3;
+          letter-spacing: -0.02em;
         }
         
         .project-badges {
