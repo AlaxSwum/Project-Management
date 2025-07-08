@@ -3956,7 +3956,7 @@ export default function ProjectDetailPage() {
                 fontSize: '1rem',
                 fontWeight: '500'
               }}>Track task progress over time with visual progress bars. See start dates, due dates, completion status, and identify overdue tasks at a glance.</p>
-            </div>
+                                    </div>
             
             <div className="timeline-header-controls" style={{ marginBottom: '2.5rem' }}>
               <div className="timeline-stats" style={{
@@ -4407,8 +4407,8 @@ export default function ProjectDetailPage() {
                                       border: '3px solid #FFFFFF',
                                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                                     }}>
-                                      {task.assignee.name.charAt(0).toUpperCase()}
-                                    </div>
+                                  {task.assignee.name.charAt(0).toUpperCase()}
+                                </div>
                                     <span style={{ color: '#57534E', fontWeight: '600' }}>{task.assignee.name}</span>
                                   </>
                                 ) : null}
@@ -4457,7 +4457,7 @@ export default function ProjectDetailPage() {
                             </div>
                             <div 
                               className="timeline-bar"
-                              style={{
+                                      style={{
                                 width: '100%',
                                 height: '4px',
                                 background: '#F3F4F6',
@@ -4508,7 +4508,7 @@ export default function ProjectDetailPage() {
                               )}
                             </div>
                           </div>
-                        </div>
+                                </div>
                         </div>
                       );
                           })
@@ -4617,142 +4617,121 @@ export default function ProjectDetailPage() {
 
         {viewMode === 'gantt' && (
           <div className="gantt-view">
-            {/* Tab Navigation */}
+            {/* Header Section */}
             <div style={{ 
               display: 'flex', 
-              gap: '1.5rem', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
               marginBottom: '2rem',
-              background: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: '16px',
-              padding: '1rem',
-              border: '2px solid rgba(255, 179, 51, 0.2)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+              borderBottom: '2px solid #E5E7EB',
+              paddingBottom: '1rem',
+              background: '#ffffff'
             }}>
-              <button
-                onClick={() => setGanttView('task')}
-                style={{
-                  padding: '1rem 2rem',
-                  border: '2px solid #FFB333',
-                  background: ganttView === 'task' ? '#FFB333' : 'rgba(255, 255, 255, 0.9)',
-                  color: ganttView === 'task' ? '#FFFFFF' : '#FFB333',
-                  borderRadius: '12px',
-                  fontWeight: '600',
-                  fontSize: '0.925rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-                  letterSpacing: '0.025em',
-                  transform: ganttView === 'task' ? 'translateY(-2px)' : 'translateY(0)',
-                  boxShadow: ganttView === 'task' ? '0 8px 24px rgba(255, 179, 51, 0.3)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (ganttView !== 'task') {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.background = '#FFB333';
-                    e.currentTarget.style.color = '#FFFFFF';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (ganttView !== 'task') {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                    e.currentTarget.style.color = '#FFB333';
-                  }
-                }}
-              >
-                Tasks
-              </button>
-              <button
-                onClick={() => setGanttView('gantt')}
-                style={{
-                  padding: '1rem 2rem',
-                  border: '2px solid #FFB333',
-                  background: ganttView === 'gantt' ? '#FFB333' : 'rgba(255, 255, 255, 0.9)',
-                  color: ganttView === 'gantt' ? '#FFFFFF' : '#FFB333',
-                  borderRadius: '12px',
-                  fontWeight: '600',
-                  fontSize: '0.925rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-                  letterSpacing: '0.025em',
-                  transform: ganttView === 'gantt' ? 'translateY(-2px)' : 'translateY(0)',
-                  boxShadow: ganttView === 'gantt' ? '0 8px 24px rgba(255, 179, 51, 0.3)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (ganttView !== 'gantt') {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.background = '#FFB333';
-                    e.currentTarget.style.color = '#FFFFFF';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (ganttView !== 'gantt') {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                    e.currentTarget.style.color = '#FFB333';
-                  }
-                }}
-              >
-                Gantt Chart
-              </button>
+              <div>
+                <h1 style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 'bold', 
+                  margin: '0', 
+                  color: '#000000'
+                }}>
+                  Gantt Chart
+                </h1>
+                <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
+                  {project?.name || 'Project'} • {ganttView === 'task' ? 'Task Management' : 'Timeline Visualization'}
+                </p>
+              </div>
+              
+              {/* Tab Navigation */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem',
+                background: '#F9FAFB',
+                borderRadius: '8px',
+                padding: '0.25rem',
+                border: '2px solid #E5E7EB'
+              }}>
+                <button
+                  onClick={() => setGanttView('task')}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    background: ganttView === 'task' ? '#000000' : 'transparent',
+                    color: ganttView === 'task' ? '#FFFFFF' : '#374151',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    letterSpacing: '0.025em'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (ganttView !== 'task') {
+                      e.currentTarget.style.background = '#E5E7EB';
+                      e.currentTarget.style.color = '#000000';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (ganttView !== 'task') {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#374151';
+                    }
+                  }}
+                >
+                  Tasks
+                </button>
+                <button
+                  onClick={() => setGanttView('gantt')}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    background: ganttView === 'gantt' ? '#000000' : 'transparent',
+                    color: ganttView === 'gantt' ? '#FFFFFF' : '#374151',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    letterSpacing: '0.025em'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (ganttView !== 'gantt') {
+                      e.currentTarget.style.background = '#E5E7EB';
+                      e.currentTarget.style.color = '#000000';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (ganttView !== 'gantt') {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#374151';
+                    }
+                  }}
+                >
+                  Gantt Chart
+                </button>
+              </div>
             </div>
 
             {/* Tasks Tab Content - Gantt Left Sidebar */}
             {ganttView === 'task' && (
               <div>
-                <div className="view-description" style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  padding: '2rem',
-                  borderRadius: '16px',
-                  border: '2px solid #E5E7EB',
-                  marginBottom: '2rem',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#F3F4F6',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '2px solid #D1D5DB'
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
-                        <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                    <h3 style={{ 
-                      fontSize: '1.5rem', 
-                      fontWeight: '700', 
-                      color: '#1F2937', 
-                      margin: '0',
-                      letterSpacing: '-0.025em'
-                    }}>Tasks</h3>
-                  </div>
-                  <p style={{ 
-                    color: '#6B7280', 
-                    margin: '0', 
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>Task list with assignee, duration, and details. This shows the task information from the Gantt chart.</p>
-                </div>
             
-                <div className="gantt-sidebar-enhanced" style={{ width: '100%', maxWidth: 'none' }}>
+                <div className="gantt-sidebar-enhanced" style={{ 
+                  width: '100%', 
+                  maxWidth: 'none',
+                  background: '#ffffff',
+                  border: '2px solid #E5E7EB',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  marginBottom: '2rem'
+                }}>
                   <div className="gantt-sidebar-header-enhanced" style={{ 
                     display: 'grid', 
                     gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr 0.8fr',
                     background: '#F9FAFB', 
-                    border: '2px solid #E5E7EB',
-                    borderBottom: '2px solid #E5E7EB',
+                    border: 'none',
+                    borderBottom: '1px solid #E5E7EB',
                     minWidth: '100%',
-                    width: '100%',
-                    borderRadius: '12px 12px 0 0'
+                    width: '100%'
                   }}>
                     <div style={{ 
                       padding: '1rem 1rem', 
@@ -4825,10 +4804,8 @@ export default function ProjectDetailPage() {
                   </div>
                                      <div className="gantt-tasks-enhanced" style={{ 
                      background: '#ffffff',
-                     border: '2px solid #E5E7EB',
-                     borderTop: 'none',
-                     overflow: 'hidden',
-                     borderRadius: '0 0 12px 12px'
+                     border: 'none',
+                     overflow: 'hidden'
                    }}>
                   {tasks.length === 0 ? (
                        <div className="gantt-empty-state" style={{
@@ -4997,67 +4974,108 @@ export default function ProjectDetailPage() {
             {/* Gantt Chart Tab Content - Timeline Only */}
             {ganttView === 'gantt' && (
               <div>
-                <div className="view-description" style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  padding: '2rem',
-                  borderRadius: '16px',
-                  border: '2px solid #E5E7EB',
-                  marginBottom: '2rem',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#F3F4F6',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '2px solid #D1D5DB'
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
-                        <rect x="3" y="3" width="18" height="4" rx="2" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="3" y="10" width="8" height="4" rx="2" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="3" y="17" width="12" height="4" rx="2" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                    <h3 style={{ 
-                      fontSize: '1.5rem', 
-                      fontWeight: '700', 
-                      color: '#1F2937', 
-                      margin: '0',
-                      letterSpacing: '-0.025em'
-                    }}>Gantt Chart</h3>
-                  </div>
-                  <p style={{ 
-                    color: '#6B7280', 
-                    margin: '0', 
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>Timeline view with calendar and task bars. Shows the scheduling and duration visualization from the Gantt chart.</p>
-                </div>
             
-                <div className="gantt-header-controls">
-              <div className="gantt-controls">
-                <button className="gantt-btn">
-                  <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
-                  Filters
-                </button>
-                <div className="date-range-controls">
-                  <button className="nav-btn" onClick={handlePreviousMonth}>
-                    <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.5rem',
+                  padding: '1rem',
+                  background: '#F9FAFB',
+                  border: '2px solid #E5E7EB',
+                  borderRadius: '12px'
+                }}>
+                  <button style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    background: '#ffffff',
+                    color: '#374151',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#F3F4F6';
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.borderColor = '#E5E7EB';
+                  }}>
+                    <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
+                    Filters
                   </button>
-                  <span className="date-range">
-                    {timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </span>
-                  <button className="nav-btn" onClick={handleNextMonth}>
-                    <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
-                  </button>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    background: '#ffffff',
+                    padding: '0.5rem',
+                    borderRadius: '8px',
+                    border: '2px solid #E5E7EB'
+                  }}>
+                    <button 
+                      onClick={handlePreviousMonth}
+                      style={{
+                        padding: '0.5rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#374151',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#F3F4F6';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
+                    </button>
+                    <span style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      color: '#1F2937',
+                      minWidth: '140px',
+                      textAlign: 'center'
+                    }}>
+                      {timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button 
+                      onClick={handleNextMonth}
+                      style={{
+                        padding: '0.5rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#374151',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#F3F4F6';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
 
             <div className="gantt-chart-enhanced" style={{
               width: '100%',
@@ -5075,8 +5093,17 @@ export default function ProjectDetailPage() {
                 scrollbarWidth: 'thin'
               }}>
                 <div className="gantt-timeline-header-enhanced" style={{ minWidth: '1120px' }}>
-                  <div className="gantt-month-header">
-                    <div className="month-label">{timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                  <div className="gantt-month-header" style={{
+                    background: '#F9FAFB',
+                    padding: '1rem',
+                    borderBottom: '2px solid #E5E7EB',
+                    textAlign: 'center'
+                  }}>
+                    <div className="month-label" style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '700',
+                      color: '#1F2937'
+                    }}>{timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
                   </div>
                   <div className="gantt-week-headers" style={{ display: 'flex', width: '1120px' }}>
                     {Array.from({ length: 4 }, (_, weekIndex) => {

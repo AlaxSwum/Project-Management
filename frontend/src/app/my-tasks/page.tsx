@@ -1353,7 +1353,7 @@ export default function MyTasksPage() {
                     <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
                     <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                </div>
+              </div>
                 <div>
                   <div className="stat-number" style={{ 
                     fontSize: '2rem', 
@@ -1368,7 +1368,7 @@ export default function MyTasksPage() {
                     fontWeight: '500', 
                     margin: '0' 
                   }}>Total Tasks</div>
-                </div>
+              </div>
               </div>
               <div className="stat-card"
                 style={{

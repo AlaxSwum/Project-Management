@@ -1758,7 +1758,7 @@ Your report is now available in the system.`);
           .modal-close-btn {
             background: rgba(156, 163, 175, 0.1);
             border: 1px solid rgba(156, 163, 175, 0.2);
-            padding: 0.75rem;
+              padding: 0.75rem;
             border-radius: 12px;
             cursor: pointer;
             color: #6B7280;
@@ -1915,7 +1915,7 @@ Your report is now available in the system.`);
           }
         `
       }} />
-
+      
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
@@ -1953,7 +1953,7 @@ Your report is now available in the system.`);
                 title="Create new..."
               >
                 <PlusIcon style={{ width: '20px', height: '20px' }} />
-              </button>
+                </button>
             </div>
           </div>
 
