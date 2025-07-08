@@ -104,7 +104,7 @@ export default function PersonalCalendarPage() {
       const { data, error } = await supabase
         .from('personal_calendar_overview')
         .select('*')
-        .eq('user_id', parseInt(user?.id?.toString() || '0'))
+        .eq('user_id', user?.id)
         .gte('start_datetime', startDate.toISOString())
         .lte('end_datetime', endDate.toISOString())
         .order('start_datetime');
@@ -126,7 +126,7 @@ export default function PersonalCalendarPage() {
       const { data, error } = await supabase
         .from('personal_calendar_settings')
         .select('*')
-        .eq('user_id', parseInt(user?.id?.toString() || '0'))
+        .eq('user_id', user?.id)
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
@@ -256,7 +256,7 @@ export default function PersonalCalendarPage() {
       const { data, error } = await supabase
         .from('personal_events')
         .insert([{
-          user_id: parseInt(user?.id?.toString() || '0'),
+          user_id: user?.id,
           title: newEvent.title,
           description: newEvent.description,
           start_datetime: newEvent.start_datetime,
