@@ -68,6 +68,13 @@ export default function PersonalCalendarPage() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Drag-to-create state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ date: Date; hour: number } | null>(null);
+  const [dragEnd, setDragEnd] = useState<{ date: Date; hour: number } | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ startTime: Date; endTime: Date } | null>(null);
+  
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -294,6 +301,98 @@ export default function PersonalCalendarPage() {
     setShowCreateModal(true);
   };
 
+  // Drag-to-create handlers
+  const handleMouseDown = (date: Date, hour: number, event: React.MouseEvent) => {
+    event.preventDefault();
+    setIsDragging(true);
+    setDragStart({ date, hour });
+    setDragEnd({ date, hour });
+    
+    const startTime = new Date(date);
+    startTime.setHours(hour, 0, 0, 0);
+    const endTime = new Date(date);
+    endTime.setHours(hour + 1, 0, 0, 0);
+    
+    setDragPreview({ startTime, endTime });
+  };
+
+  const handleMouseEnter = (date: Date, hour: number) => {
+    if (isDragging && dragStart) {
+      setDragEnd({ date, hour });
+      
+      // Calculate the time range for preview
+      const startHour = Math.min(dragStart.hour, hour);
+      const endHour = Math.max(dragStart.hour, hour) + 1;
+      
+      const startTime = new Date(dragStart.date);
+      startTime.setHours(startHour, 0, 0, 0);
+      const endTime = new Date(dragStart.date);
+      endTime.setHours(endHour, 0, 0, 0);
+      
+      setDragPreview({ startTime, endTime });
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging && dragStart && dragEnd) {
+      const startHour = Math.min(dragStart.hour, dragEnd.hour);
+      const endHour = Math.max(dragStart.hour, dragEnd.hour) + 1;
+      
+      const startTime = new Date(dragStart.date);
+      startTime.setHours(startHour, 0, 0, 0);
+      const endTime = new Date(dragStart.date);
+      endTime.setHours(endHour, 0, 0, 0);
+      
+      // Format for datetime-local input
+      const formatForInput = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      };
+      
+      setNewEvent({
+        ...newEvent,
+        start_datetime: formatForInput(startTime),
+        end_datetime: formatForInput(endTime)
+      });
+      setShowCreateModal(true);
+    }
+    
+    // Reset drag state
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+    setDragPreview(null);
+  };
+
+  // Add global mouse up listener
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        handleMouseUp();
+      }
+    };
+
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => document.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDragging, dragStart, dragEnd]);
+
+  // Helper function to check if a time slot is being dragged
+  const isSlotInDragRange = (date: Date, hour: number) => {
+    if (!isDragging || !dragStart || !dragEnd) return false;
+    
+    // Only highlight slots on the same day as drag start
+    if (date.toDateString() !== dragStart.date.toDateString()) return false;
+    
+    const startHour = Math.min(dragStart.hour, dragEnd.hour);
+    const endHour = Math.max(dragStart.hour, dragEnd.hour);
+    
+    return hour >= startHour && hour <= endHour;
+  };
+
   const createEvent = async () => {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
@@ -418,23 +517,38 @@ export default function PersonalCalendarPage() {
           {/* Time slots */}
           {timeSlots.map(hour => {
             const slotEvents = getEventsForTimeSlot(hour, currentDate);
+            const isInDragRange = isSlotInDragRange(currentDate, hour);
+            
             return (
               <div 
                 key={hour} 
-                onClick={() => handleTimeSlotClick(currentDate, hour)}
+                onClick={(e) => {
+                  if (!isDragging) {
+                    handleTimeSlotClick(currentDate, hour);
+                  }
+                }}
+                onMouseDown={(e) => handleMouseDown(currentDate, hour, e)}
+                onMouseEnter={(e) => {
+                  handleMouseEnter(currentDate, hour);
+                  if (!isDragging) {
+                    e.currentTarget.style.backgroundColor = '#f0f8ff';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDragging) {
+                    e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                  }
+                }}
                 style={{
                   height: '60px',
                   borderBottom: '1px solid #f0f0f0',
                   position: 'relative',
-                  background: hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f0f8ff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                  background: isInDragRange 
+                    ? 'rgba(88, 132, 253, 0.2)' 
+                    : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                  cursor: isDragging ? 'grabbing' : 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  userSelect: 'none'
                 }}
               >
                 {slotEvents.map((event, index) => (
@@ -535,23 +649,38 @@ export default function PersonalCalendarPage() {
               {/* Time slots for this day */}
               {timeSlots.map(hour => {
                 const slotEvents = getEventsForTimeSlot(hour, day);
+                const isInDragRange = isSlotInDragRange(day, hour);
+                
                 return (
                   <div 
                     key={hour} 
-                    onClick={() => handleTimeSlotClick(day, hour)}
+                    onClick={(e) => {
+                      if (!isDragging) {
+                        handleTimeSlotClick(day, hour);
+                      }
+                    }}
+                    onMouseDown={(e) => handleMouseDown(day, hour, e)}
+                    onMouseEnter={(e) => {
+                      handleMouseEnter(day, hour);
+                      if (!isDragging) {
+                        e.currentTarget.style.backgroundColor = '#f0f8ff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isDragging) {
+                        e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                      }
+                    }}
                     style={{
                       height: '60px',
                       borderBottom: '1px solid #f0f0f0',
                       position: 'relative',
-                      background: hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f0f8ff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                      background: isInDragRange 
+                        ? 'rgba(88, 132, 253, 0.2)' 
+                        : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                      cursor: isDragging ? 'grabbing' : 'pointer',
+                      transition: 'background-color 0.2s ease',
+                      userSelect: 'none'
                     }}
                   >
                     {slotEvents.map((event, index) => (
@@ -790,8 +919,49 @@ export default function PersonalCalendarPage() {
               boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
+              {error === 'Failed to load calendar data' && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', opacity: 0.8 }}>
+                  Please run the database setup SQL scripts in your Supabase dashboard to create the necessary tables.
+                </div>
+              )}
             </div>
           )}
+
+          {/* Drag Instructions */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              background: 'linear-gradient(135deg, #5884FD, #C483D9)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              fontSize: '1.2rem',
+              fontWeight: '600'
+            }}>
+              ✨
+            </div>
+            <div>
+              <div style={{ fontWeight: '500', color: '#1a1a1a', marginBottom: '0.25rem' }}>
+                Drag to Create Events
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666666' }}>
+                Click and drag from 2 PM to 4 PM (or any time range) to create events seamlessly
+              </div>
+            </div>
+          </div>
 
           {/* Calendar Controls */}
           <div style={{
@@ -893,11 +1063,41 @@ export default function PersonalCalendarPage() {
             border: '1px solid #e8e8e8',
             borderRadius: '16px',
             overflow: 'hidden',
-            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
+            position: 'relative'
           }}>
             {currentView === 'month' && renderMonthView()}
             {currentView === 'week' && renderWeekView()}
             {currentView === 'day' && renderDayView()}
+            
+            {/* Drag Preview Tooltip */}
+            {isDragging && dragPreview && (
+              <div style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: 'rgba(0, 0, 0, 0.8)',
+                color: '#ffffff',
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                zIndex: 1000,
+                pointerEvents: 'none',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ marginBottom: '0.25rem', opacity: 0.8 }}>Creating Event</div>
+                                     <div>
+                     {formatTime(dragPreview.startTime.toISOString())} - {formatTime(dragPreview.endTime.toISOString())}
+                   </div>
+                  <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.25rem' }}>
+                    {Math.round((dragPreview.endTime.getTime() - dragPreview.startTime.getTime()) / (1000 * 60 * 60))} hour(s)
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
