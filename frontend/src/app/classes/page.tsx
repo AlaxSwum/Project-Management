@@ -6,6 +6,58 @@ import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ClockIcon, MapPinIcon, UsersIcon, CurrencyDollarIcon, PhoneIcon, LinkIcon } from '@heroicons/react/24/outline'
 
+// Reusable form styles
+const formStyles = {
+  input: {
+    width: '100%',
+    padding: '0.9rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '12px',
+    fontSize: '0.95rem',
+    backgroundColor: '#fafafa',
+    transition: 'all 0.2s ease',
+    outline: 'none'
+  },
+  select: {
+    width: '100%',
+    padding: '0.9rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '12px',
+    fontSize: '0.95rem',
+    backgroundColor: '#fafafa',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    cursor: 'pointer',
+    appearance: 'none',
+    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23666666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 0.75rem center',
+    backgroundSize: '1rem',
+    paddingRight: '2.5rem'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '0.75rem',
+    fontWeight: '600',
+    fontSize: '1rem',
+    color: '#374151',
+    letterSpacing: '-0.01em'
+  },
+  inputGroup: {
+    marginBottom: '2rem'
+  },
+  focusStyles: {
+    borderColor: '#5884FD',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 8px rgba(88, 132, 253, 0.25)'
+  },
+  blurStyles: {
+    borderColor: '#e5e7eb',
+    backgroundColor: '#fafafa',
+    boxShadow: 'none'
+  }
+}
+
 interface ClassItem {
   id: number
   class_title: string
@@ -1621,16 +1673,39 @@ export default function ClassesPage() {
         }}>
           <div style={{
             background: '#ffffff',
-            borderRadius: '8px',
-            padding: '2rem',
-            maxWidth: '800px',
-            width: '90%',
-            maxHeight: '90vh',
-            overflow: 'auto'
+            borderRadius: '20px',
+            padding: '3rem',
+            maxWidth: '700px',
+            width: '95%',
+            maxHeight: '95vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
           }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#000000' }}>
-              {editingItem ? 'Edit Class' : 'Create New Class'}
-            </h2>
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '3rem',
+              paddingBottom: '2rem',
+              borderBottom: '1px solid #f0f0f0'
+            }}>
+              <h2 style={{ 
+                fontSize: '2rem', 
+                fontWeight: '400', 
+                margin: '0 0 0.5rem 0',
+                color: '#1a1a1a',
+                letterSpacing: '-0.025em'
+              }}>
+                {editingItem ? 'Edit Class' : 'Add New Class'}
+              </h2>
+              <p style={{
+                fontSize: '1.1rem',
+                color: '#666666',
+                margin: '0',
+                fontWeight: '400',
+                lineHeight: '1.5'
+              }}>
+                {editingItem ? 'Update your class details below' : 'Fill in the details to create a new class'}
+              </p>
+            </div>
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1.5rem' }}>
@@ -1645,10 +1720,23 @@ export default function ClassesPage() {
                   placeholder="Enter class name (e.g., PR Writing Workshop, Media Interview Training)"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
+                    padding: '0.9rem',
                     border: '2px solid #e5e7eb',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem'
+                    borderRadius: '12px',
+                    fontSize: '0.95rem',
+                    backgroundColor: '#fafafa',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#5884FD';
+                    e.target.style.backgroundColor = '#ffffff';
+                    e.target.style.boxShadow = '0 2px 8px rgba(88, 132, 253, 0.25)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.backgroundColor = '#fafafa';
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -1665,11 +1753,25 @@ export default function ClassesPage() {
                   placeholder="Describe what this class covers, learning objectives, and what students will gain..."
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
+                    padding: '0.9rem',
                     border: '2px solid #e5e7eb',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    resize: 'vertical'
+                    borderRadius: '12px',
+                    fontSize: '0.95rem',
+                    backgroundColor: '#fafafa',
+                    resize: 'vertical',
+                    transition: 'all 0.2s ease',
+                    outline: 'none',
+                    lineHeight: '1.5'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#5884FD';
+                    e.target.style.backgroundColor = '#ffffff';
+                    e.target.style.boxShadow = '0 2px 8px rgba(88, 132, 253, 0.25)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.backgroundColor = '#fafafa';
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -1679,13 +1781,29 @@ export default function ClassesPage() {
                   type="button"
                   onClick={resetForm}
                   style={{
-                    padding: '0.75rem 1.5rem',
+                    padding: '1rem 2.5rem',
                     background: '#ffffff',
-                    color: '#000000',
-                    border: '2px solid #666666',
-                    borderRadius: '6px',
+                    color: '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
                     cursor: 'pointer',
-                    fontSize: '0.9rem'
+                    transition: 'all 0.2s ease',
+                    minWidth: '140px',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f8f8';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
                   }}
                 >
                   Cancel
@@ -1693,13 +1811,29 @@ export default function ClassesPage() {
                 <button
                   type="submit"
                   style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#000000',
+                    padding: '1rem 2.5rem',
+                    background: '#5884FD',
                     color: '#ffffff',
-                    border: '2px solid #000000',
-                    borderRadius: '6px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
                     cursor: 'pointer',
-                    fontSize: '0.9rem'
+                    transition: 'all 0.2s ease',
+                    minWidth: '140px',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4A6CF7';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(88, 132, 253, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#5884FD';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)';
                   }}
                 >
                   {editingItem ? 'Update Class' : 'Create Class'}
@@ -1828,8 +1962,8 @@ export default function ClassesPage() {
         </div>
       )}
 
-      {/* Student Enrollment Form Modal */}
-      {showStudentForm && selectedClass && (
+      {/* Student Form Modal */}
+      {showStudentForm && (
         <div style={{
           position: 'fixed',
           top: '0',
@@ -1840,436 +1974,289 @@ export default function ClassesPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 50
+          zIndex: 1000
         }}>
-                     <div style={{
-             background: '#ffffff',
-             borderRadius: '8px',
-             padding: 'clamp(1rem, 4vw, 2rem)',
-             maxWidth: 'min(800px, 95vw)',
-             width: '100%',
-             maxHeight: '90vh',
-             overflow: 'auto'
-           }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1e293b' }}>
-              {editingStudent ? 'Edit Student Enrollment' : 'Enroll New Student'}
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '2rem' }}>
-              Class: {selectedClass.class_title}
-            </p>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '3rem',
+            maxWidth: '700px',
+            width: '95%',
+            maxHeight: '95vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '3rem',
+              paddingBottom: '2rem',
+              borderBottom: '1px solid #f0f0f0'
+            }}>
+              <h2 style={{ 
+                fontSize: '2rem', 
+                fontWeight: '400', 
+                margin: '0 0 0.5rem 0',
+                color: '#1a1a1a',
+                letterSpacing: '-0.025em'
+              }}>
+                {editingStudent ? 'Edit Student' : 'Enroll New Student'}
+              </h2>
+              <p style={{
+                fontSize: '1.1rem',
+                color: '#666666',
+                margin: '0',
+                fontWeight: '400',
+                lineHeight: '1.5'
+              }}>
+                {editingStudent ? 'Update student enrollment details below' : 'Fill in the details to enroll a new student'}
+              </p>
+            </div>
 
             <form onSubmit={handleStudentSubmit}>
-              {/* Student Information */}
-              <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '8px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#1e293b' }}>
-                  Student Information
-                </h3>
-                
-                                 <div style={{ 
-                   display: 'grid', 
-                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-                   gap: '1rem', 
-                   marginBottom: '1rem' 
-                 }}>
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Student Name *
-                     </label>
-                     <input
-                       type="text"
-                       value={studentFormData.student_name}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
-                       required
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
+              {/* Student Information Section */}
+              <div style={{ marginBottom: '3rem' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '2rem',
+                  paddingBottom: '1rem',
+                  borderBottom: '1px solid #f0f0f0'
+                }}>
+                  <div style={{
+                    width: '4px',
+                    height: '24px',
+                    backgroundColor: '#5884FD',
+                    borderRadius: '2px'
+                  }}></div>
+                  <h3 style={{ 
+                    fontSize: '1.2rem', 
+                    fontWeight: '500', 
+                    margin: '0',
+                    color: '#1a1a1a',
+                    letterSpacing: '-0.015em'
+                  }}>
+                    Student Information
+                  </h3>
+                </div>
 
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Email *
-                     </label>
-                     <input
-                       type="email"
-                       value={studentFormData.email}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
-                       required
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
-                 </div>
-
-                 <div style={{ 
-                   display: 'grid', 
-                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-                   gap: '1rem' 
-                 }}>
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Phone Number
-                     </label>
-                     <input
-                       type="tel"
-                       value={studentFormData.phone_number}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
-
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Facebook Link
-                     </label>
-                     <input
-                       type="url"
-                       value={studentFormData.facebook_link}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
-                       placeholder="https://facebook.com/username"
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
-                 </div>
-              </div>
-
-              {/* Payment Information */}
-              <div data-payment-section style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f0fdf4', borderRadius: '8px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#1e293b' }}>
-                  Payment Information
-                </h3>
-                
-                                 <div style={{ 
-                   display: 'grid', 
-                   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                   gap: '1rem', 
-                   marginBottom: '1rem' 
-                 }}>
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Payment Method *
-                     </label>
-                     <select
-                       value={studentFormData.payment_method}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, payment_method: e.target.value as any })}
-                       required
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     >
-                       {PAYMENT_METHODS.map(method => (
-                         <option key={method} value={method}>{method}</option>
-                       ))}
-                     </select>
-                   </div>
-
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Course Fee (MMK) *
-                     </label>
-                     <input
-                       type="number"
-                       value={studentFormData.course_fee}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
-                       required
-                       min="0"
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
-
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Payment Type *
-                     </label>
-                     <select
-                       value={studentFormData.payment_type}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     >
-                       <option value="full">Full Payment</option>
-                       <option value="split">Split Payment</option>
-                     </select>
-                   </div>
-                 </div>
-
-                 {/* Discount Section */}
-                 <div style={{ 
-                   display: 'grid', 
-                   gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                   gap: '1rem', 
-                   marginBottom: '1rem', 
-                   padding: '1rem', 
-                   background: '#ffffff', 
-                   borderRadius: '6px', 
-                   border: '1px solid #e2e8f0' 
-                 }}>
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Discount Amount (MMK)
-                     </label>
-                     <input
-                       type="number"
-                       value={studentFormData.discount_amount}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, discount_amount: Number(e.target.value), discount_percentage: 0 })}
-                       min="0"
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
-
-                   <div>
-                     <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                       Discount Percentage (%)
-                     </label>
-                     <input
-                       type="number"
-                       value={studentFormData.discount_percentage}
-                       onChange={(e) => setStudentFormData({ ...studentFormData, discount_percentage: Number(e.target.value), discount_amount: 0 })}
-                       min="0"
-                       max="100"
-                       style={{
-                         width: '100%',
-                         padding: '0.75rem',
-                         border: '2px solid #e2e8f0',
-                         borderRadius: '6px',
-                         fontSize: '0.9rem'
-                       }}
-                     />
-                   </div>
-                 </div>
-
-                {/* Payment Calculation Display */}
-                <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '6px', border: '1px solid #bbf7d0', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span>Course Fee:</span>
-                    <span style={{ fontWeight: '600' }}>{formatCurrency(studentFormData.course_fee)}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
+                  <div>
+                    <label style={formStyles.label}>Student Name *</label>
+                    <input
+                      type="text"
+                      value={studentFormData.student_name}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
+                      required
+                      placeholder="Enter student's full name"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
                   </div>
-                  {(studentFormData.discount_amount > 0 || studentFormData.discount_percentage > 0) && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#059669' }}>
-                      <span>Discount:</span>
-                      <span style={{ fontWeight: '600' }}>
-                        -{formatCurrency(studentFormData.discount_percentage > 0 
-                          ? studentFormData.course_fee * studentFormData.discount_percentage / 100 
-                          : studentFormData.discount_amount
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #bbf7d0', paddingTop: '0.5rem', fontSize: '1.1rem', fontWeight: '700' }}>
-                    <span>Total Amount:</span>
-                    <span>{formatCurrency(calculateTotalAmount())}</span>
+
+                  <div>
+                    <label style={formStyles.label}>Email *</label>
+                    <input
+                      type="email"
+                      value={studentFormData.email}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
+                      required
+                      placeholder="Enter student's email address"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
                   </div>
                 </div>
 
-                                 {/* Full Payment Section */}
-                 {studentFormData.payment_type === 'full' && (
-                   <div style={{ 
-                     display: 'grid', 
-                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                     gap: '1rem' 
-                   }}>
-                     <div>
-                       <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                         Payment Amount (MMK)
-                       </label>
-                       <input
-                         type="number"
-                         value={studentFormData.full_payment_amount}
-                         onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_amount: Number(e.target.value) })}
-                         min="0"
-                         style={{
-                           width: '100%',
-                           padding: '0.75rem',
-                           border: '2px solid #e2e8f0',
-                           borderRadius: '6px',
-                           fontSize: '0.9rem'
-                         }}
-                       />
-                     </div>
-
-                     <div>
-                       <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                         Payment Date
-                       </label>
-                       <input
-                         type="date"
-                         value={studentFormData.full_payment_date}
-                         onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_date: e.target.value })}
-                         style={{
-                           width: '100%',
-                           padding: '0.75rem',
-                           border: '2px solid #e2e8f0',
-                           borderRadius: '6px',
-                           fontSize: '0.9rem'
-                         }}
-                       />
-                     </div>
-                   </div>
-                 )}
-
-                {/* Split Payment Section */}
-                {studentFormData.payment_type === 'split' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
                   <div>
-                    <div style={{ marginBottom: '1rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                        Number of Splits
-                      </label>
-                      <select
-                        value={studentFormData.number_of_splits}
-                        onChange={(e) => setStudentFormData({ ...studentFormData, number_of_splits: Number(e.target.value) })}
-                        style={{
-                          width: '200px',
-                          padding: '0.75rem',
-                          border: '2px solid #e2e8f0',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <option value={2}>2 Splits</option>
-                        <option value={3}>3 Splits</option>
-                        <option value={4}>4 Splits</option>
-                      </select>
-                    </div>
-
-                                         {/* Split Payment Inputs */}
-                     <div style={{ 
-                       display: 'grid', 
-                       gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-                       gap: '1rem' 
-                     }}>
-                       {[1, 2, 3, 4].slice(0, studentFormData.number_of_splits).map(split => (
-                         <div key={split} style={{ 
-                           padding: '1rem', 
-                           background: '#ffffff', 
-                           borderRadius: '6px', 
-                           border: '1px solid #e2e8f0',
-                           minWidth: '200px'
-                         }}>
-                           <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                             Split {split}
-                           </h4>
-                           <div style={{ marginBottom: '0.5rem' }}>
-                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
-                               Amount (MMK)
-                             </label>
-                             <input
-                               type="number"
-                               value={studentFormData[`split_${split}_amount` as keyof typeof studentFormData] as number}
-                               onChange={(e) => setStudentFormData({ 
-                                 ...studentFormData, 
-                                 [`split_${split}_amount`]: Number(e.target.value) 
-                               })}
-                               min="0"
-                               style={{
-                                 width: '100%',
-                                 padding: '0.5rem',
-                                 border: '1px solid #e2e8f0',
-                                 borderRadius: '4px',
-                                 fontSize: '0.8rem'
-                               }}
-                             />
-                           </div>
-                           <div>
-                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#64748b' }}>
-                               Date
-                             </label>
-                             <input
-                               type="date"
-                               value={studentFormData[`split_${split}_date` as keyof typeof studentFormData] as string}
-                               onChange={(e) => setStudentFormData({ 
-                                 ...studentFormData, 
-                                 [`split_${split}_date`]: e.target.value 
-                               })}
-                               style={{
-                                 width: '100%',
-                                 padding: '0.5rem',
-                                 border: '1px solid #e2e8f0',
-                                 borderRadius: '4px',
-                                 fontSize: '0.8rem'
-                               }}
-                             />
-                           </div>
-                         </div>
-                       ))}
-                     </div>
+                    <label style={formStyles.label}>Phone Number</label>
+                    <input
+                      type="tel"
+                      value={studentFormData.phone_number}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
+                      placeholder="Enter phone number"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
                   </div>
-                )}
+
+                  <div>
+                    <label style={formStyles.label}>Facebook Link</label>
+                    <input
+                      type="url"
+                      value={studentFormData.facebook_link}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
+                      placeholder="https://facebook.com/username"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Notes */}
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
-                  Notes
-                </label>
-                <textarea
-                  value={studentFormData.notes}
-                  onChange={(e) => setStudentFormData({ ...studentFormData, notes: e.target.value })}
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    resize: 'vertical'
-                  }}
-                />
+              {/* Payment Information Section */}
+              <div style={{ marginBottom: '3rem' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '2rem',
+                  paddingBottom: '1rem',
+                  borderBottom: '1px solid #f0f0f0'
+                }}>
+                  <div style={{
+                    width: '4px',
+                    height: '24px',
+                    backgroundColor: '#C483D9',
+                    borderRadius: '2px'
+                  }}></div>
+                  <h3 style={{ 
+                    fontSize: '1.2rem', 
+                    fontWeight: '500', 
+                    margin: '0',
+                    color: '#1a1a1a',
+                    letterSpacing: '-0.015em'
+                  }}>
+                    Payment Information
+                  </h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
+                  <div>
+                    <label style={formStyles.label}>Payment Method *</label>
+                    <select
+                      value={studentFormData.payment_method}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_method: e.target.value as 'Kpay' | 'Aya Pay' | 'Wave Pay' })}
+                      required
+                      style={formStyles.select}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    >
+                      <option value="">Select payment method</option>
+                      {PAYMENT_METHODS.map(method => (
+                        <option key={method} value={method}>{method}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={formStyles.label}>Course Fee (MMK) *</label>
+                    <input
+                      type="number"
+                      value={studentFormData.course_fee}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
+                      required
+                      min="0"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={formStyles.label}>Payment Type *</label>
+                    <select
+                      value={studentFormData.payment_type}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
+                      required
+                      style={formStyles.select}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    >
+                      <option value="full">Full Payment</option>
+                      <option value="split">Split Payment</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
+                  <div>
+                    <label style={formStyles.label}>Discount Amount (MMK)</label>
+                    <input
+                      type="number"
+                      value={studentFormData.discount_amount}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, discount_amount: Number(e.target.value) })}
+                      min="0"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={formStyles.label}>Discount Percentage (%)</label>
+                    <input
+                      type="number"
+                      value={studentFormData.discount_percentage}
+                      onChange={(e) => setStudentFormData({ ...studentFormData, discount_percentage: Number(e.target.value) })}
+                      min="0"
+                      max="100"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{
+                  background: '#F5F5ED',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  marginBottom: '2rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#666666' }}>Course Fee:</span>
+                    <span style={{ fontWeight: '500', color: '#1a1a1a' }}>{formatCurrency(studentFormData.course_fee)} MMK</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e0e0e0', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontWeight: '500', color: '#1a1a1a' }}>Total Amount:</span>
+                    <span style={{ fontWeight: '600', color: '#5884FD', fontSize: '1.1rem' }}>{formatCurrency(calculateTotalAmount())} MMK</span>
+                  </div>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              {/* Action Buttons */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '1.5rem', 
+                justifyContent: 'center',
+                paddingTop: '2.5rem',
+                borderTop: '1px solid #f0f0f0',
+                marginTop: '2rem'
+              }}>
                 <button
                   type="button"
                   onClick={resetStudentForm}
                   style={{
-                    padding: '0.75rem 1.5rem',
+                    padding: '1rem 2.5rem',
                     background: '#ffffff',
-                    color: '#64748b',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '6px',
+                    color: '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
                     cursor: 'pointer',
-                    fontSize: '0.9rem'
+                    transition: 'all 0.2s ease',
+                    minWidth: '140px',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f8f8';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
                   }}
                 >
                   Cancel
@@ -2277,16 +2264,32 @@ export default function ClassesPage() {
                 <button
                   type="submit"
                   style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#059669',
+                    padding: '1rem 2.5rem',
+                    background: '#5884FD',
                     color: '#ffffff',
-                    border: '2px solid #059669',
-                    borderRadius: '6px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
                     cursor: 'pointer',
-                    fontSize: '0.9rem'
+                    transition: 'all 0.2s ease',
+                    minWidth: '140px',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4A6CF7';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(88, 132, 253, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#5884FD';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)';
                   }}
                 >
-                  {editingStudent ? 'Update Enrollment' : 'Enroll Student'}
+                  {editingStudent ? 'Update Student' : 'Enroll Student'}
                 </button>
               </div>
             </form>
