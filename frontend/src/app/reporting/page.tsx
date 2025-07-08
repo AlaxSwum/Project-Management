@@ -4,10 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { reportingService } from '@/lib/api-compatibility';
-import {
-  EyeIcon,
-  DocumentChartBarIcon
-} from '@heroicons/react/24/outline';
+// Icons removed for clean design;
 import Sidebar from '@/components/Sidebar';
 
 export default function ReportingPage() {
@@ -574,7 +571,6 @@ export default function ReportingPage() {
                             e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
                           }}
                         >
-                          <EyeIcon style={{ width: '16px', height: '16px' }} />
                           View Details
                         </button>
                       </div>
