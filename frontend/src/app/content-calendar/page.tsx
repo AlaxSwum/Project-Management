@@ -368,12 +368,12 @@ export default function ContentCalendarPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -383,8 +383,8 @@ export default function ContentCalendarPage() {
           <div style={{ 
             width: '32px', 
             height: '32px', 
-            border: '3px solid #cccccc', 
-            borderTop: '3px solid #000000', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -395,12 +395,12 @@ export default function ContentCalendarPage() {
 
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -408,24 +408,26 @@ export default function ContentCalendarPage() {
           minHeight: '100vh'
         }}>
           <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#000000' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
               Access Denied
             </h1>
-            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem' }}>
+            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
               You don't have permission to access the Content Calendar.
               Please contact an administrator to request access.
             </p>
             <button
               onClick={() => router.push('/dashboard')}
               style={{
-                padding: '1rem 2rem',
-                background: '#000000',
+                padding: '0.875rem 2rem',
+                background: '#5884FD',
                 color: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
+                border: 'none',
+                borderRadius: '12px',
                 fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer'
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
               }}
             >
               Back to Dashboard
@@ -447,13 +449,13 @@ export default function ContentCalendarPage() {
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           minHeight: '100vh'
         }}>
@@ -462,25 +464,25 @@ export default function ContentCalendarPage() {
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            marginBottom: '2rem',
-            borderBottom: '2px solid #e5e7eb',
-            paddingBottom: '1rem'
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
           }}>
             <div>
               <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: 'bold', 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
                 margin: '0', 
-                color: '#000000'
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
               }}>
                 Content Calendar
               </h1>
-              <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage your social media content planning and scheduling
               </p>
             </div>
             
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={() => {
                   setFolderFormData({
@@ -494,18 +496,16 @@ export default function ContentCalendarPage() {
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#ffffff',
-                  color: '#000000',
-                  border: '2px solid #666666',
-                  borderRadius: '6px',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
                   fontSize: '0.9rem',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <FolderIcon style={{ width: '16px', height: '16px' }} />
                 Create Folder
               </button>
               
@@ -514,19 +514,17 @@ export default function ContentCalendarPage() {
                   onClick={() => setShowMemberModal(true)}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    background: '#ffffff',
-                    color: '#000000',
-                    border: '2px solid #000000',
-                    borderRadius: '6px',
+                    background: '#FFB333',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
                     fontSize: '0.9rem',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
                   }}
                 >
-                  <UserGroupIcon style={{ width: '16px', height: '16px' }} />
                   Manage Members
                 </button>
               )}
@@ -541,19 +539,17 @@ export default function ContentCalendarPage() {
                 }}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  background: '#000000',
+                  background: '#5884FD',
                   color: '#ffffff',
-                  border: '2px solid #000000',
-                  borderRadius: '6px',
+                  border: 'none',
+                  borderRadius: '12px',
                   fontSize: '0.9rem',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                 }}
               >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
                 {currentFolder ? `Add to ${currentFolder.name}` : 'Add Content'}
               </button>
             </div>
@@ -561,13 +557,14 @@ export default function ContentCalendarPage() {
 
           {error && (
             <div style={{ 
-              background: '#f9f9f9', 
-              border: '2px solid #000000', 
-              borderRadius: '6px', 
+              background: '#ffffff', 
+              border: '1px solid #F87239', 
+              borderRadius: '12px', 
               padding: '1rem', 
               marginBottom: '2rem',
-              color: '#000000',
-              fontWeight: '600'
+              color: '#F87239',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
             </div>
@@ -576,17 +573,18 @@ export default function ContentCalendarPage() {
           {/* Hierarchical Folder Navigation */}
           <div style={{
             background: '#ffffff',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '1.5rem',
-            marginBottom: '2rem'
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            padding: '2rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
           }}>
             {/* Breadcrumb Navigation */}
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: '0.5rem',
-              marginBottom: '1rem',
+              marginBottom: '1.5rem',
               fontSize: '0.9rem',
               color: '#666666'
             }}>
@@ -595,11 +593,13 @@ export default function ContentCalendarPage() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: currentFolder === null ? '#000000' : '#666666',
-                  fontWeight: currentFolder === null ? '600' : '400',
-                  textDecoration: currentFolder === null ? 'none' : 'underline',
+                  color: currentFolder === null ? '#1a1a1a' : '#666666',
+                  fontWeight: currentFolder === null ? '500' : '400',
+                  textDecoration: 'none',
                   cursor: 'pointer',
-                  padding: '0'
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 Content Calendar
@@ -607,17 +607,19 @@ export default function ContentCalendarPage() {
               
               {folderPath.map((folder, index) => (
                 <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>/</span>
+                  <span style={{ color: '#C483D9' }}>•</span>
                   <button
                     onClick={() => goToFolder(folder)}
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: index === folderPath.length - 1 ? '#000000' : '#666666',
-                      fontWeight: index === folderPath.length - 1 ? '600' : '400',
-                      textDecoration: index === folderPath.length - 1 ? 'none' : 'underline',
+                      color: index === folderPath.length - 1 ? '#1a1a1a' : '#666666',
+                      fontWeight: index === folderPath.length - 1 ? '500' : '400',
+                      textDecoration: 'none',
                       cursor: 'pointer',
-                      padding: '0'
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '6px',
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     {folder.name}
@@ -629,26 +631,43 @@ export default function ContentCalendarPage() {
             {/* Current Folder Contents */}
             <div style={{ marginBottom: '1rem' }}>
               <h3 style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: '600', 
-                marginBottom: '1rem',
-                color: '#000000'
+                fontSize: '1.2rem', 
+                fontWeight: '500', 
+                marginBottom: '1.5rem',
+                color: '#1a1a1a',
+                letterSpacing: '-0.01em'
               }}>
                 {currentFolder ? `${currentFolder.name}` : 'All Folders'} 
-                {currentFolder === null && folders.length > 0 && ` (${folders.length} total)`}
+                {currentFolder === null && folders.length > 0 && (
+                  <span style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '400' }}>
+                    ({folders.length} total)
+                  </span>
+                )}
               </h3>
               
               {getCurrentFolderContents().length === 0 && folders.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
-                  padding: '2rem',
-                  color: '#666666',
-                  border: '1px dashed #e5e7eb',
-                  borderRadius: '6px'
+                  padding: '3rem 2rem',
+                  color: '#999999',
+                  border: '1px dashed #e0e0e0',
+                  borderRadius: '12px',
+                  background: '#fafafa'
                 }}>
-                  <FolderIcon style={{ width: '24px', height: '24px', margin: '0 auto 1rem' }} />
-                  <p style={{ margin: '0 0 1rem 0' }}>No folders created yet</p>
-                  <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                  <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    background: '#f0f0f0',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.5rem'
+                  }}>
+                    <FolderIcon style={{ width: '24px', height: '24px', color: '#999999' }} />
+                  </div>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '500' }}>No folders created yet</p>
+                  <p style={{ margin: '0', fontSize: '0.9rem', lineHeight: '1.5' }}>
                     Create folders to organize your content by month, campaign, or category
                   </p>
                 </div>
@@ -662,33 +681,48 @@ export default function ContentCalendarPage() {
                     <div
                       key={folder.id}
                       onClick={() => enterFolder(folder)}
-                                             style={{
-                         padding: '1rem',
-                         background: '#f9f9f9',
-                         border: '2px solid #e5e7eb',
-                         borderRadius: '8px',
-                         cursor: 'pointer',
-                         display: 'flex',
-                         alignItems: 'center',
-                         gap: '0.75rem',
-                         transition: 'all 0.2s ease'
-                       }}
+                      style={{
+                        padding: '1.5rem',
+                        background: '#ffffff',
+                        border: '1px solid #e8e8e8',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                      }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#000000'
-                        e.currentTarget.style.background = '#f0f0f0'
+                        e.currentTarget.style.borderColor = '#C483D9'
+                        e.currentTarget.style.background = '#fafafa'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.2)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#e5e7eb'
-                        e.currentTarget.style.background = '#f9f9f9'
+                        e.currentTarget.style.borderColor = '#e8e8e8'
+                        e.currentTarget.style.background = '#ffffff'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
                       }}
                     >
-                      <FolderIcon style={{ width: '20px', height: '20px', color: '#666666' }} />
+                      <div style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        background: '#f0f0f0',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
+                      </div>
                       <div>
-                        <div style={{ fontWeight: '600', color: '#000000' }}>
+                        <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
                           {folder.name}
                         </div>
                         {folder.description && (
-                          <div style={{ fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem', lineHeight: '1.4' }}>
                             {folder.description}
                           </div>
                         )}
@@ -706,40 +740,55 @@ export default function ContentCalendarPage() {
           {currentFolder && (
             <div style={{
               background: '#ffffff',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              overflow: 'hidden'
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
                 gap: '0',
-                background: '#f9f9f9',
-                borderBottom: '2px solid #e5e7eb',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                color: '#000000'
+                background: '#fafafa',
+                borderBottom: '1px solid #e8e8e8',
+                fontWeight: '500',
+                fontSize: '0.8rem',
+                color: '#666666',
+                letterSpacing: '0.025em'
               }}>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PUBLISHED DATE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TYPE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CATEGORY</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TITLE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>ASSIGNED</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CONTENT DUE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>GRAPHIC DUE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STATUS</div>
-                <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PUBLISHED DATE</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TYPE</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CATEGORY</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PLATFORM</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TITLE</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>ASSIGNED</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CONTENT DUE</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>GRAPHIC DUE</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>STATUS</div>
+                <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
               </div>
 
               {filteredItems.length === 0 ? (
                 <div style={{ 
-                  padding: '3rem', 
+                  padding: '4rem', 
                   textAlign: 'center', 
-                  color: '#666666',
+                  color: '#999999',
                   fontSize: '1.1rem'
                 }}>
-                  No content items in {currentFolder.name}. Click "Add Content" to create one.
+                  <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    background: '#f0f0f0',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1rem'
+                  }}>
+                    <CalendarIcon style={{ width: '24px', height: '24px', color: '#999999' }} />
+                  </div>
+                  <p style={{ margin: '0', fontWeight: '500' }}>No content items in {currentFolder.name}</p>
+                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666666' }}>Click "Add Content" to create one.</p>
                 </div>
               ) : (
                 filteredItems.map((item) => (
@@ -747,54 +796,70 @@ export default function ContentCalendarPage() {
                     display: 'grid',
                     gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
                     gap: '0',
-                    borderBottom: '1px solid #e5e7eb',
-                    fontSize: '0.8rem'
+                    borderBottom: '1px solid #f0f0f0',
+                    fontSize: '0.85rem',
+                    transition: 'all 0.2s ease'
                   }}>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {formatDate(item.date)}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                      {item.content_type}
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
+                      <div style={{ fontWeight: '500', color: '#1a1a1a' }}>{item.content_type}</div>
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.category}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.social_media}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                      {item.content_title}
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
+                      <div style={{ fontWeight: '500', marginBottom: '0.25rem', color: '#1a1a1a' }}>{item.content_title}</div>
+                      {item.description && (
+                        <div style={{ fontSize: '0.75rem', color: '#666666', lineHeight: '1.4' }}>
+                          {item.description.length > 50 ? `${item.description.substring(0, 50)}...` : item.description}
+                        </div>
+                      )}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                        {item.assigned_to && item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
                      </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.content_deadline ? formatDate(item.content_deadline) : '-'}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.graphic_deadline ? formatDate(item.graphic_deadline) : '-'}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
                       <span style={{
-                        padding: '0.25rem 0.5rem',
-                        background: '#f9f9f9',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
+                        padding: '0.375rem 0.75rem',
+                        background: item.status === 'completed' ? '#10B981' : item.status === 'in_progress' ? '#5884FD' : item.status === 'review' ? '#FFB333' : '#C483D9',
+                        color: '#ffffff',
+                        borderRadius: '12px',
                         fontSize: '0.75rem',
-                        fontWeight: '600'
+                        fontWeight: '500'
                       }}>
                         {getStatusLabel(item.status)}
                       </span>
                     </div>
-                    <div style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
                       <button
                         onClick={() => startEdit(item)}
                         style={{
-                          padding: '0.25rem',
-                          background: 'transparent',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
+                          padding: '0.375rem',
+                          background: '#ffffff',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: '#5884FD',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#5884FD'
+                          e.currentTarget.style.color = '#ffffff'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                          e.currentTarget.style.color = '#5884FD'
                         }}
                       >
                         <PencilIcon style={{ width: '14px', height: '14px' }} />
@@ -802,11 +867,21 @@ export default function ContentCalendarPage() {
                       <button
                         onClick={() => handleDelete(item.id)}
                         style={{
-                          padding: '0.25rem',
-                          background: 'transparent',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
+                          padding: '0.375rem',
+                          background: '#ffffff',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: '#F87239',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#F87239'
+                          e.currentTarget.style.color = '#ffffff'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                          e.currentTarget.style.color = '#F87239'
                         }}
                       >
                         <TrashIcon style={{ width: '14px', height: '14px' }} />
@@ -821,21 +896,33 @@ export default function ContentCalendarPage() {
           {/* Root view message - only show folders, no content table */}
           {!currentFolder && (
             <div style={{
-              background: '#f9f9f9',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '3rem',
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              padding: '4rem',
               textAlign: 'center',
-              color: '#666666'
+              color: '#666666',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
             }}>
-              <FolderIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#999999' }} />
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0 0 1rem 0', color: '#000000' }}>
+              <div style={{ 
+                width: '64px', 
+                height: '64px', 
+                background: '#f0f0f0',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 2rem'
+              }}>
+                <FolderIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
                 Choose a Folder to View Content
               </h3>
-              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0' }}>
+              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', lineHeight: '1.5' }}>
                 Click on a folder above to see its content items and manage your social media content.
               </p>
-              <p style={{ fontSize: '0.9rem', margin: '0' }}>
+              <p style={{ fontSize: '0.9rem', margin: '0', color: '#999999' }}>
                 Create new folders to organize content by month, campaign, or category.
               </p>
             </div>
