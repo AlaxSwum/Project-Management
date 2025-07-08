@@ -3935,159 +3935,294 @@ export default function ProjectDetailPage() {
         {viewMode === 'timeline' && (
           <div className="timeline-view">
             <div className="view-description" style={{
-              background: 'rgba(255, 255, 255, 0.9)',
+              background: '#FEF7ED',
               padding: '2rem',
-              borderRadius: '16px',
-              border: '2px solid rgba(255, 179, 51, 0.2)',
-              marginBottom: '2rem',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+              borderRadius: '20px',
+              border: '1px solid #FED7AA',
+              marginBottom: '2.5rem',
+              boxShadow: '0 4px 16px rgba(251, 146, 60, 0.08)'
             }}>
               <h3 style={{ 
                 fontSize: '1.5rem', 
                 fontWeight: '700', 
-                color: '#FFB333', 
+                color: '#EA580C', 
                 margin: '0 0 0.75rem 0',
                 letterSpacing: '-0.025em'
               }}>Timeline View</h3>
               <p style={{ 
-                color: '#6B7280', 
+                color: '#78716C', 
                 margin: '0', 
                 lineHeight: '1.6',
-                fontSize: '1rem'
+                fontSize: '1rem',
+                fontWeight: '500'
               }}>Track task progress over time with visual progress bars. See start dates, due dates, completion status, and identify overdue tasks at a glance.</p>
             </div>
             
-            <div className="timeline-header-controls" style={{ marginBottom: '2rem' }}>
+            <div className="timeline-header-controls" style={{ marginBottom: '2.5rem' }}>
               <div className="timeline-stats" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.5rem'
+                display: 'flex',
+                gap: '1.5rem',
+                width: '100%',
+                flexWrap: 'nowrap',
+                overflowX: 'auto',
+                paddingBottom: '0.5rem'
               }}>
                 <div className="stat-card" style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  padding: '1.5rem',
-                  borderRadius: '16px',
-                  border: '2px solid #FFB333',
+                  background: '#FEF3C7',
+                  padding: '2rem 1.5rem',
+                  borderRadius: '20px',
+                  border: '1px solid #F59E0B',
                   textAlign: 'center',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-                  transition: 'all 0.3s ease'
+                  boxShadow: '0 4px 16px rgba(245, 158, 11, 0.12)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  flex: '1',
+                  minWidth: '160px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(245, 158, 11, 0.24)';
+                  e.currentTarget.style.background = '#FEF3C7';
+                  e.currentTarget.style.borderColor = '#F59E0B';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(245, 158, 11, 0.12)';
+                  e.currentTarget.style.background = '#FEF3C7';
+                  e.currentTarget.style.borderColor = '#F59E0B';
                 }}>
+                  <div className="stat-icon" style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    width: '32px',
+                    height: '32px',
+                    background: '#F59E0B',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem',
+                    fontWeight: '700',
+                    color: '#FFFFFF'
+                  }}>📋</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2.5rem',
+                    fontWeight: '800',
+                    color: '#92400E',
+                    marginBottom: '0.5rem',
+                    lineHeight: '1'
+                  }}>{tasks.length}</div>
                   <div className="stat-label" style={{
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    color: '#6B7280',
-                    marginBottom: '0.5rem',
+                    color: '#78350F',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
                   }}>Total Tasks</div>
-                  <div className="stat-value" style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#FFB333'
-                  }}>{tasks.length}</div>
                 </div>
+                
                 <div className="stat-card" style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  padding: '1.5rem',
-                  borderRadius: '16px',
-                  border: '2px solid #10B981',
+                  background: '#D1FAE5',
+                  padding: '2rem 1.5rem',
+                  borderRadius: '20px',
+                  border: '1px solid #10B981',
                   textAlign: 'center',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-                  transition: 'all 0.3s ease'
+                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.12)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  flex: '1',
+                  minWidth: '160px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(16, 185, 129, 0.24)';
+                  e.currentTarget.style.background = '#A7F3D0';
+                  e.currentTarget.style.borderColor = '#10B981';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.12)';
+                  e.currentTarget.style.background = '#D1FAE5';
+                  e.currentTarget.style.borderColor = '#10B981';
                 }}>
+                  <div className="stat-icon" style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    width: '32px',
+                    height: '32px',
+                    background: '#10B981',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem',
+                    fontWeight: '700',
+                    color: '#FFFFFF'
+                  }}>✅</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2.5rem',
+                    fontWeight: '800',
+                    color: '#047857',
+                    marginBottom: '0.5rem',
+                    lineHeight: '1'
+                  }}>{tasks.filter(t => t.status === 'done').length}</div>
                   <div className="stat-label" style={{
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    color: '#6B7280',
-                    marginBottom: '0.5rem',
+                    color: '#064E3B',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
                   }}>Completed</div>
-                  <div className="stat-value" style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#10B981'
-                  }}>{tasks.filter(t => t.status === 'done').length}</div>
                 </div>
+                
                 <div className="stat-card" style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  padding: '1.5rem',
-                  borderRadius: '16px',
-                  border: '2px solid #5884FD',
+                  background: '#DBEAFE',
+                  padding: '2rem 1.5rem',
+                  borderRadius: '20px',
+                  border: '1px solid #3B82F6',
                   textAlign: 'center',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-                  transition: 'all 0.3s ease'
+                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.12)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  flex: '1',
+                  minWidth: '160px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(59, 130, 246, 0.24)';
+                  e.currentTarget.style.background = '#BFDBFE';
+                  e.currentTarget.style.borderColor = '#3B82F6';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.12)';
+                  e.currentTarget.style.background = '#DBEAFE';
+                  e.currentTarget.style.borderColor = '#3B82F6';
                 }}>
+                  <div className="stat-icon" style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    width: '32px',
+                    height: '32px',
+                    background: '#3B82F6',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem',
+                    fontWeight: '700',
+                    color: '#FFFFFF'
+                  }}>⚡</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2.5rem',
+                    fontWeight: '800',
+                    color: '#1E40AF',
+                    marginBottom: '0.5rem',
+                    lineHeight: '1'
+                  }}>{tasks.filter(t => t.status === 'in_progress').length}</div>
                   <div className="stat-label" style={{
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    color: '#6B7280',
-                    marginBottom: '0.5rem',
+                    color: '#1E3A8A',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
                   }}>In Progress</div>
-                  <div className="stat-value" style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#5884FD'
-                  }}>{tasks.filter(t => t.status === 'in_progress').length}</div>
                 </div>
+                
                 <div className="stat-card" style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  padding: '1.5rem',
-                  borderRadius: '16px',
-                  border: '2px solid #EF4444',
+                  background: '#FEE2E2',
+                  padding: '2rem 1.5rem',
+                  borderRadius: '20px',
+                  border: '1px solid #EF4444',
                   textAlign: 'center',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-                  transition: 'all 0.3s ease'
+                  boxShadow: '0 4px 16px rgba(239, 68, 68, 0.12)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer',
+                  flex: '1',
+                  minWidth: '160px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(239, 68, 68, 0.24)';
+                  e.currentTarget.style.background = '#FECACA';
+                  e.currentTarget.style.borderColor = '#EF4444';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.12)';
+                  e.currentTarget.style.background = '#FEE2E2';
+                  e.currentTarget.style.borderColor = '#EF4444';
                 }}>
+                  <div className="stat-icon" style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    width: '32px',
+                    height: '32px',
+                    background: '#EF4444',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem',
+                    fontWeight: '700',
+                    color: '#FFFFFF'
+                  }}>⚠️</div>
+                  <div className="stat-value" style={{
+                    fontSize: '2.5rem',
+                    fontWeight: '800',
+                    color: '#DC2626',
+                    marginBottom: '0.5rem',
+                    lineHeight: '1'
+                  }}>{tasks.filter(t => isOverdue(t.due_date)).length}</div>
                   <div className="stat-label" style={{
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    color: '#6B7280',
-                    marginBottom: '0.5rem',
+                    color: '#991B1B',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
                   }}>Overdue</div>
-                  <div className="stat-value" style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#EF4444'
-                  }}>{tasks.filter(t => isOverdue(t.due_date)).length}</div>
                 </div>
               </div>
             </div>
 
             <div className="timeline-grid" style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              border: '2px solid rgba(255, 179, 51, 0.2)',
-              borderRadius: '16px',
+              background: '#FFFFFF',
+              border: '1px solid #F3F4F6',
+              borderRadius: '20px',
               overflow: 'hidden',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
             }}>
               <div className="timeline-grid-header" style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 2fr',
-                background: 'linear-gradient(135deg, #FFB333, #F87239)',
-                color: '#FFFFFF',
+                background: '#FEF3C7',
+                color: '#92400E',
                 fontWeight: '700',
                 padding: '1.5rem',
-                borderBottom: '2px solid rgba(255, 179, 51, 0.3)'
+                borderBottom: '1px solid #FED7AA'
               }}>
                 <div className="timeline-task-column" style={{ 
                   fontSize: '1rem',
-                  letterSpacing: '0.05em'
-                }}>Task</div>
+                  letterSpacing: '0.05em',
+                  fontWeight: '800'
+                }}>Task Details</div>
                 <div className="timeline-chart-column" style={{ 
                   fontSize: '1rem',
-                  letterSpacing: '0.05em'
-                }}>Timeline</div>
+                  letterSpacing: '0.05em',
+                  fontWeight: '800'
+                }}>Progress Timeline</div>
               </div>
               
               <div className="timeline-grid-body" style={{
@@ -4095,17 +4230,26 @@ export default function ProjectDetailPage() {
               }}>
                 {tasks.length === 0 ? (
                   <div style={{ 
-                    padding: '3rem', 
+                    padding: '4rem 3rem', 
                     textAlign: 'center', 
-                    color: '#6B7280',
-                    background: 'rgba(255, 255, 255, 0.5)'
+                    color: '#78716C',
+                    background: '#FEFDFB'
                   }}>
                     <div style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      marginBottom: '0.5rem'
+                      fontSize: '3rem',
+                      marginBottom: '1rem'
+                    }}>📅</div>
+                    <div style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '700',
+                      marginBottom: '0.75rem',
+                      color: '#57534E'
                     }}>No tasks available</div>
-                    <div style={{ fontSize: '0.925rem' }}>Create your first task to see the timeline</div>
+                    <div style={{ 
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      lineHeight: '1.5'
+                    }}>Create your first task to see the beautiful timeline visualization</div>
                   </div>
                 ) : (
                   tasks.map((task) => {
@@ -4119,44 +4263,57 @@ export default function ProjectDetailPage() {
                       <div key={task.id} className="timeline-row" style={{
                         display: 'grid',
                         gridTemplateColumns: '1fr 2fr',
-                        borderBottom: '1px solid rgba(255, 179, 51, 0.1)',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
+                        borderBottom: '1px solid #F3F4F6',
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: 'pointer',
+                        background: 'transparent'
                       }} 
+                      onClick={(e) => handleTaskClick(task, e)}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 179, 51, 0.05)';
+                        e.currentTarget.style.background = '#FEF7ED';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(251, 146, 60, 0.1)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}>
                         <div className="timeline-task-info" style={{
-                          padding: '1.5rem',
-                          borderRight: '1px solid rgba(255, 179, 51, 0.1)'
+                          padding: '2rem 1.5rem',
+                          borderRight: '1px solid #F3F4F6'
                         }}>
                           <div className="task-name" style={{
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            color: '#374151',
-                            marginBottom: '0.75rem',
-                            letterSpacing: '-0.025em'
+                            fontSize: '1.125rem',
+                            fontWeight: '700',
+                            color: '#57534E',
+                            marginBottom: '1rem',
+                            letterSpacing: '-0.025em',
+                            lineHeight: '1.4'
                           }}>{task.name}</div>
                           <div className="task-details" style={{
                             display: 'flex',
                             flexWrap: 'wrap',
-                            gap: '0.75rem',
+                            gap: '0.875rem',
                             alignItems: 'center'
                           }}>
                             <span className={`task-status-badge status-${task.status}`} style={{
-                              padding: '0.375rem 0.875rem',
-                              borderRadius: '8px',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '16px',
                               fontSize: '0.75rem',
-                              fontWeight: '600',
+                              fontWeight: '700',
                               textTransform: 'uppercase',
                               letterSpacing: '0.05em',
-                              background: task.status === 'done' ? '#10B981' : 
-                                         task.status === 'in_progress' ? '#5884FD' : 
-                                         task.status === 'review' ? '#F59E0B' : '#6B7280',
-                              color: '#FFFFFF'
+                              background: task.status === 'done' ? '#D1FAE5' : 
+                                         task.status === 'in_progress' ? '#DBEAFE' : 
+                                         task.status === 'review' ? '#FEF3C7' : '#FEE2E2',
+                              color: task.status === 'done' ? '#047857' : 
+                                     task.status === 'in_progress' ? '#1E40AF' : 
+                                     task.status === 'review' ? '#92400E' : '#DC2626',
+                              border: `2px solid ${task.status === 'done' ? '#10B981' : 
+                                                  task.status === 'in_progress' ? '#3B82F6' : 
+                                                  task.status === 'review' ? '#F59E0B' : '#EF4444'}`,
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
                             }}>
                               {TASK_STATUSES.find(s => s.value === task.status)?.label}
                             </span>
@@ -4166,87 +4323,96 @@ export default function ProjectDetailPage() {
                                 alignItems: 'center', 
                                 gap: '0.5rem',
                                 fontSize: '0.875rem',
-                                color: '#6B7280',
-                                fontWeight: '500'
+                                color: '#78716C',
+                                fontWeight: '600'
                               }}>
                                 {task.assignees && task.assignees.length > 0 ? (
                                   <>
                                     {task.assignees.slice(0, 2).map((assignee, index) => (
                                       <div key={assignee.id} className="assignee-avatar-sm" style={{ 
-                                        width: '24px',
-                                        height: '24px',
+                                        width: '28px',
+                                        height: '28px',
                                         borderRadius: '50%',
-                                        background: index === 0 ? '#FFB333' : '#5884FD',
+                                        background: index === 0 ? '#F59E0B' : '#3B82F6',
                                         color: '#FFFFFF',
                                         fontSize: '0.75rem',
-                                        fontWeight: '600',
+                                        fontWeight: '700',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        marginLeft: index > 0 ? '-8px' : '0',
+                                        marginLeft: index > 0 ? '-10px' : '0',
                                         zIndex: task.assignees.length - index,
                                         position: 'relative',
-                                        border: '2px solid #FFFFFF'
+                                        border: '3px solid #FFFFFF',
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                                       }}>
                                         {assignee.name.charAt(0).toUpperCase()}
                                       </div>
                                     ))}
                                     {task.assignees.length > 2 && (
                                       <div className="assignee-avatar-sm" style={{ 
-                                        width: '24px',
-                                        height: '24px',
+                                        width: '28px',
+                                        height: '28px',
                                         borderRadius: '50%',
-                                        background: '#C483D9',
+                                        background: '#10B981',
                                         color: '#FFFFFF',
                                         fontSize: '0.75rem',
-                                        fontWeight: '600',
+                                        fontWeight: '700',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        marginLeft: '-8px',
-                                        border: '2px solid #FFFFFF',
-                                        zIndex: 1
+                                        marginLeft: '-10px',
+                                        border: '3px solid #FFFFFF',
+                                        zIndex: 1,
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                                       }}>
                                         +{task.assignees.length - 2}
                                       </div>
                                     )}
-                                    <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#374151' }}>
+                                    <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#57534E', fontWeight: '600' }}>
                                       {task.assignees.length === 1 ? task.assignees[0].name : `${task.assignees.length} assignees`}
                                     </span>
                                   </>
                                 ) : task.assignee ? (
                                   <>
                                     <div className="assignee-avatar-sm" style={{
-                                      width: '24px',
-                                      height: '24px',
+                                      width: '28px',
+                                      height: '28px',
                                       borderRadius: '50%',
-                                      background: '#FFB333',
+                                      background: '#F59E0B',
                                       color: '#FFFFFF',
                                       fontSize: '0.75rem',
-                                      fontWeight: '600',
+                                      fontWeight: '700',
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                      border: '2px solid #FFFFFF'
+                                      border: '3px solid #FFFFFF',
+                                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                                     }}>
                                       {task.assignee.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <span style={{ color: '#374151' }}>{task.assignee.name}</span>
+                                    <span style={{ color: '#57534E', fontWeight: '600' }}>{task.assignee.name}</span>
                                   </>
                                 ) : null}
                               </span>
                             )}
                             <span className={`task-priority priority-${task.priority}`} style={{
-                              padding: '0.375rem 0.875rem',
-                              borderRadius: '8px',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '16px',
                               fontSize: '0.75rem',
-                              fontWeight: '600',
+                              fontWeight: '700',
                               textTransform: 'uppercase',
                               letterSpacing: '0.05em',
-                              background: task.priority === 'high' ? '#EF4444' : 
-                                         task.priority === 'medium' ? '#F59E0B' : 
-                                         task.priority === 'urgent' ? '#DC2626' : '#10B981',
-                              color: '#FFFFFF'
+                              background: task.priority === 'urgent' ? '#FEE2E2' : 
+                                         task.priority === 'high' ? '#FEF3C7' : 
+                                         task.priority === 'medium' ? '#DBEAFE' : '#F9FAFB',
+                              color: task.priority === 'urgent' ? '#DC2626' : 
+                                     task.priority === 'high' ? '#92400E' : 
+                                     task.priority === 'medium' ? '#1E40AF' : '#6B7280',
+                              border: `2px solid ${task.priority === 'urgent' ? '#EF4444' : 
+                                                  task.priority === 'high' ? '#F59E0B' : 
+                                                  task.priority === 'medium' ? '#3B82F6' : '#D1D5DB'}`,
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
                             }}>
                               {task.priority}
                             </span>
@@ -4254,21 +4420,43 @@ export default function ProjectDetailPage() {
                                 </div>
 
                         <div className="timeline-chart" style={{
-                          padding: '1.5rem'
+                          padding: '2rem 1.5rem'
                         }}>
                           <div className="timeline-bar-container" style={{
-                            marginBottom: '1rem'
+                            marginBottom: '1.5rem'
                           }}>
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginBottom: '0.75rem'
+                            }}>
+                              <span style={{
+                                fontSize: '0.875rem',
+                                fontWeight: '700',
+                                color: '#57534E'
+                              }}>Progress: {progress}%</span>
+                              <span style={{
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                color: '#78716C',
+                                background: '#F9FAFB',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                border: '1px solid #E5E7EB'
+                              }}>{progress === 100 ? 'Complete' : progress >= 80 ? 'Nearly Done' : progress >= 50 ? 'In Progress' : 'Getting Started'}</span>
+                            </div>
                             <div 
                               className="timeline-bar"
                               style={{
                                 width: '100%',
-                                height: '12px',
-                                background: 'rgba(255, 179, 51, 0.1)',
-                                borderRadius: '8px',
+                                height: '16px',
+                                background: '#F3F4F6',
+                                borderRadius: '12px',
                                 overflow: 'hidden',
-                                border: '2px solid rgba(255, 179, 51, 0.2)',
-                                position: 'relative'
+                                border: '1px solid #E5E7EB',
+                                position: 'relative',
+                                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)'
                               }}
                             >
                               <div 
@@ -4276,14 +4464,13 @@ export default function ProjectDetailPage() {
                                 style={{ 
                                   width: `${Math.max(progress, 5)}%`,
                                   height: '100%',
-                                  background: task.status === 'done' ? 'linear-gradient(90deg, #10B981, #059669)' : 
-                                             task.status === 'in_progress' ? 'linear-gradient(90deg, #5884FD, #3B82F6)' : 
-                                             task.status === 'review' ? 'linear-gradient(90deg, #F59E0B, #D97706)' : 
-                                             'linear-gradient(90deg, #FFB333, #F87239)',
-                                  borderRadius: '6px',
-                                  transition: 'width 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+                                  background: task.status === 'done' ? '#10B981' : 
+                                             task.status === 'in_progress' ? '#3B82F6' : 
+                                             task.status === 'review' ? '#F59E0B' : '#F59E0B',
+                                  borderRadius: '12px',
+                                  transition: 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
                                   position: 'relative',
-                                  overflow: 'hidden'
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                                 }}
                               >
                                 <div style={{
@@ -4292,8 +4479,8 @@ export default function ProjectDetailPage() {
                                   left: 0,
                                   right: 0,
                                   bottom: 0,
-                                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
-                                  animation: 'shimmer 2s infinite'
+                                  background: 'rgba(255, 255, 255, 0.2)',
+                                  borderRadius: '12px'
                                 }} />
                               </div>
                             </div>
@@ -4301,18 +4488,31 @@ export default function ProjectDetailPage() {
                               display: 'flex',
                               justifyContent: 'space-between',
                               fontSize: '0.875rem',
-                              marginTop: '0.75rem'
+                              marginTop: '1rem',
+                              gap: '1rem'
                             }}>
                               <span className="start-date" style={{
-                                color: '#6B7280',
-                                fontWeight: '500'
+                                color: '#78716C',
+                                fontWeight: '600',
+                                background: '#F9FAFB',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '12px',
+                                border: '1px solid #E5E7EB',
+                                flex: '1',
+                                textAlign: 'center'
                               }}>
                                 Start: {startDate.toLocaleDateString()}
                               </span>
                               {dueDate && (
                                 <span className={`due-date ${isOverdue(task.due_date) ? 'overdue' : ''}`} style={{
-                                  color: isOverdue(task.due_date) ? '#EF4444' : '#6B7280',
-                                  fontWeight: '500'
+                                  color: isOverdue(task.due_date) ? '#DC2626' : '#78716C',
+                                  fontWeight: '600',
+                                  background: isOverdue(task.due_date) ? '#FEE2E2' : '#F9FAFB',
+                                  padding: '0.5rem 1rem',
+                                  borderRadius: '12px',
+                                  border: `1px solid ${isOverdue(task.due_date) ? '#EF4444' : '#E5E7EB'}`,
+                                  flex: '1',
+                                  textAlign: 'center'
                                 }}>
                                   Due: {dueDate.toLocaleDateString()}
                                 </span>
@@ -4327,31 +4527,91 @@ export default function ProjectDetailPage() {
                   </div>
             </div>
             
-            <div className="timeline-info" style={{ marginTop: '2rem' }}>
+            <div className="timeline-info" style={{ marginTop: '2.5rem' }}>
               <div className="info-card" style={{ 
-                background: 'rgba(255, 255, 255, 0.9)', 
-                border: '2px solid rgba(255, 179, 51, 0.2)', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+                background: '#FEF7ED', 
+                border: '1px solid #FED7AA', 
+                borderRadius: '20px', 
+                padding: '2rem', 
+                boxShadow: '0 4px 16px rgba(251, 146, 60, 0.08)'
               }}>
-                <h4 style={{ 
-                  fontSize: '1rem', 
-                  fontWeight: '700', 
-                  color: '#FFB333', 
-                  margin: '0 0 0.75rem 0',
-                  letterSpacing: '-0.025em'
-                }}>Progress Indicators</h4>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '1rem'
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: '#F59E0B',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem'
+                  }}>📊</div>
+                  <h4 style={{ 
+                    fontSize: '1.125rem', 
+                    fontWeight: '800', 
+                    color: '#EA580C', 
+                    margin: '0',
+                    letterSpacing: '-0.025em'
+                  }}>Progress Guide</h4>
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1rem'
+                }}>
+                  <div style={{
+                    background: '#FEF3C7',
+                    padding: '0.75rem',
+                    borderRadius: '12px',
+                    border: '1px solid #F59E0B'
+                  }}>
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#92400E', marginBottom: '0.25rem' }}>Getting Started (10%)</div>
+                    <div style={{ fontSize: '0.75rem', color: '#78350F' }}>Task planning phase</div>
+                  </div>
+                  <div style={{
+                    background: '#DBEAFE',
+                    padding: '0.75rem',
+                    borderRadius: '12px',
+                    border: '1px solid #3B82F6'
+                  }}>
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#1E40AF', marginBottom: '0.25rem' }}>In Progress (50%)</div>
+                    <div style={{ fontSize: '0.75rem', color: '#1E3A8A' }}>Actively working</div>
+                  </div>
+                  <div style={{
+                    background: '#FEF3C7',
+                    padding: '0.75rem',
+                    borderRadius: '12px',
+                    border: '1px solid #F59E0B'
+                  }}>
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#92400E', marginBottom: '0.25rem' }}>Nearly Done (80%)</div>
+                    <div style={{ fontSize: '0.75rem', color: '#78350F' }}>Under review</div>
+                  </div>
+                  <div style={{
+                    background: '#D1FAE5',
+                    padding: '0.75rem',
+                    borderRadius: '12px',
+                    border: '1px solid #10B981'
+                  }}>
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#047857', marginBottom: '0.25rem' }}>Complete (100%)</div>
+                    <div style={{ fontSize: '0.75rem', color: '#064E3B' }}>Task finished</div>
+                  </div>
+                </div>
                 <p style={{ 
                   fontSize: '0.925rem', 
                   margin: '0', 
-                  color: '#6B7280', 
+                  color: '#78716C', 
                   lineHeight: '1.6',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  textAlign: 'center'
                 }}>
-                  Progress bars show completion status: <strong style={{ color: '#6B7280' }}>To Do (10%)</strong>, <strong style={{ color: '#5884FD' }}>In Progress (50%)</strong>, 
-                  <strong style={{ color: '#F59E0B' }}>Review (80%)</strong>, <strong style={{ color: '#10B981' }}>Done (100%)</strong>. Overdue tasks are highlighted in <strong style={{ color: '#EF4444' }}>red</strong>.
+                  Tasks are automatically color-coded by status. Overdue items are highlighted with a red border for immediate attention.
                 </p>
               </div>
             </div>
