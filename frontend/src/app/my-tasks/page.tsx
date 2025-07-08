@@ -709,44 +709,79 @@ export default function MyTasksPage() {
             gap: 0.75rem;
           }
           .filter-label {
-            font-weight: 500;
+            font-weight: 600;
             color: #1a1a1a;
             font-size: 1rem;
             letter-spacing: -0.01em;
+            margin-bottom: 0.75rem;
+            display: block;
           }
           .search-input {
             width: 100%;
-            padding: 0.9rem;
-            border: 1px solid #e8e8e8;
-            border-radius: 12px;
+            padding: 0.9rem 3rem 0.9rem 1rem;
+            border: 2px solid #e8e8e8;
+            border-radius: 16px;
             font-size: 0.95rem;
             box-sizing: border-box;
-            background: #fafafa;
+            background: #ffffff;
             color: #1a1a1a;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          }
+          .search-input:hover {
+            border-color: #C483D9;
+            background: #fafafa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(196, 131, 217, 0.15);
           }
           .search-input:focus {
             outline: none;
             border-color: #5884FD;
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(88, 132, 253, 0.1);
+            box-shadow: 0 0 0 4px rgba(88, 132, 253, 0.1), 0 4px 16px rgba(88, 132, 253, 0.2);
+            transform: translateY(-2px);
+          }
+          .search-input:active {
+            transform: translateY(0);
           }
           .filter-select {
             width: 100%;
-            padding: 0.9rem;
-            border: 1px solid #e8e8e8;
-            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            border: 2px solid #e8e8e8;
+            border-radius: 16px;
             font-size: 0.95rem;
             box-sizing: border-box;
-            background: #fafafa;
+            background: #ffffff;
             color: #1a1a1a;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 1rem center;
+            background-repeat: no-repeat;
+            background-size: 1rem;
+            padding-right: 3rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          }
+          .filter-select:hover {
+            border-color: #C483D9;
+            background: #fafafa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(196, 131, 217, 0.15);
           }
           .filter-select:focus {
             outline: none;
             border-color: #5884FD;
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(88, 132, 253, 0.1);
+            box-shadow: 0 0 0 4px rgba(88, 132, 253, 0.1), 0 4px 16px rgba(88, 132, 253, 0.2);
+            transform: translateY(-2px);
+          }
+          .filter-select:active {
+            transform: translateY(0);
           }
           .tasks-section {
             padding: 0 2rem 2rem 2rem;
@@ -1294,12 +1329,14 @@ export default function MyTasksPage() {
               gap: 1rem;
             }
             .search-input {
-              padding: 0.875rem;
+              padding: 0.875rem 3rem 0.875rem 1rem;
               font-size: 1rem;
+              border-radius: 12px;
             }
             .filter-select {
-              padding: 0.875rem;
+              padding: 0.875rem 3rem 0.875rem 1rem;
               font-size: 1rem;
+              border-radius: 12px;
             }
             .tasks-section {
               padding: 0 1rem 1rem 1rem;
@@ -1532,18 +1569,34 @@ export default function MyTasksPage() {
                 <button
                   onClick={() => setViewMode('list')}
                   style={{
-                    padding: '0.75rem 1rem',
+                    padding: '0.75rem 1.25rem',
                     background: viewMode === 'list' ? '#5884FD' : '#ffffff',
                     color: viewMode === 'list' ? '#ffffff' : '#666666',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
+                    border: '2px solid #e8e8e8',
+                    borderRadius: '12px',
                     fontSize: '0.9rem',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    letterSpacing: '-0.01em',
+                    boxShadow: viewMode === 'list' ? '0 4px 12px rgba(88, 132, 253, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.04)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (viewMode !== 'list') {
+                      e.currentTarget.style.borderColor = '#C483D9';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.15)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (viewMode !== 'list') {
+                      e.currentTarget.style.borderColor = '#e8e8e8';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                    }
                   }}
                 >
                   <ListBulletIcon style={{ width: '16px', height: '16px' }} />
@@ -1552,18 +1605,34 @@ export default function MyTasksPage() {
                 <button
                   onClick={() => setViewMode('calendar')}
                   style={{
-                    padding: '0.75rem 1rem',
+                    padding: '0.75rem 1.25rem',
                     background: viewMode === 'calendar' ? '#5884FD' : '#ffffff',
                     color: viewMode === 'calendar' ? '#ffffff' : '#666666',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
+                    border: '2px solid #e8e8e8',
+                    borderRadius: '12px',
                     fontSize: '0.9rem',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    letterSpacing: '-0.01em',
+                    boxShadow: viewMode === 'calendar' ? '0 4px 12px rgba(88, 132, 253, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.04)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (viewMode !== 'calendar') {
+                      e.currentTarget.style.borderColor = '#C483D9';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.15)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (viewMode !== 'calendar') {
+                      e.currentTarget.style.borderColor = '#e8e8e8';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                    }
                   }}
                 >
                   <CalendarIcon style={{ width: '16px', height: '16px' }} />
@@ -1678,12 +1747,13 @@ export default function MyTasksPage() {
                   <MagnifyingGlassIcon 
                     style={{ 
                       position: 'absolute', 
-                      right: '12px', 
+                      right: '1rem', 
                       top: '50%', 
                       transform: 'translateY(-50%)', 
-                      width: '16px', 
-                      height: '16px', 
-                      color: '#9ca3af' 
+                      width: '18px', 
+                      height: '18px', 
+                      color: '#666666',
+                      pointerEvents: 'none'
                     }} 
                   />
                 </div>
