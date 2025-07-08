@@ -3960,12 +3960,12 @@ export default function ProjectDetailPage() {
             
             <div className="timeline-header-controls" style={{ marginBottom: '2.5rem' }}>
               <div className="timeline-stats" style={{
-                display: 'flex',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: '1.5rem',
                 width: '100%',
-                flexWrap: 'nowrap',
-                overflowX: 'auto',
-                paddingBottom: '0.5rem'
+                maxWidth: '1400px',
+                margin: '0 auto'
               }}>
                 <div className="stat-card" style={{
                   background: '#FEF3C7',
@@ -4000,14 +4000,15 @@ export default function ProjectDetailPage() {
                     width: '32px',
                     height: '32px',
                     background: '#F59E0B',
-                    borderRadius: '50%',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: '700',
-                    color: '#FFFFFF'
-                  }}>📋</div>
+                    color: '#FFFFFF',
+                    letterSpacing: '0.05em'
+                  }}>ALL</div>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4057,14 +4058,15 @@ export default function ProjectDetailPage() {
                     width: '32px',
                     height: '32px',
                     background: '#10B981',
-                    borderRadius: '50%',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: '700',
-                    color: '#FFFFFF'
-                  }}>✅</div>
+                    color: '#FFFFFF',
+                    letterSpacing: '0.05em'
+                  }}>OK</div>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4114,14 +4116,15 @@ export default function ProjectDetailPage() {
                     width: '32px',
                     height: '32px',
                     background: '#3B82F6',
-                    borderRadius: '50%',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: '700',
-                    color: '#FFFFFF'
-                  }}>⚡</div>
+                    color: '#FFFFFF',
+                    letterSpacing: '0.05em'
+                  }}>IP</div>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4171,14 +4174,15 @@ export default function ProjectDetailPage() {
                     width: '32px',
                     height: '32px',
                     background: '#EF4444',
-                    borderRadius: '50%',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: '700',
-                    color: '#FFFFFF'
-                  }}>⚠️</div>
+                    color: '#FFFFFF',
+                    letterSpacing: '0.05em'
+                  }}>DUE</div>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4429,34 +4433,22 @@ export default function ProjectDetailPage() {
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'center',
-                              marginBottom: '0.75rem'
+                              marginBottom: '1rem'
                             }}>
                               <span style={{
                                 fontSize: '0.875rem',
-                                fontWeight: '700',
-                                color: '#57534E'
-                              }}>Progress: {progress}%</span>
-                              <span style={{
-                                fontSize: '0.75rem',
                                 fontWeight: '600',
-                                color: '#78716C',
-                                background: '#F9FAFB',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '12px',
-                                border: '1px solid #E5E7EB'
-                              }}>{progress === 100 ? 'Complete' : progress >= 80 ? 'Nearly Done' : progress >= 50 ? 'In Progress' : 'Getting Started'}</span>
+                                color: '#57534E'
+                              }}>{progress}% Complete</span>
                             </div>
                             <div 
                               className="timeline-bar"
                               style={{
                                 width: '100%',
-                                height: '16px',
+                                height: '4px',
                                 background: '#F3F4F6',
-                                borderRadius: '12px',
                                 overflow: 'hidden',
-                                border: '1px solid #E5E7EB',
-                                position: 'relative',
-                                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)'
+                                position: 'relative'
                               }}
                             >
                               <div 
@@ -4467,55 +4459,38 @@ export default function ProjectDetailPage() {
                                   background: task.status === 'done' ? '#10B981' : 
                                              task.status === 'in_progress' ? '#3B82F6' : 
                                              task.status === 'review' ? '#F59E0B' : '#F59E0B',
-                                  borderRadius: '12px',
-                                  transition: 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
-                                  position: 'relative',
-                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  position: 'relative'
                                 }}
-                              >
-                                <div style={{
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 0,
-                                  background: 'rgba(255, 255, 255, 0.2)',
-                                  borderRadius: '12px'
-                                }} />
-                              </div>
+                              />
                             </div>
                             <div className="timeline-dates" style={{
                               display: 'flex',
                               justifyContent: 'space-between',
-                              fontSize: '0.875rem',
+                              fontSize: '0.75rem',
                               marginTop: '1rem',
-                              gap: '1rem'
+                              color: '#78716C'
                             }}>
-                              <span className="start-date" style={{
-                                color: '#78716C',
-                                fontWeight: '600',
-                                background: '#F9FAFB',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '12px',
-                                border: '1px solid #E5E7EB',
-                                flex: '1',
-                                textAlign: 'center'
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
                               }}>
-                                Start: {startDate.toLocaleDateString()}
-                              </span>
+                                <span style={{ fontWeight: '600' }}>Start:</span>
+                                <span>{startDate.toLocaleDateString()}</span>
+                              </div>
                               {dueDate && (
-                                <span className={`due-date ${isOverdue(task.due_date) ? 'overdue' : ''}`} style={{
-                                  color: isOverdue(task.due_date) ? '#DC2626' : '#78716C',
-                                  fontWeight: '600',
-                                  background: isOverdue(task.due_date) ? '#FEE2E2' : '#F9FAFB',
-                                  padding: '0.5rem 1rem',
-                                  borderRadius: '12px',
-                                  border: `1px solid ${isOverdue(task.due_date) ? '#EF4444' : '#E5E7EB'}`,
-                                  flex: '1',
-                                  textAlign: 'center'
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem'
                                 }}>
-                                  Due: {dueDate.toLocaleDateString()}
-                                </span>
+                                  <span style={{ fontWeight: '600' }}>Due:</span>
+                                  <span style={{
+                                    color: isOverdue(task.due_date) ? '#DC2626' : '#78716C',
+                                    fontWeight: isOverdue(task.due_date) ? '600' : 'normal'
+                                  }}>{dueDate.toLocaleDateString()}</span>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -4544,14 +4519,15 @@ export default function ProjectDetailPage() {
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    borderRadius: '50%',
+                    borderRadius: '12px',
                     background: '#F59E0B',
                     color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.25rem'
-                  }}>📊</div>
+                    fontSize: '1.25rem',
+                    fontWeight: '700'
+                  }}>P</div>
                   <h4 style={{ 
                     fontSize: '1.125rem', 
                     fontWeight: '800', 
@@ -4562,45 +4538,47 @@ export default function ProjectDetailPage() {
                 </div>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: '1rem',
-                  marginBottom: '1rem'
+                  marginBottom: '1.5rem',
+                  maxWidth: '1400px',
+                  margin: '0 auto'
                 }}>
                   <div style={{
-                    background: '#FEF3C7',
-                    padding: '0.75rem',
-                    borderRadius: '12px',
-                    border: '1px solid #F59E0B'
+                    background: '#FFFFFF',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    borderLeft: '4px solid #F59E0B'
                   }}>
-                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#92400E', marginBottom: '0.25rem' }}>Getting Started (10%)</div>
-                    <div style={{ fontSize: '0.75rem', color: '#78350F' }}>Task planning phase</div>
+                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>Planning</div>
+                    <div style={{ fontSize: '1.125rem', color: '#92400E', fontWeight: '700' }}>10%</div>
                   </div>
                   <div style={{
-                    background: '#DBEAFE',
-                    padding: '0.75rem',
-                    borderRadius: '12px',
-                    border: '1px solid #3B82F6'
+                    background: '#FFFFFF',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    borderLeft: '4px solid #3B82F6'
                   }}>
-                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#1E40AF', marginBottom: '0.25rem' }}>In Progress (50%)</div>
-                    <div style={{ fontSize: '0.75rem', color: '#1E3A8A' }}>Actively working</div>
+                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>In Progress</div>
+                    <div style={{ fontSize: '1.125rem', color: '#1E40AF', fontWeight: '700' }}>50%</div>
                   </div>
                   <div style={{
-                    background: '#FEF3C7',
-                    padding: '0.75rem',
-                    borderRadius: '12px',
-                    border: '1px solid #F59E0B'
+                    background: '#FFFFFF',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    borderLeft: '4px solid #F59E0B'
                   }}>
-                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#92400E', marginBottom: '0.25rem' }}>Nearly Done (80%)</div>
-                    <div style={{ fontSize: '0.75rem', color: '#78350F' }}>Under review</div>
+                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>Review</div>
+                    <div style={{ fontSize: '1.125rem', color: '#92400E', fontWeight: '700' }}>80%</div>
                   </div>
                   <div style={{
-                    background: '#D1FAE5',
-                    padding: '0.75rem',
-                    borderRadius: '12px',
-                    border: '1px solid #10B981'
+                    background: '#FFFFFF',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    borderLeft: '4px solid #10B981'
                   }}>
-                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#047857', marginBottom: '0.25rem' }}>Complete (100%)</div>
-                    <div style={{ fontSize: '0.75rem', color: '#064E3B' }}>Task finished</div>
+                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>Complete</div>
+                    <div style={{ fontSize: '1.125rem', color: '#047857', fontWeight: '700' }}>100%</div>
                   </div>
                 </div>
                 <p style={{ 
