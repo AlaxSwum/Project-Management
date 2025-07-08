@@ -397,20 +397,34 @@ export default function PersonalCalendarPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       
+      // Convert datetime-local format to date and time
+      const startDate = new Date(newEvent.start_datetime);
+      const endDate = new Date(newEvent.end_datetime);
+      
+      const dateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const timeStr = startDate.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+      const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
+      
+      // Create a meeting in the timetable
       const { data, error } = await supabase
-        .from('personal_events')
+        .from('projects_meeting')
         .insert([{
-          user_id: user?.id,
           title: newEvent.title,
-          description: newEvent.description,
-          start_datetime: newEvent.start_datetime,
-          end_datetime: newEvent.end_datetime,
-          all_day: newEvent.all_day,
-          location: newEvent.location,
-          event_type: newEvent.event_type,
-          priority: newEvent.priority,
+          description: newEvent.description || '',
+          date: dateStr,
+          time: timeStr,
+          duration: duration,
+          location: newEvent.location || 'Personal Calendar',
           color: newEvent.color,
-          status: 'confirmed'
+          event_type: newEvent.event_type,
+          all_day: newEvent.all_day,
+          project_id: null, // Personal events don't need a project
+          attendees: [{
+            id: user?.id || '',
+            name: user?.name || user?.email || 'Me',
+            email: user?.email || ''
+          }],
+          attendee_ids: [user?.id || '']
         }])
         .select()
         .single();
@@ -436,7 +450,7 @@ export default function PersonalCalendarPage() {
       
     } catch (err: any) {
       console.error('Error creating event:', err);
-      setError('Failed to create event');
+      setError('Failed to create event: ' + err.message);
     }
   };
 
@@ -1264,7 +1278,7 @@ export default function PersonalCalendarPage() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
                     Type
@@ -1285,28 +1299,9 @@ export default function PersonalCalendarPage() {
                     <option value="meeting">Meeting</option>
                     <option value="appointment">Appointment</option>
                     <option value="reminder">Reminder</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                    Priority
-                  </label>
-                  <select
-                    value={newEvent.priority}
-                    onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="task">Task</option>
+                    <option value="break">Break</option>
+                    <option value="focus">Focus Time</option>
                   </select>
                 </div>
 
@@ -1314,20 +1309,38 @@ export default function PersonalCalendarPage() {
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
                     Color
                   </label>
-                  <input
-                    type="color"
-                    value={newEvent.color}
-                    onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
-                    style={{
-                      width: '100%',
-                      height: '44px',
-                      padding: '0.25rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      boxSizing: 'border-box'
-                    }}
-                  />
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      type="color"
+                      value={newEvent.color}
+                      onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
+                      style={{
+                        width: '46px',
+                        height: '46px',
+                        padding: '0',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                      {['#5884FD', '#C483D9', '#F87239', '#FFB333', '#10b981', '#ef4444', '#8b5cf6'].map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setNewEvent({ ...newEvent, color })}
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            backgroundColor: color,
+                            border: newEvent.color === color ? '2px solid #000' : '1px solid #e0e0e0',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
