@@ -53,7 +53,7 @@ export default function PersonalCalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [settings, setSettings] = useState<CalendarSettings>({
     default_view: 'week',
-    time_format: '12h',
+    time_format: '24h',
     start_hour: 0,
     end_hour: 23,
     first_day_of_week: 0,
