@@ -93,10 +93,9 @@ export default function ProjectDetailPage() {
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt' | 'todo'>('board');
   const [ganttView, setGanttView] = useState<'task' | 'gantt'>('task');
   const [timelineStartDate, setTimelineStartDate] = useState<Date>(() => {
-    // Start from the 1st day of current month
+    // Start from January 1st of current year
     const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    return firstDayOfMonth;
+    return new Date(today.getFullYear(), 0, 1);
   });
   const [showCreateTask, setShowCreateTask] = useState(false);
 
@@ -127,6 +126,20 @@ export default function ProjectDetailPage() {
     }
     fetchProject();
   }, [isAuthenticated, authLoading, params?.id, router]);
+
+  useEffect(() => {
+    // Auto-scroll to current week when gantt view is opened
+    if (ganttView === 'gantt' && tasks.length > 0) {
+      setTimeout(() => {
+        const currentWeek = getWeekNumber(new Date());
+        const scrollPosition = (currentWeek - 1) * 40 - 200; // Center the current week
+        const timelineElement = document.querySelector('.gantt-timeline-enhanced');
+        if (timelineElement) {
+          timelineElement.scrollLeft = Math.max(0, scrollPosition);
+        }
+      }, 100);
+    }
+  }, [ganttView, tasks]);
 
   const fetchProject = async () => {
     try {
@@ -332,16 +345,39 @@ export default function ProjectDetailPage() {
     return diffDays;
   };
 
-  const handlePreviousMonth = () => {
+  const handlePreviousYear = () => {
     const newDate = new Date(timelineStartDate);
-    newDate.setMonth(newDate.getMonth() - 1, 1); // Go to 1st day of previous month
+    newDate.setFullYear(newDate.getFullYear() - 1);
     setTimelineStartDate(newDate);
   };
 
-  const handleNextMonth = () => {
+  const handleNextYear = () => {
     const newDate = new Date(timelineStartDate);
-    newDate.setMonth(newDate.getMonth() + 1, 1); // Go to 1st day of next month
+    newDate.setFullYear(newDate.getFullYear() + 1);
     setTimelineStartDate(newDate);
+  };
+
+  const getProjectStartDate = () => {
+    if (!tasks || tasks.length === 0) return timelineStartDate;
+    
+    const taskDates = tasks
+      .map(task => task.start_date ? new Date(task.start_date) : null)
+      .filter(date => date !== null)
+      .sort((a, b) => a!.getTime() - b!.getTime());
+    
+    if (taskDates.length > 0) {
+      const earliestTask = taskDates[0]!;
+      // Start from the beginning of the year containing the earliest task
+      return new Date(earliestTask.getFullYear(), 0, 1);
+    }
+    
+    return timelineStartDate;
+  };
+
+  const getWeekNumber = (date: Date) => {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date.getTime() - startOfYear.getTime()) / 86400000;
+    return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
   };
 
   // Show loading state while auth is initializing
@@ -5020,7 +5056,7 @@ export default function ProjectDetailPage() {
                     border: '2px solid #E5E7EB'
                   }}>
                     <button 
-                      onClick={handlePreviousMonth}
+                      onClick={handlePreviousYear}
                       style={{
                         padding: '0.5rem',
                         background: 'transparent',
@@ -5049,10 +5085,10 @@ export default function ProjectDetailPage() {
                       minWidth: '140px',
                       textAlign: 'center'
                     }}>
-                      {timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      {timelineStartDate.getFullYear()}
                     </span>
                     <button 
-                      onClick={handleNextMonth}
+                      onClick={handleNextYear}
                       style={{
                         padding: '0.5rem',
                         background: 'transparent',
@@ -5080,89 +5116,57 @@ export default function ProjectDetailPage() {
             <div className="gantt-chart-enhanced" style={{
               width: '100%',
               maxWidth: '100%',
-              overflow: 'visible'
+              overflow: 'visible',
+              background: '#ffffff',
+              borderRadius: '12px',
+              border: '2px solid #E5E7EB'
             }}>
               <div className="gantt-timeline-enhanced" style={{ 
                 width: '100%', 
                 maxWidth: '100%',
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                border: '2px solid #E5E7EB',
-                borderRadius: '12px',
                 boxSizing: 'border-box',
-                scrollbarWidth: 'thin'
+                scrollbarWidth: 'thin',
+                background: '#ffffff'
               }}>
-                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '1120px' }}>
-                  <div className="gantt-month-header" style={{
+                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2080px' }}>
+                  <div className="gantt-year-header" style={{
                     background: '#F9FAFB',
                     padding: '1rem',
                     borderBottom: '2px solid #E5E7EB',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 10
                   }}>
-                    <div className="month-label" style={{
+                    <div className="year-label" style={{
                       fontSize: '1.25rem',
                       fontWeight: '700',
                       color: '#1F2937'
-                    }}>{timelineStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                    }}>{timelineStartDate.getFullYear()}</div>
                   </div>
-                  <div className="gantt-week-headers" style={{ display: 'flex', width: '1120px' }}>
-                    {Array.from({ length: 4 }, (_, weekIndex) => {
-                      // Calculate week start from timelineStartDate (1st of month)
-                      const startOfWeek = new Date(timelineStartDate);
-                      startOfWeek.setDate(timelineStartDate.getDate() + (weekIndex * 7));
-                      
-                      // Use simple month-based week numbering (Week 1, 2, 3, 4)
-                      const monthWeekNumber = weekIndex + 1;
+                  <div className="gantt-week-headers" style={{ display: 'flex', width: '2080px' }}>
+                    {Array.from({ length: 52 }, (_, weekIndex) => {
+                      const weekNumber = weekIndex + 1;
+                      const startOfWeek = new Date(timelineStartDate.getFullYear(), 0, 1 + (weekIndex * 7));
                       
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
-                          width: '280px',
-                          padding: '0.75rem',
-                          borderRight: weekIndex < 3 ? '1px solid #E5E7EB' : 'none',
+                          width: '40px',
+                          minWidth: '40px',
+                          padding: '0.75rem 0.25rem',
+                          borderRight: weekIndex < 51 ? '1px solid #E5E7EB' : 'none',
                           fontWeight: '700',
                           textAlign: 'center',
                           background: '#F9FAFB',
                           boxSizing: 'border-box',
-                          color: '#374151'
+                          color: '#374151',
+                          fontSize: '0.75rem'
                         }}>
-                          Week {monthWeekNumber}
-                          <div style={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: '500' }}>
+                          W{weekNumber}
+                          <div style={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: '500', marginTop: '0.25rem' }}>
                             {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="gantt-date-grid" style={{ display: 'flex', width: '1120px' }}>
-                    {Array.from({ length: 28 }, (_, i) => {
-                      // Calculate date from timelineStartDate
-                      const date = new Date(timelineStartDate);
-                      date.setDate(timelineStartDate.getDate() + i);
-                      
-                      const isToday = date.toDateString() === new Date().toDateString();
-                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                      
-                      return (
-                        <div 
-                          key={i} 
-                          className={`gantt-date-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}
-                          style={{
-                            width: '40px',
-                            minWidth: '40px',
-                            maxWidth: '40px',
-                            padding: '0.5rem',
-                            borderRight: i < 27 ? '1px solid #E5E7EB' : 'none',
-                            borderBottom: '1px solid #E5E7EB',
-                            textAlign: 'center',
-                            background: isToday ? '#FEF3C7' : isWeekend ? '#F9FAFB' : '#ffffff',
-                            boxSizing: 'border-box'
-                          }}
-                        >
-                          <div className="date-number" style={{ fontWeight: '600', fontSize: '0.9rem' }}>
-                            {date.getDate()}
-                          </div>
-                          <div className="date-day" style={{ fontSize: '0.7rem', color: '#666666' }}>
-                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
                           </div>
                         </div>
                       );
@@ -5171,121 +5175,129 @@ export default function ProjectDetailPage() {
                 </div>
                 
                 <div className="gantt-grid-container" style={{ 
-                  minWidth: '1120px',
+                  minWidth: '2080px',
                   position: 'relative',
-                  minHeight: tasks.length > 0 ? `${tasks.length * 40}px` : '200px'
+                  minHeight: tasks.length > 0 ? `${tasks.length * 50}px` : '200px',
+                  background: '#ffffff'
                 }}>
                   <div className="gantt-vertical-grid" style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: '1120px',
+                    width: '2080px',
                     height: '100%',
                     pointerEvents: 'none',
                     zIndex: 1
                   }}>
-                    {Array.from({ length: 29 }, (_, i) => (
+                    {Array.from({ length: 53 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
                         left: `${(i * 40)}px`,
                         top: 0,
                         height: '100%',
                         width: '1px',
-                        background: i === 0 || i === 28 ? '#D1D5DB' : '#E5E7EB'
+                        background: i === 0 || i === 52 ? '#D1D5DB' : '#E5E7EB'
                       }}></div>
                     ))}
                   </div>
                   
                   <div className="gantt-bars-enhanced" style={{ 
-                    minWidth: '1120px',
+                    minWidth: '2080px',
                     position: 'relative',
                     zIndex: 2
                   }}>
                     {tasks.length === 0 ? (
-                      <div className="gantt-bars-empty">
-                        <p>Create tasks to see them on the timeline</p>
+                      <div className="gantt-bars-empty" style={{
+                        padding: '3rem',
+                        textAlign: 'center',
+                        color: '#6B7280',
+                        background: '#F9FAFB',
+                        borderRadius: '8px',
+                        margin: '2rem'
+                      }}>
+                        <p style={{ margin: '0', fontSize: '1.1rem', fontWeight: '600' }}>No tasks available</p>
+                        <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to see it on the timeline!</p>
                       </div>
                     ) : (
                       tasks.map((task, taskIndex) => {
                         const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
                         const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                        const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
+                        const durationInWeeks = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
                         
-                        // Calculate position relative to timeline start (1st of month)
-                        const timelineStart = new Date(timelineStartDate);
+                        // Calculate position relative to year start
+                        const yearStart = new Date(timelineStartDate.getFullYear(), 0, 1);
+                        const taskStartWeek = getWeekNumber(taskStartDate);
                         
-                        const daysFromStart = Math.ceil((taskStartDate.getTime() - timelineStart.getTime()) / (24 * 60 * 60 * 1000));
-                        
-                        // Calculate width and position for 28-day timeline
-                        const barWidth = Math.min((durationInDays * 40), 28 * 40 - 40); // 40px per day
-                        const barLeft = Math.max(0, daysFromStart * 40); // 40px per day
+                        // Calculate width and position for 52-week timeline
+                        const barWidth = Math.min((durationInWeeks * 40), 52 * 40 - 40); // 40px per week
+                        const barLeft = Math.max(0, (taskStartWeek - 1) * 40); // 40px per week
                         
                         const statusConfig = getStatusConfig(task.status);
                         const isOverdueTask = isOverdue(task.due_date);
                         
-                        return (
-                          <div key={task.id} className="gantt-bar-row-enhanced" style={{
-                            position: 'relative',
-                            height: '40px',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            <div className="gantt-horizontal-grid-line" style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height: '1px',
-                              background: '#e5e7eb'
-                            }}></div>
-                            <div 
-                              className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
-                              style={{
-                                width: `${barWidth}px`,
-                                left: `${barLeft}px`,
+                                                  return (
+                            <div key={task.id} className="gantt-bar-row-enhanced" style={{
+                              position: 'relative',
+                              height: '50px',
+                              borderBottom: '1px solid #E5E7EB'
+                            }}>
+                              <div className="gantt-horizontal-grid-line" style={{
                                 position: 'absolute',
-                                height: '28px',
-                                background: getStatusConfig(task.status).color,
-                                border: '2px solid #E5E7EB',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                marginTop: '6px',
-                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                              }}
-                              title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInDays} days\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
-                              onClick={(e) => handleTaskClick(task, e)}
-                            >
-                              <div className="gantt-bar-content-enhanced" style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '0 0.5rem',
-                                width: '100%',
-                                height: '100%'
-                              }}>
-                                <span className="gantt-bar-text-enhanced" style={{
-                                  color: '#1F2937',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  wordWrap: 'break-word',
-                                  overflowWrap: 'break-word',
-                                  wordBreak: 'break-word',
-                                  whiteSpace: 'normal',
-                                  hyphens: 'auto',
-                                  lineHeight: '1.2',
-                                  flex: 1
-                                }}>{task.name}</span>
-                                <span className="gantt-bar-duration-enhanced" style={{
-                                  color: '#1F2937',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  marginLeft: '0.5rem'
-                                }}>{durationInDays}d</span>
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                height: '1px',
+                                background: '#E5E7EB'
+                              }}></div>
+                              <div 
+                                className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
+                                style={{
+                                  width: `${barWidth}px`,
+                                  left: `${barLeft}px`,
+                                  position: 'absolute',
+                                  height: '32px',
+                                  background: getStatusConfig(task.status).color,
+                                  border: '2px solid #E5E7EB',
+                                  borderRadius: '8px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  marginTop: '9px',
+                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                                }}
+                                title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInWeeks} weeks\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
+                                onClick={(e) => handleTaskClick(task, e)}
+                              >
+                                <div className="gantt-bar-content-enhanced" style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '0 0.75rem',
+                                  width: '100%',
+                                  height: '100%'
+                                }}>
+                                  <span className="gantt-bar-text-enhanced" style={{
+                                    color: '#1F2937',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600',
+                                    wordWrap: 'break-word',
+                                    overflowWrap: 'break-word',
+                                    wordBreak: 'break-word',
+                                    whiteSpace: 'normal',
+                                    hyphens: 'auto',
+                                    lineHeight: '1.2',
+                                    flex: 1
+                                  }}>{task.name}</span>
+                                  <span className="gantt-bar-duration-enhanced" style={{
+                                    color: '#1F2937',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600',
+                                    marginLeft: '0.5rem'
+                                  }}>{durationInWeeks}w</span>
+                                </div>
+                                {isOverdueTask && <div className="overdue-indicator">!</div>}
                               </div>
-                              {isOverdueTask && <div className="overdue-indicator">!</div>}
                             </div>
-                          </div>
-                        );
+                          );
                       })
                     )}
                   </div>
