@@ -132,7 +132,7 @@ export default function ProjectDetailPage() {
     if (ganttView === 'gantt') {
       setTimeout(() => {
         const currentWeek = getWeekNumber(new Date());
-        const scrollPosition = (currentWeek - 1) * 50 + 200 - 300; // Center the current week with offset
+        const scrollPosition = (currentWeek - 1) * 50 - 300; // Center the current week
         const timelineElement = document.querySelector('.gantt-timeline-enhanced');
         if (timelineElement) {
           timelineElement.scrollLeft = Math.max(0, scrollPosition);
@@ -5141,86 +5141,7 @@ export default function ProjectDetailPage() {
               border: '2px solid #E5E7EB',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}>
-              {/* Zoom Controls */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '1rem',
-                background: '#F9FAFB',
-                borderBottom: '1px solid #E5E7EB',
-                borderRadius: '12px 12px 0 0'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem'
-                }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
-                    Timeline View
-                  </span>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: '#ffffff',
-                    padding: '0.25rem',
-                    borderRadius: '6px',
-                    border: '1px solid #E5E7EB'
-                  }}>
-                    <button style={{
-                      padding: '0.25rem 0.5rem',
-                      fontSize: '0.75rem',
-                      background: 'transparent',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      color: '#374151'
-                    }}>
-                      Weeks
-                    </button>
-                    <button style={{
-                      padding: '0.25rem 0.5rem',
-                      fontSize: '0.75rem',
-                      background: '#374151',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}>
-                      Months
-                    </button>
-                  </div>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Zoom:</span>
-                  <button style={{
-                    padding: '0.25rem 0.5rem',
-                    background: '#ffffff',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem'
-                  }}>
-                    -
-                  </button>
-                  <span style={{ fontSize: '0.75rem', color: '#374151' }}>100%</span>
-                  <button style={{
-                    padding: '0.25rem 0.5rem',
-                    background: '#ffffff',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem'
-                  }}>
-                    +
-                  </button>
-                </div>
-              </div>
+
 
               <div className="gantt-timeline-enhanced" style={{ 
                 width: '100%', 
@@ -5229,131 +5150,35 @@ export default function ProjectDetailPage() {
                 overflowY: 'hidden',
                 boxSizing: 'border-box',
                 scrollbarWidth: 'thin',
-                background: '#ffffff',
-                display: 'flex'
+                background: '#ffffff'
               }}>
-                {/* Task List Column */}
-                <div className="gantt-task-list" style={{
-                  width: '250px',
-                  minWidth: '250px',
-                  background: '#F9FAFB',
-                  borderRight: '2px solid #E5E7EB',
-                  position: 'sticky',
-                  left: 0,
-                  zIndex: 10,
-                  height: 'fit-content'
-                }}>
-                  <div className="task-list-header" style={{
-                    padding: '0.75rem 1rem',
-                    borderBottom: '1px solid #E5E7EB',
-                    background: '#F3F4F6',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    color: '#374151'
-                  }}>
-                    Tasks ({tasks.length})
-                  </div>
-                  <div className="task-list-items">
-                    {tasks.length === 0 ? (
-                      <div style={{
-                        padding: '2rem 1rem',
-                        textAlign: 'center',
-                        color: '#6B7280',
-                        fontSize: '0.875rem'
-                      }}>
-                        No tasks available
-                      </div>
-                    ) : (
-                      tasks.map((task, index) => (
-                        <div key={task.id} style={{
-                          height: '60px',
-                          padding: '0.75rem 1rem',
-                          borderBottom: '1px solid #E5E7EB',
-                          background: index % 2 === 0 ? '#FAFBFC' : '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.75rem',
-                          cursor: 'pointer'
-                        }}
-                        onClick={(e) => handleTaskClick(task, e)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#EBF8FF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = index % 2 === 0 ? '#FAFBFC' : '#ffffff';
-                        }}
-                        >
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: getTaskColor(task.status),
-                            flexShrink: 0
-                          }}></div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                              fontSize: '0.875rem',
-                              fontWeight: '600',
-                              color: '#374151',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              {task.name}
-                            </div>
-                            <div style={{
-                              fontSize: '0.75rem',
-                              color: '#6B7280',
-                              marginTop: '0.25rem'
-                            }}>
-                              {task.assignee?.name || 'Unassigned'}
-                            </div>
-                          </div>
-                          <div style={{
-                            padding: '0.25rem 0.5rem',
-                            background: getTaskColor(task.status),
-                            color: '#ffffff',
-                            fontSize: '0.75rem',
-                            fontWeight: '500',
-                            borderRadius: '4px'
-                          }}>
-                            {TASK_STATUSES.find(s => s.value === task.status)?.label}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {/* Timeline Column */}
-                <div className="gantt-timeline-column" style={{ flex: 1 }}>
-                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2600px' }}>
-                  <div className="gantt-year-header" style={{
-                    background: '#F9FAFB',
-                    padding: '0.75rem 1rem',
-                    borderBottom: '1px solid #E5E7EB',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem'
-                  }}>
-                    <div className="year-label" style={{
-                      fontSize: '1rem',
-                      fontWeight: '700',
-                      color: '#1F2937'
-                    }}>{timelineStartDate.getFullYear()}</div>
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: '#6B7280',
-                      fontWeight: '500'
+                                  <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2600px' }}>
+                    <div className="gantt-year-header" style={{
+                      background: '#F9FAFB',
+                      padding: '0.75rem 1rem',
+                      borderBottom: '1px solid #E5E7EB',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem'
                     }}>
-                      52 weeks • January to December
+                      <div className="year-label" style={{
+                        fontSize: '1rem',
+                        fontWeight: '700',
+                        color: '#1F2937'
+                      }}>{getProjectStartDate().getFullYear()}</div>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: '#6B7280',
+                        fontWeight: '500'
+                      }}>
+                        52 weeks • January to December
+                      </div>
                     </div>
-                  </div>
-                  <div className="gantt-week-headers" style={{ display: 'flex', width: '2600px' }}>
-                    {Array.from({ length: 52 }, (_, weekIndex) => {
-                      const weekNumber = weekIndex + 1;
-                      const weekStartDate = getWeekStartDate(timelineStartDate.getFullYear(), weekNumber);
+                    <div className="gantt-week-headers" style={{ display: 'flex', width: '2600px' }}>
+                      {Array.from({ length: 52 }, (_, weekIndex) => {
+                        const weekNumber = weekIndex + 1;
+                        const weekStartDate = getWeekStartDate(getProjectStartDate().getFullYear(), weekNumber);
                       
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
@@ -5447,42 +5272,25 @@ export default function ProjectDetailPage() {
                               borderBottom: '1px solid #F3F4F6',
                               background: taskIndex % 2 === 0 ? '#FAFBFC' : '#ffffff'
                             }}>
-                              {/* Task Name Label */}
-                              <div style={{
-                                position: 'absolute',
-                                left: '1rem',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: '#374151',
-                                zIndex: 3,
-                                background: taskIndex % 2 === 0 ? '#FAFBFC' : '#ffffff',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '4px',
-                                minWidth: '150px'
-                              }}>
-                                {task.name}
-                              </div>
-                              
                               {/* Task Bar */}
                               <div 
                                 className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
                                 style={{
                                   width: `${barWidth}px`,
-                                  left: `${barLeft + 200}px`, // Offset for task name
+                                  left: `${barLeft}px`,
                                   position: 'absolute',
-                                  height: '24px',
+                                  height: '36px',
                                   background: getTaskColor(task.status),
                                   border: 'none',
-                                  borderRadius: '12px',
+                                  borderRadius: '8px',
                                   display: 'flex',
                                   alignItems: 'center',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
                                   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s ease'
+                                  transition: 'all 0.2s ease',
+                                  padding: '0 0.75rem'
                                 }}
                                 title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInWeeks} weeks\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
                                 onClick={(e) => handleTaskClick(task, e)}
@@ -5495,56 +5303,28 @@ export default function ProjectDetailPage() {
                                   e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                                 }}
                               >
-                                {/* Progress indicator */}
-                                <div style={{
-                                  position: 'absolute',
-                                  left: 0,
-                                  top: 0,
-                                  height: '100%',
-                                  width: task.status === 'done' ? '100%' : task.status === 'in_progress' ? '60%' : task.status === 'review' ? '80%' : '20%',
-                                  background: 'rgba(255, 255, 255, 0.3)',
-                                  borderRadius: '12px',
-                                  transition: 'width 0.3s ease'
-                                }}></div>
-                                
-                                {/* Assignee Avatar */}
-                                {task.assignee && (
-                                  <div style={{
-                                    position: 'absolute',
-                                    right: '-12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    width: '24px',
-                                    height: '24px',
-                                    borderRadius: '50%',
-                                    background: '#ffffff',
-                                    border: '2px solid #E5E7EB',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '600',
-                                    color: '#374151'
-                                  }}>
-                                    {task.assignee.name.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
+                                {/* Task Name */}
+                                <span style={{
+                                  color: '#ffffff',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '600',
+                                  flex: 1,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {task.name}
+                                </span>
                                 
                                 {/* Duration Label */}
-                                <div style={{
-                                  position: 'absolute',
-                                  right: '0.5rem',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
+                                <span style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
-                                  color: '#ffffff',
-                                  background: 'rgba(0, 0, 0, 0.2)',
-                                  padding: '0.125rem 0.25rem',
-                                  borderRadius: '4px'
+                                  color: 'rgba(255, 255, 255, 0.9)',
+                                  marginLeft: '0.5rem'
                                 }}>
                                   {durationInWeeks}w
-                                </div>
+                                </span>
                               </div>
                             </div>
                           );
@@ -5554,7 +5334,6 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </div>
-          </div>
 
             <div className="gantt-legend">
               <div className="legend-section">
