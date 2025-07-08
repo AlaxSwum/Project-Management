@@ -18,7 +18,11 @@ import {
   PaperClipIcon,
   ChatBubbleLeftIcon,
   ArrowUpTrayIcon,
-  DocumentIcon
+  DocumentIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ListBulletIcon,
+  Squares2X2Icon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
@@ -124,6 +128,193 @@ export default function MyTasksPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+  
+  // Calendar view state
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Calendar helper functions
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const previousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+  };
+
+  const getTasksForDate = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return filteredTasks.filter(task => {
+      if (!task.due_date) return false;
+      const taskDate = new Date(task.due_date).toISOString().split('T')[0];
+      return taskDate === dateString;
+    });
+  };
+
+  const renderCalendarGrid = () => {
+    const today = new Date();
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+      const prevMonthDays = getDaysInMonth(prevMonth);
+      const day = prevMonthDays - firstDay + i + 1;
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, day);
+      const dayTasks = getTasksForDate(date);
+      
+      days.push(
+        <div key={`prev-${day}`} className="calendar-day-cell" style={{ 
+          minHeight: '120px', 
+          padding: '0.75rem',
+          background: '#f8f9fa',
+          border: '1px solid #e5e7eb',
+          color: '#9ca3af',
+          opacity: 0.5
+        }}>
+          <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>{day}</div>
+          {dayTasks.slice(0, 2).map((task, index) => (
+            <div key={task.id} style={{
+              background: '#e5e7eb',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+              marginBottom: '0.25rem',
+              cursor: 'pointer'
+            }}>
+              {task.name.length > 15 ? `${task.name.substring(0, 15)}...` : task.name}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Add days of the current month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dayTasks = getTasksForDate(date);
+      const isToday = date.toDateString() === today.toDateString();
+      
+      days.push(
+        <div key={day} className="calendar-day-cell" style={{ 
+          minHeight: '120px', 
+          padding: '0.75rem',
+          background: isToday ? '#e3f2fd' : '#ffffff',
+          border: isToday ? '2px solid #5884FD' : '1px solid #e5e7eb',
+          position: 'relative'
+        }}>
+          <div style={{ 
+            fontSize: '0.875rem', 
+            fontWeight: isToday ? '600' : '400',
+            color: isToday ? '#5884FD' : '#1f2937',
+            marginBottom: '0.5rem' 
+          }}>
+            {day}
+          </div>
+          {dayTasks.slice(0, 3).map((task, index) => {
+            const priorityConfig = getPriorityConfig(task.priority);
+            const overdue = isOverdue(task.due_date);
+            
+            return (
+              <div 
+                key={task.id} 
+                onClick={() => handleTaskClick(task)}
+                style={{
+                  background: overdue ? '#fef2f2' : '#f8fafc',
+                  border: `1px solid ${overdue ? '#f87171' : priorityConfig.color}`,
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  marginBottom: '0.25rem',
+                  cursor: 'pointer',
+                  color: overdue ? '#dc2626' : '#1f2937',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ fontWeight: '500' }}>
+                  {task.name.length > 15 ? `${task.name.substring(0, 15)}...` : task.name}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                  {task.project.name}
+                </div>
+              </div>
+            );
+          })}
+          {dayTasks.length > 3 && (
+            <div style={{
+              fontSize: '0.7rem',
+              color: '#6b7280',
+              fontWeight: '500',
+              marginTop: '0.25rem'
+            }}>
+              +{dayTasks.length - 3} more tasks
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Add days from next month to fill the grid
+    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    const remainingCells = totalCells - (firstDay + daysInMonth);
+    
+    for (let day = 1; day <= remainingCells; day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, day);
+      const dayTasks = getTasksForDate(date);
+      
+      days.push(
+        <div key={`next-${day}`} className="calendar-day-cell" style={{ 
+          minHeight: '120px', 
+          padding: '0.75rem',
+          background: '#f8f9fa',
+          border: '1px solid #e5e7eb',
+          color: '#9ca3af',
+          opacity: 0.5
+        }}>
+          <div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>{day}</div>
+          {dayTasks.slice(0, 2).map((task, index) => (
+            <div key={task.id} style={{
+              background: '#e5e7eb',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+              marginBottom: '0.25rem',
+              cursor: 'pointer'
+            }}>
+              {task.name.length > 15 ? `${task.name.substring(0, 15)}...` : task.name}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return days;
+  };
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -999,6 +1190,19 @@ export default function MyTasksPage() {
             background: #cccccc;
             cursor: not-allowed;
           }
+          
+          /* Calendar View Styles */
+          .calendar-day-cell {
+            position: relative;
+            transition: all 0.2s ease;
+          }
+          .calendar-day-cell:hover {
+            background: #f8fafc !important;
+          }
+          .calendar-grid {
+            border-collapse: separate;
+            border-spacing: 1px;
+          }
           .loading-spinner {
             width: 16px;
             height: 16px;
@@ -1055,6 +1259,11 @@ export default function MyTasksPage() {
               padding: 1rem;
               position: relative;
               border-bottom: 1px solid #e5e7eb;
+            }
+            .header-content {
+              flex-direction: column;
+              gap: 1rem;
+              align-items: stretch;
             }
             .header-title {
               font-size: 1.5rem;
@@ -1318,6 +1527,49 @@ export default function MyTasksPage() {
                 <h1 className="header-title">My Tasks</h1>
                 <p className="header-subtitle">Manage all your assigned tasks</p>
               </div>
+              
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setViewMode('list')}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    background: viewMode === 'list' ? '#5884FD' : '#ffffff',
+                    color: viewMode === 'list' ? '#ffffff' : '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <ListBulletIcon style={{ width: '16px', height: '16px' }} />
+                  List
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    background: viewMode === 'calendar' ? '#5884FD' : '#ffffff',
+                    color: viewMode === 'calendar' ? '#ffffff' : '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <CalendarIcon style={{ width: '16px', height: '16px' }} />
+                  Calendar
+                </button>
+              </div>
             </div>
             
             <div className="stats-grid">
@@ -1471,149 +1723,265 @@ export default function MyTasksPage() {
           </div>
 
           <div className="tasks-section">
-            {filteredTasks.length === 0 ? (
+            {viewMode === 'list' ? (
+              // List View
+              filteredTasks.length === 0 ? (
+                <div style={{
+                  background: '#ffffff',
+                  border: '1px solid #e8e8e8',
+                  borderRadius: '16px',
+                  padding: '4rem',
+                  textAlign: 'center',
+                  color: '#666666',
+                  boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+                }}>
+                  <div style={{ 
+                    width: '64px', 
+                    height: '64px', 
+                    background: '#f0f0f0',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 2rem'
+                  }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#999999' }}>
+                      <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                      <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                      <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                      <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                  </div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                    No tasks found
+                  </h3>
+                  <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5', color: '#999999' }}>
+                    {tasks.length === 0 
+                      ? "You don't have any assigned tasks yet." 
+                      : "No tasks match your current filters. Try adjusting your search or filters."
+                    }
+                  </p>
+                </div>
+              ) : (
+                <div className="tasks-list">
+                  {filteredTasks.map((task) => {
+                    const priorityConfig = getPriorityConfig(task.priority);
+                    const statusConfig = getStatusConfig(task.status);
+                    const daysUntilDue = getDaysUntilDue(task.due_date);
+                    const overdue = isOverdue(task.due_date);
+                    const urgent = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue > 0;
+                    
+                    return (
+                      <div 
+                        key={task.id} 
+                        className={`task-item ${overdue ? 'overdue' : urgent ? 'urgent' : ''}`}
+                        onClick={() => handleTaskClick(task)}
+                      >
+                        <div className="task-header">
+                          <div className="task-title-section">
+                            <h3 className="task-title">{task.name}</h3>
+                            <p className="task-project">{task.project.name}</p>
+                          </div>
+                          
+                          <div className="task-actions">
+                            <div 
+                              className="priority-badge"
+                              style={{ 
+                                backgroundColor: priorityConfig.color + '20',
+                                borderColor: priorityConfig.color,
+                                color: priorityConfig.color
+                              }}
+                            >
+                              <span>{priorityConfig.icon}</span>
+                              <span>{priorityConfig.label}</span>
+                            </div>
+                            
+                            <div 
+                              className="status-badge"
+                              style={{ 
+                                backgroundColor: statusConfig.color,
+                                borderColor: '#000000',
+                                color: '#000000'
+                              }}
+                            >
+                              <span>{statusConfig.icon}</span>
+                              <span>{statusConfig.label}</span>
+                            </div>
+                            
+                            <button
+                              className="view-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTaskClick(task);
+                              }}
+                              title="View Details"
+                            >
+                              <EyeIcon style={{ width: '16px', height: '16px' }} />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {task.description && (
+                          <p className="task-description">{task.description}</p>
+                        )}
+                        
+                        <div className="task-meta">
+                          {task.due_date && (
+                            <div className={`task-meta-item ${overdue ? 'overdue' : ''}`}>
+                              <CalendarIcon style={{ width: '14px', height: '14px' }} />
+                              <span>{formatDate(task.due_date)}</span>
+                              {overdue && <span style={{ fontWeight: 'bold' }}>(Overdue)</span>}
+                              {urgent && (
+                                <span style={{ fontWeight: 'bold' }}>({daysUntilDue}d left)</span>
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="task-meta-item">
+                            <UserIcon style={{ width: '14px', height: '14px' }} />
+                            <span>Created by {task.created_by.name}</span>
+                          </div>
+                          
+                          {(task.tags_list || []).length > 0 && (
+                            <div className="task-meta-item">
+                              <TagIcon style={{ width: '14px', height: '14px' }} />
+                              <span>{(task.tags_list || []).slice(0, 3).join(', ')}</span>
+                              {(task.tags_list || []).length > 3 && (
+                                <span style={{ fontWeight: 'bold' }}>+{(task.tags_list || []).length - 3} more</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="task-actions-row">
+                          {TASK_STATUSES.filter(s => s.value !== task.status).map(statusOption => (
+                            <button
+                              key={statusOption.value}
+                              onClick={() => handleTaskStatusChange(task.id, statusOption.value)}
+                              className="status-btn"
+                              title={`Move to ${statusOption.label}`}
+                            >
+                              {statusOption.icon} {statusOption.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              // Calendar View
               <div style={{
                 background: '#ffffff',
                 border: '1px solid #e8e8e8',
                 borderRadius: '16px',
-                padding: '4rem',
-                textAlign: 'center',
-                color: '#666666',
+                padding: '2rem',
                 boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
               }}>
+                {/* Calendar Navigation */}
                 <div style={{ 
-                  width: '64px', 
-                  height: '64px', 
-                  background: '#f0f0f0',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem'
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  marginBottom: '2rem',
+                  padding: '0 1rem'
                 }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#999999' }}>
-                    <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                    <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                    <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                    <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                </div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
-                  No tasks found
-                </h3>
-                <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5', color: '#999999' }}>
-                  {tasks.length === 0 
-                    ? "You don't have any assigned tasks yet." 
-                    : "No tasks match your current filters. Try adjusting your search or filters."
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="tasks-list">
-                {filteredTasks.map((task) => {
-                  const priorityConfig = getPriorityConfig(task.priority);
-                  const statusConfig = getStatusConfig(task.status);
-                  const daysUntilDue = getDaysUntilDue(task.due_date);
-                  const overdue = isOverdue(task.due_date);
-                  const urgent = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue > 0;
+                  <button
+                    onClick={() => previousMonth()}
+                    className="nav-button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '44px',
+                      height: '44px',
+                      background: '#ffffff',
+                      border: '2px solid #e8e8e8',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      color: '#666666',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.color = '#5884FD';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e8e8e8';
+                      e.currentTarget.style.color = '#666666';
+                    }}
+                  >
+                    <ChevronLeftIcon style={{ width: '20px', height: '20px' }} />
+                  </button>
                   
-                  return (
-                    <div 
-                      key={task.id} 
-                      className={`task-item ${overdue ? 'overdue' : urgent ? 'urgent' : ''}`}
-                      onClick={() => handleTaskClick(task)}
-                    >
-                      <div className="task-header">
-                        <div className="task-title-section">
-                          <h3 className="task-title">{task.name}</h3>
-                          <p className="task-project">{task.project.name}</p>
-                        </div>
-                        
-                        <div className="task-actions">
-                          <div 
-                            className="priority-badge"
-                            style={{ 
-                              backgroundColor: priorityConfig.color + '20',
-                              borderColor: priorityConfig.color,
-                              color: priorityConfig.color
-                            }}
-                          >
-                            <span>{priorityConfig.icon}</span>
-                            <span>{priorityConfig.label}</span>
-                          </div>
-                          
-                          <div 
-                            className="status-badge"
-                            style={{ 
-                              backgroundColor: statusConfig.color,
-                              borderColor: '#000000',
-                              color: '#000000'
-                            }}
-                          >
-                            <span>{statusConfig.icon}</span>
-                            <span>{statusConfig.label}</span>
-                          </div>
-                          
-                          <button
-                            className="view-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTaskClick(task);
-                            }}
-                            title="View Details"
-                          >
-                            <EyeIcon style={{ width: '16px', height: '16px' }} />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {task.description && (
-                        <p className="task-description">{task.description}</p>
-                      )}
-                      
-                      <div className="task-meta">
-                        {task.due_date && (
-                          <div className={`task-meta-item ${overdue ? 'overdue' : ''}`}>
-                            <CalendarIcon style={{ width: '14px', height: '14px' }} />
-                            <span>{formatDate(task.due_date)}</span>
-                            {overdue && <span style={{ fontWeight: 'bold' }}>(Overdue)</span>}
-                            {urgent && (
-                              <span style={{ fontWeight: 'bold' }}>({daysUntilDue}d left)</span>
-                            )}
-                          </div>
-                        )}
-                        
-                        <div className="task-meta-item">
-                          <UserIcon style={{ width: '14px', height: '14px' }} />
-                          <span>Created by {task.created_by.name}</span>
-                        </div>
-                        
-                        {(task.tags_list || []).length > 0 && (
-                          <div className="task-meta-item">
-                            <TagIcon style={{ width: '14px', height: '14px' }} />
-                            <span>{(task.tags_list || []).slice(0, 3).join(', ')}</span>
-                            {(task.tags_list || []).length > 3 && (
-                              <span style={{ fontWeight: 'bold' }}>+{(task.tags_list || []).length - 3} more</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="task-actions-row">
-                        {TASK_STATUSES.filter(s => s.value !== task.status).map(statusOption => (
-                          <button
-                            key={statusOption.value}
-                            onClick={() => handleTaskStatusChange(task.id, statusOption.value)}
-                            className="status-btn"
-                            title={`Move to ${statusOption.label}`}
-                          >
-                            {statusOption.icon} {statusOption.label}
-                          </button>
-                        ))}
-                      </div>
+                  <h2 style={{ 
+                    margin: 0, 
+                    fontSize: '1.5rem', 
+                    fontWeight: '700', 
+                    color: '#000000',
+                    textAlign: 'center',
+                    flex: 1
+                  }}>
+                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </h2>
+                  
+                  <button
+                    onClick={() => nextMonth()}
+                    className="nav-button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '44px',
+                      height: '44px',
+                      background: '#ffffff',
+                      border: '2px solid #e8e8e8',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      color: '#666666',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.color = '#5884FD';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e8e8e8';
+                      e.currentTarget.style.color = '#666666';
+                    }}
+                  >
+                    <ChevronRightIcon style={{ width: '20px', height: '20px' }} />
+                  </button>
+                </div>
+
+                {/* Calendar Grid */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(7, 1fr)', 
+                  gap: '1px', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  background: '#e5e7eb'
+                }}>
+                  {/* Day Headers */}
+                  {daysOfWeek.map(day => (
+                    <div key={day} style={{ 
+                      padding: '1rem', 
+                      background: '#f8f9fa', 
+                      fontWeight: '600', 
+                      textAlign: 'center',
+                      fontSize: '0.875rem',
+                      color: '#374151'
+                    }}>
+                      {day}
                     </div>
-                  );
-                })}
+                  ))}
+                  
+                  {/* Calendar Days */}
+                  {renderCalendarGrid()}
+                </div>
               </div>
             )}
           </div>
