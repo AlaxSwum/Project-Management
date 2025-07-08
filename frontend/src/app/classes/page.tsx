@@ -832,12 +832,12 @@ export default function ClassesPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -847,8 +847,8 @@ export default function ClassesPage() {
           <div style={{ 
             width: '32px', 
             height: '32px', 
-            border: '3px solid #cccccc', 
-            borderTop: '3px solid #000000', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -859,12 +859,12 @@ export default function ClassesPage() {
 
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -872,24 +872,26 @@ export default function ClassesPage() {
           minHeight: '100vh'
         }}>
           <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#000000' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
               Access Denied
             </h1>
-            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem' }}>
+            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
               You don't have permission to access the Classes section.
               Please contact an administrator to request access.
             </p>
             <button
               onClick={() => router.push('/dashboard')}
               style={{
-                padding: '1rem 2rem',
-                background: '#000000',
+                padding: '0.875rem 2rem',
+                background: '#5884FD',
                 color: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
+                border: 'none',
+                borderRadius: '12px',
                 fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer'
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
               }}
             >
               Back to Dashboard
@@ -911,13 +913,13 @@ export default function ClassesPage() {
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           minHeight: '100vh'
         }}>
@@ -926,25 +928,25 @@ export default function ClassesPage() {
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            marginBottom: '2rem',
-            borderBottom: '2px solid #e5e7eb',
-            paddingBottom: '1rem'
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
           }}>
             <div>
               <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: 'bold', 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
                 margin: '0', 
-                color: '#000000'
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
               }}>
                 Classes (PR)
               </h1>
-              <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage PR and communication training classes and workshops
               </p>
             </div>
             
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={() => {
                   setFolderFormData({
@@ -958,39 +960,20 @@ export default function ClassesPage() {
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#ffffff',
-                  color: '#000000',
-                  border: '2px solid #666666',
-                  borderRadius: '6px',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
                   fontSize: '0.9rem',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <FolderIcon style={{ width: '16px', height: '16px' }} />
-                New Folder
-              </button>
-              
-              <button
-                onClick={() => setShowAddForm(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: '#000000',
-                  color: '#ffffff',
-                  border: '2px solid #000000',
-                  borderRadius: '6px',
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
-                New Class
+                Create Folder
               </button>
               
               {userRole === 'admin' && (
@@ -998,135 +981,225 @@ export default function ClassesPage() {
                   onClick={() => setShowMemberModal(true)}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    background: '#ffffff',
-                    color: '#000000',
-                    border: '2px solid #000000',
-                    borderRadius: '6px',
+                    background: '#FFB333',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
                     fontSize: '0.9rem',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
                   }}
                 >
-                  <UserGroupIcon style={{ width: '16px', height: '16px' }} />
                   Manage Members
                 </button>
               )}
+              
+              <button
+                onClick={() => setShowAddForm(true)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#5884FD',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                }}
+              >
+                Add Class
+              </button>
             </div>
           </div>
 
           {error && (
-            <div style={{
-              background: '#fee2e2',
-              border: '1px solid #fecaca',
-              color: '#dc2626',
-              padding: '1rem',
-              borderRadius: '6px',
-              marginBottom: '1rem'
+            <div style={{ 
+              background: '#ffffff', 
+              border: '1px solid #F87239', 
+              borderRadius: '12px', 
+              padding: '1rem', 
+              marginBottom: '2rem',
+              color: '#F87239',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
             </div>
           )}
 
-          {/* Breadcrumb Navigation */}
+          {/* Hierarchical Folder Navigation */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1.5rem',
-            fontSize: '0.9rem',
-            color: '#666666'
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            padding: '2rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
           }}>
-            <button
-              onClick={() => goToFolder(null)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: folderPath.length === 0 ? '#000000' : '#0066cc',
-                cursor: 'pointer',
-                textDecoration: folderPath.length === 0 ? 'none' : 'underline'
-              }}
-            >
-              Home
-            </button>
-            {folderPath.map((folder, index) => (
-              <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronRightIcon style={{ width: '12px', height: '12px' }} />
-                <button
-                  onClick={() => goToFolder(folder)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: index === folderPath.length - 1 ? '#000000' : '#0066cc',
-                    cursor: 'pointer',
-                    textDecoration: index === folderPath.length - 1 ? 'none' : 'underline'
-                  }}
-                >
-                  {folder.name}
-                </button>
-              </span>
-            ))}
-          </div>
-
-          {/* Folders Grid */}
-          {getCurrentFolderContents().length > 0 && (
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#000000' }}>
-                Folders
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                gap: '1rem'
-              }}>
-                {getCurrentFolderContents().map(folder => (
-                  <div
-                    key={folder.id}
-                    onClick={() => enterFolder(folder)}
+            {/* Breadcrumb Navigation */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              marginBottom: '1.5rem',
+              fontSize: '0.9rem',
+              color: '#666666'
+            }}>
+              <button
+                onClick={() => goToFolder(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: folderPath.length === 0 ? '#1a1a1a' : '#666666',
+                  fontWeight: folderPath.length === 0 ? '500' : '400',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Classes
+              </button>
+              
+              {folderPath.map((folder, index) => (
+                <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: '#C483D9' }}>•</span>
+                  <button
+                    onClick={() => goToFolder(folder)}
                     style={{
-                      padding: '1.5rem',
-                      background: '#ffffff',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: index === folderPath.length - 1 ? '#1a1a1a' : '#666666',
+                      fontWeight: index === folderPath.length - 1 ? '500' : '400',
+                      textDecoration: 'none',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#000000'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#e5e7eb'
-                      e.currentTarget.style.transform = 'translateY(0)'
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '6px',
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    <FolderIcon 
-                      style={{ 
-                        width: '24px', 
-                        height: '24px', 
-                        color: folder.color || '#666666' 
-                      }} 
-                    />
-                    <div>
-                      <h4 style={{ margin: '0', fontSize: '1rem', fontWeight: '600', color: '#000000' }}>
-                        {folder.name}
-                      </h4>
-                      {folder.description && (
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#666666' }}>
-                          {folder.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    {folder.name}
+                  </button>
+                </span>
+              ))}
             </div>
-          )}
+
+            {/* Current Folder Contents */}
+            <div style={{ marginBottom: '1rem' }}>
+              <h3 style={{ 
+                fontSize: '1.2rem', 
+                fontWeight: '500', 
+                marginBottom: '1.5rem',
+                color: '#1a1a1a',
+                letterSpacing: '-0.01em'
+              }}>
+                {currentFolder ? `${currentFolder.name}` : 'All Folders'} 
+                {currentFolder === null && folders.length > 0 && (
+                  <span style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '400' }}>
+                    ({folders.length} total)
+                  </span>
+                )}
+              </h3>
+              
+              {getCurrentFolderContents().length === 0 && folders.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '3rem 2rem',
+                  color: '#999999',
+                  border: '1px dashed #e0e0e0',
+                  borderRadius: '12px',
+                  background: '#fafafa'
+                }}>
+                  <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    background: '#f0f0f0',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.5rem'
+                  }}>
+                    <FolderIcon style={{ width: '24px', height: '24px', color: '#999999' }} />
+                  </div>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '500' }}>No folders created yet</p>
+                  <p style={{ margin: '0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                    Create folders to organize your classes by category, level, or subject
+                  </p>
+                </div>
+              ) : (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                  gap: '1rem' 
+                }}>
+                  {getCurrentFolderContents().map(folder => (
+                    <div
+                      key={folder.id}
+                      onClick={() => enterFolder(folder)}
+                      style={{
+                        padding: '1.5rem',
+                        background: '#ffffff',
+                        border: '1px solid #e8e8e8',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#C483D9'
+                        e.currentTarget.style.background = '#fafafa'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.2)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e8e8e8'
+                        e.currentTarget.style.background = '#ffffff'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
+                      }}
+                    >
+                      <div style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        background: '#f0f0f0',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
+                          {folder.name}
+                        </div>
+                        {folder.description && (
+                          <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem', lineHeight: '1.4' }}>
+                            {folder.description}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Student Management - When Class is Selected */}
           {selectedClass && (
