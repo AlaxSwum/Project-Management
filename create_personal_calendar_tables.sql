@@ -5,7 +5,7 @@
 -- Create personal_events table for calendar events
 CREATE TABLE IF NOT EXISTS personal_events (
     id SERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     start_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS personal_events (
 -- Create personal_tasks table for task management integrated with calendar
 CREATE TABLE IF NOT EXISTS personal_tasks (
     id SERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     due_date TIMESTAMP WITH TIME ZONE,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS personal_tasks (
 -- Create personal_calendar_settings table for user preferences
 CREATE TABLE IF NOT EXISTS personal_calendar_settings (
     id SERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE UNIQUE,
     default_view VARCHAR(20) DEFAULT 'week', -- month, week, day, agenda
     start_hour INTEGER DEFAULT 6 CHECK (start_hour >= 0 AND start_hour <= 23), -- day view start hour
     end_hour INTEGER DEFAULT 22 CHECK (end_hour >= 0 AND end_hour <= 23), -- day view end hour
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS personal_calendar_settings (
 -- Create personal_time_blocks table for blocking time (focus time, meetings, etc.)
 CREATE TABLE IF NOT EXISTS personal_time_blocks (
     id SERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     start_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
     end_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -124,55 +124,55 @@ ALTER TABLE personal_time_blocks ENABLE ROW LEVEL SECURITY;
 
 -- Personal Events Policies
 CREATE POLICY "Users can view their own events" ON personal_events
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can insert their own events" ON personal_events
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can update their own events" ON personal_events
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can delete their own events" ON personal_events
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE USING (auth.uid()::int = user_id);
 
 -- Personal Tasks Policies
 CREATE POLICY "Users can view their own tasks" ON personal_tasks
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can insert their own tasks" ON personal_tasks
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can update their own tasks" ON personal_tasks
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can delete their own tasks" ON personal_tasks
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE USING (auth.uid()::int = user_id);
 
 -- Personal Calendar Settings Policies
 CREATE POLICY "Users can view their own settings" ON personal_calendar_settings
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can insert their own settings" ON personal_calendar_settings
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can update their own settings" ON personal_calendar_settings
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can delete their own settings" ON personal_calendar_settings
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE USING (auth.uid()::int = user_id);
 
 -- Personal Time Blocks Policies
 CREATE POLICY "Users can view their own time blocks" ON personal_time_blocks
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can insert their own time blocks" ON personal_time_blocks
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can update their own time blocks" ON personal_time_blocks
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid()::int = user_id);
 
 CREATE POLICY "Users can delete their own time blocks" ON personal_time_blocks
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE USING (auth.uid()::int = user_id);
 
 -- Create functions for automatic timestamp updates
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -211,7 +211,7 @@ $$ language 'plpgsql';
 -- CREATE TRIGGER create_user_calendar_settings AFTER INSERT ON auth.users
 --     FOR EACH ROW EXECUTE FUNCTION create_default_calendar_settings();
 
--- Create a view for calendar overview (combines events, tasks, and time blocks)
+-- Create a view for calendar overview (combines events, tasks, time blocks, and timetable meetings)
 CREATE OR REPLACE VIEW personal_calendar_overview AS
 SELECT 
     'event' as item_type,
@@ -269,7 +269,27 @@ SELECT
     null as completion_percentage,
     null as location,
     ptb.block_type as category
-FROM personal_time_blocks ptb;
+FROM personal_time_blocks ptb
+
+UNION ALL
+
+SELECT 
+    'meeting' as item_type,
+    pm.id,
+    pm.created_by as user_id,
+    pm.title,
+    pm.description,
+    (pm.date || ' ' || pm.time)::timestamp with time zone as start_datetime,
+    (pm.date || ' ' || pm.time)::timestamp with time zone + (pm.duration || ' minutes')::interval as end_datetime,
+    false as all_day,
+    '#FFB333' as color,
+    'medium' as priority,
+    'confirmed' as status,
+    null as completion_percentage,
+    null as location,
+    'meeting' as category
+FROM projects_meeting pm
+WHERE pm.created_by IS NOT NULL;
 
 -- Grant appropriate permissions
 GRANT ALL ON personal_events TO authenticated;
