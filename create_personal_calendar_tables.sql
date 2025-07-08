@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS personal_tasks (
     priority VARCHAR(20) DEFAULT 'medium', -- low, medium, high
     status VARCHAR(20) DEFAULT 'todo', -- todo, in_progress, completed, cancelled
     category VARCHAR(100), -- work, personal, health, learning, etc.
-    project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL, -- link to project tasks
+    project_id INTEGER REFERENCES projects_project(id) ON DELETE SET NULL, -- link to project tasks
     tags TEXT[], -- array of tags for organization
     completion_percentage INTEGER DEFAULT 0 CHECK (completion_percentage >= 0 AND completion_percentage <= 100),
     scheduled_start TIMESTAMP WITH TIME ZONE, -- when task is scheduled to start
