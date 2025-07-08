@@ -68,6 +68,17 @@ export default function PersonalCalendarPage() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    start_datetime: '',
+    end_datetime: '',
+    all_day: false,
+    location: '',
+    event_type: 'personal',
+    priority: 'medium',
+    color: '#5884FD'
+  });
 
   useEffect(() => {
     if (authLoading) return;
@@ -236,6 +247,53 @@ export default function PersonalCalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
+  };
+
+  const createEvent = async () => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data, error } = await supabase
+        .from('personal_events')
+        .insert([{
+          user_id: parseInt(user?.id?.toString() || '0'),
+          title: newEvent.title,
+          description: newEvent.description,
+          start_datetime: newEvent.start_datetime,
+          end_datetime: newEvent.end_datetime,
+          all_day: newEvent.all_day,
+          location: newEvent.location,
+          event_type: newEvent.event_type,
+          priority: newEvent.priority,
+          color: newEvent.color,
+          status: 'confirmed'
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Refresh calendar data
+      await fetchCalendarData();
+      
+      // Reset form and close modal
+      setNewEvent({
+        title: '',
+        description: '',
+        start_datetime: '',
+        end_datetime: '',
+        all_day: false,
+        location: '',
+        event_type: 'personal',
+        priority: 'medium',
+        color: '#5884FD'
+      });
+      setShowCreateModal(false);
+      
+    } catch (err: any) {
+      console.error('Error creating event:', err);
+      setError('Failed to create event');
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -768,6 +826,293 @@ export default function PersonalCalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Event Modal */}
+      {showCreateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '2rem',
+            width: '90%',
+            maxWidth: '500px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+            animation: 'slideIn 0.3s ease-out'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0, color: '#1a1a1a' }}>
+                Create New Event
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#666666',
+                  padding: '0.25rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                  Event Title *
+                </label>
+                <input
+                  type="text"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter event title"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                  Description
+                </label>
+                <textarea
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    minHeight: '80px',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter event description"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    Start Date & Time *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newEvent.start_datetime}
+                    onChange={(e) => setNewEvent({ ...newEvent, start_datetime: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    End Date & Time *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newEvent.end_datetime}
+                    onChange={(e) => setNewEvent({ ...newEvent, end_datetime: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={newEvent.location}
+                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter event location"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    Type
+                  </label>
+                  <select
+                    value={newEvent.event_type}
+                    onChange={(e) => setNewEvent({ ...newEvent, event_type: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="personal">Personal</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="appointment">Appointment</option>
+                    <option value="reminder">Reminder</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    Priority
+                  </label>
+                  <select
+                    value={newEvent.priority}
+                    onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    Color
+                  </label>
+                  <input
+                    type="color"
+                    value={newEvent.color}
+                    onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '0.25rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={newEvent.all_day}
+                  onChange={(e) => setNewEvent({ ...newEvent, all_day: e.target.checked })}
+                  style={{ width: '16px', height: '16px' }}
+                />
+                <label style={{ fontWeight: '500', color: '#1a1a1a' }}>
+                  All Day Event
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    background: '#ffffff',
+                    color: '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createEvent}
+                  disabled={!newEvent.title || !newEvent.start_datetime || !newEvent.end_datetime}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    background: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? '#5884FD' : '#cccccc',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Create Event
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          
+          @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+        `
+      }} />
     </>
   );
 } 
