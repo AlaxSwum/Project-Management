@@ -1409,14 +1409,14 @@ export default function ProjectDetailPage() {
             }
             
             .task-title {
-              font-size: 0.9rem;
-              word-wrap: break-word;
-              overflow-wrap: break-word;
-              word-break: break-word;
-              white-space: normal;
-              hyphens: auto;
-              max-width: 100%;
-              display: block;
+              font-size: 0.9rem !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              word-break: break-word !important;
+              white-space: normal !important;
+              hyphens: auto !important;
+              max-width: 100% !important;
+              display: block !important;
             }
             
             .task-meta-item {
@@ -1733,21 +1733,21 @@ export default function ProjectDetailPage() {
             margin-bottom: 0.75rem;
           }
           .task-title {
-            font-weight: 600;
-            color: #374151;
-            font-size: 1rem;
-            line-height: 1.4;
-            flex: 1;
-            margin-right: 0.5rem;
-            letter-spacing: -0.025em;
-            transition: all 0.3s ease;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-            hyphens: auto;
-            max-width: 100%;
-            display: block;
+            font-weight: 600 !important;
+            color: #374151 !important;
+            font-size: 1rem !important;
+            line-height: 1.4 !important;
+            flex: 1 !important;
+            margin-right: 0.5rem !important;
+            letter-spacing: -0.025em !important;
+            transition: all 0.3s ease !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+            hyphens: auto !important;
+            max-width: 100% !important;
+            display: block !important;
           }
           
           .task-card:hover .task-title {
@@ -2511,24 +2511,31 @@ export default function ProjectDetailPage() {
           }
           
           .gantt-task-name-enhanced {
-            padding: 0 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex: 1;
-            overflow: visible;
-            white-space: nowrap;
+            padding: 0 0.75rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            flex: 1 !important;
+            overflow: visible !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+            hyphens: auto !important;
           }
           
           .task-title {
-            font-weight: 600;
-            color: #000000;
-            font-size: 0.85rem;
-            flex: 1;
-            overflow: visible;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 180px;
+            font-weight: 600 !important;
+            color: #000000 !important;
+            font-size: 0.85rem !important;
+            flex: 1 !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+            hyphens: auto !important;
+            line-height: 1.3 !important;
+            max-width: 180px !important;
           }
           
           .task-status-indicator {
@@ -2861,9 +2868,12 @@ export default function ProjectDetailPage() {
           .gantt-bar-text-enhanced {
             font-size: 0.65rem;
             font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            hyphens: auto;
+            line-height: 1.2;
             flex: 1;
             z-index: 2;
             position: relative;
@@ -2882,7 +2892,11 @@ export default function ProjectDetailPage() {
           .gantt-bar-duration-enhanced {
             font-size: 0.55rem;
             font-weight: 500;
-            white-space: nowrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            hyphens: auto;
             margin-left: 0.25rem;
             z-index: 2;
             position: relative;
@@ -3585,7 +3599,12 @@ export default function ProjectDetailPage() {
             .task-title {
               font-size: 0.9rem !important;
               line-height: 1.3 !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
               word-break: break-word !important;
+              white-space: normal !important;
+              hyphens: auto !important;
+              max-width: 100% !important;
               font-weight: 600 !important;
               color: #000000 !important;
               margin: 0 !important;
