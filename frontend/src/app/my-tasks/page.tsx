@@ -391,8 +391,8 @@ export default function MyTasksPage() {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
@@ -403,8 +403,8 @@ export default function MyTasksPage() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
@@ -431,12 +431,12 @@ export default function MyTasksPage() {
           body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #ffffff;
+            background: #F5F5ED;
           }
           .my-tasks-container {
             min-height: 100vh;
             display: flex;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background: #F5F5ED;
           }
           .main-content {
             flex: 1;
@@ -444,117 +444,118 @@ export default function MyTasksPage() {
             background: transparent;
           }
           .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid #000000;
-            padding: 1.5rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: transparent;
+            padding: 2rem;
+            margin-bottom: 3rem;
           }
           .header-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
           }
           .header-title {
-            font-size: 1.875rem;
-            font-weight: bold;
-            color: #000000;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: #1a1a1a;
             margin: 0;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.02em;
           }
           .header-subtitle {
             color: #666666;
-            font-size: 0.95rem;
-            font-weight: 500;
+            font-size: 1.1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            margin: 0.5rem 0 0 0;
           }
           .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 0;
           }
           .stat-card {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: left;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
           }
           .stat-card:hover {
-            border-color: #000000;
             transform: translateY(-2px);
           }
           .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
+            font-size: 2rem;
+            font-weight: 700;
             margin-bottom: 0.25rem;
+            line-height: 1;
           }
           .stat-label {
-            font-size: 0.8rem;
-            color: #666666;
+            font-size: 0.875rem;
             font-weight: 500;
+            margin: 0;
           }
           .filters-section {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #000000;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 0 2rem 2rem 2rem;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
           }
           .filters-grid {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr;
-            gap: 1rem;
+            gap: 2rem;
             align-items: end;
           }
           .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.75rem;
           }
           .filter-label {
-            font-weight: 600;
-            color: #000000;
-            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            font-size: 1rem;
+            letter-spacing: -0.01em;
           }
           .search-input {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 0.9rem;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 0.95rem;
             box-sizing: border-box;
-            background: #ffffff;
-            color: #000000;
+            background: #fafafa;
+            color: #1a1a1a;
             transition: all 0.2s ease;
           }
           .search-input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #5884FD;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(88, 132, 253, 0.1);
           }
           .filter-select {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 0.9rem;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 0.95rem;
             box-sizing: border-box;
-            background: #ffffff;
-            color: #000000;
+            background: #fafafa;
+            color: #1a1a1a;
             transition: all 0.2s ease;
           }
           .filter-select:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #5884FD;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(88, 132, 253, 0.1);
           }
           .tasks-section {
             padding: 0 2rem 2rem 2rem;
@@ -566,18 +567,19 @@ export default function MyTasksPage() {
           }
           .task-item {
             background: #ffffff;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 1.5rem;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            padding: 2rem;
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
           }
           .task-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: #000000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-color: #C483D9;
           }
           .task-item.overdue {
             border-color: #ef4444;
@@ -597,11 +599,12 @@ export default function MyTasksPage() {
             flex: 1;
           }
           .task-title {
-            font-weight: 600;
-            color: #000000;
-            font-size: 1.1rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            font-size: 1.2rem;
             line-height: 1.4;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
           }
           .task-project {
             font-size: 0.85rem;
@@ -670,25 +673,28 @@ export default function MyTasksPage() {
           }
           .status-btn {
             padding: 0.5rem 1rem;
-            border: 1px solid #000000;
-            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s ease;
             background: #ffffff;
-            color: #000000;
+            color: #666666;
             font-weight: 500;
           }
           .status-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: #5884FD;
+            color: #ffffff;
+            border-color: #5884FD;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(88, 132, 253, 0.3);
           }
           .view-btn {
             padding: 0.5rem;
-            border: 1px solid #000000;
-            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             background: #ffffff;
-            color: #000000;
+            color: #666666;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -696,8 +702,10 @@ export default function MyTasksPage() {
             justify-content: center;
           }
           .view-btn:hover {
-            background: #f3f4f6;
-            transform: scale(1.05);
+            background: #5884FD;
+            color: #ffffff;
+            border-color: #5884FD;
+            transform: translateY(-1px);
           }
           .empty-state {
             display: flex;
@@ -724,13 +732,13 @@ export default function MyTasksPage() {
           }
           .error-message {
             background: #ffffff;
-            border: 2px solid #ef4444;
-            color: #dc2626;
+            border: 1px solid #F87239;
+            color: #F87239;
             padding: 1rem;
-            border-radius: 8px;
-            margin: 2rem;
+            border-radius: 12px;
+            margin: 0 2rem 2rem 2rem;
             font-weight: 500;
-            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+            box-shadow: 0 2px 8px rgba(248, 114, 57, 0.1);
           }
           .modal-overlay {
             position: fixed;
@@ -1313,41 +1321,18 @@ export default function MyTasksPage() {
             </div>
             
             <div className="stats-grid">
-              <div className="stat-card"
-                style={{
-                  background: '#FEF3C7',
-                  borderColor: '#F59E0B',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: '2px solid #F59E0B',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.2)';
-                  e.currentTarget.style.background = '#FEF3C7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.background = '#FEF3C7';
-                }}
-              >
+              <div className="stat-card">
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#ffffff',
-                  borderRadius: '8px',
+                  background: '#f0f0f0',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '2px solid #F59E0B'
+                  marginBottom: '1rem'
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#FFB333' }}>
                     <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
                     <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
                     <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
@@ -1355,184 +1340,66 @@ export default function MyTasksPage() {
                   </svg>
               </div>
                 <div>
-                  <div className="stat-number" style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: '700', 
-                    color: '#92400E', 
-                    margin: '0', 
-                    lineHeight: '1' 
-                  }}>{stats.total}</div>
-                  <div className="stat-label" style={{ 
-                    fontSize: '0.875rem', 
-                    color: '#92400E', 
-                    fontWeight: '500', 
-                    margin: '0' 
-                  }}>Total Tasks</div>
+                  <div className="stat-number" style={{ color: '#FFB333' }}>{stats.total}</div>
+                  <div className="stat-label" style={{ color: '#666666' }}>Total Tasks</div>
               </div>
               </div>
-              <div className="stat-card"
-                style={{
-                  background: '#D1FAE5',
-                  borderColor: '#10B981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: '2px solid #10B981',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.2)';
-                  e.currentTarget.style.background = '#D1FAE5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.background = '#D1FAE5';
-                }}
-              >
+              <div className="stat-card">
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#ffffff',
-                  borderRadius: '8px',
+                  background: '#f0f0f0',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '2px solid #10B981'
+                  marginBottom: '1rem'
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
-                    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <CheckCircleIcon style={{ width: '20px', height: '20px', color: '#10B981' }} />
                 </div>
                 <div>
-                  <div className="stat-number" style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: '700', 
-                    color: '#047857', 
-                    margin: '0', 
-                    lineHeight: '1' 
-                  }}>{stats.completed}</div>
-                  <div className="stat-label" style={{ 
-                    fontSize: '0.875rem', 
-                    color: '#047857', 
-                    fontWeight: '500', 
-                    margin: '0' 
-                  }}>Completed</div>
+                  <div className="stat-number" style={{ color: '#10B981' }}>{stats.completed}</div>
+                  <div className="stat-label" style={{ color: '#666666' }}>Completed</div>
                 </div>
               </div>
-              <div className="stat-card"
-                style={{
-                  background: '#FEE2E2',
-                  borderColor: '#EF4444',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: '2px solid #EF4444',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.2)';
-                  e.currentTarget.style.background = '#FEE2E2';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.background = '#FEE2E2';
-                }}
-              >
+              <div className="stat-card">
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#ffffff',
-                  borderRadius: '8px',
+                  background: '#f0f0f0',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '2px solid #EF4444'
+                  marginBottom: '1rem'
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#F87239' }}>
                     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
                     <path d="M12 7v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <div>
-                  <div className="stat-number" style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: '700', 
-                    color: '#DC2626', 
-                    margin: '0', 
-                    lineHeight: '1' 
-                  }}>{stats.overdue}</div>
-                  <div className="stat-label" style={{ 
-                    fontSize: '0.875rem', 
-                    color: '#DC2626', 
-                    fontWeight: '500', 
-                    margin: '0' 
-                  }}>Overdue</div>
+                  <div className="stat-number" style={{ color: '#F87239' }}>{stats.overdue}</div>
+                  <div className="stat-label" style={{ color: '#666666' }}>Overdue</div>
                 </div>
               </div>
-              <div className="stat-card"
-                style={{
-                  background: '#DBEAFE',
-                  borderColor: '#3B82F6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: '2px solid #3B82F6',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.2)';
-                  e.currentTarget.style.background = '#DBEAFE';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.background = '#DBEAFE';
-                }}
-              >
+              <div className="stat-card">
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#ffffff',
-                  borderRadius: '8px',
+                  background: '#f0f0f0',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '2px solid #3B82F6'
+                  marginBottom: '1rem'
                 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
+                  <ClockIcon style={{ width: '20px', height: '20px', color: '#5884FD' }} />
                 </div>
                 <div>
-                  <div className="stat-number" style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: '700', 
-                    color: '#1E40AF', 
-                    margin: '0', 
-                    lineHeight: '1' 
-                  }}>{stats.dueToday}</div>
-                  <div className="stat-label" style={{ 
-                    fontSize: '0.875rem', 
-                    color: '#1E40AF', 
-                    fontWeight: '500', 
-                    margin: '0' 
-                  }}>Due Today</div>
+                  <div className="stat-number" style={{ color: '#5884FD' }}>{stats.dueToday}</div>
+                  <div className="stat-label" style={{ color: '#666666' }}>Due Today</div>
                 </div>
               </div>
             </div>
@@ -1605,15 +1472,41 @@ export default function MyTasksPage() {
 
           <div className="tasks-section">
             {filteredTasks.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">□</div>
-                <div className="empty-state-title">No tasks found</div>
-                <div className="empty-state-text">
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid #e8e8e8',
+                borderRadius: '16px',
+                padding: '4rem',
+                textAlign: 'center',
+                color: '#666666',
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+              }}>
+                <div style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  background: '#f0f0f0',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 2rem'
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#999999' }}>
+                    <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                  No tasks found
+                </h3>
+                <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5', color: '#999999' }}>
                   {tasks.length === 0 
                     ? "You don't have any assigned tasks yet." 
                     : "No tasks match your current filters. Try adjusting your search or filters."
                   }
-                </div>
+                </p>
               </div>
             ) : (
               <div className="tasks-list">

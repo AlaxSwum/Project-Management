@@ -715,10 +715,9 @@ export default function ClassSchedulePage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 1.5rem',
-                    fontSize: '1.5rem'
+                    margin: '0 auto 1.5rem'
                   }}>
-                    📁
+                    <FolderIcon style={{ width: '24px', height: '24px', color: '#999999' }} />
                   </div>
                   <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '500' }}>No folders created yet</p>
                   <p style={{ margin: '0', fontSize: '0.9rem', lineHeight: '1.5' }}>
@@ -767,10 +766,9 @@ export default function ClassSchedulePage() {
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.2rem'
+                        justifyContent: 'center'
                       }}>
-                        📁
+                        <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
                       </div>
                       <div>
                         <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
@@ -836,10 +834,9 @@ export default function ClassSchedulePage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 1rem',
-                    fontSize: '1.5rem'
+                    margin: '0 auto 1rem'
                   }}>
-                    📚
+                    <CalendarIcon style={{ width: '24px', height: '24px', color: '#999999' }} />
                   </div>
                   <p style={{ margin: '0', fontWeight: '500' }}>No classes in {currentFolder.name}</p>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666666' }}>Click "Add Class" to create one.</p>
@@ -955,10 +952,9 @@ export default function ClassSchedulePage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 2rem',
-                fontSize: '2rem'
+                margin: '0 auto 2rem'
               }}>
-                📁
+                <FolderIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
               </div>
               <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
                 Choose a Folder to View Classes
