@@ -797,27 +797,32 @@ export default function ClassSchedulePage() {
               boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: '120px 1fr 100px 100px 100px 100px 120px 1fr 100px 80px',
-                gap: '0',
-                background: '#fafafa',
-                borderBottom: '1px solid #e8e8e8',
-                fontWeight: '500',
-                fontSize: '0.8rem',
-                color: '#666666',
-                letterSpacing: '0.025em'
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch'
               }}>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>START DATE</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CLASS NAME</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DURATION</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DAYS</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TIME</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PLATFORM</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR NAME</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR INFO</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>POST DATE</div>
-                <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
-              </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '120px 200px 100px 100px 100px 100px 120px 200px 100px 80px',
+                  gap: '0',
+                  background: '#fafafa',
+                  borderBottom: '1px solid #e8e8e8',
+                  fontWeight: '500',
+                  fontSize: '0.8rem',
+                  color: '#666666',
+                  letterSpacing: '0.025em',
+                  minWidth: '1120px'
+                }}>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>START DATE</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CLASS NAME</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DURATION</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DAYS</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TIME</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PLATFORM</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR NAME</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR INFO</div>
+                  <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>POST DATE</div>
+                  <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
+                </div>
 
               {filteredItems.length === 0 ? (
                 <div style={{ 
@@ -845,11 +850,12 @@ export default function ClassSchedulePage() {
                 filteredItems.map((item) => (
                   <div key={item.id} style={{
                     display: 'grid',
-                    gridTemplateColumns: '120px 1fr 100px 100px 100px 100px 120px 1fr 100px 80px',
+                    gridTemplateColumns: '120px 200px 100px 100px 100px 100px 120px 200px 100px 80px',
                     gap: '0',
                     borderBottom: '1px solid #f0f0f0',
                     fontSize: '0.85rem',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    minWidth: '1120px'
                   }}>
                     <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {formatDate(item.class_start_date)}
@@ -954,6 +960,7 @@ export default function ClassSchedulePage() {
                   </div>
                 ))
               )}
+              </div>
             </div>
           )}
 
