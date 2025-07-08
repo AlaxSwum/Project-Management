@@ -402,9 +402,7 @@ export default function TimetablePage() {
     return `${mins}m`;
   };
 
-  const filteredMeetings = selectedProject 
-    ? meetings.filter(m => (m.project_id || m.project) === selectedProject)
-    : meetings;
+  const filteredMeetings = meetings;
 
   const upcomingMeetings = filteredMeetings.filter(m => {
     // Parse date and time manually to avoid timezone issues
@@ -539,8 +537,8 @@ export default function TimetablePage() {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
@@ -551,8 +549,8 @@ export default function TimetablePage() {
 
   if (isLoading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
@@ -567,31 +565,36 @@ export default function TimetablePage() {
           body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #ffffff;
+            background: #F5F5ED;
           }
           .timetable-container {
             min-height: 100vh;
             display: flex;
-            background: #ffffff;
+            background: #F5F5ED;
             max-width: 100vw;
             overflow-x: hidden;
             box-sizing: border-box;
           }
           .main-content {
             flex: 1;
-            margin-left: 256px;
-            background: #ffffff;
-            max-width: calc(100vw - 256px);
+            margin-left: 280px;
+            background: transparent;
+            max-width: calc(100vw - 280px);
             overflow-x: hidden;
             box-sizing: border-box;
+            position: relative;
+            z-index: 1;
           }
           .header {
-            background: #ffffff;
-            border-bottom: 2px solid #000000;
-            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(30px);
+            border-bottom: none;
+            padding: 2.5rem 2rem 1.5rem 2rem;
             position: sticky;
             top: 0;
             z-index: 20;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
             box-sizing: border-box;
             width: 100%;
             overflow-x: hidden;
@@ -600,45 +603,104 @@ export default function TimetablePage() {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
             box-sizing: border-box;
             width: 100%;
             max-width: 100%;
           }
           .header-title {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #000000;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1F2937;
             margin: 0;
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
           }
-          .header-actions {
+          .header-controls {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            width: 100%;
-            max-width: 100%;
+            gap: 2rem;
           }
-          .create-button {
-            background: #000000;
-            color: #ffffff;
-            border: none;
+          
+          .filter-controls {
+            display: flex;
+            gap: 1rem;
+          }
+          
+          .filter-btn {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            color: #1F2937;
+            border: 2px solid rgba(196, 131, 217, 0.3);
             padding: 0.75rem 1.5rem;
-            border-radius: 4px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            height: 40px;
-            box-sizing: border-box;
+            gap: 0.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
+            font-size: 0.875rem;
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .filter-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(196, 131, 217, 0.1), transparent);
+            transition: left 0.6s ease;
+          }
+          
+          .filter-btn:hover {
+            background: rgba(196, 131, 217, 0.1);
+            border-color: #C483D9;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(196, 131, 217, 0.25);
+          }
+          
+          .filter-btn:hover::before {
+            left: 100%;
+          }
+          
+          .filter-btn.active {
+            background: linear-gradient(135deg, #C483D9, #E5A3F0);
+            color: #FFFFFF;
+            border-color: #C483D9;
+            box-shadow: 0 8px 25px rgba(196, 131, 217, 0.35);
+          }
+          .create-button {
+            background: linear-gradient(135deg, #5884FD, #7BA3FF);
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
+            font-size: 0.875rem;
+            box-shadow: 0 4px 16px rgba(88, 132, 253, 0.3);
           }
           .create-button:hover {
-            background: #333333;
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #4A6CF7, #5884FD);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 132, 253, 0.4);
           }
           .filter-section {
             display: flex;
@@ -658,19 +720,74 @@ export default function TimetablePage() {
           }
           .main-content-area {
             padding: 2rem;
-            max-width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
             box-sizing: border-box;
             min-height: calc(100vh - 200px);
             line-height: 1.6;
           }
           .error-message {
             background: #ffffff;
-            border: 2px solid #000000;
-            color: #000000;
+            border: 1px solid #F87239;
+            color: #F87239;
             padding: 1rem;
-            border-radius: 4px;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
             font-weight: 500;
+            box-shadow: 0 2px 8px rgba(248, 114, 57, 0.1);
+          }
+          
+          .timetable-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            padding-top: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+          }
+          
+          .timetable-stats .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            background: #FFFFFF;
+            padding: 1.25rem 1rem;
+            border-radius: 16px;
+            border: 1px solid #E5E7EB;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          }
+          
+          .timetable-stats .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #5884FD;
+          }
+          
+          .stat-label {
+            font-size: 0.75rem;
+            color: #6B7280;
+            font-weight: 500;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+          
+          .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1F2937;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
+            letter-spacing: -0.01em;
+          }
+          
+          .stat-value.upcoming {
+            color: #5884FD;
+          }
+          
+          .stat-value.total {
+            color: #FFB333;
           }
           .meetings-section {
             margin-bottom: 2rem;
@@ -892,36 +1009,41 @@ export default function TimetablePage() {
               margin-left: 0;
               max-width: 100vw;
             }
+            
+            .header-controls {
+              flex-direction: column;
+              gap: 1rem;
+              align-items: stretch;
+            }
+            
+            .filter-controls {
+              justify-content: center;
+            }
+            
+            .timetable-stats {
+              grid-template-columns: repeat(2, 1fr);
+            }
           }
           
           /* Tablet Portrait - Better layout */
           @media (max-width: 1024px) and (min-width: 769px) {
-            .header-actions {
-              display: grid;
-              grid-template-columns: 2fr 3fr;
-              gap: 1rem;
-              align-items: end;
-            }
-            
-            .filter-section {
-              display: flex;
+            .header-content {
               flex-direction: column;
+              gap: 1.5rem;
+            }
+            
+            .header-controls {
+              flex-direction: row;
+              justify-content: center;
+              gap: 2rem;
+            }
+            
+            .filter-controls {
               gap: 0.5rem;
             }
             
-            .action-buttons-row {
-              display: flex;
-              gap: 0.5rem;
-              justify-content: flex-end;
-            }
-            
-            .view-toggle {
-              width: auto;
-            }
-            
-            .create-button {
-              width: auto;
-              min-width: 140px;
+            .timetable-stats {
+              grid-template-columns: repeat(2, 1fr);
             }
           }
           
@@ -931,107 +1053,70 @@ export default function TimetablePage() {
             }
             
             .header {
-              padding: 0.75rem;
+              padding: 1rem;
               position: relative;
-            }
-            
-            /* Better space utilization */
-            .main-content-area {
-              padding: 0.75rem;
-              max-width: 100%;
-              min-height: calc(100vh - 150px);
-            }
-            
-            /* Clean up header spacing */
-            .header-content > div:first-child {
-              margin-bottom: 0.5rem;
-            }
-            
-            .header-title {
-              font-size: 1.1rem;
-              margin-bottom: 0.25rem;
-            }
-            
-            .header-title p {
-              font-size: 0.75rem;
-              margin-top: 0.125rem;
             }
             
             .header-content {
               flex-direction: column;
-              gap: 0.5rem;
+              gap: 1rem;
               align-items: stretch;
             }
             
-            .header-actions {
-              display: grid;
-              grid-template-columns: 1fr;
-              gap: 0.5rem;
+            .header-title {
+              font-size: 1.75rem;
+              text-align: center;
             }
             
-            .filter-section {
-              display: grid;
-              grid-template-columns: auto 1fr;
-              align-items: center;
-              gap: 0.5rem;
-              width: 100%;
+            .header-title + p {
+              font-size: 0.9rem;
+              text-align: center;
             }
             
-            .filter-section label {
-              font-size: 0.8rem;
-              white-space: nowrap;
+            .header-controls {
+              flex-direction: column;
+              gap: 1rem;
+              align-items: stretch;
             }
             
-            .filter-select {
-              padding: 0 0.5rem;
-              font-size: 0.85rem;
-              width: 100%;
-              height: 36px;
-              box-sizing: border-box;
-              line-height: 32px;
-            }
-            
-            .action-buttons-row {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 0.5rem;
-              width: 100%;
-              align-items: center;
-            }
-            
-            .view-toggle {
-              height: 36px !important;
+            .filter-controls {
               display: flex;
-              width: 100%;
-              box-sizing: border-box;
-              align-self: center;
+              gap: 0.5rem;
+              justify-content: center;
             }
             
-            .view-toggle button {
+            .filter-btn {
               flex: 1;
-              padding: 0.5rem 0.5rem !important;
-              font-size: 0.75rem !important;
-              height: 36px;
-              box-sizing: border-box;
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
+              padding: 0.5rem 1rem;
+              font-size: 0.8rem;
             }
             
             .create-button {
               justify-content: center;
-              padding: 0.5rem 0.75rem;
-              font-size: 0.75rem;
-              height: 36px;
-              display: flex;
-              align-items: center;
-              gap: 0.25rem;
-              width: 100%;
-              box-sizing: border-box;
+              padding: 0.75rem 1rem;
+              font-size: 0.8rem;
+              align-self: center;
+              min-width: 200px;
+            }
+            
+            .timetable-stats {
+              grid-template-columns: repeat(2, 1fr);
+              gap: 0.75rem;
+              padding-top: 1rem;
+            }
+            
+            .timetable-stats .stat-item {
+              padding: 1rem 0.75rem;
+            }
+            
+            .stat-value {
+              font-size: 1.5rem;
             }
             
             .main-content-area {
-              padding: 0.75rem;
+              padding: 1rem;
+              max-width: 100%;
+              min-height: calc(100vh - 150px);
             }
             
             /* Calendar Navigation Mobile - 2 Row Layout */
@@ -1919,60 +2004,58 @@ export default function TimetablePage() {
         <main className="main-content">
           <header className="header">
             <div className="header-content">
-              <div style={{ marginBottom: '0.5rem' }}>
+              <div>
                 <h1 className="header-title">
                   <ClockIcon style={{ width: '32px', height: '32px' }} />
                   Timetable & Meetings
                 </h1>
-                <p style={{ color: '#666666', marginTop: '0.25rem', margin: '0' }}>
+                <p style={{ color: '#666666', fontSize: '1.1rem', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                   Schedule and manage team meetings across all projects
                 </p>
               </div>
-              <div className="header-actions">
-                <div className="filter-section">
-                  <select
-                    className="filter-select"
-                    value={selectedProject}
-                    onChange={(e) => setSelectedProject(Number(e.target.value))}
-                  >
-                    <option value={0}>All Projects</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>{project.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="action-buttons-row">
-                  <div className="view-toggle">
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={viewMode === 'list' ? 'active' : ''}
-                      style={{
-                        background: viewMode === 'list' ? '#000000' : '#ffffff',
-                        color: viewMode === 'list' ? '#ffffff' : '#000000'
-                      }}
-                    >
-                      List View
-                    </button>
-                    <button
-                      onClick={() => setViewMode('calendar')}
-                      className={viewMode === 'calendar' ? 'active' : ''}
-                      style={{
-                        borderLeft: '2px solid #000000',
-                        background: viewMode === 'calendar' ? '#000000' : '#ffffff',
-                        color: viewMode === 'calendar' ? '#ffffff' : '#000000'
-                      }}
-                    >
-                      Calendar View
-                    </button>
-                  </div>
+              
+              <div className="header-controls">
+                <div className="filter-controls">
                   <button
-                    onClick={() => setShowCreateForm(true)}
-                    className="create-button"
+                    onClick={() => setViewMode('list')}
+                    className={`filter-btn ${viewMode === 'list' ? 'active' : ''}`}
                   >
-                    <PlusIcon style={{ width: '20px', height: '20px' }} />
-                    Schedule Meeting
+                    List View
+                  </button>
+                  <button
+                    onClick={() => setViewMode('calendar')}
+                    className={`filter-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                  >
+                    Calendar View
                   </button>
                 </div>
+                
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="create-button"
+                >
+                  <PlusIcon style={{ width: '20px', height: '20px' }} />
+                  Schedule Meeting
+                </button>
+              </div>
+            </div>
+            
+            <div className="timetable-stats">
+              <div className="stat-item">
+                <div className="stat-label">Total Meetings</div>
+                <div className="stat-value total">{meetings.length}</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-label">Upcoming</div>
+                <div className="stat-value upcoming">{upcomingMeetings.length}</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-label">Past Meetings</div>
+                <div className="stat-value">{pastMeetings.length}</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-label">Active Projects</div>
+                <div className="stat-value">{projects.length}</div>
               </div>
             </div>
           </header>
