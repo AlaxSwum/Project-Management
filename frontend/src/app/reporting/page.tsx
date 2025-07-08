@@ -302,7 +302,7 @@ export default function ReportingPage() {
             
             .modal-content .compact-stats {
               grid-template-columns: repeat(2, 1fr) !important;
-              gap: 1rem !important;
+              gap: 0.5rem !important;
               padding: 0 1.5rem !important;
             }
           }
@@ -354,7 +354,7 @@ export default function ReportingPage() {
             
             .modal-content .compact-stats {
               grid-template-columns: 1fr !important;
-              gap: 0.75rem !important;
+              gap: 0.5rem !important;
               padding: 0 1rem !important;
             }
           }
@@ -748,28 +748,28 @@ export default function ReportingPage() {
               </div>
             </div>
 
-            {/* Compact Statistics Cards Grid */}
+            {/* Mini Statistics Cards Grid */}
             <div className="compact-stats" style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '1.5rem', 
-              marginBottom: '2.5rem',
+              gap: '0.75rem', 
+              marginBottom: '1.5rem',
               padding: '0 3rem'
             }}>
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #fef9f0 100%)', 
                 border: '1px solid #FFB333', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
+                borderRadius: '12px', 
+                padding: '1rem', 
                 textAlign: 'center', 
-                boxShadow: '0 4px 16px rgba(255, 179, 51, 0.15)',
+                boxShadow: '0 2px 8px rgba(255, 179, 51, 0.1)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   fontWeight: '700', 
                   color: '#FFB333', 
-                  margin: '0 0 0.5rem 0', 
+                  margin: '0 0 0.25rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #FFB333, #FCD34D)',
                   WebkitBackgroundClip: 'text',
@@ -780,7 +780,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -791,17 +791,17 @@ export default function ReportingPage() {
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)', 
                 border: '1px solid #10B981', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
+                borderRadius: '12px', 
+                padding: '1rem', 
                 textAlign: 'center', 
-                boxShadow: '0 4px 16px rgba(16, 185, 129, 0.15)',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.1)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   fontWeight: '700', 
                   color: '#10B981', 
-                  margin: '0 0 0.5rem 0', 
+                  margin: '0 0 0.25rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #10B981, #34D399)',
                   WebkitBackgroundClip: 'text',
@@ -812,7 +812,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -823,17 +823,17 @@ export default function ReportingPage() {
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%)', 
                 border: '1px solid #5884FD', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
+                borderRadius: '12px', 
+                padding: '1rem', 
                 textAlign: 'center', 
-                boxShadow: '0 4px 16px rgba(88, 132, 253, 0.15)',
+                boxShadow: '0 2px 8px rgba(88, 132, 253, 0.1)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   fontWeight: '700', 
                   color: '#5884FD', 
-                  margin: '0 0 0.5rem 0', 
+                  margin: '0 0 0.25rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #5884FD, #7BA3FF)',
                   WebkitBackgroundClip: 'text',
@@ -844,7 +844,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -855,17 +855,17 @@ export default function ReportingPage() {
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #fef2f2 100%)', 
                 border: '1px solid #F87239', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
+                borderRadius: '12px', 
+                padding: '1rem', 
                 textAlign: 'center', 
-                boxShadow: '0 4px 16px rgba(248, 114, 57, 0.15)',
+                boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   fontWeight: '700', 
                   color: '#F87239', 
-                  margin: '0 0 0.5rem 0', 
+                  margin: '0 0 0.25rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #F87239, #FB923C)',
                   WebkitBackgroundClip: 'text',
@@ -876,7 +876,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -887,17 +887,17 @@ export default function ReportingPage() {
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)', 
                 border: '1px solid #f59e0b', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
+                borderRadius: '12px', 
+                padding: '1rem', 
                 textAlign: 'center', 
-                boxShadow: '0 4px 16px rgba(245, 158, 11, 0.15)',
+                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.1)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   fontWeight: '700', 
                   color: '#f59e0b', 
-                  margin: '0 0 0.5rem 0', 
+                  margin: '0 0 0.25rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
                   WebkitBackgroundClip: 'text',
@@ -908,7 +908,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -919,17 +919,17 @@ export default function ReportingPage() {
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #faf5ff 100%)', 
                 border: '1px solid #C483D9', 
-                borderRadius: '16px', 
-                padding: '1.5rem', 
+                borderRadius: '12px', 
+                padding: '1rem', 
                 textAlign: 'center', 
-                boxShadow: '0 4px 16px rgba(196, 131, 217, 0.15)',
+                boxShadow: '0 2px 8px rgba(196, 131, 217, 0.1)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   fontWeight: '700', 
                   color: '#C483D9', 
-                  margin: '0 0 0.5rem 0', 
+                  margin: '0 0 0.25rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #C483D9, #DDA0DD)',
                   WebkitBackgroundClip: 'text',
@@ -940,7 +940,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '0.875rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
