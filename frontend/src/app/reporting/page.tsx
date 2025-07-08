@@ -235,23 +235,25 @@ export default function ReportingPage() {
           .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1rem;
             z-index: 50;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
           }
           .modal-content {
             background: #ffffff;
-            border: 1px solid #e8e8e8;
-            border-radius: 20px;
+            border: 2px solid #e8e8e8;
+            border-radius: 24px;
             width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
+            max-width: 1100px;
+            max-height: 95vh;
             overflow-y: auto;
-            padding: 3rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
           }
           /* Mobile Responsive Styles */
           @media (max-width: 768px) {
@@ -294,7 +296,7 @@ export default function ReportingPage() {
             
             .modal-content {
               max-width: 95vw;
-              padding: 1rem;
+              max-height: 90vh;
               margin: 0.5rem;
             }
           }
@@ -340,7 +342,7 @@ export default function ReportingPage() {
             
             .modal-content {
               max-width: 98vw;
-              padding: 0.75rem;
+              max-height: 85vh;
               margin: 0.25rem;
             }
           }
@@ -655,179 +657,516 @@ export default function ReportingPage() {
       {showDetailModal && selectedMember && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: '400', color: '#1a1a1a', margin: '0', letterSpacing: '-0.02em' }}>
-                {selectedMember.user_info.name} - Detailed Report
-              </h2>
-              <button
-                style={{ 
-                  background: '#ffffff', 
-                  border: '1px solid #e8e8e8', 
-                  borderRadius: '12px', 
-                  padding: '0.75rem 1rem', 
-                  cursor: 'pointer', 
-                  fontWeight: '500',
-                  color: '#666666',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
-                }}
-                onClick={() => setShowDetailModal(false)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#F87239';
-                  e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.style.borderColor = '#F87239';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#ffffff';
-                  e.currentTarget.style.color = '#666666';
-                  e.currentTarget.style.borderColor = '#e8e8e8';
-                }}
-              >
-                ✕ Close
-              </button>
+            {/* Enhanced Header with Theme Colors */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #F5F5ED 0%, #ffffff 100%)', 
+              borderRadius: '24px 24px 0 0',
+              padding: '2.5rem 3rem',
+              margin: '-2px -2px 2.5rem -2px',
+              borderBottom: '1px solid #e8e8e8'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  <div style={{ 
+                    width: '72px', 
+                    height: '72px', 
+                    borderRadius: '50%', 
+                    background: 'linear-gradient(135deg, #5884FD, #C483D9)', 
+                    color: '#ffffff', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: '700', 
+                    fontSize: '1.75rem',
+                    boxShadow: '0 8px 24px rgba(88, 132, 253, 0.3)'
+                  }}>
+                    {selectedMember.user_info.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 style={{ 
+                      fontSize: '2rem', 
+                      fontWeight: '300', 
+                      color: '#1a1a1a', 
+                      margin: '0 0 0.5rem 0', 
+                      letterSpacing: '-0.025em'
+                    }}>
+                      {selectedMember.user_info.name}
+                    </h2>
+                    <p style={{ 
+                      fontSize: '1.1rem', 
+                      color: '#666666', 
+                      margin: '0',
+                      fontWeight: '400'
+                    }}>
+                      Performance Report & Task Overview
+                    </p>
+                  </div>
+                </div>
+                <button
+                  style={{ 
+                    background: '#ffffff', 
+                    border: '2px solid #e8e8e8', 
+                    borderRadius: '16px', 
+                    padding: '1rem 1.5rem', 
+                    cursor: 'pointer', 
+                    fontWeight: '500',
+                    color: '#666666',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
+                    fontSize: '1rem'
+                  }}
+                  onClick={() => setShowDetailModal(false)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#F87239';
+                    e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.borderColor = '#F87239';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(248, 114, 57, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.color = '#666666';
+                    e.currentTarget.style.borderColor = '#e8e8e8';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.05)';
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-              <div style={{ background: '#ffffff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#FFB333', margin: '0', lineHeight: '1' }}>
+            {/* Enhanced Statistics Cards Grid */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+              gap: '2rem', 
+              marginBottom: '3rem',
+              padding: '0 3rem'
+            }}>
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ffffff 0%, #fef9f0 100%)', 
+                border: '2px solid #FFB333', 
+                borderRadius: '24px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                boxShadow: '0 8px 32px rgba(255, 179, 51, 0.2)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: '#FFB333', 
+                  margin: '0 0 1rem 0', 
+                  lineHeight: '1',
+                  background: 'linear-gradient(135deg, #FFB333, #FCD34D)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {selectedMember.task_summary?.total_tasks || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.5rem 0 0 0', fontWeight: '500' }}>Total Tasks</div>
+                <div style={{ 
+                  color: '#666666', 
+                  fontSize: '1rem', 
+                  fontWeight: '500',
+                  letterSpacing: '-0.01em'
+                }}>
+                  Total Tasks
+                </div>
               </div>
-              <div style={{ background: '#ffffff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#10b981', margin: '0', lineHeight: '1' }}>
+
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)', 
+                border: '2px solid #10B981', 
+                borderRadius: '24px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.2)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: '#10B981', 
+                  margin: '0 0 1rem 0', 
+                  lineHeight: '1',
+                  background: 'linear-gradient(135deg, #10B981, #34D399)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {selectedMember.task_summary?.completed_tasks || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.5rem 0 0 0', fontWeight: '500' }}>Completed</div>
+                <div style={{ 
+                  color: '#666666', 
+                  fontSize: '1rem', 
+                  fontWeight: '500',
+                  letterSpacing: '-0.01em'
+                }}>
+                  Completed
+                </div>
               </div>
-              <div style={{ background: '#ffffff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#5884FD', margin: '0', lineHeight: '1' }}>
+
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%)', 
+                border: '2px solid #5884FD', 
+                borderRadius: '24px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                boxShadow: '0 8px 32px rgba(88, 132, 253, 0.2)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: '#5884FD', 
+                  margin: '0 0 1rem 0', 
+                  lineHeight: '1',
+                  background: 'linear-gradient(135deg, #5884FD, #7BA3FF)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {selectedMember.task_summary?.in_progress_tasks || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.5rem 0 0 0', fontWeight: '500' }}>In Progress</div>
+                <div style={{ 
+                  color: '#666666', 
+                  fontSize: '1rem', 
+                  fontWeight: '500',
+                  letterSpacing: '-0.01em'
+                }}>
+                  In Progress
+                </div>
               </div>
-              <div style={{ background: '#ffffff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#F87239', margin: '0', lineHeight: '1' }}>
+
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ffffff 0%, #fef2f2 100%)', 
+                border: '2px solid #F87239', 
+                borderRadius: '24px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                boxShadow: '0 8px 32px rgba(248, 114, 57, 0.2)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: '#F87239', 
+                  margin: '0 0 1rem 0', 
+                  lineHeight: '1',
+                  background: 'linear-gradient(135deg, #F87239, #FB923C)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {selectedMember.task_summary?.overdue_tasks || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.5rem 0 0 0', fontWeight: '500' }}>Overdue</div>
+                <div style={{ 
+                  color: '#666666', 
+                  fontSize: '1rem', 
+                  fontWeight: '500',
+                  letterSpacing: '-0.01em'
+                }}>
+                  Overdue
+                </div>
               </div>
-              <div style={{ background: '#ffffff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f59e0b', margin: '0', lineHeight: '1' }}>
+
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)', 
+                border: '2px solid #f59e0b', 
+                borderRadius: '24px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                boxShadow: '0 8px 32px rgba(245, 158, 11, 0.2)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: '#f59e0b', 
+                  margin: '0 0 1rem 0', 
+                  lineHeight: '1',
+                  background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {selectedMember.task_summary?.todo_tasks || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.5rem 0 0 0', fontWeight: '500' }}>To Do</div>
+                <div style={{ 
+                  color: '#666666', 
+                  fontSize: '1rem', 
+                  fontWeight: '500',
+                  letterSpacing: '-0.01em'
+                }}>
+                  To Do
+                </div>
               </div>
-              <div style={{ background: '#ffffff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#C483D9', margin: '0', lineHeight: '1' }}>
+
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ffffff 0%, #faf5ff 100%)', 
+                border: '2px solid #C483D9', 
+                borderRadius: '24px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                boxShadow: '0 8px 32px rgba(196, 131, 217, 0.2)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '3rem', 
+                  fontWeight: '700', 
+                  color: '#C483D9', 
+                  margin: '0 0 1rem 0', 
+                  lineHeight: '1',
+                  background: 'linear-gradient(135deg, #C483D9, #DDA0DD)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {selectedMember.project_involvement?.length || 0}
                 </div>
-                <div style={{ color: '#666666', fontSize: '0.875rem', margin: '0.5rem 0 0 0', fontWeight: '500' }}>Active Projects</div>
+                <div style={{ 
+                  color: '#666666', 
+                  fontSize: '1rem', 
+                  fontWeight: '500',
+                  letterSpacing: '-0.01em'
+                }}>
+                  Active Projects
+                </div>
               </div>
             </div>
 
-            {/* Overdue Tasks Section */}
+            {/* Enhanced Overdue Tasks Section */}
             {selectedMember.overdue_task_details && selectedMember.overdue_task_details.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                  <h3 style={{ margin: '0', color: '#ef4444', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                    ⚠️ Overdue Tasks ({selectedMember.overdue_task_details.length})
-                  </h3>
-                  {selectedMember.overdue_task_details.length > 5 && (
-                    <button
-                      style={{
-                        background: '#F87239',
-                        color: '#ffffff',
-                        border: 'none',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '12px',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
+              <div style={{ marginBottom: '2rem', padding: '0 3rem' }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)', 
+                  borderRadius: '24px', 
+                  padding: '2.5rem',
+                  border: '2px solid #F87239',
+                  boxShadow: '0 8px 32px rgba(248, 114, 57, 0.15)'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    marginBottom: '2rem',
+                    paddingBottom: '1.5rem',
+                    borderBottom: '1px solid #fecaca'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{
+                        width: '4px',
+                        height: '32px',
+                        backgroundColor: '#F87239',
+                        borderRadius: '2px'
+                      }}></div>
+                      <h3 style={{ 
+                        margin: '0', 
+                        color: '#F87239', 
+                        fontSize: '1.5rem', 
                         fontWeight: '600',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 4px 12px rgba(248, 114, 57, 0.3)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#e66429';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#F87239';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
-                      onClick={() => {
-                        const allOverdueTasks = selectedMember.overdue_task_details;
-                        alert(`All ${allOverdueTasks.length} overdue tasks:\n\n${allOverdueTasks.map((task: any, i: number) => 
-                          `${i+1}. ${task.name} (Due: ${task.due_date})`
-                        ).join('\n')}`);
-                      }}
-                    >
-                      View All {selectedMember.overdue_task_details.length} Tasks
-                    </button>
-                  )}
-                </div>
-                
-                <div style={{ maxHeight: '300px', overflow: 'auto', border: '1px solid #F87239', borderRadius: '16px', background: 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)', boxShadow: '0 4px 16px rgba(248, 114, 57, 0.1)' }}>
-                  {selectedMember.overdue_task_details.slice(0, 5).map((task: any, index: number) => (
-                    <div 
-                      key={index} 
-                      style={{ 
-                        padding: '1rem', 
-                        borderBottom: index < Math.min(4, selectedMember.overdue_task_details.length - 1) ? '1px solid #fecaca' : 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s ease'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fee2e2';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                      onClick={() => {
-                        alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project_name || 'Unknown'}\n\nDays Overdue: ${task.days_overdue}`);
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <strong style={{ color: '#dc2626', fontSize: '1rem' }}>{task.name}</strong>
-                        <span style={{ 
-                          background: '#dc2626', 
-                          color: '#ffffff', 
-                          padding: '0.25rem 0.5rem', 
-                          borderRadius: '12px', 
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          {task.days_overdue} days overdue
-                        </span>
-                      </div>
-                      
-                      <div style={{ fontSize: '0.875rem', color: '#991b1b', marginBottom: '0.5rem' }}>
-                        <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </div>
-                      
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#7f1d1d' }}>
-                        <span><strong>Priority:</strong> {task.priority || 'Not set'}</span>
-                        <span><strong>Project:</strong> {task.project_name}</span>
-                      </div>
-                      
-                      <div style={{ fontSize: '0.75rem', color: '#7f1d1d', marginTop: '0.5rem', textAlign: 'right' }}>
-                        Click for full details
-                      </div>
+                        letterSpacing: '-0.02em'
+                      }}>
+                        Overdue Tasks ({selectedMember.overdue_task_details.length})
+                      </h3>
                     </div>
-                  ))}
+                    
+                    {selectedMember.overdue_task_details.length > 3 && (
+                      <button
+                        style={{
+                          background: '#F87239',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '1rem 1.5rem',
+                          borderRadius: '16px',
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 16px rgba(248, 114, 57, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#e66429';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(248, 114, 57, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#F87239';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(248, 114, 57, 0.3)';
+                        }}
+                        onClick={() => {
+                          const allOverdueTasks = selectedMember.overdue_task_details;
+                          alert(`All ${allOverdueTasks.length} overdue tasks:\n\n${allOverdueTasks.map((task: any, i: number) => 
+                            `${i+1}. ${task.name} (Due: ${task.due_date})`
+                          ).join('\n')}`);
+                        }}
+                      >
+                        View All {selectedMember.overdue_task_details.length} Tasks
+                      </button>
+                    )}
+                  </div>
                   
-                  {selectedMember.overdue_task_details.length > 5 && (
-                    <div style={{ padding: '1rem', textAlign: 'center', background: '#fee2e2', borderTop: '1px solid #fecaca' }}>
-                      <span style={{ color: '#991b1b', fontSize: '0.875rem', fontWeight: '500' }}>
-                        Showing 5 of {selectedMember.overdue_task_details.length} overdue tasks
+                  <div style={{ 
+                    display: 'grid', 
+                    gap: '1.5rem',
+                    maxHeight: '400px', 
+                    overflow: 'auto'
+                  }}>
+                    {selectedMember.overdue_task_details.slice(0, 3).map((task: any, index: number) => (
+                      <div 
+                        key={index} 
+                        style={{ 
+                          background: '#ffffff',
+                          border: '1px solid #fecaca',
+                          borderRadius: '20px',
+                          padding: '2rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 16px rgba(248, 114, 57, 0.1)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.borderColor = '#F87239';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(248, 114, 57, 0.2)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.borderColor = '#fecaca';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(248, 114, 57, 0.1)';
+                        }}
+                        onClick={() => {
+                          alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project_name || 'Unknown'}\n\nDays Overdue: ${task.days_overdue}`);
+                        }}
+                      >
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between', 
+                          marginBottom: '1rem' 
+                        }}>
+                          <h4 style={{ 
+                            color: '#F87239', 
+                            fontSize: '1.25rem', 
+                            fontWeight: '600',
+                            margin: '0',
+                            letterSpacing: '-0.01em'
+                          }}>
+                            {task.name}
+                          </h4>
+                          <span style={{ 
+                            background: 'linear-gradient(135deg, #F87239, #FB923C)', 
+                            color: '#ffffff', 
+                            padding: '0.5rem 1rem', 
+                            borderRadius: '20px', 
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            boxShadow: '0 4px 12px rgba(248, 114, 57, 0.3)'
+                          }}>
+                            {task.days_overdue} days overdue
+                          </span>
+                        </div>
+                        
+                        <div style={{ 
+                          fontSize: '1rem', 
+                          color: '#666666', 
+                          marginBottom: '1rem',
+                          lineHeight: '1.5'
+                        }}>
+                          <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </div>
+                        
+                        <div style={{ 
+                          display: 'flex', 
+                          gap: '2rem', 
+                          fontSize: '0.95rem', 
+                          color: '#666666',
+                          marginBottom: '1rem'
+                        }}>
+                          <span><strong>Priority:</strong> {task.priority || 'Not set'}</span>
+                          <span><strong>Project:</strong> {task.project_name}</span>
+                        </div>
+                        
+                        <div style={{ 
+                          fontSize: '0.875rem', 
+                          color: '#999999', 
+                          textAlign: 'center',
+                          padding: '0.75rem',
+                          background: '#f8f9fa',
+                          borderRadius: '12px',
+                          fontStyle: 'italic'
+                        }}>
+                          Click to view full task details
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {selectedMember.overdue_task_details.length > 3 && (
+                    <div style={{ 
+                      padding: '1.5rem', 
+                      textAlign: 'center', 
+                      background: 'linear-gradient(135deg, #fff5f5 0%, #ffffff 100%)', 
+                      borderRadius: '16px',
+                      marginTop: '1.5rem',
+                      border: '1px solid #fecaca'
+                    }}>
+                      <span style={{ 
+                        color: '#F87239', 
+                        fontSize: '1rem', 
+                        fontWeight: '600' 
+                      }}>
+                        Showing 3 of {selectedMember.overdue_task_details.length} overdue tasks
                       </span>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* No Overdue Tasks Message */}
+            {(!selectedMember.overdue_task_details || selectedMember.overdue_task_details.length === 0) && (
+              <div style={{ 
+                padding: '0 3rem 2rem 3rem'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)', 
+                  borderRadius: '24px', 
+                  padding: '3rem',
+                  border: '2px solid #10B981',
+                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.15)',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    margin: '0 0 1rem 0'
+                  }}>
+                    🎉
+                  </div>
+                  <h3 style={{ 
+                    color: '#10B981', 
+                    fontSize: '1.5rem', 
+                    fontWeight: '600',
+                    margin: '0 0 1rem 0',
+                    letterSpacing: '-0.02em'
+                  }}>
+                    No Overdue Tasks!
+                  </h3>
+                  <p style={{ 
+                    color: '#666666', 
+                    fontSize: '1.1rem',
+                    margin: '0',
+                    lineHeight: '1.5'
+                  }}>
+                    {selectedMember.user_info.name} is keeping up with all deadlines. Great work!
+                  </p>
                 </div>
               </div>
             )}
