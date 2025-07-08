@@ -376,26 +376,48 @@ export default function ProjectDetailPage() {
 
   const getWeekNumber = (date: Date) => {
     const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date.getTime() - startOfYear.getTime()) / 86400000;
-    return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+    const dayOfWeek = startOfYear.getDay();
+    const daysToFirstMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    const firstMonday = new Date(date.getFullYear(), 0, 1 + daysToFirstMonday);
+    
+    if (date < firstMonday) {
+      return 1;
+    }
+    
+    const diffTime = date.getTime() - firstMonday.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.floor(diffDays / 7) + 1;
   };
 
   const getWeekStartDate = (year: number, weekNumber: number) => {
     const startOfYear = new Date(year, 0, 1);
-    const daysToAdd = (weekNumber - 1) * 7 - startOfYear.getDay();
-    const weekStart = new Date(startOfYear);
-    weekStart.setDate(startOfYear.getDate() + daysToAdd);
+    const dayOfWeek = startOfYear.getDay();
+    const daysToFirstMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
+    const weekStart = new Date(firstMonday);
+    weekStart.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
     return weekStart;
   };
 
   // Get task color based on status
   const getTaskColor = (status: string) => {
     switch(status) {
-      case 'todo': return '#94A3B8';
-      case 'in_progress': return '#3B82F6';
-      case 'review': return '#F59E0B';
-      case 'done': return '#10B981';
-      default: return '#6B7280';
+      case 'todo': return '#6366F1'; // Indigo
+      case 'in_progress': return '#3B82F6'; // Blue
+      case 'review': return '#F59E0B'; // Amber
+      case 'done': return '#10B981'; // Emerald
+      default: return '#6B7280'; // Gray
+    }
+  };
+
+  // Get lighter background color for task bars
+  const getTaskBgColor = (status: string) => {
+    switch(status) {
+      case 'todo': return 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)';
+      case 'in_progress': return 'linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)';
+      case 'review': return 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)';
+      case 'done': return 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+      default: return 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)';
     }
   };
 
@@ -5180,25 +5202,60 @@ export default function ProjectDetailPage() {
                         const weekNumber = weekIndex + 1;
                         const weekStartDate = getWeekStartDate(getProjectStartDate().getFullYear(), weekNumber);
                       
-                      return (
-                        <div key={weekIndex} className="week-header" style={{ 
-                          width: '50px',
-                          minWidth: '50px',
-                          padding: '0.5rem 0.25rem',
-                          borderRight: weekIndex < 51 ? '1px solid #E5E7EB' : 'none',
-                          fontWeight: '600',
-                          textAlign: 'center',
-                          background: weekIndex % 2 === 0 ? '#F9FAFB' : '#ffffff',
-                          boxSizing: 'border-box',
-                          color: '#374151',
-                          fontSize: '0.75rem'
-                        }}>
-                          <div style={{ marginBottom: '0.25rem' }}>W{weekNumber}</div>
-                          <div style={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: '400' }}>
-                            {weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                              // Check if this week contains current date
+                        const currentDate = new Date();
+                        const weekEndDate = new Date(weekStartDate);
+                        weekEndDate.setDate(weekStartDate.getDate() + 6);
+                        const isCurrentWeek = currentDate >= weekStartDate && currentDate <= weekEndDate;
+                        
+                        return (
+                          <div key={weekIndex} className="week-header" style={{ 
+                            width: '50px',
+                            minWidth: '50px',
+                            padding: '0.5rem 0.25rem',
+                            borderRight: weekIndex < 51 ? '1px solid #E5E7EB' : 'none',
+                            fontWeight: isCurrentWeek ? '700' : '600',
+                            textAlign: 'center',
+                            background: isCurrentWeek 
+                              ? 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' 
+                              : weekIndex % 2 === 0 ? '#F9FAFB' : '#ffffff',
+                            boxSizing: 'border-box',
+                            color: isCurrentWeek ? '#ffffff' : '#374151',
+                            fontSize: '0.75rem',
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer',
+                            borderRadius: isCurrentWeek ? '6px' : '0',
+                            boxShadow: isCurrentWeek ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrentWeek) {
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrentWeek) {
+                              e.currentTarget.style.background = weekIndex % 2 === 0 ? '#F9FAFB' : '#ffffff';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                            }
+                          }}
+                          >
+                            <div style={{ 
+                              marginBottom: '0.25rem',
+                              textShadow: isCurrentWeek ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
+                            }}>
+                              W{weekNumber}
+                            </div>
+                            <div style={{ 
+                              fontSize: '0.6rem', 
+                              color: isCurrentWeek ? 'rgba(255, 255, 255, 0.9)' : '#6B7280', 
+                              fontWeight: '400',
+                              textShadow: isCurrentWeek ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
+                            }}>
+                              {weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
                           </div>
-                        </div>
-                      );
+                        );
                     })}
                   </div>
                 </div>
@@ -5206,7 +5263,7 @@ export default function ProjectDetailPage() {
                 <div className="gantt-grid-container" style={{ 
                   minWidth: '2600px',
                   position: 'relative',
-                  minHeight: tasks.length > 0 ? `${tasks.length * 60}px` : '200px',
+                  minHeight: tasks.length > 0 ? `${tasks.length * 65}px` : '200px',
                   background: '#ffffff'
                 }}>
                   <div className="gantt-vertical-grid" style={{
@@ -5268,7 +5325,7 @@ export default function ProjectDetailPage() {
                                                   return (
                             <div key={task.id} className="gantt-bar-row-enhanced" style={{
                               position: 'relative',
-                              height: '60px',
+                              height: '65px',
                               borderBottom: '1px solid #F3F4F6',
                               background: taskIndex % 2 === 0 ? '#FAFBFC' : '#ffffff'
                             }}>
@@ -5279,52 +5336,103 @@ export default function ProjectDetailPage() {
                                   width: `${barWidth}px`,
                                   left: `${barLeft}px`,
                                   position: 'absolute',
-                                  height: '36px',
-                                  background: getTaskColor(task.status),
-                                  border: 'none',
-                                  borderRadius: '8px',
+                                  height: '40px',
+                                  background: getTaskBgColor(task.status),
+                                  border: `2px solid ${getTaskColor(task.status)}`,
+                                  borderRadius: '10px',
                                   display: 'flex',
                                   alignItems: 'center',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
-                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  padding: '0 0.75rem'
+                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  padding: '0 0.75rem',
+                                  overflow: 'hidden'
                                 }}
-                                title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInWeeks} weeks\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
+                                title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInWeeks} weeks\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || task.assignees?.map(a => a.name).join(', ') || 'Unassigned'}`}
                                 onClick={(e) => handleTaskClick(task, e)}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)';
-                                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2)';
+                                  e.currentTarget.style.zIndex = '10';
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                                  e.currentTarget.style.zIndex = '2';
                                 }}
                               >
-                                {/* Task Name */}
-                                <span style={{
-                                  color: '#ffffff',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '600',
-                                  flex: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
+                                {/* Task Content */}
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  width: '100%',
+                                  gap: '0.5rem'
                                 }}>
-                                  {task.name}
-                                </span>
-                                
-                                {/* Duration Label */}
-                                <span style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  color: 'rgba(255, 255, 255, 0.9)',
-                                  marginLeft: '0.5rem'
-                                }}>
-                                  {durationInWeeks}w
-                                </span>
+                                  {/* Left side - Task name and assignee */}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    flex: 1,
+                                    minWidth: 0
+                                  }}>
+                                    {/* Assignee Avatar */}
+                                    {(task.assignee || task.assignees?.[0]) && (
+                                      <div style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        background: '#ffffff',
+                                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '700',
+                                        color: getTaskColor(task.status),
+                                        flexShrink: 0
+                                      }}>
+                                        {(task.assignee?.name || task.assignees?.[0]?.name || 'U').charAt(0).toUpperCase()}
+                                      </div>
+                                    )}
+                                    
+                                    {/* Task Name */}
+                                    <span style={{
+                                      color: '#ffffff',
+                                      fontSize: '0.875rem',
+                                      fontWeight: '600',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                                    }}>
+                                      {task.name}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Right side - Duration */}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    flexShrink: 0
+                                  }}>
+                                    <span style={{
+                                      fontSize: '0.75rem',
+                                      fontWeight: '600',
+                                      color: 'rgba(255, 255, 255, 0.9)',
+                                      background: 'rgba(255, 255, 255, 0.2)',
+                                      padding: '0.125rem 0.375rem',
+                                      borderRadius: '4px',
+                                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                                    }}>
+                                      {durationInWeeks}w
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           );
