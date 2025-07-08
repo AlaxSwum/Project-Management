@@ -108,16 +108,40 @@ export default function PersonalCalendarPage() {
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
       
+      // Fetch directly from projects_meeting table
       const { data, error } = await supabase
-        .from('personal_calendar_overview')
+        .from('projects_meeting')
         .select('*')
-        .eq('user_id', user?.id)
-        .gte('start_datetime', startDate.toISOString())
-        .lte('end_datetime', endDate.toISOString())
-        .order('start_datetime');
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0])
+        .order('date', { ascending: true })
+        .order('time', { ascending: true });
       
       if (error) throw error;
-      setEvents(data || []);
+      
+      // Transform timetable data to calendar event format
+      const transformedEvents = (data || []).map(meeting => {
+        const startDateTime = new Date(`${meeting.date}T${meeting.time}`);
+        const endDateTime = new Date(startDateTime.getTime() + (meeting.duration * 60000));
+        
+        return {
+          id: meeting.id,
+          title: meeting.title,
+          description: meeting.description || '',
+          start_datetime: startDateTime.toISOString(),
+          end_datetime: endDateTime.toISOString(),
+          all_day: meeting.all_day || false,
+          location: meeting.location || '',
+          event_type: meeting.event_type || 'meeting',
+          priority: 'medium' as const,
+          status: 'confirmed' as const,
+          color: meeting.color || '#5884FD',
+          item_type: 'event' as const,
+          completion_percentage: undefined
+        };
+      });
+      
+      setEvents(transformedEvents);
     } catch (err: any) {
       console.error('Error fetching calendar data:', err);
       setError('Failed to load calendar data');
@@ -126,34 +150,10 @@ export default function PersonalCalendarPage() {
     }
   };
 
+  // Using hardcoded settings since we're not using personal_calendar_settings table
   const fetchSettings = async () => {
-    try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      
-      const { data, error } = await supabase
-        .from('personal_calendar_settings')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      if (data) {
-        setSettings({
-          default_view: data.default_view,
-          time_format: data.time_format,
-          start_hour: data.start_hour,
-          end_hour: data.end_hour,
-          first_day_of_week: data.first_day_of_week,
-          working_hours_start: data.working_hours_start,
-          working_hours_end: data.working_hours_end,
-          theme_color: data.theme_color
-        });
-        setCurrentView(data.default_view === 'agenda' ? 'week' : data.default_view);
-      }
-    } catch (err: any) {
-      console.error('Error fetching settings:', err);
-    }
+    // Settings are already initialized in state, no need to fetch from database
+    console.log('Using default calendar settings');
   };
 
   const getViewStartDate = () => {
