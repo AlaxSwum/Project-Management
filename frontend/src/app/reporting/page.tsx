@@ -299,6 +299,12 @@ export default function ReportingPage() {
               max-height: 90vh;
               margin: 0.5rem;
             }
+            
+            .modal-content .compact-stats {
+              grid-template-columns: repeat(2, 1fr) !important;
+              gap: 1rem !important;
+              padding: 0 1.5rem !important;
+            }
           }
           
           @media (max-width: 480px) {
@@ -344,6 +350,12 @@ export default function ReportingPage() {
               max-width: 98vw;
               max-height: 85vh;
               margin: 0.25rem;
+            }
+            
+            .modal-content .compact-stats {
+              grid-template-columns: 1fr !important;
+              gap: 0.75rem !important;
+              padding: 0 1rem !important;
             }
           }
           `
@@ -736,28 +748,28 @@ export default function ReportingPage() {
               </div>
             </div>
 
-            {/* Enhanced Statistics Cards Grid */}
-            <div style={{ 
+            {/* Compact Statistics Cards Grid */}
+            <div className="compact-stats" style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-              gap: '2rem', 
-              marginBottom: '3rem',
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: '1.5rem', 
+              marginBottom: '2.5rem',
               padding: '0 3rem'
             }}>
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #fef9f0 100%)', 
-                border: '2px solid #FFB333', 
-                borderRadius: '24px', 
-                padding: '2rem', 
+                border: '1px solid #FFB333', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
                 textAlign: 'center', 
-                boxShadow: '0 8px 32px rgba(255, 179, 51, 0.2)',
+                boxShadow: '0 4px 16px rgba(255, 179, 51, 0.15)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '3rem', 
+                  fontSize: '2rem', 
                   fontWeight: '700', 
                   color: '#FFB333', 
-                  margin: '0 0 1rem 0', 
+                  margin: '0 0 0.5rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #FFB333, #FCD34D)',
                   WebkitBackgroundClip: 'text',
@@ -768,7 +780,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '1rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -778,18 +790,18 @@ export default function ReportingPage() {
 
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)', 
-                border: '2px solid #10B981', 
-                borderRadius: '24px', 
-                padding: '2rem', 
+                border: '1px solid #10B981', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
                 textAlign: 'center', 
-                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.2)',
+                boxShadow: '0 4px 16px rgba(16, 185, 129, 0.15)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '3rem', 
+                  fontSize: '2rem', 
                   fontWeight: '700', 
                   color: '#10B981', 
-                  margin: '0 0 1rem 0', 
+                  margin: '0 0 0.5rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #10B981, #34D399)',
                   WebkitBackgroundClip: 'text',
@@ -800,7 +812,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '1rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -810,18 +822,18 @@ export default function ReportingPage() {
 
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%)', 
-                border: '2px solid #5884FD', 
-                borderRadius: '24px', 
-                padding: '2rem', 
+                border: '1px solid #5884FD', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
                 textAlign: 'center', 
-                boxShadow: '0 8px 32px rgba(88, 132, 253, 0.2)',
+                boxShadow: '0 4px 16px rgba(88, 132, 253, 0.15)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '3rem', 
+                  fontSize: '2rem', 
                   fontWeight: '700', 
                   color: '#5884FD', 
-                  margin: '0 0 1rem 0', 
+                  margin: '0 0 0.5rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #5884FD, #7BA3FF)',
                   WebkitBackgroundClip: 'text',
@@ -832,7 +844,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '1rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -842,18 +854,18 @@ export default function ReportingPage() {
 
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #fef2f2 100%)', 
-                border: '2px solid #F87239', 
-                borderRadius: '24px', 
-                padding: '2rem', 
+                border: '1px solid #F87239', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
                 textAlign: 'center', 
-                boxShadow: '0 8px 32px rgba(248, 114, 57, 0.2)',
+                boxShadow: '0 4px 16px rgba(248, 114, 57, 0.15)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '3rem', 
+                  fontSize: '2rem', 
                   fontWeight: '700', 
                   color: '#F87239', 
-                  margin: '0 0 1rem 0', 
+                  margin: '0 0 0.5rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #F87239, #FB923C)',
                   WebkitBackgroundClip: 'text',
@@ -864,7 +876,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '1rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -874,18 +886,18 @@ export default function ReportingPage() {
 
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)', 
-                border: '2px solid #f59e0b', 
-                borderRadius: '24px', 
-                padding: '2rem', 
+                border: '1px solid #f59e0b', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
                 textAlign: 'center', 
-                boxShadow: '0 8px 32px rgba(245, 158, 11, 0.2)',
+                boxShadow: '0 4px 16px rgba(245, 158, 11, 0.15)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '3rem', 
+                  fontSize: '2rem', 
                   fontWeight: '700', 
                   color: '#f59e0b', 
-                  margin: '0 0 1rem 0', 
+                  margin: '0 0 0.5rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
                   WebkitBackgroundClip: 'text',
@@ -896,7 +908,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '1rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -906,18 +918,18 @@ export default function ReportingPage() {
 
               <div style={{ 
                 background: 'linear-gradient(135deg, #ffffff 0%, #faf5ff 100%)', 
-                border: '2px solid #C483D9', 
-                borderRadius: '24px', 
-                padding: '2rem', 
+                border: '1px solid #C483D9', 
+                borderRadius: '16px', 
+                padding: '1.5rem', 
                 textAlign: 'center', 
-                boxShadow: '0 8px 32px rgba(196, 131, 217, 0.2)',
+                boxShadow: '0 4px 16px rgba(196, 131, 217, 0.15)',
                 transition: 'all 0.3s ease'
               }}>
                 <div style={{ 
-                  fontSize: '3rem', 
+                  fontSize: '2rem', 
                   fontWeight: '700', 
                   color: '#C483D9', 
-                  margin: '0 0 1rem 0', 
+                  margin: '0 0 0.5rem 0', 
                   lineHeight: '1',
                   background: 'linear-gradient(135deg, #C483D9, #DDA0DD)',
                   WebkitBackgroundClip: 'text',
@@ -928,7 +940,7 @@ export default function ReportingPage() {
                 </div>
                 <div style={{ 
                   color: '#666666', 
-                  fontSize: '1rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '500',
                   letterSpacing: '-0.01em'
                 }}>
@@ -937,65 +949,65 @@ export default function ReportingPage() {
               </div>
             </div>
 
-            {/* Enhanced Overdue Tasks Section */}
+            {/* Compact Overdue Tasks Section */}
             {selectedMember.overdue_task_details && selectedMember.overdue_task_details.length > 0 && (
-              <div style={{ marginBottom: '2rem', padding: '0 3rem' }}>
+              <div style={{ marginBottom: '1.5rem', padding: '0 3rem' }}>
                 <div style={{ 
                   background: 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)', 
-                  borderRadius: '24px', 
-                  padding: '2.5rem',
-                  border: '2px solid #F87239',
-                  boxShadow: '0 8px 32px rgba(248, 114, 57, 0.15)'
+                  borderRadius: '16px', 
+                  padding: '2rem',
+                  border: '1px solid #F87239',
+                  boxShadow: '0 4px 16px rgba(248, 114, 57, 0.15)'
                 }}>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between', 
-                    marginBottom: '2rem',
-                    paddingBottom: '1.5rem',
+                    marginBottom: '1.5rem',
+                    paddingBottom: '1rem',
                     borderBottom: '1px solid #fecaca'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <div style={{
-                        width: '4px',
-                        height: '32px',
+                        width: '3px',
+                        height: '24px',
                         backgroundColor: '#F87239',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         margin: '0', 
                         color: '#F87239', 
-                        fontSize: '1.5rem', 
+                        fontSize: '1.25rem', 
                         fontWeight: '600',
-                        letterSpacing: '-0.02em'
+                        letterSpacing: '-0.01em'
                       }}>
                         Overdue Tasks ({selectedMember.overdue_task_details.length})
                       </h3>
                     </div>
                     
-                    {selectedMember.overdue_task_details.length > 3 && (
+                    {selectedMember.overdue_task_details.length > 2 && (
                       <button
                         style={{
                           background: '#F87239',
                           color: '#ffffff',
                           border: 'none',
-                          padding: '1rem 1.5rem',
-                          borderRadius: '16px',
-                          fontSize: '0.9rem',
+                          padding: '0.75rem 1.25rem',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
                           cursor: 'pointer',
-                          fontWeight: '600',
+                          fontWeight: '500',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 16px rgba(248, 114, 57, 0.3)'
+                          boxShadow: '0 2px 8px rgba(248, 114, 57, 0.3)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = '#e66429';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(248, 114, 57, 0.4)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(248, 114, 57, 0.4)';
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = '#F87239';
                           e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(248, 114, 57, 0.3)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(248, 114, 57, 0.3)';
                         }}
                         onClick={() => {
                           const allOverdueTasks = selectedMember.overdue_task_details;
@@ -1004,38 +1016,38 @@ export default function ReportingPage() {
                           ).join('\n')}`);
                         }}
                       >
-                        View All {selectedMember.overdue_task_details.length} Tasks
+                        View All {selectedMember.overdue_task_details.length}
                       </button>
                     )}
                   </div>
                   
                   <div style={{ 
                     display: 'grid', 
-                    gap: '1.5rem',
-                    maxHeight: '400px', 
+                    gap: '1rem',
+                    maxHeight: '300px', 
                     overflow: 'auto'
                   }}>
-                    {selectedMember.overdue_task_details.slice(0, 3).map((task: any, index: number) => (
+                    {selectedMember.overdue_task_details.slice(0, 2).map((task: any, index: number) => (
                       <div 
                         key={index} 
                         style={{ 
                           background: '#ffffff',
                           border: '1px solid #fecaca',
-                          borderRadius: '20px',
-                          padding: '2rem',
+                          borderRadius: '12px',
+                          padding: '1.5rem',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 16px rgba(248, 114, 57, 0.1)'
+                          boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
                         }}
                         onMouseOver={(e) => {
                           e.currentTarget.style.borderColor = '#F87239';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(248, 114, 57, 0.2)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(248, 114, 57, 0.2)';
                         }}
                         onMouseOut={(e) => {
                           e.currentTarget.style.borderColor = '#fecaca';
                           e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(248, 114, 57, 0.1)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(248, 114, 57, 0.1)';
                         }}
                         onClick={() => {
                           alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project_name || 'Unknown'}\n\nDays Overdue: ${task.days_overdue}`);
@@ -1045,11 +1057,11 @@ export default function ReportingPage() {
                           display: 'flex', 
                           alignItems: 'center', 
                           justifyContent: 'space-between', 
-                          marginBottom: '1rem' 
+                          marginBottom: '0.75rem' 
                         }}>
                           <h4 style={{ 
                             color: '#F87239', 
-                            fontSize: '1.25rem', 
+                            fontSize: '1.125rem', 
                             fontWeight: '600',
                             margin: '0',
                             letterSpacing: '-0.01em'
@@ -1059,71 +1071,71 @@ export default function ReportingPage() {
                           <span style={{ 
                             background: 'linear-gradient(135deg, #F87239, #FB923C)', 
                             color: '#ffffff', 
-                            padding: '0.5rem 1rem', 
-                            borderRadius: '20px', 
-                            fontSize: '0.875rem',
+                            padding: '0.375rem 0.75rem', 
+                            borderRadius: '16px', 
+                            fontSize: '0.75rem',
                             fontWeight: '600',
-                            boxShadow: '0 4px 12px rgba(248, 114, 57, 0.3)'
+                            boxShadow: '0 2px 6px rgba(248, 114, 57, 0.3)'
                           }}>
                             {task.days_overdue} days overdue
                           </span>
                         </div>
                         
                         <div style={{ 
-                          fontSize: '1rem', 
+                          fontSize: '0.9rem', 
                           color: '#666666', 
-                          marginBottom: '1rem',
-                          lineHeight: '1.5'
+                          marginBottom: '0.75rem',
+                          lineHeight: '1.4'
                         }}>
                           <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString('en-US', { 
-                            weekday: 'long', 
+                            weekday: 'short', 
                             year: 'numeric', 
-                            month: 'long', 
+                            month: 'short', 
                             day: 'numeric' 
                           })}
                         </div>
                         
                         <div style={{ 
                           display: 'flex', 
-                          gap: '2rem', 
-                          fontSize: '0.95rem', 
+                          gap: '1.5rem', 
+                          fontSize: '0.85rem', 
                           color: '#666666',
-                          marginBottom: '1rem'
+                          marginBottom: '0.75rem'
                         }}>
                           <span><strong>Priority:</strong> {task.priority || 'Not set'}</span>
                           <span><strong>Project:</strong> {task.project_name}</span>
                         </div>
                         
                         <div style={{ 
-                          fontSize: '0.875rem', 
+                          fontSize: '0.75rem', 
                           color: '#999999', 
                           textAlign: 'center',
-                          padding: '0.75rem',
+                          padding: '0.5rem',
                           background: '#f8f9fa',
-                          borderRadius: '12px',
+                          borderRadius: '8px',
                           fontStyle: 'italic'
                         }}>
-                          Click to view full task details
+                          Click for details
                         </div>
                       </div>
                     ))}
                   </div>
                   
-                  {selectedMember.overdue_task_details.length > 3 && (
+                  {selectedMember.overdue_task_details.length > 2 && (
                     <div style={{ 
-                      padding: '1.5rem', 
+                      padding: '1rem', 
                       textAlign: 'center', 
                       background: 'linear-gradient(135deg, #fff5f5 0%, #ffffff 100%)', 
-                      borderRadius: '16px',
-                      marginTop: '1.5rem',
+                      borderRadius: '12px',
+                      marginTop: '1rem',
                       border: '1px solid #fecaca'
                     }}>
                       <span style={{ 
                         color: '#F87239', 
-                        fontSize: '1rem', 
-                        fontWeight: '600' 
+                        fontSize: '0.875rem', 
+                        fontWeight: '500' 
                       }}>
-                        Showing 3 of {selectedMember.overdue_task_details.length} overdue tasks
+                        Showing 2 of {selectedMember.overdue_task_details.length} overdue tasks
                       </span>
                     </div>
                   )}
