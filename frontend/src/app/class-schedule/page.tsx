@@ -881,7 +881,7 @@ export default function ClassSchedulePage() {
                     <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {formatDate(item.post_date)}
                     </div>
-                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
                       <button
                         onClick={() => startEdit(item)}
                         style={{

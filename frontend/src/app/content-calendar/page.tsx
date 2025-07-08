@@ -841,7 +841,7 @@ export default function ContentCalendarPage() {
                         {getStatusLabel(item.status)}
                       </span>
                     </div>
-                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
                       <button
                         onClick={() => startEdit(item)}
                         style={{
