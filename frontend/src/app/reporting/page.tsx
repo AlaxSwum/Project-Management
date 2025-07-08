@@ -132,9 +132,10 @@ export default function ReportingPage() {
           }
           .overview-cards {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+            padding: 0 1rem;
           }
           
           /* Large screens - 5 columns for better spacing */
@@ -153,22 +154,40 @@ export default function ReportingPage() {
             }
           }
           .overview-card {
-            background: #ffffff;
-            border: 1px solid #e8e8e8;
-            border-radius: 16px;
-            padding: 2rem;
+            background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+            border: 1px solid #f0f0f0;
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+            gap: 0.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+          }
+          .overview-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
           }
           .overview-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border-color: #C483D9;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(196, 131, 217, 0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+          }
+          .overview-card:hover::before {
+            opacity: 1;
           }
           .team-grid {
             display: grid;
@@ -262,8 +281,9 @@ export default function ReportingPage() {
             }
             
             .overview-card {
-              padding: 1rem;
-              gap: 0.5rem;
+              padding: 1.5rem 1rem;
+              gap: 0.75rem;
+              border-radius: 20px;
             }
             
             .kpi-stats {
@@ -300,7 +320,8 @@ export default function ReportingPage() {
             }
             
             .overview-card {
-              padding: 0.75rem;
+              padding: 1.25rem 0.75rem;
+              border-radius: 16px;
             }
             
             .team-grid {
@@ -342,7 +363,7 @@ export default function ReportingPage() {
             </p>
           </header>
 
-          <div style={{ padding: '2rem' }}>
+          <div style={{ padding: '2rem 3rem 3rem 3rem', maxWidth: '1400px', margin: '0 auto' }}>
             {error && (
               <div style={{ background: '#ffffff', border: '1px solid #F87239', color: '#F87239', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', fontWeight: '500', boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)' }}>
                 {error}
@@ -354,94 +375,103 @@ export default function ReportingPage() {
                 {/* Overview Cards */}
                 <div className="overview-cards">
                   <div className="overview-card">
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#f0f0f0',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '1rem'
+                    <div style={{ 
+                      fontSize: '3rem', 
+                      fontWeight: '600', 
+                      color: '#5884FD', 
+                      lineHeight: '1',
+                      marginBottom: '0.5rem',
+                      background: 'linear-gradient(135deg, #5884FD, #7BA3FF)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
                     }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#5884FD' }}>
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-                        <path d="m22 21-3-3m0 0a6 6 0 1 0-12 0 6 6 0 0 0 12 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#5884FD', lineHeight: '1' }}>
                       {teamReport.summary.total_team_members}
                     </div>
-                    <div style={{ color: '#666666', fontSize: '0.875rem', fontWeight: '500' }}>Your Project Team Members</div>
+                    <div style={{ 
+                      color: '#666666', 
+                      fontSize: '1rem', 
+                      fontWeight: '500',
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}>
+                      Your Project Team Members
+                    </div>
                   </div>
 
                   <div className="overview-card">
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#f0f0f0',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '1rem'
+                    <div style={{ 
+                      fontSize: '3rem', 
+                      fontWeight: '600', 
+                      color: '#10B981', 
+                      lineHeight: '1',
+                      marginBottom: '0.5rem',
+                      background: 'linear-gradient(135deg, #10B981, #34D399)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
                     }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#10B981' }}>
-                        <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#10B981', lineHeight: '1' }}>
                       {teamReport.summary.average_completion_rate}%
                     </div>
-                    <div style={{ color: '#666666', fontSize: '0.875rem', fontWeight: '500' }}>Team Completion Rate</div>
+                    <div style={{ 
+                      color: '#666666', 
+                      fontSize: '1rem', 
+                      fontWeight: '500',
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}>
+                      Team Completion Rate
+                    </div>
                   </div>
 
                   <div className="overview-card">
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#f0f0f0',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '1rem'
+                    <div style={{ 
+                      fontSize: '3rem', 
+                      fontWeight: '600', 
+                      color: '#FFB333', 
+                      lineHeight: '1',
+                      marginBottom: '0.5rem',
+                      background: 'linear-gradient(135deg, #FFB333, #FCD34D)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
                     }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#FFB333' }}>
-                        <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#FFB333', lineHeight: '1' }}>
                       {teamReport.summary.total_tasks_across_team}
                     </div>
-                    <div style={{ color: '#666666', fontSize: '0.875rem', fontWeight: '500' }}>Total Tasks</div>
+                    <div style={{ 
+                      color: '#666666', 
+                      fontSize: '1rem', 
+                      fontWeight: '500',
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}>
+                      Total Tasks
+                    </div>
                   </div>
 
                   <div className="overview-card">
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#f0f0f0',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '1rem'
+                    <div style={{ 
+                      fontSize: '3rem', 
+                      fontWeight: '600', 
+                      color: '#C483D9', 
+                      lineHeight: '1',
+                      marginBottom: '0.5rem',
+                      background: 'linear-gradient(135deg, #C483D9, #DDA0DD)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
                     }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#C483D9' }}>
-                        <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M21 12c.552 0 1-.448 1-1V9c0-.552-.448-1-1-1h-1V7a1 1 0 00-1-1H5a1 1 0 00-1 1v1H3c-.552 0-1 .448-1 1v2c0 .552.448 1 1 1h1v1a1 1 0 001 1h14a1 1 0 001-1v-1h1z" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#C483D9', lineHeight: '1' }}>
                       {teamReport.summary.total_finished_tasks}
                     </div>
-                    <div style={{ color: '#666666', fontSize: '0.875rem', fontWeight: '500' }}>Completed Tasks</div>
+                    <div style={{ 
+                      color: '#666666', 
+                      fontSize: '1rem', 
+                      fontWeight: '500',
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}>
+                      Completed Tasks
+                    </div>
                   </div>
 
                   <div className="overview-card" style={{ cursor: 'pointer', border: '1px solid #F87239', background: 'linear-gradient(135deg, #ffffff 0%, #fef2f2 100%)' }}
@@ -462,26 +492,28 @@ export default function ReportingPage() {
                          e.currentTarget.style.transform = 'translateY(0)';
                          e.currentTarget.style.boxShadow = '0 2px 16px rgba(0, 0, 0, 0.04)';
                        }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#f0f0f0',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '1rem'
+                    <div style={{ 
+                      fontSize: '3rem', 
+                      fontWeight: '600', 
+                      color: '#F87239', 
+                      lineHeight: '1',
+                      marginBottom: '0.5rem',
+                      background: 'linear-gradient(135deg, #F87239, #FB923C)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
                     }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#F87239' }}>
-                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-                        <path d="M12 7v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#F87239', lineHeight: '1' }}>
                       {teamReport.team_report.reduce((total: number, member: any) => total + (member.overdue_tasks || 0), 0)}
                     </div>
-                    <div style={{ color: '#F87239', fontSize: '0.875rem', fontWeight: '600' }}>Team Overdue Tasks (Click to view)</div>
+                    <div style={{ 
+                      color: '#F87239', 
+                      fontSize: '1rem', 
+                      fontWeight: '600',
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}>
+                      Team Overdue Tasks (Click to view)
+                    </div>
                   </div>
                 </div>
 
@@ -809,3 +841,7 @@ export default function ReportingPage() {
     </div>
   );
 }
+
+
+
+
