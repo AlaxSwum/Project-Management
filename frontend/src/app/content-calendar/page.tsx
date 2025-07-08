@@ -841,50 +841,74 @@ export default function ContentCalendarPage() {
                         {getStatusLabel(item.status)}
                       </span>
                     </div>
-                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <button
                         onClick={() => startEdit(item)}
                         style={{
-                          padding: '0.375rem',
+                          padding: '0.5rem',
                           background: '#ffffff',
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '6px',
+                          border: '1px solid #e8e8e8',
+                          borderRadius: '8px',
                           cursor: 'pointer',
                           color: '#5884FD',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          height: '36px',
+                          width: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = '#5884FD'
                           e.currentTarget.style.color = '#ffffff'
+                          e.currentTarget.style.borderColor = '#5884FD'
+                          e.currentTarget.style.transform = 'translateY(-1px)'
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)'
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = '#ffffff'
                           e.currentTarget.style.color = '#5884FD'
+                          e.currentTarget.style.borderColor = '#e8e8e8'
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                       >
-                        <PencilIcon style={{ width: '14px', height: '14px' }} />
+                        <PencilIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
                         style={{
-                          padding: '0.375rem',
+                          padding: '0.5rem',
                           background: '#ffffff',
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '6px',
+                          border: '1px solid #e8e8e8',
+                          borderRadius: '8px',
                           cursor: 'pointer',
                           color: '#F87239',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          height: '36px',
+                          width: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = '#F87239'
                           e.currentTarget.style.color = '#ffffff'
+                          e.currentTarget.style.borderColor = '#F87239'
+                          e.currentTarget.style.transform = 'translateY(-1px)'
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(248, 114, 57, 0.3)'
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = '#ffffff'
                           e.currentTarget.style.color = '#F87239'
+                          e.currentTarget.style.borderColor = '#e8e8e8'
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                       >
-                        <TrashIcon style={{ width: '14px', height: '14px' }} />
+                        <TrashIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                     </div>
                   </div>
@@ -944,35 +968,36 @@ export default function ContentCalendarPage() {
             }}>
               <div style={{
                 background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '2.5rem',
+                border: '1px solid #e8e8e8',
+                borderRadius: '20px',
+                padding: '3rem',
                 width: '95%',
                 maxWidth: '700px',
                 maxHeight: '95vh',
                 overflow: 'auto',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
               }}>
                 <div style={{
                   textAlign: 'center',
-                  marginBottom: '2.5rem',
-                  paddingBottom: '1.5rem',
-                  borderBottom: '2px solid #f0f0f0'
+                  marginBottom: '3rem',
+                  paddingBottom: '2rem',
+                  borderBottom: '1px solid #f0f0f0'
                 }}>
                   <h2 style={{ 
-                    fontSize: '1.8rem', 
-                    fontWeight: '700', 
+                    fontSize: '2rem', 
+                    fontWeight: '400', 
                     margin: '0 0 0.5rem 0',
-                    color: '#000000',
+                    color: '#1a1a1a',
                     letterSpacing: '-0.025em'
                   }}>
                     {editingItem ? 'Edit Content Item' : 'Add New Content Item'}
                   </h2>
                   <p style={{
-                    fontSize: '1rem',
+                    fontSize: '1.1rem',
                     color: '#666666',
                     margin: '0',
-                    fontWeight: '400'
+                    fontWeight: '400',
+                    lineHeight: '1.5'
                   }}>
                     {editingItem ? 'Update your content details below' : 'Fill in the details to create a new content item'}
                   </p>
@@ -987,19 +1012,19 @@ export default function ContentCalendarPage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#5884FD',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Basic Information
@@ -1122,19 +1147,19 @@ export default function ContentCalendarPage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#C483D9',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Deadlines
@@ -1186,19 +1211,19 @@ export default function ContentCalendarPage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#F87239',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Organization
@@ -1305,19 +1330,19 @@ export default function ContentCalendarPage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#FFB333',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Additional Details
@@ -1359,27 +1384,28 @@ export default function ContentCalendarPage() {
                       onClick={resetForm}
                       style={{
                         padding: '1rem 2.5rem',
-                        background: '#f8f9fa',
-                        color: '#374151',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '10px',
+                        background: '#ffffff',
+                        color: '#666666',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '12px',
                         fontSize: '1rem',
-                        fontWeight: '600',
+                        fontWeight: '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         minWidth: '140px',
                         fontFamily: 'inherit',
-                        outline: 'none'
+                        outline: 'none',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#e5e7eb';
+                        e.currentTarget.style.backgroundColor = '#f8f8f8';
                         e.currentTarget.style.transform = 'translateY(-1px)';
                         e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.backgroundColor = '#ffffff';
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
                       }}
                     >
                       Cancel
@@ -1388,27 +1414,28 @@ export default function ContentCalendarPage() {
                       type="submit"
                       style={{
                         padding: '1rem 2.5rem',
-                        background: '#000000',
+                        background: '#5884FD',
                         color: '#ffffff',
-                        border: '1px solid #000000',
-                        borderRadius: '10px',
+                        border: 'none',
+                        borderRadius: '12px',
                         fontSize: '1rem',
-                        fontWeight: '600',
+                        fontWeight: '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         minWidth: '140px',
                         fontFamily: 'inherit',
-                        outline: 'none'
+                        outline: 'none',
+                        boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#1f2937';
+                        e.currentTarget.style.backgroundColor = '#4A6CF7';
                         e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.25)';
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(88, 132, 253, 0.4)';
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = '#000000';
+                        e.currentTarget.style.backgroundColor = '#5884FD';
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)';
                       }}
                     >
                       {editingItem ? 'Update Content' : 'Create Content'}
@@ -1435,19 +1462,21 @@ export default function ContentCalendarPage() {
             }}>
               <div style={{
                 background: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                padding: '2rem',
+                border: '1px solid #e8e8e8',
+                borderRadius: '20px',
+                padding: '2.5rem',
                 width: '90%',
                 maxWidth: '600px',
                 maxHeight: '90vh',
-                overflow: 'auto'
+                overflow: 'auto',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
               }}>
                 <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 'bold', 
-                  marginBottom: '1.5rem',
-                  color: '#000000'
+                  fontSize: '1.75rem', 
+                  fontWeight: '400', 
+                  marginBottom: '2rem',
+                  color: '#1a1a1a',
+                  letterSpacing: '-0.02em'
                 }}>
                   Manage Content Calendar Members
                 </h2>
@@ -1540,14 +1569,26 @@ export default function ContentCalendarPage() {
                   <button
                     onClick={() => setShowMemberModal(false)}
                     style={{
-                      padding: '0.75rem 1.5rem',
-                      background: '#000000',
+                      padding: '0.875rem 2rem',
+                      background: '#5884FD',
                       color: '#ffffff',
-                      border: '2px solid #000000',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem',
-                      fontWeight: '600',
-                      cursor: 'pointer'
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#4A6CF7';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(88, 132, 253, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#5884FD';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)';
                     }}
                   >
                     Close
@@ -1573,17 +1614,19 @@ export default function ContentCalendarPage() {
             }}>
               <div style={{
                 background: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                padding: '2rem',
+                border: '1px solid #e8e8e8',
+                borderRadius: '20px',
+                padding: '2.5rem',
                 width: '90%',
-                maxWidth: '500px'
+                maxWidth: '500px',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
               }}>
                 <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 'bold', 
-                  marginBottom: '1.5rem',
-                  color: '#000000'
+                  fontSize: '1.75rem', 
+                  fontWeight: '400', 
+                  marginBottom: '2rem',
+                  color: '#1a1a1a',
+                  letterSpacing: '-0.02em'
                 }}>
                   {currentFolder ? `Create Subfolder in ${currentFolder.name}` : 'Create New Folder'}
                 </h2>
@@ -1687,14 +1730,26 @@ export default function ContentCalendarPage() {
                       type="button"
                       onClick={() => setShowFolderForm(false)}
                       style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '0.875rem 1.5rem',
                         background: '#ffffff',
-                        color: '#000000',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
+                        color: '#666666',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f8f8';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
                       }}
                     >
                       Cancel
@@ -1702,14 +1757,26 @@ export default function ContentCalendarPage() {
                     <button
                       type="submit"
                       style={{
-                        padding: '0.75rem 1.5rem',
-                        background: '#000000',
+                        padding: '0.875rem 1.5rem',
+                        background: '#C483D9',
                         color: '#ffffff',
-                        border: '2px solid #000000',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 12px rgba(196, 131, 217, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#B16EC4';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(196, 131, 217, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#C483D9';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(196, 131, 217, 0.3)';
                       }}
                     >
                       {currentFolder ? 'Create Subfolder' : 'Create Folder'}

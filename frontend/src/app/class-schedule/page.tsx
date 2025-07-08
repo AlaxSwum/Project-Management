@@ -881,50 +881,74 @@ export default function ClassSchedulePage() {
                     <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {formatDate(item.post_date)}
                     </div>
-                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <button
                         onClick={() => startEdit(item)}
                         style={{
-                          padding: '0.375rem',
+                          padding: '0.5rem',
                           background: '#ffffff',
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '6px',
+                          border: '1px solid #e8e8e8',
+                          borderRadius: '8px',
                           cursor: 'pointer',
                           color: '#5884FD',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          height: '36px',
+                          width: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = '#5884FD'
                           e.currentTarget.style.color = '#ffffff'
+                          e.currentTarget.style.borderColor = '#5884FD'
+                          e.currentTarget.style.transform = 'translateY(-1px)'
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)'
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = '#ffffff'
                           e.currentTarget.style.color = '#5884FD'
+                          e.currentTarget.style.borderColor = '#e8e8e8'
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                       >
-                        <PencilIcon style={{ width: '14px', height: '14px' }} />
+                        <PencilIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
                         style={{
-                          padding: '0.375rem',
+                          padding: '0.5rem',
                           background: '#ffffff',
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '6px',
+                          border: '1px solid #e8e8e8',
+                          borderRadius: '8px',
                           cursor: 'pointer',
                           color: '#F87239',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          height: '36px',
+                          width: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = '#F87239'
                           e.currentTarget.style.color = '#ffffff'
+                          e.currentTarget.style.borderColor = '#F87239'
+                          e.currentTarget.style.transform = 'translateY(-1px)'
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(248, 114, 57, 0.3)'
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = '#ffffff'
                           e.currentTarget.style.color = '#F87239'
+                          e.currentTarget.style.borderColor = '#e8e8e8'
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
                         }}
                       >
-                        <TrashIcon style={{ width: '14px', height: '14px' }} />
+                        <TrashIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                     </div>
                   </div>
@@ -1499,13 +1523,25 @@ export default function ClassSchedulePage() {
                         <button
                           onClick={() => handleRemoveMember(member.user_id)}
                           style={{
-                            padding: '0.25rem 0.5rem',
+                            padding: '0.375rem 0.75rem',
                             background: '#ffffff',
-                            color: '#000000',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '4px',
+                            color: '#F87239',
+                            border: '1px solid #e8e8e8',
+                            borderRadius: '6px',
                             fontSize: '0.8rem',
-                            cursor: 'pointer'
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#F87239'
+                            e.currentTarget.style.color = '#ffffff'
+                            e.currentTarget.style.borderColor = '#F87239'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#ffffff'
+                            e.currentTarget.style.color = '#F87239'
+                            e.currentTarget.style.borderColor = '#e8e8e8'
                           }}
                         >
                           Remove
@@ -1542,13 +1578,21 @@ export default function ClassSchedulePage() {
                           <button
                             onClick={() => handleAddMember(user.id)}
                             style={{
-                              padding: '0.25rem 0.5rem',
-                              background: '#000000',
+                              padding: '0.375rem 0.75rem',
+                              background: '#5884FD',
                               color: '#ffffff',
-                              border: '1px solid #000000',
-                              borderRadius: '4px',
+                              border: 'none',
+                              borderRadius: '6px',
                               fontSize: '0.8rem',
-                              cursor: 'pointer'
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#4A6CF7'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#5884FD'
                             }}
                           >
                             Add
@@ -1572,6 +1616,16 @@ export default function ClassSchedulePage() {
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#4A6CF7';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(88, 132, 253, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#5884FD';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)';
                     }}
                   >
                     Close
@@ -1713,6 +1767,16 @@ export default function ClassSchedulePage() {
                         transition: 'all 0.2s ease',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f8f8';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      }}
                     >
                       Cancel
                     </button>
@@ -1729,6 +1793,16 @@ export default function ClassSchedulePage() {
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         boxShadow: '0 4px 12px rgba(196, 131, 217, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#B16EC4';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(196, 131, 217, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#C483D9';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(196, 131, 217, 0.3)';
                       }}
                     >
                       {currentFolder ? 'Create Subfolder' : 'Create Folder'}
