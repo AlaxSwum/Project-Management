@@ -778,6 +778,12 @@ export default function DashboardPage() {
           font-family: 'Mabry Pro', 'Inter', sans-serif;
           line-height: 1.3;
           letter-spacing: -0.02em;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          word-break: break-word;
+          white-space: normal;
+          hyphens: auto;
+          max-width: 100%;
         }
         
         .project-badges {

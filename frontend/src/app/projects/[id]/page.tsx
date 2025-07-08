@@ -1410,6 +1410,13 @@ export default function ProjectDetailPage() {
             
             .task-title {
               font-size: 0.9rem;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              word-break: break-word;
+              white-space: normal;
+              hyphens: auto;
+              max-width: 100%;
+              display: block;
             }
             
             .task-meta-item {
@@ -1734,6 +1741,13 @@ export default function ProjectDetailPage() {
             margin-right: 0.5rem;
             letter-spacing: -0.025em;
             transition: all 0.3s ease;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            hyphens: auto;
+            max-width: 100%;
+            display: block;
           }
           
           .task-card:hover .task-title {
@@ -4573,7 +4587,10 @@ export default function ProjectDetailPage() {
                                    lineHeight: '1.2',
                                    wordWrap: 'break-word',
                                    overflowWrap: 'break-word',
-                                   whiteSpace: 'normal'
+                                   wordBreak: 'break-word',
+                                   whiteSpace: 'normal',
+                                   hyphens: 'auto',
+                                   maxWidth: '100%'
                                  }}>{task.name}</span>
                                  {task.description && (
                                    <span style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.2' }}>
@@ -4900,9 +4917,12 @@ export default function ProjectDetailPage() {
                                   color: '#ffffff',
                                   fontSize: '0.8rem',
                                   fontWeight: '600',
-                                  textOverflow: 'ellipsis',
-                                  overflow: 'hidden',
-                                  whiteSpace: 'nowrap',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  wordBreak: 'break-word',
+                                  whiteSpace: 'normal',
+                                  hyphens: 'auto',
+                                  lineHeight: '1.2',
                                   flex: 1
                                 }}>{task.name}</span>
                                 <span className="gantt-bar-duration-enhanced" style={{

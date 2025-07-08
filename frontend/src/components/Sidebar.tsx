@@ -1456,6 +1456,7 @@ Your report is now available in the system.`);
           .project-name {
             word-wrap: break-word;
             overflow-wrap: break-word;
+            word-break: break-word;
             white-space: normal;
             hyphens: auto;
             font-weight: 500;
@@ -1569,6 +1570,7 @@ Your report is now available in the system.`);
             margin: 0;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            word-break: break-word;
             white-space: normal;
             line-height: 1.3;
           }
@@ -1579,6 +1581,7 @@ Your report is now available in the system.`);
             margin: 0;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            word-break: break-word;
             white-space: normal;
             line-height: 1.3;
           }
