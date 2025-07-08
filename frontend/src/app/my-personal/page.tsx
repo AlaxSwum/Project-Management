@@ -201,8 +201,12 @@ export default function PersonalCalendarPage() {
     return date;
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatTime = (dateString: string | number) => {
+    const date = typeof dateString === 'number' ? new Date(dateString) : new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Time';
+    }
+    
     if (settings.time_format === '12h') {
       return date.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
@@ -213,6 +217,22 @@ export default function PersonalCalendarPage() {
       return date.toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit',
+        hour12: false 
+      });
+    }
+  };
+
+  const formatHourSlot = (hour: number) => {
+    const date = new Date();
+    date.setHours(hour, 0, 0, 0);
+    if (settings.time_format === '12h') {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric',
+        hour12: true 
+      });
+    } else {
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit',
         hour12: false 
       });
     }
@@ -247,6 +267,31 @@ export default function PersonalCalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
+  };
+
+  const handleTimeSlotClick = (date: Date, hour: number) => {
+    const startTime = new Date(date);
+    startTime.setHours(hour, 0, 0, 0);
+    
+    const endTime = new Date(date);
+    endTime.setHours(hour + 1, 0, 0, 0);
+    
+    // Format for datetime-local input
+    const formatForInput = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+    
+    setNewEvent({
+      ...newEvent,
+      start_datetime: formatForInput(startTime),
+      end_datetime: formatForInput(endTime)
+    });
+    setShowCreateModal(true);
   };
 
   const createEvent = async () => {
@@ -350,7 +395,7 @@ export default function PersonalCalendarPage() {
               fontSize: '0.75rem',
               color: '#666666'
             }}>
-              {formatTime(new Date().setHours(hour, 0, 0, 0).toString())}
+              {formatHourSlot(hour)}
             </div>
           ))}
         </div>
@@ -374,16 +419,31 @@ export default function PersonalCalendarPage() {
           {timeSlots.map(hour => {
             const slotEvents = getEventsForTimeSlot(hour, currentDate);
             return (
-              <div key={hour} style={{
-                height: '60px',
-                borderBottom: '1px solid #f0f0f0',
-                position: 'relative',
-                background: hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff'
-              }}>
+              <div 
+                key={hour} 
+                onClick={() => handleTimeSlotClick(currentDate, hour)}
+                style={{
+                  height: '60px',
+                  borderBottom: '1px solid #f0f0f0',
+                  position: 'relative',
+                  background: hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f0f8ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                }}
+              >
                 {slotEvents.map((event, index) => (
                   <div
                     key={event.id}
-                    onClick={() => setSelectedEvent(event)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEvent(event);
+                    }}
                     style={{
                       position: 'absolute',
                       left: `${index * 5 + 4}px`,
@@ -444,7 +504,7 @@ export default function PersonalCalendarPage() {
               fontSize: '0.75rem',
               color: '#666666'
             }}>
-              {formatTime(new Date().setHours(hour, 0, 0, 0).toString())}
+              {formatHourSlot(hour)}
             </div>
           ))}
         </div>
@@ -476,16 +536,31 @@ export default function PersonalCalendarPage() {
               {timeSlots.map(hour => {
                 const slotEvents = getEventsForTimeSlot(hour, day);
                 return (
-                  <div key={hour} style={{
-                    height: '60px',
-                    borderBottom: '1px solid #f0f0f0',
-                    position: 'relative',
-                    background: hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff'
-                  }}>
+                  <div 
+                    key={hour} 
+                    onClick={() => handleTimeSlotClick(day, hour)}
+                    style={{
+                      height: '60px',
+                      borderBottom: '1px solid #f0f0f0',
+                      position: 'relative',
+                      background: hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f0f8ff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                    }}
+                  >
                     {slotEvents.map((event, index) => (
                       <div
                         key={event.id}
-                        onClick={() => setSelectedEvent(event)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEvent(event);
+                        }}
                         style={{
                           position: 'absolute',
                           left: '2px',

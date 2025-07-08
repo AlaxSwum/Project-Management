@@ -31,9 +31,9 @@ DROP TRIGGER IF EXISTS update_personal_tasks_updated_at ON personal_tasks;
 DROP TRIGGER IF EXISTS update_personal_calendar_settings_updated_at ON personal_calendar_settings;
 DROP TRIGGER IF EXISTS update_personal_time_blocks_updated_at ON personal_time_blocks;
 
--- Drop existing function
+-- Drop existing function (only the calendar-specific one)
 DROP FUNCTION IF EXISTS create_default_calendar_settings();
-DROP FUNCTION IF EXISTS update_updated_at_column();
+-- Note: We don't drop update_updated_at_column() as it's used by other tables
 
 -- Drop existing indexes
 DROP INDEX IF EXISTS idx_personal_events_user_datetime;
