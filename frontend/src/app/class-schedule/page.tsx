@@ -412,12 +412,12 @@ export default function ClassSchedulePage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -427,8 +427,8 @@ export default function ClassSchedulePage() {
           <div style={{ 
             width: '32px', 
             height: '32px', 
-            border: '3px solid #cccccc', 
-            borderTop: '3px solid #000000', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -439,12 +439,12 @@ export default function ClassSchedulePage() {
 
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -452,24 +452,26 @@ export default function ClassSchedulePage() {
           minHeight: '100vh'
         }}>
           <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#000000' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
               Access Denied
             </h1>
-            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem' }}>
+            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
               You don't have permission to access the Class Schedule.
               Please contact an administrator to request access.
             </p>
             <button
               onClick={() => router.push('/dashboard')}
               style={{
-                padding: '1rem 2rem',
-                background: '#000000',
+                padding: '0.875rem 2rem',
+                background: '#5884FD',
                 color: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
+                border: 'none',
+                borderRadius: '12px',
                 fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer'
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
               }}
             >
               Back to Dashboard
@@ -491,13 +493,13 @@ export default function ClassSchedulePage() {
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#ffffff' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         
         <div id="main-content" className="main-content" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#ffffff', 
+          background: '#F5F5ED', 
           flex: 1,
           minHeight: '100vh'
         }}>
@@ -506,25 +508,25 @@ export default function ClassSchedulePage() {
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            marginBottom: '2rem',
-            borderBottom: '2px solid #e5e7eb',
-            paddingBottom: '1rem'
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
           }}>
             <div>
               <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: 'bold', 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
                 margin: '0', 
-                color: '#000000'
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
               }}>
                 Class Schedule
               </h1>
-              <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage and organize your class schedules and training sessions
               </p>
             </div>
             
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={() => {
                   setFolderFormData({
@@ -538,18 +540,19 @@ export default function ClassSchedulePage() {
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#ffffff',
-                  color: '#000000',
-                  border: '2px solid #666666',
-                  borderRadius: '6px',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
                   fontSize: '0.9rem',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <FolderIcon style={{ width: '16px', height: '16px' }} />
                 Create Folder
               </button>
               
@@ -558,19 +561,20 @@ export default function ClassSchedulePage() {
                   onClick={() => setShowMemberModal(true)}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    background: '#ffffff',
-                    color: '#000000',
-                    border: '2px solid #000000',
-                    borderRadius: '6px',
+                    background: '#FFB333',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
                     fontSize: '0.9rem',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
                   }}
                 >
-                  <UserGroupIcon style={{ width: '16px', height: '16px' }} />
                   Manage Members
                 </button>
               )}
@@ -585,19 +589,20 @@ export default function ClassSchedulePage() {
                 }}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  background: '#000000',
+                  background: '#5884FD',
                   color: '#ffffff',
-                  border: '2px solid #000000',
-                  borderRadius: '6px',
+                  border: 'none',
+                  borderRadius: '12px',
                   fontSize: '0.9rem',
-                  fontWeight: '600',
+                  fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                 }}
               >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
                 {currentFolder ? `Add to ${currentFolder.name}` : 'Add Class'}
               </button>
             </div>
@@ -605,13 +610,14 @@ export default function ClassSchedulePage() {
 
           {error && (
             <div style={{ 
-              background: '#f9f9f9', 
-              border: '2px solid #000000', 
-              borderRadius: '6px', 
+              background: '#ffffff', 
+              border: '1px solid #F87239', 
+              borderRadius: '12px', 
               padding: '1rem', 
               marginBottom: '2rem',
-              color: '#000000',
-              fontWeight: '600'
+              color: '#F87239',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
             </div>
@@ -620,17 +626,18 @@ export default function ClassSchedulePage() {
           {/* Hierarchical Folder Navigation */}
           <div style={{
             background: '#ffffff',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '1.5rem',
-            marginBottom: '2rem'
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            padding: '2rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
           }}>
             {/* Breadcrumb Navigation */}
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: '0.5rem',
-              marginBottom: '1rem',
+              marginBottom: '1.5rem',
               fontSize: '0.9rem',
               color: '#666666'
             }}>
@@ -639,11 +646,13 @@ export default function ClassSchedulePage() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: currentFolder === null ? '#000000' : '#666666',
-                  fontWeight: currentFolder === null ? '600' : '400',
-                  textDecoration: currentFolder === null ? 'none' : 'underline',
+                  color: currentFolder === null ? '#1a1a1a' : '#666666',
+                  fontWeight: currentFolder === null ? '500' : '400',
+                  textDecoration: 'none',
                   cursor: 'pointer',
-                  padding: '0'
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 Class Schedule
@@ -651,17 +660,19 @@ export default function ClassSchedulePage() {
               
               {folderPath.map((folder, index) => (
                 <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>/</span>
+                  <span style={{ color: '#C483D9' }}>•</span>
                   <button
                     onClick={() => goToFolder(folder)}
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: index === folderPath.length - 1 ? '#000000' : '#666666',
-                      fontWeight: index === folderPath.length - 1 ? '600' : '400',
-                      textDecoration: index === folderPath.length - 1 ? 'none' : 'underline',
+                      color: index === folderPath.length - 1 ? '#1a1a1a' : '#666666',
+                      fontWeight: index === folderPath.length - 1 ? '500' : '400',
+                      textDecoration: 'none',
                       cursor: 'pointer',
-                      padding: '0'
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '6px',
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     {folder.name}
@@ -673,26 +684,44 @@ export default function ClassSchedulePage() {
             {/* Current Folder Contents */}
             <div style={{ marginBottom: '1rem' }}>
               <h3 style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: '600', 
-                marginBottom: '1rem',
-                color: '#000000'
+                fontSize: '1.2rem', 
+                fontWeight: '500', 
+                marginBottom: '1.5rem',
+                color: '#1a1a1a',
+                letterSpacing: '-0.01em'
               }}>
                 {currentFolder ? `${currentFolder.name}` : 'All Folders'} 
-                {currentFolder === null && folders.length > 0 && ` (${folders.length} total)`}
+                {currentFolder === null && folders.length > 0 && (
+                  <span style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '400' }}>
+                    ({folders.length} total)
+                  </span>
+                )}
               </h3>
               
               {getCurrentFolderContents().length === 0 && folders.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
-                  padding: '2rem',
-                  color: '#666666',
-                  border: '1px dashed #e5e7eb',
-                  borderRadius: '6px'
+                  padding: '3rem 2rem',
+                  color: '#999999',
+                  border: '1px dashed #e0e0e0',
+                  borderRadius: '12px',
+                  background: '#fafafa'
                 }}>
-                  <FolderIcon style={{ width: '24px', height: '24px', margin: '0 auto 1rem' }} />
-                  <p style={{ margin: '0 0 1rem 0' }}>No folders created yet</p>
-                  <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                  <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    background: '#f0f0f0',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.5rem',
+                    fontSize: '1.5rem'
+                  }}>
+                    📁
+                  </div>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '500' }}>No folders created yet</p>
+                  <p style={{ margin: '0', fontSize: '0.9rem', lineHeight: '1.5' }}>
                     Create folders to organize your classes by category, level, or subject
                   </p>
                 </div>
@@ -707,32 +736,48 @@ export default function ClassSchedulePage() {
                       key={folder.id}
                       onClick={() => enterFolder(folder)}
                       style={{
-                        padding: '1rem',
-                        background: '#f9f9f9',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '8px',
+                        padding: '1.5rem',
+                        background: '#ffffff',
+                        border: '1px solid #e8e8e8',
+                        borderRadius: '12px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.75rem',
-                        transition: 'all 0.2s ease'
+                        gap: '1rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#000000'
-                        e.currentTarget.style.background = '#f0f0f0'
+                        e.currentTarget.style.borderColor = '#C483D9'
+                        e.currentTarget.style.background = '#fafafa'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.2)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#e5e7eb'
-                        e.currentTarget.style.background = '#f9f9f9'
+                        e.currentTarget.style.borderColor = '#e8e8e8'
+                        e.currentTarget.style.background = '#ffffff'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
                       }}
                     >
-                      <FolderIcon style={{ width: '20px', height: '20px', color: '#666666' }} />
+                      <div style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        background: '#f0f0f0',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem'
+                      }}>
+                        📁
+                      </div>
                       <div>
-                        <div style={{ fontWeight: '600', color: '#000000' }}>
+                        <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
                           {folder.name}
                         </div>
                         {folder.description && (
-                          <div style={{ fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem', lineHeight: '1.4' }}>
                             {folder.description}
                           </div>
                         )}
@@ -748,40 +793,56 @@ export default function ClassSchedulePage() {
           {currentFolder && (
             <div style={{
               background: '#ffffff',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              overflow: 'hidden'
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '120px 1fr 100px 100px 100px 100px 120px 1fr 100px 80px',
                 gap: '0',
-                background: '#f9f9f9',
-                borderBottom: '2px solid #e5e7eb',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                color: '#000000'
+                background: '#fafafa',
+                borderBottom: '1px solid #e8e8e8',
+                fontWeight: '500',
+                fontSize: '0.8rem',
+                color: '#666666',
+                letterSpacing: '0.025em'
               }}>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>START DATE</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>CLASS NAME</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DURATION</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DAYS</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TIME</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PLATFORM</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>INSTRUCTOR NAME</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>INSTRUCTOR INFO</div>
-                <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>POST DATE</div>
-                <div style={{ padding: '1rem 0.75rem' }}>ACTIONS</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>START DATE</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CLASS NAME</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DURATION</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DAYS</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TIME</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PLATFORM</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR NAME</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR INFO</div>
+                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>POST DATE</div>
+                <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
               </div>
 
               {filteredItems.length === 0 ? (
                 <div style={{ 
-                  padding: '3rem', 
+                  padding: '4rem', 
                   textAlign: 'center', 
-                  color: '#666666',
+                  color: '#999999',
                   fontSize: '1.1rem'
                 }}>
-                  No classes in {currentFolder.name}. Click "Add Class" to create one.
+                  <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    background: '#f0f0f0',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1rem',
+                    fontSize: '1.5rem'
+                  }}>
+                    📚
+                  </div>
+                  <p style={{ margin: '0', fontWeight: '500' }}>No classes in {currentFolder.name}</p>
+                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666666' }}>Click "Add Class" to create one.</p>
                 </div>
               ) : (
                 filteredItems.map((item) => (
@@ -789,48 +850,59 @@ export default function ClassSchedulePage() {
                     display: 'grid',
                     gridTemplateColumns: '120px 1fr 100px 100px 100px 100px 120px 1fr 100px 80px',
                     gap: '0',
-                    borderBottom: '1px solid #e5e7eb',
-                    fontSize: '0.8rem'
+                    borderBottom: '1px solid #f0f0f0',
+                    fontSize: '0.85rem',
+                    transition: 'all 0.2s ease'
                   }}>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {formatDate(item.class_start_date)}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
-                      <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{item.class_name}</div>
-                      <div style={{ fontSize: '0.7rem', color: '#666666' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
+                      <div style={{ fontWeight: '500', marginBottom: '0.25rem', color: '#1a1a1a' }}>{item.class_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#666666', lineHeight: '1.4' }}>
                         {item.class_info && item.class_info.length > 50 ? `${item.class_info.substring(0, 50)}...` : item.class_info}
                       </div>
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.duration}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.days.join(', ')}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.time_range}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.platform}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.instructor_name || '-'}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.instructor_info && item.instructor_info.length > 30 ? `${item.instructor_info.substring(0, 30)}...` : item.instructor_info || '-'}
                     </div>
-                    <div style={{ padding: '0.75rem', borderRight: '1px solid #e5e7eb' }}>
+                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {formatDate(item.post_date)}
                     </div>
-                    <div style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
                       <button
                         onClick={() => startEdit(item)}
                         style={{
-                          padding: '0.25rem',
-                          background: 'transparent',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
+                          padding: '0.375rem',
+                          background: '#ffffff',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: '#5884FD',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#5884FD'
+                          e.currentTarget.style.color = '#ffffff'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                          e.currentTarget.style.color = '#5884FD'
                         }}
                       >
                         <PencilIcon style={{ width: '14px', height: '14px' }} />
@@ -838,11 +910,21 @@ export default function ClassSchedulePage() {
                       <button
                         onClick={() => handleDelete(item.id)}
                         style={{
-                          padding: '0.25rem',
-                          background: 'transparent',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
+                          padding: '0.375rem',
+                          background: '#ffffff',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: '#F87239',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#F87239'
+                          e.currentTarget.style.color = '#ffffff'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                          e.currentTarget.style.color = '#F87239'
                         }}
                       >
                         <TrashIcon style={{ width: '14px', height: '14px' }} />
@@ -857,21 +939,34 @@ export default function ClassSchedulePage() {
           {/* Root view message - only show folders, no class table */}
           {!currentFolder && (
             <div style={{
-              background: '#f9f9f9',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '3rem',
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              padding: '4rem',
               textAlign: 'center',
-              color: '#666666'
+              color: '#666666',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
             }}>
-              <FolderIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#999999' }} />
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0 0 1rem 0', color: '#000000' }}>
+              <div style={{ 
+                width: '64px', 
+                height: '64px', 
+                background: '#f0f0f0',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 2rem',
+                fontSize: '2rem'
+              }}>
+                📁
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
                 Choose a Folder to View Classes
               </h3>
-              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0' }}>
+              <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', lineHeight: '1.5' }}>
                 Click on a folder above to see its class schedules and manage your training sessions.
               </p>
-              <p style={{ fontSize: '0.9rem', margin: '0' }}>
+              <p style={{ fontSize: '0.9rem', margin: '0', color: '#999999' }}>
                 Create new folders to organize classes by category, level, or subject.
               </p>
             </div>
@@ -891,37 +986,38 @@ export default function ClassSchedulePage() {
               justifyContent: 'center',
               zIndex: 1000
             }}>
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '2.5rem',
-                width: '95%',
-                maxWidth: '700px',
-                maxHeight: '95vh',
-                overflow: 'auto',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-              }}>
+                          <div style={{
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '20px',
+              padding: '3rem',
+              width: '95%',
+              maxWidth: '700px',
+              maxHeight: '95vh',
+              overflow: 'auto',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
+            }}>
                 <div style={{
                   textAlign: 'center',
-                  marginBottom: '2.5rem',
-                  paddingBottom: '1.5rem',
-                  borderBottom: '2px solid #f0f0f0'
+                  marginBottom: '3rem',
+                  paddingBottom: '2rem',
+                  borderBottom: '1px solid #f0f0f0'
                 }}>
                   <h2 style={{ 
-                    fontSize: '1.8rem', 
-                    fontWeight: '700', 
+                    fontSize: '2rem', 
+                    fontWeight: '400', 
                     margin: '0 0 0.5rem 0',
-                    color: '#000000',
+                    color: '#1a1a1a',
                     letterSpacing: '-0.025em'
                   }}>
                     {editingItem ? 'Edit Class Schedule' : 'Add New Class Schedule'}
                   </h2>
                   <p style={{
-                    fontSize: '1rem',
+                    fontSize: '1.1rem',
                     color: '#666666',
                     margin: '0',
-                    fontWeight: '400'
+                    fontWeight: '400',
+                    lineHeight: '1.5'
                   }}>
                     {editingItem ? 'Update your class details below' : 'Fill in the details to create a new class schedule'}
                   </p>
@@ -936,19 +1032,19 @@ export default function ClassSchedulePage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#5884FD',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Basic Information
@@ -1025,19 +1121,19 @@ export default function ClassSchedulePage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#C483D9',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Schedule Details
@@ -1189,19 +1285,19 @@ export default function ClassSchedulePage() {
                       gap: '0.75rem',
                       marginBottom: '2rem',
                       paddingBottom: '1rem',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #f0f0f0'
                     }}>
                       <div style={{
                         width: '4px',
                         height: '24px',
-                        backgroundColor: '#000000',
+                        backgroundColor: '#F87239',
                         borderRadius: '2px'
                       }}></div>
                       <h3 style={{ 
                         fontSize: '1.2rem', 
-                        fontWeight: '700', 
+                        fontWeight: '500', 
                         margin: '0',
-                        color: '#000000',
+                        color: '#1a1a1a',
                         letterSpacing: '-0.015em'
                       }}>
                         Additional Details
@@ -1285,27 +1381,28 @@ export default function ClassSchedulePage() {
                       onClick={resetForm}
                       style={{
                         padding: '1rem 2.5rem',
-                        background: '#f8f9fa',
-                        color: '#374151',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '10px',
+                        background: '#ffffff',
+                        color: '#666666',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '12px',
                         fontSize: '1rem',
-                        fontWeight: '600',
+                        fontWeight: '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         minWidth: '140px',
                         fontFamily: 'inherit',
-                        outline: 'none'
+                        outline: 'none',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#e5e7eb'
+                        e.currentTarget.style.backgroundColor = '#f8f8f8'
                         e.currentTarget.style.transform = 'translateY(-1px)'
                         e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8f9fa'
+                        e.currentTarget.style.backgroundColor = '#ffffff'
                         e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.boxShadow = 'none'
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}
                     >
                       Cancel
@@ -1314,27 +1411,28 @@ export default function ClassSchedulePage() {
                       type="submit"
                       style={{
                         padding: '1rem 2.5rem',
-                        background: '#000000',
+                        background: '#5884FD',
                         color: '#ffffff',
-                        border: '1px solid #000000',
-                        borderRadius: '10px',
+                        border: 'none',
+                        borderRadius: '12px',
                         fontSize: '1rem',
-                        fontWeight: '600',
+                        fontWeight: '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         minWidth: '140px',
                         fontFamily: 'inherit',
-                        outline: 'none'
+                        outline: 'none',
+                        boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#1f2937'
+                        e.currentTarget.style.backgroundColor = '#4A6CF7'
                         e.currentTarget.style.transform = 'translateY(-1px)'
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.25)'
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(88, 132, 253, 0.4)'
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = '#000000'
+                        e.currentTarget.style.backgroundColor = '#5884FD'
                         e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.boxShadow = 'none'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(88, 132, 253, 0.3)'
                       }}
                     >
                       {editingItem ? 'Update Class' : 'Create Class'}
@@ -1361,19 +1459,21 @@ export default function ClassSchedulePage() {
             }}>
               <div style={{
                 background: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                padding: '2rem',
+                border: '1px solid #e8e8e8',
+                borderRadius: '20px',
+                padding: '2.5rem',
                 width: '90%',
                 maxWidth: '600px',
                 maxHeight: '90vh',
-                overflow: 'auto'
+                overflow: 'auto',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
               }}>
                 <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 'bold', 
-                  marginBottom: '1.5rem',
-                  color: '#000000'
+                  fontSize: '1.75rem', 
+                  fontWeight: '400', 
+                  marginBottom: '2rem',
+                  color: '#1a1a1a',
+                  letterSpacing: '-0.02em'
                 }}>
                   Manage Class Schedule Members
                 </h2>
@@ -1466,14 +1566,16 @@ export default function ClassSchedulePage() {
                   <button
                     onClick={() => setShowMemberModal(false)}
                     style={{
-                      padding: '0.75rem 1.5rem',
-                      background: '#000000',
+                      padding: '0.875rem 2rem',
+                      background: '#5884FD',
                       color: '#ffffff',
-                      border: '2px solid #000000',
-                      borderRadius: '6px',
-                      fontSize: '0.9rem',
-                      fontWeight: '600',
-                      cursor: 'pointer'
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                     }}
                   >
                     Close
@@ -1499,17 +1601,19 @@ export default function ClassSchedulePage() {
             }}>
               <div style={{
                 background: '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                padding: '2rem',
+                border: '1px solid #e8e8e8',
+                borderRadius: '20px',
+                padding: '2.5rem',
                 width: '90%',
-                maxWidth: '500px'
+                maxWidth: '500px',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
               }}>
                 <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 'bold', 
-                  marginBottom: '1.5rem',
-                  color: '#000000'
+                  fontSize: '1.75rem', 
+                  fontWeight: '400', 
+                  marginBottom: '2rem',
+                  color: '#1a1a1a',
+                  letterSpacing: '-0.02em'
                 }}>
                   {currentFolder ? `Create Subfolder in ${currentFolder.name}` : 'Create New Folder'}
                 </h2>
@@ -1602,14 +1706,16 @@ export default function ClassSchedulePage() {
                       type="button"
                       onClick={() => setShowFolderForm(false)}
                       style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '0.875rem 1.5rem',
                         background: '#ffffff',
-                        color: '#000000',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
+                        color: '#666666',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}
                     >
                       Cancel
@@ -1617,14 +1723,16 @@ export default function ClassSchedulePage() {
                     <button
                       type="submit"
                       style={{
-                        padding: '0.75rem 1.5rem',
-                        background: '#000000',
+                        padding: '0.875rem 1.5rem',
+                        background: '#C483D9',
                         color: '#ffffff',
-                        border: '2px solid #000000',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 12px rgba(196, 131, 217, 0.3)'
                       }}
                     >
                       {currentFolder ? 'Create Subfolder' : 'Create Folder'}
