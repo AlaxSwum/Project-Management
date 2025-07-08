@@ -213,29 +213,29 @@ export default function EmployeeAbsentPage() {
     switch (status) {
       case 'pending':
         return {
-          color: '#f59e0b',
-          bg: '#fef3c7',
+          color: '#FFB333',
+          bg: '#FFF9E6',
           icon: <ExclamationCircleIcon style={{ width: '14px', height: '14px' }} />,
           label: 'Pending'
         };
       case 'approved':
         return {
           color: '#10b981',
-          bg: '#d1fae5',
+          bg: '#E6F7F1',
           icon: <CheckCircleIcon style={{ width: '14px', height: '14px' }} />,
           label: 'Approved'
         };
       case 'rejected':
         return {
-          color: '#ef4444',
-          bg: '#fef2f2',
+          color: '#F87239',
+          bg: '#FFF2ED',
           icon: <XCircleIcon style={{ width: '14px', height: '14px' }} />,
           label: 'Rejected'
         };
       default:
         return {
-          color: '#6b7280',
-          bg: '#f9fafb',
+          color: '#C483D9',
+          bg: '#F8F4FC',
           icon: <ClockIcon style={{ width: '14px', height: '14px' }} />,
           label: 'Unknown'
         };
@@ -262,8 +262,27 @@ export default function EmployeeAbsentPage() {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     );
   }
@@ -274,378 +293,387 @@ export default function EmployeeAbsentPage() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <>
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #ffffff;
-          }
-          .employee-absent-container {
-            min-height: 100vh;
-            display: flex;
-            background: #ffffff;
-          }
-          .main-content {
-            flex: 1;
-            margin-left: 256px;
-            background: #ffffff;
-          }
-          .header {
-            background: #ffffff;
-            border-bottom: 2px solid #000000;
-            padding: 1.5rem 2rem;
-          }
-          .header-title {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #000000;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-          }
-          .filters-section {
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f9fafb;
-          }
-          .filter-buttons {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-          }
-          .filter-btn {
-            padding: 0.5rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            background: #ffffff;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-          }
-          .filter-btn:hover {
-            border-color: #000000;
-            transform: translateY(-1px);
-          }
-          .filter-btn.active {
-            background: #000000;
-            color: #ffffff;
-            border-color: #000000;
-          }
-          .requests-grid {
-            padding: 1.5rem 2rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 1.5rem;
-          }
-          .request-card {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: all 0.2s ease;
-          }
-          .request-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 4px 4px 0px #000000;
-          }
-          .request-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-          }
-          .employee-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-          }
-          .employee-avatar {
-            width: 40px;
-            height: 40px;
-            background: #000000;
-            color: #ffffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1rem;
-          }
-          .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-          }
-          .request-details {
-            margin-bottom: 1.5rem;
-          }
-          .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-          }
-          .detail-label {
-            color: #666666;
-            font-weight: 500;
-          }
-          .detail-value {
-            color: #000000;
-            font-weight: 600;
-          }
-          .request-actions {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-          }
-          .action-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            border: 2px solid;
-            transition: all 0.2s ease;
-          }
-          .action-btn.approve {
-            background: #10b981;
-            color: #ffffff;
-            border-color: #10b981;
-          }
-          .action-btn.approve:hover {
-            background: #059669;
-            border-color: #059669;
-          }
-          .action-btn.reject {
-            background: #ef4444;
-            color: #ffffff;
-            border-color: #ef4444;
-          }
-          .action-btn.reject:hover {
-            background: #dc2626;
-            border-color: #dc2626;
-          }
-          .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #666666;
-          }
-          .empty-state h3 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 0.5rem;
-          }
-          
-          @media (max-width: 768px) {
-            .main-content {
-              margin-left: 0;
-            }
-            
-            .header {
-              padding: 1rem;
-            }
-            
-            .header-title {
-              font-size: 1.5rem;
-            }
-            
-            .filters-section {
-              padding: 1rem;
-            }
-            
-            .requests-grid {
-              grid-template-columns: 1fr;
-              padding: 1rem;
-              gap: 1rem;
-            }
-            
-            .request-card {
-              padding: 1rem;
-            }
-            
-            .request-actions {
-              flex-direction: column;
-              gap: 0.5rem;
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
         `
       }} />
-
-      <div className="employee-absent-container">
+      
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <main className="main-content">
-          <header className="header">
-            <h1 className="header-title">
-              <CalendarDaysIcon style={{ width: '32px', height: '32px' }} />
-              Absence Management
-            </h1>
-            <p style={{ color: '#666666', marginTop: '0.25rem' }}>
-              Review and manage employee leave requests
-            </p>
-          </header>
-
-          <div className="filters-section">
-            <div className="filter-buttons">
-              <button
-                onClick={() => setFilterStatus('all')}
-                className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
-              >
-                All Requests ({leaveRequests.length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('pending')}
-                className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
-              >
-                Pending ({leaveRequests.filter(r => r.status === 'pending').length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('approved')}
-                className={`filter-btn ${filterStatus === 'approved' ? 'active' : ''}`}
-              >
-                Approved ({leaveRequests.filter(r => r.status === 'approved').length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('rejected')}
-                className={`filter-btn ${filterStatus === 'rejected' ? 'active' : ''}`}
-              >
-                Rejected ({leaveRequests.filter(r => r.status === 'rejected').length})
-              </button>
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
+          }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
+                margin: '0', 
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
+              }}>
+                Absence Management
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+                Review and manage employee leave requests
+              </p>
             </div>
           </div>
 
           {error && (
             <div style={{ 
-              background: '#fef2f2', 
-              border: '2px solid #ef4444', 
-              borderRadius: '8px', 
+              background: '#ffffff', 
+              border: '1px solid #F87239', 
+              borderRadius: '12px', 
               padding: '1rem', 
-              margin: '1.5rem 2rem',
-              color: '#dc2626',
-              fontWeight: '500'
+              marginBottom: '2rem',
+              color: '#F87239',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
             </div>
           )}
 
-          {filteredRequests.length === 0 ? (
-            <div className="empty-state">
-              <CalendarDaysIcon style={{ width: '80px', height: '80px', color: '#e5e7eb', margin: '0 auto 1rem' }} />
-              <h3>No Leave Requests</h3>
-              <p>
-                {filterStatus === 'all' 
-                  ? 'No leave requests have been submitted yet.'
-                  : `No ${filterStatus} leave requests found.`
-                }
-              </p>
+          {/* Statistics Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '3rem'
+          }}>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#5884FD', marginBottom: '0.5rem' }}>
+                {leaveRequests.length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Requests</div>
             </div>
-          ) : (
-            <div className="requests-grid">
-              {filteredRequests.map((request) => {
-                const statusBadge = getStatusBadge(request.status);
-                
-                return (
-                  <div key={request.id} className="request-card">
-                    <div className="request-header">
-                      <div className="employee-info">
-                        <div className="employee-avatar">
-                          {request.employee_name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#000000' }}>
-                            {request.employee_name}
-                          </div>
-                          <div style={{ fontSize: '0.875rem', color: '#666666' }}>
-                            {request.employee_email}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div 
-                        className="status-badge"
-                        style={{ 
-                          color: statusBadge.color, 
-                          backgroundColor: statusBadge.bg 
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#FFB333', marginBottom: '0.5rem' }}>
+                {leaveRequests.filter(r => r.status === 'pending').length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Pending</div>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#10b981', marginBottom: '0.5rem' }}>
+                {leaveRequests.filter(r => r.status === 'approved').length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Approved</div>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#F87239', marginBottom: '0.5rem' }}>
+                {leaveRequests.filter(r => r.status === 'rejected').length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Rejected</div>
+            </div>
+          </div>
+
+          {/* Filter Section */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            padding: '2rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {(['all', 'pending', 'approved', 'rejected'] as const).map(status => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: filterStatus === status ? '#5884FD' : '#ffffff',
+                    color: filterStatus === status ? '#ffffff' : '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    textTransform: 'capitalize',
+                    boxShadow: filterStatus === status ? '0 4px 12px rgba(88, 132, 253, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  {status} ({status === 'all' ? leaveRequests.length : leaveRequests.filter(r => r.status === status).length})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Requests List */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+          }}>
+            {filteredRequests.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '4rem 2rem',
+                color: '#999999'
+              }}>
+                <div style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  background: '#f0f0f0',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 2rem'
+                }}>
+                  <CalendarDaysIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                  {filterStatus === 'all' ? 'No Leave Requests' : `No ${filterStatus} Requests`}
+                </h3>
+                <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
+                  {filterStatus === 'all' 
+                    ? 'No leave requests have been submitted yet.'
+                    : `No ${filterStatus} leave requests found.`
+                  }
+                </p>
+              </div>
+            ) : (
+              <div style={{ padding: '1.5rem' }}>
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  {filteredRequests.map((request) => {
+                    const statusBadge = getStatusBadge(request.status);
+                    
+                    return (
+                      <div
+                        key={request.id}
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid #e8e8e8',
+                          borderRadius: '12px',
+                          padding: '1.5rem',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
                         }}
                       >
-                        {statusBadge.icon}
-                        {statusBadge.label}
-                      </div>
-                    </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              background: '#5884FD',
+                              color: '#ffffff',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: '500',
+                              fontSize: '1.1rem'
+                            }}>
+                              {request.employee_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#1a1a1a', marginBottom: '0.25rem' }}>
+                                {request.employee_name}
+                              </div>
+                              <div style={{ fontSize: '0.9rem', color: '#666666' }}>
+                                {request.project_name}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 1rem',
+                            background: statusBadge.bg,
+                            color: statusBadge.color,
+                            borderRadius: '12px',
+                            fontSize: '0.85rem',
+                            fontWeight: '500'
+                          }}>
+                            {statusBadge.icon}
+                            {statusBadge.label}
+                          </div>
+                        </div>
 
-                    <div className="request-details">
-                      <div className="detail-row">
-                        <span className="detail-label">Project:</span>
-                        <span className="detail-value">{request.project_name}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Leave Type:</span>
-                        <span className="detail-value">{getLeaveTypeLabel(request.leave_type)}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Duration:</span>
-                        <span className="detail-value">
-                          {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Days:</span>
-                        <span className="detail-value">{request.days_requested} days</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Reason:</span>
-                        <span className="detail-value">{request.reason}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Submitted:</span>
-                        <span className="detail-value">
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                          <div>
+                            <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>LEAVE TYPE</div>
+                            <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{getLeaveTypeLabel(request.leave_type)}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>DURATION</div>
+                            <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{request.days_requested} days</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>START DATE</div>
+                            <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{new Date(request.start_date).toLocaleDateString()}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>END DATE</div>
+                            <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{new Date(request.end_date).toLocaleDateString()}</div>
+                          </div>
+                        </div>
 
-                    {request.status === 'pending' && (
-                      <div className="request-actions">
-                        <button
-                          onClick={() => handleStatusChange(request.id, 'approved')}
-                          className="action-btn approve"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(request.id, 'rejected')}
-                          className="action-btn reject"
-                        >
-                          Reject
-                        </button>
+                        {request.reason && (
+                          <div style={{ marginBottom: '1rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.5rem' }}>REASON</div>
+                            <div style={{ fontSize: '0.9rem', color: '#666666', lineHeight: '1.5' }}>{request.reason}</div>
+                          </div>
+                        )}
+
+                        {request.status === 'pending' && (
+                          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
+                            <button
+                              onClick={() => handleStatusChange(request.id, 'rejected')}
+                              style={{
+                                padding: '0.75rem 1.5rem',
+                                background: '#ffffff',
+                                color: '#F87239',
+                                border: '1px solid #F87239',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                fontWeight: '500',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#F87239';
+                                e.currentTarget.style.color = '#ffffff';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#ffffff';
+                                e.currentTarget.style.color = '#F87239';
+                              }}
+                            >
+                              Reject
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(request.id, 'approved')}
+                              style={{
+                                padding: '0.75rem 1.5rem',
+                                background: '#10b981',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                fontWeight: '500',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#059669';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#10b981';
+                              }}
+                            >
+                              Approve
+                            </button>
+                          </div>
+                        )}
+
+                        <div style={{ fontSize: '0.8rem', color: '#999999', marginTop: '1rem' }}>
+                          Submitted on {new Date(request.created_at).toLocaleDateString()}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </main>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 } 

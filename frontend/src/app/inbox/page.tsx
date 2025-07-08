@@ -126,13 +126,13 @@ export default function InboxPage() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'leave_request_submitted':
-        return <ExclamationCircleIcon style={{ width: '20px', height: '20px', color: '#f59e0b' }} />;
+        return <ExclamationCircleIcon style={{ width: '20px', height: '20px', color: '#FFB333' }} />;
       case 'leave_request_approved':
         return <CheckCircleIcon style={{ width: '20px', height: '20px', color: '#10b981' }} />;
       case 'leave_request_rejected':
-        return <XCircleIcon style={{ width: '20px', height: '20px', color: '#ef4444' }} />;
+        return <XCircleIcon style={{ width: '20px', height: '20px', color: '#F87239' }} />;
       default:
-        return <BellIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />;
+        return <BellIcon style={{ width: '20px', height: '20px', color: '#C483D9' }} />;
     }
   };
 
@@ -159,8 +159,27 @@ export default function InboxPage() {
   // Show loading state while auth is initializing
   if (authLoading || isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     );
   }
@@ -170,216 +189,145 @@ export default function InboxPage() {
   }
 
   return (
-    <div>
+    <>
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #ffffff;
-          }
-          .inbox-container {
-            min-height: 100vh;
-            display: flex;
-            background: #ffffff;
-          }
-          .main-content {
-            flex: 1;
-            margin-left: 256px;
-            background: #ffffff;
-          }
-          .header {
-            background: #ffffff;
-            border-bottom: 2px solid #000000;
-            padding: 1.5rem 2rem;
-          }
-          .header-title {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #000000;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-          }
-          .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 1rem;
-          }
-          .filter-btn {
-            padding: 0.5rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            background: #ffffff;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-          }
-          .filter-btn:hover {
-            border-color: #000000;
-          }
-          .filter-btn.active {
-            background: #000000;
-            color: #ffffff;
-            border-color: #000000;
-          }
-          .mark-all-btn {
-            padding: 0.5rem 1rem;
-            background: #f3f4f6;
-            border: 2px solid #d1d5db;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-          }
-          .mark-all-btn:hover {
-            background: #e5e7eb;
-            border-color: #9ca3af;
-          }
-          .notifications-section {
-            padding: 1.5rem 2rem;
-          }
-          .notification-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1.25rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            background: #ffffff;
-            transition: all 0.2s ease;
-            cursor: pointer;
-          }
-          .notification-item:hover {
-            border-color: #000000;
-            transform: translateY(-1px);
-          }
-          .notification-item.unread {
-            background: #f8fafc;
-            border-color: #3b82f6;
-          }
-          .notification-icon {
-            flex-shrink: 0;
-            padding: 0.5rem;
-            border-radius: 50%;
-            background: #f9fafb;
-          }
-          .notification-content {
-            flex: 1;
-            min-width: 0;
-          }
-          .notification-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.25rem;
-          }
-          .notification-message {
-            font-size: 0.875rem;
-            color: #666666;
-            line-height: 1.5;
-          }
-          .notification-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            color: #9ca3af;
-          }
-          .mark-read-btn {
-            background: none;
-            border: none;
-            color: #6b7280;
-            cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-          }
-          .mark-read-btn:hover {
-            background: #f3f4f6;
-            color: #000000;
-          }
-          .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #666666;
-          }
-          .empty-state h3 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 0.5rem;
-          }
-          
-          @media (max-width: 768px) {
-            .main-content {
-              margin-left: 0;
-            }
-            
-            .header {
-              padding: 1rem;
-            }
-            
-            .header-title {
-              font-size: 1.5rem;
-            }
-            
-            .header-actions {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.75rem;
-            }
-            
-            .notifications-section {
-              padding: 1rem;
-            }
-            
-            .notification-item {
-              padding: 1rem;
-            }
-            
-            .notification-meta {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.5rem;
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
         `
       }} />
-
-      <div className="inbox-container">
+      
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <main className="main-content">
-          <header className="header">
-            <h1 className="header-title">
-              <InboxIcon style={{ width: '32px', height: '32px' }} />
-              Inbox
-            </h1>
-            <p style={{ color: '#666666', marginTop: '0.25rem' }}>
-              Notifications and important updates
-            </p>
-            
-            <div className="header-actions">
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
+          }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
+                margin: '0', 
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
+              }}>
+                Inbox
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+                Notifications and important updates
+              </p>
+            </div>
+          </div>
+
+          {/* Statistics Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '3rem'
+          }}>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#5884FD', marginBottom: '0.5rem' }}>
+                {notifications.length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Notifications</div>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#FFB333', marginBottom: '0.5rem' }}>
+                {notifications.filter(n => !n.is_read).length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Unread</div>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#10b981', marginBottom: '0.5rem' }}>
+                {notifications.filter(n => n.is_read).length}
+              </div>
+              <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Read</div>
+            </div>
+          </div>
+
+          {/* Filter Section */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            padding: '2rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button
                   onClick={() => setFilter('all')}
-                  className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: filter === 'all' ? '#5884FD' : '#ffffff',
+                    color: filter === 'all' ? '#ffffff' : '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: filter === 'all' ? '0 4px 12px rgba(88, 132, 253, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
                 >
                   All ({notifications.length})
                 </button>
                 <button
                   onClick={() => setFilter('unread')}
-                  className={`filter-btn ${filter === 'unread' ? 'active' : ''}`}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: filter === 'unread' ? '#5884FD' : '#ffffff',
+                    color: filter === 'unread' ? '#ffffff' : '#666666',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: filter === 'unread' ? '0 4px 12px rgba(88, 132, 253, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}
                 >
                   Unread ({notifications.filter(n => !n.is_read).length})
                 </button>
@@ -388,81 +336,176 @@ export default function InboxPage() {
               {notifications.some(n => !n.is_read) && (
                 <button
                   onClick={markAllAsRead}
-                  className="mark-all-btn"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#FFB333',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
+                  }}
                 >
                   Mark All as Read
                 </button>
               )}
             </div>
-          </header>
+          </div>
 
           {error && (
             <div style={{ 
-              background: '#fef2f2', 
-              border: '2px solid #ef4444', 
-              borderRadius: '8px', 
+              background: '#ffffff', 
+              border: '1px solid #F87239', 
+              borderRadius: '12px', 
               padding: '1rem', 
-              margin: '1.5rem 2rem',
-              color: '#dc2626',
-              fontWeight: '500'
+              marginBottom: '2rem',
+              color: '#F87239',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
             </div>
           )}
 
-          <div className="notifications-section">
+          {/* Notifications List */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+          }}>
             {filteredNotifications.length === 0 ? (
-              <div className="empty-state">
-                <InboxIcon style={{ width: '80px', height: '80px', color: '#e5e7eb', margin: '0 auto 1rem' }} />
-                <h3>No Notifications</h3>
-                <p>
+              <div style={{
+                textAlign: 'center',
+                padding: '4rem 2rem',
+                color: '#999999'
+              }}>
+                <div style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  background: '#f0f0f0',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 2rem'
+                }}>
+                  <InboxIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                  {filter === 'unread' ? 'No Unread Notifications' : 'No Notifications'}
+                </h3>
+                <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
                   {filter === 'unread' 
-                    ? 'No unread notifications at the moment.'
+                    ? 'All caught up! No unread notifications at the moment.'
                     : 'Your inbox is empty. Notifications will appear here when you have updates.'
                   }
                 </p>
               </div>
             ) : (
-              filteredNotifications.map((notification) => (
-                <div 
-                  key={notification.id} 
-                  className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
-                  onClick={() => !notification.is_read && markAsRead(notification.id)}
-                >
-                  <div className="notification-icon">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  
-                  <div className="notification-content">
-                    <div className="notification-title">
-                      {notification.title}
-                    </div>
-                    <div className="notification-message">
-                      {notification.message}
+              <div style={{ padding: '1.5rem' }}>
+                {filteredNotifications.map((notification) => (
+                  <div 
+                    key={notification.id} 
+                    onClick={() => !notification.is_read && markAsRead(notification.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '1.5rem',
+                      padding: '1.5rem',
+                      marginBottom: '1rem',
+                      background: notification.is_read ? '#ffffff' : '#f8fafc',
+                      border: `1px solid ${notification.is_read ? '#e8e8e8' : '#5884FD'}`,
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                    }}
+                  >
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      background: '#f0f0f0',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {getNotificationIcon(notification.type)}
                     </div>
                     
-                    <div className="notification-meta">
-                      <span>{formatDate(notification.created_at)}</span>
-                      {!notification.is_read && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            markAsRead(notification.id);
-                          }}
-                          className="mark-read-btn"
-                          title="Mark as read"
-                        >
-                          <EyeIcon style={{ width: '16px', height: '16px' }} />
-                        </button>
-                      )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: '1.1rem',
+                        fontWeight: '500',
+                        color: '#1a1a1a',
+                        marginBottom: '0.5rem',
+                        lineHeight: '1.4'
+                      }}>
+                        {notification.title}
+                      </div>
+                      <div style={{
+                        fontSize: '0.95rem',
+                        color: '#666666',
+                        lineHeight: '1.5',
+                        marginBottom: '1rem'
+                      }}>
+                        {notification.message}
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: '0.85rem',
+                        color: '#999999'
+                      }}>
+                        <span>{formatDate(notification.created_at)}</span>
+                        {!notification.is_read && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notification.id);
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#5884FD',
+                              cursor: 'pointer',
+                              padding: '0.25rem',
+                              borderRadius: '6px',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                            title="Mark as read"
+                          >
+                            <EyeIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
-        </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 } 

@@ -398,8 +398,27 @@ Your changes are now saved in the system.`);
   // Show loading state while auth is initializing
   if (authLoading || isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     );
   }
@@ -409,1280 +428,456 @@ Your changes are now saved in the system.`);
   }
 
   return (
-    <div>
+    <>
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #ffffff;
-          }
-          .weekly-report-container {
-            min-height: 100vh;
-            display: flex;
-            background: #ffffff;
-          }
-          .main-content {
-            flex: 1;
-            margin-left: 256px;
-            background: #ffffff;
-          }
-          .header {
-            background: #ffffff;
-            border-bottom: 2px solid #000000;
-            padding: 1.5rem 2rem;
-          }
-          .header-title {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #000000;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-          }
-          .content-section {
-            padding: 1.5rem 2rem;
-          }
-          .stats-bar {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 0;
-          }
-          .stat-item {
-            text-align: center;
-            flex: 1;
-          }
-          .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
-          }
-          .stat-label {
-            font-size: 0.875rem;
-            color: #666666;
-          }
-          .week-folder {
-            border: 2px solid #000000;
-            border-radius: 0;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-            background: #ffffff;
-          }
-          .week-folder-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.5rem 2rem;
-            background: #000000;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #ffffff;
-          }
-          .week-folder-header:hover {
-            background: #333333;
-          }
-          .week-folder-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-          }
-          .week-folder-stats {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            font-size: 0.875rem;
-          }
-          .submission-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
-            border: 1px solid #ffffff;
-          }
-          .submission-badge.complete {
-            background: #ffffff;
-            color: #000000;
-          }
-          .submission-badge.partial {
-            background: #cccccc;
-            color: #000000;
-          }
-          .submission-badge.none {
-            background: #ffffff;
-            color: #000000;
-            border: 1px solid #ffffff;
-          }
-          .week-folder-content {
-            padding: 2rem;
-            border-top: 2px solid #000000;
-            background: #f8f9fa;
-          }
-          .reports-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-          }
-          .report-card {
-            border: 2px solid #000000;
-            border-radius: 0;
-            padding: 1.5rem;
-            transition: all 0.2s ease;
-            background: #ffffff;
-          }
-          .report-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 4px 4px 0px #000000;
-          }
-          .report-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-          }
-          .employee-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .employee-avatar {
-            width: 32px;
-            height: 32px;
-            background: #000000;
-            color: #ffffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.875rem;
-          }
-          .view-btn {
-            padding: 0.5rem 1rem;
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 0;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
-            transition: all 0.2s ease;
-            color: #000000;
-          }
-          .view-btn:hover {
-            background: #000000;
-            color: #ffffff;
-            transform: translateY(-1px);
-            box-shadow: 2px 2px 0px #666666;
-          }
-          .edit-btn {
-            padding: 0.5rem 1rem;
-            background: #000000;
-            border: 2px solid #000000;
-            border-radius: 0;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
-            transition: all 0.2s ease;
-            color: #ffffff;
-          }
-          .edit-btn:hover {
-            background: #333333;
-            border-color: #333333;
-            transform: translateY(-1px);
-            box-shadow: 2px 2px 0px #666666;
-          }
-          .missing-section {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e5e7eb;
-          }
-          .missing-employees {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-          }
-          .missing-employee {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: #991b1b;
-          }
-          .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #666666;
-          }
-          .empty-state h3 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 0.5rem;
-          }
-          .user-reports-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 1.5rem;
-          }
-          .user-report-card {
-            border: 2px solid #000000;
-            border-radius: 0;
-            padding: 2rem;
-            transition: all 0.2s ease;
-            background: #ffffff;
-          }
-          .user-report-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 6px 6px 0px #000000;
-          }
-          
-          @media (max-width: 768px) {
-            .main-content {
-              margin-left: 0;
-            }
-            
-            .header {
-              padding: 1rem;
-            }
-            
-            .header-title {
-              font-size: 1.5rem;
-            }
-            
-            .content-section {
-              padding: 1rem;
-            }
-            
-            .stats-bar {
-              flex-direction: column;
-              gap: 0.5rem;
-            }
-            
-            .reports-grid {
-              grid-template-columns: 1fr;
-            }
-            
-            .user-reports-grid {
-              grid-template-columns: 1fr;
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
         `
       }} />
-
-      <div className="weekly-report-container">
+      
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <main className="main-content">
-          <header className="header">
-            <h1 className="header-title">
-              <ClipboardDocumentListIcon style={{ width: '32px', height: '32px' }} />
-              Weekly Reports
-            </h1>
-            <p style={{ color: '#666666', marginTop: '0.25rem' }}>
-              {viewMode === 'admin' 
-                ? 'Monitor weekly reports from team members in your assigned projects'
-                : 'View your submitted weekly reports'
-              }
-            </p>
-          </header>
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
+          }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
+                margin: '0', 
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
+              }}>
+                Weekly Reports
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+                {viewMode === 'admin' ? 'Team weekly progress reports and insights' : 'Your weekly progress reports and achievements'}
+              </p>
+            </div>
+          </div>
 
           {error && (
             <div style={{ 
-              background: '#fef2f2', 
-              border: '2px solid #ef4444', 
-              borderRadius: '8px', 
+              background: '#ffffff', 
+              border: '1px solid #F87239', 
+              borderRadius: '12px', 
               padding: '1rem', 
-              margin: '1.5rem 2rem',
-              color: '#dc2626',
-              fontWeight: '500'
+              marginBottom: '2rem',
+              color: '#F87239',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
             }}>
               {error}
             </div>
           )}
 
-          <div className="content-section">
-            {viewMode === 'admin' ? (
-              // Admin View: Week folders with team submissions
-              <>
-                <div className="stats-bar">
-                  <div className="stat-item">
-                    <div className="stat-number">{weekFolders.length}</div>
-                    <div className="stat-label">Weeks Tracked</div>
+          {viewMode === 'admin' ? (
+            <>
+              {/* Statistics Cards for Admin */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.5rem',
+                marginBottom: '3rem'
+              }}>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '16px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#5884FD', marginBottom: '0.5rem' }}>
+                    {weekFolders.length}
                   </div>
-                  <div className="stat-item">
-                    <div className="stat-number">{employees.length}</div>
-                    <div className="stat-label">Team Members</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">{reports.length}</div>
-                    <div className="stat-label">Total Reports</div>
-                  </div>
+                  <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Weeks</div>
                 </div>
 
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '16px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#10b981', marginBottom: '0.5rem' }}>
+                    {reports.length}
+                  </div>
+                  <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Reports</div>
+                </div>
+
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '16px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#C483D9', marginBottom: '0.5rem' }}>
+                    {employees.length}
+                  </div>
+                  <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Team Members</div>
+                </div>
+              </div>
+
+              {/* Week Folders */}
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid #e8e8e8',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+              }}>
                 {weekFolders.length === 0 ? (
-                  <div className="empty-state">
-                    <ClipboardDocumentListIcon style={{ width: '80px', height: '80px', color: '#e5e7eb', margin: '0 auto 1rem' }} />
-                    <h3>No Weekly Reports Found</h3>
-                    <p>No weekly reports have been submitted by team members in your assigned projects yet.</p>
-                    <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem' }}>
-                      You can view weekly reports from team members in projects you're assigned to.
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '4rem 2rem',
+                    color: '#999999'
+                  }}>
+                    <div style={{ 
+                      width: '64px', 
+                      height: '64px', 
+                      background: '#f0f0f0',
+                      borderRadius: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 2rem'
+                    }}>
+                      <ClipboardDocumentListIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
                     </div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                      No Weekly Reports Yet
+                    </h3>
+                    <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
+                      Weekly reports from your team will appear here when they're submitted.
+                    </p>
                   </div>
                 ) : (
-                  weekFolders.map((folder) => {
-                    const weekKey = `${folder.year}-${folder.weekNumber}`;
-                    const isExpanded = expandedWeeks.has(weekKey);
-                    const completionRate = (folder.submittedCount / folder.totalEmployees) * 100;
-                    
-                    return (
-                      <div key={weekKey} className="week-folder">
-                        <div 
-                          className="week-folder-header"
-                          onClick={() => toggleWeekFolder(weekKey)}
-                        >
-                          <div className="week-folder-info">
-                            {isExpanded ? (
-                              <FolderOpenIcon style={{ width: '24px', height: '24px', color: '#ffffff' }} />
-                            ) : (
-                              <FolderIcon style={{ width: '24px', height: '24px', color: '#ffffff' }} />
-                            )}
-                            <div>
-                              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: '#ffffff' }}>
-                                {folder.dateRangeDisplay}
-                              </h3>
-                              <p style={{ margin: 0, fontSize: '0.875rem', color: '#cccccc' }}>
-                                Week {folder.weekNumber}, {folder.year}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="week-folder-stats">
-                            <span className={`submission-badge ${
-                              completionRate === 100 ? 'complete' : 
-                              completionRate > 0 ? 'partial' : 'none'
-                            }`}>
-                              {completionRate === 100 ? (
-                                <CheckCircleIcon style={{ width: '12px', height: '12px' }} />
-                              ) : (
-                                <ExclamationTriangleIcon style={{ width: '12px', height: '12px' }} />
-                              )}
-                              {folder.submittedCount}/{folder.totalEmployees} submitted
-                            </span>
-                            
-                            {isExpanded ? (
-                              <ChevronDownIcon style={{ width: '20px', height: '20px', color: '#ffffff' }} />
-                            ) : (
-                              <ChevronRightIcon style={{ width: '20px', height: '20px', color: '#ffffff' }} />
-                            )}
-                          </div>
-                        </div>
-                        
-                        {isExpanded && (
-                          <div className="week-folder-content">
-                            <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600' }}>
-                              Submitted Reports ({folder.reports.length})
-                            </h4>
-                            
-                            <div className="reports-grid">
-                              {folder.reports.map((report) => (
-                                <div key={report.id} className="report-card">
-                                  <div className="report-header">
-                                    <div className="employee-info">
-                                      <div className="employee-avatar">
-                                        {report.employee_name.charAt(0).toUpperCase()}
-                                      </div>
-                                      <div>
-                                        <div style={{ fontWeight: '600', fontSize: '0.875rem' }}>
-                                          {report.employee_name}
-                                        </div>
-                                        <div style={{ fontSize: '0.75rem', color: '#666666' }}>
-                                          {report.project_name}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    
-                                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                      <button
-                                        onClick={() => handleViewReport(report)}
-                                        className="view-btn"
-                                      >
-                                        View
-                                      </button>
-                                      {(viewMode === 'admin' || report.employee_id === user?.id) && (
-                                        <button
-                                          onClick={() => handleEditReport(report)}
-                                          className="edit-btn"
-                                        >
-                                          Edit
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  <div style={{ fontSize: '0.75rem', color: '#666666' }}>
-                                    Submitted: {formatDate(report.created_at)}
-                                  </div>
-                                  
-                                  <div style={{ fontSize: '0.875rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                                    {report.key_activities.substring(0, 120)}
-                                    {report.key_activities.length > 120 && '...'}
-                                  </div>
+                  <div style={{ padding: '1.5rem' }}>
+                    {weekFolders.map((folder) => {
+                      const weekKey = `${folder.year}-${folder.weekNumber}`;
+                      const isExpanded = expandedWeeks.has(weekKey);
+                      const completionRate = Math.round((folder.submittedCount / folder.totalEmployees) * 100);
+                      
+                      return (
+                        <div key={weekKey} style={{ marginBottom: '1rem' }}>
+                          <div
+                            onClick={() => toggleWeekFolder(weekKey)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '1.5rem',
+                              background: '#5884FD',
+                              color: '#ffffff',
+                              borderRadius: '12px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              marginBottom: isExpanded ? '1rem' : '0'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#4A6CF7';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#5884FD';
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                {isExpanded ? (
+                                  <ChevronDownIcon style={{ width: '20px', height: '20px' }} />
+                                ) : (
+                                  <ChevronRightIcon style={{ width: '20px', height: '20px' }} />
+                                )}
+                                <FolderIcon style={{ width: '24px', height: '24px' }} />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                                  Week {folder.weekNumber}, {folder.year}
                                 </div>
-                              ))}
+                                <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+                                  {folder.dateRangeDisplay}
+                                </div>
+                              </div>
                             </div>
                             
-                            {folder.submittedCount < folder.totalEmployees && (
-                              <div className="missing-section">
-                                <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.875rem', fontWeight: '600', color: '#dc2626' }}>
-                                  Missing Submissions ({folder.totalEmployees - folder.submittedCount})
-                                </h4>
-                                
-                                <div className="missing-employees">
-                                  {getMissingEmployees(folder.reports, employees).map((employee) => (
-                                    <div key={employee.id} className="missing-employee">
-                                      <ExclamationTriangleIcon style={{ width: '12px', height: '12px' }} />
-                                      {employee.name}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                              <div style={{
+                                background: 'rgba(255, 255, 255, 0.2)',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '8px',
+                                fontSize: '0.9rem',
+                                fontWeight: '500'
+                              }}>
+                                {folder.submittedCount}/{folder.totalEmployees} submitted ({completionRate}%)
+                              </div>
+                              <div style={{
+                                background: completionRate === 100 ? '#10b981' : completionRate >= 50 ? '#FFB333' : '#F87239',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                              }}>
+                                {completionRate === 100 ? 'Complete' : completionRate >= 50 ? 'In Progress' : 'Pending'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {isExpanded && (
+                            <div style={{
+                              background: '#f8fafc',
+                              border: '1px solid #e8e8e8',
+                              borderRadius: '12px',
+                              padding: '1.5rem'
+                            }}>
+                              {folder.reports.length > 0 ? (
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                  {folder.reports.map((report) => (
+                                    <div
+                                      key={report.id}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '1rem',
+                                        background: '#ffffff',
+                                        border: '1px solid #e8e8e8',
+                                        borderRadius: '8px',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.boxShadow = 'none';
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <div style={{
+                                          width: '40px',
+                                          height: '40px',
+                                          background: '#5884FD',
+                                          color: '#ffffff',
+                                          borderRadius: '50%',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          fontWeight: '500'
+                                        }}>
+                                          {report.employee_name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                          <div style={{ fontWeight: '500', color: '#1a1a1a' }}>
+                                            {report.employee_name}
+                                          </div>
+                                          <div style={{ fontSize: '0.85rem', color: '#666666' }}>
+                                            {report.project_name}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                          onClick={() => handleViewReport(report)}
+                                          style={{
+                                            padding: '0.5rem',
+                                            background: '#ffffff',
+                                            border: '1px solid #e8e8e8',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            color: '#5884FD',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                          }}
+                                          title="View report"
+                                        >
+                                          <EyeIcon style={{ width: '16px', height: '16px' }} />
+                                        </button>
+                                        {report.employee_id === user?.id && (
+                                          <button
+                                            onClick={() => handleEditReport(report)}
+                                            style={{
+                                              padding: '0.5rem',
+                                              background: '#ffffff',
+                                              border: '1px solid #e8e8e8',
+                                              borderRadius: '8px',
+                                              cursor: 'pointer',
+                                              color: '#FFB333',
+                                              transition: 'all 0.2s ease',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center'
+                                            }}
+                                            title="Edit report"
+                                          >
+                                            <PencilIcon style={{ width: '16px', height: '16px' }} />
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </>
-            ) : (
-              // User View: Their own reports
-              <>
-                <div className="stats-bar">
-                  <div className="stat-item">
-                    <div className="stat-number">{reports.length}</div>
-                    <div className="stat-label">Reports Submitted</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">
-                      {reports.length > 0 ? Math.ceil((Date.now() - new Date(reports[reports.length - 1].created_at).getTime()) / (7 * 24 * 60 * 60 * 1000)) : 0}
-                    </div>
-                    <div className="stat-label">Weeks Active</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">
-                      {reports.length > 0 ? formatDate(reports[0].created_at) : 'N/A'}
-                    </div>
-                    <div className="stat-label">Latest Report</div>
-                  </div>
-                </div>
-
-                {reports.length === 0 ? (
-                  <div className="empty-state">
-                    <ClipboardDocumentListIcon style={{ width: '80px', height: '80px', color: '#e5e7eb', margin: '0 auto 1rem' }} />
-                    <h3>No Reports Submitted</h3>
-                    <p>You haven't submitted any weekly reports yet. Click the + button in the sidebar to create your first report.</p>
-                  </div>
-                ) : (
-                  <div className="user-reports-grid">
-                    {reports.map((report) => (
-                      <div key={report.id} className="user-report-card">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                          <div>
-                            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
-                              {report.date_range_display}
-                            </h3>
-                            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#666666' }}>
-                              {report.project_name}
-                            </p>
-                          </div>
-                          
-                                                     <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button
-                              onClick={() => handleViewReport(report)}
-                              className="view-btn"
-                              style={{ padding: '0.75rem 1.25rem' }}
-                            >
-                              View Report
-                            </button>
-                            <button
-                              onClick={() => handleEditReport(report)}
-                              className="edit-btn"
-                              style={{ padding: '0.75rem 1.25rem' }}
-                            >
-                              Edit Report
-                            </button>
-                          </div>
+                              ) : (
+                                <div style={{ textAlign: 'center', color: '#666666', padding: '2rem' }}>
+                                  No reports submitted for this week yet.
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        
-                        <div style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '0.75rem' }}>
-                          Submitted: {formatDate(report.created_at)}
-                        </div>
-                        
-                        <div style={{ fontSize: '0.875rem', lineHeight: '1.5' }}>
-                          <strong>Key Activities:</strong><br />
-                          {report.key_activities.substring(0, 150)}
-                          {report.key_activities.length > 150 && '...'}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* Report Detail Modal */}
-      {showReportDetail && selectedReport && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-            zIndex: 1000
-          }}
-          onClick={() => setShowReportDetail(false)}
-        >
-          <div 
-            style={{
-              background: '#ffffff',
-              border: '3px solid #000000',
-              borderRadius: '12px',
-              padding: 0,
-              width: '100%',
-              maxWidth: '800px',
-              maxHeight: '90vh',
-              overflow: 'hidden'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '1.5rem 2rem',
-              borderBottom: '3px solid #000000',
-              background: '#000000'
-            }}>
-              <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#ffffff',
-                margin: 0
-              }}>
-                Weekly Report - {selectedReport.date_range_display}
-              </h2>
-              <button
-                onClick={() => setShowReportDetail(false)}
-                style={{
-                  background: '#ffffff',
-                  border: '2px solid #ffffff',
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  color: '#000000'
-                }}
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div style={{
-              padding: '2rem',
-              maxHeight: '70vh',
-              overflowY: 'auto'
-            }}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div className="employee-avatar" style={{ width: '48px', height: '48px', fontSize: '1.25rem' }}>
-                    {selectedReport.employee_name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600' }}>
-                      {selectedReport.employee_name}
-                    </h3>
-                    <p style={{ margin: 0, color: '#666666' }}>
-                      {selectedReport.project_name} • Submitted {formatDate(selectedReport.created_at)}
-                    </p>
-                  </div>
-                </div>
               </div>
-
-              <div style={{ lineHeight: '1.6' }}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                    Key Activities Completed
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                    {selectedReport.key_activities}
+            </>
+          ) : (
+            /* User View */
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+            }}>
+              {reports.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '4rem 2rem',
+                  color: '#999999'
+                }}>
+                  <div style={{ 
+                    width: '64px', 
+                    height: '64px', 
+                    background: '#f0f0f0',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 2rem'
+                  }}>
+                    <ClipboardDocumentListIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
+                  </div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                    No Weekly Reports Yet
+                  </h3>
+                  <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
+                    Your weekly reports will appear here once you start submitting them.
                   </p>
                 </div>
-
-                {selectedReport.ongoing_tasks && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                      Ongoing Tasks
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                      {selectedReport.ongoing_tasks}
-                    </p>
-                  </div>
-                )}
-
-                {selectedReport.challenges && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                      Challenges / Issues
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                      {selectedReport.challenges}
-                    </p>
-                  </div>
-                )}
-
-                {selectedReport.team_performance && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                      Team Performance / KPIs
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                      {selectedReport.team_performance}
-                    </p>
-                  </div>
-                )}
-
-                {selectedReport.next_week_priorities && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                      Next Week's Priorities
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                      {selectedReport.next_week_priorities}
-                    </p>
-                  </div>
-                )}
-
-                {selectedReport.other_notes && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000000' }}>
-                      Other Notes
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                      {selectedReport.other_notes}
-                    </p>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <div style={{ padding: '1.5rem' }}>
+                  {reports.map((report) => (
+                    <div
+                      key={report.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1.5rem',
+                        marginBottom: '1rem',
+                        background: '#ffffff',
+                        border: '1px solid #e8e8e8',
+                        borderRadius: '12px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#1a1a1a', marginBottom: '0.5rem' }}>
+                          Week {report.week_number}, {report.year}
+                        </div>
+                        <div style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '0.25rem' }}>
+                          {report.date_range_display}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#999999' }}>
+                          {report.project_name} • Submitted {formatDate(report.created_at)}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => handleViewReport(report)}
+                          style={{
+                            padding: '0.75rem 1.5rem',
+                            background: '#5884FD',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <EyeIcon style={{ width: '16px', height: '16px' }} />
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleEditReport(report)}
+                          style={{
+                            padding: '0.75rem 1.5rem',
+                            background: '#ffffff',
+                            color: '#FFB333',
+                            border: '1px solid #e8e8e8',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <PencilIcon style={{ width: '16px', height: '16px' }} />
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Edit Report Form Modal */}
-      {showEditForm && editingReport && (
-        <div className="weekly-report-overlay" onClick={handleEditFormClose}>
-          <div className="weekly-report-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="weekly-report-header">
-              <h1 className="weekly-report-title">Edit Weekly Report</h1>
-              <button
-                onClick={handleEditFormClose}
-                className="weekly-close-btn"
-                title="Close"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="weekly-report-body">
-              {/* Week Info Display */}
-              <div className="week-info-banner">
-                <h2 className="week-title">{editingReport.date_range_display}</h2>
-                <p className="week-subtitle">Edit your weekly progress report</p>
-              </div>
-
-              {/* Weekly Report Form */}
-              <form onSubmit={handleUpdateReport} className="weekly-report-form">
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label className="weekly-label">Project / Team</label>
-                    <div style={{ 
-                      padding: '1rem 1.25rem', 
-                      border: '3px solid #000000', 
-                      background: '#f8f9fa', 
-                      fontSize: '1rem',
-                      color: '#666666'
-                    }}>
-                      {editingReport.project_name}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label className="weekly-label">KEY ACTIVITIES COMPLETED *</label>
-                    <div className="weekly-field-container">
-                      {editFormData.keyActivities.map((activity, index) => (
-                        <div key={index} className="weekly-field-row">
-                          <input
-                            type="text"
-                            className="weekly-input"
-                            required={index === 0}
-                            placeholder={index === 0 ? "Main task or deliverable completed..." : "Additional activity..."}
-                            value={activity}
-                            onChange={(e) => updateEditField('keyActivities', index, e.target.value)}
-                          />
-                          {editFormData.keyActivities.length > 1 && (
-                            <button
-                              type="button"
-                              className="weekly-remove-btn"
-                              onClick={() => removeEditField('keyActivities', index)}
-                              title="Remove this item"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        className="weekly-add-btn"
-                        onClick={() => addEditField('keyActivities')}
-                      >
-                        Add another activity
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group half-width">
-                    <label className="weekly-label">ONGOING TASKS</label>
-                    <div className="weekly-field-container">
-                      {editFormData.ongoingTasks.map((task, index) => (
-                        <div key={index} className="weekly-field-row">
-                          <input
-                            type="text"
-                            className="weekly-input"
-                            placeholder={index === 0 ? "Task still in progress..." : "Additional task..."}
-                            value={task}
-                            onChange={(e) => updateEditField('ongoingTasks', index, e.target.value)}
-                          />
-                          {editFormData.ongoingTasks.length > 1 && (
-                            <button
-                              type="button"
-                              className="weekly-remove-btn"
-                              onClick={() => removeEditField('ongoingTasks', index)}
-                              title="Remove this item"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        className="weekly-add-btn"
-                        onClick={() => addEditField('ongoingTasks')}
-                      >
-                        Add task
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="form-group half-width">
-                    <label className="weekly-label">CHALLENGES / ISSUES</label>
-                    <div className="weekly-field-container">
-                      {editFormData.challenges.map((challenge, index) => (
-                        <div key={index} className="weekly-field-row">
-                          <input
-                            type="text"
-                            className="weekly-input"
-                            placeholder={index === 0 ? "Any blocker or challenge..." : "Additional challenge..."}
-                            value={challenge}
-                            onChange={(e) => updateEditField('challenges', index, e.target.value)}
-                          />
-                          {editFormData.challenges.length > 1 && (
-                            <button
-                              type="button"
-                              className="weekly-remove-btn"
-                              onClick={() => removeEditField('challenges', index)}
-                              title="Remove this item"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        className="weekly-add-btn"
-                        onClick={() => addEditField('challenges')}
-                      >
-                        Add challenge
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group half-width">
-                    <label className="weekly-label">TEAM PERFORMANCE / KPIs</label>
-                    <div className="weekly-field-container">
-                      {editFormData.teamPerformance.map((performance, index) => (
-                        <div key={index} className="weekly-field-row">
-                          <input
-                            type="text"
-                            className="weekly-input"
-                            placeholder={index === 0 ? "Metrics or performance indicator..." : "Additional KPI..."}
-                            value={performance}
-                            onChange={(e) => updateEditField('teamPerformance', index, e.target.value)}
-                          />
-                          {editFormData.teamPerformance.length > 1 && (
-                            <button
-                              type="button"
-                              className="weekly-remove-btn"
-                              onClick={() => removeEditField('teamPerformance', index)}
-                              title="Remove this item"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        className="weekly-add-btn"
-                        onClick={() => addEditField('teamPerformance')}
-                      >
-                        Add KPI
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="form-group half-width">
-                    <label className="weekly-label">NEXT WEEK'S PRIORITIES</label>
-                    <div className="weekly-field-container">
-                      {editFormData.nextWeekPriorities.map((priority, index) => (
-                        <div key={index} className="weekly-field-row">
-                          <input
-                            type="text"
-                            className="weekly-input"
-                            placeholder={index === 0 ? "Priority for upcoming week..." : "Additional priority..."}
-                            value={priority}
-                            onChange={(e) => updateEditField('nextWeekPriorities', index, e.target.value)}
-                          />
-                          {editFormData.nextWeekPriorities.length > 1 && (
-                            <button
-                              type="button"
-                              className="weekly-remove-btn"
-                              onClick={() => removeEditField('nextWeekPriorities', index)}
-                              title="Remove this item"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        className="weekly-add-btn"
-                        onClick={() => addEditField('nextWeekPriorities')}
-                      >
-                        Add priority
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label className="weekly-label">OTHER NOTES</label>
-                    <textarea
-                      className="weekly-textarea"
-                      placeholder="Additional observations, suggestions, or miscellaneous notes..."
-                      value={editFormData.otherNotes}
-                      onChange={(e) => setEditFormData({
-                        ...editFormData,
-                        otherNotes: e.target.value
-                      })}
-                    />
-                  </div>
-                </div>
-
-                <div className="weekly-form-buttons">
-                  <button
-                    type="button"
-                    onClick={handleEditFormClose}
-                    className="weekly-btn-cancel"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="weekly-btn-submit"
-                  >
-                    Update Report
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Styles for Edit Form */}
-      <style jsx>{`
-        .weekly-report-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.85);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem;
-          z-index: 1000;
-          backdrop-filter: blur(4px);
-        }
-        
-        .weekly-report-modal {
-          background: #ffffff;
-          border: 3px solid #000000;
-          border-radius: 0;
-          width: 100%;
-          max-width: 1200px;
-          max-height: 95vh;
-          overflow: hidden;
-          box-shadow: 8px 8px 0px #000000;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .weekly-report-header {
-          background: #000000;
-          color: #ffffff;
-          padding: 2rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 3px solid #000000;
-        }
-        
-        .weekly-report-title {
-          font-size: 2rem;
-          font-weight: bold;
-          margin: 0;
-          letter-spacing: -0.025em;
-        }
-        
-        .weekly-close-btn {
-          background: #ffffff;
-          color: #000000;
-          border: 2px solid #ffffff;
-          width: 40px;
-          height: 40px;
-          border-radius: 0;
-          cursor: pointer;
-          font-size: 24px;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-        }
-        
-        .weekly-close-btn:hover {
-          background: #f5f5f5;
-          transform: scale(1.1);
-        }
-        
-        .weekly-report-body {
-          padding: 2rem 3rem 3rem 3rem;
-          flex: 1;
-          overflow-y: auto;
-          overflow-x: hidden;
-          background: #ffffff;
-          scroll-behavior: smooth;
-        }
-        
-        .week-info-banner {
-          background: #f8f9fa;
-          border: 3px solid #000000;
-          padding: 2rem;
-          text-align: center;
-          margin-bottom: 3rem;
-          border-radius: 0;
-        }
-        
-        .week-title {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #000000;
-          margin: 0 0 0.5rem 0;
-          letter-spacing: -0.025em;
-        }
-        
-        .week-subtitle {
-          font-size: 1rem;
-          color: #666666;
-          margin: 0;
-        }
-        
-        .weekly-report-form {
-          display: flex;
-          flex-direction: column;
-          gap: 2.5rem;
-          padding-bottom: 2rem;
-        }
-        
-        .form-row {
-          display: flex;
-          gap: 2rem;
-          width: 100%;
-        }
-        
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        
-        .form-group.full-width {
-          flex: 1;
-        }
-        
-        .form-group.half-width {
-          flex: 1;
-        }
-        
-        .weekly-label {
-          font-size: 0.9rem;
-          font-weight: bold;
-          color: #000000;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin: 0;
-          padding-bottom: 0.5rem;
-        }
-        
-        .weekly-field-container {
-          background: #ffffff;
-          border: 3px solid #000000;
-          padding: 1.5rem;
-          border-radius: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        
-        .weekly-field-row {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        
-        .weekly-input {
-          flex: 1;
-          padding: 0.875rem 1.125rem;
-          border: 2px solid #000000;
-          border-radius: 0;
-          font-size: 0.95rem;
-          background: #ffffff;
-          color: #000000;
-          transition: all 0.2s ease;
-        }
-        
-        .weekly-input:focus {
-          outline: none;
-          border-color: #000000;
-          box-shadow: 2px 2px 0px #e5e5e5;
-        }
-        
-        .weekly-input::placeholder {
-          color: #888888;
-        }
-        
-        .weekly-remove-btn {
-          background: #ffffff;
-          color: #000000;
-          border: 2px solid #000000;
-          width: 32px;
-          height: 32px;
-          border-radius: 0;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-        }
-        
-        .weekly-remove-btn:hover {
-          background: #f5f5f5;
-          transform: scale(1.1);
-        }
-        
-        .weekly-add-btn {
-          background: #f8f9fa;
-          color: #000000;
-          border: 2px solid #000000;
-          border-radius: 0;
-          padding: 0.75rem 1.25rem;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
-          align-self: flex-start;
-        }
-        
-        .weekly-add-btn:hover {
-          background: #e9ecef;
-          transform: translateY(-2px);
-          box-shadow: 2px 2px 0px #000000;
-        }
-        
-        .weekly-textarea {
-          width: 100%;
-          min-height: 120px;
-          padding: 1rem 1.25rem;
-          border: 3px solid #000000;
-          border-radius: 0;
-          font-size: 0.95rem;
-          background: #ffffff;
-          color: #000000;
-          resize: vertical;
-          font-family: inherit;
-          line-height: 1.5;
-          transition: all 0.2s ease;
-        }
-        
-        .weekly-textarea:focus {
-          outline: none;
-          border-color: #000000;
-          box-shadow: 4px 4px 0px #e5e5e5;
-        }
-        
-        .weekly-textarea::placeholder {
-          color: #888888;
-        }
-        
-        .weekly-form-buttons {
-          display: flex;
-          gap: 1.5rem;
-          justify-content: flex-end;
-          padding: 2rem 0 1rem 0;
-          margin-top: 2rem;
-          border-top: 2px solid #e5e5e5;
-        }
-        
-        .weekly-btn-cancel {
-          background: #ffffff;
-          color: #000000;
-          border: 2px solid #000000;
-          border-radius: 0;
-          padding: 1rem 2rem;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
-        }
-        
-        .weekly-btn-cancel:hover {
-          background: #f5f5f5;
-          transform: translateY(-2px);
-          box-shadow: 3px 3px 0px #000000;
-        }
-        
-        .weekly-btn-submit {
-          background: #000000;
-          color: #ffffff;
-          border: 2px solid #000000;
-          border-radius: 0;
-          padding: 1rem 2rem;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
-        }
-        
-        .weekly-btn-submit:hover {
-          background: #333333;
-          transform: translateY(-2px);
-          box-shadow: 3px 3px 0px #666666;
-        }
-        
-        @media (max-width: 768px) {
-          .weekly-report-overlay {
-            padding: 1rem;
-          }
-          
-          .weekly-report-modal {
-            max-width: 100%;
-            max-height: 98vh;
-          }
-          
-          .weekly-report-header {
-            padding: 1.5rem;
-          }
-          
-          .weekly-report-title {
-            font-size: 1.5rem;
-          }
-          
-          .weekly-report-body {
-            padding: 1.5rem;
-          }
-          
-          .form-row {
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-          
-          .weekly-form-buttons {
-            flex-direction: column;
-            gap: 1rem;
-          }
-          
-          .weekly-btn-cancel,
-          .weekly-btn-submit {
-            width: 100%;
-            text-align: center;
-          }
-        }
-      `}</style>
-    </div>
+      </div>
+    </>
   );
 } 
