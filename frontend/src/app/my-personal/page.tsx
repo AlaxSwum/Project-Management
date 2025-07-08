@@ -479,28 +479,30 @@ export default function PersonalCalendarPage() {
     });
 
     return (
-      <div style={{ display: 'flex', height: '600px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: '800px', overflow: 'hidden' }}>
         {/* Time column */}
-        <div style={{ width: '80px', borderRight: '1px solid #e8e8e8' }}>
+        <div style={{ width: '80px', borderRight: '1px solid #e8e8e8', overflow: 'hidden' }}>
           <div style={{ height: '60px', borderBottom: '1px solid #e8e8e8' }}></div>
-          {timeSlots.map(hour => (
-            <div key={hour} style={{
-              height: '60px',
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'center',
-              paddingTop: '4px',
-              fontSize: '0.75rem',
-              color: '#666666'
-            }}>
-              {formatHourSlot(hour)}
-            </div>
-          ))}
+          <div style={{ height: '740px', overflowY: 'auto' }}>
+            {timeSlots.map(hour => (
+              <div key={hour} style={{
+                height: '60px',
+                borderBottom: '1px solid #f0f0f0',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                paddingTop: '4px',
+                fontSize: '0.75rem',
+                color: '#666666'
+              }}>
+                {formatHourSlot(hour)}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Day column */}
-        <div style={{ flex: 1, position: 'relative', overflow: 'auto' }}>
+        <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {/* Header */}
           <div style={{
             height: '60px',
@@ -515,76 +517,78 @@ export default function PersonalCalendarPage() {
           </div>
 
           {/* Time slots */}
-          {timeSlots.map(hour => {
-            const slotEvents = getEventsForTimeSlot(hour, currentDate);
-            const isInDragRange = isSlotInDragRange(currentDate, hour);
-            
-            return (
-              <div 
-                key={hour} 
-                onClick={(e) => {
-                  if (!isDragging) {
-                    handleTimeSlotClick(currentDate, hour);
-                  }
-                }}
-                onMouseDown={(e) => handleMouseDown(currentDate, hour, e)}
-                onMouseEnter={(e) => {
-                  handleMouseEnter(currentDate, hour);
-                  if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = '#f0f8ff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
-                  }
-                }}
-                style={{
-                  height: '60px',
-                  borderBottom: '1px solid #f0f0f0',
-                  position: 'relative',
-                  background: isInDragRange 
-                    ? 'rgba(88, 132, 253, 0.2)' 
-                    : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
-                  cursor: isDragging ? 'grabbing' : 'pointer',
-                  transition: 'background-color 0.2s ease',
-                  userSelect: 'none'
-                }}
-              >
-                {slotEvents.map((event, index) => (
-                  <div
-                    key={event.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEvent(event);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      left: `${index * 5 + 4}px`,
-                      right: '4px',
-                      top: '2px',
-                      bottom: '2px',
-                      background: event.color,
-                      color: '#ffffff',
-                      borderRadius: '4px',
-                      padding: '2px 6px',
-                      fontSize: '0.75rem',
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                    }}
-                  >
-                    <div style={{ fontWeight: '500', marginBottom: '1px' }}>
-                      {event.title}
+          <div style={{ height: '740px', overflowY: 'auto' }}>
+            {timeSlots.map(hour => {
+              const slotEvents = getEventsForTimeSlot(hour, currentDate);
+              const isInDragRange = isSlotInDragRange(currentDate, hour);
+              
+              return (
+                <div 
+                  key={hour} 
+                  onClick={(e) => {
+                    if (!isDragging) {
+                      handleTimeSlotClick(currentDate, hour);
+                    }
+                  }}
+                  onMouseDown={(e) => handleMouseDown(currentDate, hour, e)}
+                  onMouseEnter={(e) => {
+                    handleMouseEnter(currentDate, hour);
+                    if (!isDragging) {
+                      e.currentTarget.style.backgroundColor = '#f0f8ff';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isDragging) {
+                      e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                    }
+                  }}
+                  style={{
+                    height: '60px',
+                    borderBottom: '1px solid #f0f0f0',
+                    position: 'relative',
+                    background: isInDragRange 
+                      ? 'rgba(88, 132, 253, 0.2)' 
+                      : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                    cursor: isDragging ? 'grabbing' : 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    userSelect: 'none'
+                  }}
+                >
+                  {slotEvents.map((event, index) => (
+                    <div
+                      key={event.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        left: `${index * 5 + 4}px`,
+                        right: '4px',
+                        top: '2px',
+                        bottom: '2px',
+                        background: event.color,
+                        color: '#ffffff',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                      }}
+                    >
+                      <div style={{ fontWeight: '500', marginBottom: '1px' }}>
+                        {event.title}
+                      </div>
+                      <div style={{ opacity: 0.9, fontSize: '0.7rem' }}>
+                        {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                      </div>
                     </div>
-                    <div style={{ opacity: 0.9, fontSize: '0.7rem' }}>
-                      {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -603,30 +607,32 @@ export default function PersonalCalendarPage() {
     const timeSlots = getTimeSlots();
 
     return (
-      <div style={{ display: 'flex', height: '600px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: '800px', overflow: 'hidden' }}>
         {/* Time column */}
-        <div style={{ width: '80px', borderRight: '1px solid #e8e8e8' }}>
+        <div style={{ width: '80px', borderRight: '1px solid #e8e8e8', overflow: 'hidden' }}>
           <div style={{ height: '60px', borderBottom: '1px solid #e8e8e8' }}></div>
-          {timeSlots.map(hour => (
-            <div key={hour} style={{
-              height: '60px',
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'center',
-              paddingTop: '4px',
-              fontSize: '0.75rem',
-              color: '#666666'
-            }}>
-              {formatHourSlot(hour)}
-            </div>
-          ))}
+          <div style={{ height: '740px', overflowY: 'auto' }}>
+            {timeSlots.map(hour => (
+              <div key={hour} style={{
+                height: '60px',
+                borderBottom: '1px solid #f0f0f0',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                paddingTop: '4px',
+                fontSize: '0.75rem',
+                color: '#666666'
+              }}>
+                {formatHourSlot(hour)}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Week columns */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {weekDays.map(day => (
-            <div key={day.toISOString()} style={{ flex: 1, borderRight: '1px solid #e8e8e8' }}>
+            <div key={day.toISOString()} style={{ flex: 1, borderRight: '1px solid #e8e8e8', overflow: 'hidden' }}>
               {/* Day header */}
               <div style={{
                 height: '60px',
@@ -647,72 +653,74 @@ export default function PersonalCalendarPage() {
               </div>
 
               {/* Time slots for this day */}
-              {timeSlots.map(hour => {
-                const slotEvents = getEventsForTimeSlot(hour, day);
-                const isInDragRange = isSlotInDragRange(day, hour);
-                
-                return (
-                  <div 
-                    key={hour} 
-                    onClick={(e) => {
-                      if (!isDragging) {
-                        handleTimeSlotClick(day, hour);
-                      }
-                    }}
-                    onMouseDown={(e) => handleMouseDown(day, hour, e)}
-                    onMouseEnter={(e) => {
-                      handleMouseEnter(day, hour);
-                      if (!isDragging) {
-                        e.currentTarget.style.backgroundColor = '#f0f8ff';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isDragging) {
-                        e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
-                      }
-                    }}
-                    style={{
-                      height: '60px',
-                      borderBottom: '1px solid #f0f0f0',
-                      position: 'relative',
-                      background: isInDragRange 
-                        ? 'rgba(88, 132, 253, 0.2)' 
-                        : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
-                      cursor: isDragging ? 'grabbing' : 'pointer',
-                      transition: 'background-color 0.2s ease',
-                      userSelect: 'none'
-                    }}
-                  >
-                    {slotEvents.map((event, index) => (
-                      <div
-                        key={event.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEvent(event);
-                        }}
-                        style={{
-                          position: 'absolute',
-                          left: '2px',
-                          right: '2px',
-                          top: `${index * 18 + 2}px`,
-                          height: '16px',
-                          background: event.color,
-                          color: '#ffffff',
-                          borderRadius: '3px',
-                          padding: '1px 4px',
-                          fontSize: '0.7rem',
-                          cursor: 'pointer',
-                          overflow: 'hidden',
-                          fontWeight: '500',
-                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                        }}
-                      >
-                        {event.title}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
+              <div style={{ height: '740px', overflowY: 'auto' }}>
+                {timeSlots.map(hour => {
+                  const slotEvents = getEventsForTimeSlot(hour, day);
+                  const isInDragRange = isSlotInDragRange(day, hour);
+                  
+                  return (
+                    <div 
+                      key={hour} 
+                      onClick={(e) => {
+                        if (!isDragging) {
+                          handleTimeSlotClick(day, hour);
+                        }
+                      }}
+                      onMouseDown={(e) => handleMouseDown(day, hour, e)}
+                      onMouseEnter={(e) => {
+                        handleMouseEnter(day, hour);
+                        if (!isDragging) {
+                          e.currentTarget.style.backgroundColor = '#f0f8ff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isDragging) {
+                          e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                        }
+                      }}
+                      style={{
+                        height: '60px',
+                        borderBottom: '1px solid #f0f0f0',
+                        position: 'relative',
+                        background: isInDragRange 
+                          ? 'rgba(88, 132, 253, 0.2)' 
+                          : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                        cursor: isDragging ? 'grabbing' : 'pointer',
+                        transition: 'background-color 0.2s ease',
+                        userSelect: 'none'
+                      }}
+                    >
+                      {slotEvents.map((event, index) => (
+                        <div
+                          key={event.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEvent(event);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            left: '2px',
+                            right: '2px',
+                            top: `${index * 18 + 2}px`,
+                            height: '16px',
+                            background: event.color,
+                            color: '#ffffff',
+                            borderRadius: '3px',
+                            padding: '1px 4px',
+                            fontSize: '0.7rem',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            fontWeight: '500',
+                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                          }}
+                        >
+                          {event.title}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
