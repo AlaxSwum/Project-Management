@@ -1313,21 +1313,227 @@ export default function MyTasksPage() {
             </div>
             
             <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-number">{stats.total}</div>
-                <div className="stat-label">Total Tasks</div>
+              <div className="stat-card"
+                style={{
+                  background: '#FEF3C7',
+                  borderColor: '#F59E0B',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '2px solid #F59E0B',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.2)';
+                  e.currentTarget.style.background = '#FEF3C7';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.background = '#FEF3C7';
+                }}
+              >
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: '#ffffff',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #F59E0B'
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                    <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="stat-number" style={{ 
+                    fontSize: '2rem', 
+                    fontWeight: '700', 
+                    color: '#92400E', 
+                    margin: '0', 
+                    lineHeight: '1' 
+                  }}>{stats.total}</div>
+                  <div className="stat-label" style={{ 
+                    fontSize: '0.875rem', 
+                    color: '#92400E', 
+                    fontWeight: '500', 
+                    margin: '0' 
+                  }}>Total Tasks</div>
+                </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.completed}</div>
-                <div className="stat-label">Completed</div>
+              <div className="stat-card"
+                style={{
+                  background: '#D1FAE5',
+                  borderColor: '#10B981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '2px solid #10B981',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.2)';
+                  e.currentTarget.style.background = '#D1FAE5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.background = '#D1FAE5';
+                }}
+              >
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: '#ffffff',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #10B981'
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="stat-number" style={{ 
+                    fontSize: '2rem', 
+                    fontWeight: '700', 
+                    color: '#047857', 
+                    margin: '0', 
+                    lineHeight: '1' 
+                  }}>{stats.completed}</div>
+                  <div className="stat-label" style={{ 
+                    fontSize: '0.875rem', 
+                    color: '#047857', 
+                    fontWeight: '500', 
+                    margin: '0' 
+                  }}>Completed</div>
+                </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.overdue}</div>
-                <div className="stat-label">Overdue</div>
+              <div className="stat-card"
+                style={{
+                  background: '#FEE2E2',
+                  borderColor: '#EF4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '2px solid #EF4444',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.2)';
+                  e.currentTarget.style.background = '#FEE2E2';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.background = '#FEE2E2';
+                }}
+              >
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: '#ffffff',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #EF4444'
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M12 7v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="stat-number" style={{ 
+                    fontSize: '2rem', 
+                    fontWeight: '700', 
+                    color: '#DC2626', 
+                    margin: '0', 
+                    lineHeight: '1' 
+                  }}>{stats.overdue}</div>
+                  <div className="stat-label" style={{ 
+                    fontSize: '0.875rem', 
+                    color: '#DC2626', 
+                    fontWeight: '500', 
+                    margin: '0' 
+                  }}>Overdue</div>
+                </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.dueToday}</div>
-                <div className="stat-label">Due Today</div>
+              <div className="stat-card"
+                style={{
+                  background: '#DBEAFE',
+                  borderColor: '#3B82F6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '2px solid #3B82F6',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.2)';
+                  e.currentTarget.style.background = '#DBEAFE';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.background = '#DBEAFE';
+                }}
+              >
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: '#ffffff',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #3B82F6'
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="stat-number" style={{ 
+                    fontSize: '2rem', 
+                    fontWeight: '700', 
+                    color: '#1E40AF', 
+                    margin: '0', 
+                    lineHeight: '1' 
+                  }}>{stats.dueToday}</div>
+                  <div className="stat-label" style={{ 
+                    fontSize: '0.875rem', 
+                    color: '#1E40AF', 
+                    fontWeight: '500', 
+                    margin: '0' 
+                  }}>Due Today</div>
+                </div>
               </div>
             </div>
           </header>

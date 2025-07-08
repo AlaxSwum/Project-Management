@@ -4701,21 +4701,40 @@ export default function ProjectDetailPage() {
             {ganttView === 'task' && (
               <div>
                 <div className="view-description" style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
+                  background: 'rgba(255, 255, 255, 0.95)',
                   padding: '2rem',
                   borderRadius: '16px',
-                  border: '2px solid rgba(255, 179, 51, 0.2)',
+                  border: '2px solid #E5E7EB',
                   marginBottom: '2rem',
                   backdropFilter: 'blur(10px)',
                   boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
                 }}>
-                  <h3 style={{ 
-                    fontSize: '1.5rem', 
-                    fontWeight: '700', 
-                    color: '#FFB333', 
-                    margin: '0 0 0.75rem 0',
-                    letterSpacing: '-0.025em'
-                  }}>Tasks</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      background: '#F3F4F6',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid #D1D5DB'
+                    }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                        <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                    </div>
+                    <h3 style={{ 
+                      fontSize: '1.5rem', 
+                      fontWeight: '700', 
+                      color: '#1F2937', 
+                      margin: '0',
+                      letterSpacing: '-0.025em'
+                    }}>Tasks</h3>
+                  </div>
                   <p style={{ 
                     color: '#6B7280', 
                     margin: '0', 
@@ -4728,81 +4747,88 @@ export default function ProjectDetailPage() {
                   <div className="gantt-sidebar-header-enhanced" style={{ 
                     display: 'grid', 
                     gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr 0.8fr',
-                    background: '#ffffff', 
-                    border: '2px solid #000000',
-                    borderBottom: '2px solid #000000',
+                    background: '#F9FAFB', 
+                    border: '2px solid #E5E7EB',
+                    borderBottom: '2px solid #E5E7EB',
                     minWidth: '100%',
-                    width: '100%'
+                    width: '100%',
+                    borderRadius: '12px 12px 0 0'
                   }}>
                     <div style={{ 
-                      padding: '0.75rem 0.5rem', 
+                      padding: '1rem 1rem', 
                       fontWeight: '700', 
-                      color: '#000000', 
-                      fontSize: '0.8rem',
+                      color: '#374151', 
+                      fontSize: '0.875rem',
                       display: 'flex',
                       alignItems: 'center',
-                      borderRight: '2px solid #000000',
-                      textAlign: 'left'
+                      borderRight: '1px solid #E5E7EB',
+                      textAlign: 'left',
+                      letterSpacing: '0.025em'
                     }}>
                       TASK
                 </div>
                     <div style={{ 
-                      padding: '0.75rem 0.25rem', 
+                      padding: '1rem 0.5rem', 
                       fontWeight: '700', 
-                      color: '#000000', 
-                      fontSize: '0.8rem',
+                      color: '#374151', 
+                      fontSize: '0.875rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRight: '2px solid #000000',
-                      textAlign: 'center'
+                      borderRight: '1px solid #E5E7EB',
+                      textAlign: 'center',
+                      letterSpacing: '0.025em'
                     }}>
                       DURATION
               </div>
                     <div style={{ 
-                      padding: '0.75rem 0.25rem', 
+                      padding: '1rem 0.5rem', 
                       fontWeight: '700', 
-                      color: '#000000', 
-                      fontSize: '0.8rem',
+                      color: '#374151', 
+                      fontSize: '0.875rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRight: '2px solid #000000',
-                      textAlign: 'center'
+                      borderRight: '1px solid #E5E7EB',
+                      textAlign: 'center',
+                      letterSpacing: '0.025em'
                     }}>
                       ASSIGNEE
             </div>
                     <div style={{ 
-                      padding: '0.75rem 0.25rem', 
+                      padding: '1rem 0.5rem', 
                       fontWeight: '700', 
-                      color: '#000000', 
-                      fontSize: '0.8rem',
+                      color: '#374151', 
+                      fontSize: '0.875rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRight: '2px solid #000000',
-                      textAlign: 'center'
+                      borderRight: '1px solid #E5E7EB',
+                      textAlign: 'center',
+                      letterSpacing: '0.025em'
                     }}>
                       STATUS
                 </div>
                     <div style={{ 
-                      padding: '0.75rem 0.25rem', 
+                      padding: '1rem 0.5rem', 
                       fontWeight: '700', 
-                      color: '#000000', 
-                      fontSize: '0.8rem',
+                      color: '#374151', 
+                      fontSize: '0.875rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      letterSpacing: '0.025em'
                     }}>
                       PRIORITY
                     </div>
                   </div>
                                      <div className="gantt-tasks-enhanced" style={{ 
                      background: '#ffffff',
-                     border: '2px solid #000000',
+                     border: '2px solid #E5E7EB',
                      borderTop: 'none',
-                     overflow: 'hidden'
+                     overflow: 'hidden',
+                     borderRadius: '0 0 12px 12px'
                    }}>
                   {tasks.length === 0 ? (
                        <div className="gantt-empty-state" style={{
@@ -4828,10 +4854,10 @@ export default function ProjectDetailPage() {
                             style={{ 
                               cursor: 'pointer', 
                               transition: 'all 0.2s ease',
-                              borderBottom: '2px solid #000000'
+                              borderBottom: '1px solid #E5E7EB'
                             }}
                             onMouseOver={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f0f9ff';
+                              e.currentTarget.style.backgroundColor = '#F8FAFC';
                               e.currentTarget.style.transform = 'translateY(-1px)';
                               e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
                             }}
@@ -4851,16 +4877,16 @@ export default function ProjectDetailPage() {
                                <div className="gantt-task-name-enhanced" style={{ 
                                  display: 'flex', 
                                  flexDirection: 'column', 
-                                 gap: '0.2rem',
-                                 padding: '0.75rem 0.5rem',
-                                 borderRight: '2px solid #000000',
+                                 gap: '0.25rem',
+                                 padding: '1rem 1rem',
+                                 borderRight: '1px solid #E5E7EB',
                                  justifyContent: 'center'
                                }}>
                                  <span className="task-title" style={{ 
                                    fontWeight: '600', 
-                                   color: '#000000', 
-                                   fontSize: '0.8rem', 
-                                   lineHeight: '1.2',
+                                   color: '#1F2937', 
+                                   fontSize: '0.875rem', 
+                                   lineHeight: '1.3',
                                    wordWrap: 'break-word',
                                    overflowWrap: 'break-word',
                                    wordBreak: 'break-word',
@@ -4869,8 +4895,8 @@ export default function ProjectDetailPage() {
                                    maxWidth: '100%'
                                  }}>{task.name}</span>
                                  {task.description && (
-                                   <span style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.2' }}>
-                                     {task.description.substring(0, 25)}{task.description.length > 25 ? '...' : ''}
+                                   <span style={{ fontSize: '0.75rem', color: '#6B7280', lineHeight: '1.3' }}>
+                                     {task.description.substring(0, 30)}{task.description.length > 30 ? '...' : ''}
                                      </span>
                                    )}
                                </div>
@@ -4879,10 +4905,10 @@ export default function ProjectDetailPage() {
                                  alignItems: 'center', 
                                  justifyContent: 'center', 
                                  fontWeight: '600',
-                                 fontSize: '0.75rem',
-                                 color: '#000000',
-                                 borderRight: '2px solid #000000',
-                                 padding: '0.75rem 0.25rem'
+                                 fontSize: '0.875rem',
+                                 color: '#374151',
+                                 borderRight: '1px solid #E5E7EB',
+                                 padding: '1rem 0.5rem'
                                }}>
                                  {durationInDays}d
                                </div>
@@ -4890,72 +4916,72 @@ export default function ProjectDetailPage() {
                                  display: 'flex', 
                                  alignItems: 'center', 
                                  justifyContent: 'center',
-                                 gap: '0.25rem',
-                                 padding: '0.75rem 0.25rem',
-                                 borderRight: '2px solid #000000'
+                                 gap: '0.5rem',
+                                 padding: '1rem 0.5rem',
+                                 borderRight: '1px solid #E5E7EB'
                                }}>
                               {task.assignee ? (
                                    <>
                                      <div className="assignee-avatar-enhanced" style={{
-                                       width: '18px',
-                                       height: '18px',
+                                       width: '24px',
+                                       height: '24px',
                                        borderRadius: '50%',
-                                       background: '#f3f4f6',
-                                       color: '#000000',
-                                       border: '1px solid #000000',
+                                       background: '#F3F4F6',
+                                       color: '#374151',
+                                       border: '2px solid #E5E7EB',
                                        display: 'flex',
                                        alignItems: 'center',
                                        justifyContent: 'center',
-                                       fontSize: '0.6rem',
+                                       fontSize: '0.75rem',
                                        fontWeight: '600'
                                      }}>
                                   {task.assignee.name.charAt(0).toUpperCase()}
                                 </div>
-                                     <span style={{ fontSize: '0.7rem', color: '#000000', fontWeight: '500' }}>{task.assignee.name.split(' ')[0]}</span>
+                                     <span style={{ fontSize: '0.75rem', color: '#374151', fontWeight: '500' }}>{task.assignee.name.split(' ')[0]}</span>
                                    </>
                               ) : (
-                                   <span className="unassigned" style={{ color: '#6b7280', fontStyle: 'italic', fontSize: '0.7rem' }}>-</span>
+                                   <span className="unassigned" style={{ color: '#9CA3AF', fontStyle: 'italic', fontSize: '0.75rem' }}>Unassigned</span>
                               )}
                             </div>
                                <div style={{ 
                                  display: 'flex', 
                                  alignItems: 'center', 
                                  justifyContent: 'center',
-                                 borderRight: '2px solid #000000',
-                                 padding: '0.75rem 0.25rem'
+                                 borderRight: '1px solid #E5E7EB',
+                                 padding: '1rem 0.5rem'
                                }}>
                                  <span style={{
-                                   padding: '0.2rem 0.4rem',
-                                   borderRadius: '12px',
-                                   fontSize: '0.6rem',
+                                   padding: '0.25rem 0.5rem',
+                                   borderRadius: '6px',
+                                   fontSize: '0.75rem',
                                    fontWeight: '600',
-                                   background: '#ffffff',
-                                   color: '#000000',
-                                   border: '1px solid #000000',
-                                   textTransform: 'uppercase',
+                                   background: getStatusConfig(task.status).color,
+                                   color: '#1F2937',
+                                   border: '1px solid #E5E7EB',
+                                   textTransform: 'capitalize',
                                    letterSpacing: '0.025em'
                                  }}>
-                                   {TASK_STATUSES.find(s => s.value === task.status)?.label.substring(0, 4) || task.status.substring(0, 4)}
+                                   {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
                                  </span>
                                </div>
                                <div style={{ 
                                  display: 'flex', 
                                  alignItems: 'center', 
                                  justifyContent: 'center',
-                                 padding: '0.75rem 0.25rem'
+                                 padding: '1rem 0.5rem'
                                }}>
                                  <span style={{
-                                   padding: '0.2rem 0.4rem',
-                                   borderRadius: '12px',
-                                   fontSize: '0.6rem',
+                                   padding: '0.25rem 0.5rem',
+                                   borderRadius: '6px',
+                                   fontSize: '0.75rem',
                                    fontWeight: '600',
-                                   background: '#ffffff',
-                                   color: '#000000',
-                                   border: '1px solid #000000',
-                                   textTransform: 'uppercase',
+                                   background: getPriorityConfig(task.priority).color + '20',
+                                   color: getPriorityConfig(task.priority).color,
+                                   border: '1px solid ' + getPriorityConfig(task.priority).color + '40',
+                                   textTransform: 'capitalize',
                                    letterSpacing: '0.025em'
                                  }}>
-                                   {task.priority.substring(0, 3)}
+                                   {task.priority}
                                  </span>
                                </div>
                           </div>
@@ -4972,21 +4998,39 @@ export default function ProjectDetailPage() {
             {ganttView === 'gantt' && (
               <div>
                 <div className="view-description" style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
+                  background: 'rgba(255, 255, 255, 0.95)',
                   padding: '2rem',
                   borderRadius: '16px',
-                  border: '2px solid rgba(255, 179, 51, 0.2)',
+                  border: '2px solid #E5E7EB',
                   marginBottom: '2rem',
                   backdropFilter: 'blur(10px)',
                   boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
                 }}>
-                  <h3 style={{ 
-                    fontSize: '1.5rem', 
-                    fontWeight: '700', 
-                    color: '#FFB333', 
-                    margin: '0 0 0.75rem 0',
-                    letterSpacing: '-0.025em'
-                  }}>Gantt Chart</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      background: '#F3F4F6',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid #D1D5DB'
+                    }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+                        <rect x="3" y="3" width="18" height="4" rx="2" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="3" y="10" width="8" height="4" rx="2" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="3" y="17" width="12" height="4" rx="2" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                    </div>
+                    <h3 style={{ 
+                      fontSize: '1.5rem', 
+                      fontWeight: '700', 
+                      color: '#1F2937', 
+                      margin: '0',
+                      letterSpacing: '-0.025em'
+                    }}>Gantt Chart</h3>
+                  </div>
                   <p style={{ 
                     color: '#6B7280', 
                     margin: '0', 
@@ -5025,7 +5069,8 @@ export default function ProjectDetailPage() {
                 maxWidth: '100%',
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                border: '2px solid #000000',
+                border: '2px solid #E5E7EB',
+                borderRadius: '12px',
                 boxSizing: 'border-box',
                 scrollbarWidth: 'thin'
               }}>
@@ -5045,15 +5090,16 @@ export default function ProjectDetailPage() {
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
                           width: '280px',
-                          padding: '0.5rem',
-                          borderRight: weekIndex < 3 ? '1px solid #000000' : 'none',
-                          fontWeight: '600',
+                          padding: '0.75rem',
+                          borderRight: weekIndex < 3 ? '1px solid #E5E7EB' : 'none',
+                          fontWeight: '700',
                           textAlign: 'center',
-                          background: '#f3f4f6',
-                          boxSizing: 'border-box'
+                          background: '#F9FAFB',
+                          boxSizing: 'border-box',
+                          color: '#374151'
                         }}>
                           Week {monthWeekNumber}
-                          <div style={{ fontSize: '0.75rem', color: '#666666' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: '500' }}>
                             {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </div>
                         </div>
@@ -5078,10 +5124,10 @@ export default function ProjectDetailPage() {
                             minWidth: '40px',
                             maxWidth: '40px',
                             padding: '0.5rem',
-                            borderRight: i < 27 ? '1px solid #e5e7eb' : 'none',
-                            borderBottom: '1px solid #000000',
+                            borderRight: i < 27 ? '1px solid #E5E7EB' : 'none',
+                            borderBottom: '1px solid #E5E7EB',
                             textAlign: 'center',
-                            background: isToday ? '#fef3c7' : isWeekend ? '#f9fafb' : '#ffffff',
+                            background: isToday ? '#FEF3C7' : isWeekend ? '#F9FAFB' : '#ffffff',
                             boxSizing: 'border-box'
                           }}
                         >
@@ -5118,7 +5164,7 @@ export default function ProjectDetailPage() {
                         top: 0,
                         height: '100%',
                         width: '1px',
-                        background: i === 0 || i === 28 ? '#000000' : '#e5e7eb'
+                        background: i === 0 || i === 28 ? '#D1D5DB' : '#E5E7EB'
                       }}></div>
                     ))}
                   </div>
@@ -5170,13 +5216,14 @@ export default function ProjectDetailPage() {
                                 width: `${barWidth}px`,
                                 left: `${barLeft}px`,
                                 position: 'absolute',
-                                height: '30px',
-                                background: '#3b82f6',
-                                border: '2px solid #000000',
-                                borderRadius: '4px',
+                                height: '28px',
+                                background: getStatusConfig(task.status).color,
+                                border: '2px solid #E5E7EB',
+                                borderRadius: '8px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                marginTop: '5px'
+                                marginTop: '6px',
+                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
                               }}
                               title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInDays} days\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
                               onClick={(e) => handleTaskClick(task, e)}
@@ -5190,8 +5237,8 @@ export default function ProjectDetailPage() {
                                 height: '100%'
                               }}>
                                 <span className="gantt-bar-text-enhanced" style={{
-                                  color: '#ffffff',
-                                  fontSize: '0.8rem',
+                                  color: '#1F2937',
+                                  fontSize: '0.75rem',
                                   fontWeight: '600',
                                   wordWrap: 'break-word',
                                   overflowWrap: 'break-word',
@@ -5202,7 +5249,7 @@ export default function ProjectDetailPage() {
                                   flex: 1
                                 }}>{task.name}</span>
                                 <span className="gantt-bar-duration-enhanced" style={{
-                                  color: '#ffffff',
+                                  color: '#1F2937',
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   marginLeft: '0.5rem'
