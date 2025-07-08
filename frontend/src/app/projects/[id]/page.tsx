@@ -129,10 +129,10 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     // Auto-scroll to current week when gantt view is opened
-    if (ganttView === 'gantt' && tasks.length > 0) {
+    if (ganttView === 'gantt') {
       setTimeout(() => {
         const currentWeek = getWeekNumber(new Date());
-        const scrollPosition = (currentWeek - 1) * 40 - 200; // Center the current week
+        const scrollPosition = (currentWeek - 1) * 50 + 200 - 300; // Center the current week with offset
         const timelineElement = document.querySelector('.gantt-timeline-enhanced');
         if (timelineElement) {
           timelineElement.scrollLeft = Math.max(0, scrollPosition);
@@ -378,6 +378,25 @@ export default function ProjectDetailPage() {
     const startOfYear = new Date(date.getFullYear(), 0, 1);
     const pastDaysOfYear = (date.getTime() - startOfYear.getTime()) / 86400000;
     return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+  };
+
+  const getWeekStartDate = (year: number, weekNumber: number) => {
+    const startOfYear = new Date(year, 0, 1);
+    const daysToAdd = (weekNumber - 1) * 7 - startOfYear.getDay();
+    const weekStart = new Date(startOfYear);
+    weekStart.setDate(startOfYear.getDate() + daysToAdd);
+    return weekStart;
+  };
+
+  // Get task color based on status
+  const getTaskColor = (status: string) => {
+    switch(status) {
+      case 'todo': return '#94A3B8';
+      case 'in_progress': return '#3B82F6';
+      case 'review': return '#F59E0B';
+      case 'done': return '#10B981';
+      default: return '#6B7280';
+    }
   };
 
   // Show loading state while auth is initializing
@@ -5119,8 +5138,90 @@ export default function ProjectDetailPage() {
               overflow: 'visible',
               background: '#ffffff',
               borderRadius: '12px',
-              border: '2px solid #E5E7EB'
+              border: '2px solid #E5E7EB',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}>
+              {/* Zoom Controls */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1rem',
+                background: '#F9FAFB',
+                borderBottom: '1px solid #E5E7EB',
+                borderRadius: '12px 12px 0 0'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem'
+                }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
+                    Timeline View
+                  </span>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: '#ffffff',
+                    padding: '0.25rem',
+                    borderRadius: '6px',
+                    border: '1px solid #E5E7EB'
+                  }}>
+                    <button style={{
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      color: '#374151'
+                    }}>
+                      Weeks
+                    </button>
+                    <button style={{
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      background: '#374151',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}>
+                      Months
+                    </button>
+                  </div>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Zoom:</span>
+                  <button style={{
+                    padding: '0.25rem 0.5rem',
+                    background: '#ffffff',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem'
+                  }}>
+                    -
+                  </button>
+                  <span style={{ fontSize: '0.75rem', color: '#374151' }}>100%</span>
+                  <button style={{
+                    padding: '0.25rem 0.5rem',
+                    background: '#ffffff',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem'
+                  }}>
+                    +
+                  </button>
+                </div>
+              </div>
+
               <div className="gantt-timeline-enhanced" style={{ 
                 width: '100%', 
                 maxWidth: '100%',
@@ -5128,45 +5229,148 @@ export default function ProjectDetailPage() {
                 overflowY: 'hidden',
                 boxSizing: 'border-box',
                 scrollbarWidth: 'thin',
-                background: '#ffffff'
+                background: '#ffffff',
+                display: 'flex'
               }}>
-                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2080px' }}>
+                {/* Task List Column */}
+                <div className="gantt-task-list" style={{
+                  width: '250px',
+                  minWidth: '250px',
+                  background: '#F9FAFB',
+                  borderRight: '2px solid #E5E7EB',
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 10,
+                  height: 'fit-content'
+                }}>
+                  <div className="task-list-header" style={{
+                    padding: '0.75rem 1rem',
+                    borderBottom: '1px solid #E5E7EB',
+                    background: '#F3F4F6',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    color: '#374151'
+                  }}>
+                    Tasks ({tasks.length})
+                  </div>
+                  <div className="task-list-items">
+                    {tasks.length === 0 ? (
+                      <div style={{
+                        padding: '2rem 1rem',
+                        textAlign: 'center',
+                        color: '#6B7280',
+                        fontSize: '0.875rem'
+                      }}>
+                        No tasks available
+                      </div>
+                    ) : (
+                      tasks.map((task, index) => (
+                        <div key={task.id} style={{
+                          height: '60px',
+                          padding: '0.75rem 1rem',
+                          borderBottom: '1px solid #E5E7EB',
+                          background: index % 2 === 0 ? '#FAFBFC' : '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          cursor: 'pointer'
+                        }}
+                        onClick={(e) => handleTaskClick(task, e)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#EBF8FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = index % 2 === 0 ? '#FAFBFC' : '#ffffff';
+                        }}
+                        >
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: getTaskColor(task.status),
+                            flexShrink: 0
+                          }}></div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              color: '#374151',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {task.name}
+                            </div>
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#6B7280',
+                              marginTop: '0.25rem'
+                            }}>
+                              {task.assignee?.name || 'Unassigned'}
+                            </div>
+                          </div>
+                          <div style={{
+                            padding: '0.25rem 0.5rem',
+                            background: getTaskColor(task.status),
+                            color: '#ffffff',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            borderRadius: '4px'
+                          }}>
+                            {TASK_STATUSES.find(s => s.value === task.status)?.label}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Timeline Column */}
+                <div className="gantt-timeline-column" style={{ flex: 1 }}>
+                <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2600px' }}>
                   <div className="gantt-year-header" style={{
                     background: '#F9FAFB',
-                    padding: '1rem',
-                    borderBottom: '2px solid #E5E7EB',
-                    textAlign: 'center',
-                    position: 'sticky',
-                    left: 0,
-                    zIndex: 10
+                    padding: '0.75rem 1rem',
+                    borderBottom: '1px solid #E5E7EB',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem'
                   }}>
                     <div className="year-label" style={{
-                      fontSize: '1.25rem',
+                      fontSize: '1rem',
                       fontWeight: '700',
                       color: '#1F2937'
                     }}>{timelineStartDate.getFullYear()}</div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#6B7280',
+                      fontWeight: '500'
+                    }}>
+                      52 weeks • January to December
+                    </div>
                   </div>
-                  <div className="gantt-week-headers" style={{ display: 'flex', width: '2080px' }}>
+                  <div className="gantt-week-headers" style={{ display: 'flex', width: '2600px' }}>
                     {Array.from({ length: 52 }, (_, weekIndex) => {
                       const weekNumber = weekIndex + 1;
-                      const startOfWeek = new Date(timelineStartDate.getFullYear(), 0, 1 + (weekIndex * 7));
+                      const weekStartDate = getWeekStartDate(timelineStartDate.getFullYear(), weekNumber);
                       
                       return (
                         <div key={weekIndex} className="week-header" style={{ 
-                          width: '40px',
-                          minWidth: '40px',
-                          padding: '0.75rem 0.25rem',
+                          width: '50px',
+                          minWidth: '50px',
+                          padding: '0.5rem 0.25rem',
                           borderRight: weekIndex < 51 ? '1px solid #E5E7EB' : 'none',
-                          fontWeight: '700',
+                          fontWeight: '600',
                           textAlign: 'center',
-                          background: '#F9FAFB',
+                          background: weekIndex % 2 === 0 ? '#F9FAFB' : '#ffffff',
                           boxSizing: 'border-box',
                           color: '#374151',
                           fontSize: '0.75rem'
                         }}>
-                          W{weekNumber}
-                          <div style={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: '500', marginTop: '0.25rem' }}>
-                            {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          <div style={{ marginBottom: '0.25rem' }}>W{weekNumber}</div>
+                          <div style={{ fontSize: '0.6rem', color: '#6B7280', fontWeight: '400' }}>
+                            {weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </div>
                         </div>
                       );
@@ -5175,16 +5379,16 @@ export default function ProjectDetailPage() {
                 </div>
                 
                 <div className="gantt-grid-container" style={{ 
-                  minWidth: '2080px',
+                  minWidth: '2600px',
                   position: 'relative',
-                  minHeight: tasks.length > 0 ? `${tasks.length * 50}px` : '200px',
+                  minHeight: tasks.length > 0 ? `${tasks.length * 60}px` : '200px',
                   background: '#ffffff'
                 }}>
                   <div className="gantt-vertical-grid" style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: '2080px',
+                    width: '2600px',
                     height: '100%',
                     pointerEvents: 'none',
                     zIndex: 1
@@ -5192,17 +5396,17 @@ export default function ProjectDetailPage() {
                     {Array.from({ length: 53 }, (_, i) => (
                       <div key={i} className="grid-line-vertical" style={{
                         position: 'absolute',
-                        left: `${(i * 40)}px`,
+                        left: `${(i * 50)}px`,
                         top: 0,
                         height: '100%',
                         width: '1px',
-                        background: i === 0 || i === 52 ? '#D1D5DB' : '#E5E7EB'
+                        background: i === 0 || i === 52 ? '#D1D5DB' : '#F3F4F6'
                       }}></div>
                     ))}
                   </div>
                   
                   <div className="gantt-bars-enhanced" style={{ 
-                    minWidth: '2080px',
+                    minWidth: '2600px',
                     position: 'relative',
                     zIndex: 2
                   }}>
@@ -5225,12 +5429,13 @@ export default function ProjectDetailPage() {
                         const durationInWeeks = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
                         
                         // Calculate position relative to year start
-                        const yearStart = new Date(timelineStartDate.getFullYear(), 0, 1);
                         const taskStartWeek = getWeekNumber(taskStartDate);
                         
                         // Calculate width and position for 52-week timeline
-                        const barWidth = Math.min((durationInWeeks * 40), 52 * 40 - 40); // 40px per week
-                        const barLeft = Math.max(0, (taskStartWeek - 1) * 40); // 40px per week
+                        const barWidth = Math.min((durationInWeeks * 50), 52 * 50 - 50); // 50px per week
+                        const barLeft = Math.max(0, (taskStartWeek - 1) * 50); // 50px per week
+                        
+
                         
                         const statusConfig = getStatusConfig(task.status);
                         const isOverdueTask = isOverdue(task.due_date);
@@ -5238,63 +5443,108 @@ export default function ProjectDetailPage() {
                                                   return (
                             <div key={task.id} className="gantt-bar-row-enhanced" style={{
                               position: 'relative',
-                              height: '50px',
-                              borderBottom: '1px solid #E5E7EB'
+                              height: '60px',
+                              borderBottom: '1px solid #F3F4F6',
+                              background: taskIndex % 2 === 0 ? '#FAFBFC' : '#ffffff'
                             }}>
-                              <div className="gantt-horizontal-grid-line" style={{
+                              {/* Task Name Label */}
+                              <div style={{
                                 position: 'absolute',
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                height: '1px',
-                                background: '#E5E7EB'
-                              }}></div>
+                                left: '1rem',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: '#374151',
+                                zIndex: 3,
+                                background: taskIndex % 2 === 0 ? '#FAFBFC' : '#ffffff',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '4px',
+                                minWidth: '150px'
+                              }}>
+                                {task.name}
+                              </div>
+                              
+                              {/* Task Bar */}
                               <div 
                                 className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
                                 style={{
                                   width: `${barWidth}px`,
-                                  left: `${barLeft}px`,
+                                  left: `${barLeft + 200}px`, // Offset for task name
                                   position: 'absolute',
-                                  height: '32px',
-                                  background: getStatusConfig(task.status).color,
-                                  border: '2px solid #E5E7EB',
-                                  borderRadius: '8px',
+                                  height: '24px',
+                                  background: getTaskColor(task.status),
+                                  border: 'none',
+                                  borderRadius: '12px',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  marginTop: '9px',
-                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease'
                                 }}
                                 title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInWeeks} weeks\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || 'Unassigned'}`}
                                 onClick={(e) => handleTaskClick(task, e)}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)';
+                                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                                }}
                               >
-                                <div className="gantt-bar-content-enhanced" style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  padding: '0 0.75rem',
-                                  width: '100%',
-                                  height: '100%'
-                                }}>
-                                  <span className="gantt-bar-text-enhanced" style={{
-                                    color: '#1F2937',
-                                    fontSize: '0.8rem',
-                                    fontWeight: '600',
-                                    wordWrap: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    wordBreak: 'break-word',
-                                    whiteSpace: 'normal',
-                                    hyphens: 'auto',
-                                    lineHeight: '1.2',
-                                    flex: 1
-                                  }}>{task.name}</span>
-                                  <span className="gantt-bar-duration-enhanced" style={{
-                                    color: '#1F2937',
+                                {/* Progress indicator */}
+                                <div style={{
+                                  position: 'absolute',
+                                  left: 0,
+                                  top: 0,
+                                  height: '100%',
+                                  width: task.status === 'done' ? '100%' : task.status === 'in_progress' ? '60%' : task.status === 'review' ? '80%' : '20%',
+                                  background: 'rgba(255, 255, 255, 0.3)',
+                                  borderRadius: '12px',
+                                  transition: 'width 0.3s ease'
+                                }}></div>
+                                
+                                {/* Assignee Avatar */}
+                                {task.assignee && (
+                                  <div style={{
+                                    position: 'absolute',
+                                    right: '-12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    width: '24px',
+                                    height: '24px',
+                                    borderRadius: '50%',
+                                    background: '#ffffff',
+                                    border: '2px solid #E5E7EB',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     fontSize: '0.75rem',
                                     fontWeight: '600',
-                                    marginLeft: '0.5rem'
-                                  }}>{durationInWeeks}w</span>
+                                    color: '#374151'
+                                  }}>
+                                    {task.assignee.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                
+                                {/* Duration Label */}
+                                <div style={{
+                                  position: 'absolute',
+                                  right: '0.5rem',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  color: '#ffffff',
+                                  background: 'rgba(0, 0, 0, 0.2)',
+                                  padding: '0.125rem 0.25rem',
+                                  borderRadius: '4px'
+                                }}>
+                                  {durationInWeeks}w
                                 </div>
-                                {isOverdueTask && <div className="overdue-indicator">!</div>}
                               </div>
                             </div>
                           );
@@ -5304,6 +5554,7 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
 
             <div className="gantt-legend">
               <div className="legend-section">
