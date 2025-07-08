@@ -3993,22 +3993,27 @@ export default function ProjectDetailPage() {
                   e.currentTarget.style.background = '#FEF3C7';
                   e.currentTarget.style.borderColor = '#F59E0B';
                 }}>
-                  <div className="stat-icon" style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    width: '32px',
-                    height: '32px',
-                    background: '#F59E0B',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    letterSpacing: '0.05em'
-                  }}>ALL</div>
+                  <svg 
+                    style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      width: '20px',
+                      height: '20px',
+                      opacity: 0.6
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                  </svg>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4051,22 +4056,24 @@ export default function ProjectDetailPage() {
                   e.currentTarget.style.background = '#D1FAE5';
                   e.currentTarget.style.borderColor = '#10B981';
                 }}>
-                  <div className="stat-icon" style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    width: '32px',
-                    height: '32px',
-                    background: '#10B981',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    letterSpacing: '0.05em'
-                  }}>OK</div>
+                  <svg 
+                    style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      width: '20px',
+                      height: '20px',
+                      opacity: 0.6
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4109,22 +4116,25 @@ export default function ProjectDetailPage() {
                   e.currentTarget.style.background = '#DBEAFE';
                   e.currentTarget.style.borderColor = '#3B82F6';
                 }}>
-                  <div className="stat-icon" style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    width: '32px',
-                    height: '32px',
-                    background: '#3B82F6',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    letterSpacing: '0.05em'
-                  }}>IP</div>
+                  <svg 
+                    style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      width: '20px',
+                      height: '20px',
+                      opacity: 0.6
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4167,22 +4177,26 @@ export default function ProjectDetailPage() {
                   e.currentTarget.style.background = '#FEE2E2';
                   e.currentTarget.style.borderColor = '#EF4444';
                 }}>
-                  <div className="stat-icon" style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    width: '32px',
-                    height: '32px',
-                    background: '#EF4444',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    letterSpacing: '0.05em'
-                  }}>DUE</div>
+                  <svg 
+                    style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      width: '20px',
+                      height: '20px',
+                      opacity: 0.6
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12" y2="16" />
+                  </svg>
                   <div className="stat-value" style={{
                     fontSize: '2.5rem',
                     fontWeight: '800',
@@ -4516,18 +4530,23 @@ export default function ProjectDetailPage() {
                   gap: '0.75rem',
                   marginBottom: '1rem'
                 }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '12px',
-                    background: '#F59E0B',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.25rem',
-                    fontWeight: '700'
-                  }}>P</div>
+                  <svg 
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      opacity: 0.6
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="20" x2="12" y2="10" />
+                    <line x1="18" y1="20" x2="18" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="16" />
+                  </svg>
                   <h4 style={{ 
                     fontSize: '1.125rem', 
                     fontWeight: '800', 
