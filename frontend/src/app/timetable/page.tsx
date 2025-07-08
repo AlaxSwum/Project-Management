@@ -64,7 +64,7 @@ export default function TimetablePage() {
   const [showMeetingDetail, setShowMeetingDetail] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
-  const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('month');
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showDayMeetings, setShowDayMeetings] = useState(false);
   const [selectedDayMeetings, setSelectedDayMeetings] = useState<Meeting[]>([]);
@@ -441,49 +441,30 @@ export default function TimetablePage() {
   });
 
   // Calendar helper functions
-  const getWeekDates = (date: Date) => {
-    const start = new Date(date);
-    const day = start.getDay();
-    const diff = start.getDate() - day;
-    start.setDate(diff);
-    
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(start);
-      day.setDate(start.getDate() + i);
-      week.push(day);
-    }
-    return week;
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   };
 
-  const getMonthCalendar = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
-    const calendar = [];
-    const current = new Date(startDate);
-    
-    for (let week = 0; week < 6; week++) {
-      const weekDays = [];
-      for (let day = 0; day < 7; day++) {
-        weekDays.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-      calendar.push(weekDays);
-      
-      if (current > lastDay && weekDays[6].getMonth() !== month) break;
-    }
-    
-    return calendar;
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const previousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
   const getMeetingsForDate = (date: Date) => {
-    // Use local date formatting to avoid timezone issues
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -491,32 +472,11 @@ export default function TimetablePage() {
     return filteredMeetings.filter(meeting => meeting.date === dateStr);
   };
 
-  const navigateDate = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
-    if (calendarMode === 'week') {
-      newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-    } else if (calendarMode === 'month') {
-      newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-    }
-    setCurrentDate(newDate);
-  };
 
-  const formatCalendarTitle = () => {
-    if (calendarMode === 'week') {
-      const weekDates = getWeekDates(currentDate);
-      const start = weekDates[0];
-      const end = weekDates[6];
-      
-      if (start.getMonth() === end.getMonth()) {
-        return `${start.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${end.getDate()}, ${start.getFullYear()}`;
-      } else {
-        return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${start.getFullYear()}`;
-      }
-    } else if (calendarMode === 'month') {
-      return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    }
-    return '';
-  };
+
+  const today = new Date();
+  const daysInMonth = getDaysInMonth(currentDate);
+  const firstDay = getFirstDayOfMonth(currentDate);
 
   const getAttendeesList = (meeting: Meeting) => {
     if (meeting.attendees_list && meeting.attendees_list.length > 0) {
@@ -1419,11 +1379,6 @@ export default function TimetablePage() {
               font-size: 0.75rem;
             }
             
-            .meeting-description {
-              font-size: 0.8rem;
-              line-height: 1.3;
-            }
-            
             /* Ultra-compact Calendar for Small Screens */
             .calendar-navigation {
               padding: 0.5rem !important;
@@ -2088,7 +2043,7 @@ export default function TimetablePage() {
                   width: '100%'
                 }}>
                   <button
-                    onClick={() => navigateDate('prev')}
+                    onClick={() => previousMonth()}
                     className="nav-button"
                     style={{
                       padding: '0.75rem 1rem',
@@ -2112,19 +2067,19 @@ export default function TimetablePage() {
                     ← Previous
                   </button>
                   
-                  <h2 style={{ 
-                    margin: 0, 
-                    fontSize: '1.5rem', 
-                    fontWeight: '700', 
-                    color: '#000000',
-                    textAlign: 'center',
-                    flex: 1
-                  }}>
-                    {formatCalendarTitle()}
-                  </h2>
+                                  <h2 style={{ 
+                  margin: 0, 
+                  fontSize: '1.5rem', 
+                  fontWeight: '700', 
+                  color: '#000000',
+                  textAlign: 'center',
+                  flex: 1
+                }}>
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h2>
 
                   <button
-                    onClick={() => navigateDate('next')}
+                    onClick={() => nextMonth()}
                     className="nav-button"
                     style={{
                       padding: '0.75rem 1rem',
@@ -2149,52 +2104,7 @@ export default function TimetablePage() {
                   </button>
                 </div>
                 
-                <div className="calendar-nav-row-2" style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  width: '100%'
-                }}>
-                  <div className="calendar-mode-buttons" style={{ 
-                    display: 'flex', 
-                    gap: '0.25rem', 
-                    border: '2px solid #000000', 
-                    borderRadius: '6px', 
-                    overflow: 'hidden',
-                    background: '#f8f9fa'
-                  }}>
-                    <button
-                      onClick={() => setCalendarMode('week')}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        background: calendarMode === 'week' ? '#000000' : 'transparent',
-                        color: calendarMode === 'week' ? '#ffffff' : '#000000',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Week
-                    </button>
-                    <button
-                      onClick={() => setCalendarMode('month')}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        borderLeft: '1px solid #e0e0e0',
-                        background: calendarMode === 'month' ? '#000000' : 'transparent',
-                        color: calendarMode === 'month' ? '#ffffff' : '#000000',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Month
-                    </button>
-                  </div>
-                </div>
+
               </div>
             )}
 
@@ -2376,228 +2286,283 @@ export default function TimetablePage() {
                   padding: '0',
                   margin: '0 auto'
                 }}>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(7, 1fr)', 
-                    gap: '2px', 
-                    border: '3px solid #000000',
-                    borderRadius: '8px',
+                  <div style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '16px',
                     overflow: 'hidden',
-                    background: '#000000',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    width: '100%',
-                    maxWidth: '100%'
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                   }}>
-                    {/* Day Headers */}
-                    {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                      <div key={day} className="calendar-day-header" style={{ 
-                        padding: '1rem', 
-                        background: '#f8f9fa', 
-                        fontWeight: '700', 
-                        textAlign: 'center',
-                        fontSize: '0.875rem',
-                        color: '#000000',
-                        borderBottom: '2px solid #000000'
-                      }}>
-                        {calendarMode === 'week' ? day : day.slice(0, 3)}
-                      </div>
-                    ))}
+                    {/* Calendar Header */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(7, 1fr)',
+                      background: '#F9FAFB',
+                      borderBottom: '1px solid #E5E7EB'
+                    }}>
+                      {daysOfWeek.map((day) => (
+                        <div key={day} style={{
+                          padding: '1rem',
+                          textAlign: 'center',
+                          fontWeight: '600',
+                          color: '#374151',
+                          borderRight: '1px solid #E5E7EB',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase'
+                        }}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
                     
-                    {/* Calendar Days */}
-                    {(calendarMode === 'week' ? getWeekDates(currentDate) : getMonthCalendar(currentDate).flat()).map(date => {
-                      const dayMeetings = getMeetingsForDate(date);
-                      const isToday = date.toDateString() === new Date().toDateString();
-                      const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-                      const isCurrentPeriod = calendarMode === 'week' || isCurrentMonth;
+                    {/* Calendar Body */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(7, 1fr)'
+                    }}>
+                    
+                    {/* Empty cells for days before the first day of the month */}
+                    {Array.from({ length: firstDay }, (_, index) => {
+                      const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+                      const prevMonthDays = getDaysInMonth(prevMonth);
+                      const dayNumber = prevMonthDays - firstDay + index + 1;
                       
                       return (
-                        <div key={date.toISOString()} className="calendar-day-cell" style={{ 
-                          minHeight: calendarMode === 'week' ? '150px' : '120px', 
+                        <div key={`prev-${index}`} className="calendar-cell other-month" style={{
+                          minHeight: '120px',
                           padding: '0.75rem',
-                          background: isToday ? '#e3f2fd' : '#ffffff',
-                          border: isToday ? '3px solid #1976d2' : 'none',
-                          borderRadius: isToday ? '4px' : '0',
-                          opacity: isCurrentPeriod ? 1 : 0.4,
-                          transition: 'all 0.2s ease',
-                          cursor: 'pointer'
-                        }}
-                        onMouseOver={(e) => {
-                          if (!isToday) {
-                            e.currentTarget.style.background = '#f5f5f5';
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          if (!isToday) {
-                            e.currentTarget.style.background = '#ffffff';
-                          }
-                        }}
-                        onClick={() => {
-                          // Use local date formatting to avoid timezone issues
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const dateStr = `${year}-${month}-${day}`;
-                          setNewMeeting({
-                            ...newMeeting,
-                            date: dateStr,
-                            time: '09:00'
-                          });
-                          setShowCreateForm(true);
-                        }}
+                          borderRight: '1px solid #E5E7EB',
+                          borderBottom: '1px solid #E5E7EB',
+                          background: '#F9FAFB',
+                          color: '#9CA3AF'
+                        }}>
+                          <div style={{
+                            fontWeight: '600',
+                            color: '#9CA3AF',
+                            marginBottom: '0.5rem',
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                            fontSize: '1rem'
+                          }}>{dayNumber}</div>
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Days of the current month */}
+                    {Array.from({ length: daysInMonth }, (_, index) => {
+                      const dayNumber = index + 1;
+                      const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber);
+                      const isToday = currentDate.getMonth() === today.getMonth() && 
+                                      currentDate.getFullYear() === today.getFullYear() && 
+                                      dayNumber === today.getDate();
+                      
+                      const dayMeetings = getMeetingsForDate(cellDate);
+                      
+                      return (
+                        <div 
+                          key={dayNumber} 
+                          className={`calendar-cell ${isToday ? 'today' : ''}`}
+                          style={{
+                            minHeight: '120px',
+                            padding: '0.75rem',
+                            borderRight: '1px solid #E5E7EB',
+                            borderBottom: '1px solid #E5E7EB',
+                            background: isToday ? 'rgba(88, 132, 253, 0.05)' : '#FFFFFF',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                            ...(isToday && {
+                              borderRight: '1px solid #5884FD',
+                              borderBottom: '1px solid #5884FD',
+                              position: 'relative'
+                            })
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isToday) {
+                              e.currentTarget.style.background = '#F9FAFB';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isToday) {
+                              e.currentTarget.style.background = '#FFFFFF';
+                            }
+                          }}
+                          onClick={() => {
+                            const year = cellDate.getFullYear();
+                            const month = String(cellDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(cellDate.getDate()).padStart(2, '0');
+                            const dateStr = `${year}-${month}-${day}`;
+                            setNewMeeting({
+                              ...newMeeting,
+                              date: dateStr,
+                              time: '09:00'
+                            });
+                            setShowCreateForm(true);
+                          }}
                         >
-                          <div className="calendar-day-number" style={{ 
-                            fontWeight: '700', 
-                            marginBottom: '0.75rem',
-                            fontSize: calendarMode === 'week' ? '1.1rem' : '1rem',
-                            color: isToday ? '#1976d2' : (isCurrentPeriod ? '#000000' : '#999999'),
-                            textAlign: 'left'
+                          {isToday && (
+                            <div style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '4px',
+                              height: '100%',
+                              background: '#5884FD'
+                            }}></div>
+                          )}
+                          
+                          <div style={{
+                            fontWeight: isToday ? '700' : '600',
+                            color: isToday ? '#5884FD' : '#1F2937',
+                            marginBottom: '0.5rem',
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                            fontSize: '1rem'
                           }}>
-                            {date.getDate()}
-                            {calendarMode === 'week' && (
-                              <div style={{ 
-                                fontSize: '0.75rem', 
-                                fontWeight: '500', 
-                                color: isToday ? '#1976d2' : '#666666' 
-                              }}>
-                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                              </div>
-                            )}
+                            {dayNumber}
                           </div>
                           
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', overflow: 'hidden', flex: 1 }}>
-                            {dayMeetings.slice(0, calendarMode === 'week' ? 5 : 2).map(meeting => (
-                              <div 
-                                key={meeting.id} 
-                                className="calendar-meeting-item"
-                                style={{ 
-                                  fontSize: calendarMode === 'week' ? '0.8rem' : '0.75rem', 
-                                  padding: '0.375rem 0.5rem', 
-                                  background: '#000000', 
-                                  color: '#ffffff',
-                                  borderRadius: '4px',
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.25rem'
+                          }}>
+                            {(dayMeetings || []).slice(0, 3).map((meeting) => (
+                              <div
+                                key={meeting.id}
+                                style={{
+                                  background: '#F8FAFC',
+                                  border: '1px solid #E2E8F0',
+                                  borderRadius: '8px',
+                                  padding: '0.5rem',
+                                  fontSize: '0.75rem',
+                                  marginBottom: '0.25rem',
                                   cursor: 'pointer',
-                                  overflow: 'hidden',
                                   transition: 'all 0.2s ease',
-                                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+                                  borderLeft: '3px solid #5884FD'
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleMeetingClick(meeting);
                                 }}
-                                onMouseOver={(e) => {
-                                  e.currentTarget.style.background = '#333333';
-                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#F1F5F9';
+                                  e.currentTarget.style.borderColor = '#5884FD';
+                                  e.currentTarget.style.borderLeftColor = '#5884FD';
                                 }}
-                                onMouseOut={(e) => {
-                                  e.currentTarget.style.background = '#000000';
-                                  e.currentTarget.style.transform = 'translateY(0)';
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#F8FAFC';
+                                  e.currentTarget.style.borderColor = '#E2E8F0';
+                                  e.currentTarget.style.borderLeftColor = '#5884FD';
                                 }}
-                                title={`${meeting.title} - ${formatTime(meeting.time)} (${formatDuration(meeting.duration)})`}
                               >
-                                {calendarMode === 'week' && (
-                                  <div className="calendar-meeting-time" style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
+                                <div style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                  marginBottom: '0.25rem'
+                                }}>
+                                  <div style={{
+                                    fontWeight: '500',
+                                    color: '#1F2937',
+                                    lineHeight: '1.3',
+                                    flex: 1,
+                                    marginRight: '0.25rem',
+                                    fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                                  }}>
+                                    {meeting.title}
+                                  </div>
+                                </div>
+                                <div style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  fontSize: '0.65rem'
+                                }}>
+                                  <div style={{
+                                    fontWeight: '500',
+                                    maxWidth: '60%',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    color: '#6B7280'
+                                  }}>
                                     {formatTime(meeting.time)}
                                   </div>
-                                )}
-                                <div style={{ 
-                                  overflow: 'hidden', 
-                                  textOverflow: 'ellipsis', 
-                                  whiteSpace: 'nowrap',
-                                  fontWeight: '500'
-                                }}>
-                                  {meeting.title}
-                                </div>
-                                {calendarMode === 'week' && meeting.description && (
-                                  <div style={{ 
-                                    fontSize: '0.7rem', 
-                                    opacity: 0.8, 
-                                    overflow: 'hidden', 
-                                    textOverflow: 'ellipsis', 
-                                    whiteSpace: 'nowrap' 
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.125rem',
+                                    color: '#6B7280'
                                   }}>
-                                    {meeting.description}
+                                    <UserGroupIcon style={{ width: '10px', height: '10px' }} />
+                                    {meeting.created_by.name.split(' ')[0]}
                                   </div>
-                                )}
+                                </div>
                               </div>
                             ))}
-                            
-                            {dayMeetings.length > (calendarMode === 'week' ? 5 : 2) && (
+                            {(dayMeetings || []).length > 3 && (
                               <div 
-                                className="calendar-more-meetings" 
-                                style={{ 
-                                  fontSize: '0.7rem', 
-                                  color: '#666666',
-                                  fontWeight: '600',
+                                style={{
+                                  background: '#EEF2FF',
+                                  border: '1px solid #C7D2FE',
+                                  borderRadius: '6px',
+                                  padding: '0.375rem 0.5rem',
+                                  fontSize: '0.6875rem',
+                                  color: '#5B21B6',
                                   textAlign: 'center',
-                                  padding: '0.25rem',
-                                  background: '#f0f0f0',
-                                  borderRadius: '4px',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s ease'
+                                  transition: 'all 0.2s ease',
+                                  fontWeight: '500',
+                                  fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleShowMoreMeetings(date, dayMeetings);
+                                  handleShowMoreMeetings(cellDate, dayMeetings || []);
                                 }}
-                                onMouseOver={(e) => {
-                                  e.currentTarget.style.background = '#e0e0e0';
-                                  e.currentTarget.style.color = '#000000';
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#E0E7FF';
+                                  e.currentTarget.style.borderColor = '#A5B4FC';
                                 }}
-                                onMouseOut={(e) => {
-                                  e.currentTarget.style.background = '#f0f0f0';
-                                  e.currentTarget.style.color = '#666666';
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#EEF2FF';
+                                  e.currentTarget.style.borderColor = '#C7D2FE';
                                 }}
                               >
-                                +{dayMeetings.length - (calendarMode === 'week' ? 5 : 2)} more
+                                +{(dayMeetings || []).length - 3} more
                               </div>
                             )}
                           </div>
                         </div>
                       );
                     })}
-                  </div>
-                  
-                  {/* Calendar Legend */}
-                  <div style={{ 
-                    marginTop: '1.5rem', 
-                    padding: '1rem', 
-                    background: '#f8f9fa', 
-                    border: '2px solid #e0e0e0', 
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    color: '#666666',
-                    lineHeight: '1.5'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '2rem',
-                      flexWrap: 'wrap'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ 
-                          width: '16px', 
-                          height: '16px', 
-                          background: '#e3f2fd', 
-                          border: '2px solid #1976d2', 
-                          borderRadius: '4px',
-                          flexShrink: 0
-                        }}></div>
-                        <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Today</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ 
-                          width: '16px', 
-                          height: '16px', 
-                          background: '#000000', 
-                          borderRadius: '4px',
-                          flexShrink: 0
-                        }}></div>
-                        <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Meeting</span>
-                      </div>
+                    
+                    {/* Fill remaining cells with next month's days */}
+                    {Array.from({ length: 42 - (firstDay + daysInMonth) }, (_, index) => {
+                      const dayNumber = index + 1;
+                      
+                      return (
+                        <div key={`next-${index}`} className="calendar-cell other-month" style={{
+                          minHeight: '120px',
+                          padding: '0.75rem',
+                          borderRight: '1px solid #E5E7EB',
+                          borderBottom: '1px solid #E5E7EB',
+                          background: '#F9FAFB',
+                          color: '#9CA3AF'
+                        }}>
+                          <div style={{
+                            fontWeight: '600',
+                            color: '#9CA3AF',
+                            marginBottom: '0.5rem',
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                            fontSize: '1rem'
+                          }}>{dayNumber}</div>
+                        </div>
+                      );
+                    })}
                     </div>
                   </div>
+                  
+
                 </div>
               )}
           </div>
