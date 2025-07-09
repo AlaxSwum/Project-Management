@@ -72,6 +72,10 @@ export default function PersonalCalendarPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   
+  // Modal states for menu items
+  const [showAbsenceForm, setShowAbsenceForm] = useState(false);
+  const [showWeeklyReportForm, setShowWeeklyReportForm] = useState(false);
+  
   // Drag-to-create state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ date: Date; hour: number } | null>(null);
@@ -364,6 +368,15 @@ export default function PersonalCalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
+  };
+
+  // Menu handlers
+  const handleAbsenceForm = () => {
+    setShowAbsenceForm(true);
+  };
+
+  const handleWeeklyReport = () => {
+    setShowWeeklyReportForm(true);
   };
 
   const handleTimeSlotClick = (date: Date, hour: number) => {
@@ -1886,10 +1899,14 @@ export default function PersonalCalendarPage() {
                     {selectedEvent.title}
                   </h3>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Start Time</div>
                       <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>{formatTime(selectedEvent.start_datetime)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>End Time</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>{formatTime(selectedEvent.end_datetime)}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Duration</div>
