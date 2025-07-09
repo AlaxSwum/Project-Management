@@ -813,7 +813,7 @@ export default function PersonalCalendarPage() {
               style={{
                 position: 'absolute',
                 left: `${index * 6 + 16}px`,
-                right: '16px',
+                width: 'calc(100% - 32px)',
                 top: `${event.topPosition}px`,
                 height: `${event.height}px`,
                 background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
@@ -1031,8 +1031,8 @@ export default function PersonalCalendarPage() {
                     }}
                     style={{
                       position: 'absolute',
-                      left: `${index * 4 + 6}px`,
-                      right: '6px',
+                      left: `${index * 4 + 8}px`,
+                      width: 'calc(100% - 16px)',
                       top: `${event.topPosition}px`,
                       height: `${Math.max(24, event.height)}px`,
                       background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
