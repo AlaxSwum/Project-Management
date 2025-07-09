@@ -45,11 +45,14 @@ SET folder_id = (
 )
 WHERE folder_id IS NULL;
 
--- Step 5b: Remove the old folder_name column since we now use folder_id
+-- Step 5b: Drop existing views that depend on folder_name column
+DROP VIEW IF EXISTS password_vault_with_access;
+DROP VIEW IF EXISTS password_vault_full_access;
+
+-- Step 5c: Remove the old folder_name column since we now use folder_id
 ALTER TABLE password_vault DROP COLUMN IF EXISTS folder_name;
 
--- Step 6: Drop and recreate the view to include folder information
-DROP VIEW IF EXISTS password_vault_with_access;
+-- Step 6: Create the new view with folder information
 
 CREATE VIEW password_vault_with_access AS
 SELECT 
@@ -192,8 +195,6 @@ WHERE created_by_id IS NOT NULL
 ON CONFLICT (folder_id, user_id) DO NOTHING;
 
 -- Step 13: Create comprehensive view for password vault with folder access
-DROP VIEW IF EXISTS password_vault_full_access;
-
 CREATE VIEW password_vault_full_access AS
 SELECT 
     pv.id,
