@@ -51,14 +51,15 @@ interface PasswordFolder {
 
 interface FolderMember {
   id: number;
-  user_id: number;
-  user_name: string;
-  user_email: string;
+  user_id: string;
+  user_name?: string;
+  user_email?: string;
   permission_level: 'owner' | 'editor' | 'viewer';
   can_view: boolean;
   can_edit: boolean;
   can_delete: boolean;
-  can_share: boolean;
+  can_manage_access: boolean;
+  can_create_passwords: boolean;
 }
 
 export default function PasswordVaultPage() {
@@ -147,14 +148,15 @@ export default function PasswordVaultPage() {
       .from('password_vault_folders')
       .select(`
         *,
-        password_vault_folder_members(
+        password_vault_folder_access(
           id,
           user_id,
           permission_level,
           can_view,
           can_edit,
           can_delete,
-          can_share
+          can_manage_access,
+          can_create_passwords
         )
       `)
       .order('name');
@@ -173,7 +175,7 @@ export default function PasswordVaultPage() {
         return {
           ...folder,
           password_count: count || 0,
-          members: folder.password_vault_folder_members || []
+          members: folder.password_vault_folder_access || []
         };
       })
     );
@@ -378,13 +380,13 @@ export default function PasswordVaultPage() {
       const supabase = (await import('@/lib/supabase')).supabase;
       
       const permissionMap = {
-        owner: { can_view: true, can_edit: true, can_delete: true, can_share: true },
-        editor: { can_view: true, can_edit: true, can_delete: false, can_share: false },
-        viewer: { can_view: true, can_edit: false, can_delete: false, can_share: false }
+        owner: { can_view: true, can_edit: true, can_delete: true, can_manage_access: true, can_create_passwords: true },
+        editor: { can_view: true, can_edit: true, can_delete: false, can_manage_access: false, can_create_passwords: true },
+        viewer: { can_view: true, can_edit: false, can_delete: false, can_manage_access: false, can_create_passwords: false }
       };
       
       const { error } = await supabase
-        .from('password_vault_access')
+        .from('password_vault_folder_access')
         .update({
           permission_level: newPermission,
           ...permissionMap[newPermission]
@@ -408,7 +410,7 @@ export default function PasswordVaultPage() {
       const supabase = (await import('@/lib/supabase')).supabase;
       
       const { error } = await supabase
-        .from('password_vault_access')
+        .from('password_vault_folder_access')
         .delete()
         .eq('id', memberId);
       
