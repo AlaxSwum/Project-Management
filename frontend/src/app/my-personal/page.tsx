@@ -406,6 +406,37 @@ export default function PersonalCalendarPage() {
       const timeStr = startDate.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
       
+      // First, try to find or create a "Personal" project
+      let personalProjectId = 1; // Default fallback
+      
+      // Check if there's a "Personal" project
+      const { data: personalProject, error: projectError } = await supabase
+        .from('projects_project')
+        .select('id')
+        .eq('name', 'Personal')
+        .single();
+      
+      if (personalProject) {
+        personalProjectId = personalProject.id;
+      } else {
+        // Create a "Personal" project if it doesn't exist
+        const { data: newProject, error: createError } = await supabase
+          .from('projects_project')
+          .insert([{
+            name: 'Personal',
+            description: 'Personal calendar events and tasks',
+            project_type: 'personal',
+            status: 'active',
+            created_by: parseInt(user?.id?.toString() || '0')
+          }])
+          .select('id')
+          .single();
+        
+        if (newProject && !createError) {
+          personalProjectId = newProject.id;
+        }
+      }
+      
       // Create a meeting in the timetable
       const { data, error } = await supabase
         .from('projects_meeting')
@@ -419,7 +450,7 @@ export default function PersonalCalendarPage() {
           color: newEvent.color,
           event_type: newEvent.event_type,
           all_day: newEvent.all_day,
-          project_id: null, // Personal events don't need a project
+          project_id: personalProjectId, // Use Personal project ID
           attendee_ids: [parseInt(user?.id?.toString() || '0')], // Only use attendee_ids, not attendees
           created_by_id: parseInt(user?.id?.toString() || '0') // Add created_by_id field
         }])
