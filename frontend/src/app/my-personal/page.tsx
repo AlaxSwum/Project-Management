@@ -812,33 +812,36 @@ export default function PersonalCalendarPage() {
               }}
               style={{
                 position: 'absolute',
-                left: `${index * 6 + 16}px`,
+                left: '16px',
                 width: 'calc(100% - 32px)',
                 top: `${event.topPosition}px`,
                 height: `${event.height}px`,
-                background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
+                background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
                 color: '#ffffff',
-                borderRadius: '10px',
-                padding: event.height > 40 ? '10px 14px' : '6px 10px',
+                borderRadius: '12px',
+                padding: event.height > 40 ? '10px 14px' : '8px 12px',
                 fontSize: event.height > 50 ? '0.85rem' : '0.8rem',
                 cursor: 'pointer',
                 overflow: 'hidden',
-                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)',
                 zIndex: 10 + index,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(10px)'
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.18), 0 4px 8px rgba(0, 0, 0, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
               }}
             >
               <div style={{ 
@@ -1031,34 +1034,37 @@ export default function PersonalCalendarPage() {
                     }}
                     style={{
                       position: 'absolute',
-                      left: `${index * 4 + 8}px`,
+                      left: '8px',
                       width: 'calc(100% - 16px)',
                       top: `${event.topPosition}px`,
                       height: `${Math.max(24, event.height)}px`,
-                      background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
+                      background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
                       color: '#ffffff',
-                      borderRadius: '8px',
-                      padding: event.height > 32 ? '4px 8px' : '2px 6px',
-                      fontSize: '0.7rem',
+                      borderRadius: '12px',
+                      padding: event.height > 32 ? '8px 12px' : '4px 8px',
+                      fontSize: '0.75rem',
                       cursor: 'pointer',
                       overflow: 'hidden',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)',
                       zIndex: 10 + index,
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
-                      border: '1px solid rgba(255, 255, 255, 0.25)',
-                      transition: 'all 0.2s ease',
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       fontWeight: '600',
-                      backdropFilter: 'blur(8px)'
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12)';
+                      e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                     }}
                   >
                     <div style={{ 
