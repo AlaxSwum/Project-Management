@@ -317,26 +317,19 @@ export default function PersonalCalendarPage() {
     }
   };
 
-  const formatHourSlot = (timeSlot: { hour: number, minute: number } | number) => {
-    // Handle both old format (number) and new format (object)
-    const hour = typeof timeSlot === 'number' ? timeSlot : timeSlot.hour;
-    const minute = typeof timeSlot === 'number' ? 0 : timeSlot.minute;
-    
+  const formatHourSlot = (hour: number) => {
     const date = new Date();
-    date.setHours(hour, minute, 0, 0);
-    
+    date.setHours(hour, 0, 0, 0);
     if (settings.time_format === '12h') {
       return date.toLocaleTimeString('en-US', { 
         hour: 'numeric',
-        minute: '2-digit',
         hour12: true 
-      });
+      }).replace(':00', ''); // Remove :00 for cleaner display
     } else {
       return date.toLocaleTimeString('en-US', { 
         hour: '2-digit',
-        minute: '2-digit',
         hour12: false 
-      });
+      }).replace(':00', ''); // Remove :00 for cleaner display
     }
   };
 
@@ -597,10 +590,7 @@ export default function PersonalCalendarPage() {
   const getTimeSlots = () => {
     const slots = [];
     for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
-      // Add 15-minute intervals: 0, 15, 30, 45
-      for (let minute = 0; minute < 60; minute += 15) {
-        slots.push({ hour, minute });
-      }
+      slots.push(hour);
     }
     return slots;
   };
@@ -735,19 +725,19 @@ export default function PersonalCalendarPage() {
         {/* Time column */}
         <div style={{ width: '80px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
           <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7' }}></div>
-          {timeSlots.map((timeSlot, index) => (
-            <div key={`${timeSlot.hour}-${timeSlot.minute}`} style={{
-              height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
-              borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f8f9fa',
+          {timeSlots.map(hour => (
+            <div key={hour} style={{
+              height: `${slotHeight}px`,
+              borderBottom: '1px solid #f0f1f2',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '1px',
-              fontSize: timeSlot.minute === 0 ? '0.75rem' : '0.65rem',
-              color: timeSlot.minute === 0 ? '#64748b' : '#94a3b8',
-              fontWeight: timeSlot.minute === 0 ? '500' : '400'
+              paddingTop: '2px',
+              fontSize: '0.75rem',
+              color: '#64748b',
+              fontWeight: '500'
             }}>
-              {timeSlot.minute === 0 ? formatHourSlot(timeSlot) : timeSlot.minute}
+              {formatHourSlot(hour)}
             </div>
           ))}
         </div>
@@ -770,34 +760,34 @@ export default function PersonalCalendarPage() {
             {formatDate(currentDate)}
           </div>
 
-          {/* Time slots */}
-          {timeSlots.map((timeSlot, index) => {
-            const isInDragRange = isSlotInDragRange(currentDate, timeSlot.hour);
-            const isWorkingHour = timeSlot.hour >= 9 && timeSlot.hour <= 17;
+                    {/* Time slots */}
+          {timeSlots.map((hour, index) => {
+            const isInDragRange = isSlotInDragRange(currentDate, hour);
+            const isWorkingHour = hour >= 9 && hour <= 17;
             
-                          return (
-                <div 
-                  key={`${timeSlot.hour}-${timeSlot.minute}`} 
-                  onClick={(e) => {
-                    if (!isDragging) {
-                      handleTimeSlotClick(currentDate, timeSlot.hour);
-                    }
-                  }}
-                  onMouseDown={(e) => handleMouseDown(currentDate, timeSlot.hour, e)}
-                  onMouseEnter={(e) => {
-                    handleMouseEnter(currentDate, timeSlot.hour);
-                    if (!isDragging) {
-                      e.currentTarget.style.backgroundColor = '#f0f8ff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isDragging) {
-                      e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
-                    }
-                  }}
-                  style={{
-                    height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
-                    borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
+            return (
+              <div 
+                key={hour} 
+                onClick={(e) => {
+                  if (!isDragging) {
+                    handleTimeSlotClick(currentDate, hour);
+                  }
+                }}
+                onMouseDown={(e) => handleMouseDown(currentDate, hour, e)}
+                onMouseEnter={(e) => {
+                  handleMouseEnter(currentDate, hour);
+                  if (!isDragging) {
+                    e.currentTarget.style.backgroundColor = '#f0f8ff';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDragging) {
+                    e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
+                  }
+                }}
+                style={{
+                  height: `${slotHeight}px`,
+                  borderBottom: hour % 2 === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
                   position: 'relative',
                   background: isInDragRange 
                     ? 'rgba(88, 132, 253, 0.15)' 
@@ -947,19 +937,19 @@ export default function PersonalCalendarPage() {
         {/* Time column */}
         <div style={{ width: '80px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
           <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7' }}></div>
-          {timeSlots.map((timeSlot, index) => (
-            <div key={`${timeSlot.hour}-${timeSlot.minute}`} style={{
-              height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
-              borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f8f9fa',
+          {timeSlots.map(hour => (
+            <div key={hour} style={{
+              height: `${slotHeight}px`,
+              borderBottom: '1px solid #f0f1f2',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '1px',
-              fontSize: timeSlot.minute === 0 ? '0.75rem' : '0.65rem',
-              color: timeSlot.minute === 0 ? '#64748b' : '#94a3b8',
-              fontWeight: timeSlot.minute === 0 ? '500' : '400'
+              paddingTop: '2px',
+              fontSize: '0.75rem',
+              color: '#64748b',
+              fontWeight: '500'
             }}>
-              {timeSlot.minute === 0 ? formatHourSlot(timeSlot) : timeSlot.minute}
+              {formatHourSlot(hour)}
             </div>
           ))}
         </div>
@@ -994,21 +984,21 @@ export default function PersonalCalendarPage() {
 
               {/* Time slots for this day */}
               <div style={{ position: 'relative', background: '#ffffff' }}>
-                {timeSlots.map((timeSlot, index) => {
-                  const isInDragRange = isSlotInDragRange(day, timeSlot.hour);
-                  const isWorkingHour = timeSlot.hour >= 9 && timeSlot.hour <= 17;
+                {timeSlots.map((hour, index) => {
+                  const isInDragRange = isSlotInDragRange(day, hour);
+                  const isWorkingHour = hour >= 9 && hour <= 17;
                   
                   return (
                     <div 
-                      key={`${timeSlot.hour}-${timeSlot.minute}`} 
+                      key={hour} 
                       onClick={(e) => {
                         if (!isDragging) {
-                          handleTimeSlotClick(day, timeSlot.hour);
+                          handleTimeSlotClick(day, hour);
                         }
                       }}
-                      onMouseDown={(e) => handleMouseDown(day, timeSlot.hour, e)}
+                      onMouseDown={(e) => handleMouseDown(day, hour, e)}
                       onMouseEnter={(e) => {
-                        handleMouseEnter(day, timeSlot.hour);
+                        handleMouseEnter(day, hour);
                         if (!isDragging) {
                           e.currentTarget.style.backgroundColor = '#f0f8ff';
                         }
@@ -1019,8 +1009,8 @@ export default function PersonalCalendarPage() {
                         }
                       }}
                       style={{
-                        height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
-                        borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
+                        height: `${slotHeight}px`,
+                        borderBottom: hour % 2 === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
                         background: isInDragRange 
                           ? 'rgba(88, 132, 253, 0.15)' 
                           : isWorkingHour ? '#fafbfc' : '#ffffff',
@@ -1859,76 +1849,76 @@ export default function PersonalCalendarPage() {
                 />
               </div>
 
-              <div className="form-grid-3">
-                <div className="form-group">
-                  <label className="form-label">Start Time *</label>
-                  <input
-                    type="time"
-                    required
-                    step="900"
-                    className="form-input"
-                    value={newEvent.start_datetime.split('T')[1] || ''}
-                    onChange={(e) => {
-                      const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
-                      const startTime = e.target.value;
-                      const startDateTime = `${date}T${startTime}`;
-                      
-                      // Keep the same duration when changing start time
-                      const currentDuration = newEvent.end_datetime ? 
-                        Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60;
-                      const endDateTime = new Date(new Date(startDateTime).getTime() + currentDuration * 60 * 1000).toISOString().slice(0, 16);
-                      
+              <div className="form-group">
+                <label className="form-label">Start Time *</label>
+                <input
+                  type="time"
+                  required
+                  step="900"
+                  className="form-input"
+                  value={newEvent.start_datetime.split('T')[1] || ''}
+                  onChange={(e) => {
+                    const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
+                    const startTime = e.target.value;
+                    const startDateTime = `${date}T${startTime}`;
+                    
+                    // Keep the same duration when changing start time
+                    const currentDuration = newEvent.end_datetime ? 
+                      Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60;
+                    const endDateTime = new Date(new Date(startDateTime).getTime() + currentDuration * 60 * 1000).toISOString().slice(0, 16);
+                    
+                    setNewEvent({ 
+                      ...newEvent, 
+                      start_datetime: startDateTime,
+                      end_datetime: endDateTime
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">End Time *</label>
+                <input
+                  type="time"
+                  required
+                  step="900"
+                  className="form-input"
+                  value={newEvent.end_datetime.split('T')[1] || ''}
+                  onChange={(e) => {
+                    const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
+                    const endTime = e.target.value;
+                    const endDateTime = `${date}T${endTime}`;
+                    setNewEvent({ 
+                      ...newEvent, 
+                      end_datetime: endDateTime
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Duration (Minutes)</label>
+                <input
+                  type="number"
+                  min="15"
+                  max="480"
+                  step="15"
+                  className="form-input"
+                  placeholder="Minutes"
+                  value={newEvent.start_datetime && newEvent.end_datetime ? 
+                    Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60}
+                  onChange={(e) => {
+                    if (newEvent.start_datetime) {
+                      const duration = parseInt(e.target.value) || 60;
+                      const startTime = new Date(newEvent.start_datetime);
+                      const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
                       setNewEvent({ 
                         ...newEvent, 
-                        start_datetime: startDateTime,
-                        end_datetime: endDateTime
+                        end_datetime: endTime.toISOString().slice(0, 16)
                       });
-                    }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">End Time *</label>
-                  <input
-                    type="time"
-                    required
-                    step="900"
-                    className="form-input"
-                    value={newEvent.end_datetime.split('T')[1] || ''}
-                    onChange={(e) => {
-                      const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
-                      const endTime = e.target.value;
-                      const endDateTime = `${date}T${endTime}`;
-                      setNewEvent({ 
-                        ...newEvent, 
-                        end_datetime: endDateTime
-                      });
-                    }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Duration</label>
-                  <input
-                    type="number"
-                    min="15"
-                    max="480"
-                    step="15"
-                    className="form-input"
-                    placeholder="Minutes"
-                    value={newEvent.start_datetime && newEvent.end_datetime ? 
-                      Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60}
-                    onChange={(e) => {
-                      if (newEvent.start_datetime) {
-                        const duration = parseInt(e.target.value) || 60;
-                        const startTime = new Date(newEvent.start_datetime);
-                        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
-                        setNewEvent({ 
-                          ...newEvent, 
-                          end_datetime: endTime.toISOString().slice(0, 16)
-                        });
-                      }
-                    }}
-                  />
-                </div>
+                    }
+                  }}
+                />
               </div>
 
               <div className="form-actions">
