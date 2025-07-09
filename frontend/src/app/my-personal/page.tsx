@@ -53,7 +53,7 @@ export default function PersonalCalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [settings, setSettings] = useState<CalendarSettings>({
     default_view: 'week',
-    time_format: '24h',
+    time_format: '12h',
     start_hour: 0,
     end_hour: 23,
     first_day_of_week: 0,
@@ -236,12 +236,12 @@ export default function PersonalCalendarPage() {
       return date.toLocaleTimeString('en-US', { 
         hour: 'numeric',
         hour12: true 
-      });
+      }).replace(':00', ''); // Remove :00 for cleaner display
     } else {
       return date.toLocaleTimeString('en-US', { 
         hour: '2-digit',
         hour12: false 
-      });
+      }).replace(':00', ''); // Remove :00 for cleaner display
     }
   };
 
@@ -419,12 +419,8 @@ export default function PersonalCalendarPage() {
           event_type: newEvent.event_type,
           all_day: newEvent.all_day,
           project_id: null, // Personal events don't need a project
-          attendees: [{
-            id: user?.id || '',
-            name: user?.name || user?.email || 'Me',
-            email: user?.email || ''
-          }],
-          attendee_ids: [user?.id || '']
+          attendee_ids: [parseInt(user?.id?.toString() || '0')], // Only use attendee_ids, not attendees
+          created_by: parseInt(user?.id?.toString() || '0')
         }])
         .select()
         .single();
