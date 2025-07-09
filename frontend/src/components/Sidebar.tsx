@@ -2220,7 +2220,10 @@ Your report is now available in the system.`);
       )}
 
       {/* Absence Form Modal */}
-      {showAbsenceForm && console.log('🔥 DEBUG: Rendering Absence Form Modal, showAbsenceForm =', showAbsenceForm) && (
+      {showAbsenceForm && (() => {
+        console.log('🔥 DEBUG: Rendering Absence Form Modal, showAbsenceForm =', showAbsenceForm);
+        return true;
+      })() && (
         <div className="modal-overlay" onClick={handleAbsenceFormClose}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
