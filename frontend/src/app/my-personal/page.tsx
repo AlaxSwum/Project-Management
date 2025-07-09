@@ -51,6 +51,7 @@ export default function PersonalCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [settings, setSettings] = useState<CalendarSettings>({
     default_view: 'week',
     time_format: '12h',
@@ -85,7 +86,8 @@ export default function PersonalCalendarPage() {
     location: '',
     event_type: 'personal',
     priority: 'medium',
-    color: '#5884FD'
+    color: '#5884FD',
+    project_id: 0
   });
 
   // Location options for dropdown
@@ -114,6 +116,7 @@ export default function PersonalCalendarPage() {
     }
     
     fetchCalendarData();
+    fetchProjects();
     fetchSettings();
   }, [isAuthenticated, authLoading, router, currentDate, currentView]);
 
@@ -165,6 +168,24 @@ export default function PersonalCalendarPage() {
       setError('Failed to load calendar data');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data, error } = await supabase
+        .from('projects_project')
+        .select('id, name')
+        .eq('status', 'active')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      
+      setProjects(data || []);
+    } catch (err: any) {
+      console.error('Error fetching projects:', err);
     }
   };
 
@@ -413,6 +434,11 @@ export default function PersonalCalendarPage() {
 
   const createEvent = async () => {
     try {
+      if (!newEvent.title.trim() || !newEvent.start_datetime || !newEvent.project_id) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
       const supabase = (await import('@/lib/supabase')).supabase;
       
       // Convert datetime-local format to date and time
@@ -423,73 +449,7 @@ export default function PersonalCalendarPage() {
       const timeStr = startDate.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
       
-      // First, try to find or create a "Personal" project
-      let personalProjectId = null;
-      
-      // Check if there's a "Personal" project
-      const { data: personalProject } = await supabase
-        .from('projects_project')
-        .select('id')
-        .eq('name', 'Personal')
-        .single();
-      
-      if (personalProject) {
-        personalProjectId = personalProject.id;
-      } else {
-        // Create a "Personal" project if it doesn't exist
-        const { data: newProject } = await supabase
-          .from('projects_project')
-          .insert([{
-            name: 'Personal',
-            description: 'Personal calendar events and tasks',
-            project_type: 'personal',
-            status: 'active',
-            created_by: parseInt(user?.id?.toString() || '0')
-          }])
-          .select('id')
-          .single();
-        
-        if (newProject) {
-          personalProjectId = newProject.id;
-        }
-      }
-      
-      // If we still don't have a project ID, get the first available project or create one
-      if (!personalProjectId) {
-        const { data: firstProject } = await supabase
-          .from('projects_project')
-          .select('id')
-          .limit(1)
-          .single();
-        
-        if (firstProject) {
-          personalProjectId = firstProject.id;
-        } else {
-          // Last resort: create a default project
-          const { data: defaultProject } = await supabase
-            .from('projects_project')
-            .insert([{
-              name: 'Default Project',
-              description: 'Auto-created default project',
-              project_type: 'other',
-              status: 'active',
-              created_by: parseInt(user?.id?.toString() || '0')
-            }])
-            .select('id')
-            .single();
-          
-          if (defaultProject) {
-            personalProjectId = defaultProject.id;
-          }
-        }
-      }
-      
-      // Ensure we have a valid project_id
-      if (!personalProjectId) {
-        throw new Error('Unable to find or create a project for personal events');
-      }
-      
-      // Create a meeting in the timetable
+      // Create a meeting in the timetable using the selected project
       const { data, error } = await supabase
         .from('projects_meeting')
         .insert([{
@@ -498,13 +458,13 @@ export default function PersonalCalendarPage() {
           date: dateStr,
           time: timeStr,
           duration: duration,
-          location: newEvent.location || null, // Use null instead of default text if no location selected
+          location: newEvent.location || null,
           color: newEvent.color,
           event_type: newEvent.event_type,
           all_day: newEvent.all_day,
-          project_id: personalProjectId, // Use Personal project ID
-          attendee_ids: [parseInt(user?.id?.toString() || '0')], // Only use attendee_ids, not attendees
-          created_by_id: parseInt(user?.id?.toString() || '0') // Add created_by_id field
+          project_id: newEvent.project_id, // Use selected project ID
+          attendee_ids: [parseInt(user?.id?.toString() || '0')],
+          created_by_id: parseInt(user?.id?.toString() || '0')
         }])
         .select()
         .single();
@@ -524,9 +484,11 @@ export default function PersonalCalendarPage() {
         location: '',
         event_type: 'personal',
         priority: 'medium',
-        color: '#5884FD'
+        color: '#5884FD',
+        project_id: 0
       });
       setShowCreateModal(false);
+      setError('');
       
     } catch (err: any) {
       console.error('Error creating event:', err);
@@ -1396,7 +1358,7 @@ export default function PersonalCalendarPage() {
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 className="modal-title">Schedule New Meeting</h2>
+              <h2 className="modal-title">Create New Event</h2>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
@@ -1408,12 +1370,12 @@ export default function PersonalCalendarPage() {
 
             <form onSubmit={(e) => { e.preventDefault(); createEvent(); }} className="modal-form">
               <div className="form-group">
-                <label className="form-label">Meeting Title *</label>
+                <label className="form-label">Event Title *</label>
                 <input
                   type="text"
                   required
                   className="form-input"
-                  placeholder="Enter meeting title..."
+                  placeholder="Enter event title..."
                   value={newEvent.title}
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                 />
@@ -1423,10 +1385,25 @@ export default function PersonalCalendarPage() {
                 <label className="form-label">Description</label>
                 <textarea
                   className="form-textarea"
-                  placeholder="What will be discussed in this meeting?"
+                  placeholder="Enter event description..."
                   value={newEvent.description}
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Project *</label>
+                <select
+                  required
+                  className="form-select"
+                  value={newEvent.project_id || 0}
+                  onChange={(e) => setNewEvent({ ...newEvent, project_id: Number(e.target.value) })}
+                >
+                  <option value={0}>Select a project</option>
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>{project.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-grid-3">
@@ -1497,41 +1474,9 @@ export default function PersonalCalendarPage() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Location (Optional)</label>
-                <select
-                  className="form-select"
-                  value={newEvent.location}
-                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                >
-                  <option value="">Select location (optional)</option>
-                  {locationOptions.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Meeting Type</label>
-                <select
-                  className="form-select"
-                  value={newEvent.event_type}
-                  onChange={(e) => setNewEvent({ ...newEvent, event_type: e.target.value })}
-                >
-                  <option value="meeting">Meeting</option>
-                  <option value="personal">Personal</option>
-                  <option value="appointment">Appointment</option>
-                  <option value="task">Task</option>
-                  <option value="break">Break</option>
-                  <option value="focus">Focus Time</option>
-                </select>
-              </div>
-
               <div className="form-actions">
                 <button type="submit" className="btn-primary">
-                  Schedule Meeting
+                  Create Event
                 </button>
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn-secondary">
                   Cancel
