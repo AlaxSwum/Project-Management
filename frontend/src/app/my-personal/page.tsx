@@ -72,10 +72,6 @@ export default function PersonalCalendarPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   
-  // Modal states for menu items
-  const [showAbsenceForm, setShowAbsenceForm] = useState(false);
-  const [showWeeklyReportForm, setShowWeeklyReportForm] = useState(false);
-  
   // Drag-to-create state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ date: Date; hour: number } | null>(null);
@@ -368,15 +364,6 @@ export default function PersonalCalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
-  };
-
-  // Menu handlers
-  const handleAbsenceForm = () => {
-    setShowAbsenceForm(true);
-  };
-
-  const handleWeeklyReport = () => {
-    setShowWeeklyReportForm(true);
   };
 
   const handleTimeSlotClick = (date: Date, hour: number) => {
