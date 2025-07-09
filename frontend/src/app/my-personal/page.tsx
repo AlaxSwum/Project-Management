@@ -601,9 +601,9 @@ export default function PersonalCalendarPage() {
       const endMinutes = eventEnd.getMinutes();
       
       const slotHeight = 40; // pixels per hour
-      const weekViewDayHeaderHeight = 60; // Each day has its own header in week view
+      const weekViewDayHeaderHeight = 0; // No additional header offset needed - events position relative to time slots
       
-      // ALTERNATIVE SOLUTION: Calculate position based on actual time slot index
+      // Calculate position based on actual time slot index
       // Find which time slot this event belongs to
       const timeSlots = [];
       for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
@@ -613,18 +613,7 @@ export default function PersonalCalendarPage() {
       const slotIndex = timeSlots.indexOf(startHour);
       const topPosition = weekViewDayHeaderHeight + (slotIndex * slotHeight) + (startMinutes * slotHeight / 60);
       
-              // TEMPORARY DEBUG: Check if event is being positioned correctly
-        if (event.title.includes("event")) {
-          console.log(`🔍 WEEK VIEW ALT SOLUTION - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
-          console.log(`  📅 Event time: ${startHour}:${startMinutes} (${event.start_datetime})`);
-          console.log(`  ⏰ Calendar starts at: ${settings.start_hour} (should be 0 for midnight)`);
-          console.log(`  📐 Time slots available: [${timeSlots.join(', ')}]`);
-          console.log(`  📍 Event hour ${startHour} is at slot index: ${slotIndex}`);
-          console.log(`  📏 Slot height: ${slotHeight}px per hour`);
-          console.log(`  📍 Calculated position: ${topPosition}px`);
-          console.log(`  🎯 Should be in slot: Hour ${startHour} (${formatHourSlot(startHour)})`);
-          console.log(`  ✅ Alt solution: ${weekViewDayHeaderHeight} + ${slotIndex} * ${slotHeight} + ${startMinutes * slotHeight / 60} = ${topPosition}px`);
-        }
+
       
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
@@ -666,7 +655,7 @@ export default function PersonalCalendarPage() {
       const slotHeight = 40; // pixels per hour
       const headerHeight = 60;
       
-      // ALTERNATIVE SOLUTION: Calculate position based on actual time slot index
+      // Calculate position based on actual time slot index
       // Find which time slot this event belongs to
       const timeSlots = [];
       for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
@@ -675,19 +664,6 @@ export default function PersonalCalendarPage() {
       
       const slotIndex = timeSlots.indexOf(startHour);
       const topPosition = headerHeight + (slotIndex * slotHeight) + (startMinutes * slotHeight / 60);
-      
-              // TEMPORARY DEBUG: Check if event is being positioned correctly  
-        if (event.title.includes("event")) {
-          console.log(`🔍 DAY VIEW ALT SOLUTION - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
-          console.log(`  📅 Event time: ${startHour}:${startMinutes} (${event.start_datetime})`);
-          console.log(`  ⏰ Calendar starts at: ${settings.start_hour} (should be 0 for midnight)`);
-          console.log(`  📐 Time slots available: [${timeSlots.join(', ')}]`);
-          console.log(`  📍 Event hour ${startHour} is at slot index: ${slotIndex}`);
-          console.log(`  📏 Header height: ${headerHeight}px, Slot height: ${slotHeight}px per hour`);
-          console.log(`  📍 Calculated position: ${topPosition}px`);
-          console.log(`  🎯 Should be in slot: Hour ${startHour} (${formatHourSlot(startHour)})`);
-          console.log(`  ✅ Alt solution: ${headerHeight} + ${slotIndex} * ${slotHeight} + ${startMinutes * slotHeight / 60} = ${topPosition}px`);
-        }
       
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
