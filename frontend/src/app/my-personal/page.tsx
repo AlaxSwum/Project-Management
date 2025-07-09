@@ -860,72 +860,105 @@ export default function PersonalCalendarPage() {
               </div>
 
               {/* Time slots for this day */}
-              {timeSlots.map(hour => {
-                const slotEvents = getEventsForTimeSlot(hour, day);
-                const isInDragRange = isSlotInDragRange(day, hour);
-                
-                return (
-                  <div 
-                    key={hour} 
+              <div style={{ position: 'relative' }}>
+                {timeSlots.map(hour => {
+                  const isInDragRange = isSlotInDragRange(day, hour);
+                  
+                  return (
+                    <div 
+                      key={hour} 
+                      onClick={(e) => {
+                        if (!isDragging) {
+                          handleTimeSlotClick(day, hour);
+                        }
+                      }}
+                      onMouseDown={(e) => handleMouseDown(day, hour, e)}
+                      onMouseEnter={(e) => {
+                        handleMouseEnter(day, hour);
+                        if (!isDragging) {
+                          e.currentTarget.style.backgroundColor = '#f0f8ff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isDragging) {
+                          e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                        }
+                      }}
+                      style={{
+                        height: `${slotHeight}px`,
+                        borderBottom: '1px solid #f0f0f0',
+                        background: isInDragRange 
+                          ? 'rgba(88, 132, 253, 0.2)' 
+                          : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                        cursor: isDragging ? 'grabbing' : 'pointer',
+                        transition: 'background-color 0.2s ease',
+                        userSelect: 'none'
+                      }}
+                    />
+                  );
+                })}
+
+                {/* Week Day Events - positioned absolutely like day view */}
+                {getEventsForDay(day).map((event, index) => (
+                  <div
+                    key={event.id}
                     onClick={(e) => {
-                      if (!isDragging) {
-                        handleTimeSlotClick(day, hour);
-                      }
-                    }}
-                    onMouseDown={(e) => handleMouseDown(day, hour, e)}
-                    onMouseEnter={(e) => {
-                      handleMouseEnter(day, hour);
-                      if (!isDragging) {
-                        e.currentTarget.style.backgroundColor = '#f0f8ff';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isDragging) {
-                        e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
-                      }
+                      e.stopPropagation();
+                      setSelectedEvent(event);
+                      setShowEventModal(true);
+                      setIsEditingEvent(false);
                     }}
                     style={{
-                      height: `${slotHeight}px`,
-                      borderBottom: '1px solid #f0f0f0',
-                      position: 'relative',
-                      background: isInDragRange 
-                        ? 'rgba(88, 132, 253, 0.2)' 
-                        : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
-                      cursor: isDragging ? 'grabbing' : 'pointer',
-                      transition: 'background-color 0.2s ease',
-                      userSelect: 'none'
+                      position: 'absolute',
+                      left: `${index * 3 + 4}px`,
+                      right: '4px',
+                      top: `${event.topPosition}px`,
+                      height: `${Math.max(20, event.height)}px`,
+                      background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
+                      color: '#ffffff',
+                      borderRadius: '8px',
+                      padding: '2px 6px',
+                      fontSize: '0.7rem',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+                      zIndex: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '600'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
                     }}
                   >
-                    {slotEvents.map((event, index) => (
-                      <div
-                        key={event.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEvent(event);
-                        }}
-                        style={{
-                          position: 'absolute',
-                          left: '2px',
-                          right: '2px',
-                          top: `${index * 18 + 2}px`,
-                          height: '16px',
-                          background: event.color,
-                          color: '#ffffff',
-                          borderRadius: '3px',
-                          padding: '1px 4px',
-                          fontSize: '0.7rem',
-                          cursor: 'pointer',
-                          overflow: 'hidden',
-                          fontWeight: '500',
-                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                        }}
-                      >
-                        {event.title}
+                    <div style={{ 
+                      lineHeight: '1.2',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {event.title}
+                    </div>
+                    {event.height > 30 && (
+                      <div style={{ 
+                        fontSize: '0.6rem', 
+                        opacity: 0.9,
+                        marginTop: '1px'
+                      }}>
+                        {formatTime(event.start_datetime)}
                       </div>
-                    ))}
+                    )}
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           ))}
         </div>
