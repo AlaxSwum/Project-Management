@@ -173,6 +173,7 @@ export default function PersonalCalendarPage() {
 
   const fetchProjects = async () => {
     try {
+      console.log('Fetching projects for personal calendar...');
       const supabase = (await import('@/lib/supabase')).supabase;
       
       const { data, error } = await supabase
@@ -181,11 +182,16 @@ export default function PersonalCalendarPage() {
         .eq('status', 'active')
         .order('name', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching projects:', error);
+        throw error;
+      }
       
+      console.log('Projects fetched:', data);
       setProjects(data || []);
     } catch (err: any) {
       console.error('Error fetching projects:', err);
+      setError('Failed to load projects: ' + err.message);
     }
   };
 
@@ -932,7 +938,7 @@ export default function PersonalCalendarPage() {
   if (authLoading || isLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <Sidebar projects={projects} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
@@ -1138,7 +1144,7 @@ export default function PersonalCalendarPage() {
       }} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <Sidebar projects={projects} onCreateProject={() => {}} />
 
         <div style={{ 
           marginLeft: '256px',
@@ -1400,10 +1406,19 @@ export default function PersonalCalendarPage() {
                   onChange={(e) => setNewEvent({ ...newEvent, project_id: Number(e.target.value) })}
                 >
                   <option value={0}>Select a project</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>{project.name}</option>
-                  ))}
+                  {projects.length === 0 ? (
+                    <option disabled>Loading projects...</option>
+                  ) : (
+                    projects.map(project => (
+                      <option key={project.id} value={project.id}>{project.name}</option>
+                    ))
+                  )}
                 </select>
+                {projects.length === 0 && (
+                  <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                    Debug: {projects.length} projects loaded
+                  </div>
+                )}
               </div>
 
               <div className="form-grid-3">
