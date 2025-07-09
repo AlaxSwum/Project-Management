@@ -771,33 +771,33 @@ export default function PersonalCalendarPage() {
           </div>
 
           {/* Time slots */}
-          {timeSlots.map((hour, index) => {
-            const isInDragRange = isSlotInDragRange(currentDate, hour);
-            const isWorkingHour = hour >= 9 && hour <= 17;
+          {timeSlots.map((timeSlot, index) => {
+            const isInDragRange = isSlotInDragRange(currentDate, timeSlot.hour);
+            const isWorkingHour = timeSlot.hour >= 9 && timeSlot.hour <= 17;
             
-            return (
-              <div 
-                key={hour} 
-                onClick={(e) => {
-                  if (!isDragging) {
-                    handleTimeSlotClick(currentDate, hour);
-                  }
-                }}
-                onMouseDown={(e) => handleMouseDown(currentDate, hour, e)}
-                onMouseEnter={(e) => {
-                  handleMouseEnter(currentDate, hour);
-                  if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = '#f0f8ff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
-                  }
-                }}
-                style={{
-                  height: `${slotHeight}px`,
-                  borderBottom: hour % 2 === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
+                          return (
+                <div 
+                  key={`${timeSlot.hour}-${timeSlot.minute}`} 
+                  onClick={(e) => {
+                    if (!isDragging) {
+                      handleTimeSlotClick(currentDate, timeSlot.hour);
+                    }
+                  }}
+                  onMouseDown={(e) => handleMouseDown(currentDate, timeSlot.hour, e)}
+                  onMouseEnter={(e) => {
+                    handleMouseEnter(currentDate, timeSlot.hour);
+                    if (!isDragging) {
+                      e.currentTarget.style.backgroundColor = '#f0f8ff';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isDragging) {
+                      e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
+                    }
+                  }}
+                  style={{
+                    height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
+                    borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
                   position: 'relative',
                   background: isInDragRange 
                     ? 'rgba(88, 132, 253, 0.15)' 
@@ -994,21 +994,21 @@ export default function PersonalCalendarPage() {
 
               {/* Time slots for this day */}
               <div style={{ position: 'relative', background: '#ffffff' }}>
-                {timeSlots.map((hour, index) => {
-                  const isInDragRange = isSlotInDragRange(day, hour);
-                  const isWorkingHour = hour >= 9 && hour <= 17;
+                {timeSlots.map((timeSlot, index) => {
+                  const isInDragRange = isSlotInDragRange(day, timeSlot.hour);
+                  const isWorkingHour = timeSlot.hour >= 9 && timeSlot.hour <= 17;
                   
                   return (
                     <div 
-                      key={hour} 
+                      key={`${timeSlot.hour}-${timeSlot.minute}`} 
                       onClick={(e) => {
                         if (!isDragging) {
-                          handleTimeSlotClick(day, hour);
+                          handleTimeSlotClick(day, timeSlot.hour);
                         }
                       }}
-                      onMouseDown={(e) => handleMouseDown(day, hour, e)}
+                      onMouseDown={(e) => handleMouseDown(day, timeSlot.hour, e)}
                       onMouseEnter={(e) => {
-                        handleMouseEnter(day, hour);
+                        handleMouseEnter(day, timeSlot.hour);
                         if (!isDragging) {
                           e.currentTarget.style.backgroundColor = '#f0f8ff';
                         }
@@ -1019,8 +1019,8 @@ export default function PersonalCalendarPage() {
                         }
                       }}
                       style={{
-                        height: `${slotHeight}px`,
-                        borderBottom: hour % 2 === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
+                        height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
+                        borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
                         background: isInDragRange 
                           ? 'rgba(88, 132, 253, 0.15)' 
                           : isWorkingHour ? '#fafbfc' : '#ffffff',
