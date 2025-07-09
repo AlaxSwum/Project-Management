@@ -2141,20 +2141,26 @@ Your report is now available in the system.`);
             position: 'fixed',
             top: isCollapsed ? '120px' : '120px',
             left: isCollapsed ? '80px' : '240px',
-            zIndex: 999999,
+            zIndex: 9999999,
             background: '#FFFFFF',
-            border: '1px solid #E5E7EB',
+            border: '2px solid #5884FD',
             borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
             minWidth: '200px',
             padding: '0.75rem',
             backdropFilter: 'blur(15px)',
+            pointerEvents: 'auto',
           }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            console.log('🔥 DEBUG: Dropdown container clicked!', e);
+            e.stopPropagation();
+          }}
         >
           <button 
             onClick={(e) => {
               console.log('🔥 DEBUG: Absence Form button clicked!', e);
+              e.preventDefault();
+              e.stopPropagation();
               handleAbsenceForm();
               closeDropdown();
             }} 
@@ -2166,13 +2172,16 @@ Your report is now available in the system.`);
               fontSize: '0.875rem',
               color: '#374151',
               cursor: 'pointer',
-              border: 'none',
-              background: 'none',
+              border: '2px solid transparent',
+              background: '#f9fafb',
               width: '100%',
               textAlign: 'left',
               borderRadius: '12px',
               fontWeight: '500',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 10000000,
             }} 
             onMouseEnter={(e) => {
               e.currentTarget.style.color = '#FFB333';
@@ -2189,7 +2198,10 @@ Your report is now available in the system.`);
             Absence Form
           </button>
           <button 
-            onClick={() => {
+            onClick={(e) => {
+              console.log('🔥 DEBUG: Weekly Report button clicked!', e);
+              e.preventDefault();
+              e.stopPropagation();
               handleWeeklyReport();
               closeDropdown();
             }} 
@@ -2201,13 +2213,16 @@ Your report is now available in the system.`);
               fontSize: '0.875rem',
               color: '#374151',
               cursor: 'pointer',
-              border: 'none',
-              background: 'none',
+              border: '2px solid transparent',
+              background: '#f9fafb',
               width: '100%',
               textAlign: 'left',
               borderRadius: '12px',
               fontWeight: '500',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 10000000,
             }} 
             onMouseEnter={(e) => {
               e.currentTarget.style.color = '#FFB333';
