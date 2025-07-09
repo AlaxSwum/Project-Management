@@ -1242,59 +1242,66 @@ export default function PersonalCalendarPage() {
           animation: 'fadeIn 0.2s ease-out'
         }}>
           <div style={{
-            background: '#F5F5ED',
+            background: '#ffffff',
             borderRadius: '20px',
-            padding: '2.5rem',
+            padding: '2rem',
             width: '90%',
-            maxWidth: '550px',
+            maxWidth: '500px',
             maxHeight: '85vh',
             overflow: 'auto',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
             animation: 'slideIn 0.3s ease-out',
-            border: '1px solid rgba(255, 255, 255, 0.2)'
+            border: '1px solid #e8e8e8'
           }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '2rem'
+              marginBottom: '1.5rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid #f0f0f0'
             }}>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: '300', margin: 0, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
-                Create New Event
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '600', 
+                margin: 0, 
+                color: '#1a1a1a'
+              }}>
+                New Meeting
               </h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  border: '1px solid rgba(0, 0, 0, 0.1)',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.2rem',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
                   cursor: 'pointer',
                   color: '#666666',
+                  padding: '0.5rem',
+                  borderRadius: '50%',
                   transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.background = '#f5f5f5';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)';
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = 'none';
                 }}
               >
                 ×
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                  Event Title *
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '500', 
+                  color: '#374151',
+                  fontSize: '0.875rem'
+                }}>
+                  Meeting Title *
                 </label>
                 <input
                   type="text"
@@ -1302,29 +1309,35 @@ export default function PersonalCalendarPage() {
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
-                    borderRadius: '12px',
-                    fontSize: '1rem',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
                     boxSizing: 'border-box',
-                    background: 'rgba(255, 255, 255, 0.9)',
+                    background: '#ffffff',
                     transition: 'all 0.2s ease',
                     outline: 'none'
                   }}
-                  placeholder="Enter event title"
+                  placeholder="Enter meeting title"
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = '#5884FD';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '500', 
+                  color: '#374151',
+                  fontSize: '0.875rem'
+                }}>
                   Description
                 </label>
                 <textarea
@@ -1332,210 +1345,293 @@ export default function PersonalCalendarPage() {
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #e0e0e0',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem',
-                    minHeight: '80px',
+                    fontSize: '0.875rem',
+                    minHeight: '70px',
                     resize: 'vertical',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    background: '#ffffff',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
                   }}
-                  placeholder="Enter event description"
+                  placeholder="Meeting description"
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#5884FD';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                    Start Date & Time *
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Date *
                   </label>
                   <input
-                    type="datetime-local"
-                    step="900" // 15-minute intervals (900 seconds)
-                    value={newEvent.start_datetime}
-                    onChange={(e) => setNewEvent({ ...newEvent, start_datetime: e.target.value })}
+                    type="date"
+                    value={newEvent.start_datetime.split('T')[0]}
+                    onChange={(e) => {
+                      const date = e.target.value;
+                      const startTime = newEvent.start_datetime.split('T')[1] || '09:00';
+                      const endTime = newEvent.end_datetime.split('T')[1] || '10:00';
+                      setNewEvent({ 
+                        ...newEvent, 
+                        start_datetime: `${date}T${startTime}`,
+                        end_datetime: `${date}T${endTime}`
+                      });
+                    }}
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(255, 255, 255, 0.9)',
+                      background: '#ffffff',
                       transition: 'all 0.2s ease',
                       outline: 'none'
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                    End Date & Time *
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Duration (minutes) *
                   </label>
                   <input
-                    type="datetime-local"
-                    step="900" // 15-minute intervals (900 seconds)
-                    value={newEvent.end_datetime}
-                    onChange={(e) => setNewEvent({ ...newEvent, end_datetime: e.target.value })}
+                    type="number"
+                    min="15"
+                    step="15"
+                    value={newEvent.start_datetime && newEvent.end_datetime ? 
+                      Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60}
+                    onChange={(e) => {
+                      if (newEvent.start_datetime) {
+                        const duration = parseInt(e.target.value) || 60;
+                        const startTime = new Date(newEvent.start_datetime);
+                        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+                        setNewEvent({ 
+                          ...newEvent, 
+                          end_datetime: endTime.toISOString().slice(0, 16)
+                        });
+                      }
+                    }}
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(255, 255, 255, 0.9)',
+                      background: '#ffffff',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }}
+                    placeholder="60"
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Start Time *
+                  </label>
+                  <input
+                    type="time"
+                    step="900"
+                    value={newEvent.start_datetime.split('T')[1] || ''}
+                    onChange={(e) => {
+                      const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
+                      const time = e.target.value;
+                      const startDateTime = `${date}T${time}`;
+                      const duration = newEvent.end_datetime ? 
+                        Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60;
+                      const endDateTime = new Date(new Date(startDateTime).getTime() + duration * 60 * 1000).toISOString().slice(0, 16);
+                      setNewEvent({ 
+                        ...newEvent, 
+                        start_datetime: startDateTime,
+                        end_datetime: endDateTime
+                      });
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                      background: '#ffffff',
                       transition: 'all 0.2s ease',
                       outline: 'none'
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Location
+                  </label>
+                  <select
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                      background: '#ffffff',
+                      transition: 'all 0.2s ease',
+                      outline: 'none',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundSize: '1rem',
+                      paddingRight: '2.5rem'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="">Select location (optional)</option>
+                    {locationOptions.map((location) => (
+                      <option key={location} value={location}>
+                        {location}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                  Location
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '500', 
+                  color: '#374151',
+                  fontSize: '0.875rem'
+                }}>
+                  Meeting Type
                 </label>
                 <select
-                  value={newEvent.location}
-                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                  value={newEvent.event_type}
+                  onChange={(e) => setNewEvent({ ...newEvent, event_type: e.target.value })}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
-                    borderRadius: '12px',
-                    fontSize: '1rem',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
                     boxSizing: 'border-box',
-                    background: 'rgba(255, 255, 255, 0.9)',
+                    background: '#ffffff',
                     transition: 'all 0.2s ease',
-                    outline: 'none'
+                    outline: 'none',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundSize: '1rem',
+                    paddingRight: '2.5rem'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = '#5884FD';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
-                  <option value="">Select a location (optional)</option>
-                  {locationOptions.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
+                  <option value="meeting">Meeting</option>
+                  <option value="personal">Personal</option>
+                  <option value="appointment">Appointment</option>
+                  <option value="task">Task</option>
+                  <option value="break">Break</option>
+                  <option value="focus">Focus Time</option>
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                    Type
-                  </label>
-                  <select
-                    value={newEvent.event_type}
-                    onChange={(e) => setNewEvent({ ...newEvent, event_type: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="personal">Personal</option>
-                    <option value="meeting">Meeting</option>
-                    <option value="appointment">Appointment</option>
-                    <option value="reminder">Reminder</option>
-                    <option value="task">Task</option>
-                    <option value="break">Break</option>
-                    <option value="focus">Focus Time</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                    Color
-                  </label>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <input
-                      type="color"
-                      value={newEvent.color}
-                      onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
-                      style={{
-                        width: '46px',
-                        height: '46px',
-                        padding: '0',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                      {['#5884FD', '#C483D9', '#F87239', '#FFB333', '#10b981', '#ef4444', '#8b5cf6'].map(color => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => setNewEvent({ ...newEvent, color })}
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            backgroundColor: color,
-                            border: newEvent.color === color ? '2px solid #000' : '1px solid #e0e0e0',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                  type="checkbox"
-                  checked={newEvent.all_day}
-                  onChange={(e) => setNewEvent({ ...newEvent, all_day: e.target.checked })}
-                  style={{ width: '16px', height: '16px' }}
-                />
-                <label style={{ fontWeight: '500', color: '#1a1a1a' }}>
-                  All Day Event
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   style={{
                     flex: 1,
-                    padding: '0.75rem',
+                    padding: '0.75rem 1rem',
                     background: '#ffffff',
-                    color: '#666666',
-                    border: '1px solid #e0e0e0',
+                    color: '#374151',
+                    border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: '500',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f9fafb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff';
                   }}
                 >
                   Cancel
@@ -1545,18 +1641,28 @@ export default function PersonalCalendarPage() {
                   disabled={!newEvent.title || !newEvent.start_datetime || !newEvent.end_datetime}
                   style={{
                     flex: 1,
-                    padding: '0.75rem',
-                    background: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? '#5884FD' : '#cccccc',
+                    padding: '0.75rem 1rem',
+                    background: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? '#5884FD' : '#9ca3af',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '8px',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: '500',
                     cursor: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s ease'
                   }}
+                  onMouseEnter={(e) => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.background = '#4f7bf7';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.background = '#5884FD';
+                    }
+                  }}
                 >
-                  Create Event
+                  Create Meeting
                 </button>
               </div>
             </div>
@@ -1581,39 +1687,56 @@ export default function PersonalCalendarPage() {
           animation: 'fadeIn 0.2s ease-out'
         }}>
           <div style={{
-            background: '#F5F5ED',
+            background: '#ffffff',
             borderRadius: '20px',
-            padding: '2.5rem',
+            padding: '2rem',
             width: '90%',
-            maxWidth: '550px',
+            maxWidth: '500px',
             maxHeight: '85vh',
             overflow: 'auto',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
             animation: 'slideIn 0.3s ease-out',
-            border: '1px solid rgba(255, 255, 255, 0.2)'
+            border: '1px solid #e8e8e8'
           }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '2rem'
+              marginBottom: '1.5rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid #f0f0f0'
             }}>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: '300', margin: 0, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
-                {isEditingEvent ? 'Edit Event' : 'Event Details'}
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '600', 
+                margin: 0, 
+                color: '#1a1a1a'
+              }}>
+                {isEditingEvent ? 'Edit Meeting' : 'Meeting Details'}
               </h2>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {!isEditingEvent && (
                   <button
                     onClick={() => setIsEditingEvent(true)}
                     style={{
-                      background: 'rgba(88, 132, 253, 0.1)',
-                      border: '1px solid #5884FD',
-                      borderRadius: '12px',
-                      padding: '0.5rem 1rem',
-                      color: '#5884FD',
-                      fontSize: '0.9rem',
+                      background: '#f8fafc',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      padding: '0.5rem 0.75rem',
+                      color: '#374151',
+                      fontSize: '0.8rem',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f1f5f9';
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.color = '#5884FD';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#f8fafc';
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.color = '#374151';
                     }}
                   >
                     Edit
@@ -1626,18 +1749,20 @@ export default function PersonalCalendarPage() {
                     setIsEditingEvent(false);
                   }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
-                    borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.2rem',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
                     cursor: 'pointer',
                     color: '#666666',
+                    padding: '0.5rem',
+                    borderRadius: '50%',
                     transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f5f5f5';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'none';
                   }}
                 >
                   ×
@@ -1647,72 +1772,111 @@ export default function PersonalCalendarPage() {
 
             {!isEditingEvent ? (
               // View Mode
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
+                  background: '#fafafa',
                   borderRadius: '12px',
                   padding: '1.5rem',
-                  border: '1px solid rgba(0, 0, 0, 0.1)'
+                  border: '1px solid #e8e8e8'
                 }}>
-                  <h3 style={{ fontSize: '1.3rem', fontWeight: '500', margin: '0 0 1rem 0', color: '#1a1a1a' }}>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: '0 0 1rem 0', color: '#1a1a1a' }}>
                     {selectedEvent.title}
                   </h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
-                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Start Time</div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>{formatTime(selectedEvent.start_datetime)}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Start Time</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>{formatTime(selectedEvent.start_datetime)}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>End Time</div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>{formatTime(selectedEvent.end_datetime)}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Duration</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                        {Math.round((new Date(selectedEvent.end_datetime).getTime() - new Date(selectedEvent.start_datetime).getTime()) / (1000 * 60))} min
+                      </div>
                     </div>
                   </div>
 
                   {selectedEvent.description && (
                     <div style={{ marginBottom: '1rem' }}>
-                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Description</div>
-                      <div style={{ fontSize: '0.95rem', lineHeight: '1.5' }}>{selectedEvent.description}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: '500', textTransform: 'uppercase' }}>Description</div>
+                      <div style={{ 
+                        fontSize: '0.9rem', 
+                        lineHeight: '1.5', 
+                        color: '#374151',
+                        background: '#ffffff',
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        border: '1px solid #e8e8e8'
+                      }}>
+                        {selectedEvent.description}
+                      </div>
                     </div>
                   )}
 
                   {selectedEvent.location && (
                     <div style={{ marginBottom: '1rem' }}>
-                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Location</div>
-                      <div style={{ fontSize: '0.95rem' }}>📍 {selectedEvent.location}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Location</div>
+                      <div style={{ 
+                        fontSize: '0.9rem', 
+                        color: '#374151',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <span style={{ 
+                          background: '#f3f4f6',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '6px',
+                          fontSize: '0.85rem'
+                        }}>
+                          {selectedEvent.location}
+                        </span>
+                      </div>
                     </div>
                   )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Type</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Type</div>
                       <div style={{ 
-                        fontSize: '0.85rem', 
-                        padding: '0.25rem 0.5rem', 
-                        background: selectedEvent.color,
+                        fontSize: '0.8rem', 
+                        padding: '0.375rem 0.75rem', 
+                        background: selectedEvent.color || '#5884FD',
                         color: '#ffffff',
                         borderRadius: '6px',
                         display: 'inline-block',
-                        textTransform: 'capitalize'
+                        textTransform: 'capitalize',
+                        fontWeight: '500'
                       }}>
                         {selectedEvent.event_type}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Duration</div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>
-                        {Math.round((new Date(selectedEvent.end_datetime).getTime() - new Date(selectedEvent.start_datetime).getTime()) / (1000 * 60))} minutes
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem', fontWeight: '500', textTransform: 'uppercase' }}>Date</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                        {new Date(selectedEvent.start_datetime).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              // Edit Mode - Similar to create form but with existing data
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              // Edit Mode - Similar to timetable style
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                    Event Title *
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Meeting Title *
                   </label>
                   <input
                     type="text"
@@ -1720,21 +1884,35 @@ export default function PersonalCalendarPage() {
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, title: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(255, 255, 255, 0.9)',
+                      background: '#ffffff',
                       transition: 'all 0.2s ease',
                       outline: 'none'
                     }}
-                    placeholder="Enter event title"
+                    placeholder="Enter meeting title"
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
                     Description
                   </label>
                   <textarea
@@ -1742,31 +1920,53 @@ export default function PersonalCalendarPage() {
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, description: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
-                      minHeight: '80px',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      minHeight: '70px',
                       resize: 'vertical',
                       boxSizing: 'border-box',
-                      background: 'rgba(255, 255, 255, 0.9)',
+                      background: '#ffffff',
                       transition: 'all 0.2s ease',
                       outline: 'none'
                     }}
-                    placeholder="Enter event description"
+                    placeholder="Meeting description"
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
-                      Start Date & Time *
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem', 
+                      fontWeight: '500', 
+                      color: '#374151',
+                      fontSize: '0.875rem'
+                    }}>
+                      Date *
                     </label>
                     <input
-                      type="datetime-local"
-                      step="900"
-                      value={selectedEvent.start_datetime.slice(0, 16)}
-                      onChange={(e) => setSelectedEvent({ ...selectedEvent, start_datetime: e.target.value + ':00.000Z' })}
+                      type="date"
+                      value={selectedEvent.start_datetime.slice(0, 10)}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        const startTime = selectedEvent.start_datetime.slice(11, 16);
+                        const endTime = selectedEvent.end_datetime.slice(11, 16);
+                        setSelectedEvent({ 
+                          ...selectedEvent, 
+                          start_datetime: `${date}T${startTime}:00.000Z`,
+                          end_datetime: `${date}T${endTime}:00.000Z`
+                        });
+                      }}
                       style={{
                         width: '100%',
                         padding: '0.875rem 1rem',
