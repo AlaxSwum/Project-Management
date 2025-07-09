@@ -317,19 +317,26 @@ export default function PersonalCalendarPage() {
     }
   };
 
-  const formatHourSlot = (hour: number) => {
+  const formatHourSlot = (timeSlot: { hour: number, minute: number } | number) => {
+    // Handle both old format (number) and new format (object)
+    const hour = typeof timeSlot === 'number' ? timeSlot : timeSlot.hour;
+    const minute = typeof timeSlot === 'number' ? 0 : timeSlot.minute;
+    
     const date = new Date();
-    date.setHours(hour, 0, 0, 0);
+    date.setHours(hour, minute, 0, 0);
+    
     if (settings.time_format === '12h') {
       return date.toLocaleTimeString('en-US', { 
         hour: 'numeric',
+        minute: '2-digit',
         hour12: true 
-      }).replace(':00', ''); // Remove :00 for cleaner display
+      });
     } else {
       return date.toLocaleTimeString('en-US', { 
         hour: '2-digit',
+        minute: '2-digit',
         hour12: false 
-      }).replace(':00', ''); // Remove :00 for cleaner display
+      });
     }
   };
 
@@ -590,7 +597,10 @@ export default function PersonalCalendarPage() {
   const getTimeSlots = () => {
     const slots = [];
     for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
-      slots.push(hour);
+      // Add 15-minute intervals: 0, 15, 30, 45
+      for (let minute = 0; minute < 60; minute += 15) {
+        slots.push({ hour, minute });
+      }
     }
     return slots;
   };
@@ -1829,43 +1839,67 @@ export default function PersonalCalendarPage() {
                 </div>
               </div>
 
+              <div className="form-group">
+                <label className="form-label">Date *</label>
+                <input
+                  type="date"
+                  required
+                  className="form-input"
+                  value={newEvent.start_datetime.split('T')[0]}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const startTime = newEvent.start_datetime.split('T')[1] || '09:00';
+                    const endTime = newEvent.end_datetime.split('T')[1] || '10:00';
+                    setNewEvent({ 
+                      ...newEvent, 
+                      start_datetime: `${date}T${startTime}`,
+                      end_datetime: `${date}T${endTime}`
+                    });
+                  }}
+                />
+              </div>
+
               <div className="form-grid-3">
                 <div className="form-group">
-                  <label className="form-label">Date *</label>
+                  <label className="form-label">Start Time *</label>
                   <input
-                    type="date"
+                    type="time"
                     required
+                    step="900"
                     className="form-input"
-                    value={newEvent.start_datetime.split('T')[0]}
+                    value={newEvent.start_datetime.split('T')[1] || ''}
                     onChange={(e) => {
-                      const date = e.target.value;
-                      const startTime = newEvent.start_datetime.split('T')[1] || '09:00';
-                      const endTime = newEvent.end_datetime.split('T')[1] || '10:00';
+                      const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
+                      const startTime = e.target.value;
+                      const startDateTime = `${date}T${startTime}`;
+                      
+                      // Keep the same duration when changing start time
+                      const currentDuration = newEvent.end_datetime ? 
+                        Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60;
+                      const endDateTime = new Date(new Date(startDateTime).getTime() + currentDuration * 60 * 1000).toISOString().slice(0, 16);
+                      
                       setNewEvent({ 
                         ...newEvent, 
-                        start_datetime: `${date}T${startTime}`,
-                        end_datetime: `${date}T${endTime}`
+                        start_datetime: startDateTime,
+                        end_datetime: endDateTime
                       });
                     }}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Time *</label>
+                  <label className="form-label">End Time *</label>
                   <input
                     type="time"
                     required
+                    step="900"
                     className="form-input"
-                    value={newEvent.start_datetime.split('T')[1] || ''}
+                    value={newEvent.end_datetime.split('T')[1] || ''}
                     onChange={(e) => {
                       const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
-                      const time = e.target.value;
-                      const startDateTime = `${date}T${time}`;
-                      const duration = newEvent.end_datetime ? 
-                        Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60;
-                      const endDateTime = new Date(new Date(startDateTime).getTime() + duration * 60 * 1000).toISOString().slice(0, 16);
+                      const endTime = e.target.value;
+                      const endDateTime = `${date}T${endTime}`;
                       setNewEvent({ 
                         ...newEvent, 
-                        start_datetime: startDateTime,
                         end_datetime: endDateTime
                       });
                     }}
