@@ -603,12 +603,13 @@ export default function PersonalCalendarPage() {
       const slotHeight = 40; // pixels per hour
       const headerHeight = 60;
       
-      // Calculate top position (from start of day)
-      const topPosition = headerHeight + (startHour * slotHeight) + (startMinutes * slotHeight / 60);
+      // FIXED: Calculate top position relative to visible start hour, not absolute 0
+      const relativeStartHour = startHour - settings.start_hour;
+      const topPosition = headerHeight + (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
       
-      // Calculate height based on duration
+      // Calculate height based on duration - REDUCED for better proportion
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-      const height = Math.max(20, (durationInMinutes * slotHeight / 60)); // Minimum 20px height
+      const height = Math.max(24, (durationInMinutes * slotHeight / 60)); // Increased minimum to 24px
       
       return {
         ...event,
@@ -625,26 +626,27 @@ export default function PersonalCalendarPage() {
     const timeSlots = getTimeSlots();
     const dayEvents = getEventsForDay(currentDate);
 
-    // Calculate height to fit all 24 hours (24 * 40px = 960px + 60px header = 1020px)
+    // Calculate height based on visible time slots, not full 24 hours
     const slotHeight = 40;
     const headerHeight = 60;
     const totalHeight = timeSlots.length * slotHeight + headerHeight;
 
     return (
-      <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'visible' }}>
+      <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'auto', minHeight: '500px' }}>
         {/* Time column */}
-        <div style={{ width: '80px', borderRight: '1px solid #e8e8e8' }}>
-          <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e8e8e8' }}></div>
+        <div style={{ width: '80px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
+          <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7' }}></div>
           {timeSlots.map(hour => (
             <div key={hour} style={{
               height: `${slotHeight}px`,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid #f0f1f2',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '4px',
+              paddingTop: '6px',
               fontSize: '0.75rem',
-              color: '#666666'
+              color: '#64748b',
+              fontWeight: '500'
             }}>
               {formatHourSlot(hour)}
             </div>
@@ -652,23 +654,27 @@ export default function PersonalCalendarPage() {
         </div>
 
         {/* Day column */}
-        <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ flex: 1, position: 'relative', background: '#ffffff' }}>
           {/* Header */}
           <div style={{
             height: `${headerHeight}px`,
-            borderBottom: '1px solid #e8e8e8',
+            borderBottom: '1px solid #e0e4e7',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#fafafa',
-            fontWeight: '500'
+            background: 'linear-gradient(135deg, #5884FD, #6c91ff)',
+            color: '#ffffff',
+            fontWeight: '600',
+            fontSize: '1rem',
+            boxShadow: '0 2px 4px rgba(88, 132, 253, 0.1)'
           }}>
             {formatDate(currentDate)}
           </div>
 
           {/* Time slots */}
-          {timeSlots.map(hour => {
+          {timeSlots.map((hour, index) => {
             const isInDragRange = isSlotInDragRange(currentDate, hour);
+            const isWorkingHour = hour >= 9 && hour <= 17;
             
             return (
               <div 
@@ -687,16 +693,16 @@ export default function PersonalCalendarPage() {
                 }}
                 onMouseLeave={(e) => {
                   if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                    e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
                   }
                 }}
                 style={{
                   height: `${slotHeight}px`,
-                  borderBottom: '1px solid #f0f0f0',
+                  borderBottom: hour % 2 === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
                   position: 'relative',
                   background: isInDragRange 
-                    ? 'rgba(88, 132, 253, 0.2)' 
-                    : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                    ? 'rgba(88, 132, 253, 0.15)' 
+                    : isWorkingHour ? '#fafbfc' : '#ffffff',
                   cursor: isDragging ? 'grabbing' : 'pointer',
                   transition: 'background-color 0.2s ease',
                   userSelect: 'none'
@@ -717,76 +723,95 @@ export default function PersonalCalendarPage() {
               }}
               style={{
                 position: 'absolute',
-                left: `${index * 5 + 12}px`,
-                right: '12px',
+                left: `${index * 6 + 16}px`,
+                right: '16px',
                 top: `${event.topPosition}px`,
                 height: `${event.height}px`,
                 background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                 color: '#ffffff',
-                borderRadius: '12px',
-                padding: '8px 12px',
-                fontSize: '0.8rem',
+                borderRadius: '10px',
+                padding: event.height > 40 ? '10px 14px' : '6px 10px',
+                fontSize: event.height > 50 ? '0.85rem' : '0.8rem',
                 cursor: 'pointer',
                 overflow: 'hidden',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
-                zIndex: 10,
+                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)',
+                zIndex: 10 + index,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                transition: 'all 0.2s ease'
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(10px)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15)';
+                e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.18), 0 4px 8px rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
               }}
             >
               <div style={{ 
-                fontWeight: '600', 
-                marginBottom: event.height > 35 ? '4px' : '2px',
-                lineHeight: '1.2',
-                fontSize: event.height > 50 ? '0.85rem' : '0.8rem'
+                fontWeight: '700', 
+                marginBottom: event.height > 35 ? '6px' : '3px',
+                lineHeight: '1.3',
+                fontSize: event.height > 50 ? '0.9rem' : '0.85rem',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
               }}>
                 {event.title}
               </div>
-              {event.height > 35 && (
+              {event.height > 40 && (
                 <div style={{ 
-                  opacity: 0.9, 
-                  fontSize: '0.7rem',
+                  opacity: 0.95, 
+                  fontSize: '0.72rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  marginBottom: '2px'
+                  gap: '6px',
+                  marginBottom: '3px',
+                  fontWeight: '500'
                 }}>
+                  <span style={{ 
+                    display: 'inline-block',
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.7)'
+                  }}></span>
                   {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
                 </div>
               )}
-              {event.height > 55 && event.location && (
+              {event.height > 65 && event.location && (
                 <div style={{ 
-                  opacity: 0.85, 
-                  fontSize: '0.65rem', 
+                  opacity: 0.9, 
+                  fontSize: '0.68rem', 
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  marginTop: '2px'
+                  gap: '6px',
+                  marginTop: '3px',
+                  fontWeight: '500'
                 }}>
+                  <span style={{ 
+                    display: 'inline-block',
+                    width: '3px',
+                    height: '3px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.6)'
+                  }}></span>
                   {event.location}
                 </div>
               )}
-              {event.height > 70 && event.description && (
+              {event.height > 80 && event.description && (
                 <div style={{ 
-                  opacity: 0.8, 
-                  fontSize: '0.65rem',
-                  marginTop: '4px',
-                  lineHeight: '1.3',
+                  opacity: 0.85, 
+                  fontSize: '0.68rem',
+                  marginTop: '6px',
+                  lineHeight: '1.4',
                   overflow: 'hidden',
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical'
+                  WebkitBoxOrient: 'vertical',
+                  fontWeight: '400'
                 }}>
                   {event.description}
                 </div>
@@ -810,26 +835,27 @@ export default function PersonalCalendarPage() {
 
     const timeSlots = getTimeSlots();
     
-    // Calculate height to fit all 24 hours (24 * 40px = 960px + 60px header = 1020px)
+    // Calculate height based on visible time slots, not full 24 hours
     const slotHeight = 40;
     const headerHeight = 60;
     const totalHeight = timeSlots.length * slotHeight + headerHeight;
 
     return (
-      <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'visible' }}>
+      <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'auto', minHeight: '500px' }}>
         {/* Time column */}
-        <div style={{ width: '80px', borderRight: '1px solid #e8e8e8' }}>
-          <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e8e8e8' }}></div>
+        <div style={{ width: '80px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
+          <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7' }}></div>
           {timeSlots.map(hour => (
             <div key={hour} style={{
               height: `${slotHeight}px`,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid #f0f1f2',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '4px',
+              paddingTop: '6px',
               fontSize: '0.75rem',
-              color: '#666666'
+              color: '#64748b',
+              fontWeight: '500'
             }}>
               {formatHourSlot(hour)}
             </div>
@@ -839,30 +865,36 @@ export default function PersonalCalendarPage() {
         {/* Week columns */}
         <div style={{ flex: 1, display: 'flex' }}>
           {weekDays.map(day => (
-            <div key={day.toISOString()} style={{ flex: 1, borderRight: '1px solid #e8e8e8' }}>
+            <div key={day.toISOString()} style={{ flex: 1, borderRight: '1px solid #e0e4e7' }}>
               {/* Day header */}
               <div style={{
                 height: `${headerHeight}px`,
-                borderBottom: '1px solid #e8e8e8',
+                borderBottom: '1px solid #e0e4e7',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: day.toDateString() === new Date().toDateString() ? '#5884FD' : '#fafafa',
-                color: day.toDateString() === new Date().toDateString() ? '#ffffff' : '#1a1a1a'
+                background: day.toDateString() === new Date().toDateString() 
+                  ? 'linear-gradient(135deg, #5884FD, #6c91ff)' 
+                  : 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+                color: day.toDateString() === new Date().toDateString() ? '#ffffff' : '#475569',
+                boxShadow: day.toDateString() === new Date().toDateString() 
+                  ? '0 2px 4px rgba(88, 132, 253, 0.1)' 
+                  : '0 1px 2px rgba(0, 0, 0, 0.05)'
               }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: '500' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>
                   {day.toLocaleDateString('en-US', { weekday: 'short' })}
                 </div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '600' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>
                   {day.getDate()}
                 </div>
               </div>
 
               {/* Time slots for this day */}
-              <div style={{ position: 'relative' }}>
-                {timeSlots.map(hour => {
+              <div style={{ position: 'relative', background: '#ffffff' }}>
+                {timeSlots.map((hour, index) => {
                   const isInDragRange = isSlotInDragRange(day, hour);
+                  const isWorkingHour = hour >= 9 && hour <= 17;
                   
                   return (
                     <div 
@@ -881,15 +913,15 @@ export default function PersonalCalendarPage() {
                       }}
                       onMouseLeave={(e) => {
                         if (!isDragging) {
-                          e.currentTarget.style.backgroundColor = hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff';
+                          e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
                         }
                       }}
                       style={{
                         height: `${slotHeight}px`,
-                        borderBottom: '1px solid #f0f0f0',
+                        borderBottom: hour % 2 === 0 ? '1px solid #e0e4e7' : '1px solid #f0f1f2',
                         background: isInDragRange 
-                          ? 'rgba(88, 132, 253, 0.2)' 
-                          : hour >= 9 && hour <= 17 ? '#fafafa' : '#ffffff',
+                          ? 'rgba(88, 132, 253, 0.15)' 
+                          : isWorkingHour ? '#fafbfc' : '#ffffff',
                         cursor: isDragging ? 'grabbing' : 'pointer',
                         transition: 'background-color 0.2s ease',
                         userSelect: 'none'
@@ -898,7 +930,7 @@ export default function PersonalCalendarPage() {
                   );
                 })}
 
-                {/* Week Day Events - positioned absolutely like day view */}
+                {/* Week Day Events - positioned absolutely with corrected positioning */}
                 {getEventsForDay(day).map((event, index) => (
                   <div
                     key={event.id}
@@ -910,49 +942,63 @@ export default function PersonalCalendarPage() {
                     }}
                     style={{
                       position: 'absolute',
-                      left: `${index * 3 + 4}px`,
-                      right: '4px',
+                      left: `${index * 4 + 6}px`,
+                      right: '6px',
                       top: `${event.topPosition}px`,
-                      height: `${Math.max(20, event.height)}px`,
+                      height: `${Math.max(24, event.height)}px`,
                       background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                       color: '#ffffff',
                       borderRadius: '8px',
-                      padding: '2px 6px',
+                      padding: event.height > 32 ? '4px 8px' : '2px 6px',
                       fontSize: '0.7rem',
                       cursor: 'pointer',
                       overflow: 'hidden',
-                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-                      zIndex: 10,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)',
+                      zIndex: 10 + index,
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
                       transition: 'all 0.2s ease',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      backdropFilter: 'blur(8px)'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)';
                     }}
                   >
                     <div style={{ 
-                      lineHeight: '1.2',
+                      lineHeight: '1.3',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      fontSize: event.height > 32 ? '0.75rem' : '0.7rem',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
                     }}>
                       {event.title}
                     </div>
-                    {event.height > 30 && (
+                    {event.height > 35 && (
                       <div style={{ 
                         fontSize: '0.6rem', 
                         opacity: 0.9,
-                        marginTop: '1px'
+                        marginTop: '2px',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px'
                       }}>
+                        <span style={{ 
+                          display: 'inline-block',
+                          width: '3px',
+                          height: '3px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.7)'
+                        }}></span>
                         {formatTime(event.start_datetime)}
                       </div>
                     )}
