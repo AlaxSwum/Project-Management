@@ -373,6 +373,55 @@ export default function PasswordVaultPage() {
     setShowPasswordModal(true);
   };
 
+  const updateMemberPermission = async (memberId: number, newPermission: 'owner' | 'editor' | 'viewer') => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const permissionMap = {
+        owner: { can_view: true, can_edit: true, can_delete: true, can_share: true },
+        editor: { can_view: true, can_edit: true, can_delete: false, can_share: false },
+        viewer: { can_view: true, can_edit: false, can_delete: false, can_share: false }
+      };
+      
+      const { error } = await supabase
+        .from('password_vault_access')
+        .update({
+          permission_level: newPermission,
+          ...permissionMap[newPermission]
+        })
+        .eq('id', memberId);
+      
+      if (error) throw error;
+      
+      // Refresh data
+      await fetchFolders();
+      setError('');
+    } catch (err: any) {
+      setError('Failed to update member permission: ' + err.message);
+    }
+  };
+
+  const removeMember = async (memberId: number) => {
+    if (!confirm('Are you sure you want to remove this member?')) return;
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { error } = await supabase
+        .from('password_vault_access')
+        .delete()
+        .eq('id', memberId);
+      
+      if (error) throw error;
+      
+      // Refresh data
+      await fetchFolders();
+      setError('');
+    } catch (err: any) {
+      setError('Failed to remove member: ' + err.message);
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -626,6 +675,24 @@ export default function PasswordVaultPage() {
                   {folder.is_shared && (
                     <ShareIcon style={{ width: '12px', height: '12px', opacity: 0.7 }} />
                   )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFolderForMembers(folder);
+                      setShowMembersModal(true);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '2px',
+                      cursor: 'pointer',
+                      color: selectedFolder === folder.id ? 'rgba(255,255,255,0.7)' : '#9ca3af',
+                      transition: 'color 0.2s ease'
+                    }}
+                    title="Manage members"
+                  >
+                    <UserPlusIcon style={{ width: '12px', height: '12px' }} />
+                  </button>
                   <span style={{ 
                     fontSize: '0.8rem', 
                     opacity: 0.8,
@@ -1177,6 +1244,214 @@ export default function PasswordVaultPage() {
                 >
                   Create Folder
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Members Management Modal */}
+      {showMembersModal && selectedFolderForMembers && (
+        <div className="modal-overlay" onClick={() => setShowMembersModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ 
+              padding: '1.5rem 2rem', 
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600' }}>
+                Manage Folder Members
+              </h3>
+              <button
+                onClick={() => setShowMembersModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ padding: '2rem' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600' }}>
+                  {selectedFolderForMembers.name}
+                </h4>
+                <p style={{ margin: '0', fontSize: '0.9rem', color: '#666666' }}>
+                  Manage who can access this folder and their permissions
+                </p>
+              </div>
+
+              {/* Current Members */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
+                  Current Members ({selectedFolderForMembers.members?.length || 0})
+                </h5>
+                
+                {selectedFolderForMembers.members && selectedFolderForMembers.members.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {selectedFolderForMembers.members.map((member, index) => (
+                      <div key={member.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem',
+                        background: '#f8fafc',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #5884FD, #6c91ff)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#ffffff',
+                            fontSize: '0.8rem',
+                            fontWeight: '600'
+                          }}>
+                            {(member.user_name || member.user_email)?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#1a1a1a' }}>
+                              {member.user_name || member.user_email?.split('@')[0] || 'Unknown User'}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#666666' }}>
+                              {member.user_email}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <select
+                            value={member.permission_level}
+                            onChange={(e) => updateMemberPermission(member.id, e.target.value as 'owner' | 'editor' | 'viewer')}
+                            style={{
+                              padding: '0.5rem',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '6px',
+                              fontSize: '0.8rem',
+                              background: '#ffffff'
+                            }}
+                            disabled={member.permission_level === 'owner'}
+                          >
+                            <option value="viewer">Viewer</option>
+                            <option value="editor">Editor</option>
+                            <option value="owner">Owner</option>
+                          </select>
+                          
+                          {member.permission_level !== 'owner' && (
+                            <button
+                              onClick={() => removeMember(member.id)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: '0.5rem',
+                                cursor: 'pointer',
+                                color: '#F87239',
+                                borderRadius: '4px'
+                              }}
+                              title="Remove member"
+                            >
+                              <TrashIcon style={{ width: '14px', height: '14px' }} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '2rem',
+                    color: '#666666',
+                    background: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <UserIcon style={{ width: '32px', height: '32px', margin: '0 auto 0.5rem', opacity: 0.5 }} />
+                    <p style={{ fontSize: '0.9rem', margin: '0' }}>
+                      No members added yet
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Add New Member */}
+              <div>
+                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
+                  Add New Member
+                </h5>
+                
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'end' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="user@example.com"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ minWidth: '120px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                      Permission
+                    </label>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        background: '#ffffff',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="viewer">Viewer</option>
+                      <option value="editor">Editor</option>
+                    </select>
+                  </div>
+                  
+                  <button
+                    style={{
+                      padding: '0.75rem 1rem',
+                      background: '#5884FD',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      minWidth: '80px'
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ marginTop: '2rem', padding: '1rem', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+                <h6 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', fontWeight: '600', color: '#1e40af' }}>
+                  Permission Levels:
+                </h6>
+                <ul style={{ margin: '0', paddingLeft: '1rem', fontSize: '0.8rem', color: '#374151' }}>
+                  <li><strong>Viewer:</strong> Can view passwords in this folder</li>
+                  <li><strong>Editor:</strong> Can view, create, and edit passwords</li>
+                  <li><strong>Owner:</strong> Full access including member management</li>
+                </ul>
               </div>
             </div>
           </div>
