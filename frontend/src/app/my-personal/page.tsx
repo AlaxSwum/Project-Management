@@ -16,7 +16,8 @@ import {
   PencilIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
+  import Sidebar from '@/components/Sidebar';
+  import { projectService } from '@/lib/api-compatibility';
 
 interface CalendarEvent {
   id: number;
@@ -173,25 +174,69 @@ export default function PersonalCalendarPage() {
 
   const fetchProjects = async () => {
     try {
-      console.log('Fetching projects for personal calendar...');
-      const supabase = (await import('@/lib/supabase')).supabase;
+      console.log('🔍 Fetching projects for personal calendar...');
+      console.log('🔍 User:', user);
       
-      const { data, error } = await supabase
-        .from('projects_project')
-        .select('id, name')
-        .eq('status', 'active')
-        .order('name', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching projects:', error);
-        throw error;
+      try {
+        // Use the same service as timetable for consistency
+        const projectsData = await projectService.getProjects();
+        
+        console.log('✅ Projects fetched successfully:', projectsData);
+        console.log('📊 Number of projects:', projectsData?.length || 0);
+        
+        if (projectsData && projectsData.length > 0) {
+          console.log('📋 Project names:', projectsData.map(p => p.name));
+          setProjects(projectsData);
+          return;
+        } else {
+          console.warn('⚠️ No projects returned from projectService.getProjects()');
+        }
+      } catch (serviceError) {
+        console.error('❌ projectService.getProjects() failed:', serviceError);
+        console.log('🔄 Trying direct database query as fallback...');
+        
+        // Fallback to direct database query
+        const supabase = (await import('@/lib/supabase')).supabase;
+        
+        const { data, error } = await supabase
+          .from('projects_project')
+          .select('id, name, status')
+          .order('name', { ascending: true });
+        
+        if (error) {
+          console.error('❌ Direct database query also failed:', error);
+          throw error;
+        }
+        
+        console.log('✅ Direct database query successful:', data);
+        console.log('📊 All projects found:', data?.length || 0);
+        
+        // Try different status filters
+        const activeProjects = data?.filter(p => p.status === 'active') || [];
+        const allProjects = data || [];
+        
+        console.log('📈 Active projects:', activeProjects.length);
+        console.log('📈 All projects:', allProjects.length);
+        
+        if (activeProjects.length > 0) {
+          setProjects(activeProjects);
+        } else if (allProjects.length > 0) {
+          console.log('🔧 No active projects, using all projects');
+          setProjects(allProjects);
+        } else {
+          console.warn('⚠️ No projects found at all');
+          setProjects([]);
+        }
+        return;
       }
       
-      console.log('Projects fetched:', data);
-      setProjects(data || []);
+      // If we get here, projectService returned empty array
+      setProjects([]);
+      
     } catch (err: any) {
-      console.error('Error fetching projects:', err);
+      console.error('❌ All project fetching methods failed:', err);
       setError('Failed to load projects: ' + err.message);
+      setProjects([]);
     }
   };
 
