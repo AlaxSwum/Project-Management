@@ -523,19 +523,13 @@ export default function PersonalCalendarPage() {
 
       const supabase = (await import('@/lib/supabase')).supabase;
       
-      // Convert datetime-local format to date and time (keeping local timezone)
+      // Convert datetime-local format to date and time
       const startDate = new Date(newEvent.start_datetime);
       const endDate = new Date(newEvent.end_datetime);
       
-      // Extract date and time components in LOCAL timezone (not UTC)
-      const year = startDate.getFullYear();
-      const month = String(startDate.getMonth() + 1).padStart(2, '0');
-      const day = String(startDate.getDate()).padStart(2, '0');
-      const hours = String(startDate.getHours()).padStart(2, '0');
-      const minutes = String(startDate.getMinutes()).padStart(2, '0');
-      
-      const dateStr = `${year}-${month}-${day}`; // YYYY-MM-DD in local timezone
-      const timeStr = `${hours}:${minutes}`; // HH:MM in local timezone
+      // FIXED: Use local date/time to avoid timezone conversion issues
+      const dateStr = newEvent.start_datetime.split('T')[0]; // Get date directly from input (YYYY-MM-DD)
+      const timeStr = newEvent.start_datetime.split('T')[1]; // Get time directly from input (HH:MM)
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
       
       // Create a PERSONAL event (associated with project but marked as personal)
