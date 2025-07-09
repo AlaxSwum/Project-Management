@@ -154,7 +154,7 @@ export default function PasswordVaultPage() {
     
     // Count passwords per folder and try to get access data separately
     const foldersWithCounts = await Promise.all(
-      data.map(async (folder) => {
+      (data || []).map(async (folder) => {
         const { count } = await supabase
           .from('password_vault')
           .select('*', { count: 'exact' })
@@ -162,7 +162,7 @@ export default function PasswordVaultPage() {
           .eq('is_active', true);
         
         // Try to get access data, but don't fail if table doesn't exist
-        let members = [];
+        let members: FolderMember[] = [];
         try {
           const { data: accessData } = await supabase
             .from('password_vault_folder_access')
