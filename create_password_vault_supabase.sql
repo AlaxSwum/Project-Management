@@ -231,6 +231,7 @@ CREATE TRIGGER log_password_access_trigger
 CREATE OR REPLACE VIEW password_vault_with_access AS
 SELECT 
     pv.*,
+    pva.user_id,
     pva.permission_level,
     pva.can_view,
     pva.can_edit,
