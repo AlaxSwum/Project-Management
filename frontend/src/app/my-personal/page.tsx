@@ -68,6 +68,7 @@ export default function PersonalCalendarPage() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
   
   // Drag-to-create state
   const [isDragging, setIsDragging] = useState(false);
@@ -419,7 +420,8 @@ export default function PersonalCalendarPage() {
           event_type: newEvent.event_type,
           all_day: newEvent.all_day,
           project_id: null, // Personal events don't need a project
-          attendee_ids: [parseInt(user?.id?.toString() || '0')] // Only use attendee_ids, not attendees
+          attendee_ids: [parseInt(user?.id?.toString() || '0')], // Only use attendee_ids, not attendees
+          created_by_id: parseInt(user?.id?.toString() || '0') // Add created_by_id field
         }])
         .select()
         .single();
@@ -614,6 +616,8 @@ export default function PersonalCalendarPage() {
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedEvent(event);
+                setShowEventModal(true);
+                setIsEditingEvent(false);
               }}
               style={{
                 position: 'absolute',
@@ -1264,15 +1268,27 @@ export default function PersonalCalendarPage() {
                   </label>
                   <input
                     type="datetime-local"
+                    step="900" // 15-minute intervals (900 seconds)
                     value={newEvent.start_datetime}
                     onChange={(e) => setNewEvent({ ...newEvent, start_datetime: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 1rem',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '12px',
                       fontSize: '1rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
                     }}
                   />
                 </div>
@@ -1283,15 +1299,27 @@ export default function PersonalCalendarPage() {
                   </label>
                   <input
                     type="datetime-local"
+                    step="900" // 15-minute intervals (900 seconds)
                     value={newEvent.end_datetime}
                     onChange={(e) => setNewEvent({ ...newEvent, end_datetime: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 1rem',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '12px',
                       fontSize: '1rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5884FD';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
                     }}
                   />
                 </div>
@@ -1433,6 +1461,293 @@ export default function PersonalCalendarPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event Detail Modal */}
+      {showEventModal && selectedEvent && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          paddingTop: '5vh',
+          zIndex: 1000,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#F5F5ED',
+            borderRadius: '20px',
+            padding: '2.5rem',
+            width: '90%',
+            maxWidth: '550px',
+            maxHeight: '85vh',
+            overflow: 'auto',
+            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+            animation: 'slideIn 0.3s ease-out',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem'
+            }}>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '300', margin: 0, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
+                {isEditingEvent ? 'Edit Event' : 'Event Details'}
+              </h2>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!isEditingEvent && (
+                  <button
+                    onClick={() => setIsEditingEvent(true)}
+                    style={{
+                      background: 'rgba(88, 132, 253, 0.1)',
+                      border: '1px solid #5884FD',
+                      borderRadius: '12px',
+                      padding: '0.5rem 1rem',
+                      color: '#5884FD',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Edit
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowEventModal(false);
+                    setSelectedEvent(null);
+                    setIsEditingEvent(false);
+                  }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                    color: '#666666',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {!isEditingEvent ? (
+              // View Mode
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  border: '1px solid rgba(0, 0, 0, 0.1)'
+                }}>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: '500', margin: '0 0 1rem 0', color: '#1a1a1a' }}>
+                    {selectedEvent.title}
+                  </h3>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Start Time</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>{formatTime(selectedEvent.start_datetime)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>End Time</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>{formatTime(selectedEvent.end_datetime)}</div>
+                    </div>
+                  </div>
+
+                  {selectedEvent.description && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Description</div>
+                      <div style={{ fontSize: '0.95rem', lineHeight: '1.5' }}>{selectedEvent.description}</div>
+                    </div>
+                  )}
+
+                  {selectedEvent.location && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Location</div>
+                      <div style={{ fontSize: '0.95rem' }}>📍 {selectedEvent.location}</div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Type</div>
+                      <div style={{ 
+                        fontSize: '0.85rem', 
+                        padding: '0.25rem 0.5rem', 
+                        background: selectedEvent.color,
+                        color: '#ffffff',
+                        borderRadius: '6px',
+                        display: 'inline-block',
+                        textTransform: 'capitalize'
+                      }}>
+                        {selectedEvent.event_type}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: '#666666', marginBottom: '0.25rem' }}>Duration</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>
+                        {Math.round((new Date(selectedEvent.end_datetime).getTime() - new Date(selectedEvent.start_datetime).getTime()) / (1000 * 60))} minutes
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Edit Mode - Similar to create form but with existing data
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    Event Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedEvent.title}
+                    onChange={(e) => setSelectedEvent({ ...selectedEvent, title: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }}
+                    placeholder="Enter event title"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    Description
+                  </label>
+                  <textarea
+                    value={selectedEvent.description}
+                    onChange={(e) => setSelectedEvent({ ...selectedEvent, description: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      minHeight: '80px',
+                      resize: 'vertical',
+                      boxSizing: 'border-box',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }}
+                    placeholder="Enter event description"
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                      Start Date & Time *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      step="900"
+                      value={selectedEvent.start_datetime.slice(0, 16)}
+                      onChange={(e) => setSelectedEvent({ ...selectedEvent, start_datetime: e.target.value + ':00.000Z' })}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                      End Date & Time *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      step="900"
+                      value={selectedEvent.end_datetime.slice(0, 16)}
+                      onChange={(e) => setSelectedEvent({ ...selectedEvent, end_datetime: e.target.value + ':00.000Z' })}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '12px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    onClick={() => setIsEditingEvent(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      color: '#666666',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Save changes logic here
+                      setIsEditingEvent(false);
+                      setShowEventModal(false);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: '#5884FD',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
