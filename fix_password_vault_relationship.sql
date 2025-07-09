@@ -45,12 +45,37 @@ SET folder_id = (
 )
 WHERE folder_id IS NULL;
 
+-- Step 5b: Remove the old folder_name column since we now use folder_id
+ALTER TABLE password_vault DROP COLUMN IF EXISTS folder_name;
+
 -- Step 6: Drop and recreate the view to include folder information
 DROP VIEW IF EXISTS password_vault_with_access;
 
 CREATE VIEW password_vault_with_access AS
 SELECT 
-    pv.*,
+    pv.id,
+    pv.account_name,
+    pv.email,
+    pv.username,
+    pv.password_encrypted,
+    pv.phone_number,
+    pv.website_url,
+    pv.notes,
+    pv.category,
+    pv.tags,
+    pv.two_factor_auth,
+    pv.security_questions,
+    pv.created_by_id,
+    pv.created_at,
+    pv.updated_at,
+    pv.last_accessed,
+    pv.password_strength,
+    pv.password_created_date,
+    pv.password_last_changed,
+    pv.is_compromised,
+    pv.is_active,
+    pv.is_favorite,
+    pv.folder_id,
     pva.user_id,
     pva.permission_level,
     pva.can_view,
@@ -171,7 +196,29 @@ DROP VIEW IF EXISTS password_vault_full_access;
 
 CREATE VIEW password_vault_full_access AS
 SELECT 
-    pv.*,
+    pv.id,
+    pv.account_name,
+    pv.email,
+    pv.username,
+    pv.password_encrypted,
+    pv.phone_number,
+    pv.website_url,
+    pv.notes,
+    pv.category,
+    pv.tags,
+    pv.two_factor_auth,
+    pv.security_questions,
+    pv.created_by_id,
+    pv.created_at,
+    pv.updated_at,
+    pv.last_accessed,
+    pv.password_strength,
+    pv.password_created_date,
+    pv.password_last_changed,
+    pv.is_compromised,
+    pv.is_active,
+    pv.is_favorite,
+    pv.folder_id,
     pva.user_id,
     pva.permission_level as vault_permission_level,
     pva.can_view as vault_can_view,
