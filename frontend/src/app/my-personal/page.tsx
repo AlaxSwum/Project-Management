@@ -735,19 +735,19 @@ export default function PersonalCalendarPage() {
         {/* Time column */}
         <div style={{ width: '80px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
           <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7' }}></div>
-          {timeSlots.map(hour => (
-            <div key={hour} style={{
-              height: `${slotHeight}px`,
-              borderBottom: '1px solid #f0f1f2',
+          {timeSlots.map((timeSlot, index) => (
+            <div key={`${timeSlot.hour}-${timeSlot.minute}`} style={{
+              height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
+              borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f8f9fa',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '2px',
-              fontSize: '0.75rem',
-              color: '#64748b',
-              fontWeight: '500'
+              paddingTop: '1px',
+              fontSize: timeSlot.minute === 0 ? '0.75rem' : '0.65rem',
+              color: timeSlot.minute === 0 ? '#64748b' : '#94a3b8',
+              fontWeight: timeSlot.minute === 0 ? '500' : '400'
             }}>
-              {formatHourSlot(hour)}
+              {timeSlot.minute === 0 ? formatHourSlot(timeSlot) : timeSlot.minute}
             </div>
           ))}
         </div>
@@ -947,19 +947,19 @@ export default function PersonalCalendarPage() {
         {/* Time column */}
         <div style={{ width: '80px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
           <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7' }}></div>
-          {timeSlots.map(hour => (
-            <div key={hour} style={{
-              height: `${slotHeight}px`,
-              borderBottom: '1px solid #f0f1f2',
+          {timeSlots.map((timeSlot, index) => (
+            <div key={`${timeSlot.hour}-${timeSlot.minute}`} style={{
+              height: `${slotHeight/4}px`, // Quarter height for 15-minute intervals
+              borderBottom: timeSlot.minute === 0 ? '1px solid #e0e4e7' : '1px solid #f8f9fa',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '2px',
-              fontSize: '0.75rem',
-              color: '#64748b',
-              fontWeight: '500'
+              paddingTop: '1px',
+              fontSize: timeSlot.minute === 0 ? '0.75rem' : '0.65rem',
+              color: timeSlot.minute === 0 ? '#64748b' : '#94a3b8',
+              fontWeight: timeSlot.minute === 0 ? '500' : '400'
             }}>
-              {formatHourSlot(hour)}
+              {timeSlot.minute === 0 ? formatHourSlot(timeSlot) : timeSlot.minute}
             </div>
           ))}
         </div>
