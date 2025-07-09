@@ -144,26 +144,15 @@ export default function PasswordVaultPage() {
   const fetchFolders = async () => {
     const supabase = (await import('@/lib/supabase')).supabase;
     
-    const { data, error } = await supabase
+    // First try to get folders with access data, fallback to basic query if table doesn't exist
+    let { data, error } = await supabase
       .from('password_vault_folders')
-      .select(`
-        *,
-        password_vault_folder_access(
-          id,
-          user_id,
-          permission_level,
-          can_view,
-          can_edit,
-          can_delete,
-          can_manage_access,
-          can_create_passwords
-        )
-      `)
+      .select('*')
       .order('name');
     
     if (error) throw error;
     
-    // Count passwords per folder
+    // Count passwords per folder and try to get access data separately
     const foldersWithCounts = await Promise.all(
       data.map(async (folder) => {
         const { count } = await supabase
@@ -172,10 +161,33 @@ export default function PasswordVaultPage() {
           .eq('folder_id', folder.id)
           .eq('is_active', true);
         
+        // Try to get access data, but don't fail if table doesn't exist
+        let members = [];
+        try {
+          const { data: accessData } = await supabase
+            .from('password_vault_folder_access')
+            .select(`
+              id,
+              user_id,
+              permission_level,
+              can_view,
+              can_edit,
+              can_delete,
+              can_manage_access,
+              can_create_passwords
+            `)
+            .eq('folder_id', folder.id);
+          
+          members = accessData || [];
+        } catch (accessError) {
+          console.warn('password_vault_folder_access table not found, using empty members array');
+          members = [];
+        }
+        
         return {
           ...folder,
           password_count: count || 0,
-          members: folder.password_vault_folder_access || []
+          members: members
         };
       })
     );
