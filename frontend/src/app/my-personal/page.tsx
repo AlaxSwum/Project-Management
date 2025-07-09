@@ -88,6 +88,23 @@ export default function PersonalCalendarPage() {
     color: '#5884FD'
   });
 
+  // Location options for dropdown
+  const locationOptions = [
+    'Office',
+    'Home',
+    'Conference Room A',
+    'Conference Room B',
+    'Meeting Room 1',
+    'Meeting Room 2',
+    'Client Office',
+    'Remote/Online',
+    'Restaurant',
+    'Coffee Shop',
+    'Outdoor',
+    'Training Center',
+    'Other'
+  ];
+
   useEffect(() => {
     if (authLoading) return;
     
@@ -407,10 +424,10 @@ export default function PersonalCalendarPage() {
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
       
       // First, try to find or create a "Personal" project
-      let personalProjectId = 1; // Default fallback
+      let personalProjectId = null;
       
       // Check if there's a "Personal" project
-      const { data: personalProject, error: projectError } = await supabase
+      const { data: personalProject } = await supabase
         .from('projects_project')
         .select('id')
         .eq('name', 'Personal')
@@ -420,7 +437,7 @@ export default function PersonalCalendarPage() {
         personalProjectId = personalProject.id;
       } else {
         // Create a "Personal" project if it doesn't exist
-        const { data: newProject, error: createError } = await supabase
+        const { data: newProject } = await supabase
           .from('projects_project')
           .insert([{
             name: 'Personal',
@@ -432,9 +449,44 @@ export default function PersonalCalendarPage() {
           .select('id')
           .single();
         
-        if (newProject && !createError) {
+        if (newProject) {
           personalProjectId = newProject.id;
         }
+      }
+      
+      // If we still don't have a project ID, get the first available project or create one
+      if (!personalProjectId) {
+        const { data: firstProject } = await supabase
+          .from('projects_project')
+          .select('id')
+          .limit(1)
+          .single();
+        
+        if (firstProject) {
+          personalProjectId = firstProject.id;
+        } else {
+          // Last resort: create a default project
+          const { data: defaultProject } = await supabase
+            .from('projects_project')
+            .insert([{
+              name: 'Default Project',
+              description: 'Auto-created default project',
+              project_type: 'other',
+              status: 'active',
+              created_by: parseInt(user?.id?.toString() || '0')
+            }])
+            .select('id')
+            .single();
+          
+          if (defaultProject) {
+            personalProjectId = defaultProject.id;
+          }
+        }
+      }
+      
+      // Ensure we have a valid project_id
+      if (!personalProjectId) {
+        throw new Error('Unable to find or create a project for personal events');
       }
       
       // Create a meeting in the timetable
@@ -446,7 +498,7 @@ export default function PersonalCalendarPage() {
           date: dateStr,
           time: timeStr,
           duration: duration,
-          location: newEvent.location || 'Personal Calendar',
+          location: newEvent.location || null, // Use null instead of default text if no location selected
           color: newEvent.color,
           event_type: newEvent.event_type,
           all_day: newEvent.all_day,
@@ -1360,20 +1412,36 @@ export default function PersonalCalendarPage() {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
                   Location
                 </label>
-                <input
-                  type="text"
+                <select
                   value={newEvent.location}
                   onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
                   }}
-                  placeholder="Enter event location"
-                />
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#5884FD';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                  }}
+                >
+                  <option value="">Select a location (optional)</option>
+                  {locationOptions.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
