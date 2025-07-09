@@ -91,22 +91,19 @@ export default function PersonalCalendarPage() {
     project_id: 0
   });
 
-  // Location options for dropdown
+  // Location options for the dropdown
   const locationOptions = [
-    'Office',
-    'Home',
     'Conference Room A',
     'Conference Room B',
     'Meeting Room 1',
     'Meeting Room 2',
+    'Main Office',
     'Client Office',
-    'Remote/Online',
-    'Restaurant',
-    'Coffee Shop',
-    'Outdoor',
-    'Training Center',
+    'Online/Virtual',
     'Other'
   ];
+
+
 
   useEffect(() => {
     if (authLoading) return;
@@ -1738,6 +1735,89 @@ export default function PersonalCalendarPage() {
                     <option key={location} value={location}>{location}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Event Color</label>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(6, 1fr)', 
+                  gap: '0.5rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {[
+                    { name: 'Ocean Blue', value: '#5884FD' },
+                    { name: 'Emerald', value: '#10B981' },
+                    { name: 'Amber', value: '#F59E0B' },
+                    { name: 'Rose', value: '#F43F5E' },
+                    { name: 'Purple', value: '#8B5CF6' },
+                    { name: 'Pink', value: '#EC4899' },
+                    { name: 'Teal', value: '#14B8A6' },
+                    { name: 'Orange', value: '#F97316' },
+                    { name: 'Indigo', value: '#6366F1' },
+                    { name: 'Green', value: '#22C55E' },
+                    { name: 'Cyan', value: '#06B6D4' },
+                    { name: 'Gray', value: '#6B7280' }
+                  ].map((color) => (
+                    <div
+                      key={color.value}
+                      onClick={() => setNewEvent({ ...newEvent, color: color.value })}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        backgroundColor: color.value,
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        border: newEvent.color === color.value ? '3px solid #1a1a1a' : '2px solid #e5e7eb',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title={color.name}
+                    >
+                      {newEvent.color === color.value && (
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            backgroundColor: color.value,
+                            borderRadius: '50%'
+                          }} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ 
+                  fontSize: '0.75rem', 
+                  color: '#6B7280', 
+                  marginTop: '0.5rem',
+                  textAlign: 'center'
+                }}>
+                  Selected: {[
+                    { name: 'Ocean Blue', value: '#5884FD' },
+                    { name: 'Emerald', value: '#10B981' },
+                    { name: 'Amber', value: '#F59E0B' },
+                    { name: 'Rose', value: '#F43F5E' },
+                    { name: 'Purple', value: '#8B5CF6' },
+                    { name: 'Pink', value: '#EC4899' },
+                    { name: 'Teal', value: '#14B8A6' },
+                    { name: 'Orange', value: '#F97316' },
+                    { name: 'Indigo', value: '#6366F1' },
+                    { name: 'Green', value: '#22C55E' },
+                    { name: 'Cyan', value: '#06B6D4' },
+                    { name: 'Gray', value: '#6B7280' }
+                  ].find(c => c.value === newEvent.color)?.name || 'Ocean Blue'}
+                </div>
               </div>
 
               <div className="form-grid-3">
