@@ -604,8 +604,16 @@ export default function PersonalCalendarPage() {
       const headerHeight = 60;
       
       // Calculate top position relative to visible start hour (0 AM = hour 0 = midnight)
+      // Events should be positioned at the exact top of their hour slot
       const relativeStartHour = startHour - settings.start_hour;
       const topPosition = headerHeight + (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
+      
+      // Debug: Log positioning for verification
+      console.log(`Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
+      console.log(`  - Start hour: ${startHour}, Calendar starts at: ${settings.start_hour}`);
+      console.log(`  - Relative hour position: ${relativeStartHour} (should be ${startHour} - ${settings.start_hour})`);
+      console.log(`  - Top position: ${topPosition}px = ${headerHeight} + (${relativeStartHour} * ${slotHeight}) + (${startMinutes} * ${slotHeight} / 60)`);
+      console.log(`  - Expected slot position: Hour ${startHour} should be at ${headerHeight + (relativeStartHour * slotHeight)}px`);
       
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
@@ -643,7 +651,7 @@ export default function PersonalCalendarPage() {
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '6px',
+              paddingTop: '2px',
               fontSize: '0.75rem',
               color: '#64748b',
               fontWeight: '500'
@@ -852,7 +860,7 @@ export default function PersonalCalendarPage() {
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'center',
-              paddingTop: '6px',
+              paddingTop: '2px',
               fontSize: '0.75rem',
               color: '#64748b',
               fontWeight: '500'
