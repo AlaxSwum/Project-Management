@@ -717,35 +717,80 @@ export default function PersonalCalendarPage() {
               }}
               style={{
                 position: 'absolute',
-                left: `${index * 5 + 8}px`,
-                right: '8px',
+                left: `${index * 5 + 12}px`,
+                right: '12px',
                 top: `${event.topPosition}px`,
                 height: `${event.height}px`,
-                background: event.color,
+                background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                 color: '#ffffff',
-                borderRadius: '6px',
-                padding: '4px 8px',
-                fontSize: '0.75rem',
+                borderRadius: '12px',
+                padding: '8px 12px',
+                fontSize: '0.8rem',
                 cursor: 'pointer',
                 overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
                 zIndex: 10,
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: event.height > 30 ? 'flex-start' : 'center'
+                justifyContent: 'flex-start',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)';
               }}
             >
-              <div style={{ fontWeight: '500', marginBottom: event.height > 30 ? '2px' : '0' }}>
+              <div style={{ 
+                fontWeight: '600', 
+                marginBottom: event.height > 35 ? '4px' : '2px',
+                lineHeight: '1.2',
+                fontSize: event.height > 50 ? '0.85rem' : '0.8rem'
+              }}>
                 {event.title}
               </div>
-              {event.height > 30 && (
-                <div style={{ opacity: 0.9, fontSize: '0.7rem' }}>
+              {event.height > 35 && (
+                <div style={{ 
+                  opacity: 0.9, 
+                  fontSize: '0.7rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginBottom: '2px'
+                }}>
+                  <span>🕒</span>
                   {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
                 </div>
               )}
-              {event.height > 50 && event.location && (
-                <div style={{ opacity: 0.8, fontSize: '0.65rem', marginTop: '2px' }}>
-                  📍 {event.location}
+              {event.height > 55 && event.location && (
+                <div style={{ 
+                  opacity: 0.85, 
+                  fontSize: '0.65rem', 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginTop: '2px'
+                }}>
+                  <span>📍</span>
+                  {event.location}
+                </div>
+              )}
+              {event.height > 70 && event.description && (
+                <div style={{ 
+                  opacity: 0.8, 
+                  fontSize: '0.65rem',
+                  marginTop: '4px',
+                  lineHeight: '1.3',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical'
+                }}>
+                  {event.description}
                 </div>
               )}
             </div>
@@ -947,27 +992,58 @@ export default function PersonalCalendarPage() {
                 </div>
                 
                 <div style={{ fontSize: '0.7rem' }}>
-                  {dayEvents.slice(0, 3).map(event => (
+                  {dayEvents.slice(0, 3).map((event, index) => (
                     <div
                       key={event.id}
-                      onClick={() => setSelectedEvent(event)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                        setShowEventModal(true);
+                        setIsEditingEvent(false);
+                      }}
                       style={{
-                        background: event.color,
+                        background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                         color: '#ffffff',
-                        padding: '1px 4px',
-                        borderRadius: '2px',
-                        marginBottom: '1px',
+                        padding: '3px 6px',
+                        borderRadius: '6px',
+                        marginBottom: '2px',
                         cursor: 'pointer',
                         overflow: 'hidden',
                         whiteSpace: 'nowrap',
-                        textOverflow: 'ellipsis'
+                        textOverflow: 'ellipsis',
+                        fontSize: '0.65rem',
+                        fontWeight: '500',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                       }}
                     >
+                      <span style={{ fontSize: '8px' }}>●</span>
                       {event.title}
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div style={{ color: '#666666', fontSize: '0.6rem' }}>
+                    <div style={{ 
+                      color: '#666666', 
+                      fontSize: '0.6rem', 
+                      fontWeight: '500',
+                      marginTop: '2px',
+                      padding: '2px 4px',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      borderRadius: '4px',
+                      textAlign: 'center'
+                    }}>
                       +{dayEvents.length - 3} more
                     </div>
                   )}
