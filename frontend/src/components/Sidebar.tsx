@@ -385,11 +385,15 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   };
 
   const handleAbsenceForm = async () => {
+    console.log('🔥 DEBUG: handleAbsenceForm called');
+    console.log('🔥 DEBUG: Setting showAbsenceForm to true');
     setShowAbsenceForm(true);
     closeDropdown();
     
+    console.log('🔥 DEBUG: Fetching leave balance...');
     // Refresh leave balance to get latest data
     await fetchLeaveBalance();
+    console.log('🔥 DEBUG: Leave balance fetched, modal should be visible');
   };
 
   const handleAbsenceFormSubmit = async (e: React.FormEvent) => {
@@ -2141,7 +2145,8 @@ Your report is now available in the system.`);
           onClick={(e) => e.stopPropagation()}
         >
           <button 
-            onClick={() => {
+            onClick={(e) => {
+              console.log('🔥 DEBUG: Absence Form button clicked!', e);
               handleAbsenceForm();
               closeDropdown();
             }} 
@@ -2215,7 +2220,7 @@ Your report is now available in the system.`);
       )}
 
       {/* Absence Form Modal */}
-      {showAbsenceForm && (
+      {showAbsenceForm && console.log('🔥 DEBUG: Rendering Absence Form Modal, showAbsenceForm =', showAbsenceForm) && (
         <div className="modal-overlay" onClick={handleAbsenceFormClose}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
