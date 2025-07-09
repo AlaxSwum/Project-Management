@@ -1006,6 +1006,172 @@ export default function PersonalCalendarPage() {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 2rem;
+            z-index: 1000;
+          }
+          
+          .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+          }
+          
+          .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+          }
+          
+          .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.25rem;
+            line-height: 1;
+          }
+          
+          .modal-close-btn:hover {
+            color: #374151;
+          }
+          
+          .modal-form {
+            padding: 2rem;
+          }
+          
+          .form-group {
+            margin-bottom: 1.5rem;
+          }
+          
+          .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+          }
+          
+          .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+          }
+          
+          .form-input:focus {
+            outline: none;
+            border-color: #000000;
+          }
+          
+          .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-height: 80px;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+          }
+          
+          .form-textarea:focus {
+            outline: none;
+            border-color: #000000;
+          }
+          
+          .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: #ffffff;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+          }
+          
+          .form-select:focus {
+            outline: none;
+            border-color: #000000;
+          }
+          
+          .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+          }
+          
+          .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+          }
+          
+          .btn-primary {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+          }
+          
+          .btn-primary:hover {
+            background: #111827;
+          }
+          
+          .btn-secondary {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: #ffffff;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          
+          .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+          }
         `
       }} />
       
@@ -1225,162 +1391,51 @@ export default function PersonalCalendarPage() {
         </div>
       </div>
 
-      {/* Create Event Modal */}
+      {/* Create Meeting Modal - Timetable Style */}
       {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          paddingTop: '5vh',
-          zIndex: 1000,
-          animation: 'fadeIn 0.2s ease-out'
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '20px',
-            padding: '2rem',
-            width: '90%',
-            maxWidth: '500px',
-            maxHeight: '85vh',
-            overflow: 'auto',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            animation: 'slideIn 0.3s ease-out',
-            border: '1px solid #e8e8e8'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem',
-              paddingBottom: '1rem',
-              borderBottom: '1px solid #f0f0f0'
-            }}>
-              <h2 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: '600', 
-                margin: 0, 
-                color: '#1a1a1a'
-              }}>
-                New Meeting
-              </h2>
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Schedule New Meeting</h2>
               <button
+                type="button"
                 onClick={() => setShowCreateModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  color: '#666666',
-                  padding: '0.5rem',
-                  borderRadius: '50%',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f5f5f5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'none';
-                }}
+                className="modal-close-btn"
               >
                 ×
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5rem', 
-                  fontWeight: '500', 
-                  color: '#374151',
-                  fontSize: '0.875rem'
-                }}>
-                  Meeting Title *
-                </label>
+            <form onSubmit={(e) => { e.preventDefault(); createEvent(); }} className="modal-form">
+              <div className="form-group">
+                <label className="form-label">Meeting Title *</label>
                 <input
                   type="text"
+                  required
+                  className="form-input"
+                  placeholder="Enter meeting title..."
                   value={newEvent.title}
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    boxSizing: 'border-box',
-                    background: '#ffffff',
-                    transition: 'all 0.2s ease',
-                    outline: 'none'
-                  }}
-                  placeholder="Enter meeting title"
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#5884FD';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#d1d5db';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
                 />
               </div>
 
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5rem', 
-                  fontWeight: '500', 
-                  color: '#374151',
-                  fontSize: '0.875rem'
-                }}>
-                  Description
-                </label>
+              <div className="form-group">
+                <label className="form-label">Description</label>
                 <textarea
+                  className="form-textarea"
+                  placeholder="What will be discussed in this meeting?"
                   value={newEvent.description}
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    minHeight: '70px',
-                    resize: 'vertical',
-                    boxSizing: 'border-box',
-                    background: '#ffffff',
-                    transition: 'all 0.2s ease',
-                    outline: 'none'
-                  }}
-                  placeholder="Meeting description"
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#5884FD';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#d1d5db';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: '500', 
-                    color: '#374151',
-                    fontSize: '0.875rem'
-                  }}>
-                    Date *
-                  </label>
+              <div className="form-grid-3">
+                <div className="form-group">
+                  <label className="form-label">Date *</label>
                   <input
                     type="date"
+                    required
+                    className="form-input"
                     value={newEvent.start_datetime.split('T')[0]}
                     onChange={(e) => {
                       const date = e.target.value;
@@ -1392,93 +1447,14 @@ export default function PersonalCalendarPage() {
                         end_datetime: `${date}T${endTime}`
                       });
                     }}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                      background: '#ffffff',
-                      transition: 'all 0.2s ease',
-                      outline: 'none'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = '#d1d5db';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
                   />
                 </div>
-
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: '500', 
-                    color: '#374151',
-                    fontSize: '0.875rem'
-                  }}>
-                    Duration (minutes) *
-                  </label>
-                  <input
-                    type="number"
-                    min="15"
-                    step="15"
-                    value={newEvent.start_datetime && newEvent.end_datetime ? 
-                      Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60}
-                    onChange={(e) => {
-                      if (newEvent.start_datetime) {
-                        const duration = parseInt(e.target.value) || 60;
-                        const startTime = new Date(newEvent.start_datetime);
-                        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
-                        setNewEvent({ 
-                          ...newEvent, 
-                          end_datetime: endTime.toISOString().slice(0, 16)
-                        });
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                      background: '#ffffff',
-                      transition: 'all 0.2s ease',
-                      outline: 'none'
-                    }}
-                    placeholder="60"
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = '#d1d5db';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: '500', 
-                    color: '#374151',
-                    fontSize: '0.875rem'
-                  }}>
-                    Start Time *
-                  </label>
+                <div className="form-group">
+                  <label className="form-label">Time *</label>
                   <input
                     type="time"
-                    step="900"
+                    required
+                    className="form-input"
                     value={newEvent.start_datetime.split('T')[1] || ''}
                     onChange={(e) => {
                       const date = newEvent.start_datetime.split('T')[0] || new Date().toISOString().split('T')[0];
@@ -1493,115 +1469,56 @@ export default function PersonalCalendarPage() {
                         end_datetime: endDateTime
                       });
                     }}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                      background: '#ffffff',
-                      transition: 'all 0.2s ease',
-                      outline: 'none'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = '#d1d5db';
-                      e.currentTarget.style.boxShadow = 'none';
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Duration</label>
+                  <input
+                    type="number"
+                    min="15"
+                    max="480"
+                    step="15"
+                    className="form-input"
+                    placeholder="Minutes"
+                    value={newEvent.start_datetime && newEvent.end_datetime ? 
+                      Math.round((new Date(newEvent.end_datetime).getTime() - new Date(newEvent.start_datetime).getTime()) / (1000 * 60)) : 60}
+                    onChange={(e) => {
+                      if (newEvent.start_datetime) {
+                        const duration = parseInt(e.target.value) || 60;
+                        const startTime = new Date(newEvent.start_datetime);
+                        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+                        setNewEvent({ 
+                          ...newEvent, 
+                          end_datetime: endTime.toISOString().slice(0, 16)
+                        });
+                      }
                     }}
                   />
                 </div>
-
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: '500', 
-                    color: '#374151',
-                    fontSize: '0.875rem'
-                  }}>
-                    Location
-                  </label>
-                  <select
-                    value={newEvent.location}
-                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                      background: '#ffffff',
-                      transition: 'all 0.2s ease',
-                      outline: 'none',
-                      appearance: 'none',
-                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 0.75rem center',
-                      backgroundSize: '1rem',
-                      paddingRight: '2.5rem'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = '#d1d5db';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    <option value="">Select location (optional)</option>
-                    {locationOptions.map((location) => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5rem', 
-                  fontWeight: '500', 
-                  color: '#374151',
-                  fontSize: '0.875rem'
-                }}>
-                  Meeting Type
-                </label>
+              <div className="form-group">
+                <label className="form-label">Location (Optional)</label>
                 <select
+                  className="form-select"
+                  value={newEvent.location}
+                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                >
+                  <option value="">Select location (optional)</option>
+                  {locationOptions.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Meeting Type</label>
+                <select
+                  className="form-select"
                   value={newEvent.event_type}
                   onChange={(e) => setNewEvent({ ...newEvent, event_type: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    boxSizing: 'border-box',
-                    background: '#ffffff',
-                    transition: 'all 0.2s ease',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 0.75rem center',
-                    backgroundSize: '1rem',
-                    paddingRight: '2.5rem'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#5884FD';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88, 132, 253, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#d1d5db';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
                 >
                   <option value="meeting">Meeting</option>
                   <option value="personal">Personal</option>
@@ -1612,60 +1529,15 @@ export default function PersonalCalendarPage() {
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem 1rem',
-                    background: '#ffffff',
-                    color: '#374151',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f9fafb';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#ffffff';
-                  }}
-                >
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">
+                  Schedule Meeting
+                </button>
+                <button type="button" onClick={() => setShowCreateModal(false)} className="btn-secondary">
                   Cancel
                 </button>
-                <button
-                  onClick={createEvent}
-                  disabled={!newEvent.title || !newEvent.start_datetime || !newEvent.end_datetime}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem 1rem',
-                    background: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? '#5884FD' : '#9ca3af',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: newEvent.title && newEvent.start_datetime && newEvent.end_datetime ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      e.currentTarget.style.background = '#4f7bf7';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      e.currentTarget.style.background = '#5884FD';
-                    }
-                  }}
-                >
-                  Create Meeting
-                </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
