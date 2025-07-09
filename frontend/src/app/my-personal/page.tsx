@@ -603,22 +603,27 @@ export default function PersonalCalendarPage() {
       const slotHeight = 40; // pixels per hour
       const weekViewDayHeaderHeight = 60; // Each day has its own header in week view
       
-      // Calculate top position relative to visible start hour (0 AM = hour 0 = midnight)
-      // In week view, events start after the day header, not the main header
-      // FIXED: Subtract 1 from relativeStartHour to align with time slot labels
-      const relativeStartHour = startHour - settings.start_hour;
-      const topPosition = ((relativeStartHour - 1) * slotHeight) + (startMinutes * slotHeight / 60);
+      // ALTERNATIVE SOLUTION: Calculate position based on actual time slot index
+      // Find which time slot this event belongs to
+      const timeSlots = [];
+      for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
+        timeSlots.push(hour);
+      }
+      
+      const slotIndex = timeSlots.indexOf(startHour);
+      const topPosition = weekViewDayHeaderHeight + (slotIndex * slotHeight) + (startMinutes * slotHeight / 60);
       
               // TEMPORARY DEBUG: Check if event is being positioned correctly
         if (event.title.includes("event")) {
-          console.log(`🔍 WEEK VIEW FIXED - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
+          console.log(`🔍 WEEK VIEW ALT SOLUTION - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
           console.log(`  📅 Event time: ${startHour}:${startMinutes} (${event.start_datetime})`);
           console.log(`  ⏰ Calendar starts at: ${settings.start_hour} (should be 0 for midnight)`);
-          console.log(`  📐 Relative hour: ${relativeStartHour}, Adjusted: ${relativeStartHour - 1} (fixed off-by-one)`);
+          console.log(`  📐 Time slots available: [${timeSlots.join(', ')}]`);
+          console.log(`  📍 Event hour ${startHour} is at slot index: ${slotIndex}`);
           console.log(`  📏 Slot height: ${slotHeight}px per hour`);
           console.log(`  📍 Calculated position: ${topPosition}px`);
           console.log(`  🎯 Should be in slot: Hour ${startHour} (${formatHourSlot(startHour)})`);
-          console.log(`  ✅ Fixed position: (${relativeStartHour - 1}) * ${slotHeight} + ${startMinutes * slotHeight / 60} = ${topPosition}px`);
+          console.log(`  ✅ Alt solution: ${weekViewDayHeaderHeight} + ${slotIndex} * ${slotHeight} + ${startMinutes * slotHeight / 60} = ${topPosition}px`);
         }
       
       // Calculate height based on duration
@@ -661,22 +666,27 @@ export default function PersonalCalendarPage() {
       const slotHeight = 40; // pixels per hour
       const headerHeight = 60;
       
-      // Calculate top position relative to visible start hour (0 AM = hour 0 = midnight)
-      // Events should be positioned at the exact top of their hour slot
-      // FIXED: Subtract 1 from relativeStartHour to align with time slot labels
-      const relativeStartHour = startHour - settings.start_hour;
-      const topPosition = headerHeight + ((relativeStartHour - 1) * slotHeight) + (startMinutes * slotHeight / 60);
+      // ALTERNATIVE SOLUTION: Calculate position based on actual time slot index
+      // Find which time slot this event belongs to
+      const timeSlots = [];
+      for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
+        timeSlots.push(hour);
+      }
+      
+      const slotIndex = timeSlots.indexOf(startHour);
+      const topPosition = headerHeight + (slotIndex * slotHeight) + (startMinutes * slotHeight / 60);
       
               // TEMPORARY DEBUG: Check if event is being positioned correctly  
         if (event.title.includes("event")) {
-          console.log(`🔍 DAY VIEW FIXED - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
+          console.log(`🔍 DAY VIEW ALT SOLUTION - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
           console.log(`  📅 Event time: ${startHour}:${startMinutes} (${event.start_datetime})`);
           console.log(`  ⏰ Calendar starts at: ${settings.start_hour} (should be 0 for midnight)`);
-          console.log(`  📐 Relative hour: ${relativeStartHour}, Adjusted: ${relativeStartHour - 1} (fixed off-by-one)`);
+          console.log(`  📐 Time slots available: [${timeSlots.join(', ')}]`);
+          console.log(`  📍 Event hour ${startHour} is at slot index: ${slotIndex}`);
           console.log(`  📏 Header height: ${headerHeight}px, Slot height: ${slotHeight}px per hour`);
           console.log(`  📍 Calculated position: ${topPosition}px`);
           console.log(`  🎯 Should be in slot: Hour ${startHour} (${formatHourSlot(startHour)})`);
-          console.log(`  ✅ Fixed position: ${headerHeight} + (${relativeStartHour - 1}) * ${slotHeight} + ${startMinutes * slotHeight / 60} = ${topPosition}px`);
+          console.log(`  ✅ Alt solution: ${headerHeight} + ${slotIndex} * ${slotHeight} + ${startMinutes * slotHeight / 60} = ${topPosition}px`);
         }
       
       // Calculate height based on duration
