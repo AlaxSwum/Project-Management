@@ -366,6 +366,38 @@ export default function PersonalCalendarPage() {
     setCurrentDate(new Date());
   };
 
+  const deleteEvent = async () => {
+    if (!selectedEvent) return;
+    
+    if (!confirm(`Are you sure you want to delete "${selectedEvent.title}"?`)) {
+      return;
+    }
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { error } = await supabase
+        .from('projects_meeting')
+        .delete()
+        .eq('id', selectedEvent.id);
+      
+      if (error) throw error;
+      
+      // Refresh calendar data
+      await fetchCalendarData();
+      
+      // Close modal
+      setShowEventModal(false);
+      setSelectedEvent(null);
+      setIsEditingEvent(false);
+      
+      console.log('✅ Event deleted successfully');
+    } catch (err: any) {
+      console.error('❌ Error deleting event:', err);
+      alert('Failed to delete event. Please try again.');
+    }
+  };
+
   const handleTimeSlotClick = (date: Date, hour: number) => {
     const startTime = new Date(date);
     startTime.setHours(hour, 0, 0, 0);
@@ -1819,31 +1851,58 @@ export default function PersonalCalendarPage() {
               </h2>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {!isEditingEvent && (
-                  <button
-                    onClick={() => setIsEditingEvent(true)}
-                    style={{
-                      background: '#f8fafc',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      padding: '0.5rem 0.75rem',
-                      color: '#374151',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#f1f5f9';
-                      e.currentTarget.style.borderColor = '#5884FD';
-                      e.currentTarget.style.color = '#5884FD';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8fafc';
-                      e.currentTarget.style.borderColor = '#d1d5db';
-                      e.currentTarget.style.color = '#374151';
-                    }}
-                  >
-                    Edit
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setIsEditingEvent(true)}
+                      style={{
+                        background: '#f8fafc',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        padding: '0.5rem 0.75rem',
+                        color: '#374151',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f1f5f9';
+                        e.currentTarget.style.borderColor = '#5884FD';
+                        e.currentTarget.style.color = '#5884FD';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f8fafc';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={deleteEvent}
+                      style={{
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        borderRadius: '8px',
+                        padding: '0.5rem 0.75rem',
+                        color: '#dc2626',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fee2e2';
+                        e.currentTarget.style.borderColor = '#dc2626';
+                        e.currentTarget.style.color = '#991b1b';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fef2f2';
+                        e.currentTarget.style.borderColor = '#fecaca';
+                        e.currentTarget.style.color = '#dc2626';
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => {
