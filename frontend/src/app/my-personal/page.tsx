@@ -130,10 +130,11 @@ export default function PersonalCalendarPage() {
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
       
-      // Fetch personal calendar events (RLS policies ensure user only sees their own events)
+      // Fetch personal calendar events (filter by user ID for privacy)
       const { data, error } = await supabase
         .from('projects_meeting')
         .select('*')
+        .eq('created_by_id', parseInt(user?.id?.toString() || '0'))
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('date', { ascending: true })
