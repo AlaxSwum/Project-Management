@@ -127,12 +127,11 @@ export default function PersonalCalendarPage() {
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
       
-      // Fetch personal calendar events (filter by user ID and personal events)
+      // Fetch ALL events where user is assigned (personal events + events from different projects)
       const { data, error } = await supabase
         .from('projects_meeting')
         .select('*')
-        .eq('created_by_id', parseInt(user?.id?.toString() || '0'))
-        .eq('event_type', 'personal')
+        .or(`created_by_id.eq.${parseInt(user?.id?.toString() || '0')},attendee_ids.cs.{${parseInt(user?.id?.toString() || '0')}}`)
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('date', { ascending: true })
@@ -1665,7 +1664,10 @@ export default function PersonalCalendarPage() {
       {/* Create Meeting Modal - Timetable Style */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
             <div className="modal-header">
               <h2 className="modal-title">Create New Event</h2>
               <button
@@ -1738,7 +1740,88 @@ export default function PersonalCalendarPage() {
                 </select>
               </div>
 
-
+              <div className="form-group">
+                <label className="form-label">Event Color</label>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(6, 1fr)', 
+                  gap: '0.5rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {[
+                    { name: 'Ocean Blue', value: '#5884FD' },
+                    { name: 'Emerald', value: '#10B981' },
+                    { name: 'Amber', value: '#F59E0B' },
+                    { name: 'Rose', value: '#F43F5E' },
+                    { name: 'Purple', value: '#8B5CF6' },
+                    { name: 'Pink', value: '#EC4899' },
+                    { name: 'Teal', value: '#14B8A6' },
+                    { name: 'Orange', value: '#F97316' },
+                    { name: 'Indigo', value: '#6366F1' },
+                    { name: 'Green', value: '#22C55E' },
+                    { name: 'Cyan', value: '#06B6D4' },
+                    { name: 'Gray', value: '#6B7280' }
+                  ].map((color) => (
+                    <div
+                      key={color.value}
+                      onClick={() => setNewEvent({ ...newEvent, color: color.value })}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        backgroundColor: color.value,
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        border: newEvent.color === color.value ? '3px solid #1a1a1a' : '2px solid #e5e7eb',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title={color.name}
+                    >
+                      {newEvent.color === color.value && (
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            backgroundColor: color.value,
+                            borderRadius: '50%'
+                          }} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ 
+                  fontSize: '0.75rem', 
+                  color: '#6B7280', 
+                  marginTop: '0.5rem',
+                  textAlign: 'center'
+                }}>
+                  Selected: {[
+                    { name: 'Ocean Blue', value: '#5884FD' },
+                    { name: 'Emerald', value: '#10B981' },
+                    { name: 'Amber', value: '#F59E0B' },
+                    { name: 'Rose', value: '#F43F5E' },
+                    { name: 'Purple', value: '#8B5CF6' },
+                    { name: 'Pink', value: '#EC4899' },
+                    { name: 'Teal', value: '#14B8A6' },
+                    { name: 'Orange', value: '#F97316' },
+                    { name: 'Indigo', value: '#6366F1' },
+                    { name: 'Green', value: '#22C55E' },
+                    { name: 'Cyan', value: '#06B6D4' },
+                    { name: 'Gray', value: '#6B7280' }
+                  ].find(c => c.value === newEvent.color)?.name || 'Ocean Blue'}
+                </div>
+              </div>
 
               <div className="form-grid-3">
                 <div className="form-group">
