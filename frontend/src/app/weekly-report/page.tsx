@@ -437,7 +437,7 @@ Your changes are now saved in the system.`);
           }
         `
       }} />
-      
+
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
@@ -464,11 +464,11 @@ Your changes are now saved in the system.`);
                 color: '#1a1a1a',
                 letterSpacing: '-0.02em'
               }}>
-                Weekly Reports
-              </h1>
+              Weekly Reports
+            </h1>
               <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 {viewMode === 'admin' ? 'Team weekly progress reports and insights' : 'Your weekly progress reports and achievements'}
-              </p>
+            </p>
             </div>
           </div>
 
@@ -487,7 +487,7 @@ Your changes are now saved in the system.`);
             </div>
           )}
 
-          {viewMode === 'admin' ? (
+            {viewMode === 'admin' ? (
             <>
               {/* Statistics Cards for Admin */}
               <div style={{
@@ -509,7 +509,7 @@ Your changes are now saved in the system.`);
                     {weekFolders.length}
                   </div>
                   <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Weeks</div>
-                </div>
+                  </div>
 
                 <div style={{
                   background: 'rgba(255, 255, 255, 0.9)',
@@ -578,14 +578,14 @@ Your changes are now saved in the system.`);
                 ) : (
                   <div style={{ padding: '1.5rem' }}>
                     {weekFolders.map((folder) => {
-                      const weekKey = `${folder.year}-${folder.weekNumber}`;
-                      const isExpanded = expandedWeeks.has(weekKey);
+                    const weekKey = `${folder.year}-${folder.weekNumber}`;
+                    const isExpanded = expandedWeeks.has(weekKey);
                       const completionRate = Math.round((folder.submittedCount / folder.totalEmployees) * 100);
-                      
-                      return (
+                    
+                    return (
                         <div key={weekKey} style={{ marginBottom: '1rem' }}>
-                          <div
-                            onClick={() => toggleWeekFolder(weekKey)}
+                        <div 
+                          onClick={() => toggleWeekFolder(weekKey)}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -607,23 +607,23 @@ Your changes are now saved in the system.`);
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {isExpanded ? (
+                            {isExpanded ? (
                                   <ChevronDownIcon style={{ width: '20px', height: '20px' }} />
-                                ) : (
+                            ) : (
                                   <ChevronRightIcon style={{ width: '20px', height: '20px' }} />
-                                )}
+                            )}
                                 <FolderIcon style={{ width: '24px', height: '24px' }} />
                               </div>
-                              <div>
+                            <div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
-                                  Week {folder.weekNumber}, {folder.year}
+                                Week {folder.weekNumber}, {folder.year}
                                 </div>
                                 <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
                                   {folder.dateRangeDisplay}
                                 </div>
-                              </div>
                             </div>
-                            
+                          </div>
+                          
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                               <div style={{
                                 background: 'rgba(255, 255, 255, 0.2)',
@@ -643,10 +643,10 @@ Your changes are now saved in the system.`);
                               }}>
                                 {completionRate === 100 ? 'Complete' : completionRate >= 50 ? 'In Progress' : 'Pending'}
                               </div>
-                            </div>
                           </div>
-
-                          {isExpanded && (
+                        </div>
+                        
+                        {isExpanded && (
                             <div style={{
                               background: '#f8fafc',
                               border: '1px solid #e8e8e8',
@@ -655,7 +655,7 @@ Your changes are now saved in the system.`);
                             }}>
                               {folder.reports.length > 0 ? (
                                 <div style={{ display: 'grid', gap: '1rem' }}>
-                                  {folder.reports.map((report) => (
+                              {folder.reports.map((report) => (
                                     <div
                                       key={report.id}
                                       style={{
@@ -687,21 +687,21 @@ Your changes are now saved in the system.`);
                                           justifyContent: 'center',
                                           fontWeight: '500'
                                         }}>
-                                          {report.employee_name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
+                                        {report.employee_name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
                                           <div style={{ fontWeight: '500', color: '#1a1a1a' }}>
-                                            {report.employee_name}
-                                          </div>
+                                          {report.employee_name}
+                                        </div>
                                           <div style={{ fontSize: '0.85rem', color: '#666666' }}>
-                                            {report.project_name}
-                                          </div>
+                                          {report.project_name}
                                         </div>
                                       </div>
-                                      
+                                    </div>
+                                    
                                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button
-                                          onClick={() => handleViewReport(report)}
+                                      <button
+                                        onClick={() => handleViewReport(report)}
                                           style={{
                                             padding: '0.5rem',
                                             background: '#ffffff',
@@ -715,12 +715,12 @@ Your changes are now saved in the system.`);
                                             justifyContent: 'center'
                                           }}
                                           title="View report"
-                                        >
+                                      >
                                           <EyeIcon style={{ width: '16px', height: '16px' }} />
-                                        </button>
+                                      </button>
                                         {report.employee_id === user?.id && (
-                                          <button
-                                            onClick={() => handleEditReport(report)}
+                                        <button
+                                          onClick={() => handleEditReport(report)}
                                             style={{
                                               padding: '0.5rem',
                                               background: '#ffffff',
@@ -734,29 +734,29 @@ Your changes are now saved in the system.`);
                                               justifyContent: 'center'
                                             }}
                                             title="Edit report"
-                                          >
+                                        >
                                             <PencilIcon style={{ width: '16px', height: '16px' }} />
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
+                                        </button>
+                                      )}
+                                  </div>
                                 </div>
+                              ))}
+                            </div>
                               ) : (
                                 <div style={{ textAlign: 'center', color: '#666666', padding: '2rem' }}>
                                   No reports submitted for this week yet.
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
                     })}
                   </div>
                 )}
               </div>
-            </>
-          ) : (
+              </>
+            ) : (
             /* User View */
             <div style={{
               background: '#ffffff',
@@ -765,7 +765,7 @@ Your changes are now saved in the system.`);
               overflow: 'hidden',
               boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
             }}>
-              {reports.length === 0 ? (
+                {reports.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
                   padding: '4rem 2rem',
@@ -785,25 +785,25 @@ Your changes are now saved in the system.`);
                   </div>
                   <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
                     No Weekly Reports Yet
-                  </h3>
+                            </h3>
                   <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
                     Your weekly reports will appear here once you start submitting them.
-                  </p>
-                </div>
+                            </p>
+                          </div>
               ) : (
                 <div style={{ padding: '1.5rem' }}>
                   {reports.map((report) => (
                     <div
                       key={report.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
+          style={{
+            display: 'flex',
+            alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '1.5rem',
                         marginBottom: '1rem',
-                        background: '#ffffff',
+              background: '#ffffff',
                         border: '1px solid #e8e8e8',
-                        borderRadius: '12px',
+              borderRadius: '12px',
                         transition: 'all 0.2s ease',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
                       }}
@@ -816,20 +816,20 @@ Your changes are now saved in the system.`);
                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
                       }}
                     >
-                      <div>
+                  <div>
                         <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#1a1a1a', marginBottom: '0.5rem' }}>
                           Week {report.week_number}, {report.year}
-                        </div>
+                  </div>
                         <div style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '0.25rem' }}>
                           {report.date_range_display}
-                        </div>
+                </div>
                         <div style={{ fontSize: '0.85rem', color: '#999999' }}>
                           {report.project_name} • Submitted {formatDate(report.created_at)}
-                        </div>
-                      </div>
-                      
+              </div>
+                </div>
+
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
+              <button
                           onClick={() => handleViewReport(report)}
                           style={{
                             padding: '0.75rem 1.5rem',
@@ -848,8 +848,8 @@ Your changes are now saved in the system.`);
                         >
                           <EyeIcon style={{ width: '16px', height: '16px' }} />
                           View
-                        </button>
-                        <button
+              </button>
+                            <button
                           onClick={() => handleEditReport(report)}
                           style={{
                             padding: '0.75rem 1.5rem',
@@ -868,16 +868,16 @@ Your changes are now saved in the system.`);
                         >
                           <PencilIcon style={{ width: '16px', height: '16px' }} />
                           Edit
-                        </button>
-                      </div>
+                            </button>
+                        </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+                          )}
+                        </div>
+                          )}
+                        </div>
+                    </div>
     </>
   );
 } 

@@ -799,11 +799,11 @@ export default function ClassSchedulePage() {
               <div style={{
                 overflowX: 'auto',
                 WebkitOverflowScrolling: 'touch'
-              }}>
-                <div style={{
-                  display: 'grid',
+            }}>
+              <div style={{
+                display: 'grid',
                   gridTemplateColumns: '120px 200px 100px 100px 100px 100px 120px 200px 100px 80px',
-                  gap: '0',
+                gap: '0',
                   background: '#fafafa',
                   borderBottom: '1px solid #e8e8e8',
                   fontWeight: '500',
@@ -811,7 +811,7 @@ export default function ClassSchedulePage() {
                   color: '#666666',
                   letterSpacing: '0.025em',
                   minWidth: '1120px'
-                }}>
+              }}>
                   <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>START DATE</div>
                   <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CLASS NAME</div>
                   <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>DURATION</div>
@@ -822,7 +822,7 @@ export default function ClassSchedulePage() {
                   <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>INSTRUCTOR INFO</div>
                   <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>POST DATE</div>
                   <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
-                </div>
+              </div>
 
               {filteredItems.length === 0 ? (
                 <div style={{ 
@@ -1013,17 +1013,17 @@ export default function ClassSchedulePage() {
               justifyContent: 'center',
               zIndex: 1000
             }}>
-                          <div style={{
-              background: '#ffffff',
+              <div style={{
+                background: '#ffffff',
               border: '1px solid #e8e8e8',
               borderRadius: '20px',
               padding: '3rem',
-              width: '95%',
-              maxWidth: '700px',
-              maxHeight: '95vh',
-              overflow: 'auto',
+                width: '95%',
+                maxWidth: '700px',
+                maxHeight: '95vh',
+                overflow: 'auto',
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
-            }}>
+              }}>
                 <div style={{
                   textAlign: 'center',
                   marginBottom: '3rem',

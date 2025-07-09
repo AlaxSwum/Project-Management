@@ -55,8 +55,8 @@ export default function PersonalCalendarPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [settings, setSettings] = useState<CalendarSettings>({
     default_view: 'week',
-    time_format: '12h', // Changed back to '12h' for "1 AM, 2 AM" format
-    start_hour: 1, // Start from 1 AM instead of 6 AM
+    time_format: '12h', // 12-hour format for "12 AM, 1 AM, 2 AM" format
+    start_hour: 0, // Start from 12 AM (midnight) - FIXED to include hour 0
     end_hour: 23, // End at 11 PM
     first_day_of_week: 0,
     working_hours_start: '09:00:00',
@@ -603,22 +603,13 @@ export default function PersonalCalendarPage() {
       const slotHeight = 40; // pixels per hour
       const headerHeight = 60;
       
-      // DEBUG: Verify positioning calculation
-      console.log(`📍 Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
-      console.log(`  - Event hour: ${startHour}, Calendar starts at: ${settings.start_hour}`);
-      console.log(`  - Relative position: ${startHour - settings.start_hour} hours from start`);
-      
-      // FIXED: Calculate top position relative to visible start hour (1 AM = hour 1)
+      // Calculate top position relative to visible start hour (0 AM = hour 0 = midnight)
       const relativeStartHour = startHour - settings.start_hour;
       const topPosition = headerHeight + (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
-      
-      console.log(`  - Top position: ${topPosition}px (${headerHeight} + ${relativeStartHour} * ${slotHeight} + ${startMinutes * slotHeight / 60})`);
       
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
       const height = Math.max(24, (durationInMinutes * slotHeight / 60)); // Minimum 24px
-      
-      console.log(`  - Height: ${height}px (${durationInMinutes} minutes)`);
       
       return {
         ...event,

@@ -328,7 +328,7 @@ export default function EmployeeAbsentPage() {
           }
         `
       }} />
-      
+
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
@@ -355,11 +355,11 @@ export default function EmployeeAbsentPage() {
                 color: '#1a1a1a',
                 letterSpacing: '-0.02em'
               }}>
-                Absence Management
-              </h1>
+              Absence Management
+            </h1>
               <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-                Review and manage employee leave requests
-              </p>
+              Review and manage employee leave requests
+            </p>
             </div>
           </div>
 
@@ -488,7 +488,7 @@ export default function EmployeeAbsentPage() {
             overflow: 'hidden',
             boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
           }}>
-            {filteredRequests.length === 0 ? (
+          {filteredRequests.length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '4rem 2rem',
@@ -510,19 +510,19 @@ export default function EmployeeAbsentPage() {
                   {filterStatus === 'all' ? 'No Leave Requests' : `No ${filterStatus} Requests`}
                 </h3>
                 <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
-                  {filterStatus === 'all' 
-                    ? 'No leave requests have been submitted yet.'
-                    : `No ${filterStatus} leave requests found.`
-                  }
-                </p>
-              </div>
-            ) : (
+                {filterStatus === 'all' 
+                  ? 'No leave requests have been submitted yet.'
+                  : `No ${filterStatus} leave requests found.`
+                }
+              </p>
+            </div>
+          ) : (
               <div style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'grid', gap: '1rem' }}>
-                  {filteredRequests.map((request) => {
-                    const statusBadge = getStatusBadge(request.status);
-                    
-                    return (
+              {filteredRequests.map((request) => {
+                const statusBadge = getStatusBadge(request.status);
+                
+                return (
                       <div
                         key={request.id}
                         style={{
@@ -556,52 +556,52 @@ export default function EmployeeAbsentPage() {
                               fontWeight: '500',
                               fontSize: '1.1rem'
                             }}>
-                              {request.employee_name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
+                          {request.employee_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
                               <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#1a1a1a', marginBottom: '0.25rem' }}>
-                                {request.employee_name}
-                              </div>
+                            {request.employee_name}
+                          </div>
                               <div style={{ fontSize: '0.9rem', color: '#666666' }}>
                                 {request.project_name}
-                              </div>
-                            </div>
                           </div>
-                          
+                        </div>
+                      </div>
+                      
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.5rem 1rem',
                             background: statusBadge.bg,
-                            color: statusBadge.color,
+                          color: statusBadge.color, 
                             borderRadius: '12px',
                             fontSize: '0.85rem',
                             fontWeight: '500'
                           }}>
-                            {statusBadge.icon}
-                            {statusBadge.label}
-                          </div>
-                        </div>
+                        {statusBadge.icon}
+                        {statusBadge.label}
+                      </div>
+                    </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                           <div>
                             <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>LEAVE TYPE</div>
                             <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{getLeaveTypeLabel(request.leave_type)}</div>
-                          </div>
+                      </div>
                           <div>
                             <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>DURATION</div>
                             <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{request.days_requested} days</div>
-                          </div>
+                      </div>
                           <div>
                             <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>START DATE</div>
                             <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{new Date(request.start_date).toLocaleDateString()}</div>
-                          </div>
+                      </div>
                           <div>
                             <div style={{ fontSize: '0.8rem', color: '#999999', fontWeight: '500', marginBottom: '0.25rem' }}>END DATE</div>
                             <div style={{ fontSize: '0.9rem', color: '#1a1a1a', fontWeight: '500' }}>{new Date(request.end_date).toLocaleDateString()}</div>
-                          </div>
-                        </div>
+                      </div>
+                    </div>
 
                         {request.reason && (
                           <div style={{ marginBottom: '1rem' }}>
@@ -610,7 +610,7 @@ export default function EmployeeAbsentPage() {
                           </div>
                         )}
 
-                        {request.status === 'pending' && (
+                    {request.status === 'pending' && (
                           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
                             <button
                               onClick={() => handleStatusChange(request.id, 'rejected')}
@@ -636,8 +636,8 @@ export default function EmployeeAbsentPage() {
                             >
                               Reject
                             </button>
-                            <button
-                              onClick={() => handleStatusChange(request.id, 'approved')}
+                        <button
+                          onClick={() => handleStatusChange(request.id, 'approved')}
                               style={{
                                 padding: '0.75rem 1.5rem',
                                 background: '#10b981',
@@ -656,21 +656,21 @@ export default function EmployeeAbsentPage() {
                               onMouseLeave={(e) => {
                                 e.currentTarget.style.background = '#10b981';
                               }}
-                            >
-                              Approve
-                            </button>
+                        >
+                          Approve
+                        </button>
                           </div>
                         )}
 
                         <div style={{ fontSize: '0.8rem', color: '#999999', marginTop: '1rem' }}>
                           Submitted on {new Date(request.created_at).toLocaleDateString()}
                         </div>
-                      </div>
-                    );
-                  })}
+                  </div>
+                );
+              })}
                 </div>
-              </div>
-            )}
+            </div>
+          )}
           </div>
         </div>
       </div>

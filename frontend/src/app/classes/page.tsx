@@ -1031,57 +1031,57 @@ export default function ClassesPage() {
               </button>
               
               {userRole === 'admin' && (
-                <button
+              <button
                   onClick={() => setShowMemberModal(true)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
+                style={{
+                  padding: '0.75rem 1.5rem',
                     background: '#FFB333',
-                    color: '#ffffff',
+                  color: '#ffffff',
                     border: 'none',
                     borderRadius: '12px',
-                    fontSize: '0.9rem',
+                  fontSize: '0.9rem',
                     fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
                     gap: '0.5rem',
                     transition: 'all 0.2s ease',
                     boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
-                  }}
-                >
+                }}
+              >
                   Manage Members
-                </button>
+              </button>
               )}
               
-              <button
+                <button
                 onClick={() => setShowAddForm(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
+                  style={{
+                    padding: '0.75rem 1.5rem',
                   background: '#5884FD',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '12px',
-                  fontSize: '0.9rem',
+                    fontSize: '0.9rem',
                   fontWeight: '500',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
                   gap: '0.5rem',
                   transition: 'all 0.2s ease',
                   boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
-                }}
-              >
+                  }}
+                >
                 Add Class
-              </button>
+                </button>
             </div>
           </div>
 
           {error && (
-            <div style={{ 
+            <div style={{
               background: '#ffffff', 
               border: '1px solid #F87239', 
               borderRadius: '12px', 
-              padding: '1rem', 
+              padding: '1rem',
               marginBottom: '2rem',
               color: '#F87239',
               fontWeight: '500',
@@ -1100,54 +1100,54 @@ export default function ClassesPage() {
             marginBottom: '2rem',
             boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
           }}>
-            {/* Breadcrumb Navigation */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem',
-              marginBottom: '1.5rem',
-              fontSize: '0.9rem',
-              color: '#666666'
-            }}>
-              <button
-                onClick={() => goToFolder(null)}
-                style={{
+          {/* Breadcrumb Navigation */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginBottom: '1.5rem',
+            fontSize: '0.9rem',
+            color: '#666666'
+          }}>
+            <button
+              onClick={() => goToFolder(null)}
+              style={{
                   background: 'transparent',
-                  border: 'none',
+                border: 'none',
                   color: folderPath.length === 0 ? '#1a1a1a' : '#666666',
                   fontWeight: folderPath.length === 0 ? '500' : '400',
                   textDecoration: 'none',
-                  cursor: 'pointer',
+                cursor: 'pointer',
                   padding: '0.25rem 0.5rem',
                   borderRadius: '6px',
                   transition: 'all 0.2s ease'
-                }}
-              >
+              }}
+            >
                 Classes
-              </button>
+            </button>
               
-              {folderPath.map((folder, index) => (
-                <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {folderPath.map((folder, index) => (
+              <span key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ color: '#C483D9' }}>•</span>
-                  <button
-                    onClick={() => goToFolder(folder)}
-                    style={{
+                <button
+                  onClick={() => goToFolder(folder)}
+                  style={{
                       background: 'transparent',
-                      border: 'none',
+                    border: 'none',
                       color: index === folderPath.length - 1 ? '#1a1a1a' : '#666666',
                       fontWeight: index === folderPath.length - 1 ? '500' : '400',
                       textDecoration: 'none',
-                      cursor: 'pointer',
+                    cursor: 'pointer',
                       padding: '0.25rem 0.5rem',
                       borderRadius: '6px',
                       transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {folder.name}
-                  </button>
-                </span>
-              ))}
-            </div>
+                  }}
+                >
+                  {folder.name}
+                </button>
+              </span>
+            ))}
+          </div>
 
             {/* Current Folder Contents */}
             <div style={{ marginBottom: '1rem' }}>
@@ -1193,40 +1193,40 @@ export default function ClassesPage() {
                   </p>
                 </div>
               ) : (
-                <div style={{ 
-                  display: 'grid', 
+              <div style={{
+                display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-                  gap: '1rem' 
-                }}>
-                  {getCurrentFolderContents().map(folder => (
-                    <div
-                      key={folder.id}
-                      onClick={() => enterFolder(folder)}
-                      style={{
-                        padding: '1.5rem',
-                        background: '#ffffff',
+                gap: '1rem'
+              }}>
+                {getCurrentFolderContents().map(folder => (
+                  <div
+                    key={folder.id}
+                    onClick={() => enterFolder(folder)}
+                    style={{
+                      padding: '1.5rem',
+                      background: '#ffffff',
                         border: '1px solid #e8e8e8',
                         borderRadius: '12px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
                         gap: '1rem',
                         transition: 'all 0.2s ease',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
-                      }}
-                      onMouseEnter={(e) => {
+                    }}
+                    onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = '#C483D9'
                         e.currentTarget.style.background = '#fafafa'
-                        e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.transform = 'translateY(-2px)'
                         e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.2)'
-                      }}
-                      onMouseLeave={(e) => {
+                    }}
+                    onMouseLeave={(e) => {
                         e.currentTarget.style.borderColor = '#e8e8e8'
                         e.currentTarget.style.background = '#ffffff'
-                        e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.transform = 'translateY(0)'
                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
-                      }}
-                    >
+                    }}
+                  >
                       <div style={{ 
                         width: '40px', 
                         height: '40px', 
@@ -1238,20 +1238,20 @@ export default function ClassesPage() {
                       }}>
                         <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
                       </div>
-                      <div>
+                    <div>
                         <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
-                          {folder.name}
+                        {folder.name}
                         </div>
-                        {folder.description && (
+                      {folder.description && (
                           <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem', lineHeight: '1.4' }}>
-                            {folder.description}
+                          {folder.description}
                           </div>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+            </div>
+          )}
             </div>
           </div>
 
@@ -1688,7 +1688,7 @@ export default function ClassesPage() {
               marginBottom: '3rem',
               paddingBottom: '2rem',
               borderBottom: '1px solid #f0f0f0'
-            }}>
+          }}>
               <h2 style={{ 
                 fontSize: '2rem', 
                 fontWeight: '400', 
@@ -1697,7 +1697,7 @@ export default function ClassesPage() {
                 letterSpacing: '-0.025em'
               }}>
                 {editingItem ? 'Edit Class' : 'Add New Class'}
-              </h2>
+            </h2>
               <p style={{
                 fontSize: '1.1rem',
                 color: '#666666',
@@ -1978,8 +1978,8 @@ export default function ClassesPage() {
           justifyContent: 'center',
           zIndex: 1000
         }}>
-          <div style={{
-            background: '#ffffff',
+                     <div style={{
+             background: '#ffffff',
             borderRadius: '20px',
             padding: '3rem',
             maxWidth: '700px',
@@ -1993,7 +1993,7 @@ export default function ClassesPage() {
               marginBottom: '3rem',
               paddingBottom: '2rem',
               borderBottom: '1px solid #f0f0f0'
-            }}>
+           }}>
               <h2 style={{ 
                 fontSize: '2rem', 
                 fontWeight: '400', 
@@ -2002,7 +2002,7 @@ export default function ClassesPage() {
                 letterSpacing: '-0.025em'
               }}>
                 {editingStudent ? 'Edit Student' : 'Enroll New Student'}
-              </h2>
+            </h2>
               <p style={{
                 fontSize: '1.1rem',
                 color: '#666666',
@@ -2011,7 +2011,7 @@ export default function ClassesPage() {
                 lineHeight: '1.5'
               }}>
                 {editingStudent ? 'Update student enrollment details below' : 'Fill in the details to enroll a new student'}
-              </p>
+            </p>
             </div>
 
             <form onSubmit={handleStudentSubmit}>
@@ -2038,67 +2038,67 @@ export default function ClassesPage() {
                     color: '#1a1a1a',
                     letterSpacing: '-0.015em'
                   }}>
-                    Student Information
-                  </h3>
+                  Student Information
+                </h3>
                 </div>
-
+                
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Student Name *</label>
-                    <input
-                      type="text"
-                      value={studentFormData.student_name}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
-                      required
+                     <input
+                       type="text"
+                       value={studentFormData.student_name}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, student_name: e.target.value })}
+                       required
                       placeholder="Enter student's full name"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
+                     />
+                   </div>
 
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Email *</label>
-                    <input
-                      type="email"
-                      value={studentFormData.email}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
-                      required
+                     <input
+                       type="email"
+                       value={studentFormData.email}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, email: e.target.value })}
+                       required
                       placeholder="Enter student's email address"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
-                </div>
+                     />
+                   </div>
+                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Phone Number</label>
-                    <input
-                      type="tel"
-                      value={studentFormData.phone_number}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
+                     <input
+                       type="tel"
+                       value={studentFormData.phone_number}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, phone_number: e.target.value })}
                       placeholder="Enter phone number"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
+                     />
+                   </div>
 
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Facebook Link</label>
-                    <input
-                      type="url"
-                      value={studentFormData.facebook_link}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
-                      placeholder="https://facebook.com/username"
+                     <input
+                       type="url"
+                       value={studentFormData.facebook_link}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
+                       placeholder="https://facebook.com/username"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
-                </div>
+                     />
+                   </div>
+                 </div>
               </div>
 
               {/* Payment Information Section */}
@@ -2124,107 +2124,107 @@ export default function ClassesPage() {
                     color: '#1a1a1a',
                     letterSpacing: '-0.015em'
                   }}>
-                    Payment Information
-                  </h3>
+                  Payment Information
+                </h3>
                 </div>
-
+                
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Payment Method *</label>
-                    <select
-                      value={studentFormData.payment_method}
+                     <select
+                       value={studentFormData.payment_method}
                       onChange={(e) => setStudentFormData({ ...studentFormData, payment_method: e.target.value as 'Kpay' | 'Aya Pay' | 'Wave Pay' })}
-                      required
+                       required
                       style={formStyles.select}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    >
+                     >
                       <option value="">Select payment method</option>
-                      {PAYMENT_METHODS.map(method => (
-                        <option key={method} value={method}>{method}</option>
-                      ))}
-                    </select>
-                  </div>
+                       {PAYMENT_METHODS.map(method => (
+                         <option key={method} value={method}>{method}</option>
+                       ))}
+                     </select>
+                   </div>
 
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Course Fee (MMK) *</label>
-                    <input
-                      type="number"
-                      value={studentFormData.course_fee}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
-                      required
-                      min="0"
+                     <input
+                       type="number"
+                       value={studentFormData.course_fee}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, course_fee: Number(e.target.value) })}
+                       required
+                       min="0"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
+                     />
+                   </div>
 
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Payment Type *</label>
-                    <select
-                      value={studentFormData.payment_type}
-                      onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
+                     <select
+                       value={studentFormData.payment_type}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, payment_type: e.target.value as 'full' | 'split' })}
                       required
                       style={formStyles.select}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    >
-                      <option value="full">Full Payment</option>
-                      <option value="split">Split Payment</option>
-                    </select>
-                  </div>
-                </div>
+                     >
+                       <option value="full">Full Payment</option>
+                       <option value="split">Split Payment</option>
+                     </select>
+                   </div>
+                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Discount Amount (MMK)</label>
-                    <input
-                      type="number"
-                      value={studentFormData.discount_amount}
+                     <input
+                       type="number"
+                       value={studentFormData.discount_amount}
                       onChange={(e) => setStudentFormData({ ...studentFormData, discount_amount: Number(e.target.value) })}
-                      min="0"
+                       min="0"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
+                     />
+                   </div>
 
-                  <div>
+                   <div>
                     <label style={formStyles.label}>Discount Percentage (%)</label>
-                    <input
-                      type="number"
-                      value={studentFormData.discount_percentage}
+                     <input
+                       type="number"
+                       value={studentFormData.discount_percentage}
                       onChange={(e) => setStudentFormData({ ...studentFormData, discount_percentage: Number(e.target.value) })}
-                      min="0"
-                      max="100"
+                       min="0"
+                       max="100"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
-                    />
-                  </div>
-                </div>
+                     />
+                   </div>
+                 </div>
 
-                <div style={{
+                   <div style={{ 
                   background: '#F5F5ED',
                   border: '1px solid #e0e0e0',
                   borderRadius: '12px',
                   padding: '1.5rem',
                   marginBottom: '2rem'
-                }}>
+                   }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ color: '#666666' }}>Course Fee:</span>
                     <span style={{ fontWeight: '500', color: '#1a1a1a' }}>{formatCurrency(studentFormData.course_fee)} MMK</span>
-                  </div>
+                     </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e0e0e0', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
                     <span style={{ fontWeight: '500', color: '#1a1a1a' }}>Total Amount:</span>
                     <span style={{ fontWeight: '600', color: '#5884FD', fontSize: '1.1rem' }}>{formatCurrency(calculateTotalAmount())} MMK</span>
-                  </div>
-                </div>
-              </div>
+                     </div>
+                   </div>
+                    </div>
 
               {/* Action Buttons */}
-              <div style={{ 
+                     <div style={{ 
                 display: 'flex', 
                 gap: '1.5rem', 
                 justifyContent: 'center',

@@ -198,7 +198,7 @@ export default function InboxPage() {
           }
         `
       }} />
-      
+
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
@@ -225,11 +225,11 @@ export default function InboxPage() {
                 color: '#1a1a1a',
                 letterSpacing: '-0.02em'
               }}>
-                Inbox
-              </h1>
+              Inbox
+            </h1>
               <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-                Notifications and important updates
-              </p>
+              Notifications and important updates
+            </p>
             </div>
           </div>
 
@@ -409,9 +409,9 @@ export default function InboxPage() {
             ) : (
               <div style={{ padding: '1.5rem' }}>
                 {filteredNotifications.map((notification) => (
-                  <div 
-                    key={notification.id} 
-                    onClick={() => !notification.is_read && markAsRead(notification.id)}
+                <div 
+                  key={notification.id} 
+                  onClick={() => !notification.is_read && markAsRead(notification.id)}
                     style={{
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -444,9 +444,9 @@ export default function InboxPage() {
                       justifyContent: 'center',
                       flexShrink: 0
                     }}>
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
                         fontSize: '1.1rem',
@@ -455,17 +455,17 @@ export default function InboxPage() {
                         marginBottom: '0.5rem',
                         lineHeight: '1.4'
                       }}>
-                        {notification.title}
-                      </div>
+                      {notification.title}
+                    </div>
                       <div style={{
                         fontSize: '0.95rem',
                         color: '#666666',
                         lineHeight: '1.5',
                         marginBottom: '1rem'
                       }}>
-                        {notification.message}
-                      </div>
-                      
+                      {notification.message}
+                    </div>
+                    
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -473,13 +473,13 @@ export default function InboxPage() {
                         fontSize: '0.85rem',
                         color: '#999999'
                       }}>
-                        <span>{formatDate(notification.created_at)}</span>
-                        {!notification.is_read && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification.id);
-                            }}
+                      <span>{formatDate(notification.created_at)}</span>
+                      {!notification.is_read && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notification.id);
+                          }}
                             style={{
                               background: 'transparent',
                               border: 'none',
@@ -492,14 +492,14 @@ export default function InboxPage() {
                               alignItems: 'center',
                               gap: '0.25rem'
                             }}
-                            title="Mark as read"
-                          >
-                            <EyeIcon style={{ width: '16px', height: '16px' }} />
-                          </button>
-                        )}
-                      </div>
+                          title="Mark as read"
+                        >
+                          <EyeIcon style={{ width: '16px', height: '16px' }} />
+                        </button>
+                      )}
                     </div>
                   </div>
+                </div>
                 ))}
               </div>
             )}

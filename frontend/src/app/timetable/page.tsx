@@ -1971,28 +1971,28 @@ export default function TimetablePage() {
               
               <div className="header-controls">
                 <div className="filter-controls">
-                  <button
-                    onClick={() => setViewMode('list')}
+                    <button
+                      onClick={() => setViewMode('list')}
                     className={`filter-btn ${viewMode === 'list' ? 'active' : ''}`}
-                  >
-                    List View
-                  </button>
-                  <button
-                    onClick={() => setViewMode('calendar')}
+                    >
+                      List View
+                    </button>
+                    <button
+                      onClick={() => setViewMode('calendar')}
                     className={`filter-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                    >
+                      Calendar View
+                    </button>
+                  </div>
+                
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="create-button"
                   >
-                    Calendar View
+                    <PlusIcon style={{ width: '20px', height: '20px' }} />
+                    Schedule Meeting
                   </button>
                 </div>
-                
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="create-button"
-                >
-                  <PlusIcon style={{ width: '20px', height: '20px' }} />
-                  Schedule Meeting
-                </button>
-              </div>
             </div>
             
             <div className="timetable-stats">
@@ -2067,16 +2067,16 @@ export default function TimetablePage() {
                     ← Previous
                   </button>
                   
-                                  <h2 style={{ 
-                  margin: 0, 
-                  fontSize: '1.5rem', 
-                  fontWeight: '700', 
-                  color: '#000000',
-                  textAlign: 'center',
-                  flex: 1
-                }}>
+                  <h2 style={{ 
+                    margin: 0, 
+                    fontSize: '1.5rem', 
+                    fontWeight: '700', 
+                    color: '#000000',
+                    textAlign: 'center',
+                    flex: 1
+                  }}>
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                </h2>
+                  </h2>
 
                   <button
                     onClick={() => nextMonth()}
@@ -2294,16 +2294,16 @@ export default function TimetablePage() {
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                   }}>
                     {/* Calendar Header */}
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(7, 1fr)',
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(7, 1fr)', 
                       background: '#F9FAFB',
                       borderBottom: '1px solid #E5E7EB'
-                    }}>
+                  }}>
                       {daysOfWeek.map((day) => (
                         <div key={day} style={{
-                          padding: '1rem',
-                          textAlign: 'center',
+                        padding: '1rem', 
+                        textAlign: 'center',
                           fontWeight: '600',
                           color: '#374151',
                           borderRight: '1px solid #E5E7EB',
@@ -2311,10 +2311,10 @@ export default function TimetablePage() {
                           fontSize: '0.75rem',
                           letterSpacing: '0.05em',
                           textTransform: 'uppercase'
-                        }}>
+                      }}>
                           {day}
-                        </div>
-                      ))}
+                      </div>
+                    ))}
                     </div>
                     
                     {/* Calendar Body */}
@@ -2369,39 +2369,39 @@ export default function TimetablePage() {
                             borderRight: '1px solid #E5E7EB',
                             borderBottom: '1px solid #E5E7EB',
                             background: isToday ? 'rgba(88, 132, 253, 0.05)' : '#FFFFFF',
-                            transition: 'all 0.2s ease',
+                          transition: 'all 0.2s ease',
                             cursor: 'pointer',
                             ...(isToday && {
                               borderRight: '1px solid #5884FD',
                               borderBottom: '1px solid #5884FD',
                               position: 'relative'
                             })
-                          }}
+                        }}
                           onMouseEnter={(e) => {
-                            if (!isToday) {
+                          if (!isToday) {
                               e.currentTarget.style.background = '#F9FAFB';
-                            }
-                          }}
+                          }
+                        }}
                           onMouseLeave={(e) => {
-                            if (!isToday) {
+                          if (!isToday) {
                               e.currentTarget.style.background = '#FFFFFF';
-                            }
-                          }}
-                          onClick={() => {
+                          }
+                        }}
+                        onClick={() => {
                             const year = cellDate.getFullYear();
                             const month = String(cellDate.getMonth() + 1).padStart(2, '0');
                             const day = String(cellDate.getDate()).padStart(2, '0');
-                            const dateStr = `${year}-${month}-${day}`;
-                            setNewMeeting({
-                              ...newMeeting,
-                              date: dateStr,
-                              time: '09:00'
-                            });
-                            setShowCreateForm(true);
-                          }}
+                          const dateStr = `${year}-${month}-${day}`;
+                          setNewMeeting({
+                            ...newMeeting,
+                            date: dateStr,
+                            time: '09:00'
+                          });
+                          setShowCreateForm(true);
+                        }}
                         >
                           {isToday && (
-                            <div style={{
+                              <div style={{ 
                               position: 'absolute',
                               top: 0,
                               left: 0,
@@ -2417,7 +2417,7 @@ export default function TimetablePage() {
                             marginBottom: '0.5rem',
                             fontFamily: "'Mabry Pro', 'Inter', sans-serif",
                             fontSize: '1rem'
-                          }}>
+                              }}>
                             {dayNumber}
                           </div>
                           
@@ -2427,9 +2427,9 @@ export default function TimetablePage() {
                             gap: '0.25rem'
                           }}>
                             {(dayMeetings || []).slice(0, 3).map((meeting) => (
-                              <div
-                                key={meeting.id}
-                                style={{
+                              <div 
+                                key={meeting.id} 
+                                style={{ 
                                   background: '#F8FAFC',
                                   border: '1px solid #E2E8F0',
                                   borderRadius: '8px',
@@ -2472,7 +2472,7 @@ export default function TimetablePage() {
                                     {meeting.title}
                                   </div>
                                 </div>
-                                <div style={{
+                                <div style={{ 
                                   display: 'flex',
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
@@ -2481,14 +2481,14 @@ export default function TimetablePage() {
                                   <div style={{
                                     fontWeight: '500',
                                     maxWidth: '60%',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
+                                  overflow: 'hidden', 
+                                  textOverflow: 'ellipsis', 
+                                  whiteSpace: 'nowrap',
                                     color: '#6B7280'
-                                  }}>
+                                }}>
                                     {formatTime(meeting.time)}
-                                  </div>
-                                  <div style={{
+                                </div>
+                                  <div style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '0.125rem',
@@ -2502,7 +2502,7 @@ export default function TimetablePage() {
                             ))}
                             {(dayMeetings || []).length > 3 && (
                               <div 
-                                style={{
+                                style={{ 
                                   background: '#EEF2FF',
                                   border: '1px solid #C7D2FE',
                                   borderRadius: '6px',
@@ -2535,7 +2535,7 @@ export default function TimetablePage() {
                         </div>
                       );
                     })}
-                    
+                  
                     {/* Fill remaining cells with next month's days */}
                     {Array.from({ length: 42 - (firstDay + daysInMonth) }, (_, index) => {
                       const dayNumber = index + 1;
@@ -2548,19 +2548,19 @@ export default function TimetablePage() {
                           borderBottom: '1px solid #E5E7EB',
                           background: '#F9FAFB',
                           color: '#9CA3AF'
-                        }}>
-                          <div style={{
+                  }}>
+                    <div style={{
                             fontWeight: '600',
                             color: '#9CA3AF',
                             marginBottom: '0.5rem',
                             fontFamily: "'Mabry Pro', 'Inter', sans-serif",
                             fontSize: '1rem'
                           }}>{dayNumber}</div>
-                        </div>
+                      </div>
                       );
                     })}
+                      </div>
                     </div>
-                  </div>
                   
 
                 </div>

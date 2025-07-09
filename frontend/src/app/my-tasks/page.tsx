@@ -1563,12 +1563,12 @@ export default function MyTasksPage() {
               <div>
                 <h1 className="header-title">My Tasks</h1>
                 <p className="header-subtitle">Manage all your assigned tasks</p>
-              </div>
-              
+            </div>
+            
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={() => setViewMode('list')}
-                  style={{
+                style={{
                     padding: '0.75rem 1.25rem',
                     background: viewMode === 'list' ? '#5884FD' : '#ffffff',
                     color: viewMode === 'list' ? '#ffffff' : '#666666',
@@ -1577,8 +1577,8 @@ export default function MyTasksPage() {
                     fontSize: '0.9rem',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
                     gap: '0.5rem',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     letterSpacing: '-0.01em',
@@ -1609,7 +1609,7 @@ export default function MyTasksPage() {
                     background: viewMode === 'calendar' ? '#5884FD' : '#ffffff',
                     color: viewMode === 'calendar' ? '#ffffff' : '#666666',
                     border: '2px solid #e8e8e8',
-                    borderRadius: '12px',
+                  borderRadius: '12px',
                     fontSize: '0.9rem',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -1619,18 +1619,18 @@ export default function MyTasksPage() {
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     letterSpacing: '-0.01em',
                     boxShadow: viewMode === 'calendar' ? '0 4px 12px rgba(88, 132, 253, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.04)'
-                  }}
-                  onMouseEnter={(e) => {
+                }}
+                onMouseEnter={(e) => {
                     if (viewMode !== 'calendar') {
                       e.currentTarget.style.borderColor = '#C483D9';
                       e.currentTarget.style.transform = 'translateY(-1px)';
                       e.currentTarget.style.boxShadow = '0 4px 16px rgba(196, 131, 217, 0.15)';
                     }
-                  }}
-                  onMouseLeave={(e) => {
+                }}
+                onMouseLeave={(e) => {
                     if (viewMode !== 'calendar') {
                       e.currentTarget.style.borderColor = '#e8e8e8';
-                      e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
                     }
                   }}
@@ -1826,118 +1826,118 @@ export default function MyTasksPage() {
                     No tasks found
                   </h3>
                   <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5', color: '#999999' }}>
-                    {tasks.length === 0 
-                      ? "You don't have any assigned tasks yet." 
-                      : "No tasks match your current filters. Try adjusting your search or filters."
-                    }
+                  {tasks.length === 0 
+                    ? "You don't have any assigned tasks yet." 
+                    : "No tasks match your current filters. Try adjusting your search or filters."
+                  }
                   </p>
-                </div>
-              ) : (
-                <div className="tasks-list">
-                  {filteredTasks.map((task) => {
-                    const priorityConfig = getPriorityConfig(task.priority);
-                    const statusConfig = getStatusConfig(task.status);
-                    const daysUntilDue = getDaysUntilDue(task.due_date);
-                    const overdue = isOverdue(task.due_date);
-                    const urgent = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue > 0;
-                    
-                    return (
-                      <div 
-                        key={task.id} 
-                        className={`task-item ${overdue ? 'overdue' : urgent ? 'urgent' : ''}`}
-                        onClick={() => handleTaskClick(task)}
-                      >
-                        <div className="task-header">
-                          <div className="task-title-section">
-                            <h3 className="task-title">{task.name}</h3>
-                            <p className="task-project">{task.project.name}</p>
-                          </div>
-                          
-                          <div className="task-actions">
-                            <div 
-                              className="priority-badge"
-                              style={{ 
-                                backgroundColor: priorityConfig.color + '20',
-                                borderColor: priorityConfig.color,
-                                color: priorityConfig.color
-                              }}
-                            >
-                              <span>{priorityConfig.icon}</span>
-                              <span>{priorityConfig.label}</span>
-                            </div>
-                            
-                            <div 
-                              className="status-badge"
-                              style={{ 
-                                backgroundColor: statusConfig.color,
-                                borderColor: '#000000',
-                                color: '#000000'
-                              }}
-                            >
-                              <span>{statusConfig.icon}</span>
-                              <span>{statusConfig.label}</span>
-                            </div>
-                            
-                            <button
-                              className="view-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleTaskClick(task);
-                              }}
-                              title="View Details"
-                            >
-                              <EyeIcon style={{ width: '16px', height: '16px' }} />
-                            </button>
-                          </div>
+              </div>
+            ) : (
+              <div className="tasks-list">
+                {filteredTasks.map((task) => {
+                  const priorityConfig = getPriorityConfig(task.priority);
+                  const statusConfig = getStatusConfig(task.status);
+                  const daysUntilDue = getDaysUntilDue(task.due_date);
+                  const overdue = isOverdue(task.due_date);
+                  const urgent = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue > 0;
+                  
+                  return (
+                    <div 
+                      key={task.id} 
+                      className={`task-item ${overdue ? 'overdue' : urgent ? 'urgent' : ''}`}
+                      onClick={() => handleTaskClick(task)}
+                    >
+                      <div className="task-header">
+                        <div className="task-title-section">
+                          <h3 className="task-title">{task.name}</h3>
+                          <p className="task-project">{task.project.name}</p>
                         </div>
                         
-                        {task.description && (
-                          <p className="task-description">{task.description}</p>
-                        )}
-                        
-                        <div className="task-meta">
-                          {task.due_date && (
-                            <div className={`task-meta-item ${overdue ? 'overdue' : ''}`}>
-                              <CalendarIcon style={{ width: '14px', height: '14px' }} />
-                              <span>{formatDate(task.due_date)}</span>
-                              {overdue && <span style={{ fontWeight: 'bold' }}>(Overdue)</span>}
-                              {urgent && (
-                                <span style={{ fontWeight: 'bold' }}>({daysUntilDue}d left)</span>
-                              )}
-                            </div>
-                          )}
-                          
-                          <div className="task-meta-item">
-                            <UserIcon style={{ width: '14px', height: '14px' }} />
-                            <span>Created by {task.created_by.name}</span>
+                        <div className="task-actions">
+                          <div 
+                            className="priority-badge"
+                            style={{ 
+                              backgroundColor: priorityConfig.color + '20',
+                              borderColor: priorityConfig.color,
+                              color: priorityConfig.color
+                            }}
+                          >
+                            <span>{priorityConfig.icon}</span>
+                            <span>{priorityConfig.label}</span>
                           </div>
                           
-                          {(task.tags_list || []).length > 0 && (
-                            <div className="task-meta-item">
-                              <TagIcon style={{ width: '14px', height: '14px' }} />
-                              <span>{(task.tags_list || []).slice(0, 3).join(', ')}</span>
-                              {(task.tags_list || []).length > 3 && (
-                                <span style={{ fontWeight: 'bold' }}>+{(task.tags_list || []).length - 3} more</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="task-actions-row">
-                          {TASK_STATUSES.filter(s => s.value !== task.status).map(statusOption => (
-                            <button
-                              key={statusOption.value}
-                              onClick={() => handleTaskStatusChange(task.id, statusOption.value)}
-                              className="status-btn"
-                              title={`Move to ${statusOption.label}`}
-                            >
-                              {statusOption.icon} {statusOption.label}
-                            </button>
-                          ))}
+                          <div 
+                            className="status-badge"
+                            style={{ 
+                              backgroundColor: statusConfig.color,
+                              borderColor: '#000000',
+                              color: '#000000'
+                            }}
+                          >
+                            <span>{statusConfig.icon}</span>
+                            <span>{statusConfig.label}</span>
+                          </div>
+                          
+                          <button
+                            className="view-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTaskClick(task);
+                            }}
+                            title="View Details"
+                          >
+                            <EyeIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
                         </div>
                       </div>
-                    );
-                  })}
+                      
+                      {task.description && (
+                        <p className="task-description">{task.description}</p>
+                      )}
+                      
+                      <div className="task-meta">
+                        {task.due_date && (
+                          <div className={`task-meta-item ${overdue ? 'overdue' : ''}`}>
+                            <CalendarIcon style={{ width: '14px', height: '14px' }} />
+                            <span>{formatDate(task.due_date)}</span>
+                            {overdue && <span style={{ fontWeight: 'bold' }}>(Overdue)</span>}
+                            {urgent && (
+                              <span style={{ fontWeight: 'bold' }}>({daysUntilDue}d left)</span>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="task-meta-item">
+                          <UserIcon style={{ width: '14px', height: '14px' }} />
+                          <span>Created by {task.created_by.name}</span>
+                        </div>
+                        
+                        {(task.tags_list || []).length > 0 && (
+                          <div className="task-meta-item">
+                            <TagIcon style={{ width: '14px', height: '14px' }} />
+                            <span>{(task.tags_list || []).slice(0, 3).join(', ')}</span>
+                            {(task.tags_list || []).length > 3 && (
+                              <span style={{ fontWeight: 'bold' }}>+{(task.tags_list || []).length - 3} more</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="task-actions-row">
+                        {TASK_STATUSES.filter(s => s.value !== task.status).map(statusOption => (
+                          <button
+                            key={statusOption.value}
+                            onClick={() => handleTaskStatusChange(task.id, statusOption.value)}
+                            className="status-btn"
+                            title={`Move to ${statusOption.label}`}
+                          >
+                            {statusOption.icon} {statusOption.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
                 </div>
               )
             ) : (

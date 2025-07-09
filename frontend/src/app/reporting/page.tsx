@@ -703,7 +703,7 @@ export default function ReportingPage() {
                       letterSpacing: '-0.025em'
                     }}>
                       {selectedMember.user_info.name}
-                    </h2>
+              </h2>
                     <p style={{ 
                       fontSize: '1.1rem', 
                       color: '#666666', 
@@ -714,7 +714,7 @@ export default function ReportingPage() {
                     </p>
                   </div>
                 </div>
-                <button
+              <button
                   style={{ 
                     background: '#ffffff', 
                     border: '2px solid #e8e8e8', 
@@ -727,7 +727,7 @@ export default function ReportingPage() {
                     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
                     fontSize: '1rem'
                   }}
-                  onClick={() => setShowDetailModal(false)}
+                onClick={() => setShowDetailModal(false)}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#F87239';
                     e.currentTarget.style.color = '#ffffff';
@@ -744,7 +744,7 @@ export default function ReportingPage() {
                   }}
                 >
                   Close
-                </button>
+              </button>
               </div>
             </div>
 
@@ -785,7 +785,7 @@ export default function ReportingPage() {
                   letterSpacing: '-0.01em'
                 }}>
                   Total Tasks
-                </div>
+              </div>
               </div>
 
               <div style={{ 
@@ -817,7 +817,7 @@ export default function ReportingPage() {
                   letterSpacing: '-0.01em'
                 }}>
                   Completed
-                </div>
+              </div>
               </div>
 
               <div style={{ 
@@ -849,7 +849,7 @@ export default function ReportingPage() {
                   letterSpacing: '-0.01em'
                 }}>
                   In Progress
-                </div>
+              </div>
               </div>
 
               <div style={{ 
@@ -881,7 +881,7 @@ export default function ReportingPage() {
                   letterSpacing: '-0.01em'
                 }}>
                   Overdue
-                </div>
+              </div>
               </div>
 
               <div style={{ 
@@ -913,7 +913,7 @@ export default function ReportingPage() {
                   letterSpacing: '-0.01em'
                 }}>
                   To Do
-                </div>
+              </div>
               </div>
 
               <div style={{ 
@@ -982,19 +982,19 @@ export default function ReportingPage() {
                         letterSpacing: '-0.01em'
                       }}>
                         Overdue Tasks ({selectedMember.overdue_task_details.length})
-                      </h3>
+                  </h3>
                     </div>
                     
                     {selectedMember.overdue_task_details.length > 2 && (
-                      <button
-                        style={{
+                    <button
+                      style={{
                           background: '#F87239',
-                          color: '#ffffff',
-                          border: 'none',
+                        color: '#ffffff',
+                        border: 'none',
                           padding: '0.75rem 1.25rem',
                           borderRadius: '12px',
-                          fontSize: '0.875rem',
-                          cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
                           fontWeight: '500',
                           transition: 'all 0.3s ease',
                           boxShadow: '0 2px 8px rgba(248, 114, 57, 0.3)'
@@ -1008,19 +1008,19 @@ export default function ReportingPage() {
                           e.currentTarget.style.background = '#F87239';
                           e.currentTarget.style.transform = 'translateY(0)';
                           e.currentTarget.style.boxShadow = '0 2px 8px rgba(248, 114, 57, 0.3)';
-                        }}
-                        onClick={() => {
-                          const allOverdueTasks = selectedMember.overdue_task_details;
-                          alert(`All ${allOverdueTasks.length} overdue tasks:\n\n${allOverdueTasks.map((task: any, i: number) => 
-                            `${i+1}. ${task.name} (Due: ${task.due_date})`
-                          ).join('\n')}`);
-                        }}
-                      >
+                      }}
+                      onClick={() => {
+                        const allOverdueTasks = selectedMember.overdue_task_details;
+                        alert(`All ${allOverdueTasks.length} overdue tasks:\n\n${allOverdueTasks.map((task: any, i: number) => 
+                          `${i+1}. ${task.name} (Due: ${task.due_date})`
+                        ).join('\n')}`);
+                      }}
+                    >
                         View All {selectedMember.overdue_task_details.length}
-                      </button>
-                    )}
-                  </div>
-                  
+                    </button>
+                  )}
+                </div>
+                
                   <div style={{ 
                     display: 'grid', 
                     gap: '1rem',
@@ -1028,31 +1028,31 @@ export default function ReportingPage() {
                     overflow: 'auto'
                   }}>
                     {selectedMember.overdue_task_details.slice(0, 2).map((task: any, index: number) => (
-                      <div 
-                        key={index} 
-                        style={{ 
+                    <div 
+                      key={index} 
+                      style={{ 
                           background: '#ffffff',
                           border: '1px solid #fecaca',
                           borderRadius: '12px',
                           padding: '1.5rem',
-                          cursor: 'pointer',
+                        cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
-                        }}
-                        onMouseOver={(e) => {
+                      }}
+                      onMouseOver={(e) => {
                           e.currentTarget.style.borderColor = '#F87239';
                           e.currentTarget.style.transform = 'translateY(-1px)';
                           e.currentTarget.style.boxShadow = '0 4px 12px rgba(248, 114, 57, 0.2)';
-                        }}
-                        onMouseOut={(e) => {
+                      }}
+                      onMouseOut={(e) => {
                           e.currentTarget.style.borderColor = '#fecaca';
                           e.currentTarget.style.transform = 'translateY(0)';
                           e.currentTarget.style.boxShadow = '0 2px 8px rgba(248, 114, 57, 0.1)';
-                        }}
-                        onClick={() => {
-                          alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project_name || 'Unknown'}\n\nDays Overdue: ${task.days_overdue}`);
-                        }}
-                      >
+                      }}
+                      onClick={() => {
+                        alert(`Task Details:\n\nName: ${task.name}\nDescription: ${task.description || 'No description'}\nDue Date: ${task.due_date}\nPriority: ${task.priority || 'Not set'}\nProject: ${task.project_name || 'Unknown'}\n\nDays Overdue: ${task.days_overdue}`);
+                      }}
+                    >
                         <div style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
@@ -1068,33 +1068,33 @@ export default function ReportingPage() {
                           }}>
                             {task.name}
                           </h4>
-                          <span style={{ 
+                        <span style={{ 
                             background: 'linear-gradient(135deg, #F87239, #FB923C)', 
-                            color: '#ffffff', 
+                          color: '#ffffff', 
                             padding: '0.375rem 0.75rem', 
                             borderRadius: '16px', 
-                            fontSize: '0.75rem',
+                          fontSize: '0.75rem',
                             fontWeight: '600',
                             boxShadow: '0 2px 6px rgba(248, 114, 57, 0.3)'
-                          }}>
-                            {task.days_overdue} days overdue
-                          </span>
-                        </div>
-                        
+                        }}>
+                          {task.days_overdue} days overdue
+                        </span>
+                      </div>
+                      
                         <div style={{ 
                           fontSize: '0.9rem', 
                           color: '#666666', 
                           marginBottom: '0.75rem',
                           lineHeight: '1.4'
                         }}>
-                          <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </div>
-                        
+                        <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                      
                         <div style={{ 
                           display: 'flex', 
                           gap: '1.5rem', 
@@ -1102,10 +1102,10 @@ export default function ReportingPage() {
                           color: '#666666',
                           marginBottom: '0.75rem'
                         }}>
-                          <span><strong>Priority:</strong> {task.priority || 'Not set'}</span>
-                          <span><strong>Project:</strong> {task.project_name}</span>
-                        </div>
-                        
+                        <span><strong>Priority:</strong> {task.priority || 'Not set'}</span>
+                        <span><strong>Project:</strong> {task.project_name}</span>
+                      </div>
+                      
                         <div style={{ 
                           fontSize: '0.75rem', 
                           color: '#999999', 
@@ -1116,9 +1116,9 @@ export default function ReportingPage() {
                           fontStyle: 'italic'
                         }}>
                           Click for details
-                        </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
                   </div>
                   
                   {selectedMember.overdue_task_details.length > 2 && (
