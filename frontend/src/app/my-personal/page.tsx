@@ -130,11 +130,12 @@ export default function PersonalCalendarPage() {
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
       
-      // Fetch personal calendar events (filter by user ID for privacy)
+      // Fetch personal calendar events (filter by user ID and personal events)
       const { data, error } = await supabase
         .from('projects_meeting')
         .select('*')
         .eq('created_by_id', parseInt(user?.id?.toString() || '0'))
+        .eq('event_type', 'personal')
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('date', { ascending: true })
@@ -518,8 +519,8 @@ export default function PersonalCalendarPage() {
 
   const createEvent = async () => {
     try {
-      if (!newEvent.title.trim() || !newEvent.start_datetime) {
-        setError('Please fill in title and time');
+      if (!newEvent.title.trim() || !newEvent.start_datetime || !newEvent.project_id) {
+        setError('Please fill in all required fields');
         return;
       }
 
@@ -533,7 +534,7 @@ export default function PersonalCalendarPage() {
       const timeStr = startDate.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
       
-      // Create a PERSONAL event (no project_id for privacy)
+      // Create a PERSONAL event (associated with project but marked as personal)
       const { data, error } = await supabase
         .from('projects_meeting')
         .insert([{
@@ -544,9 +545,9 @@ export default function PersonalCalendarPage() {
           duration: duration,
           location: newEvent.location || null,
           color: newEvent.color,
-          event_type: 'personal', // Mark as personal
+          event_type: 'personal', // Mark as personal - this is the key for privacy
           all_day: newEvent.all_day,
-          project_id: null, // NO PROJECT - keeps it truly private
+          project_id: newEvent.project_id, // Associate with selected project
           attendee_ids: [parseInt(user?.id?.toString() || '0')],
           created_by_id: parseInt(user?.id?.toString() || '0')
         }])
@@ -1699,6 +1700,30 @@ export default function PersonalCalendarPage() {
                   value={newEvent.description}
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Project *</label>
+                <select
+                  required
+                  className="form-select"
+                  value={newEvent.project_id || 0}
+                  onChange={(e) => setNewEvent({ ...newEvent, project_id: Number(e.target.value) })}
+                >
+                  <option value={0}>Select a project</option>
+                  {projects.length === 0 ? (
+                    <option disabled>Loading projects...</option>
+                  ) : (
+                    projects.map(project => (
+                      <option key={project.id} value={project.id}>{project.name}</option>
+                    ))
+                  )}
+                </select>
+                {projects.length === 0 && (
+                  <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                    Debug: {projects.length} projects loaded
+                  </div>
+                )}
               </div>
 
               <div className="form-group">

@@ -46,6 +46,7 @@ interface Meeting {
   attendees?: string;
   attendees_list?: string[];
   attendee_ids?: number[]; // Add this field for proper attendee assignment
+  event_type?: string; // Add this field to distinguish personal vs project events
 }
 
 export default function TimetablePage() {
@@ -133,7 +134,12 @@ export default function TimetablePage() {
       const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
         const projectId = meeting.project_id || meeting.project;
         
-        // PERSONAL EVENTS (no project_id): Only show to creator
+        // PERSONAL EVENTS (event_type === 'personal'): Only show to creator
+        if (meeting.event_type === 'personal') {
+          return meeting.created_by?.id === user?.id;
+        }
+        
+        // PERSONAL EVENTS (no project_id): Only show to creator (legacy support)
         if (!projectId) {
           return meeting.created_by?.id === user?.id;
         }
