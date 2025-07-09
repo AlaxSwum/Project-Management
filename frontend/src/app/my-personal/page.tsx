@@ -55,7 +55,7 @@ export default function PersonalCalendarPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [settings, setSettings] = useState<CalendarSettings>({
     default_view: 'week',
-    time_format: '12h',
+    time_format: '24h', // Changed from '12h' to '24h' for 24-hour format
     start_hour: 6, // Start from 6 AM instead of midnight
     end_hour: 23, // End at 11 PM
     first_day_of_week: 0,
@@ -603,15 +603,6 @@ export default function PersonalCalendarPage() {
       const slotHeight = 40; // pixels per hour
       const headerHeight = 60;
       
-      // DEBUG: Log the positioning calculation
-      console.log(`🐛 Event "${event.title}":`, {
-        startHour,
-        startMinutes,
-        'settings.start_hour': settings.start_hour,
-        'relativeStartHour': startHour - settings.start_hour,
-        'topPosition calculation': `${headerHeight} + (${startHour - settings.start_hour} * ${slotHeight}) + (${startMinutes} * ${slotHeight} / 60)`
-      });
-      
       // FIXED: Calculate top position relative to visible start hour, not absolute 0
       const relativeStartHour = startHour - settings.start_hour;
       const topPosition = headerHeight + (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
@@ -619,12 +610,6 @@ export default function PersonalCalendarPage() {
       // Calculate height based on duration - REDUCED for better proportion
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
       const height = Math.max(24, (durationInMinutes * slotHeight / 60)); // Increased minimum to 24px
-      
-      console.log(`🐛 Final positioning for "${event.title}":`, {
-        topPosition,
-        height,
-        'will appear at': `${topPosition}px from top`
-      });
       
       return {
         ...event,
