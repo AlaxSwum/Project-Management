@@ -419,8 +419,7 @@ export default function PersonalCalendarPage() {
           event_type: newEvent.event_type,
           all_day: newEvent.all_day,
           project_id: null, // Personal events don't need a project
-          attendee_ids: [parseInt(user?.id?.toString() || '0')], // Only use attendee_ids, not attendees
-          created_by: parseInt(user?.id?.toString() || '0')
+          attendee_ids: [parseInt(user?.id?.toString() || '0')] // Only use attendee_ids, not attendees
         }])
         .select()
         .single();
@@ -481,12 +480,52 @@ export default function PersonalCalendarPage() {
     });
   };
 
+  // Get all events for a specific day with proper positioning
+  const getEventsForDay = (date: Date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    return events.filter(event => {
+      const eventStart = new Date(event.start_datetime);
+      const eventEnd = new Date(event.end_datetime);
+      
+      return (eventStart < dayEnd && eventEnd > dayStart);
+    }).map(event => {
+      const eventStart = new Date(event.start_datetime);
+      const eventEnd = new Date(event.end_datetime);
+      
+      // Calculate position and height
+      const startHour = eventStart.getHours();
+      const startMinutes = eventStart.getMinutes();
+      const endHour = eventEnd.getHours();
+      const endMinutes = eventEnd.getMinutes();
+      
+      const slotHeight = 40; // pixels per hour
+      const headerHeight = 60;
+      
+      // Calculate top position (from start of day)
+      const topPosition = headerHeight + (startHour * slotHeight) + (startMinutes * slotHeight / 60);
+      
+      // Calculate height based on duration
+      const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+      const height = Math.max(20, (durationInMinutes * slotHeight / 60)); // Minimum 20px height
+      
+      return {
+        ...event,
+        topPosition,
+        height,
+        startHour,
+        endHour,
+        duration: durationInMinutes
+      };
+    });
+  };
+
   const renderDayView = () => {
     const timeSlots = getTimeSlots();
-    const dayEvents = events.filter(event => {
-      const eventDate = new Date(event.start_datetime);
-      return eventDate.toDateString() === currentDate.toDateString();
-    });
+    const dayEvents = getEventsForDay(currentDate);
 
     // Calculate height to fit all 24 hours (24 * 40px = 960px + 60px header = 1020px)
     const slotHeight = 40;
@@ -531,7 +570,6 @@ export default function PersonalCalendarPage() {
 
           {/* Time slots */}
           {timeSlots.map(hour => {
-            const slotEvents = getEventsForTimeSlot(hour, currentDate);
             const isInDragRange = isSlotInDragRange(currentDate, hour);
             
             return (
@@ -565,41 +603,53 @@ export default function PersonalCalendarPage() {
                   transition: 'background-color 0.2s ease',
                   userSelect: 'none'
                 }}
-              >
-                {slotEvents.map((event, index) => (
-                  <div
-                    key={event.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEvent(event);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      left: `${index * 5 + 4}px`,
-                      right: '4px',
-                      top: '2px',
-                      bottom: '2px',
-                      background: event.color,
-                      color: '#ffffff',
-                      borderRadius: '4px',
-                      padding: '2px 6px',
-                      fontSize: '0.75rem',
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                    }}
-                  >
-                    <div style={{ fontWeight: '500', marginBottom: '1px' }}>
-                      {event.title}
-                    </div>
-                    <div style={{ opacity: 0.9, fontSize: '0.7rem' }}>
-                      {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              />
             );
           })}
+
+          {/* Events overlay - positioned absolutely to span multiple hours */}
+          {dayEvents.map((event, index) => (
+            <div
+              key={event.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedEvent(event);
+              }}
+              style={{
+                position: 'absolute',
+                left: `${index * 5 + 8}px`,
+                right: '8px',
+                top: `${event.topPosition}px`,
+                height: `${event.height}px`,
+                background: event.color,
+                color: '#ffffff',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: event.height > 30 ? 'flex-start' : 'center'
+              }}
+            >
+              <div style={{ fontWeight: '500', marginBottom: event.height > 30 ? '2px' : '0' }}>
+                {event.title}
+              </div>
+              {event.height > 30 && (
+                <div style={{ opacity: 0.9, fontSize: '0.7rem' }}>
+                  {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                </div>
+              )}
+              {event.height > 50 && event.location && (
+                <div style={{ opacity: 0.8, fontSize: '0.65rem', marginTop: '2px' }}>
+                  📍 {event.location}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -947,41 +997,7 @@ export default function PersonalCalendarPage() {
             </div>
           )}
 
-          {/* Drag Instructions */}
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #e8e8e8',
-            borderRadius: '12px',
-            padding: '1rem',
-            marginBottom: '2rem',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'linear-gradient(135deg, #5884FD, #C483D9)',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              fontSize: '1.2rem',
-              fontWeight: '600'
-            }}>
-              ✨
-            </div>
-            <div>
-              <div style={{ fontWeight: '500', color: '#1a1a1a', marginBottom: '0.25rem' }}>
-                Drag to Create Events
-              </div>
-              <div style={{ fontSize: '0.9rem', color: '#666666' }}>
-                Click and drag from 2 PM to 4 PM (or any time range) to create events seamlessly
-              </div>
-            </div>
-          </div>
+
 
           {/* Calendar Controls */}
           <div style={{
@@ -1132,40 +1148,56 @@ export default function PersonalCalendarPage() {
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
+          paddingTop: '5vh',
           zIndex: 1000,
           animation: 'fadeIn 0.2s ease-out'
         }}>
           <div style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '2rem',
+            background: '#F5F5ED',
+            borderRadius: '20px',
+            padding: '2.5rem',
             width: '90%',
-            maxWidth: '500px',
-            maxHeight: '90vh',
+            maxWidth: '550px',
+            maxHeight: '85vh',
             overflow: 'auto',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
-            animation: 'slideIn 0.3s ease-out'
+            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+            animation: 'slideIn 0.3s ease-out',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '1.5rem'
+              marginBottom: '2rem'
             }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0, color: '#1a1a1a' }}>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '300', margin: 0, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
                 Create New Event
               </h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.2rem',
                   cursor: 'pointer',
                   color: '#666666',
-                  padding: '0.25rem'
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)';
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 ×
@@ -1183,13 +1215,24 @@ export default function PersonalCalendarPage() {
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
                   }}
                   placeholder="Enter event title"
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#5884FD';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                  }}
                 />
               </div>
 
