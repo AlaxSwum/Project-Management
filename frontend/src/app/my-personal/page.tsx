@@ -762,7 +762,6 @@ export default function PersonalCalendarPage() {
                   gap: '4px',
                   marginBottom: '2px'
                 }}>
-                  <span>🕒</span>
                   {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
                 </div>
               )}
@@ -775,7 +774,6 @@ export default function PersonalCalendarPage() {
                   gap: '4px',
                   marginTop: '2px'
                 }}>
-                  <span>📍</span>
                   {event.location}
                 </div>
               )}
@@ -1029,7 +1027,6 @@ export default function PersonalCalendarPage() {
                         e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                       }}
                     >
-                      <span style={{ fontSize: '8px' }}>●</span>
                       {event.title}
                     </div>
                   ))}
@@ -1168,11 +1165,15 @@ export default function PersonalCalendarPage() {
           
           .form-input {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            transition: border-color 0.2s ease;
+            padding: 0.875rem 1rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+            outline: none;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
             box-sizing: border-box;
           }
           
@@ -1183,36 +1184,41 @@ export default function PersonalCalendarPage() {
           
           .form-textarea {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            min-height: 80px;
+            padding: 0.875rem 1rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            min-height: 100px;
             resize: vertical;
-            transition: border-color 0.2s ease;
+            transition: all 0.2s ease;
             box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.9);
+            outline: none;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
           }
           
           .form-textarea:focus {
-            outline: none;
             border-color: #000000;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
           }
           
           .form-select {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            background: #ffffff;
+            padding: 0.875rem 1rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
             cursor: pointer;
-            transition: border-color 0.2s ease;
+            transition: all 0.2s ease;
             box-sizing: border-box;
+            outline: none;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
           }
           
           .form-select:focus {
-            outline: none;
             border-color: #000000;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
           }
           
           .form-grid-3 {
@@ -1229,37 +1235,44 @@ export default function PersonalCalendarPage() {
           
           .btn-primary {
             flex: 1;
-            padding: 0.75rem 1rem;
-            background: #000000;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #5884FD, #4F75FC);
             color: #ffffff;
             border: none;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 500;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(88, 132, 253, 0.3);
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
           }
           
           .btn-primary:hover {
-            background: #111827;
+            background: linear-gradient(135deg, #4F75FC, #4366FC);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(88, 132, 253, 0.4);
           }
           
           .btn-secondary {
             flex: 1;
-            padding: 0.75rem 1rem;
-            background: #ffffff;
-            color: #374151;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
+            padding: 0.875rem 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #666666;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            font-family: 'Mabry Pro', 'Inter', sans-serif;
           }
           
           .btn-secondary:hover {
-            background: #f9fafb;
-            border-color: #d1d5db;
+            background: #ffffff;
+            border-color: #000000;
+            color: #000000;
+            transform: translateY(-1px);
           }
         `
       }} />
