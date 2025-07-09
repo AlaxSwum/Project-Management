@@ -27,6 +27,7 @@ import {
   TableCellsIcon,
   AcademicCapIcon,
   UserIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -881,6 +882,7 @@ Your report is now available in the system.`);
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'My Personal', href: '/my-personal', icon: CalendarDaysIcon },
+    { name: 'Password Manager', href: '/password-manager', icon: ShieldCheckIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
   ];
