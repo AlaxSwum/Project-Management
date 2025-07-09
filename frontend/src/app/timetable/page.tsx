@@ -133,8 +133,13 @@ export default function TimetablePage() {
       const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
         const projectId = meeting.project_id || meeting.project;
         
-        // Must have project access first
-        if (!projectId || !accessibleProjects.has(projectId)) {
+        // PERSONAL EVENTS (no project_id): Only show to creator
+        if (!projectId) {
+          return meeting.created_by?.id === user?.id;
+        }
+        
+        // PROJECT MEETINGS: Must have project access first
+        if (!accessibleProjects.has(projectId)) {
           return false;
         }
         

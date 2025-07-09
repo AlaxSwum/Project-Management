@@ -518,8 +518,8 @@ export default function PersonalCalendarPage() {
 
   const createEvent = async () => {
     try {
-      if (!newEvent.title.trim() || !newEvent.start_datetime || !newEvent.project_id) {
-        setError('Please fill in all required fields');
+      if (!newEvent.title.trim() || !newEvent.start_datetime) {
+        setError('Please fill in title and time');
         return;
       }
 
@@ -533,7 +533,7 @@ export default function PersonalCalendarPage() {
       const timeStr = startDate.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
       const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
       
-      // Create a meeting in the timetable using the selected project
+      // Create a PERSONAL event (no project_id for privacy)
       const { data, error } = await supabase
         .from('projects_meeting')
         .insert([{
@@ -544,9 +544,9 @@ export default function PersonalCalendarPage() {
           duration: duration,
           location: newEvent.location || null,
           color: newEvent.color,
-          event_type: newEvent.event_type,
+          event_type: 'personal', // Mark as personal
           all_day: newEvent.all_day,
-          project_id: newEvent.project_id, // Use selected project ID
+          project_id: null, // NO PROJECT - keeps it truly private
           attendee_ids: [parseInt(user?.id?.toString() || '0')],
           created_by_id: parseInt(user?.id?.toString() || '0')
         }])
@@ -1702,27 +1702,17 @@ export default function PersonalCalendarPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Project *</label>
+                <label className="form-label">Location</label>
                 <select
-                  required
                   className="form-select"
-                  value={newEvent.project_id || 0}
-                  onChange={(e) => setNewEvent({ ...newEvent, project_id: Number(e.target.value) })}
+                  value={newEvent.location}
+                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                 >
-                  <option value={0}>Select a project</option>
-                  {projects.length === 0 ? (
-                    <option disabled>Loading projects...</option>
-                  ) : (
-                    projects.map(project => (
-                      <option key={project.id} value={project.id}>{project.name}</option>
-                    ))
-                  )}
+                  <option value="">Select location (optional)</option>
+                  {locationOptions.map(location => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
                 </select>
-                {projects.length === 0 && (
-                  <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
-                    Debug: {projects.length} projects loaded
-                  </div>
-                )}
               </div>
 
               <div className="form-grid-3">
