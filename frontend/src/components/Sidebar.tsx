@@ -361,7 +361,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   };
 
   const toggleDropdown = () => {
+    console.log('🔥 DEBUG: Toggle dropdown clicked! Current state:', isDropdownOpen);
     setIsDropdownOpen(!isDropdownOpen);
+    console.log('🔥 DEBUG: Setting dropdown state to:', !isDropdownOpen);
   };
 
   const closeDropdown = () => {
@@ -1956,7 +1958,10 @@ Your report is now available in the system.`);
             <h1 className="sidebar-title">Projects</h1>
             <div className="sidebar-add-container" ref={dropdownRef}>
               <button
-                onClick={toggleDropdown}
+                onClick={(e) => {
+                  console.log('🔥 DEBUG: Plus (+) button clicked!', e);
+                  toggleDropdown();
+                }}
                 className={`sidebar-add-btn ${isDropdownOpen ? 'active' : ''}`}
                 title="Create new..."
               >
@@ -2127,7 +2132,10 @@ Your report is now available in the system.`);
       </div>
 
       {/* Dropdown Portal - Render outside sidebar */}
-      {isDropdownOpen && typeof window !== 'undefined' && createPortal(
+      {isDropdownOpen && (() => {
+        console.log('🔥 DEBUG: Rendering dropdown portal, isDropdownOpen =', isDropdownOpen);
+        return true;
+      })() && typeof window !== 'undefined' && createPortal(
         <div 
           style={{
             position: 'fixed',
