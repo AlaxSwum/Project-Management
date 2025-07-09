@@ -939,20 +939,25 @@ export default function PersonalCalendarPage() {
                 })}
 
                 {/* Week Day Events - positioned absolutely with corrected positioning */}
-                {getEventsForDay(day).map((event, index) => (
-                  <div
-                    key={event.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEvent(event);
-                      setShowEventModal(true);
-                      setIsEditingEvent(false);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      left: `${index * 4 + 6}px`,
-                      right: '6px',
-                      top: `${event.topPosition}px`,
+                {getEventsForDay(day).map((event, index) => {
+                  // In week view, we need to account for the day header height (60px)
+                  // and adjust the position accordingly since events are positioned relative to the day column, not the entire calendar
+                  const adjustedTopPosition = event.topPosition - 60; // Subtract the main header height since week view has its own day header
+                  
+                  return (
+                    <div
+                      key={event.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                        setShowEventModal(true);
+                        setIsEditingEvent(false);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        left: `${index * 4 + 6}px`,
+                        right: '6px',
+                        top: `${adjustedTopPosition}px`,
                       height: `${Math.max(24, event.height)}px`,
                       background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                       color: '#ffffff',
@@ -1011,7 +1016,8 @@ export default function PersonalCalendarPage() {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
