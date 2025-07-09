@@ -608,11 +608,17 @@ export default function PersonalCalendarPage() {
       const relativeStartHour = startHour - settings.start_hour;
       const topPosition = (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
       
-      // Debug: Log positioning for week view verification
-      console.log(`Week view - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
-      console.log(`  - Start hour: ${startHour}, Calendar starts at: ${settings.start_hour}`);
-      console.log(`  - Relative hour position: ${relativeStartHour}`);
-      console.log(`  - Top position: ${topPosition}px = (${relativeStartHour} * ${slotHeight}) + (${startMinutes} * ${slotHeight} / 60)`);
+      // TEMPORARY DEBUG: Check if event is being positioned correctly
+      if (event.title.includes("event")) {
+        console.log(`🔍 WEEK VIEW DEBUG - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
+        console.log(`  📅 Event time: ${startHour}:${startMinutes} (${event.start_datetime})`);
+        console.log(`  ⏰ Calendar starts at: ${settings.start_hour} (should be 0 for midnight)`);
+        console.log(`  📐 Relative hour: ${relativeStartHour} hours from calendar start`);
+        console.log(`  📏 Slot height: ${slotHeight}px per hour`);
+        console.log(`  📍 Calculated position: ${topPosition}px`);
+        console.log(`  🎯 Should be in slot: Hour ${startHour} (${formatHourSlot(startHour)})`);
+        console.log(`  ➡️ Expected position for hour ${startHour}: ${relativeStartHour * slotHeight}px + ${startMinutes * slotHeight / 60}px minutes`);
+      }
       
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
@@ -659,12 +665,17 @@ export default function PersonalCalendarPage() {
       const relativeStartHour = startHour - settings.start_hour;
       const topPosition = headerHeight + (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
       
-      // Debug: Log positioning for verification
-      console.log(`Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
-      console.log(`  - Start hour: ${startHour}, Calendar starts at: ${settings.start_hour}`);
-      console.log(`  - Relative hour position: ${relativeStartHour} (should be ${startHour} - ${settings.start_hour})`);
-      console.log(`  - Top position: ${topPosition}px = ${headerHeight} + (${relativeStartHour} * ${slotHeight}) + (${startMinutes} * ${slotHeight} / 60)`);
-      console.log(`  - Expected slot position: Hour ${startHour} should be at ${headerHeight + (relativeStartHour * slotHeight)}px`);
+      // TEMPORARY DEBUG: Check if event is being positioned correctly  
+      if (event.title.includes("event")) {
+        console.log(`🔍 DAY VIEW DEBUG - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
+        console.log(`  📅 Event time: ${startHour}:${startMinutes} (${event.start_datetime})`);
+        console.log(`  ⏰ Calendar starts at: ${settings.start_hour} (should be 0 for midnight)`);
+        console.log(`  📐 Relative hour: ${relativeStartHour} hours from calendar start`);
+        console.log(`  📏 Header height: ${headerHeight}px, Slot height: ${slotHeight}px per hour`);
+        console.log(`  📍 Calculated position: ${topPosition}px`);
+        console.log(`  🎯 Should be in slot: Hour ${startHour} (${formatHourSlot(startHour)})`);
+        console.log(`  ➡️ Expected position: ${headerHeight}px header + ${relativeStartHour * slotHeight}px slots + ${startMinutes * slotHeight / 60}px minutes`);
+      }
       
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
