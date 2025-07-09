@@ -578,6 +578,57 @@ export default function PersonalCalendarPage() {
     });
   };
 
+  // Get all events for a specific day with proper positioning for week view
+  const getEventsForDayWeekView = (date: Date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    return events.filter(event => {
+      const eventStart = new Date(event.start_datetime);
+      const eventEnd = new Date(event.end_datetime);
+      
+      return (eventStart < dayEnd && eventEnd > dayStart);
+    }).map(event => {
+      const eventStart = new Date(event.start_datetime);
+      const eventEnd = new Date(event.end_datetime);
+      
+      // Calculate position and height
+      const startHour = eventStart.getHours();
+      const startMinutes = eventStart.getMinutes();
+      const endHour = eventEnd.getHours();
+      const endMinutes = eventEnd.getMinutes();
+      
+      const slotHeight = 40; // pixels per hour
+      const weekViewDayHeaderHeight = 60; // Each day has its own header in week view
+      
+      // Calculate top position relative to visible start hour (0 AM = hour 0 = midnight)
+      // In week view, events start after the day header, not the main header
+      const relativeStartHour = startHour - settings.start_hour;
+      const topPosition = (relativeStartHour * slotHeight) + (startMinutes * slotHeight / 60);
+      
+      // Debug: Log positioning for week view verification
+      console.log(`Week view - Event "${event.title}" at ${startHour}:${startMinutes.toString().padStart(2, '0')}:`);
+      console.log(`  - Start hour: ${startHour}, Calendar starts at: ${settings.start_hour}`);
+      console.log(`  - Relative hour position: ${relativeStartHour}`);
+      console.log(`  - Top position: ${topPosition}px = (${relativeStartHour} * ${slotHeight}) + (${startMinutes} * ${slotHeight} / 60)`);
+      
+      // Calculate height based on duration
+      const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+      const height = Math.max(24, (durationInMinutes * slotHeight / 60)); // Minimum 24px
+      
+      return {
+        ...event,
+        topPosition,
+        height,
+        startHour,
+        endHour,
+        duration: durationInMinutes
+      };
+    });
+  };
+
   // Get all events for a specific day with proper positioning
   const getEventsForDay = (date: Date) => {
     const dayStart = new Date(date);
@@ -939,25 +990,20 @@ export default function PersonalCalendarPage() {
                 })}
 
                 {/* Week Day Events - positioned absolutely with corrected positioning */}
-                {getEventsForDay(day).map((event, index) => {
-                  // In week view, we need to account for the day header height (60px)
-                  // and adjust the position accordingly since events are positioned relative to the day column, not the entire calendar
-                  const adjustedTopPosition = event.topPosition - 60; // Subtract the main header height since week view has its own day header
-                  
-                  return (
-                    <div
-                      key={event.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedEvent(event);
-                        setShowEventModal(true);
-                        setIsEditingEvent(false);
-                      }}
-                      style={{
-                        position: 'absolute',
-                        left: `${index * 4 + 6}px`,
-                        right: '6px',
-                        top: `${adjustedTopPosition}px`,
+                {getEventsForDayWeekView(day).map((event, index) => (
+                  <div
+                    key={event.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEvent(event);
+                      setShowEventModal(true);
+                      setIsEditingEvent(false);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: `${index * 4 + 6}px`,
+                      right: '6px',
+                      top: `${event.topPosition}px`,
                       height: `${Math.max(24, event.height)}px`,
                       background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                       color: '#ffffff',
@@ -1016,8 +1062,7 @@ export default function PersonalCalendarPage() {
                       </div>
                     )}
                   </div>
-                  );
-                })}
+                ))}
               </div>
             </div>
           ))}
