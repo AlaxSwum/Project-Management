@@ -88,7 +88,7 @@ export default function PasswordVaultPage() {
     password_encrypted: '',
     website_url: '',
     notes: '',
-    folder_id: 0
+    folder_id: null as number | null
   });
   
   const [newFolder, setNewFolder] = useState({
@@ -249,7 +249,7 @@ export default function PasswordVaultPage() {
         password_encrypted: '',
         website_url: '',
         notes: '',
-        folder_id: 0
+        folder_id: null
       });
       setError('');
     } catch (err: any) {
@@ -367,7 +367,7 @@ export default function PasswordVaultPage() {
       password_encrypted: '',
       website_url: '',
       notes: '',
-      folder_id: selectedFolder || folders[0]?.id || 0
+              folder_id: selectedFolder || folders[0]?.id || null
     });
     setIsEditing(false);
     setShowPasswordModal(true);
@@ -1043,8 +1043,8 @@ export default function PasswordVaultPage() {
                       Folder
                     </label>
                     <select
-                      value={newPassword.folder_id}
-                      onChange={(e) => setNewPassword({...newPassword, folder_id: parseInt(e.target.value)})}
+                      value={newPassword.folder_id || ''}
+                      onChange={(e) => setNewPassword({...newPassword, folder_id: e.target.value ? parseInt(e.target.value) : null})}
                       style={{
                         width: '100%',
                         padding: '0.875rem',
@@ -1054,7 +1054,7 @@ export default function PasswordVaultPage() {
                         boxSizing: 'border-box'
                       }}
                     >
-                      <option value={0}>Select folder</option>
+                      <option value="">Select folder</option>
                       {folders.map(folder => (
                         <option key={folder.id} value={folder.id}>{folder.name}</option>
                       ))}
