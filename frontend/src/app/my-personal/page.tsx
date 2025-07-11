@@ -1647,7 +1647,12 @@ export default function PersonalCalendarPage() {
           {monthDays.map(day => {
             const dayEvents = events.filter(event => {
               const eventDate = new Date(event.start_datetime);
-              return eventDate.toDateString() === day.toDateString();
+              const isDateMatch = eventDate.toDateString() === day.toDateString();
+              
+              // Exclude micro-tasks from Month view
+              const isMicroTask = event.description?.includes('[MICRO-TASK]');
+              
+              return isDateMatch && !isMicroTask;
             });
 
             const isToday = day.toDateString() === new Date().toDateString();
