@@ -766,16 +766,16 @@ export default function PersonalCalendarPage() {
       }
     }
 
-    const slotHeight = 10; // Smaller height for 5-minute intervals
-    const headerHeight = 60;
+    const slotHeight = 20; // Increased height for better visibility
+    const headerHeight = 80;
     const totalHeight = fiveMinSlots.length * slotHeight + headerHeight;
 
     return (
       <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'auto', minHeight: '500px' }}>
         {/* Time column */}
-        <div style={{ width: '100px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
+        <div style={{ width: '120px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
           <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#5884FD' }}>5-Min Blocks</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#5884FD' }}>5-Min Blocks</div>
           </div>
           {fiveMinSlots.map((slot, index) => (
             <div key={`${slot.hour}-${slot.minute}`} style={{
@@ -784,10 +784,11 @@ export default function PersonalCalendarPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              paddingLeft: '4px',
-              fontSize: slot.minute === 0 ? '0.7rem' : '0.6rem',
+              paddingLeft: '8px',
+              fontSize: slot.minute === 0 ? '0.8rem' : '0.7rem',
               color: slot.minute === 0 ? '#64748b' : '#94a3b8',
-              fontWeight: slot.minute === 0 ? '600' : '400'
+              fontWeight: slot.minute === 0 ? '600' : '500',
+              background: slot.minute === 0 ? '#f1f5f9' : 'transparent'
             }}>
               {slot.minute === 0 ? formatHourSlot(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}
             </div>
@@ -801,6 +802,7 @@ export default function PersonalCalendarPage() {
             height: `${headerHeight}px`,
             borderBottom: '1px solid #e0e4e7',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             background: 'linear-gradient(135deg, #5884FD, #6c91ff)',
@@ -809,7 +811,12 @@ export default function PersonalCalendarPage() {
             fontSize: '1rem',
             boxShadow: '0 2px 4px rgba(88, 132, 253, 0.1)'
           }}>
-            {formatDate(currentDate)} - Elon Musk Style Time Blocking
+            <div style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '4px' }}>
+              {formatDate(currentDate)}
+            </div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: '500' }}>
+              🚀 Elon Musk Style Time Blocking
+            </div>
           </div>
 
           {/* 5-minute time slots */}
@@ -863,16 +870,20 @@ export default function PersonalCalendarPage() {
           {/* Events overlay - positioned absolutely for 5-minute precision */}
           {dayEvents.map((event, index) => {
             const eventStart = new Date(event.start_datetime);
+            const eventEnd = new Date(event.end_datetime);
             const startHour = eventStart.getHours();
             const startMinutes = eventStart.getMinutes();
             
             // Calculate position based on 5-minute slots
-            const slotIndex = fiveMinSlots.findIndex(slot => 
-              slot.hour === startHour && slot.minute <= startMinutes && startMinutes < slot.minute + 5
-            );
+            const totalMinutesFromStart = (startHour - settings.start_hour) * 60 + startMinutes;
+            const slotIndex = Math.floor(totalMinutesFromStart / 5);
+            
+            // Calculate duration in 5-minute slots
+            const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+            const durationInSlots = Math.ceil(durationInMinutes / 5);
             
             const topPosition = headerHeight + (slotIndex * slotHeight);
-            const eventHeight = Math.max(slotHeight, event.height / 4); // Scale down from hourly view
+            const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
             
             return (
               <div
@@ -891,9 +902,9 @@ export default function PersonalCalendarPage() {
                   height: `${eventHeight}px`,
                   background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
                   color: '#ffffff',
-                  borderRadius: '6px',
-                  padding: '2px 6px',
-                  fontSize: '0.65rem',
+                  borderRadius: '8px',
+                  padding: eventHeight > 30 ? '6px 12px' : '4px 8px',
+                  fontSize: eventHeight > 40 ? '0.8rem' : '0.75rem',
                   cursor: 'pointer',
                   overflow: 'hidden',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)',
@@ -919,22 +930,43 @@ export default function PersonalCalendarPage() {
                 }}
               >
                 <div style={{ 
-                  lineHeight: '1.2',
+                  lineHeight: '1.3',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                  whiteSpace: eventHeight > 40 ? 'normal' : 'nowrap',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                  fontWeight: '600',
+                  marginBottom: eventHeight > 30 ? '4px' : '2px'
                 }}>
                   {event.title}
                 </div>
-                {eventHeight > 15 && (
+                {eventHeight > 25 && (
                   <div style={{ 
-                    fontSize: '0.55rem', 
+                    fontSize: eventHeight > 40 ? '0.7rem' : '0.65rem', 
                     opacity: 0.9,
-                    marginTop: '1px',
+                    fontWeight: '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ 
+                      display: 'inline-block',
+                      width: '3px',
+                      height: '3px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.7)'
+                    }}></span>
+                    {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                  </div>
+                )}
+                {eventHeight > 50 && event.location && (
+                  <div style={{ 
+                    fontSize: '0.6rem', 
+                    opacity: 0.8,
+                    marginTop: '3px',
                     fontWeight: '400'
                   }}>
-                    {formatTime(event.start_datetime)}
+                    📍 {event.location}
                   </div>
                 )}
               </div>
