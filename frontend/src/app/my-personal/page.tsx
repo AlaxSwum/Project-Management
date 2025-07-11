@@ -46,7 +46,7 @@ interface CalendarSettings {
   theme_color: string;
 }
 
-type ViewType = 'month' | 'week' | 'day';
+type ViewType = 'month' | 'week' | 'day' | '5min';
 
 export default function PersonalCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -609,6 +609,22 @@ export default function PersonalCalendarPage() {
     });
   };
 
+  // Helper function to detect overlapping events
+  const getOverlappingEvents = (dayEvents: any[], targetEvent: any) => {
+    const targetStart = new Date(targetEvent.start_datetime).getTime();
+    const targetEnd = new Date(targetEvent.end_datetime).getTime();
+    
+    return dayEvents.filter(event => {
+      if (event.id === targetEvent.id) return false;
+      
+      const eventStart = new Date(event.start_datetime).getTime();
+      const eventEnd = new Date(event.end_datetime).getTime();
+      
+      // Check if events overlap
+      return (eventStart < targetEnd && eventEnd > targetStart);
+    });
+  };
+
   // Get all events for a specific day with proper positioning for week view
   const getEventsForDayWeekView = (date: Date) => {
     const dayStart = new Date(date);
@@ -616,12 +632,14 @@ export default function PersonalCalendarPage() {
     const dayEnd = new Date(date);
     dayEnd.setHours(23, 59, 59, 999);
     
-    return events.filter(event => {
+    const dayEvents = events.filter(event => {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
       return (eventStart < dayEnd && eventEnd > dayStart);
-    }).map(event => {
+    });
+    
+    return dayEvents.map((event, index) => {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
@@ -644,11 +662,19 @@ export default function PersonalCalendarPage() {
       const slotIndex = timeSlots.indexOf(startHour);
       const topPosition = weekViewDayHeaderHeight + (slotIndex * slotHeight) + (startMinutes * slotHeight / 60);
       
-
-      
       // Calculate height based on duration
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
       const height = Math.max(24, (durationInMinutes * slotHeight / 60)); // Minimum 24px
+      
+      // Calculate overlap positioning
+      const overlappingEvents = getOverlappingEvents(dayEvents, event);
+      const totalOverlapping = overlappingEvents.length + 1; // +1 for current event
+      const currentPosition = overlappingEvents.filter(e => 
+        new Date(e.start_datetime).getTime() <= new Date(event.start_datetime).getTime()
+      ).length;
+      
+      const eventWidth = totalOverlapping > 1 ? `${95 / totalOverlapping}%` : 'calc(100% - 16px)';
+      const eventLeft = totalOverlapping > 1 ? `${(currentPosition * 95) / totalOverlapping + 2}%` : '8px';
       
       return {
         ...event,
@@ -656,7 +682,10 @@ export default function PersonalCalendarPage() {
         height,
         startHour,
         endHour,
-        duration: durationInMinutes
+        duration: durationInMinutes,
+        eventWidth,
+        eventLeft,
+        totalOverlapping
       };
     });
   };
@@ -668,12 +697,14 @@ export default function PersonalCalendarPage() {
     const dayEnd = new Date(date);
     dayEnd.setHours(23, 59, 59, 999);
     
-    return events.filter(event => {
+    const dayEvents = events.filter(event => {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
       return (eventStart < dayEnd && eventEnd > dayStart);
-    }).map(event => {
+    });
+    
+    return dayEvents.map((event, index) => {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
@@ -700,15 +731,218 @@ export default function PersonalCalendarPage() {
       const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
       const height = Math.max(24, (durationInMinutes * slotHeight / 60)); // Minimum 24px
       
+      // Calculate overlap positioning
+      const overlappingEvents = getOverlappingEvents(dayEvents, event);
+      const totalOverlapping = overlappingEvents.length + 1; // +1 for current event
+      const currentPosition = overlappingEvents.filter(e => 
+        new Date(e.start_datetime).getTime() <= new Date(event.start_datetime).getTime()
+      ).length;
+      
+      const eventWidth = totalOverlapping > 1 ? `${90 / totalOverlapping}%` : 'calc(100% - 32px)';
+      const eventLeft = totalOverlapping > 1 ? `${(currentPosition * 90) / totalOverlapping + 5}%` : '16px';
+      
       return {
         ...event,
         topPosition,
         height,
         startHour,
         endHour,
-        duration: durationInMinutes
+        duration: durationInMinutes,
+        eventWidth,
+        eventLeft,
+        totalOverlapping
       };
     });
+  };
+
+  const render5MinView = () => {
+    const dayEvents = getEventsForDay(currentDate);
+
+    // Generate 5-minute time slots
+    const fiveMinSlots = [];
+    for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
+      for (let minute = 0; minute < 60; minute += 5) {
+        fiveMinSlots.push({ hour, minute });
+      }
+    }
+
+    const slotHeight = 10; // Smaller height for 5-minute intervals
+    const headerHeight = 60;
+    const totalHeight = fiveMinSlots.length * slotHeight + headerHeight;
+
+    return (
+      <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'auto', minHeight: '500px' }}>
+        {/* Time column */}
+        <div style={{ width: '100px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
+          <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#5884FD' }}>5-Min Blocks</div>
+          </div>
+          {fiveMinSlots.map((slot, index) => (
+            <div key={`${slot.hour}-${slot.minute}`} style={{
+              height: `${slotHeight}px`,
+              borderBottom: slot.minute === 0 ? '1px solid #e0e4e7' : slot.minute % 15 === 0 ? '1px solid #f0f1f2' : '1px solid #f8f9fa',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingLeft: '4px',
+              fontSize: slot.minute === 0 ? '0.7rem' : '0.6rem',
+              color: slot.minute === 0 ? '#64748b' : '#94a3b8',
+              fontWeight: slot.minute === 0 ? '600' : '400'
+            }}>
+              {slot.minute === 0 ? formatHourSlot(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}
+            </div>
+          ))}
+        </div>
+
+        {/* 5-minute timeline column */}
+        <div style={{ flex: 1, position: 'relative', background: '#ffffff' }}>
+          {/* Header */}
+          <div style={{
+            height: `${headerHeight}px`,
+            borderBottom: '1px solid #e0e4e7',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #5884FD, #6c91ff)',
+            color: '#ffffff',
+            fontWeight: '600',
+            fontSize: '1rem',
+            boxShadow: '0 2px 4px rgba(88, 132, 253, 0.1)'
+          }}>
+            {formatDate(currentDate)} - Elon Musk Style Time Blocking
+          </div>
+
+          {/* 5-minute time slots */}
+          {fiveMinSlots.map((slot, index) => {
+            const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
+            
+            return (
+              <div 
+                key={`${slot.hour}-${slot.minute}`} 
+                onClick={(e) => {
+                  const startTime = new Date(currentDate);
+                  startTime.setHours(slot.hour, slot.minute, 0, 0);
+                  const endTime = new Date(startTime);
+                  endTime.setMinutes(startTime.getMinutes() + 5);
+                  
+                  const formatForInput = (date: Date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                  };
+
+                  setNewEvent({
+                    ...newEvent,
+                    start_datetime: formatForInput(startTime),
+                    end_datetime: formatForInput(endTime)
+                  });
+                  setShowCreateModal(true);
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f0f8ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
+                }}
+                style={{
+                  height: `${slotHeight}px`,
+                  borderBottom: slot.minute === 0 ? '1px solid #e0e4e7' : slot.minute % 15 === 0 ? '1px solid #f0f1f2' : '1px solid #f8f9fa',
+                  position: 'relative',
+                  background: isWorkingHour ? '#fafbfc' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  userSelect: 'none'
+                }}
+              />
+            );
+          })}
+
+          {/* Events overlay - positioned absolutely for 5-minute precision */}
+          {dayEvents.map((event, index) => {
+            const eventStart = new Date(event.start_datetime);
+            const startHour = eventStart.getHours();
+            const startMinutes = eventStart.getMinutes();
+            
+            // Calculate position based on 5-minute slots
+            const slotIndex = fiveMinSlots.findIndex(slot => 
+              slot.hour === startHour && slot.minute <= startMinutes && startMinutes < slot.minute + 5
+            );
+            
+            const topPosition = headerHeight + (slotIndex * slotHeight);
+            const eventHeight = Math.max(slotHeight, event.height / 4); // Scale down from hourly view
+            
+            return (
+              <div
+                key={event.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedEvent(event);
+                  setShowEventModal(true);
+                  setIsEditingEvent(false);
+                }}
+                style={{
+                  position: 'absolute',
+                  left: event.eventLeft,
+                  width: event.eventWidth,
+                  top: `${topPosition}px`,
+                  height: `${eventHeight}px`,
+                  background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
+                  color: '#ffffff',
+                  borderRadius: '6px',
+                  padding: '2px 6px',
+                  fontSize: '0.65rem',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)',
+                  zIndex: 10 + index,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontWeight: '600',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+              >
+                <div style={{ 
+                  lineHeight: '1.2',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                }}>
+                  {event.title}
+                </div>
+                {eventHeight > 15 && (
+                  <div style={{ 
+                    fontSize: '0.55rem', 
+                    opacity: 0.9,
+                    marginTop: '1px',
+                    fontWeight: '400'
+                  }}>
+                    {formatTime(event.start_datetime)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const renderDayView = () => {
@@ -812,8 +1046,8 @@ export default function PersonalCalendarPage() {
               }}
               style={{
                 position: 'absolute',
-                left: '16px',
-                width: 'calc(100% - 32px)',
+                left: event.eventLeft,
+                width: event.eventWidth,
                 top: `${event.topPosition}px`,
                 height: `${event.height}px`,
                 background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
@@ -1034,8 +1268,8 @@ export default function PersonalCalendarPage() {
                     }}
                     style={{
                       position: 'absolute',
-                      left: '8px',
-                      width: 'calc(100% - 16px)',
+                      left: event.eventLeft,
+                      width: event.eventWidth,
                       top: `${event.topPosition}px`,
                       height: `${Math.max(24, event.height)}px`,
                       background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
@@ -1541,7 +1775,7 @@ export default function PersonalCalendarPage() {
               {/* View Controls */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {(['month', 'week', 'day'] as ViewType[]).map(view => (
+                  {(['month', 'week', 'day', '5min'] as ViewType[]).map(view => (
                     <button
                       key={view}
                       onClick={() => setCurrentView(view)}
@@ -1555,10 +1789,10 @@ export default function PersonalCalendarPage() {
                         fontWeight: '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        textTransform: 'capitalize'
+                        textTransform: view === '5min' ? 'none' : 'capitalize'
                       }}
                     >
-                      {view}
+                      {view === '5min' ? '5-Min Time-Blocking' : view}
                     </button>
                   ))}
                 </div>
@@ -1602,6 +1836,7 @@ export default function PersonalCalendarPage() {
                   {currentView === 'month' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   {currentView === 'week' && `${getViewStartDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${getViewEndDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
                   {currentView === 'day' && formatDate(currentDate)}
+                  {currentView === '5min' && formatDate(currentDate)}
                 </div>
 
                 <button
@@ -1634,6 +1869,7 @@ export default function PersonalCalendarPage() {
             {currentView === 'month' && renderMonthView()}
             {currentView === 'week' && renderWeekView()}
             {currentView === 'day' && renderDayView()}
+            {currentView === '5min' && render5MinView()}
             
             {/* Drag Preview Tooltip */}
             {isDragging && dragPreview && (
@@ -1854,7 +2090,7 @@ export default function PersonalCalendarPage() {
                 <input
                   type="time"
                   required
-                  step="900"
+                  step="300"
                   className="form-input"
                   value={newEvent.start_datetime.split('T')[1] || ''}
                   onChange={(e) => {
@@ -1881,7 +2117,7 @@ export default function PersonalCalendarPage() {
                 <input
                   type="time"
                   required
-                  step="900"
+                  step="300"
                   className="form-input"
                   value={newEvent.end_datetime.split('T')[1] || ''}
                   onChange={(e) => {
@@ -1900,9 +2136,9 @@ export default function PersonalCalendarPage() {
                 <label className="form-label">Duration (Minutes)</label>
                 <input
                   type="number"
-                  min="15"
+                  min="5"
                   max="480"
-                  step="15"
+                  step="5"
                   className="form-input"
                   placeholder="Minutes"
                   value={newEvent.start_datetime && newEvent.end_datetime ? 
