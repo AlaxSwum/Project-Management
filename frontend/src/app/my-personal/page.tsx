@@ -605,7 +605,10 @@ export default function PersonalCalendarPage() {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
-      return (eventStart < slotEnd && eventEnd > slotStart);
+      // Exclude micro-tasks from Day/Week/Month views
+      const isMicroTask = event.description?.includes('[MICRO-TASK]');
+      
+      return (eventStart < slotEnd && eventEnd > slotStart) && !isMicroTask;
     });
   };
 
@@ -636,7 +639,10 @@ export default function PersonalCalendarPage() {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
-      return (eventStart < dayEnd && eventEnd > dayStart);
+      // Exclude micro-tasks from Day/Week/Month views
+      const isMicroTask = event.description?.includes('[MICRO-TASK]');
+      
+      return (eventStart < dayEnd && eventEnd > dayStart) && !isMicroTask;
     });
     
     return dayEvents.map((event, index) => {
@@ -701,7 +707,10 @@ export default function PersonalCalendarPage() {
       const eventStart = new Date(event.start_datetime);
       const eventEnd = new Date(event.end_datetime);
       
-      return (eventStart < dayEnd && eventEnd > dayStart);
+      // Exclude micro-tasks from Day/Week/Month views
+      const isMicroTask = event.description?.includes('[MICRO-TASK]');
+      
+      return (eventStart < dayEnd && eventEnd > dayStart) && !isMicroTask;
     });
     
     return dayEvents.map((event, index) => {
@@ -755,15 +764,30 @@ export default function PersonalCalendarPage() {
     });
   };
 
+  // Special function for 5-Min view that includes ALL events (main tasks + micro-tasks)
+  const getAllEventsForDay = (date: Date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    return events.filter(event => {
+      const eventStart = new Date(event.start_datetime);
+      const eventEnd = new Date(event.end_datetime);
+      
+      return (eventStart < dayEnd && eventEnd > dayStart);
+    });
+  };
+
   const render5MinView = () => {
-    const dayEvents = getEventsForDay(currentDate);
+    const allDayEvents = getAllEventsForDay(currentDate);
     
     // Separate main tasks from micro-tasks
-    const mainTasks = dayEvents.filter(event => 
+    const mainTasks = allDayEvents.filter(event => 
       !event.description?.includes('[MICRO-TASK]')
     );
     
-    const microTasks = dayEvents.filter(event => 
+    const microTasks = allDayEvents.filter(event => 
       event.description?.includes('[MICRO-TASK]')
     );
     
@@ -771,7 +795,7 @@ export default function PersonalCalendarPage() {
     console.log('5-Min View Debug:', {
       currentDate: currentDate.toISOString(),
       allEvents: events.length,
-      dayEvents: dayEvents.length,
+      allDayEvents: allDayEvents.length,
       mainTasks: mainTasks.length,
       microTasks: microTasks.length
     });
