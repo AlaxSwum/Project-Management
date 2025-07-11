@@ -758,17 +758,22 @@ export default function PersonalCalendarPage() {
   const render5MinView = () => {
     const dayEvents = getEventsForDay(currentDate);
     
+    // Separate main tasks from micro-tasks
+    const mainTasks = dayEvents.filter(event => 
+      !event.description?.includes('[MICRO-TASK]')
+    );
+    
+    const microTasks = dayEvents.filter(event => 
+      event.description?.includes('[MICRO-TASK]')
+    );
+    
     // Debug logging
     console.log('5-Min View Debug:', {
       currentDate: currentDate.toISOString(),
       allEvents: events.length,
       dayEvents: dayEvents.length,
-      dayEventsDetails: dayEvents.map(e => ({
-        id: e.id,
-        title: e.title,
-        start: e.start_datetime,
-        end: e.end_datetime
-      }))
+      mainTasks: mainTasks.length,
+      microTasks: microTasks.length
     });
 
     // Generate 5-minute time slots (show every 15 minutes for cleaner look, but maintain 5-min precision)
@@ -894,7 +899,7 @@ export default function PersonalCalendarPage() {
           })}
 
           {/* Main task events overlay */}
-          {dayEvents.map((event, index) => {
+          {mainTasks.map((event, index) => {
             const eventStart = new Date(event.start_datetime);
             const eventEnd = new Date(event.end_datetime);
             const startHour = eventStart.getHours();
@@ -1042,7 +1047,7 @@ export default function PersonalCalendarPage() {
                   setNewEvent({
                     ...newEvent,
                     title: '',
-                    description: '',
+                    description: '[MICRO-TASK] ', // Add prefix to identify micro-tasks
                     start_datetime: formatForInput(startTime),
                     end_datetime: formatForInput(endTime),
                     color: '#8b5cf6' // Purple for micro-tasks
@@ -1095,6 +1100,90 @@ export default function PersonalCalendarPage() {
                     fontWeight: '700'
                   }}>
                     +
+                  </div>
+                                  )}
+                </div>
+              );
+            })}
+
+          {/* Micro-task events overlay */}
+          {microTasks.map((event, index) => {
+            const eventStart = new Date(event.start_datetime);
+            const eventEnd = new Date(event.end_datetime);
+            const startHour = eventStart.getHours();
+            const startMinutes = eventStart.getMinutes();
+            
+            // Calculate position based on 5-minute slots
+            const totalMinutesFromStart = (startHour - settings.start_hour) * 60 + startMinutes;
+            const slotIndex = Math.floor(totalMinutesFromStart / 5);
+            
+            // Calculate duration in 5-minute slots
+            const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+            const durationInSlots = Math.ceil(durationInMinutes / 5);
+            
+            const topPosition = headerHeight + (slotIndex * slotHeight);
+            const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
+            
+            return (
+              <div
+                key={`micro-event-${event.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedEvent(event);
+                  setShowEventModal(true);
+                  setIsEditingEvent(false);
+                }}
+                style={{
+                  position: 'absolute',
+                  left: '8px',
+                  width: 'calc(100% - 16px)',
+                  top: `${topPosition}px`,
+                  height: `${eventHeight}px`,
+                  background: `linear-gradient(135deg, #8b5cf6, #7c3aed)`,
+                  color: '#ffffff',
+                  borderRadius: '6px',
+                  padding: eventHeight > 30 ? '6px 10px' : '4px 8px',
+                  fontSize: eventHeight > 40 ? '0.75rem' : '0.7rem',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3), 0 1px 4px rgba(139, 92, 246, 0.2)',
+                  zIndex: 10 + index,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontWeight: '600',
+                  minHeight: '16px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4), 0 2px 6px rgba(139, 92, 246, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(139, 92, 246, 0.3), 0 1px 4px rgba(139, 92, 246, 0.2)';
+                }}
+              >
+                <div style={{ 
+                  lineHeight: '1.2',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: eventHeight > 25 ? 'normal' : 'nowrap',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                  fontWeight: '700',
+                  fontSize: eventHeight > 30 ? '0.75rem' : '0.7rem'
+                }}>
+                  {event.title}
+                </div>
+                {eventHeight > 20 && (
+                  <div style={{ 
+                    fontSize: '0.6rem', 
+                    opacity: 0.9,
+                    fontWeight: '400',
+                    marginTop: '2px'
+                  }}>
+                    {formatTime(event.start_datetime)}
                   </div>
                 )}
               </div>
