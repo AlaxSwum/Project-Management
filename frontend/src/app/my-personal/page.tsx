@@ -801,7 +801,7 @@ export default function PersonalCalendarPage() {
       }}>
         {/* Time column */}
         <div style={{ 
-          width: '140px', 
+          width: '120px', 
           borderRight: '2px solid #e0e4e7', 
           background: 'linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%)',
           borderTopLeftRadius: '12px',
@@ -818,8 +818,8 @@ export default function PersonalCalendarPage() {
             color: '#ffffff',
             borderTopLeftRadius: '12px'
           }}>
-            <div style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '4px' }}>TIME BLOCKS</div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: '500' }}>5-Minute Precision</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '2px' }}>TIME</div>
+            <div style={{ fontSize: '0.6rem', opacity: 0.8, fontWeight: '500' }}>5-Min Precision</div>
           </div>
           {fiveMinSlots.map((slot, index) => {
             if (!slot.isMainSlot) return null; // Only show 15-minute intervals in sidebar for cleaner look
@@ -830,29 +830,28 @@ export default function PersonalCalendarPage() {
                 borderBottom: slot.minute === 0 ? '2px solid #d1d5db' : '1px solid #e5e7eb',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'flex-start',
-                paddingLeft: '16px',
-                fontSize: slot.minute === 0 ? '0.9rem' : '0.8rem',
+                justifyContent: 'center',
+                fontSize: slot.minute === 0 ? '0.8rem' : '0.7rem',
                 color: slot.minute === 0 ? '#1e293b' : '#64748b',
                 fontWeight: slot.minute === 0 ? '700' : '600',
                 background: slot.minute === 0 ? 'rgba(88, 132, 253, 0.05)' : 'transparent',
                 position: 'relative'
               }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <div style={{ textAlign: 'center' }}>
                   <div>{slot.minute === 0 ? formatHourSlot(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}</div>
-                  {slot.minute === 0 && (
-                    <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '2px' }}>
-                      +15 min blocks
-                    </div>
-                  )}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* 5-minute timeline column */}
-        <div style={{ flex: 1, position: 'relative', background: '#ffffff', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+        {/* Main Tasks Column */}
+        <div style={{ 
+          flex: 1, 
+          borderRight: '2px solid #e0e4e7', 
+          background: '#ffffff',
+          position: 'relative'
+        }}>
           {/* Header */}
           <div style={{
             height: `${headerHeight}px`,
@@ -861,32 +860,170 @@ export default function PersonalCalendarPage() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #5884FD, #6366f1)',
+            background: 'linear-gradient(135deg, #059669, #10b981)',
             color: '#ffffff',
-            fontWeight: '600',
-            fontSize: '1rem',
-            boxShadow: '0 2px 8px rgba(88, 132, 253, 0.15)',
-            borderTopRightRadius: '12px'
+            fontWeight: '600'
           }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '6px' }}>
-              {formatDate(currentDate)}
+            <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '4px' }}>
+              MAIN TASKS
             </div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.95, fontWeight: '500', textAlign: 'center' }}>
-              Hyper-Focused Time Management
-            </div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: '400', marginTop: '2px' }}>
-              Click any 5-minute block to schedule
+            <div style={{ fontSize: '0.7rem', opacity: 0.9, fontWeight: '500', textAlign: 'center' }}>
+              Events from Week/Day/Month
             </div>
           </div>
 
-          {/* 5-minute time slots */}
+          {/* Main task time slots */}
           {fiveMinSlots.map((slot, index) => {
             const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
             const isQuarterHour = slot.minute % 15 === 0;
             
             return (
               <div 
-                key={`${slot.hour}-${slot.minute}`} 
+                key={`main-${slot.hour}-${slot.minute}`} 
+                style={{
+                  height: `${slotHeight}px`,
+                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : isQuarterHour ? '1px solid #e5e7eb' : '1px solid #f1f5f9',
+                  borderRight: isQuarterHour ? '1px solid #e5e7eb' : 'none',
+                  position: 'relative',
+                  background: isWorkingHour ? 'rgba(5, 150, 105, 0.02)' : '#ffffff',
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none'
+                }}
+              />
+            );
+          })}
+
+          {/* Main task events overlay */}
+          {dayEvents.map((event, index) => {
+            const eventStart = new Date(event.start_datetime);
+            const eventEnd = new Date(event.end_datetime);
+            const startHour = eventStart.getHours();
+            const startMinutes = eventStart.getMinutes();
+            
+            // Calculate position based on 5-minute slots
+            const totalMinutesFromStart = (startHour - settings.start_hour) * 60 + startMinutes;
+            const slotIndex = Math.floor(totalMinutesFromStart / 5);
+            
+            // Calculate duration in 5-minute slots
+            const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+            const durationInSlots = Math.ceil(durationInMinutes / 5);
+            
+            const topPosition = headerHeight + (slotIndex * slotHeight);
+            const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
+            
+            return (
+              <div
+                key={`main-event-${event.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedEvent(event);
+                  setShowEventModal(true);
+                  setIsEditingEvent(false);
+                }}
+                style={{
+                  position: 'absolute',
+                  left: '8px',
+                  width: 'calc(100% - 16px)',
+                  top: `${topPosition}px`,
+                  height: `${eventHeight}px`,
+                  background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  padding: eventHeight > 50 ? '10px 12px' : eventHeight > 30 ? '6px 10px' : '4px 8px',
+                  fontSize: eventHeight > 60 ? '0.85rem' : eventHeight > 40 ? '0.75rem' : '0.7rem',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)',
+                  zIndex: 10 + index,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: eventHeight > 40 ? 'flex-start' : 'center',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontWeight: '600',
+                  minHeight: '20px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <div style={{ 
+                  lineHeight: '1.3',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: eventHeight > 40 ? 'normal' : 'nowrap',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                  fontWeight: '700',
+                  marginBottom: eventHeight > 30 ? '3px' : '1px'
+                }}>
+                  {event.title}
+                </div>
+                {eventHeight > 25 && (
+                  <div style={{ 
+                    fontSize: eventHeight > 40 ? '0.65rem' : '0.6rem', 
+                    opacity: 0.9,
+                    fontWeight: '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px'
+                  }}>
+                    <span style={{ 
+                      display: 'inline-block',
+                      width: '2px',
+                      height: '2px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.7)'
+                    }}></span>
+                    {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Micro-Tasks Column */}
+        <div style={{ 
+          flex: 1, 
+          background: '#ffffff',
+          position: 'relative',
+          borderTopRightRadius: '12px',
+          borderBottomRightRadius: '12px'
+        }}>
+          {/* Header */}
+          <div style={{
+            height: `${headerHeight}px`,
+            borderBottom: '2px solid #e0e4e7',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+            color: '#ffffff',
+            fontWeight: '600',
+            borderTopRightRadius: '12px'
+          }}>
+            <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '4px' }}>
+              MICRO-TASKS
+            </div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.9, fontWeight: '500', textAlign: 'center' }}>
+              5-Minute Focus Blocks
+            </div>
+          </div>
+
+          {/* Micro-task time slots */}
+          {fiveMinSlots.map((slot, index) => {
+            const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
+            const isQuarterHour = slot.minute % 15 === 0;
+            
+            return (
+              <div 
+                key={`micro-${slot.hour}-${slot.minute}`} 
                 onClick={(e) => {
                   const startTime = new Date(currentDate);
                   startTime.setHours(slot.hour, slot.minute, 0, 0);
@@ -904,27 +1041,30 @@ export default function PersonalCalendarPage() {
 
                   setNewEvent({
                     ...newEvent,
+                    title: '',
+                    description: '',
                     start_datetime: formatForInput(startTime),
-                    end_datetime: formatForInput(endTime)
+                    end_datetime: formatForInput(endTime),
+                    color: '#8b5cf6', // Purple for micro-tasks
+                    item_type: 'time_block'
                   });
                   setShowCreateModal(true);
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#e0f2fe';
-                  e.currentTarget.style.borderLeft = '4px solid #5884FD';
+                  e.currentTarget.style.backgroundColor = '#f3e8ff';
+                  e.currentTarget.style.borderLeft = '4px solid #8b5cf6';
                   e.currentTarget.style.transform = 'scale(1.01)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isWorkingHour ? 'rgba(88, 132, 253, 0.02)' : '#ffffff';
+                  e.currentTarget.style.backgroundColor = isWorkingHour ? 'rgba(124, 58, 237, 0.02)' : '#ffffff';
                   e.currentTarget.style.borderLeft = 'none';
                   e.currentTarget.style.transform = 'scale(1)';
                 }}
                 style={{
                   height: `${slotHeight}px`,
                   borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : isQuarterHour ? '1px solid #e5e7eb' : '1px solid #f1f5f9',
-                  borderRight: isQuarterHour ? '1px solid #e5e7eb' : 'none',
                   position: 'relative',
-                  background: isWorkingHour ? 'rgba(88, 132, 253, 0.02)' : '#ffffff',
+                  background: isWorkingHour ? 'rgba(124, 58, 237, 0.02)' : '#ffffff',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   userSelect: 'none',
@@ -945,158 +1085,17 @@ export default function PersonalCalendarPage() {
                   </div>
                 )}
                 
-                {/* Subtle grid lines for 5-minute precision */}
+                {/* Plus icon for micro-task creation */}
                 {!isQuarterHour && (
                   <div style={{
                     position: 'absolute',
-                    left: '8px',
-                    width: '4px',
-                    height: '1px',
-                    background: '#e5e7eb',
-                    opacity: 0.5
-                  }} />
-                )}
-              </div>
-            );
-          })}
-
-          {/* Debug info if no events */}
-          {dayEvents.length === 0 && (
-            <div style={{
-              position: 'absolute',
-              top: `${headerHeight + 50}px`,
-              left: '20px',
-              right: '20px',
-              padding: '20px',
-              background: 'rgba(255, 193, 7, 0.1)',
-              border: '2px dashed #ffc107',
-              borderRadius: '8px',
-              textAlign: 'center',
-              color: '#856404',
-              fontSize: '0.9rem',
-              fontWeight: '500'
-            }}>
-              <div style={{ marginBottom: '8px' }}>🔍 No events found for {formatDate(currentDate)}</div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-                Total events in system: {events.length} | Current view date: {currentDate.toLocaleDateString()}
-              </div>
-            </div>
-          )}
-
-          {/* Events overlay - positioned absolutely for 5-minute precision */}
-          {dayEvents.map((event, index) => {
-            const eventStart = new Date(event.start_datetime);
-            const eventEnd = new Date(event.end_datetime);
-            const startHour = eventStart.getHours();
-            const startMinutes = eventStart.getMinutes();
-            
-            // Calculate position based on 5-minute slots
-            const totalMinutesFromStart = (startHour - settings.start_hour) * 60 + startMinutes;
-            const slotIndex = Math.floor(totalMinutesFromStart / 5);
-            
-            // Calculate duration in 5-minute slots
-            const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-            const durationInSlots = Math.ceil(durationInMinutes / 5);
-            
-            const topPosition = headerHeight + (slotIndex * slotHeight);
-            const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
-            
-            // Debug event positioning
-            console.log('Event positioning:', {
-              title: event.title,
-              startHour,
-              startMinutes,
-              totalMinutesFromStart,
-              slotIndex,
-              topPosition,
-              eventHeight,
-              durationInMinutes,
-              durationInSlots
-            });
-            
-            return (
-              <div
-                key={event.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedEvent(event);
-                  setShowEventModal(true);
-                  setIsEditingEvent(false);
-                }}
-                style={{
-                  position: 'absolute',
-                  left: event.eventLeft || '16px',
-                  width: event.eventWidth || 'calc(100% - 32px)',
-                  top: `${topPosition}px`,
-                  height: `${eventHeight}px`,
-                  background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
-                  color: '#ffffff',
-                  borderRadius: '10px',
-                  padding: eventHeight > 50 ? '12px 16px' : eventHeight > 30 ? '8px 12px' : '6px 10px',
-                  fontSize: eventHeight > 60 ? '0.9rem' : eventHeight > 40 ? '0.8rem' : '0.75rem',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15)',
-                  zIndex: 10 + index,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: eventHeight > 40 ? 'flex-start' : 'center',
-                  border: '2px solid rgba(255, 255, 255, 0.4)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  fontWeight: '600',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  minHeight: '24px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                }}
-              >
-                <div style={{ 
-                  lineHeight: '1.3',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: eventHeight > 40 ? 'normal' : 'nowrap',
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-                  fontWeight: '600',
-                  marginBottom: eventHeight > 30 ? '4px' : '2px'
-                }}>
-                  {event.title}
-                </div>
-                {eventHeight > 25 && (
-                  <div style={{ 
-                    fontSize: eventHeight > 40 ? '0.7rem' : '0.65rem', 
-                    opacity: 0.9,
-                    fontWeight: '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
+                    right: '12px',
+                    fontSize: '0.7rem',
+                    color: '#8b5cf6',
+                    opacity: 0.4,
+                    fontWeight: '700'
                   }}>
-                    <span style={{ 
-                      display: 'inline-block',
-                      width: '3px',
-                      height: '3px',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.7)'
-                    }}></span>
-                    {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
-                  </div>
-                )}
-                {eventHeight > 50 && event.location && (
-                  <div style={{ 
-                    fontSize: '0.6rem', 
-                    opacity: 0.8,
-                    marginTop: '3px',
-                    fontWeight: '400'
-                  }}>
-                    📍 {event.location}
+                    +
                   </div>
                 )}
               </div>
