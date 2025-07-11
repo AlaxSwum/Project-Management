@@ -759,7 +759,7 @@ export default function PersonalCalendarPage() {
     const dayEvents = getEventsForDay(currentDate);
 
     // Generate 5-minute time slots
-    const fiveMinSlots = [];
+    const fiveMinSlots: { hour: number; minute: number }[] = [];
     for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
       for (let minute = 0; minute < 60; minute += 5) {
         fiveMinSlots.push({ hour, minute });
