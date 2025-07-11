@@ -757,6 +757,19 @@ export default function PersonalCalendarPage() {
 
   const render5MinView = () => {
     const dayEvents = getEventsForDay(currentDate);
+    
+    // Debug logging
+    console.log('5-Min View Debug:', {
+      currentDate: currentDate.toISOString(),
+      allEvents: events.length,
+      dayEvents: dayEvents.length,
+      dayEventsDetails: dayEvents.map(e => ({
+        id: e.id,
+        title: e.title,
+        start: e.start_datetime,
+        end: e.end_datetime
+      }))
+    });
 
     // Generate 5-minute time slots (show every 15 minutes for cleaner look, but maintain 5-min precision)
     const fiveMinSlots: { hour: number; minute: number; isMainSlot: boolean }[] = [];
@@ -947,6 +960,29 @@ export default function PersonalCalendarPage() {
             );
           })}
 
+          {/* Debug info if no events */}
+          {dayEvents.length === 0 && (
+            <div style={{
+              position: 'absolute',
+              top: `${headerHeight + 50}px`,
+              left: '20px',
+              right: '20px',
+              padding: '20px',
+              background: 'rgba(255, 193, 7, 0.1)',
+              border: '2px dashed #ffc107',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: '#856404',
+              fontSize: '0.9rem',
+              fontWeight: '500'
+            }}>
+              <div style={{ marginBottom: '8px' }}>🔍 No events found for {formatDate(currentDate)}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                Total events in system: {events.length} | Current view date: {currentDate.toLocaleDateString()}
+              </div>
+            </div>
+          )}
+
           {/* Events overlay - positioned absolutely for 5-minute precision */}
           {dayEvents.map((event, index) => {
             const eventStart = new Date(event.start_datetime);
@@ -964,6 +1000,19 @@ export default function PersonalCalendarPage() {
             
             const topPosition = headerHeight + (slotIndex * slotHeight);
             const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
+            
+            // Debug event positioning
+            console.log('Event positioning:', {
+              title: event.title,
+              startHour,
+              startMinutes,
+              totalMinutesFromStart,
+              slotIndex,
+              topPosition,
+              eventHeight,
+              durationInMinutes,
+              durationInSlots
+            });
             
             return (
               <div
