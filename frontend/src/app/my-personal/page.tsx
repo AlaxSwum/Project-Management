@@ -758,70 +758,118 @@ export default function PersonalCalendarPage() {
   const render5MinView = () => {
     const dayEvents = getEventsForDay(currentDate);
 
-    // Generate 5-minute time slots
-    const fiveMinSlots: { hour: number; minute: number }[] = [];
+    // Generate 5-minute time slots (show every 15 minutes for cleaner look, but maintain 5-min precision)
+    const fiveMinSlots: { hour: number; minute: number; isMainSlot: boolean }[] = [];
     for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
       for (let minute = 0; minute < 60; minute += 5) {
-        fiveMinSlots.push({ hour, minute });
+        fiveMinSlots.push({ 
+          hour, 
+          minute, 
+          isMainSlot: minute === 0 || minute === 15 || minute === 30 || minute === 45 
+        });
       }
     }
 
-    const slotHeight = 20; // Increased height for better visibility
-    const headerHeight = 80;
+    const slotHeight = 30; // Much larger for better visibility
+    const headerHeight = 100;
     const totalHeight = fiveMinSlots.length * slotHeight + headerHeight;
 
     return (
-      <div style={{ display: 'flex', height: `${totalHeight}px`, overflow: 'auto', minHeight: '500px' }}>
+      <div style={{ 
+        display: 'flex', 
+        height: `${Math.min(totalHeight, 800)}px`, 
+        overflow: 'auto', 
+        minHeight: '600px',
+        maxHeight: '800px',
+        border: '1px solid #e8e8e8',
+        borderRadius: '12px',
+        background: '#ffffff',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+      }}>
         {/* Time column */}
-        <div style={{ width: '120px', borderRight: '1px solid #e0e4e7', background: '#fafbfc' }}>
-          <div style={{ height: `${headerHeight}px`, borderBottom: '1px solid #e0e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#5884FD' }}>5-Min Blocks</div>
+        <div style={{ 
+          width: '140px', 
+          borderRight: '2px solid #e0e4e7', 
+          background: 'linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%)',
+          borderTopLeftRadius: '12px',
+          borderBottomLeftRadius: '12px'
+        }}>
+          <div style={{ 
+            height: `${headerHeight}px`, 
+            borderBottom: '2px solid #e0e4e7', 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center', 
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #1e293b, #334155)',
+            color: '#ffffff',
+            borderTopLeftRadius: '12px'
+          }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '4px' }}>TIME BLOCKS</div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: '500' }}>5-Minute Precision</div>
           </div>
-          {fiveMinSlots.map((slot, index) => (
-            <div key={`${slot.hour}-${slot.minute}`} style={{
-              height: `${slotHeight}px`,
-              borderBottom: slot.minute === 0 ? '1px solid #e0e4e7' : slot.minute % 15 === 0 ? '1px solid #f0f1f2' : '1px solid #f8f9fa',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingLeft: '8px',
-              fontSize: slot.minute === 0 ? '0.8rem' : '0.7rem',
-              color: slot.minute === 0 ? '#64748b' : '#94a3b8',
-              fontWeight: slot.minute === 0 ? '600' : '500',
-              background: slot.minute === 0 ? '#f1f5f9' : 'transparent'
-            }}>
-              {slot.minute === 0 ? formatHourSlot(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}
-            </div>
-          ))}
+          {fiveMinSlots.map((slot, index) => {
+            if (!slot.isMainSlot) return null; // Only show 15-minute intervals in sidebar for cleaner look
+            
+            return (
+              <div key={`${slot.hour}-${slot.minute}`} style={{
+                height: `${slotHeight * 3}px`, // 3 slots height (15 minutes)
+                borderBottom: slot.minute === 0 ? '2px solid #d1d5db' : '1px solid #e5e7eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                paddingLeft: '16px',
+                fontSize: slot.minute === 0 ? '0.9rem' : '0.8rem',
+                color: slot.minute === 0 ? '#1e293b' : '#64748b',
+                fontWeight: slot.minute === 0 ? '700' : '600',
+                background: slot.minute === 0 ? 'rgba(88, 132, 253, 0.05)' : 'transparent',
+                position: 'relative'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <div>{slot.minute === 0 ? formatHourSlot(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}</div>
+                  {slot.minute === 0 && (
+                    <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '2px' }}>
+                      +15 min blocks
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* 5-minute timeline column */}
-        <div style={{ flex: 1, position: 'relative', background: '#ffffff' }}>
+        <div style={{ flex: 1, position: 'relative', background: '#ffffff', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
           {/* Header */}
           <div style={{
             height: `${headerHeight}px`,
-            borderBottom: '1px solid #e0e4e7',
+            borderBottom: '2px solid #e0e4e7',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #5884FD, #6c91ff)',
+            background: 'linear-gradient(135deg, #5884FD, #6366f1)',
             color: '#ffffff',
             fontWeight: '600',
             fontSize: '1rem',
-            boxShadow: '0 2px 4px rgba(88, 132, 253, 0.1)'
+            boxShadow: '0 2px 8px rgba(88, 132, 253, 0.15)',
+            borderTopRightRadius: '12px'
           }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '4px' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '6px' }}>
               {formatDate(currentDate)}
             </div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: '500' }}>
-              🚀 Elon Musk Style Time Blocking
+            <div style={{ fontSize: '0.85rem', opacity: 0.95, fontWeight: '500', textAlign: 'center' }}>
+              Hyper-Focused Time Management
+            </div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: '400', marginTop: '2px' }}>
+              Click any 5-minute block to schedule
             </div>
           </div>
 
           {/* 5-minute time slots */}
           {fiveMinSlots.map((slot, index) => {
             const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
+            const isQuarterHour = slot.minute % 15 === 0;
             
             return (
               <div 
@@ -849,21 +897,53 @@ export default function PersonalCalendarPage() {
                   setShowCreateModal(true);
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f0f8ff';
+                  e.currentTarget.style.backgroundColor = '#e0f2fe';
+                  e.currentTarget.style.borderLeft = '4px solid #5884FD';
+                  e.currentTarget.style.transform = 'scale(1.01)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isWorkingHour ? '#fafbfc' : '#ffffff';
+                  e.currentTarget.style.backgroundColor = isWorkingHour ? 'rgba(88, 132, 253, 0.02)' : '#ffffff';
+                  e.currentTarget.style.borderLeft = 'none';
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
                 style={{
                   height: `${slotHeight}px`,
-                  borderBottom: slot.minute === 0 ? '1px solid #e0e4e7' : slot.minute % 15 === 0 ? '1px solid #f0f1f2' : '1px solid #f8f9fa',
+                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : isQuarterHour ? '1px solid #e5e7eb' : '1px solid #f1f5f9',
+                  borderRight: isQuarterHour ? '1px solid #e5e7eb' : 'none',
                   position: 'relative',
-                  background: isWorkingHour ? '#fafbfc' : '#ffffff',
+                  background: isWorkingHour ? 'rgba(88, 132, 253, 0.02)' : '#ffffff',
                   cursor: 'pointer',
-                  transition: 'background-color 0.2s ease',
-                  userSelect: 'none'
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingLeft: '12px'
                 }}
-              />
+              >
+                {/* Show time labels for quarter hours */}
+                {isQuarterHour && (
+                  <div style={{
+                    fontSize: '0.7rem',
+                    color: '#94a3b8',
+                    fontWeight: '500',
+                    opacity: 0.7
+                  }}>
+                    {slot.minute === 0 ? formatHourSlot(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}
+                  </div>
+                )}
+                
+                {/* Subtle grid lines for 5-minute precision */}
+                {!isQuarterHour && (
+                  <div style={{
+                    position: 'absolute',
+                    left: '8px',
+                    width: '4px',
+                    height: '1px',
+                    background: '#e5e7eb',
+                    opacity: 0.5
+                  }} />
+                )}
+              </div>
             );
           })}
 
@@ -896,27 +976,28 @@ export default function PersonalCalendarPage() {
                 }}
                 style={{
                   position: 'absolute',
-                  left: event.eventLeft,
-                  width: event.eventWidth,
+                  left: event.eventLeft || '16px',
+                  width: event.eventWidth || 'calc(100% - 32px)',
                   top: `${topPosition}px`,
                   height: `${eventHeight}px`,
-                  background: `linear-gradient(135deg, ${event.color}f0, ${event.color}dd)`,
+                  background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
                   color: '#ffffff',
-                  borderRadius: '8px',
-                  padding: eventHeight > 30 ? '6px 12px' : '4px 8px',
-                  fontSize: eventHeight > 40 ? '0.8rem' : '0.75rem',
+                  borderRadius: '10px',
+                  padding: eventHeight > 50 ? '12px 16px' : eventHeight > 30 ? '8px 12px' : '6px 10px',
+                  fontSize: eventHeight > 60 ? '0.9rem' : eventHeight > 40 ? '0.8rem' : '0.75rem',
                   cursor: 'pointer',
                   overflow: 'hidden',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15)',
                   zIndex: 10 + index,
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  justifyContent: eventHeight > 40 ? 'flex-start' : 'center',
+                  border: '2px solid rgba(255, 255, 255, 0.4)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   fontWeight: '600',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)'
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  minHeight: '24px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
