@@ -1045,8 +1045,7 @@ export default function PersonalCalendarPage() {
                     description: '',
                     start_datetime: formatForInput(startTime),
                     end_datetime: formatForInput(endTime),
-                    color: '#8b5cf6', // Purple for micro-tasks
-                    item_type: 'time_block'
+                    color: '#8b5cf6' // Purple for micro-tasks
                   });
                   setShowCreateModal(true);
                 }}
