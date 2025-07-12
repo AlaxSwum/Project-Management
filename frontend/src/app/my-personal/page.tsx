@@ -2008,6 +2008,25 @@ export default function PersonalCalendarPage() {
             color: #000000;
             transform: translateY(-1px);
           }
+          
+          /* Custom scrollbar for modal */
+          .modal-content::-webkit-scrollbar {
+            width: 8px;
+          }
+          
+          .modal-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+          }
+          
+          .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #5884FD, #4F75FC);
+            border-radius: 4px;
+          }
+          
+          .modal-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4F75FC, #4366FC);
+          }
         `
       }} />
       
@@ -2234,7 +2253,10 @@ export default function PersonalCalendarPage() {
         <div className="modal-overlay" onClick={() => setShowMoreModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
             maxWidth: '600px',
-            background: '#F5F5ED'
+            background: '#F5F5ED',
+            maxHeight: '80vh',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             <div className="modal-header" style={{
               background: 'linear-gradient(135deg, #5884FD, #4F75FC)',
@@ -2248,6 +2270,14 @@ export default function PersonalCalendarPage() {
                   month: 'long', 
                   day: 'numeric' 
                 })}
+                <span style={{ 
+                  fontSize: '0.8rem', 
+                  opacity: 0.8, 
+                  marginLeft: '0.5rem',
+                  fontWeight: '400'
+                }}>
+                  ({moreModalData.events.length} events)
+                </span>
               </h2>
               <button
                 type="button"
@@ -2259,7 +2289,14 @@ export default function PersonalCalendarPage() {
               </button>
             </div>
 
-            <div style={{ padding: '1.5rem' }}>
+            <div style={{ 
+              padding: '1.5rem',
+              overflowY: 'auto',
+              flex: 1,
+              maxHeight: 'calc(80vh - 120px)', // Account for header height
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#5884FD #f1f5f9'
+            }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {moreModalData.events.map((event, index) => (
                   <div
