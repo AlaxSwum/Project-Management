@@ -975,31 +975,46 @@ export default function PersonalCalendarPage() {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
                   e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15)';
+                  
+                  // Show tooltip with duration
+                  const durationMinutes = (new Date(event.end_datetime).getTime() - new Date(event.start_datetime).getTime()) / (1000 * 60);
+                  const hours = Math.floor(durationMinutes / 60);
+                  const minutes = durationMinutes % 60;
+                  const durationText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                  
+                  e.currentTarget.setAttribute('title', `${event.title}\n${formatTime(event.start_datetime)} - ${formatTime(event.end_datetime)}\nDuration: ${durationText}`);
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)';
                   e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.removeAttribute('title');
                 }}
               >
+                {/* Task name - always prioritized */}
                 <div style={{ 
-                  lineHeight: '1.3',
+                  lineHeight: '1.2',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: eventHeight > 40 ? 'normal' : 'nowrap',
                   textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
                   fontWeight: '700',
-                  marginBottom: eventHeight > 30 ? '3px' : '1px'
+                  fontSize: eventHeight > 60 ? '0.85rem' : eventHeight > 40 ? '0.75rem' : eventHeight > 25 ? '0.7rem' : '0.65rem',
+                  marginBottom: eventHeight > 35 ? '4px' : eventHeight > 25 ? '2px' : '0px',
+                  flex: 1
                 }}>
                   {event.title}
                 </div>
-                {eventHeight > 25 && (
+                
+                {/* Time display - only when there's enough space */}
+                {eventHeight > 35 && (
                   <div style={{ 
-                    fontSize: eventHeight > 40 ? '0.65rem' : '0.6rem', 
+                    fontSize: eventHeight > 50 ? '0.65rem' : '0.6rem', 
                     opacity: 0.9,
                     fontWeight: '400',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '3px'
+                    gap: '3px',
+                    marginTop: 'auto'
                   }}>
                     <span style={{ 
                       display: 'inline-block',
@@ -1009,6 +1024,18 @@ export default function PersonalCalendarPage() {
                       background: 'rgba(255, 255, 255, 0.7)'
                     }}></span>
                     {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                  </div>
+                )}
+                
+                {/* For small blocks (20-35px), show just start time */}
+                {eventHeight > 20 && eventHeight <= 35 && (
+                  <div style={{ 
+                    fontSize: '0.55rem', 
+                    opacity: 0.85,
+                    fontWeight: '500',
+                    marginTop: '1px'
+                  }}>
+                    {formatTime(event.start_datetime)}
                   </div>
                 )}
               </div>
@@ -1183,10 +1210,18 @@ export default function PersonalCalendarPage() {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4), 0 2px 6px rgba(139, 92, 246, 0.3)';
+                  
+                  // Show tooltip with duration for micro-tasks
+                  const durationMinutes = (new Date(event.end_datetime).getTime() - new Date(event.start_datetime).getTime()) / (1000 * 60);
+                  const taskName = event.title.replace('[MICRO-TASK] ', '');
+                  const durationText = durationMinutes >= 60 ? `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m` : `${durationMinutes}m`;
+                  
+                  e.currentTarget.setAttribute('title', `${taskName}\n${formatTime(event.start_datetime)} - ${formatTime(event.end_datetime)}\nDuration: ${durationText}`);
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)';
                   e.currentTarget.style.boxShadow = '0 2px 8px rgba(139, 92, 246, 0.3), 0 1px 4px rgba(139, 92, 246, 0.2)';
+                  e.currentTarget.removeAttribute('title');
                 }}
               >
                 <div style={{ 
@@ -1198,18 +1233,8 @@ export default function PersonalCalendarPage() {
                   fontWeight: '700',
                   fontSize: eventHeight > 30 ? '0.75rem' : '0.7rem'
                 }}>
-                  {event.title}
+                  {event.title.replace('[MICRO-TASK] ', '')}
                 </div>
-                {eventHeight > 20 && (
-                  <div style={{ 
-                    fontSize: '0.6rem', 
-                    opacity: 0.9,
-                    fontWeight: '400',
-                    marginTop: '2px'
-                  }}>
-                    {formatTime(event.start_datetime)}
-                  </div>
-                )}
               </div>
             );
           })}
