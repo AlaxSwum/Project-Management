@@ -1385,67 +1385,24 @@ export default function PersonalCalendarPage() {
                 e.currentTarget.removeAttribute('title');
               }}
             >
-              {/* Task name - always prioritized in Day view */}
+              {/* Task name - ALWAYS prioritized, no time display */}
               <div style={{ 
                 fontWeight: '700', 
-                marginBottom: event.height > 40 ? '6px' : event.height > 25 ? '3px' : '0px',
-                lineHeight: '1.2',
+                lineHeight: '1.3',
                 fontSize: event.height > 60 ? '0.9rem' : event.height > 40 ? '0.85rem' : event.height > 25 ? '0.8rem' : '0.75rem',
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-                flex: 1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: event.height > 40 ? 'normal' : 'nowrap',
-                position: 'relative'
+                whiteSpace: event.height > 60 ? 'normal' : 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                textAlign: 'center',
+                padding: '4px'
               }}>
                 {event.title}
-                {/* Visual indicator that new code is loaded */}
-                <span style={{ 
-                  position: 'absolute', 
-                  top: '-2px', 
-                  right: '0px', 
-                  width: '4px', 
-                  height: '4px', 
-                  backgroundColor: '#00ff00', 
-                  borderRadius: '50%',
-                  opacity: 0.7
-                }}></span>
               </div>
-              
-              {/* Time display - only when there's enough space */}
-              {event.height > 45 && (
-                <div style={{ 
-                  opacity: 0.95, 
-                  fontSize: '0.72rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  marginBottom: '3px',
-                  fontWeight: '500',
-                  marginTop: 'auto'
-                }}>
-                  <span style={{ 
-                    display: 'inline-block',
-                    width: '4px',
-                    height: '4px',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.7)'
-                  }}></span>
-                  {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
-                </div>
-              )}
-              
-              {/* For medium blocks (25-45px), show just start time */}
-              {event.height > 25 && event.height <= 45 && (
-                <div style={{ 
-                  fontSize: '0.65rem', 
-                  opacity: 0.9,
-                  fontWeight: '500',
-                  marginTop: '2px'
-                }}>
-                  {formatTime(event.start_datetime)}
-                </div>
-              )}
               {event.height > 65 && event.location && (
                 <div style={{ 
                   opacity: 0.9, 
@@ -1649,66 +1606,24 @@ export default function PersonalCalendarPage() {
                       e.currentTarget.removeAttribute('title');
                     }}
                   >
-                    {/* Task name - always prioritized in Week view */}
+                    {/* Task name - ALWAYS prioritized, no time display */}
                     <div style={{ 
-                      lineHeight: '1.2',
+                      lineHeight: '1.3',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      fontSize: event.height > 50 ? '0.75rem' : event.height > 32 ? '0.7rem' : '0.65rem',
+                      whiteSpace: event.height > 50 ? 'normal' : 'nowrap',
+                      fontSize: event.height > 50 ? '0.8rem' : event.height > 32 ? '0.75rem' : '0.7rem',
                       textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
                       fontWeight: '700',
-                      marginBottom: event.height > 40 ? '3px' : event.height > 25 ? '2px' : '0px',
-                      flex: 1,
-                      position: 'relative'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                      textAlign: 'center',
+                      padding: '2px'
                     }}>
                       {event.title}
-                      {/* Visual indicator that new code is loaded */}
-                      <span style={{ 
-                        position: 'absolute', 
-                        top: '-2px', 
-                        right: '0px', 
-                        width: '4px', 
-                        height: '4px', 
-                        backgroundColor: '#00ff00', 
-                        borderRadius: '50%',
-                        opacity: 0.7
-                      }}></span>
                     </div>
-                    
-                    {/* Time display - only when there's enough space */}
-                    {event.height > 40 && (
-                      <div style={{ 
-                        fontSize: '0.6rem', 
-                        opacity: 0.9,
-                        marginTop: 'auto',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '3px'
-                      }}>
-                        <span style={{ 
-                          display: 'inline-block',
-                          width: '3px',
-                          height: '3px',
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.7)'
-                        }}></span>
-                        {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
-                      </div>
-                    )}
-                    
-                    {/* For medium blocks (25-40px), show just start time */}
-                    {event.height > 25 && event.height <= 40 && (
-                      <div style={{ 
-                        fontSize: '0.55rem', 
-                        opacity: 0.85,
-                        fontWeight: '500',
-                        marginTop: '1px'
-                      }}>
-                        {formatTime(event.start_datetime)}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
