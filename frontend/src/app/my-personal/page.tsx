@@ -1369,23 +1369,39 @@ export default function PersonalCalendarPage() {
                 e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
                 e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                
+                // Show tooltip with duration for Day view
+                const durationMinutes = (new Date(event.end_datetime).getTime() - new Date(event.start_datetime).getTime()) / (1000 * 60);
+                const hours = Math.floor(durationMinutes / 60);
+                const minutes = durationMinutes % 60;
+                const durationText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                
+                e.currentTarget.setAttribute('title', `${event.title}\n${formatTime(event.start_datetime)} - ${formatTime(event.end_datetime)}\nDuration: ${durationText}`);
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                e.currentTarget.removeAttribute('title');
               }}
             >
+              {/* Task name - always prioritized in Day view */}
               <div style={{ 
                 fontWeight: '700', 
-                marginBottom: event.height > 35 ? '6px' : '3px',
-                lineHeight: '1.3',
-                fontSize: event.height > 50 ? '0.9rem' : '0.85rem',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                marginBottom: event.height > 40 ? '6px' : event.height > 25 ? '3px' : '0px',
+                lineHeight: '1.2',
+                fontSize: event.height > 60 ? '0.9rem' : event.height > 40 ? '0.85rem' : event.height > 25 ? '0.8rem' : '0.75rem',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: event.height > 40 ? 'normal' : 'nowrap'
               }}>
                 {event.title}
               </div>
-              {event.height > 40 && (
+              
+              {/* Time display - only when there's enough space */}
+              {event.height > 45 && (
                 <div style={{ 
                   opacity: 0.95, 
                   fontSize: '0.72rem',
@@ -1393,7 +1409,8 @@ export default function PersonalCalendarPage() {
                   alignItems: 'center',
                   gap: '6px',
                   marginBottom: '3px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  marginTop: 'auto'
                 }}>
                   <span style={{ 
                     display: 'inline-block',
@@ -1403,6 +1420,18 @@ export default function PersonalCalendarPage() {
                     background: 'rgba(255, 255, 255, 0.7)'
                   }}></span>
                   {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                </div>
+              )}
+              
+              {/* For medium blocks (25-45px), show just start time */}
+              {event.height > 25 && event.height <= 45 && (
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  opacity: 0.9,
+                  fontWeight: '500',
+                  marginTop: '2px'
+                }}>
+                  {formatTime(event.start_datetime)}
                 </div>
               )}
               {event.height > 65 && event.location && (
@@ -1592,28 +1621,43 @@ export default function PersonalCalendarPage() {
                       e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
                       e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15)';
                       e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                      
+                      // Show tooltip with duration for Week view
+                      const durationMinutes = (new Date(event.end_datetime).getTime() - new Date(event.start_datetime).getTime()) / (1000 * 60);
+                      const hours = Math.floor(durationMinutes / 60);
+                      const minutes = durationMinutes % 60;
+                      const durationText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                      
+                      e.currentTarget.setAttribute('title', `${event.title}\n${formatTime(event.start_datetime)} - ${formatTime(event.end_datetime)}\nDuration: ${durationText}`);
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
                       e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)';
                       e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                      e.currentTarget.removeAttribute('title');
                     }}
                   >
+                    {/* Task name - always prioritized in Week view */}
                     <div style={{ 
-                      lineHeight: '1.3',
+                      lineHeight: '1.2',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      fontSize: event.height > 32 ? '0.75rem' : '0.7rem',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                      fontSize: event.height > 50 ? '0.75rem' : event.height > 32 ? '0.7rem' : '0.65rem',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                      fontWeight: '700',
+                      marginBottom: event.height > 40 ? '3px' : event.height > 25 ? '2px' : '0px',
+                      flex: 1
                     }}>
                       {event.title}
                     </div>
-                    {event.height > 35 && (
+                    
+                    {/* Time display - only when there's enough space */}
+                    {event.height > 40 && (
                       <div style={{ 
                         fontSize: '0.6rem', 
                         opacity: 0.9,
-                        marginTop: '2px',
+                        marginTop: 'auto',
                         fontWeight: '500',
                         display: 'flex',
                         alignItems: 'center',
@@ -1626,6 +1670,18 @@ export default function PersonalCalendarPage() {
                           borderRadius: '50%',
                           background: 'rgba(255, 255, 255, 0.7)'
                         }}></span>
+                        {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                      </div>
+                    )}
+                    
+                    {/* For medium blocks (25-40px), show just start time */}
+                    {event.height > 25 && event.height <= 40 && (
+                      <div style={{ 
+                        fontSize: '0.55rem', 
+                        opacity: 0.85,
+                        fontWeight: '500',
+                        marginTop: '1px'
+                      }}>
                         {formatTime(event.start_datetime)}
                       </div>
                     )}
