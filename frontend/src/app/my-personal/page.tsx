@@ -77,6 +77,8 @@ export default function PersonalCalendarPage() {
   const [dragStart, setDragStart] = useState<{ date: Date; hour: number } | null>(null);
   const [dragEnd, setDragEnd] = useState<{ date: Date; hour: number } | null>(null);
   const [dragPreview, setDragPreview] = useState<{ startTime: Date; endTime: Date } | null>(null);
+  const [showMoreModal, setShowMoreModal] = useState(false);
+  const [moreModalData, setMoreModalData] = useState<{ date: Date; events: CalendarEvent[] }>({ date: new Date(), events: [] });
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -362,6 +364,11 @@ export default function PersonalCalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
+  };
+
+  const handleShowMoreEvents = (date: Date, events: CalendarEvent[]) => {
+    setMoreModalData({ date, events });
+    setShowMoreModal(true);
   };
 
   const deleteEvent = async () => {
@@ -1737,16 +1744,37 @@ export default function PersonalCalendarPage() {
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div style={{ 
-                      color: '#666666', 
-                      fontSize: '0.6rem', 
-                      fontWeight: '500',
-                      marginTop: '2px',
-                      padding: '2px 4px',
-                      background: 'rgba(107, 114, 128, 0.1)',
-                      borderRadius: '4px',
-                      textAlign: 'center'
-                    }}>
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShowMoreEvents(day, dayEvents);
+                      }}
+                      style={{ 
+                        color: '#5884FD', 
+                        fontSize: '0.6rem', 
+                        fontWeight: '600',
+                        marginTop: '2px',
+                        padding: '3px 6px',
+                        background: 'linear-gradient(135deg, #f0f4ff, #e6f2ff)',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        border: '1px solid rgba(88, 132, 253, 0.2)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #5884FD, #4F75FC)';
+                        e.currentTarget.style.color = '#ffffff';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(88, 132, 253, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #f0f4ff, #e6f2ff)';
+                        e.currentTarget.style.color = '#5884FD';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
                       +{dayEvents.length - 3} more
                     </div>
                   )}
@@ -2200,6 +2228,130 @@ export default function PersonalCalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Show More Events Modal */}
+      {showMoreModal && (
+        <div className="modal-overlay" onClick={() => setShowMoreModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            maxWidth: '600px',
+            background: '#F5F5ED'
+          }}>
+            <div className="modal-header" style={{
+              background: 'linear-gradient(135deg, #5884FD, #4F75FC)',
+              color: '#ffffff',
+              borderBottom: 'none'
+            }}>
+              <h2 className="modal-title" style={{ color: '#ffffff' }}>
+                Events for {moreModalData.date.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowMoreModal(false)}
+                className="modal-close-btn"
+                style={{ color: '#ffffff' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {moreModalData.events.map((event, index) => (
+                  <div
+                    key={event.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEvent(event);
+                      setShowEventModal(true);
+                      setIsEditingEvent(false);
+                      setShowMoreModal(false);
+                    }}
+                    style={{
+                      background: `linear-gradient(135deg, ${event.color}, ${event.color}dd)`,
+                      color: '#ffffff',
+                      padding: '1rem 1.25rem',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      border: '2px solid rgba(255, 255, 255, 0.2)',
+                      transition: 'all 0.3s ease',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.25)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                    }}
+                  >
+                    <div style={{ 
+                      fontSize: '1rem', 
+                      fontWeight: '700', 
+                      marginBottom: '0.5rem',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+                    }}>
+                      {event.title}
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.85rem', 
+                      opacity: 0.9,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: event.description ? '0.5rem' : '0'
+                    }}>
+                      <span style={{ 
+                        display: 'inline-block',
+                        width: '4px',
+                        height: '4px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.8)'
+                      }}></span>
+                      {formatTime(event.start_datetime)} - {formatTime(event.end_datetime)}
+                    </div>
+                    {event.description && !event.description.includes('[MICRO-TASK]') && (
+                      <div style={{ 
+                        fontSize: '0.8rem', 
+                        opacity: 0.85,
+                        lineHeight: '1.4'
+                      }}>
+                        {event.description}
+                      </div>
+                    )}
+                    {event.location && (
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        opacity: 0.8,
+                        marginTop: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <span style={{ 
+                          display: 'inline-block',
+                          width: '3px',
+                          height: '3px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.7)'
+                        }}></span>
+                        {event.location}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Meeting Modal - Timetable Style */}
       {showCreateModal && (
