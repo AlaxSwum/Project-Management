@@ -1395,9 +1395,21 @@ export default function PersonalCalendarPage() {
                 flex: 1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: event.height > 40 ? 'normal' : 'nowrap'
+                whiteSpace: event.height > 40 ? 'normal' : 'nowrap',
+                position: 'relative'
               }}>
                 {event.title}
+                {/* Visual indicator that new code is loaded */}
+                <span style={{ 
+                  position: 'absolute', 
+                  top: '-2px', 
+                  right: '0px', 
+                  width: '4px', 
+                  height: '4px', 
+                  backgroundColor: '#00ff00', 
+                  borderRadius: '50%',
+                  opacity: 0.7
+                }}></span>
               </div>
               
               {/* Time display - only when there's enough space */}
@@ -1647,9 +1659,21 @@ export default function PersonalCalendarPage() {
                       textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
                       fontWeight: '700',
                       marginBottom: event.height > 40 ? '3px' : event.height > 25 ? '2px' : '0px',
-                      flex: 1
+                      flex: 1,
+                      position: 'relative'
                     }}>
                       {event.title}
+                      {/* Visual indicator that new code is loaded */}
+                      <span style={{ 
+                        position: 'absolute', 
+                        top: '-2px', 
+                        right: '0px', 
+                        width: '4px', 
+                        height: '4px', 
+                        backgroundColor: '#00ff00', 
+                        borderRadius: '50%',
+                        opacity: 0.7
+                      }}></span>
                     </div>
                     
                     {/* Time display - only when there's enough space */}
