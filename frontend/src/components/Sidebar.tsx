@@ -869,7 +869,14 @@ Your report is now available in the system.`);
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Element;
+      
+      // Check if click is outside both the dropdown button and the dropdown portal
+      const isOutsideDropdownButton = dropdownRef.current && !dropdownRef.current.contains(target);
+      const isOutsideDropdownPortal = !target.closest || !target.closest('[data-dropdown-portal]');
+      
+      if (isOutsideDropdownButton && isOutsideDropdownPortal) {
+        console.log('🔥 DEBUG: Closing dropdown due to outside click');
         setIsDropdownOpen(false);
       }
     };
@@ -1960,6 +1967,8 @@ Your report is now available in the system.`);
               <button
                 onClick={(e) => {
                   console.log('🔥 DEBUG: Plus (+) button clicked!', e);
+                  e.preventDefault();
+                  e.stopPropagation();
                   toggleDropdown();
                 }}
                 className={`sidebar-add-btn ${isDropdownOpen ? 'active' : ''}`}
@@ -2137,6 +2146,7 @@ Your report is now available in the system.`);
         return true;
       })() && typeof window !== 'undefined' && createPortal(
         <div 
+          data-dropdown-portal
           style={{
             position: 'fixed',
             top: isCollapsed ? '120px' : '120px',

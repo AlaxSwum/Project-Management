@@ -2205,6 +2205,204 @@ export default function ClassesPage() {
                    </div>
                  </div>
 
+                {/* Full Payment Fields */}
+                {studentFormData.payment_type === 'full' && (
+                  <div style={{ 
+                    background: '#e8f5e8',
+                    border: '1px solid #c3e6c3',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    marginBottom: '2rem'
+                  }}>
+                    <h4 style={{ 
+                      color: '#2d5a2d', 
+                      marginBottom: '1rem', 
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      💳 Full Payment Details
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                      <div>
+                        <label style={formStyles.label}>Full Payment Amount (MMK)</label>
+                        <input
+                          type="number"
+                          value={studentFormData.full_payment_amount}
+                          onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_amount: Number(e.target.value) })}
+                          min="0"
+                          style={formStyles.input}
+                          onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                          onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>Payment Date</label>
+                        <input
+                          type="date"
+                          value={studentFormData.full_payment_date}
+                          onChange={(e) => setStudentFormData({ ...studentFormData, full_payment_date: e.target.value })}
+                          style={formStyles.input}
+                          onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                          onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Split Payment Fields */}
+                {studentFormData.payment_type === 'split' && (
+                  <div style={{ 
+                    background: '#fff3e0',
+                    border: '1px solid #ffcc80',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    marginBottom: '2rem'
+                  }}>
+                    <h4 style={{ 
+                      color: '#e65100', 
+                      marginBottom: '1rem', 
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      🔄 Split Payment Details
+                    </h4>
+                    
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={formStyles.label}>Number of Splits</label>
+                      <select
+                        value={studentFormData.number_of_splits}
+                        onChange={(e) => setStudentFormData({ ...studentFormData, number_of_splits: Number(e.target.value) })}
+                        style={formStyles.select}
+                        onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                        onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                      >
+                        <option value={2}>2 Splits</option>
+                        <option value={3}>3 Splits</option>
+                        <option value={4}>4 Splits</option>
+                      </select>
+                    </div>
+
+                    {/* Split 1 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+                      <div>
+                        <label style={formStyles.label}>1st Split Amount (MMK)</label>
+                        <input
+                          type="number"
+                          value={studentFormData.split_1_amount}
+                          onChange={(e) => setStudentFormData({ ...studentFormData, split_1_amount: Number(e.target.value) })}
+                          min="0"
+                          style={formStyles.input}
+                          onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                          onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>1st Split Date</label>
+                        <input
+                          type="date"
+                          value={studentFormData.split_1_date}
+                          onChange={(e) => setStudentFormData({ ...studentFormData, split_1_date: e.target.value })}
+                          style={formStyles.input}
+                          onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                          onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Split 2 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+                      <div>
+                        <label style={formStyles.label}>2nd Split Amount (MMK)</label>
+                        <input
+                          type="number"
+                          value={studentFormData.split_2_amount}
+                          onChange={(e) => setStudentFormData({ ...studentFormData, split_2_amount: Number(e.target.value) })}
+                          min="0"
+                          style={formStyles.input}
+                          onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                          onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>2nd Split Date</label>
+                        <input
+                          type="date"
+                          value={studentFormData.split_2_date}
+                          onChange={(e) => setStudentFormData({ ...studentFormData, split_2_date: e.target.value })}
+                          style={formStyles.input}
+                          onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                          onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Split 3 - Only show if number_of_splits >= 3 */}
+                    {studentFormData.number_of_splits >= 3 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+                        <div>
+                          <label style={formStyles.label}>3rd Split Amount (MMK)</label>
+                          <input
+                            type="number"
+                            value={studentFormData.split_3_amount}
+                            onChange={(e) => setStudentFormData({ ...studentFormData, split_3_amount: Number(e.target.value) })}
+                            min="0"
+                            style={formStyles.input}
+                            onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                            onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                          />
+                        </div>
+                        <div>
+                          <label style={formStyles.label}>3rd Split Date</label>
+                          <input
+                            type="date"
+                            value={studentFormData.split_3_date}
+                            onChange={(e) => setStudentFormData({ ...studentFormData, split_3_date: e.target.value })}
+                            style={formStyles.input}
+                            onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                            onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Split 4 - Only show if number_of_splits >= 4 */}
+                    {studentFormData.number_of_splits >= 4 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+                        <div>
+                          <label style={formStyles.label}>4th Split Amount (MMK)</label>
+                          <input
+                            type="number"
+                            value={studentFormData.split_4_amount}
+                            onChange={(e) => setStudentFormData({ ...studentFormData, split_4_amount: Number(e.target.value) })}
+                            min="0"
+                            style={formStyles.input}
+                            onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                            onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                          />
+                        </div>
+                        <div>
+                          <label style={formStyles.label}>4th Split Date</label>
+                          <input
+                            type="date"
+                            value={studentFormData.split_4_date}
+                            onChange={(e) => setStudentFormData({ ...studentFormData, split_4_date: e.target.value })}
+                            style={formStyles.input}
+                            onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                            onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                    <div style={{ 
                   background: '#F5F5ED',
                   border: '1px solid #e0e0e0',

@@ -527,6 +527,10 @@ export default function PersonalCalendarPage() {
         return;
       }
 
+      // Save current scroll position before refresh
+      const scrollContainer = document.querySelector('.calendar-5min-container');
+      const scrollPosition = scrollContainer ? scrollContainer.scrollTop : 0;
+
       const supabase = (await import('@/lib/supabase')).supabase;
       
       // Convert datetime-local format to date and time
@@ -562,6 +566,14 @@ export default function PersonalCalendarPage() {
       
       // Refresh calendar data
       await fetchCalendarData();
+      
+      // Restore scroll position after refresh
+      setTimeout(() => {
+        const scrollContainer = document.querySelector('.calendar-5min-container');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollPosition;
+        }
+      }, 100);
       
       // Reset form and close modal
       setNewEvent({
@@ -824,7 +836,7 @@ export default function PersonalCalendarPage() {
     const totalHeight = fiveMinSlots.length * slotHeight + headerHeight;
 
     return (
-      <div style={{ 
+      <div className="calendar-5min-container" style={{ 
         display: 'flex', 
         height: `${Math.min(totalHeight, 800)}px`, 
         overflow: 'auto', 
