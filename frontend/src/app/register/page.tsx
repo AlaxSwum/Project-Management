@@ -71,59 +71,23 @@ export default function RegisterPage() {
       <style jsx>{`
         .register-container {
           min-height: 100vh;
-          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+          background: #fafafa;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 1rem;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .register-container::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle, rgba(255, 179, 51, 0.08) 0%, transparent 70%);
-          animation: float 8s ease-in-out infinite;
-        }
-        
-        .register-container::after {
-          content: '';
-          position: absolute;
-          top: 20%;
-          right: -30%;
-          width: 60%;
-          height: 60%;
-          background: radial-gradient(circle, rgba(196, 131, 217, 0.06) 0%, transparent 70%);
-          animation: float 10s ease-in-out infinite reverse;
+          padding: 2rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         .register-card {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 20px;
-          box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 3rem 2.5rem;
+          background: #ffffff;
+          border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          border: 1px solid #e5e7eb;
+          padding: 3rem;
           width: 100%;
-          max-width: 520px;
+          max-width: 540px;
           position: relative;
-          overflow: hidden;
-          z-index: 1;
-        }
-        
-        .register-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
         }
         
         .title-section {
@@ -134,24 +98,24 @@ export default function RegisterPage() {
         .title {
           font-size: 2rem;
           font-weight: 700;
-          color: #1F2937;
-          margin-bottom: 0.75rem;
-          font-family: 'Inter', sans-serif;
+          color: #111827;
+          margin-bottom: 0.5rem;
           letter-spacing: -0.025em;
         }
         
         .subtitle {
-          color: #6B7280;
+          color: #6b7280;
           font-size: 1rem;
           line-height: 1.5;
+          font-weight: 400;
         }
         
         .error-message {
           margin-bottom: 1.5rem;
           padding: 1rem;
-          background: rgba(239, 68, 68, 0.08);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: 12px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
           display: flex;
           align-items: center;
         }
@@ -159,13 +123,13 @@ export default function RegisterPage() {
         .error-icon {
           width: 1.25rem;
           height: 1.25rem;
-          color: #EF4444;
-          margin-right: 0.5rem;
+          color: #ef4444;
+          margin-right: 0.75rem;
           flex-shrink: 0;
         }
         
         .error-text {
-          color: #DC2626;
+          color: #dc2626;
           font-size: 0.875rem;
           font-weight: 500;
         }
@@ -191,57 +155,60 @@ export default function RegisterPage() {
         .form-label {
           font-size: 0.875rem;
           font-weight: 600;
-          color: #1F2937;
-          font-family: 'Inter', sans-serif;
+          color: #374151;
+          margin-bottom: 0.5rem;
         }
         
         .form-input {
           width: 100%;
-          padding: 1rem;
-          border: 2px solid #E5E7EB;
-          border-radius: 12px;
+          padding: 0.875rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
           font-size: 0.875rem;
-          font-family: 'Inter', sans-serif;
-          transition: all 0.3s ease;
-          background: #FFFFFF;
-          color: #1F2937;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          transition: all 0.2s ease;
+          background: #ffffff;
+          color: #111827;
+          box-sizing: border-box;
         }
         
         .form-input:focus {
           outline: none;
-          border-color: #FFB333;
-          box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
-          transform: translateY(-1px);
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
         }
         
         .form-input:hover {
-          border-color: #D1D5DB;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+          border-color: #9ca3af;
         }
         
         .form-input::placeholder {
-          color: #9CA3AF;
+          color: #9ca3af;
         }
         
         .form-help {
           font-size: 0.75rem;
-          color: #6B7280;
+          color: #6b7280;
           margin-top: 0.25rem;
+        }
+        
+        .optional-label {
+          color: #9ca3af;
+          font-weight: 400;
         }
         
         .checkbox-group {
           display: flex;
           align-items: flex-start;
           gap: 0.75rem;
+          margin-top: 0.5rem;
         }
         
         .checkbox {
           width: 1rem;
           height: 1rem;
-          border: 2px solid #D1D5DB;
+          border: 1px solid #d1d5db;
           border-radius: 4px;
-          background: #FFFFFF;
+          background: #ffffff;
           cursor: pointer;
           margin-top: 0.25rem;
           flex-shrink: 0;
@@ -249,112 +216,87 @@ export default function RegisterPage() {
         }
         
         .checkbox:checked {
-          background: #FFB333;
-          border-color: #FFB333;
+          background: #111827;
+          border-color: #111827;
         }
         
         .checkbox-label {
           font-size: 0.875rem;
-          color: #6B7280;
+          color: #6b7280;
           cursor: pointer;
           line-height: 1.4;
         }
         
         .checkbox-link {
-          color: #FFB333;
+          color: #111827;
           text-decoration: none;
-          transition: color 0.3s ease;
+          transition: color 0.2s ease;
         }
         
         .checkbox-link:hover {
-          color: #E69A00;
+          color: #374151;
         }
         
         .submit-button {
           width: 100%;
-          padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, #FFB333, #FFD480);
-          color: #FFFFFF;
+          padding: 0.875rem 1.5rem;
+          background: #111827;
+          color: #ffffff;
           border: none;
-          border-radius: 12px;
-          font-size: 1rem;
+          border-radius: 8px;
+          font-size: 0.875rem;
           font-weight: 600;
-          font-family: 'Inter', sans-serif;
           cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(255, 179, 51, 0.3);
+          transition: all 0.2s ease;
           position: relative;
           overflow: hidden;
         }
         
-        .submit-button::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transition: left 0.5s ease;
-        }
-        
         .submit-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(255, 179, 51, 0.4);
-        }
-        
-        .submit-button:hover:not(:disabled)::before {
-          left: 100%;
+          background: #1f2937;
         }
         
         .submit-button:active:not(:disabled) {
-          transform: translateY(0);
+          background: #374151;
         }
         
         .submit-button:disabled {
-          opacity: 0.7;
+          opacity: 0.5;
           cursor: not-allowed;
         }
         
         .spinner {
           display: inline-block;
-          width: 1.25rem;
-          height: 1.25rem;
+          width: 1rem;
+          height: 1rem;
           border: 2px solid transparent;
-          border-top: 2px solid #FFFFFF;
+          border-top: 2px solid #ffffff;
           border-radius: 50%;
           animation: spin 1s linear infinite;
           margin-right: 0.5rem;
         }
         
         .divider {
-          margin: 2.5rem 0;
+          margin: 2rem 0;
           position: relative;
+          text-align: center;
         }
         
-        .divider-line {
+        .divider::before {
+          content: '';
           position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-        }
-        
-        .divider-border {
-          width: 100%;
-          border-top: 1px solid #E5E7EB;
-        }
-        
-        .divider-text {
-          position: relative;
-          display: flex;
-          justify-content: center;
-          font-size: 0.875rem;
+          top: 50%;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: #e5e7eb;
         }
         
         .divider-label {
+          background: #ffffff;
           padding: 0 1rem;
-          background: rgba(255, 255, 255, 0.95);
-          color: #6B7280;
+          color: #6b7280;
+          font-size: 0.875rem;
         }
         
         .signin-section {
@@ -362,24 +304,19 @@ export default function RegisterPage() {
         }
         
         .signin-text {
-          color: #6B7280;
+          color: #6b7280;
           font-size: 0.875rem;
         }
         
         .signin-link {
           font-weight: 600;
-          color: #FFB333;
+          color: #111827;
           text-decoration: none;
-          transition: color 0.3s ease;
+          transition: color 0.2s ease;
         }
         
         .signin-link:hover {
-          color: #E69A00;
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(3deg); }
+          color: #374151;
         }
         
         @keyframes spin {
@@ -390,7 +327,6 @@ export default function RegisterPage() {
         @media (max-width: 768px) {
           .register-card {
             padding: 2rem 1.5rem;
-            margin: 1rem;
           }
           
           .title {
@@ -403,6 +339,10 @@ export default function RegisterPage() {
         }
         
         @media (max-width: 640px) {
+          .register-container {
+            padding: 1rem;
+          }
+          
           .register-card {
             padding: 2rem 1.5rem;
           }
@@ -495,7 +435,7 @@ export default function RegisterPage() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="position" className="form-label">
-                  Position <span style={{ color: '#9CA3AF' }}>(Optional)</span>
+                  Position <span className="optional-label">(Optional)</span>
                 </label>
                 <input
                   id="position"
@@ -510,7 +450,7 @@ export default function RegisterPage() {
 
               <div className="form-group">
                 <label htmlFor="phone" className="form-label">
-                  Phone Number <span style={{ color: '#9CA3AF' }}>(Optional)</span>
+                  Phone Number <span className="optional-label">(Optional)</span>
                 </label>
                 <input
                   id="phone"
@@ -558,12 +498,7 @@ export default function RegisterPage() {
 
           {/* Divider */}
           <div className="divider">
-            <div className="divider-line">
-              <div className="divider-border"></div>
-            </div>
-            <div className="divider-text">
-              <span className="divider-label">Already have an account?</span>
-            </div>
+            <span className="divider-label">Already have an account?</span>
           </div>
 
           {/* Sign In Link */}
