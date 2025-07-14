@@ -208,8 +208,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
 
   const tabs = [
     { id: 'task', label: 'Task', icon: <CheckCircleIcon style={{ width: '16px', height: '16px' }} /> },
-    { id: 'comments', label: 'Comments', icon: <ChatBubbleLeftRightIcon style={{ width: '16px', height: '16px' }} /> },
-    { id: 'files', label: 'Files & Upload', icon: <PaperClipIcon style={{ width: '16px', height: '16px' }} /> }
+    { id: 'comments', label: 'Comments & Files', icon: <ChatBubbleLeftRightIcon style={{ width: '16px', height: '16px' }} /> }
   ];
 
   const modalContent = (
@@ -1237,15 +1236,9 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
 
             {activeTab === 'comments' && (
               <div style={{ height: '100%' }}>
-                <TaskInteractionSection task={task} activeSection="comments" />
+                <TaskInteractionSection task={task} />
               </div>
             )}
-
-            {activeTab === 'files' && (
-              <div style={{ height: '100%' }}>
-                <TaskInteractionSection task={task} activeSection="files" />
-              </div>
-          )}
           </div>
         </div>
       </div>
