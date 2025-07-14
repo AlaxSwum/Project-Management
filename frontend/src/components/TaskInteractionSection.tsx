@@ -106,38 +106,38 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
       const attachments = [];
       
       // Upload selected files
-      for (const file of selectedFiles) {
-        try {
-          const attachment = await taskService.uploadTaskAttachment(task.id, file);
-          if (attachment) {
-            attachments.push({ ...attachment, source: 'upload' });
+              for (const file of selectedFiles) {
+          try {
+            const attachment = await taskService.uploadTaskAttachment(task.id, file);
+            if (attachment) {
+              attachments.push({ ...attachment, source: 'upload' as const });
+            }
+          } catch (error) {
+            console.error('Failed to upload file:', file.name, error);
           }
-        } catch (error) {
-          console.error('Failed to upload file:', file.name, error);
         }
-      }
       
-      // Handle Google Drive files
-      for (const driveFile of selectedDriveFiles) {
-        try {
-          // Create attachment record for Drive file
-          const attachment = {
-            id: Date.now() + Math.random(),
-            name: driveFile.name,
-            size: driveFile.size || 0,
-            type: driveFile.mimeType || 'application/octet-stream',
-            uploaded_by: user?.name || user?.email || 'Unknown',
-            uploaded_at: new Date().toISOString(),
-            task_id: task.id,
-            url: driveFile.webViewLink || driveFile.webContentLink,
-            source: 'drive',
-            drive_file_id: driveFile.id
-          };
-          attachments.push(attachment);
-        } catch (error) {
-          console.error('Failed to attach Drive file:', driveFile.name, error);
+              // Handle Google Drive files
+        for (const driveFile of selectedDriveFiles) {
+          try {
+            // Create attachment record for Drive file
+            const attachment: Attachment = {
+              id: Date.now() + Math.random(),
+              name: driveFile.name,
+              size: driveFile.size || 0,
+              type: driveFile.mimeType || 'application/octet-stream',
+              uploaded_by: user?.name || user?.email || 'Unknown',
+              uploaded_at: new Date().toISOString(),
+              task_id: task.id,
+              url: driveFile.webViewLink || driveFile.webContentLink,
+              source: 'drive' as const,
+              drive_file_id: driveFile.id
+            };
+            attachments.push(attachment);
+          } catch (error) {
+            console.error('Failed to attach Drive file:', driveFile.name, error);
+          }
         }
-      }
       
       if (commentData) {
         const commentWithAttachments = {
