@@ -37,13 +37,24 @@ interface Comment {
 
 interface Attachment {
   id: number;
-  name: string;
-  size: number;
-  type: string;
-  uploaded_by: string;
-  uploaded_at: string;
-  task_id: number;
-  url: string;
+  file: string;
+  filename: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  created_at: string;
+  file_size: number;
+  // Extended properties for file display
+  name?: string;
+  size?: number;
+  type?: string;
+  uploaded_by?: string;
+  uploaded_at?: string;
+  task_id?: number;
+  url?: string;
   source?: 'upload' | 'drive';
   drive_file_id?: string;
 }
@@ -105,24 +116,43 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
       // Handle file uploads
       const attachments = [];
       
-      // Upload selected files
-              for (const file of selectedFiles) {
+              // Upload selected files
+        for (const file of selectedFiles) {
           try {
             const attachment = await taskService.uploadTaskAttachment(task.id, file);
             if (attachment) {
-              attachments.push({ ...attachment, source: 'upload' as const });
+              const enhancedAttachment: Attachment = {
+                ...attachment,
+                source: 'upload' as const,
+                name: attachment.filename,
+                size: attachment.file_size,
+                url: attachment.file,
+                uploaded_by: attachment.user?.name || 'Unknown',
+                uploaded_at: attachment.created_at
+              };
+              attachments.push(enhancedAttachment);
             }
           } catch (error) {
             console.error('Failed to upload file:', file.name, error);
           }
         }
-      
-              // Handle Google Drive files
+        
+        // Handle Google Drive files
         for (const driveFile of selectedDriveFiles) {
           try {
             // Create attachment record for Drive file
             const attachment: Attachment = {
               id: Date.now() + Math.random(),
+              file: driveFile.webViewLink || driveFile.webContentLink || '',
+              filename: driveFile.name,
+              user: {
+                id: user?.id || 0,
+                name: user?.name || 'Unknown',
+                email: user?.email || 'Unknown',
+                role: user?.role || 'user'
+              },
+              created_at: new Date().toISOString(),
+              file_size: driveFile.size || 0,
               name: driveFile.name,
               size: driveFile.size || 0,
               type: driveFile.mimeType || 'application/octet-stream',
@@ -695,40 +725,42 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
                   </div>
                   <div className="comment-content">{comment.comment}</div>
                   
-                  {comment.attachments && comment.attachments.length > 0 && (
-                    <div className="comment-attachments">
-                      {comment.attachments.map((attachment, index) => (
-                        <div key={index} className="attachment-item">
-                          <DocumentIcon className="attachment-icon" />
-                          <div className="attachment-info">
-                            <div className="attachment-name">{attachment.name}</div>
-                            <div className="attachment-meta">
-                              {formatFileSize(attachment.size)} • {attachment.source === 'drive' ? 'Google Drive' : 'Uploaded'}
-                            </div>
-                          </div>
-                          {attachment.url && (
-                            <a
-                              href={attachment.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                padding: '0.25rem 0.5rem',
-                                background: '#f3f4f6',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '4px',
-                                color: '#374151',
-                                textDecoration: 'none',
-                                fontSize: '0.75rem',
-                                fontWeight: '500'
-                              }}
-                            >
-                              View
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                                     {comment.attachments && comment.attachments.length > 0 && (
+                     <div className="comment-attachments">
+                       {comment.attachments.map((attachment, index) => (
+                         <div key={index} className="attachment-item">
+                           <DocumentIcon className="attachment-icon" />
+                           <div className="attachment-info">
+                             <div className="attachment-name">
+                               {attachment.name || attachment.filename}
+                             </div>
+                             <div className="attachment-meta">
+                               {formatFileSize(attachment.size || attachment.file_size)} • {attachment.source === 'drive' ? 'Google Drive' : 'Uploaded'}
+                             </div>
+                           </div>
+                           {(attachment.url || attachment.file) && (
+                             <a
+                               href={attachment.url || attachment.file}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               style={{
+                                 padding: '0.25rem 0.5rem',
+                                 background: '#f3f4f6',
+                                 border: '1px solid #d1d5db',
+                                 borderRadius: '4px',
+                                 color: '#374151',
+                                 textDecoration: 'none',
+                                 fontSize: '0.75rem',
+                                 fontWeight: '500'
+                               }}
+                             >
+                               View
+                             </a>
+                           )}
+                         </div>
+                       ))}
+                     </div>
+                   )}
                 </div>
               ))
             )}
