@@ -866,15 +866,16 @@ Your changes are now saved in the system.`);
                         >
                           <PencilIcon style={{ width: '16px', height: '16px' }} />
                           Edit
-                            </button>
-                        </div>
-                        </div>
-                      ))}
+                        </button>
+                      </div>
                     </div>
-                          )}
-                        </div>
-                          )}
-                        </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 } 
