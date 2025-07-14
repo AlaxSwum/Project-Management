@@ -2792,7 +2792,7 @@ Your report is now available in the system.`);
         .weekly-report-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.85);
+          background: rgba(0, 0, 0, 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2801,46 +2801,46 @@ Your report is now available in the system.`);
           backdrop-filter: blur(4px);
         }
         
-                 .weekly-report-modal {
-           background: #ffffff;
-           border: 3px solid #000000;
-           border-radius: 0;
-           width: 100%;
-           max-width: 1200px;
-           max-height: 95vh;
-           overflow: hidden;
-           box-shadow: 8px 8px 0px #000000;
-           display: flex;
-           flex-direction: column;
-         }
+        .weekly-report-modal {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 1200px;
+          max-height: 95vh;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          display: flex;
+          flex-direction: column;
+        }
         
         .weekly-report-header {
-          background: #000000;
-          color: #ffffff;
+          background: #ffffff;
+          color: #111827;
           padding: 2rem;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-bottom: 3px solid #000000;
+          border-bottom: 1px solid #e5e7eb;
         }
         
         .weekly-report-title {
-          font-size: 2rem;
-          font-weight: bold;
+          font-size: 1.75rem;
+          font-weight: 700;
           margin: 0;
           letter-spacing: -0.025em;
         }
         
         .weekly-close-btn {
           background: #ffffff;
-          color: #000000;
-          border: 2px solid #ffffff;
+          color: #6b7280;
+          border: 1px solid #d1d5db;
           width: 40px;
           height: 40px;
-          border-radius: 0;
+          border-radius: 8px;
           cursor: pointer;
-          font-size: 24px;
-          font-weight: bold;
+          font-size: 20px;
+          font-weight: 500;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2848,48 +2848,48 @@ Your report is now available in the system.`);
         }
         
         .weekly-close-btn:hover {
-          background: #f5f5f5;
-          transform: scale(1.1);
+          background: #f9fafb;
+          color: #374151;
         }
         
-                 .weekly-report-body {
-           padding: 2rem 3rem 3rem 3rem;
-           flex: 1;
-           overflow-y: auto;
-           overflow-x: hidden;
-           background: #ffffff;
-           scroll-behavior: smooth;
-         }
+        .weekly-report-body {
+          padding: 2rem 3rem 3rem 3rem;
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          background: #ffffff;
+          scroll-behavior: smooth;
+        }
         
         .week-info-banner {
-          background: #f8f9fa;
-          border: 3px solid #000000;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
           padding: 2rem;
           text-align: center;
           margin-bottom: 3rem;
-          border-radius: 0;
+          border-radius: 12px;
         }
         
         .week-title {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #000000;
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #111827;
           margin: 0 0 0.5rem 0;
           letter-spacing: -0.025em;
         }
         
         .week-subtitle {
-          font-size: 1rem;
-          color: #666666;
+          font-size: 0.875rem;
+          color: #6b7280;
           margin: 0;
         }
         
-                 .weekly-report-form {
-           display: flex;
-           flex-direction: column;
-           gap: 2.5rem;
-           padding-bottom: 2rem;
-         }
+        .weekly-report-form {
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+          padding-bottom: 2rem;
+        }
         
         .form-row {
           display: flex;
@@ -2900,7 +2900,7 @@ Your report is now available in the system.`);
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 0.75rem;
         }
         
         .form-group.full-width {
@@ -2912,37 +2912,36 @@ Your report is now available in the system.`);
         }
         
         .weekly-label {
-          font-size: 0.9rem;
-          font-weight: bold;
-          color: #000000;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #374151;
           margin: 0;
-          padding-bottom: 0.5rem;
+          padding-bottom: 0.25rem;
         }
         
         .weekly-select {
           width: 100%;
-          padding: 1rem 1.25rem;
-          border: 3px solid #000000;
-          border-radius: 0;
-          font-size: 1rem;
+          padding: 0.875rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 0.875rem;
           background: #ffffff;
-          color: #000000;
+          color: #111827;
           transition: all 0.2s ease;
+          box-sizing: border-box;
         }
         
         .weekly-select:focus {
           outline: none;
-          border-color: #000000;
-          box-shadow: 4px 4px 0px #e5e5e5;
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
         }
         
         .weekly-field-container {
           background: #ffffff;
-          border: 3px solid #000000;
+          border: 1px solid #e5e7eb;
           padding: 1.5rem;
-          border-radius: 0;
+          border-radius: 8px;
           display: flex;
           flex-direction: column;
           gap: 1rem;
@@ -2951,40 +2950,45 @@ Your report is now available in the system.`);
         .weekly-field-row {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 0.75rem;
         }
         
         .weekly-input {
           flex: 1;
-          padding: 0.875rem 1.125rem;
-          border: 2px solid #000000;
-          border-radius: 0;
-          font-size: 0.95rem;
+          padding: 0.75rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 0.875rem;
           background: #ffffff;
-          color: #000000;
+          color: #111827;
           transition: all 0.2s ease;
+          box-sizing: border-box;
         }
         
         .weekly-input:focus {
           outline: none;
-          border-color: #000000;
-          box-shadow: 2px 2px 0px #e5e5e5;
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+        }
+        
+        .weekly-input:hover {
+          border-color: #9ca3af;
         }
         
         .weekly-input::placeholder {
-          color: #888888;
+          color: #9ca3af;
         }
         
         .weekly-remove-btn {
           background: #ffffff;
-          color: #000000;
-          border: 2px solid #000000;
+          color: #6b7280;
+          border: 1px solid #d1d5db;
           width: 32px;
           height: 32px;
-          border-radius: 0;
+          border-radius: 6px;
           cursor: pointer;
-          font-size: 16px;
-          font-weight: bold;
+          font-size: 14px;
+          font-weight: 500;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2993,144 +2997,463 @@ Your report is now available in the system.`);
         }
         
         .weekly-remove-btn:hover {
-          background: #f5f5f5;
-          transform: scale(1.1);
+          background: #f3f4f6;
+          color: #374151;
         }
         
         .weekly-add-btn {
-          background: #f8f9fa;
-          color: #000000;
-          border: 2px solid #000000;
-          border-radius: 0;
+          background: #f9fafb;
+          color: #374151;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
           padding: 0.75rem 1.25rem;
-          font-size: 0.9rem;
-          font-weight: 600;
+          font-size: 0.875rem;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
           align-self: flex-start;
         }
         
         .weekly-add-btn:hover {
-          background: #e9ecef;
-          transform: translateY(-2px);
-          box-shadow: 2px 2px 0px #000000;
+          background: #f3f4f6;
+          border-color: #9ca3af;
         }
         
         .weekly-textarea {
           width: 100%;
           min-height: 120px;
-          padding: 1rem 1.25rem;
-          border: 3px solid #000000;
-          border-radius: 0;
-          font-size: 0.95rem;
+          padding: 0.875rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 0.875rem;
           background: #ffffff;
-          color: #000000;
+          color: #111827;
           resize: vertical;
           font-family: inherit;
           line-height: 1.5;
           transition: all 0.2s ease;
+          box-sizing: border-box;
         }
         
         .weekly-textarea:focus {
           outline: none;
-          border-color: #000000;
-          box-shadow: 4px 4px 0px #e5e5e5;
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+        }
+        
+        .weekly-textarea:hover {
+          border-color: #9ca3af;
         }
         
         .weekly-textarea::placeholder {
-          color: #888888;
+          color: #9ca3af;
         }
         
-                 .weekly-form-buttons {
-           display: flex;
-           gap: 1.5rem;
-           justify-content: flex-end;
-           padding: 2rem 0 1rem 0;
-           margin-top: 2rem;
-           border-top: 2px solid #e5e5e5;
-         }
+        .weekly-form-buttons {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          padding: 2rem 0 1rem 0;
+          margin-top: 2rem;
+          border-top: 1px solid #e5e7eb;
+        }
         
         .weekly-btn-cancel {
           background: #ffffff;
-          color: #000000;
-          border: 2px solid #000000;
-          border-radius: 0;
-          padding: 1rem 2rem;
-          font-size: 1rem;
-          font-weight: 600;
+          color: #374151;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          padding: 0.875rem 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
         }
         
         .weekly-btn-cancel:hover {
-          background: #f5f5f5;
-          transform: translateY(-2px);
-          box-shadow: 3px 3px 0px #000000;
+          background: #f3f4f6;
+          border-color: #9ca3af;
         }
         
         .weekly-btn-submit {
-          background: #000000;
+          background: #111827;
           color: #ffffff;
-          border: 2px solid #000000;
-          border-radius: 0;
-          padding: 1rem 2rem;
-          font-size: 1rem;
-          font-weight: 600;
+          border: 1px solid #111827;
+          border-radius: 8px;
+          padding: 0.875rem 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
         }
         
         .weekly-btn-submit:hover {
-          background: #333333;
-          transform: translateY(-2px);
-          box-shadow: 3px 3px 0px #666666;
+          background: #1f2937;
+          border-color: #1f2937;
         }
         
-                 @media (max-width: 768px) {
-           .weekly-report-overlay {
-             padding: 1rem;
-           }
-           
-           .weekly-report-modal {
-             max-width: 100%;
-             max-height: 98vh;
-           }
-           
-           .weekly-report-header {
-             padding: 1.5rem;
-           }
-           
-           .weekly-report-title {
-             font-size: 1.5rem;
-           }
-           
-           .weekly-report-body {
-             padding: 1.5rem;
-           }
-           
-           .form-row {
-             flex-direction: column;
-             gap: 1.5rem;
-           }
-           
-           .weekly-form-buttons {
-             flex-direction: column;
-             gap: 1rem;
-           }
-           
-           .weekly-btn-cancel,
-           .weekly-btn-submit {
-             width: 100%;
-             text-align: center;
-           }
-         }
+        @media (max-width: 768px) {
+          .weekly-report-overlay {
+            padding: 1rem;
+          }
+          
+          .weekly-report-modal {
+            max-width: 100%;
+            max-height: 98vh;
+          }
+          
+          .weekly-report-header {
+            padding: 1.5rem;
+          }
+          
+          .weekly-report-title {
+            font-size: 1.5rem;
+          }
+          
+          .weekly-report-body {
+            padding: 1.5rem;
+          }
+          
+          .form-row {
+            flex-direction: column;
+            gap: 1.5rem;
+          }
+          
+          .weekly-form-buttons {
+            flex-direction: column;
+            gap: 1rem;
+          }
+          
+          .weekly-btn-cancel,
+          .weekly-btn-submit {
+            width: 100%;
+            text-align: center;
+          }
+        }
 
+        /* Enhanced Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(12px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+          z-index: 1000;
+          animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 16px;
+          padding: 0;
+          width: 100%;
+          max-width: 520px;
+          max-height: 90vh;
+          overflow: hidden;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          animation: slideIn 0.3s ease;
+          position: relative;
+        }
+        
+        .modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 2rem 2rem 1rem 2rem;
+          border-bottom: 1px solid #e5e7eb;
+          background: #ffffff;
+          position: relative;
+        }
+        
+        .modal-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #111827;
+          margin: 0;
+          letter-spacing: -0.025em;
+        }
+        
+        .modal-close-btn {
+          background: #ffffff;
+          border: 1px solid #d1d5db;
+          padding: 0.75rem;
+          border-radius: 8px;
+          cursor: pointer;
+          color: #6b7280;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .modal-close-btn:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+          color: #374151;
+        }
+        
+        .modal-body {
+          padding: 2rem;
+          max-height: 75vh;
+          overflow-y: auto;
+        }
+        
+        .leave-stats {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+          text-align: center;
+          padding: 1.5rem 1rem;
+          background: #f9fafb;
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          position: relative;
+          transition: all 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        
+        .stat-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-number {
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          color: #111827;
+          letter-spacing: -0.025em;
+        }
+        
+        .stat-label {
+          font-size: 0.75rem;
+          color: #6b7280;
+          font-weight: 500;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+          margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        
+        .form-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+          background: #ffffff;
+          color: #111827;
+          box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+          outline: none;
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+        }
+        
+        .form-input:hover {
+          border-color: #9ca3af;
+        }
+        
+        .form-input::placeholder {
+          color: #9ca3af;
+        }
+        
+        .form-select {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+          background: #ffffff;
+          color: #111827;
+          box-sizing: border-box;
+          cursor: pointer;
+        }
+        
+        .form-select:focus {
+          outline: none;
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+        }
+        
+        .form-select:hover {
+          border-color: #9ca3af;
+        }
+        
+        .form-textarea {
+          width: 100%;
+          min-height: 100px;
+          padding: 0.875rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+          background: #ffffff;
+          color: #111827;
+          resize: vertical;
+          font-family: inherit;
+          line-height: 1.5;
+          box-sizing: border-box;
+        }
+        
+        .form-textarea:focus {
+          outline: none;
+          border-color: #374151;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+        }
+        
+        .form-textarea:hover {
+          border-color: #9ca3af;
+        }
+        
+        .form-textarea::placeholder {
+          color: #9ca3af;
+        }
+
+        .error-message {
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #dc2626;
+          padding: 1rem;
+          border-radius: 8px;
+          margin-bottom: 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+        
+        .form-buttons {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          margin-top: 2rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid #e5e7eb;
+        }
+        
+        .btn {
+          padding: 0.875rem 1.5rem;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 1px solid;
+        }
+        
+        .btn-secondary {
+          background: #ffffff;
+          color: #374151;
+          border-color: #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+          background: #f3f4f6;
+          border-color: #9ca3af;
+        }
+        
+        .btn-primary {
+          background: #111827;
+          color: #ffffff;
+          border-color: #111827;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+          background: #1f2937;
+          border-color: #1f2937;
+        }
+        
+        .btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+          from { transform: translateY(-20px) scale(0.95); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+          .modal-content {
+            max-width: 95vw;
+            margin: 1rem;
+          }
+          
+          .modal-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+          }
+          
+          .modal-title {
+            font-size: 1.25rem;
+          }
+          
+          .modal-body {
+            padding: 1.5rem;
+          }
+          
+          .leave-stats {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .form-buttons {
+            flex-direction: column;
+          }
+
+          .btn {
+            width: 100%;
+            text-align: center;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .modal-overlay {
+            padding: 1rem;
+          }
+          
+          .modal-content {
+            border-radius: 12px;
+            max-height: 95vh;
+          }
+        }
       `}</style>
     </div>
   );

@@ -438,13 +438,13 @@ Your changes are now saved in the system.`);
         `
       }} />
 
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#F5F5ED', 
+          background: '#fafafa', 
           flex: 1,
           minHeight: '100vh'
         }}>
@@ -461,12 +461,12 @@ Your changes are now saved in the system.`);
                 fontSize: '2.5rem', 
                 fontWeight: '300', 
                 margin: '0', 
-                color: '#1a1a1a',
+                color: '#111827',
                 letterSpacing: '-0.02em'
               }}>
               Weekly Reports
             </h1>
-              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              <p style={{ fontSize: '1.1rem', color: '#6b7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 {viewMode === 'admin' ? 'Team weekly progress reports and insights' : 'Your weekly progress reports and achievements'}
             </p>
             </div>
@@ -474,14 +474,14 @@ Your changes are now saved in the system.`);
 
           {error && (
             <div style={{ 
-              background: '#ffffff', 
-              border: '1px solid #F87239', 
-              borderRadius: '12px', 
+              background: '#fef2f2', 
+              border: '1px solid #fecaca', 
+              borderRadius: '8px', 
               padding: '1rem', 
               marginBottom: '2rem',
-              color: '#F87239',
+              color: '#dc2626',
               fontWeight: '500',
-              boxShadow: '0 2px 8px rgba(248, 114, 57, 0.1)'
+              fontSize: '0.875rem'
             }}>
               {error}
             </div>
@@ -497,78 +497,75 @@ Your changes are now saved in the system.`);
                 marginBottom: '3rem'
               }}>
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
                   padding: '2rem',
                   textAlign: 'center',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#5884FD', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#111827', marginBottom: '0.5rem' }}>
                     {weekFolders.length}
                   </div>
-                  <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Weeks</div>
+                  <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Total Weeks</div>
                   </div>
 
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
                   padding: '2rem',
                   textAlign: 'center',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#10b981', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#111827', marginBottom: '0.5rem' }}>
                     {reports.length}
                   </div>
-                  <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Total Reports</div>
+                  <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Total Reports</div>
                 </div>
 
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '16px',
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
                   padding: '2rem',
                   textAlign: 'center',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#C483D9', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '300', color: '#111827', marginBottom: '0.5rem' }}>
                     {employees.length}
                   </div>
-                  <div style={{ color: '#666666', fontSize: '0.9rem', fontWeight: '500' }}>Team Members</div>
+                  <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '500' }}>Team Members</div>
                 </div>
               </div>
 
               {/* Week Folders */}
               <div style={{
                 background: '#ffffff',
-                border: '1px solid #e8e8e8',
-                borderRadius: '16px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
                 overflow: 'hidden',
-                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
               }}>
                 {weekFolders.length === 0 ? (
                   <div style={{
                     textAlign: 'center',
                     padding: '4rem 2rem',
-                    color: '#999999'
+                    color: '#9ca3af'
                   }}>
                     <div style={{ 
                       width: '64px', 
                       height: '64px', 
-                      background: '#f0f0f0',
-                      borderRadius: '16px',
+                      background: '#f3f4f6',
+                      borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       margin: '0 auto 2rem'
                     }}>
-                      <ClipboardDocumentListIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
+                      <ClipboardDocumentListIcon style={{ width: '32px', height: '32px', color: '#9ca3af' }} />
                     </div>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#111827', letterSpacing: '-0.01em' }}>
                       No Weekly Reports Yet
                     </h3>
                     <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
@@ -591,18 +588,18 @@ Your changes are now saved in the system.`);
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               padding: '1.5rem',
-                              background: '#5884FD',
+                              background: '#111827',
                               color: '#ffffff',
-                              borderRadius: '12px',
+                              borderRadius: '8px',
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
                               marginBottom: isExpanded ? '1rem' : '0'
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = '#4A6CF7';
+                              e.currentTarget.style.background = '#1f2937';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = '#5884FD';
+                              e.currentTarget.style.background = '#111827';
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -628,18 +625,19 @@ Your changes are now saved in the system.`);
                               <div style={{
                                 background: 'rgba(255, 255, 255, 0.2)',
                                 padding: '0.5rem 1rem',
-                                borderRadius: '8px',
-                                fontSize: '0.9rem',
+                                borderRadius: '6px',
+                                fontSize: '0.875rem',
                                 fontWeight: '500'
                               }}>
                                 {folder.submittedCount}/{folder.totalEmployees} submitted ({completionRate}%)
                               </div>
                               <div style={{
-                                background: completionRate === 100 ? '#10b981' : completionRate >= 50 ? '#FFB333' : '#F87239',
+                                background: '#6b7280',
                                 padding: '0.25rem 0.75rem',
                                 borderRadius: '12px',
                                 fontSize: '0.75rem',
-                                fontWeight: '600'
+                                fontWeight: '600',
+                                color: '#ffffff'
                               }}>
                                 {completionRate === 100 ? 'Complete' : completionRate >= 50 ? 'In Progress' : 'Pending'}
                               </div>
@@ -648,9 +646,9 @@ Your changes are now saved in the system.`);
                         
                         {isExpanded && (
                             <div style={{
-                              background: '#f8fafc',
-                              border: '1px solid #e8e8e8',
-                              borderRadius: '12px',
+                              background: '#f9fafb',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
                               padding: '1.5rem'
                             }}>
                               {folder.reports.length > 0 ? (
@@ -664,8 +662,8 @@ Your changes are now saved in the system.`);
                                         justifyContent: 'space-between',
                                         padding: '1rem',
                                         background: '#ffffff',
-                                        border: '1px solid #e8e8e8',
-                                        borderRadius: '8px',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '6px',
                                         transition: 'all 0.2s ease'
                                       }}
                                       onMouseEnter={(e) => {
@@ -679,7 +677,7 @@ Your changes are now saved in the system.`);
                                         <div style={{
                                           width: '40px',
                                           height: '40px',
-                                          background: '#5884FD',
+                                          background: '#111827',
                                           color: '#ffffff',
                                           borderRadius: '50%',
                                           display: 'flex',
@@ -690,10 +688,10 @@ Your changes are now saved in the system.`);
                                         {report.employee_name.charAt(0).toUpperCase()}
                                       </div>
                                       <div>
-                                          <div style={{ fontWeight: '500', color: '#1a1a1a' }}>
+                                          <div style={{ fontWeight: '500', color: '#111827' }}>
                                           {report.employee_name}
                                         </div>
-                                          <div style={{ fontSize: '0.85rem', color: '#666666' }}>
+                                          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
                                           {report.project_name}
                                         </div>
                                       </div>
@@ -705,10 +703,10 @@ Your changes are now saved in the system.`);
                                           style={{
                                             padding: '0.5rem',
                                             background: '#ffffff',
-                                            border: '1px solid #e8e8e8',
-                                            borderRadius: '8px',
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '6px',
                                             cursor: 'pointer',
-                                            color: '#5884FD',
+                                            color: '#374151',
                                             transition: 'all 0.2s ease',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -724,10 +722,10 @@ Your changes are now saved in the system.`);
                                             style={{
                                               padding: '0.5rem',
                                               background: '#ffffff',
-                                              border: '1px solid #e8e8e8',
-                                              borderRadius: '8px',
+                                              border: '1px solid #e5e7eb',
+                                              borderRadius: '6px',
                                               cursor: 'pointer',
-                                              color: '#FFB333',
+                                              color: '#6b7280',
                                               transition: 'all 0.2s ease',
                                               display: 'flex',
                                               alignItems: 'center',
@@ -743,7 +741,7 @@ Your changes are now saved in the system.`);
                               ))}
                             </div>
                               ) : (
-                                <div style={{ textAlign: 'center', color: '#666666', padding: '2rem' }}>
+                                <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem' }}>
                                   No reports submitted for this week yet.
                               </div>
                             )}
@@ -760,30 +758,30 @@ Your changes are now saved in the system.`);
             /* User View */
             <div style={{
               background: '#ffffff',
-              border: '1px solid #e8e8e8',
-              borderRadius: '16px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '12px',
               overflow: 'hidden',
-              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
             }}>
                 {reports.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
                   padding: '4rem 2rem',
-                  color: '#999999'
+                  color: '#9ca3af'
                 }}>
                   <div style={{ 
                     width: '64px', 
                     height: '64px', 
-                    background: '#f0f0f0',
-                    borderRadius: '16px',
+                    background: '#f3f4f6',
+                    borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 2rem'
                   }}>
-                    <ClipboardDocumentListIcon style={{ width: '32px', height: '32px', color: '#999999' }} />
+                    <ClipboardDocumentListIcon style={{ width: '32px', height: '32px', color: '#9ca3af' }} />
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '400', margin: '0 0 1rem 0', color: '#111827', letterSpacing: '-0.01em' }}>
                     No Weekly Reports Yet
                             </h3>
                   <p style={{ fontSize: '1.1rem', margin: '0', lineHeight: '1.5' }}>
@@ -802,28 +800,28 @@ Your changes are now saved in the system.`);
                         padding: '1.5rem',
                         marginBottom: '1rem',
               background: '#ffffff',
-                        border: '1px solid #e8e8e8',
-              borderRadius: '12px',
+                        border: '1px solid #e5e7eb',
+              borderRadius: '8px',
                         transition: 'all 0.2s ease',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
                       }}
                     >
                   <div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#1a1a1a', marginBottom: '0.5rem' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#111827', marginBottom: '0.5rem' }}>
                           Week {report.week_number}, {report.year}
                   </div>
-                        <div style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '0.25rem' }}>
+                        <div style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '0.25rem' }}>
                           {report.date_range_display}
                 </div>
-                        <div style={{ fontSize: '0.85rem', color: '#999999' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#9ca3af' }}>
                           {report.project_name} • Submitted {formatDate(report.created_at)}
               </div>
                 </div>
@@ -833,12 +831,12 @@ Your changes are now saved in the system.`);
                           onClick={() => handleViewReport(report)}
                           style={{
                             padding: '0.75rem 1.5rem',
-                            background: '#5884FD',
+                            background: '#111827',
                             color: '#ffffff',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: '6px',
                             cursor: 'pointer',
-                            fontSize: '0.9rem',
+                            fontSize: '0.875rem',
                             fontWeight: '500',
                             transition: 'all 0.2s ease',
                             display: 'flex',
@@ -854,11 +852,11 @@ Your changes are now saved in the system.`);
                           style={{
                             padding: '0.75rem 1.5rem',
                             background: '#ffffff',
-                            color: '#FFB333',
-                            border: '1px solid #e8e8e8',
-                            borderRadius: '8px',
+                            color: '#6b7280',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '6px',
                             cursor: 'pointer',
-                            fontSize: '0.9rem',
+                            fontSize: '0.875rem',
                             fontWeight: '500',
                             transition: 'all 0.2s ease',
                             display: 'flex',
@@ -877,7 +875,6 @@ Your changes are now saved in the system.`);
                         </div>
                           )}
                         </div>
-                    </div>
     </>
   );
 } 
