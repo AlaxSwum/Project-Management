@@ -392,6 +392,41 @@ export default function MyTasksPage() {
       filtered = filtered.filter(task => task.priority === priorityFilter);
     }
 
+    // Apply sorting - ascending order for consistent task display
+    filtered.sort((a, b) => {
+      // 1. Sort by priority (urgent > high > medium > low)
+      const priorityOrder = { 'urgent': 0, 'high': 1, 'medium': 2, 'low': 3 };
+      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
+      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+
+      // 2. Sort by due date (earliest first, nulls last)
+      if (a.due_date && b.due_date) {
+        const aDate = new Date(a.due_date).getTime();
+        const bDate = new Date(b.due_date).getTime();
+        if (aDate !== bDate) {
+          return aDate - bDate;
+        }
+      } else if (a.due_date && !b.due_date) {
+        return -1; // a has due date, b doesn't - a comes first
+      } else if (!a.due_date && b.due_date) {
+        return 1; // b has due date, a doesn't - b comes first
+      }
+
+      // 3. Sort by creation date (earliest first)
+      const aCreated = new Date(a.created_at).getTime();
+      const bCreated = new Date(b.created_at).getTime();
+      if (aCreated !== bCreated) {
+        return aCreated - bCreated;
+      }
+
+      // 4. Sort by name (alphabetical)
+      return a.name.localeCompare(b.name);
+    });
+
     setFilteredTasks(filtered);
   };
 

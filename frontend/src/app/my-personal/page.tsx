@@ -2982,19 +2982,29 @@ export default function PersonalCalendarPage() {
                       color: '#374151',
                       fontSize: '0.875rem'
                     }}>
-                      Date *
+                      Start Date & Time *
                     </label>
                     <input
-                      type="date"
-                      value={selectedEvent.start_datetime.slice(0, 10)}
+                      type="datetime-local"
+                      step="300"
+                      value={(() => {
+                        const date = new Date(selectedEvent.start_datetime);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        return `${year}-${month}-${day}T${hours}:${minutes}`;
+                      })()}
                       onChange={(e) => {
-                        const date = e.target.value;
-                        const startTime = selectedEvent.start_datetime.slice(11, 16);
-                        const endTime = selectedEvent.end_datetime.slice(11, 16);
+                        const newStartDateTime = new Date(e.target.value);
+                        const currentDuration = new Date(selectedEvent.end_datetime).getTime() - new Date(selectedEvent.start_datetime).getTime();
+                        const newEndDateTime = new Date(newStartDateTime.getTime() + currentDuration);
+                        
                         setSelectedEvent({ 
                           ...selectedEvent, 
-                          start_datetime: `${date}T${startTime}:00.000Z`,
-                          end_datetime: `${date}T${endTime}:00.000Z`
+                          start_datetime: newStartDateTime.toISOString(),
+                          end_datetime: newEndDateTime.toISOString()
                         });
                       }}
                       style={{
@@ -3012,14 +3022,34 @@ export default function PersonalCalendarPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#1a1a1a' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem', 
+                      fontWeight: '500', 
+                      color: '#374151',
+                      fontSize: '0.875rem'
+                    }}>
                       End Date & Time *
                     </label>
                     <input
                       type="datetime-local"
-                      step="900"
-                      value={selectedEvent.end_datetime.slice(0, 16)}
-                      onChange={(e) => setSelectedEvent({ ...selectedEvent, end_datetime: e.target.value + ':00.000Z' })}
+                      step="300"
+                      value={(() => {
+                        const date = new Date(selectedEvent.end_datetime);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        return `${year}-${month}-${day}T${hours}:${minutes}`;
+                      })()}
+                      onChange={(e) => {
+                        const newEndDateTime = new Date(e.target.value);
+                        setSelectedEvent({ 
+                          ...selectedEvent, 
+                          end_datetime: newEndDateTime.toISOString()
+                        });
+                      }}
                       style={{
                         width: '100%',
                         padding: '0.875rem 1rem',
@@ -3032,6 +3062,109 @@ export default function PersonalCalendarPage() {
                         outline: 'none'
                       }}
                     />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Location
+                  </label>
+                  <select
+                    value={selectedEvent.location || ''}
+                    onChange={(e) => setSelectedEvent({ ...selectedEvent, location: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1rem',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="">Select location (optional)</option>
+                    {locationOptions.map(location => (
+                      <option key={location} value={location}>{location}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    Event Color
+                  </label>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(6, 1fr)', 
+                    gap: '0.5rem',
+                    marginTop: '0.5rem'
+                  }}>
+                    {[
+                      { name: 'Ocean Blue', value: '#5884FD' },
+                      { name: 'Emerald', value: '#10B981' },
+                      { name: 'Amber', value: '#F59E0B' },
+                      { name: 'Rose', value: '#F43F5E' },
+                      { name: 'Purple', value: '#8B5CF6' },
+                      { name: 'Pink', value: '#EC4899' },
+                      { name: 'Teal', value: '#14B8A6' },
+                      { name: 'Orange', value: '#F97316' },
+                      { name: 'Indigo', value: '#6366F1' },
+                      { name: 'Green', value: '#22C55E' },
+                      { name: 'Cyan', value: '#06B6D4' },
+                      { name: 'Gray', value: '#6B7280' }
+                    ].map((color) => (
+                      <div
+                        key={color.value}
+                        onClick={() => setSelectedEvent({ ...selectedEvent, color: color.value })}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          backgroundColor: color.value,
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          border: selectedEvent.color === color.value ? '3px solid #1a1a1a' : '2px solid #e5e7eb',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title={color.name}
+                      >
+                        {selectedEvent.color === color.value && (
+                          <div style={{
+                            width: '16px',
+                            height: '16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <div style={{
+                              width: '8px',
+                              height: '8px',
+                              backgroundColor: color.value,
+                              borderRadius: '50%'
+                            }} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -3054,10 +3187,64 @@ export default function PersonalCalendarPage() {
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      // Save changes logic here
-                      setIsEditingEvent(false);
-                      setShowEventModal(false);
+                    onClick={async () => {
+                      try {
+                        if (!selectedEvent.title.trim()) {
+                          alert('Please enter a title for the event');
+                          return;
+                        }
+
+                        // Save current scroll position before refresh
+                        const scrollContainer = document.querySelector('.calendar-5min-container');
+                        const scrollPosition = scrollContainer ? scrollContainer.scrollTop : 0;
+
+                        const supabase = (await import('@/lib/supabase')).supabase;
+                        
+                        // Convert datetime to date and time for database
+                        const startDate = new Date(selectedEvent.start_datetime);
+                        const endDate = new Date(selectedEvent.end_datetime);
+                        
+                        const dateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                        const timeStr = startDate.toTimeString().slice(0, 8); // HH:MM:SS format
+                        const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)); // minutes
+                        
+                        const { error } = await supabase
+                          .from('projects_meeting')
+                          .update({
+                            title: selectedEvent.title,
+                            description: selectedEvent.description || '',
+                            date: dateStr,
+                            time: timeStr,
+                            duration: duration,
+                            location: selectedEvent.location || null,
+                            color: selectedEvent.color || '#5884FD'
+                          })
+                          .eq('id', selectedEvent.id);
+                        
+                        if (error) throw error;
+                        
+                        // Refresh calendar data
+                        await fetchCalendarData();
+                        
+                        // Restore scroll position after refresh
+                        setTimeout(() => {
+                          const scrollContainer = document.querySelector('.calendar-5min-container');
+                          if (scrollContainer) {
+                            scrollContainer.scrollTop = scrollPosition;
+                          }
+                        }, 100);
+                        
+                        // Close modal
+                        setIsEditingEvent(false);
+                        setShowEventModal(false);
+                        setSelectedEvent(null);
+                        
+                        console.log('✅ Event updated successfully');
+                        
+                      } catch (err: any) {
+                        console.error('❌ Error updating event:', err);
+                        alert('Failed to update event. Please try again.');
+                      }
                     }}
                     style={{
                       flex: 1,

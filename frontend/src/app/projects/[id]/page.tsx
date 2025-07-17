@@ -313,8 +313,46 @@ export default function ProjectDetailPage() {
     setDraggedTask(null);
   };
 
+  // Helper function to sort tasks in ascending order
+  const sortTasks = (taskList: Task[]) => {
+    return taskList.sort((a, b) => {
+      // 1. Sort by priority (urgent > high > medium > low)
+      const priorityOrder = { 'urgent': 0, 'high': 1, 'medium': 2, 'low': 3 };
+      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
+      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+
+      // 2. Sort by due date (earliest first, nulls last)
+      if (a.due_date && b.due_date) {
+        const aDate = new Date(a.due_date).getTime();
+        const bDate = new Date(b.due_date).getTime();
+        if (aDate !== bDate) {
+          return aDate - bDate;
+        }
+      } else if (a.due_date && !b.due_date) {
+        return -1; // a has due date, b doesn't - a comes first
+      } else if (!a.due_date && b.due_date) {
+        return 1; // b has due date, a doesn't - b comes first
+      }
+
+      // 3. Sort by creation date (earliest first)
+      const aCreated = new Date(a.created_at).getTime();
+      const bCreated = new Date(b.created_at).getTime();
+      if (aCreated !== bCreated) {
+        return aCreated - bCreated;
+      }
+
+      // 4. Sort by name (alphabetical)
+      return a.name.localeCompare(b.name);
+    });
+  };
+
   const getTasksByStatus = (status: string) => {
-    return tasks.filter(task => task.status === status);
+    const statusTasks = tasks.filter(task => task.status === status);
+    return sortTasks(statusTasks);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -4347,7 +4385,7 @@ export default function ProjectDetailPage() {
                     }}>Create your first task to see the beautiful timeline visualization</div>
                   </div>
                 ) : (
-                  tasks.map((task) => {
+                  sortTasks(tasks).map((task) => {
                     const startDate = task.start_date ? new Date(task.start_date) : new Date();
                     const dueDate = task.due_date ? new Date(task.due_date) : null;
                     const progress = task.status === 'done' ? 100 : 
@@ -4895,7 +4933,7 @@ export default function ProjectDetailPage() {
                          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to get started!</p>
                     </div>
                   ) : (
-                    tasks.map((task) => {
+                    sortTasks(tasks).map((task) => {
                       const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
                       const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                       const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
@@ -5305,7 +5343,7 @@ export default function ProjectDetailPage() {
                         <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to see it on the timeline!</p>
                       </div>
                     ) : (
-                      tasks.map((task, taskIndex) => {
+                      sortTasks(tasks).map((task, taskIndex) => {
                         const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
                         const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                         const durationInWeeks = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
