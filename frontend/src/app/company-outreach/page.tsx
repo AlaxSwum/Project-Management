@@ -1093,8 +1093,6 @@ export default function CompanyOutreachPage() {
           </div>
         </div>
       </div>
-    </>
-  )
 
       {/* Add Form Modal */}
       {showAddForm && (
