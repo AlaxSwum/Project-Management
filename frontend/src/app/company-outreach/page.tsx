@@ -3,43 +3,73 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Sidebar from '@/components/Sidebar';
+import { 
+  PlusIcon, 
+  PencilIcon, 
+  TrashIcon, 
+  CheckIcon, 
+  ClockIcon, 
+  FunnelIcon as FilterIcon,
+  BuildingOfficeIcon,
+  UserGroupIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  MapPinIcon
+} from '@heroicons/react/24/outline';
 
-// Icons
-const PlusIcon = (props: any) => (
-  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-  </svg>
-);
-
-const PencilIcon = (props: any) => (
-  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-  </svg>
-);
-
-const TrashIcon = (props: any) => (
-  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
-
-const CheckIcon = (props: any) => (
-  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-  </svg>
-);
-
-const ClockIcon = (props: any) => (
-  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const FilterIcon = (props: any) => (
-  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-  </svg>
-);
+// Reusable form styles to match theme
+const formStyles = {
+  input: {
+    width: '100%',
+    padding: '0.9rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '12px',
+    fontSize: '0.95rem',
+    backgroundColor: '#fafafa',
+    transition: 'all 0.2s ease',
+    outline: 'none'
+  },
+  select: {
+    width: '100%',
+    padding: '0.9rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '12px',
+    fontSize: '0.95rem',
+    backgroundColor: '#fafafa',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    cursor: 'pointer',
+    WebkitAppearance: 'none',
+    MozAppearance: 'none',
+    appearance: 'none' as const,
+    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23666666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 0.75rem center',
+    backgroundSize: '1rem',
+    paddingRight: '2.5rem'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '0.75rem',
+    fontWeight: '600',
+    fontSize: '1rem',
+    color: '#374151',
+    letterSpacing: '-0.01em'
+  },
+  inputGroup: {
+    marginBottom: '2rem'
+  },
+  button: {
+    padding: '0.75rem 1.5rem',
+    borderRadius: '12px',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    border: 'none'
+  }
+};
 
 // Interfaces
 interface User {
@@ -495,128 +525,51 @@ export default function CompanyOutreachPage() {
     setShowEditForm(true)
   }
 
-  // Form styles
-  const formStyles = {
-    overlay: {
-      position: 'fixed' as const,
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '1rem'
-    },
-    modal: {
-      background: '#ffffff',
-      borderRadius: '16px',
-      padding: '2rem',
-      width: '100%',
-      maxWidth: '600px',
-      maxHeight: '90vh',
-      overflow: 'auto',
-      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-    },
-    header: {
-      fontSize: '1.5rem',
-      fontWeight: '700',
-      color: '#111827',
-      marginBottom: '1.5rem'
-    },
-    inputGroup: {
-      marginBottom: '1.5rem'
-    },
-    label: {
-      display: 'block',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: '#374151',
-      marginBottom: '0.5rem'
-    },
-    input: {
-      width: '100%',
-      padding: '0.75rem',
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      color: '#111827',
-      background: '#ffffff',
-      boxSizing: 'border-box' as const
-    },
-    select: {
-      width: '100%',
-      padding: '0.75rem',
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      color: '#111827',
-      background: '#ffffff',
-      boxSizing: 'border-box' as const
-    },
-    button: {
-      padding: '0.75rem 1.5rem',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      border: 'none'
-    }
+  // Modal overlay styles
+  const modalOverlayStyles = {
+    position: 'fixed' as const,
+    inset: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+    padding: '1rem'
   }
 
-  // Table styles
-  const tableStyles = {
-    container: {
-      background: '#ffffff',
-      borderRadius: '12px',
-      border: '1px solid #e5e7eb',
-      overflow: 'hidden',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse' as const
-    },
-    th: {
-      background: '#f9fafb',
-      padding: '1rem',
-      textAlign: 'left' as const,
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: '#374151',
-      borderBottom: '1px solid #e5e7eb'
-    },
-    td: {
-      padding: '1rem',
-      borderBottom: '1px solid #f3f4f6',
-      fontSize: '0.875rem',
-      color: '#111827',
-      verticalAlign: 'top' as const
-    },
-    actionButton: {
-      padding: '0.5rem',
-      margin: '0 0.25rem',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease'
-    }
+  const modalStyles = {
+    background: '#ffffff',
+    borderRadius: '16px',
+    padding: '2rem',
+    width: '100%',
+    maxWidth: '600px',
+    maxHeight: '90vh',
+    overflow: 'auto'
   }
 
   if (authLoading || isLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '400px',
-        fontSize: '1rem',
-        color: '#6b7280'
-      }}>
-        Loading Company Outreach...
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     )
   }
@@ -628,273 +581,531 @@ export default function CompanyOutreachPage() {
 
   if (!hasAccess) {
     return (
-      <div style={{
-        padding: '2rem',
-        textAlign: 'center',
-        background: '#fef2f2',
-        border: '1px solid #fecaca',
-        borderRadius: '12px',
-        color: '#dc2626',
-        margin: '2rem'
-      }}>
-        <h2>Access Denied</h2>
-        <p>You don't have permission to access Company Outreach. Please contact an administrator to get assigned to this feature.</p>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
+              Access Denied
+            </h1>
+            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
+              You don't have permission to access Company Outreach. Please contact an administrator to get assigned to this feature.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{
+                padding: '0.875rem 2rem',
+                background: '#5884FD',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '1rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+              }}
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '100%', margin: '0 auto', background: '#f9fafb', minHeight: '100vh' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#111827', margin: 0 }}>
-              Company Outreach
-            </h1>
-            <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0' }}>
-              Manage company contacts and outreach activities
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            style={{
-              ...formStyles.button,
-              background: '#111827',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            <PlusIcon style={{ width: '16px', height: '16px' }} />
-            Add Company
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem',
-          background: '#ffffff',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          border: '1px solid #e5e7eb',
-          marginBottom: '1.5rem'
+    <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `
+      }} />
+      
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        
+        <div style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh'
         }}>
-          <div>
-            <label style={formStyles.label}>Search Companies</label>
-            <input
-              type="text"
-              placeholder="Search by name, email, or note..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={formStyles.input}
-            />
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
+          }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
+                margin: '0', 
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
+              }}>
+                Company Outreach
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+                Manage company contacts and outreach partnerships
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => setShowAddForm(true)}
+                style={{
+                  ...formStyles.button,
+                  background: '#5884FD',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                }}
+              >
+                <PlusIcon style={{ width: '18px', height: '18px' }} />
+                Add Company
+              </button>
+            </div>
           </div>
-          <div>
-            <label style={formStyles.label}>Filter by Specialization</label>
-            <select
-              value={selectedSpecialization}
-              onChange={(e) => setSelectedSpecialization(e.target.value)}
-              style={formStyles.select}
-            >
-              <option value="all">All Specializations</option>
-              {specializations.map(spec => (
-                <option key={spec.id} value={spec.id}>
-                  {spec.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={formStyles.label}>Filter by Follow-up Status</label>
-            <select
-              value={selectedFollowUpStatus}
-              onChange={(e) => setSelectedFollowUpStatus(e.target.value)}
-              style={formStyles.select}
-            >
-              <option value="all">All Status</option>
-              <option value="done">Completed</option>
-              <option value="pending">Pending</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div style={{
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '12px',
-          padding: '1rem',
-          marginBottom: '1.5rem',
-          color: '#dc2626'
-        }}>
-          {error}
-        </div>
-      )}
+          {/* Filters */}
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '2rem',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #e5e7eb',
+            marginBottom: '2rem'
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '1.5rem'
+            }}>
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Search Companies</label>
+                <input
+                  type="text"
+                  placeholder="Search by name, email, or note..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={formStyles.input}
+                />
+              </div>
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Filter by Specialization</label>
+                <select
+                  value={selectedSpecialization}
+                  onChange={(e) => setSelectedSpecialization(e.target.value)}
+                  style={formStyles.select}
+                >
+                  <option value="all">All Specializations</option>
+                  {specializations.map(spec => (
+                    <option key={spec.id} value={spec.id}>
+                      {spec.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Filter by Follow-up Status</label>
+                <select
+                  value={selectedFollowUpStatus}
+                  onChange={(e) => setSelectedFollowUpStatus(e.target.value)}
+                  style={formStyles.select}
+                >
+                  <option value="all">All Status</option>
+                  <option value="done">Completed</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-      {/* Companies Table */}
-      <div style={tableStyles.container}>
-        <table style={tableStyles.table}>
-          <thead>
-            <tr>
-              <th style={tableStyles.th}>Company Name</th>
-              <th style={tableStyles.th}>Specializations</th>
-              <th style={tableStyles.th}>Contact Person</th>
-              <th style={tableStyles.th}>Phone</th>
-              <th style={tableStyles.th}>Email</th>
-              <th style={tableStyles.th}>Follow-up Person</th>
-              <th style={tableStyles.th}>Meet-up Persons</th>
-              <th style={tableStyles.th}>Status</th>
-              <th style={tableStyles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCompanies.map(company => (
-              <tr key={company.id}>
-                <td style={tableStyles.td}>
-                  <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
-                    {company.company_name}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    {company.address}
-                  </div>
-                </td>
-                <td style={tableStyles.td}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                    {company.specializations?.map(spec => (
-                      <span
-                        key={spec.id}
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '16px',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              color: '#dc2626'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Companies Table */}
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            border: '1px solid #e5e7eb',
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+          }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse' as const
+            }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Company Name</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Specializations</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Contact Person</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Phone</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Email</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Follow-up Person</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Meet-up Persons</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Status</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Actions</th>
+                </tr>
+              </thead>
+                        <tbody>
+                {filteredCompanies.map(company => (
+                  <tr key={company.id}>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
+                        {company.company_name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        {company.address}
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {company.specializations?.map(spec => (
+                          <span
+                            key={spec.id}
+                            style={{
+                              background: '#f3f4f6',
+                              color: '#374151',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem'
+                            }}
+                          >
+                            {spec.name}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      {company.contact_person ? (
+                        <div>
+                          <div style={{ fontWeight: '500' }}>{company.contact_person.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            {company.contact_person.email}
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>Not assigned</span>
+                      )}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>{company.phone_number || '-'}</td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      {company.email_address ? (
+                        <a 
+                          href={`mailto:${company.email_address}`}
+                          style={{ color: '#5884FD', textDecoration: 'none' }}
+                        >
+                          {company.email_address}
+                        </a>
+                      ) : '-'}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      {company.follow_up_person ? (
+                        <div>
+                          <div style={{ fontWeight: '500' }}>{company.follow_up_person.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            {company.follow_up_person.email}
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>Not assigned</span>
+                      )}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      {company.meet_up_persons && company.meet_up_persons.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          {company.meet_up_persons.map(person => (
+                            <div key={person.id} style={{ fontSize: '0.75rem' }}>
+                              {person.name}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>None assigned</span>
+                      )}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      <button
+                        onClick={() => toggleFollowUpStatus(company)}
                         style={{
-                          background: '#f3f4f6',
-                          color: '#374151',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem'
+                          padding: '0.5rem 0.75rem',
+                          background: company.follow_up_done ? '#dcfce7' : '#fef3c7',
+                          color: company.follow_up_done ? '#166534' : '#92400e',
+                          border: company.follow_up_done ? '1px solid #bbf7d0' : '1px solid #fde68a',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
                         }}
                       >
-                        {spec.name}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td style={tableStyles.td}>
-                  {company.contact_person ? (
-                    <div>
-                      <div style={{ fontWeight: '500' }}>{company.contact_person.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {company.contact_person.email}
+                        {company.follow_up_done ? 'Completed' : 'Pending'}
+                      </button>
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button
+                          onClick={() => startEdit(company)}
+                          style={{
+                            padding: '0.5rem',
+                            background: '#f3f4f6',
+                            color: '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Edit"
+                        >
+                          <PencilIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(company.id)}
+                          style={{
+                            padding: '0.5rem',
+                            background: '#fef2f2',
+                            color: '#dc2626',
+                            border: '1px solid #fecaca',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Delete"
+                        >
+                          <TrashIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
                       </div>
-                    </div>
-                  ) : (
-                    <span style={{ color: '#9ca3af' }}>Not assigned</span>
-                  )}
-                </td>
-                <td style={tableStyles.td}>{company.phone_number || '-'}</td>
-                <td style={tableStyles.td}>
-                  {company.email_address ? (
-                    <a 
-                      href={`mailto:${company.email_address}`}
-                      style={{ color: '#2563eb', textDecoration: 'none' }}
-                    >
-                      {company.email_address}
-                    </a>
-                  ) : '-'}
-                </td>
-                <td style={tableStyles.td}>
-                  {company.follow_up_person ? (
-                    <div>
-                      <div style={{ fontWeight: '500' }}>{company.follow_up_person.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {company.follow_up_person.email}
-                      </div>
-                    </div>
-                  ) : (
-                    <span style={{ color: '#9ca3af' }}>Not assigned</span>
-                  )}
-                </td>
-                <td style={tableStyles.td}>
-                  {company.meet_up_persons && company.meet_up_persons.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      {company.meet_up_persons.map(person => (
-                        <div key={person.id} style={{ fontSize: '0.75rem' }}>
-                          {person.name}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span style={{ color: '#9ca3af' }}>None assigned</span>
-                  )}
-                </td>
-                <td style={tableStyles.td}>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {filteredCompanies.length === 0 && (
+              <div style={{
+                padding: '4rem 2rem',
+                textAlign: 'center',
+                color: '#6b7280'
+              }}>
+                <BuildingOfficeIcon style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  color: '#d1d5db', 
+                  margin: '0 auto 1rem'
+                }} />
+                <h3 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: '600', 
+                  color: '#111827', 
+                  marginBottom: '0.5rem' 
+                }}>
+                  No companies found
+                </h3>
+                <p style={{ 
+                  fontSize: '1rem', 
+                  color: '#6b7280', 
+                  marginBottom: '1.5rem' 
+                }}>
+                  {companies.length === 0 
+                    ? "Get started by adding your first company."
+                    : "Try adjusting your filters to see more results."
+                  }
+                </p>
+                {companies.length === 0 && (
                   <button
-                    onClick={() => toggleFollowUpStatus(company)}
+                    onClick={() => setShowAddForm(true)}
                     style={{
-                      ...tableStyles.actionButton,
-                      background: company.follow_up_done ? '#dcfce7' : '#fef3c7',
-                      color: company.follow_up_done ? '#166534' : '#92400e',
-                      border: company.follow_up_done ? '1px solid #bbf7d0' : '1px solid #fde68a',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      padding: '0.5rem 0.75rem'
+                      padding: '0.75rem 1.5rem',
+                      background: '#5884FD',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                     }}
                   >
-                    {company.follow_up_done ? 'Completed' : 'Pending'}
+                    Add First Company
                   </button>
-                </td>
-                <td style={tableStyles.td}>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <button
-                      onClick={() => startEdit(company)}
-                      style={{
-                        ...tableStyles.actionButton,
-                        background: '#f3f4f6',
-                        color: '#374151',
-                        border: '1px solid #d1d5db'
-                      }}
-                      title="Edit"
-                    >
-                      <PencilIcon style={{ width: '14px', height: '14px' }} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(company.id)}
-                      style={{
-                        ...tableStyles.actionButton,
-                        background: '#fef2f2',
-                        color: '#dc2626',
-                        border: '1px solid #fecaca'
-                      }}
-                      title="Delete"
-                    >
-                      <TrashIcon style={{ width: '14px', height: '14px' }} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {filteredCompanies.length === 0 && (
-          <div style={{
-            padding: '3rem',
-            textAlign: 'center',
-            color: '#6b7280'
-          }}>
-            {companies.length === 0 ? 'No companies added yet.' : 'No companies match your filters.'}
+                )}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
+    </>
+  )
 
       {/* Add Form Modal */}
       {showAddForm && (
-        <div style={formStyles.overlay}>
-          <div style={formStyles.modal}>
-            <h2 style={formStyles.header}>Add New Company</h2>
+        <div style={modalOverlayStyles}>
+          <div style={modalStyles}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                Add New Company
+              </h2>
+            </div>
+
             <form onSubmit={handleCreateCompany}>
               <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Company Name *</label>
@@ -918,7 +1129,8 @@ export default function CompanyOutreachPage() {
                   }}
                   style={{
                     ...formStyles.select,
-                    minHeight: '100px'
+                    height: '120px',
+                    backgroundImage: 'none'
                   }}
                 >
                   {specializations.map(spec => (
@@ -927,6 +1139,9 @@ export default function CompanyOutreachPage() {
                     </option>
                   ))}
                 </select>
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Hold Ctrl/Cmd to select multiple specializations
+                </small>
               </div>
 
               <div style={formStyles.inputGroup}>
@@ -977,7 +1192,7 @@ export default function CompanyOutreachPage() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   style={{
                     ...formStyles.input,
-                    minHeight: '80px',
+                    minHeight: '100px',
                     resize: 'vertical'
                   }}
                 />
@@ -1013,7 +1228,8 @@ export default function CompanyOutreachPage() {
                   }}
                   style={{
                     ...formStyles.select,
-                    minHeight: '100px'
+                    height: '120px',
+                    backgroundImage: 'none'
                   }}
                 >
                   {assignedUsers.map(user => (
@@ -1022,18 +1238,22 @@ export default function CompanyOutreachPage() {
                     </option>
                   ))}
                 </select>
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Hold Ctrl/Cmd to select multiple persons
+                </small>
               </div>
 
               <div style={formStyles.inputGroup}>
-                <label style={formStyles.label}>Note</label>
+                <label style={formStyles.label}>Notes</label>
                 <textarea
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   style={{
                     ...formStyles.input,
-                    minHeight: '80px',
+                    minHeight: '100px',
                     resize: 'vertical'
                   }}
+                  placeholder="Add any notes about this company..."
                 />
               </div>
 
@@ -1042,10 +1262,13 @@ export default function CompanyOutreachPage() {
                   type="button"
                   onClick={() => setShowAddForm(false)}
                   style={{
-                    ...formStyles.button,
+                    padding: '0.75rem 1.5rem',
                     background: '#f3f4f6',
                     color: '#374151',
-                    border: '1px solid #d1d5db'
+                    border: '1px solid #d1d5db',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
                   }}
                 >
                   Cancel
@@ -1053,9 +1276,14 @@ export default function CompanyOutreachPage() {
                 <button
                   type="submit"
                   style={{
-                    ...formStyles.button,
-                    background: '#111827',
-                    color: '#ffffff'
+                    padding: '0.75rem 1.5rem',
+                    background: '#5884FD',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                   }}
                 >
                   Add Company
@@ -1068,11 +1296,15 @@ export default function CompanyOutreachPage() {
 
       {/* Edit Form Modal */}
       {showEditForm && editingCompany && (
-        <div style={formStyles.overlay}>
-          <div style={formStyles.modal}>
-            <h2 style={formStyles.header}>Edit Company</h2>
+        <div style={modalOverlayStyles}>
+          <div style={modalStyles}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                Edit Company
+              </h2>
+            </div>
+
             <form onSubmit={handleUpdateCompany}>
-              {/* Same form fields as Add Form but with update handler */}
               <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Company Name *</label>
                 <input
@@ -1095,7 +1327,8 @@ export default function CompanyOutreachPage() {
                   }}
                   style={{
                     ...formStyles.select,
-                    minHeight: '100px'
+                    height: '120px',
+                    backgroundImage: 'none'
                   }}
                 >
                   {specializations.map(spec => (
@@ -1104,6 +1337,9 @@ export default function CompanyOutreachPage() {
                     </option>
                   ))}
                 </select>
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Hold Ctrl/Cmd to select multiple specializations
+                </small>
               </div>
 
               <div style={formStyles.inputGroup}>
@@ -1154,7 +1390,7 @@ export default function CompanyOutreachPage() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   style={{
                     ...formStyles.input,
-                    minHeight: '80px',
+                    minHeight: '100px',
                     resize: 'vertical'
                   }}
                 />
@@ -1190,7 +1426,8 @@ export default function CompanyOutreachPage() {
                   }}
                   style={{
                     ...formStyles.select,
-                    minHeight: '100px'
+                    height: '120px',
+                    backgroundImage: 'none'
                   }}
                 >
                   {assignedUsers.map(user => (
@@ -1199,18 +1436,22 @@ export default function CompanyOutreachPage() {
                     </option>
                   ))}
                 </select>
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Hold Ctrl/Cmd to select multiple persons
+                </small>
               </div>
 
               <div style={formStyles.inputGroup}>
-                <label style={formStyles.label}>Note</label>
+                <label style={formStyles.label}>Notes</label>
                 <textarea
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   style={{
                     ...formStyles.input,
-                    minHeight: '80px',
+                    minHeight: '100px',
                     resize: 'vertical'
                   }}
+                  placeholder="Add any notes about this company..."
                 />
               </div>
 
@@ -1222,10 +1463,13 @@ export default function CompanyOutreachPage() {
                     setEditingCompany(null)
                   }}
                   style={{
-                    ...formStyles.button,
+                    padding: '0.75rem 1.5rem',
                     background: '#f3f4f6',
                     color: '#374151',
-                    border: '1px solid #d1d5db'
+                    border: '1px solid #d1d5db',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
                   }}
                 >
                   Cancel
@@ -1233,9 +1477,14 @@ export default function CompanyOutreachPage() {
                 <button
                   type="submit"
                   style={{
-                    ...formStyles.button,
-                    background: '#111827',
-                    color: '#ffffff'
+                    padding: '0.75rem 1.5rem',
+                    background: '#5884FD',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
                   }}
                 >
                   Update Company
