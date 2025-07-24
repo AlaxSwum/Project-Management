@@ -133,6 +133,8 @@ export default function CompanyOutreachPage() {
   const [editingCompany, setEditingCompany] = useState<CompanyOutreach | null>(null)
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [selectedMembers, setSelectedMembers] = useState<{ [key: number]: string }>({}) // userId -> role
+  const [showSpecializationForm, setShowSpecializationForm] = useState(false)
+  const [newSpecialization, setNewSpecialization] = useState({ name: '', description: '' })
   
   // Filter states
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('all')
@@ -142,7 +144,8 @@ export default function CompanyOutreachPage() {
   // Form data
   const [formData, setFormData] = useState({
     company_name: '',
-    field_of_specialization_ids: [] as number[],
+    field_of_specialization_ids: [] as number[], // Keep as array for backend compatibility
+    selected_specialization_id: null as number | null, // Single selection for UI
     contact_person_id: null as number | null,
     phone_number: '',
     email_address: '',
@@ -430,30 +433,42 @@ export default function CompanyOutreachPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
+      // Prepare data for insertion
+      const insertData = {
+        ...formData,
+        field_of_specialization_ids: formData.selected_specialization_id ? [formData.selected_specialization_id] : []
+      }
+      delete (insertData as any).selected_specialization_id
+      
       const { error } = await supabase
         .from('company_outreach')
-        .insert([formData])
+        .insert([insertData])
       
       if (error) throw error
       
       setShowAddForm(false)
-      setFormData({
-        company_name: '',
-        field_of_specialization_ids: [],
-        contact_person_id: null,
-        phone_number: '',
-        email_address: '',
-        note: '',
-        follow_up_person_id: null,
-        address: '',
-        meet_up_person_ids: [],
-        follow_up_done: false
-      })
-      
+      resetForm()
       fetchData()
     } catch (err: any) {
       setError('Failed to create company: ' + err.message)
     }
+  }
+
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      company_name: '',
+      field_of_specialization_ids: [],
+      selected_specialization_id: null,
+      contact_person_id: null,
+      phone_number: '',
+      email_address: '',
+      note: '',
+      follow_up_person_id: null,
+      address: '',
+      meet_up_person_ids: [],
+      follow_up_done: false
+    })
   }
 
   // Handle edit submission
@@ -465,28 +480,23 @@ export default function CompanyOutreachPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
+      // Prepare data for update
+      const updateData = {
+        ...formData,
+        field_of_specialization_ids: formData.selected_specialization_id ? [formData.selected_specialization_id] : []
+      }
+      delete (updateData as any).selected_specialization_id
+      
       const { error } = await supabase
         .from('company_outreach')
-        .update(formData)
+        .update(updateData)
         .eq('id', editingCompany.id)
       
       if (error) throw error
       
       setShowEditForm(false)
       setEditingCompany(null)
-      setFormData({
-        company_name: '',
-        field_of_specialization_ids: [],
-        contact_person_id: null,
-        phone_number: '',
-        email_address: '',
-        note: '',
-        follow_up_person_id: null,
-        address: '',
-        meet_up_person_ids: [],
-        follow_up_done: false
-      })
-      
+      resetForm()
       fetchData()
     } catch (err: any) {
       setError('Failed to update company: ' + err.message)
@@ -579,12 +589,51 @@ export default function CompanyOutreachPage() {
     }
   }
 
+  // Add new specialization
+  const addSpecialization = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      
+      const { data, error } = await supabase
+        .from('company_outreach_specializations')
+        .insert([{
+          name: newSpecialization.name,
+          description: newSpecialization.description,
+          is_active: true
+        }])
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      // Refresh specializations list
+      const { data: updatedSpecializations, error: fetchError } = await supabase
+        .from('company_outreach_specializations')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+
+      if (!fetchError) {
+        setSpecializations(updatedSpecializations || [])
+      }
+
+      setShowSpecializationForm(false)
+      setNewSpecialization({ name: '', description: '' })
+      setError('')
+    } catch (err: any) {
+      setError('Failed to add specialization: ' + err.message)
+    }
+  }
+
   // Start editing
   const startEdit = (company: CompanyOutreach) => {
     setEditingCompany(company)
     setFormData({
       company_name: company.company_name,
       field_of_specialization_ids: company.field_of_specialization_ids || [],
+      selected_specialization_id: company.field_of_specialization_ids && company.field_of_specialization_ids.length > 0 ? company.field_of_specialization_ids[0] : null,
       contact_person_id: company.contact_person_id,
       phone_number: company.phone_number,
       email_address: company.email_address,
@@ -1206,29 +1255,71 @@ export default function CompanyOutreachPage() {
               </div>
 
               <div style={formStyles.inputGroup}>
-                <label style={formStyles.label}>Field of Specialization</label>
-                <select
-                  multiple
-                  value={formData.field_of_specialization_ids.map(String)}
-                  onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => parseInt(option.value))
-                    setFormData({ ...formData, field_of_specialization_ids: values })
-                  }}
-                  style={{
-                    ...formStyles.select,
-                    height: '120px',
-                    backgroundImage: 'none'
-                  }}
-                >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <label style={formStyles.label}>Field of Specialization</label>
+                  {userRole === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSpecializationForm(true)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#f3f4f6',
+                        color: '#374151',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      Add New Field
+                    </button>
+                  )}
+                </div>
+                <div style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  background: '#fafafa'
+                }}>
                   {specializations.map(spec => (
-                    <option key={spec.id} value={spec.id}>
-                      {spec.name}
-                    </option>
+                    <label 
+                      key={spec.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        padding: '0.5rem 0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="specialization"
+                        value={spec.id}
+                        checked={formData.selected_specialization_id === spec.id}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          selected_specialization_id: parseInt(e.target.value)
+                        })}
+                        style={{ marginRight: '0.75rem' }}
+                      />
+                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                        {spec.name}
+                      </span>
+                    </label>
                   ))}
-                </select>
-                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  Hold Ctrl/Cmd to select multiple specializations
-                </small>
+                  {specializations.length === 0 && (
+                    <div style={{ color: '#6b7280', textAlign: 'center', padding: '1rem' }}>
+                      No specializations available
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={formStyles.inputGroup}>
@@ -1306,28 +1397,55 @@ export default function CompanyOutreachPage() {
 
               <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Meet-up Persons</label>
-                <select
-                  multiple
-                  value={formData.meet_up_person_ids.map(String)}
-                  onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => parseInt(option.value))
-                    setFormData({ ...formData, meet_up_person_ids: values })
-                  }}
-                  style={{
-                    ...formStyles.select,
-                    height: '120px',
-                    backgroundImage: 'none'
-                  }}
-                >
+                <div style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  background: '#fafafa'
+                }}>
                   {assignedUsers.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </option>
+                    <label 
+                      key={user.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        padding: '0.5rem 0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        value={user.id}
+                        checked={formData.meet_up_person_ids.includes(user.id)}
+                        onChange={(e) => {
+                          const userId = parseInt(e.target.value)
+                          if (e.target.checked) {
+                            setFormData({ 
+                              ...formData, 
+                              meet_up_person_ids: [...formData.meet_up_person_ids, userId]
+                            })
+                          } else {
+                            setFormData({ 
+                              ...formData, 
+                              meet_up_person_ids: formData.meet_up_person_ids.filter(id => id !== userId)
+                            })
+                          }
+                        }}
+                        style={{ marginRight: '0.75rem' }}
+                      />
+                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                        {user.name} ({user.email})
+                      </span>
+                    </label>
                   ))}
-                </select>
-                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  Hold Ctrl/Cmd to select multiple persons
-                </small>
+                  {assignedUsers.length === 0 && (
+                    <div style={{ color: '#6b7280', textAlign: 'center', padding: '1rem' }}>
+                      No assigned users available
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={formStyles.inputGroup}>
@@ -1404,29 +1522,71 @@ export default function CompanyOutreachPage() {
               </div>
 
               <div style={formStyles.inputGroup}>
-                <label style={formStyles.label}>Field of Specialization</label>
-                <select
-                  multiple
-                  value={formData.field_of_specialization_ids.map(String)}
-                  onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => parseInt(option.value))
-                    setFormData({ ...formData, field_of_specialization_ids: values })
-                  }}
-                  style={{
-                    ...formStyles.select,
-                    height: '120px',
-                    backgroundImage: 'none'
-                  }}
-                >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <label style={formStyles.label}>Field of Specialization</label>
+                  {userRole === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSpecializationForm(true)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#f3f4f6',
+                        color: '#374151',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      Add New Field
+                    </button>
+                  )}
+                </div>
+                <div style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  background: '#fafafa'
+                }}>
                   {specializations.map(spec => (
-                    <option key={spec.id} value={spec.id}>
-                      {spec.name}
-                    </option>
+                    <label 
+                      key={spec.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        padding: '0.5rem 0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="specialization-edit"
+                        value={spec.id}
+                        checked={formData.selected_specialization_id === spec.id}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          selected_specialization_id: parseInt(e.target.value)
+                        })}
+                        style={{ marginRight: '0.75rem' }}
+                      />
+                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                        {spec.name}
+                      </span>
+                    </label>
                   ))}
-                </select>
-                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  Hold Ctrl/Cmd to select multiple specializations
-                </small>
+                  {specializations.length === 0 && (
+                    <div style={{ color: '#6b7280', textAlign: 'center', padding: '1rem' }}>
+                      No specializations available
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={formStyles.inputGroup}>
@@ -1504,28 +1664,55 @@ export default function CompanyOutreachPage() {
 
               <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Meet-up Persons</label>
-                <select
-                  multiple
-                  value={formData.meet_up_person_ids.map(String)}
-                  onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => parseInt(option.value))
-                    setFormData({ ...formData, meet_up_person_ids: values })
-                  }}
-                  style={{
-                    ...formStyles.select,
-                    height: '120px',
-                    backgroundImage: 'none'
-                  }}
-                >
+                <div style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  background: '#fafafa'
+                }}>
                   {assignedUsers.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </option>
+                    <label 
+                      key={user.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        padding: '0.5rem 0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        value={user.id}
+                        checked={formData.meet_up_person_ids.includes(user.id)}
+                        onChange={(e) => {
+                          const userId = parseInt(e.target.value)
+                          if (e.target.checked) {
+                            setFormData({ 
+                              ...formData, 
+                              meet_up_person_ids: [...formData.meet_up_person_ids, userId]
+                            })
+                          } else {
+                            setFormData({ 
+                              ...formData, 
+                              meet_up_person_ids: formData.meet_up_person_ids.filter(id => id !== userId)
+                            })
+                          }
+                        }}
+                        style={{ marginRight: '0.75rem' }}
+                      />
+                      <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                        {user.name} ({user.email})
+                      </span>
+                    </label>
                   ))}
-                </select>
-                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  Hold Ctrl/Cmd to select multiple persons
-                </small>
+                  {assignedUsers.length === 0 && (
+                    <div style={{ color: '#6b7280', textAlign: 'center', padding: '1rem' }}>
+                      No assigned users available
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={formStyles.inputGroup}>
@@ -1708,6 +1895,80 @@ export default function CompanyOutreachPage() {
                 Save Member Assignments
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Specialization Modal */}
+      {showSpecializationForm && userRole === 'admin' && (
+        <div style={modalOverlayStyles}>
+          <div style={modalStyles}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                Add Field of Specialization
+              </h2>
+            </div>
+
+            <form onSubmit={addSpecialization}>
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Specialization Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newSpecialization.name}
+                  onChange={(e) => setNewSpecialization({ ...newSpecialization, name: e.target.value })}
+                  style={formStyles.input}
+                  placeholder="e.g. Technology, Healthcare, Finance..."
+                />
+              </div>
+
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Description</label>
+                <textarea
+                  value={newSpecialization.description}
+                  onChange={(e) => setNewSpecialization({ ...newSpecialization, description: e.target.value })}
+                  style={{
+                    ...formStyles.input,
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Brief description of this specialization field..."
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowSpecializationForm(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#5884FD',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                  }}
+                >
+                  Add Specialization
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
