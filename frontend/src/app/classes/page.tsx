@@ -93,6 +93,7 @@ interface Student {
   email: string
   phone_number: string
   facebook_link: string
+  discord_id: string
   payment_method: 'Kpay' | 'Aya Pay' | 'Wave Pay'
   payment_type: 'full' | 'split'
   course_fee: number
@@ -191,6 +192,7 @@ export default function ClassesPage() {
     email: '',
     phone_number: '',
     facebook_link: '',
+    discord_id: '',
     payment_method: 'Kpay' as 'Kpay' | 'Aya Pay' | 'Wave Pay',
     payment_type: 'full' as 'full' | 'split',
     course_fee: 0,
@@ -590,6 +592,7 @@ export default function ClassesPage() {
       email: '',
       phone_number: '',
       facebook_link: '',
+      discord_id: '',
       payment_method: 'Kpay',
       payment_type: 'full',
       course_fee: 0,
@@ -637,6 +640,7 @@ export default function ClassesPage() {
       email: student.email,
       phone_number: student.phone_number || '',
       facebook_link: student.facebook_link || '',
+      discord_id: student.discord_id || '',
       payment_method: student.payment_method,
       payment_type: student.payment_type,
       course_fee: student.course_fee,
@@ -1326,18 +1330,19 @@ export default function ClassesPage() {
               }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '180px 120px 120px 120px 100px 120px 120px 100px 120px',
+                  gridTemplateColumns: '180px 120px 120px 120px 120px 100px 120px 120px 100px 120px',
                   gap: '0',
                   background: '#f8fafc',
                   borderBottom: '2px solid #e5e7eb',
                   fontWeight: '700',
                   fontSize: '0.85rem',
                   color: '#1e293b',
-                  minWidth: '1000px'
+                  minWidth: '1120px'
                 }}>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>STUDENT NAME</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PHONE</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>FACEBOOK</div>
+                  <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>DISCORD ID</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>PAYMENT METHOD</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>COURSE FEE</div>
                   <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #e5e7eb' }}>TOTAL AMOUNT</div>
@@ -1349,11 +1354,11 @@ export default function ClassesPage() {
                                                   {students.map(student => (
                    <div key={student.id} style={{
                      display: 'grid',
-                     gridTemplateColumns: '180px 120px 120px 120px 100px 120px 120px 100px 120px',
+                     gridTemplateColumns: '180px 120px 120px 120px 120px 100px 120px 120px 100px 120px',
                      gap: '0',
                      borderBottom: '1px solid #f1f5f9',
                      fontSize: '0.85rem',
-                     minWidth: '1000px'
+                     minWidth: '1120px'
                    }}>
                      <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
                        <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.student_name}</div>
@@ -1390,6 +1395,11 @@ export default function ClassesPage() {
                        ) : (
                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>N/A</span>
                        )}
+                     </div>
+                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
+                       <div style={{ fontSize: '0.8rem' }}>
+                         {student.discord_id || 'N/A'}
+                       </div>
                      </div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9', color: '#64748b' }}>
                       <div>{student.payment_method}</div>
@@ -1506,18 +1516,19 @@ export default function ClassesPage() {
                 {students.length > 0 && (
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '180px 120px 120px 120px 100px 120px 120px 100px 120px',
+                    gridTemplateColumns: '180px 120px 120px 120px 120px 100px 120px 120px 100px 120px',
                     gap: '0',
                     background: '#f0f9ff',
                     borderTop: '2px solid #0284c7',
                     fontWeight: '700',
                     fontSize: '0.9rem',
                     color: '#0c4a6e',
-                    minWidth: '1000px'
+                    minWidth: '1120px'
                   }}>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}>
                       TOTAL ({students.length} students)
                     </div>
+                    <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
                     <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #bae6fd' }}></div>
@@ -2093,6 +2104,21 @@ export default function ClassesPage() {
                        value={studentFormData.facebook_link}
                        onChange={(e) => setStudentFormData({ ...studentFormData, facebook_link: e.target.value })}
                        placeholder="https://facebook.com/username"
+                      style={formStyles.input}
+                      onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
+                      onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}
+                     />
+                   </div>
+                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2.5rem', marginTop: '2rem' }}>
+                   <div>
+                    <label style={formStyles.label}>Discord ID</label>
+                     <input
+                       type="text"
+                       value={studentFormData.discord_id}
+                       onChange={(e) => setStudentFormData({ ...studentFormData, discord_id: e.target.value })}
+                       placeholder="Enter Discord username or ID"
                       style={formStyles.input}
                       onFocus={(e) => Object.assign(e.target.style, formStyles.focusStyles)}
                       onBlur={(e) => Object.assign(e.target.style, formStyles.blurStyles)}

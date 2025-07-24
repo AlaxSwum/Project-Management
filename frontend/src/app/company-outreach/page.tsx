@@ -1115,22 +1115,28 @@ export default function CompanyOutreachPage() {
                       color: '#111827',
                       verticalAlign: 'top' as const
                     }}>
-                      <button
-                        onClick={() => toggleFollowUpStatus(company)}
-                        style={{
-                          padding: '0.5rem 0.75rem',
-                          background: company.follow_up_done ? '#dcfce7' : '#fef3c7',
-                          color: company.follow_up_done ? '#166534' : '#92400e',
-                          border: company.follow_up_done ? '1px solid #bbf7d0' : '1px solid #fde68a',
-                          borderRadius: '6px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {company.follow_up_done ? 'Completed' : 'Pending'}
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.875rem' }}>
+                          <input
+                            type="radio"
+                            name={`followup-${company.id}`}
+                            checked={company.follow_up_done === true}
+                            onChange={() => toggleFollowUpStatus({ ...company, follow_up_done: true })}
+                            style={{ marginRight: '0.5rem' }}
+                          />
+                          <span style={{ color: '#10b981', fontWeight: '500' }}>Yes</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.875rem' }}>
+                          <input
+                            type="radio"
+                            name={`followup-${company.id}`}
+                            checked={company.follow_up_done === false}
+                            onChange={() => toggleFollowUpStatus({ ...company, follow_up_done: false })}
+                            style={{ marginRight: '0.5rem' }}
+                          />
+                          <span style={{ color: '#f59e0b', fontWeight: '500' }}>No</span>
+                        </label>
+                      </div>
                     </td>
                     <td style={{
                       padding: '1rem',
