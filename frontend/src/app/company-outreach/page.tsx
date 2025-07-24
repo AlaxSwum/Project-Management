@@ -900,9 +900,14 @@ export default function CompanyOutreachPage() {
             overflow: 'hidden',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
           }}>
+            <div style={{
+              overflowX: 'auto' as const,
+              maxWidth: '100%'
+            }}>
             <table style={{
               width: '100%',
-              borderCollapse: 'collapse' as const
+              borderCollapse: 'collapse' as const,
+              minWidth: '1400px'
             }}>
               <thead>
                 <tr>
@@ -1182,6 +1187,7 @@ export default function CompanyOutreachPage() {
                 ))}
               </tbody>
             </table>
+            </div>
             
             {filteredCompanies.length === 0 && (
               <div style={{
@@ -1455,6 +1461,50 @@ export default function CompanyOutreachPage() {
               </div>
 
               <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Follow-up Status</label>
+                <div style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  background: '#fafafa',
+                  display: 'flex',
+                  gap: '2rem',
+                  alignItems: 'center'
+                }}>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}>
+                    <input
+                      type="radio"
+                      name="follow_up_done_add"
+                      checked={formData.follow_up_done === true}
+                      onChange={() => setFormData({ ...formData, follow_up_done: true })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#10b981', fontWeight: '500' }}>Yes - Completed</span>
+                  </label>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}>
+                    <input
+                      type="radio"
+                      name="follow_up_done_add"
+                      checked={formData.follow_up_done === false}
+                      onChange={() => setFormData({ ...formData, follow_up_done: false })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#f59e0b', fontWeight: '500' }}>No - Pending</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Notes</label>
                 <textarea
                   value={formData.note}
@@ -1718,6 +1768,50 @@ export default function CompanyOutreachPage() {
                       No assigned users available
                     </div>
                   )}
+                </div>
+              </div>
+
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Follow-up Status</label>
+                <div style={{ 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  background: '#fafafa',
+                  display: 'flex',
+                  gap: '2rem',
+                  alignItems: 'center'
+                }}>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}>
+                    <input
+                      type="radio"
+                      name="follow_up_done_edit"
+                      checked={formData.follow_up_done === true}
+                      onChange={() => setFormData({ ...formData, follow_up_done: true })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#10b981', fontWeight: '500' }}>Yes - Completed</span>
+                  </label>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}>
+                    <input
+                      type="radio"
+                      name="follow_up_done_edit"
+                      checked={formData.follow_up_done === false}
+                      onChange={() => setFormData({ ...formData, follow_up_done: false })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#f59e0b', fontWeight: '500' }}>No - Pending</span>
+                  </label>
                 </div>
               </div>
 
