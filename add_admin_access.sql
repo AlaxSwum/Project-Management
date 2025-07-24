@@ -12,7 +12,7 @@ SELECT
     is_superuser,
     is_staff
 FROM auth_user 
-ORDER BY created_at DESC;
+ORDER BY updated_at DESC;
 
 -- Step 2: Add yourself as admin (replace YOUR_USER_ID with your actual ID from above)
 -- INSERT INTO company_outreach_members (user_id, role) VALUES (YOUR_USER_ID, 'admin');

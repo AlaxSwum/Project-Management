@@ -76,7 +76,7 @@ Copy from `create_company_outreach_tables_safe.sql`
 ### Step 3: Add Admin Access
 ```sql
 -- Find your user ID
-SELECT id, name, email FROM auth_user ORDER BY created_at DESC;
+SELECT id, name, email, role, is_superuser, is_staff FROM auth_user ORDER BY updated_at DESC;
 
 -- Add yourself as admin (replace YOUR_USER_ID)
 INSERT INTO company_outreach_members (user_id, role) VALUES (YOUR_USER_ID, 'admin');
