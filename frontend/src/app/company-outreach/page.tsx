@@ -237,14 +237,10 @@ export default function CompanyOutreachPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
-      // Fetch companies with related data
+      // Fetch companies data first
       const { data: companiesData, error: companiesError } = await supabase
         .from('company_outreach')
-        .select(`
-          *,
-          contact_person:auth_user!contact_person_id(id, name, email),
-          follow_up_person:auth_user!follow_up_person_id(id, name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
       if (companiesError) throw companiesError
@@ -277,9 +273,31 @@ export default function CompanyOutreachPage() {
 
       if (membersError) throw membersError
 
-      // Process company data to include meet up persons and specializations
+      // Process company data to include related user data and specializations
       const processedCompanies = await Promise.all(
         (companiesData || []).map(async (company) => {
+          // Fetch contact person
+          let contactPerson: User | null = null
+          if (company.contact_person_id) {
+            const { data: contactData } = await supabase
+              .from('auth_user')
+              .select('id, name, email, role')
+              .eq('id', company.contact_person_id)
+              .single()
+            contactPerson = contactData
+          }
+          
+          // Fetch follow-up person
+          let followUpPerson: User | null = null
+          if (company.follow_up_person_id) {
+            const { data: followUpData } = await supabase
+              .from('auth_user')
+              .select('id, name, email, role')
+              .eq('id', company.follow_up_person_id)
+              .single()
+            followUpPerson = followUpData
+          }
+          
           // Fetch meet up persons
           let meetUpPersons: User[] = []
           if (company.meet_up_person_ids && company.meet_up_person_ids.length > 0) {
@@ -302,6 +320,8 @@ export default function CompanyOutreachPage() {
           
           return {
             ...company,
+            contact_person: contactPerson,
+            follow_up_person: followUpPerson,
             meet_up_persons: meetUpPersons,
             specializations: companySpecializations
           }
@@ -458,18 +478,33 @@ export default function CompanyOutreachPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('company_outreach_specializations')
         .insert([{
           ...newSpecialization,
           created_by_id: user?.id
         }])
+        .select()
+        .single()
 
       if (error) throw error
 
-      await fetchData()
+      // Refresh specializations list immediately
+      const { data: updatedSpecializations, error: fetchError } = await supabase
+        .from('company_outreach_specializations')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+
+      if (!fetchError) {
+        setSpecializations(updatedSpecializations || [])
+      }
+
       setShowSpecializationForm(false)
       setNewSpecialization({ name: '', description: '' })
+      
+      // Show success message
+      setError('')
     } catch (err: any) {
       console.error('Error adding specialization:', err)
       setError('Failed to add specialization: ' + err.message)
@@ -1043,27 +1078,50 @@ export default function CompanyOutreachPage() {
 
               <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Field of Specialization</label>
-                <select
-                  multiple
-                  value={formData.field_of_specialization_ids.map(String)}
-                  onChange={(e) => {
-                    const selectedIds = Array.from(e.target.selectedOptions, option => parseInt(option.value))
-                    setFormData({ ...formData, field_of_specialization_ids: selectedIds })
-                  }}
-                  style={{
-                    ...formStyles.select,
-                    height: '120px',
-                    backgroundImage: 'none'
-                  }}
-                >
-                  {specializations.map(spec => (
-                    <option key={spec.id} value={spec.id}>
-                      {spec.name}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <select
+                    multiple
+                    value={formData.field_of_specialization_ids.map(String)}
+                    onChange={(e) => {
+                      const selectedIds = Array.from(e.target.selectedOptions, option => parseInt(option.value))
+                      setFormData({ ...formData, field_of_specialization_ids: selectedIds })
+                    }}
+                    style={{
+                      ...formStyles.select,
+                      height: '120px',
+                      backgroundImage: 'none',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    {specializations.map(spec => (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowSpecializationForm(true)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add New Field
+                  </button>
+                </div>
                 <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  Hold Ctrl/Cmd to select multiple specializations
+                  Hold Ctrl/Cmd to select multiple specializations. Click "Add New Field" to create custom specializations.
                 </small>
               </div>
 
@@ -1289,25 +1347,48 @@ export default function CompanyOutreachPage() {
 
               <div style={formStyles.inputGroup}>
                 <label style={formStyles.label}>Field of Specialization</label>
-                <select
-                  multiple
-                  value={formData.field_of_specialization_ids.map(String)}
-                  onChange={(e) => {
-                    const selectedIds = Array.from(e.target.selectedOptions, option => parseInt(option.value))
-                    setFormData({ ...formData, field_of_specialization_ids: selectedIds })
-                  }}
-                  style={{
-                    ...formStyles.select,
-                    height: '120px',
-                    backgroundImage: 'none'
-                  }}
-                >
-                  {specializations.map(spec => (
-                    <option key={spec.id} value={spec.id}>
-                      {spec.name}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <select
+                    multiple
+                    value={formData.field_of_specialization_ids.map(String)}
+                    onChange={(e) => {
+                      const selectedIds = Array.from(e.target.selectedOptions, option => parseInt(option.value))
+                      setFormData({ ...formData, field_of_specialization_ids: selectedIds })
+                    }}
+                    style={{
+                      ...formStyles.select,
+                      height: '120px',
+                      backgroundImage: 'none',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    {specializations.map(spec => (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowSpecializationForm(true)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add New Field
+                  </button>
+                </div>
               </div>
 
               <div style={formStyles.inputGroup}>
