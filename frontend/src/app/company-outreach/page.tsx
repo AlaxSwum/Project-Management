@@ -793,6 +793,79 @@ export default function CompanyOutreachPage() {
               ))}
             </select>
           )}
+          {cellType === 'multiselect' && options && (
+            <div style={{
+              border: '2px solid #3b82f6',
+              borderRadius: '4px',
+              padding: '0.5rem',
+              background: '#fff',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}>
+              {options.map(option => (
+                <label 
+                  key={option.id} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    padding: '0.25rem 0',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Array.isArray(editingValue) ? editingValue.includes(option.id) : false}
+                    onChange={(e) => {
+                      const currentIds = Array.isArray(editingValue) ? editingValue : []
+                      if (e.target.checked) {
+                        setEditingValue([...currentIds, option.id])
+                      } else {
+                        setEditingValue(currentIds.filter((id: number) => id !== option.id))
+                      }
+                    }}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  <span style={{ fontSize: '0.75rem' }}>{option.name}</span>
+                </label>
+              ))}
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem', 
+                marginTop: '0.5rem', 
+                paddingTop: '0.5rem', 
+                borderTop: '1px solid #e5e7eb' 
+              }}>
+                <button
+                  onClick={saveInlineEdit}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    background: '#3b82f6',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={cancelInlineEdit}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </td>
       )
     }
@@ -805,6 +878,9 @@ export default function CompanyOutreachPage() {
           switch (field) {
             case 'field_of_specialization_ids':
               currentValue = company.field_of_specialization_ids?.[0] || ''
+              break
+            case 'meet_up_person_ids':
+              currentValue = company.meet_up_person_ids || []
               break
             case 'contact_person_id':
             case 'follow_up_person_id':
@@ -1335,14 +1411,10 @@ export default function CompanyOutreachPage() {
                       'select',
                       assignedUsers
                     )}
-                    <td style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #f3f4f6',
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      verticalAlign: 'top' as const
-                    }}>
-                      {company.meet_up_persons && company.meet_up_persons.length > 0 ? (
+                    {renderEditableCell(
+                      company,
+                      'meet_up_person_ids',
+                      company.meet_up_persons && company.meet_up_persons.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                           {company.meet_up_persons.map(person => (
                             <div key={person.id} style={{ fontSize: '0.75rem' }}>
@@ -1352,8 +1424,10 @@ export default function CompanyOutreachPage() {
                         </div>
                       ) : (
                         <span style={{ color: '#9ca3af' }}>None assigned</span>
-                      )}
-                    </td>
+                      ),
+                      'multiselect',
+                      assignedUsers
+                    )}
                     <td style={{
                       padding: '1rem',
                       borderBottom: '1px solid #f3f4f6',
@@ -1398,6 +1472,21 @@ export default function CompanyOutreachPage() {
                       verticalAlign: 'top' as const
                     }}>
                       <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                        <button
+                          onClick={() => startEdit(company)}
+                          style={{
+                            padding: '0.5rem',
+                            background: '#f3f4f6',
+                            color: '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Edit in Form"
+                        >
+                          <PencilIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
                         <button
                           onClick={() => handleDelete(company.id)}
                           style={{
