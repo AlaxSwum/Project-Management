@@ -1,8 +1,8 @@
 -- =====================================================
--- COMPANY OUTREACH (IDEA LOUNGE) COMPLETE DATABASE SETUP
+-- COMPANY OUTREACH (IDEA LOUNGE) SAFE DATABASE SETUP
 -- =====================================================
 -- Run this script in Supabase SQL Editor to set up
--- all tables for Company Outreach feature
+-- all tables for Company Outreach feature (NO AUTO-USERS)
 -- =====================================================
 
 -- 1. Company Outreach Members Table (Access Control)
@@ -78,31 +78,6 @@ CREATE INDEX IF NOT EXISTS idx_specializations_name ON company_outreach_speciali
 
 -- Member Indexes
 CREATE INDEX IF NOT EXISTS idx_company_outreach_members_user ON company_outreach_members(user_id);
-
--- =====================================================
--- AUTOMATIC ADMIN MEMBER SETUP
--- =====================================================
-
--- Add all superusers to company outreach access automatically (only if they exist)
-INSERT INTO company_outreach_members (user_id, role)
-SELECT id, 'admin'
-FROM auth_user 
-WHERE is_superuser = true
-ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
-
--- Add all staff to company outreach access automatically (only if they exist)
-INSERT INTO company_outreach_members (user_id, role)
-SELECT id, 'admin'
-FROM auth_user 
-WHERE is_staff = true
-ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
-
--- Add HR users to company outreach access automatically (only if they exist)
-INSERT INTO company_outreach_members (user_id, role)
-SELECT id, 'admin'
-FROM auth_user 
-WHERE role = 'hr' OR role = 'admin'
-ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
 
 -- =====================================================
 -- TRIGGERS FOR AUTOMATIC TIMESTAMPS
@@ -182,10 +157,24 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON company_outreach_members TO authenticate
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- =====================================================
+-- MANUAL MEMBER SETUP INSTRUCTIONS
+-- =====================================================
+
+-- After running this script, you need to manually add users to company_outreach_members
+-- Find your user ID first:
+-- SELECT id, name, email FROM auth_user WHERE email = 'your-email@example.com';
+
+-- Then add yourself as admin:
+-- INSERT INTO company_outreach_members (user_id, role) VALUES (YOUR_USER_ID, 'admin');
+
+-- Add other team members:
+-- INSERT INTO company_outreach_members (user_id, role) VALUES (OTHER_USER_ID, 'member');
+
+-- =====================================================
 -- COMPLETION MESSAGE
 -- =====================================================
 
 -- This will show in the query results
 SELECT 
     'Company Outreach Setup Complete!' as status,
-    (SELECT COUNT(*) FROM company_outreach_members) as admin_members_added; 
+    'Manual user setup required - see comments above' as next_step; 

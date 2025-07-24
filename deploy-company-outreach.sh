@@ -6,8 +6,15 @@
 echo "🚀 Starting Company Outreach Feature Deployment..."
 echo "================================================"
 
-# Set variables
-PROJECT_DIR="/home/u137141055/project_management"
+# Set variables - Auto-detect if we're on local or server
+if [ -d "/home/u137141055/project_management" ]; then
+    # Server environment
+    PROJECT_DIR="/home/u137141055/project_management"
+else
+    # Local environment
+    PROJECT_DIR="$(pwd)"
+fi
+
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
 SQL_FILE="$PROJECT_DIR/create_company_outreach_tables.sql"
