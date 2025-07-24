@@ -286,16 +286,29 @@ export default function CompanyOutreachPage() {
 
       if (usersError) throw usersError
       
-      // Fetch members
+      // Fetch members (without embedding to avoid relationship conflicts)
       const { data: membersData, error: membersError } = await supabase
         .from('company_outreach_members')
-        .select(`
-          *,
-          user:auth_user(id, name, email, role)
-        `)
+        .select('*')
         .order('added_at', { ascending: false })
 
       if (membersError) throw membersError
+
+      // Fetch user data for members separately
+      const processedMembers = await Promise.all(
+        (membersData || []).map(async (member) => {
+          const { data: userData } = await supabase
+            .from('auth_user')
+            .select('id, name, email, role')
+            .eq('id', member.user_id)
+            .single()
+          
+          return {
+            ...member,
+            user: userData || null
+          }
+        })
+      )
 
       // Process company data to include related user data and specializations
       const processedCompanies = await Promise.all(
@@ -355,7 +368,7 @@ export default function CompanyOutreachPage() {
       setCompanies(processedCompanies)
       setSpecializations(specializationsData || [])
       setAllUsers(usersData || [])
-      setMembers(membersData || [])
+      setMembers(processedMembers || [])
       
     } catch (err: any) {
       console.error('Error fetching company outreach data:', err)
