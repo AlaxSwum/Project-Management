@@ -29,6 +29,7 @@ import {
   UserIcon,
   ShieldCheckIcon,
   KeyIcon,
+  BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -93,6 +94,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [hasClassScheduleAccess, setHasClassScheduleAccess] = useState(false);
   const [hasContentCalendarAccess, setHasContentCalendarAccess] = useState(false);
   const [hasClassesAccess, setHasClassesAccess] = useState(false);
+  const [hasCompanyOutreachAccess, setHasCompanyOutreachAccess] = useState(false);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',
@@ -275,6 +277,63 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     }
   };
 
+  // Check Company Outreach access
+  const checkCompanyOutreachAccess = async () => {
+    if (!user?.id) {
+      setHasCompanyOutreachAccess(false);
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      console.log('🔍 Checking Company Outreach access for user:', user.id, user.email);
+      
+      // Check if user is a company outreach member
+      const { data: memberData, error: memberError } = await supabase
+        .from('company_outreach_members')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('📋 Company Outreach member check:', { memberData, memberError });
+
+      if (memberData && !memberError) {
+        console.log('✅ Company Outreach access granted: User is a member');
+        setHasCompanyOutreachAccess(true);
+        return;
+      }
+
+      // Check if user is admin/HR
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role, is_superuser, is_staff')
+        .eq('id', user.id)
+        .single();
+
+      console.log('👤 Company Outreach user data check:', userData);
+
+      if (userError) {
+        console.log('❌ Company Outreach access denied: User data error');
+        setHasCompanyOutreachAccess(false);
+        return;
+      }
+
+      const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+      console.log('🔐 Company Outreach admin/HR check:', {
+        is_superuser: userData.is_superuser,
+        is_staff: userData.is_staff,
+        role: userData.role,
+        hasPermission
+      });
+      
+      setHasCompanyOutreachAccess(hasPermission);
+    } catch (err) {
+      console.error('Error checking company outreach access:', err);
+      setHasCompanyOutreachAccess(false);
+    }
+  };
+
   // Fetch leave balance on component mount and user change
   const fetchLeaveBalance = async () => {
     if (!user?.id) return;
@@ -311,10 +370,12 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       checkClassScheduleAccess();
       checkContentCalendarAccess();
       checkClassesAccess();
+      checkCompanyOutreachAccess();
     } else {
       setHasClassScheduleAccess(false);
       setHasContentCalendarAccess(false);
       setHasClassesAccess(false);
+      setHasCompanyOutreachAccess(false);
     }
   }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -907,6 +968,11 @@ Your report is now available in the system.`);
     ...(hasContentCalendarAccess ? [{ name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon }] : []),
     ...(hasClassScheduleAccess ? [{ name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon }] : []),
     ...(hasClassesAccess ? [{ name: 'Classes', href: '/classes', icon: UserIcon }] : [])
+  ];
+
+  // Idea Lounge navigation items (access-controlled)
+  const ideaLoungeNavItems = [
+    ...(hasCompanyOutreachAccess ? [{ name: 'Company Outreach', href: '/company-outreach', icon: BuildingOfficeIcon }] : [])
   ];
 
   // HR-only navigation items (will be blank pages for now)
@@ -2064,6 +2130,26 @@ Your report is now available in the system.`);
                 </span>
               )}
             </button> */}
+
+            {/* Idea Lounge Section */}
+            {ideaLoungeNavItems.length > 0 && (
+              <>
+                <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Idea Lounge</span>
+                </div>
+                {ideaLoungeNavItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
+                    onClick={closeMobileMenu}
+                  >
+                    <item.icon className="nav-icon" />
+                    <span className="nav-text">{item.name}</span>
+                  </Link>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Projects List */}
