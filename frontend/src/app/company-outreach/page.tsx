@@ -198,7 +198,7 @@ export default function CompanyOutreachPage() {
 
       // Check user properties from auth context first
       const contextRole = user.role || (user as any)?.user_metadata?.role;
-      const isAdmin = contextRole === 'admin' || contextRole === 'hr';
+      const isAdmin = contextRole === 'admin' || contextRole === 'hr' || contextRole === 'superuser';
       
       console.log('🔍 Auth context check (page):', {
         contextRole,
@@ -214,7 +214,7 @@ export default function CompanyOutreachPage() {
         return
       }
 
-      // Fallback: Check auth_user table
+      // Check auth_user table for admin privileges
       const { data: userData, error: userError } = await supabase
         .from('auth_user')
         .select('id, name, email, role, is_superuser, is_staff')
@@ -224,23 +224,24 @@ export default function CompanyOutreachPage() {
       console.log('👤 Company Outreach database user check (page):', userData, userError);
 
       if (!userError && userData) {
-        const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
+        const hasAdminPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
         console.log('🔐 Company Outreach admin/HR check (page):', {
           is_superuser: userData.is_superuser,
           is_staff: userData.is_staff,
           role: userData.role,
-          hasPermission
+          hasAdminPermission
         });
         
-        if (hasPermission) {
+        if (hasAdminPermission) {
+          console.log('✅ Company Outreach access granted: Admin from database');
           setHasAccess(true)
           setUserRole('admin')
           return
         }
       }
 
-      // Final fallback: Grant access to all authenticated users for testing
-      console.log('⚠️ Granting page access to authenticated user for testing');
+      // Grant access to all authenticated users (fallback for development)
+      console.log('⚠️ Granting page access to authenticated user (fallback)');
       setHasAccess(true)
       setUserRole('member')
       
