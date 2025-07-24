@@ -136,6 +136,10 @@ export default function CompanyOutreachPage() {
   const [showSpecializationForm, setShowSpecializationForm] = useState(false)
   const [newSpecialization, setNewSpecialization] = useState({ name: '', description: '' })
   
+  // Inline editing states
+  const [editingCell, setEditingCell] = useState<{companyId: number, field: string} | null>(null)
+  const [editingValue, setEditingValue] = useState<any>('')
+  
   // Filter states
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('all')
   const [selectedFollowUpStatus, setSelectedFollowUpStatus] = useState<string>('all')
@@ -646,6 +650,184 @@ export default function CompanyOutreachPage() {
     setShowEditForm(true)
   }
 
+  // Inline editing functions
+  const startInlineEdit = (companyId: number, field: string, currentValue: any) => {
+    setEditingCell({ companyId, field })
+    setEditingValue(currentValue)
+  }
+
+  const cancelInlineEdit = () => {
+    setEditingCell(null)
+    setEditingValue('')
+  }
+
+  const saveInlineEdit = async () => {
+    if (!editingCell) return
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      const { companyId, field } = editingCell
+
+      let updateData: any = {}
+      
+      // Handle different field types
+      switch (field) {
+        case 'field_of_specialization_ids':
+          updateData[field] = editingValue ? [editingValue] : []
+          break
+        case 'meet_up_person_ids':
+          updateData[field] = Array.isArray(editingValue) ? editingValue : (editingValue ? [editingValue] : [])
+          break
+        default:
+          updateData[field] = editingValue
+      }
+
+      const { error } = await supabase
+        .from('company_outreach')
+        .update(updateData)
+        .eq('id', companyId)
+
+      if (error) throw error
+
+      // Update local state
+      setCompanies(prev => prev.map(company => 
+        company.id === companyId 
+          ? { ...company, ...updateData }
+          : company
+      ))
+
+      cancelInlineEdit()
+    } catch (error) {
+      console.error('Error updating company:', error)
+      alert('Failed to update company')
+    }
+  }
+
+  const toggleFollowUpStatusInline = async (company: CompanyOutreach) => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      const newStatus = !company.follow_up_done
+
+      const { error } = await supabase
+        .from('company_outreach')
+        .update({ follow_up_done: newStatus })
+        .eq('id', company.id)
+
+      if (error) throw error
+
+      // Update local state
+      setCompanies(prev => prev.map(c => 
+        c.id === company.id 
+          ? { ...c, follow_up_done: newStatus }
+          : c
+      ))
+    } catch (error) {
+      console.error('Error updating follow-up status:', error)
+      alert('Failed to update follow-up status')
+    }
+  }
+
+  // Render editable cell
+  const renderEditableCell = (company: CompanyOutreach, field: string, displayValue: any, cellType: 'text' | 'select' | 'multiselect' = 'text', options?: any[]) => {
+    const isEditing = editingCell?.companyId === company.id && editingCell?.field === field
+    
+    const cellStyle = {
+      padding: '1rem',
+      borderBottom: '1px solid #f3f4f6',
+      fontSize: '0.875rem',
+      color: '#111827',
+      verticalAlign: 'top' as const,
+      cursor: isEditing ? 'default' : 'pointer',
+      position: 'relative' as const,
+      transition: 'background-color 0.2s ease'
+    }
+
+    if (isEditing) {
+      return (
+        <td style={cellStyle}>
+          {cellType === 'text' && (
+            <input
+              type={field === 'email_address' ? 'email' : field === 'phone_number' ? 'tel' : 'text'}
+              value={editingValue}
+              onChange={(e) => setEditingValue(e.target.value)}
+              onBlur={saveInlineEdit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveInlineEdit()
+                if (e.key === 'Escape') cancelInlineEdit()
+              }}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '2px solid #3b82f6',
+                borderRadius: '4px',
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+            />
+          )}
+          {cellType === 'select' && options && (
+            <select
+              value={editingValue}
+              onChange={(e) => setEditingValue(parseInt(e.target.value))}
+              onBlur={saveInlineEdit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveInlineEdit()
+                if (e.key === 'Escape') cancelInlineEdit()
+              }}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '2px solid #3b82f6',
+                borderRadius: '4px',
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+            >
+              <option value="">Select...</option>
+              {options.map(option => (
+                <option key={option.id} value={option.id}>
+                  {option.name || option.email}
+                </option>
+              ))}
+            </select>
+          )}
+        </td>
+      )
+    }
+
+    return (
+      <td 
+        style={cellStyle}
+        onDoubleClick={() => {
+          let currentValue: any = ''
+          switch (field) {
+            case 'field_of_specialization_ids':
+              currentValue = company.field_of_specialization_ids?.[0] || ''
+              break
+            case 'contact_person_id':
+            case 'follow_up_person_id':
+              currentValue = (company as any)[field] || ''
+              break
+            default:
+              currentValue = (company as any)[field] || ''
+          }
+          startInlineEdit(company.id, field, currentValue)
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f9fafb'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent'
+        }}
+        title="Double-click to edit"
+      >
+        {displayValue}
+      </td>
+    )
+  }
+
   // Modal overlay styles
   const modalOverlayStyles = {
     position: 'fixed' as const,
@@ -1004,20 +1186,87 @@ export default function CompanyOutreachPage() {
                       color: '#111827',
                       verticalAlign: 'top' as const
                     }}>
-                      <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
-                        {company.company_name}
+                      <div 
+                        style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '0.25rem',
+                          cursor: 'pointer',
+                          padding: '0.25rem',
+                          borderRadius: '4px',
+                          transition: 'background-color 0.2s ease'
+                        }}
+                        onDoubleClick={() => startInlineEdit(company.id, 'company_name', company.company_name)}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        title="Double-click to edit company name"
+                      >
+                        {editingCell?.companyId === company.id && editingCell?.field === 'company_name' ? (
+                          <input
+                            type="text"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onBlur={saveInlineEdit}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveInlineEdit()
+                              if (e.key === 'Escape') cancelInlineEdit()
+                            }}
+                            autoFocus
+                            style={{
+                              width: '100%',
+                              padding: '0.25rem',
+                              border: '2px solid #3b82f6',
+                              borderRadius: '4px',
+                              fontSize: '0.875rem',
+                              outline: 'none',
+                              fontWeight: '600'
+                            }}
+                          />
+                        ) : (
+                          company.company_name
+                        )}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {company.address}
+                      <div 
+                        style={{ 
+                          fontSize: '0.75rem', 
+                          color: '#6b7280',
+                          cursor: 'pointer',
+                          padding: '0.25rem',
+                          borderRadius: '4px',
+                          transition: 'background-color 0.2s ease'
+                        }}
+                        onDoubleClick={() => startInlineEdit(company.id, 'address', company.address)}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        title="Double-click to edit address"
+                      >
+                        {editingCell?.companyId === company.id && editingCell?.field === 'address' ? (
+                          <input
+                            type="text"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onBlur={saveInlineEdit}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveInlineEdit()
+                              if (e.key === 'Escape') cancelInlineEdit()
+                            }}
+                            autoFocus
+                            style={{
+                              width: '100%',
+                              padding: '0.25rem',
+                              border: '2px solid #3b82f6',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              outline: 'none'
+                            }}
+                          />
+                        ) : (
+                          company.address || 'No address'
+                        )}
                       </div>
                     </td>
-                    <td style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #f3f4f6',
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      verticalAlign: 'top' as const
-                    }}>
+                    {renderEditableCell(
+                      company,
+                      'field_of_specialization_ids',
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                         {company.specializations?.map(spec => (
                           <span
@@ -1033,16 +1282,14 @@ export default function CompanyOutreachPage() {
                             {spec.name}
                           </span>
                         ))}
-                      </div>
-                    </td>
-                    <td style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #f3f4f6',
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      verticalAlign: 'top' as const
-                    }}>
-                      {company.contact_person ? (
+                      </div>,
+                      'select',
+                      specializations
+                    )}
+                    {renderEditableCell(
+                      company,
+                      'contact_person_id',
+                      company.contact_person ? (
                         <div>
                           <div style={{ fontWeight: '500' }}>{company.contact_person.name}</div>
                           <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
@@ -1051,39 +1298,31 @@ export default function CompanyOutreachPage() {
                         </div>
                       ) : (
                         <span style={{ color: '#9ca3af' }}>Not assigned</span>
-                      )}
-                    </td>
-                    <td style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #f3f4f6',
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      verticalAlign: 'top' as const
-                    }}>{company.phone_number || '-'}</td>
-                    <td style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #f3f4f6',
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      verticalAlign: 'top' as const
-                    }}>
-                      {company.email_address ? (
+                      ),
+                      'select',
+                      assignedUsers
+                    )}
+                    {renderEditableCell(
+                      company,
+                      'phone_number',
+                      company.phone_number || '-'
+                    )}
+                    {renderEditableCell(
+                      company,
+                      'email_address',
+                      company.email_address ? (
                         <a 
                           href={`mailto:${company.email_address}`}
                           style={{ color: '#5884FD', textDecoration: 'none' }}
                         >
                           {company.email_address}
                         </a>
-                      ) : '-'}
-                    </td>
-                    <td style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #f3f4f6',
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      verticalAlign: 'top' as const
-                    }}>
-                      {company.follow_up_person ? (
+                      ) : '-'
+                    )}
+                    {renderEditableCell(
+                      company,
+                      'follow_up_person_id',
+                      company.follow_up_person ? (
                         <div>
                           <div style={{ fontWeight: '500' }}>{company.follow_up_person.name}</div>
                           <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
@@ -1092,8 +1331,10 @@ export default function CompanyOutreachPage() {
                         </div>
                       ) : (
                         <span style={{ color: '#9ca3af' }}>Not assigned</span>
-                      )}
-                    </td>
+                      ),
+                      'select',
+                      assignedUsers
+                    )}
                     <td style={{
                       padding: '1rem',
                       borderBottom: '1px solid #f3f4f6',
@@ -1118,29 +1359,35 @@ export default function CompanyOutreachPage() {
                       borderBottom: '1px solid #f3f4f6',
                       fontSize: '0.875rem',
                       color: '#111827',
-                      verticalAlign: 'top' as const
+                      verticalAlign: 'top' as const,
+                      cursor: 'pointer'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.875rem' }}>
-                          <input
-                            type="radio"
-                            name={`followup-${company.id}`}
-                            checked={company.follow_up_done === true}
-                            onChange={() => toggleFollowUpStatus({ ...company, follow_up_done: true })}
-                            style={{ marginRight: '0.5rem' }}
-                          />
-                          <span style={{ color: '#10b981', fontWeight: '500' }}>Yes</span>
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.875rem' }}>
-                          <input
-                            type="radio"
-                            name={`followup-${company.id}`}
-                            checked={company.follow_up_done === false}
-                            onChange={() => toggleFollowUpStatus({ ...company, follow_up_done: false })}
-                            style={{ marginRight: '0.5rem' }}
-                          />
-                          <span style={{ color: '#f59e0b', fontWeight: '500' }}>No</span>
-                        </label>
+                      <div 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '1rem',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                        onClick={() => toggleFollowUpStatusInline(company)}
+                        title="Click to toggle status"
+                      >
+                        <span style={{ 
+                          color: company.follow_up_done ? '#10b981' : '#f59e0b', 
+                          fontWeight: '600',
+                          fontSize: '0.875rem'
+                        }}>
+                          {company.follow_up_done ? '✓ Yes - Completed' : '○ No - Pending'}
+                        </span>
                       </div>
                     </td>
                     <td style={{
@@ -1150,22 +1397,7 @@ export default function CompanyOutreachPage() {
                       color: '#111827',
                       verticalAlign: 'top' as const
                     }}>
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button
-                          onClick={() => startEdit(company)}
-                          style={{
-                            padding: '0.5rem',
-                            background: '#f3f4f6',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
-                          title="Edit"
-                        >
-                          <PencilIcon style={{ width: '14px', height: '14px' }} />
-                        </button>
+                      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
                         <button
                           onClick={() => handleDelete(company.id)}
                           style={{
