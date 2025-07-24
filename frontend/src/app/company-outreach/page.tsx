@@ -129,7 +129,10 @@ export default function CompanyOutreachPage() {
   // Form states
   const [showAddForm, setShowAddForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showMemberModal, setShowMemberModal] = useState(false)
   const [editingCompany, setEditingCompany] = useState<CompanyOutreach | null>(null)
+  const [allUsers, setAllUsers] = useState<User[]>([])
+  const [selectedMembers, setSelectedMembers] = useState<{ [key: number]: string }>({}) // userId -> role
   
   // Filter states
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('all')
@@ -222,12 +225,14 @@ export default function CompanyOutreachPage() {
       // Deny access if user is not in member list or admin
       console.log('❌ Access denied: User is not assigned to Company Outreach');
       setHasAccess(false)
+      setUserRole('')
       
     } catch (err) {
       console.error('Error checking company outreach access:', err)
       // Deny access on error
       console.log('❌ Access denied due to error');
       setHasAccess(false)
+      setUserRole('')
     }
   }
 
@@ -348,6 +353,25 @@ export default function CompanyOutreachPage() {
       setSpecializations(specializationsData || [])
       setAssignedUsers(assignedUsersData || []) // Only assigned users
       setMembers(processedMembers || [])
+      
+      // Fetch all users for member management (admin only)
+      if (userRole === 'admin') {
+        const { data: allUsersData, error: allUsersError } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role')
+          .order('name')
+
+        if (!allUsersError) {
+          setAllUsers(allUsersData || [])
+        }
+
+        // Set current member selections
+        const memberMap: { [key: number]: string } = {}
+        processedMembers.forEach(member => {
+          memberMap[member.user_id] = member.role
+        })
+        setSelectedMembers(memberMap)
+      }
       
     } catch (err: any) {
       console.error('Error fetching company outreach data:', err)
@@ -504,6 +528,54 @@ export default function CompanyOutreachPage() {
       fetchData()
     } catch (err: any) {
       setError('Failed to delete company: ' + err.message)
+    }
+  }
+
+  // Member management functions
+  const handleMemberToggle = (userId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedMembers(prev => ({ ...prev, [userId]: 'member' }))
+    } else {
+      setSelectedMembers(prev => {
+        const updated = { ...prev }
+        delete updated[userId]
+        return updated
+      })
+    }
+  }
+
+  const handleRoleChange = (userId: number, role: string) => {
+    setSelectedMembers(prev => ({ ...prev, [userId]: role }))
+  }
+
+  const saveMemberAssignments = async () => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      
+      // First, remove all existing members
+      await supabase
+        .from('company_outreach_members')
+        .delete()
+        .neq('id', 0) // Delete all
+      
+      // Then add selected members
+      const memberInserts = Object.entries(selectedMembers).map(([userId, role]) => ({
+        user_id: parseInt(userId),
+        role: role
+      }))
+      
+      if (memberInserts.length > 0) {
+        const { error } = await supabase
+          .from('company_outreach_members')
+          .insert(memberInserts)
+        
+        if (error) throw error
+      }
+      
+      setShowMemberModal(false)
+      fetchData() // Refresh data
+    } catch (err: any) {
+      setError('Failed to save member assignments: ' + err.message)
     }
   }
 
@@ -668,6 +740,23 @@ export default function CompanyOutreachPage() {
             </div>
             
             <div style={{ display: 'flex', gap: '0.75rem' }}>
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => setShowMemberModal(true)}
+                  style={{
+                    ...formStyles.button,
+                    background: '#ffffff',
+                    color: '#666666',
+                    border: '1px solid #e0e0e0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <UserGroupIcon style={{ width: '18px', height: '18px' }} />
+                  Manage Members
+                </button>
+              )}
               <button
                 onClick={() => setShowAddForm(true)}
                 style={{
@@ -1489,6 +1578,136 @@ export default function CompanyOutreachPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Member Management Modal */}
+      {showMemberModal && userRole === 'admin' && (
+        <div style={modalOverlayStyles}>
+          <div style={{ ...modalStyles, maxWidth: '700px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                Manage Company Outreach Members
+              </h2>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <p style={{ color: '#666666', marginBottom: '1.5rem' }}>
+                Select users who can access the Company Outreach feature and assign their roles.
+              </p>
+
+              <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                {allUsers.map(user => (
+                  <div 
+                    key={user.id} 
+                    style={{ 
+                      padding: '1rem', 
+                      borderBottom: '1px solid #f3f4f6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers[user.id] !== undefined}
+                        onChange={(e) => handleMemberToggle(user.id, e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          marginRight: '12px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: '500', color: '#111827' }}>
+                          {user.name}
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedMembers[user.id] && (
+                      <div style={{ display: 'flex', gap: '1rem', marginLeft: '1rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name={`role-${user.id}`}
+                            value="member"
+                            checked={selectedMembers[user.id] === 'member'}
+                            onChange={() => handleRoleChange(user.id, 'member')}
+                            style={{ marginRight: '6px' }}
+                          />
+                          <span style={{ fontSize: '0.875rem', color: '#374151' }}>Member</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name={`role-${user.id}`}
+                            value="admin"
+                            checked={selectedMembers[user.id] === 'admin'}
+                            onChange={() => handleRoleChange(user.id, 'admin')}
+                            style={{ marginRight: '6px' }}
+                          />
+                          <span style={{ fontSize: '0.875rem', color: '#374151' }}>Admin</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {Object.keys(selectedMembers).length === 0 && (
+                <div style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#6b7280',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  marginTop: '1rem'
+                }}>
+                  <UserGroupIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#d1d5db' }} />
+                  <p>No members selected. Select users above to grant access to Company Outreach.</p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setShowMemberModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveMemberAssignments}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#5884FD',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                }}
+              >
+                Save Member Assignments
+              </button>
+            </div>
           </div>
         </div>
       )}
