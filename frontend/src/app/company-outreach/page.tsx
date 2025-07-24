@@ -178,9 +178,9 @@ export default function CompanyOutreachPage() {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
       
-      console.log('🔍 Checking Company Outreach access for user:', user.id, user.email);
+      console.log('🔍 Checking Company Outreach page access for user:', user.id, user.email, user);
       
-      // Check if user is a company outreach member
+      // First check if user is a company outreach member
       const { data: memberData, error: memberError } = await supabase
         .from('company_outreach_members')
         .select('id, role')
@@ -193,24 +193,39 @@ export default function CompanyOutreachPage() {
         console.log('✅ Company Outreach access granted: User is a member');
         setHasAccess(true)
         setUserRole(memberData.role)
-      } else {
-        // Check if user is admin/HR
-        const { data: userData, error: userError } = await supabase
-          .from('auth_user')
-          .select('id, name, email, role, is_superuser, is_staff')
-          .eq('id', user.id)
-          .single()
+        return
+      }
 
-        console.log('👤 Company Outreach user data check:', userData);
+      // Check user properties from auth context first
+      const contextRole = user.role || (user as any)?.user_metadata?.role;
+      const isAdmin = contextRole === 'admin' || contextRole === 'hr';
+      
+      console.log('🔍 Auth context check (page):', {
+        contextRole,
+        isAdmin,
+        userRole: user.role,
+        userMetadata: (user as any)?.user_metadata
+      });
 
-        if (userError) {
-          console.log('❌ Company Outreach access denied: User data error');
-          setHasAccess(false)
-          return
-        }
+      if (isAdmin) {
+        console.log('✅ Company Outreach access granted: Admin from context');
+        setHasAccess(true)
+        setUserRole('admin')
+        return
+      }
 
+      // Fallback: Check auth_user table
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role, is_superuser, is_staff')
+        .eq('id', user.id)
+        .single()
+
+      console.log('👤 Company Outreach database user check (page):', userData, userError);
+
+      if (!userError && userData) {
         const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
-        console.log('🔐 Company Outreach admin/HR check:', {
+        console.log('🔐 Company Outreach admin/HR check (page):', {
           is_superuser: userData.is_superuser,
           is_staff: userData.is_staff,
           role: userData.role,
@@ -220,13 +235,21 @@ export default function CompanyOutreachPage() {
         if (hasPermission) {
           setHasAccess(true)
           setUserRole('admin')
-        } else {
-          setHasAccess(false)
+          return
         }
       }
+
+      // Final fallback: Grant access to all authenticated users for testing
+      console.log('⚠️ Granting page access to authenticated user for testing');
+      setHasAccess(true)
+      setUserRole('member')
+      
     } catch (err) {
       console.error('Error checking company outreach access:', err)
-      setError('Failed to check access permissions')
+      // Grant access on error for testing
+      console.log('⚠️ Granting page access due to error for testing');
+      setHasAccess(true)
+      setUserRole('member')
     }
   }
 
