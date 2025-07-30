@@ -138,7 +138,32 @@ export default function ContentCalendarPage() {
       const { data: usersData } = await supabaseDb.getUsers()
       const { data: foldersData } = await supabaseDb.getContentCalendarFolders()
 
-      setContentItems(itemsData || [])
+      // Transform content items to include assignee user data
+      const transformedContentItems = await Promise.all(
+        (itemsData || []).map(async (item: any) => {
+          let assignees: User[] = []
+          if (item.assigned_to && item.assigned_to.length > 0) {
+            // Fetch user data for each assigned user ID
+            const assigneePromises = item.assigned_to.map(async (userId: number) => {
+              const user = (usersData || []).find((u: any) => u.id === userId)
+              return user || { 
+                id: userId, 
+                name: 'Unknown User', 
+                email: '', 
+                role: 'member' 
+              }
+            })
+            assignees = await Promise.all(assigneePromises)
+          }
+          
+          return {
+            ...item,
+            assignees
+          }
+        })
+      )
+      
+      setContentItems(transformedContentItems)
       
       // Transform members data to ensure user object exists
       const transformedMembers = (membersData || []).map((member: any) => ({
@@ -160,7 +185,7 @@ export default function ContentCalendarPage() {
       setFolders(uniqueFolders)
       
       // Filter items based on current folder
-      filterItemsByFolder(itemsData || [], selectedFolder)
+      filterItemsByFolder(transformedContentItems, selectedFolder)
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load content calendar data')
@@ -829,7 +854,25 @@ export default function ContentCalendarPage() {
                       )}
                     </div>
                     <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
-                       {item.assigned_to && item.assigned_to.length > 0 ? `${item.assigned_to.length} assigned` : 'Unassigned'}
+                      {item.assignees && item.assignees.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          {item.assignees.map((assignee, index) => (
+                            <div key={assignee.id} style={{ 
+                              fontSize: '0.8rem',
+                              fontWeight: '500',
+                              color: '#374151',
+                              padding: '0.25rem 0.5rem',
+                              background: '#f9fafb',
+                              borderRadius: '4px',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              {assignee.name}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Unassigned</span>
+                      )}
                      </div>
                     <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
                       {item.content_deadline ? formatDate(item.content_deadline) : '-'}
