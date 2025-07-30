@@ -353,7 +353,15 @@ export default function ContentCalendarPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const months = [
+      'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+      'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+    ]
+    const month = months[date.getMonth()]
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
   }
 
   const getStatusLabel = (status: string) => {
