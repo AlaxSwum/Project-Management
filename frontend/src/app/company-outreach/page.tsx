@@ -98,6 +98,8 @@ interface CompanyOutreach {
   address: string
   meet_up_person_ids: number[]
   follow_up_done: boolean
+  phone_call_status: string
+  phone_call_notes: string
   contact_person?: User | null
   follow_up_person?: User | null
   meet_up_persons?: User[]
@@ -143,6 +145,7 @@ export default function CompanyOutreachPage() {
   // Filter states
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('all')
   const [selectedFollowUpStatus, setSelectedFollowUpStatus] = useState<string>('all')
+  const [selectedPhoneCallStatus, setSelectedPhoneCallStatus] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   
   // Form data
@@ -157,7 +160,9 @@ export default function CompanyOutreachPage() {
     follow_up_person_id: null as number | null,
     address: '',
     meet_up_person_ids: [] as number[],
-    follow_up_done: false
+    follow_up_done: false,
+    phone_call_status: 'pending',
+    phone_call_notes: ''
   })
 
   // Check access control - STRICT ACCESS ONLY
@@ -413,8 +418,15 @@ export default function CompanyOutreachPage() {
       )
     }
 
+    // Filter by phone call status
+    if (selectedPhoneCallStatus !== 'all') {
+      filtered = filtered.filter(company => 
+        company.phone_call_status === selectedPhoneCallStatus
+      )
+    }
+
     setFilteredCompanies(filtered)
-  }, [companies, searchTerm, selectedSpecialization, selectedFollowUpStatus])
+  }, [companies, searchTerm, selectedSpecialization, selectedFollowUpStatus, selectedPhoneCallStatus])
 
   // Load data on component mount
   useEffect(() => {
@@ -471,7 +483,9 @@ export default function CompanyOutreachPage() {
       follow_up_person_id: null,
       address: '',
       meet_up_person_ids: [],
-      follow_up_done: false
+      follow_up_done: false,
+      phone_call_status: 'pending',
+      phone_call_notes: ''
     })
   }
 
@@ -645,7 +659,9 @@ export default function CompanyOutreachPage() {
       follow_up_person_id: company.follow_up_person_id,
       address: company.address,
       meet_up_person_ids: company.meet_up_person_ids || [],
-      follow_up_done: company.follow_up_done
+      follow_up_done: company.follow_up_done,
+      phone_call_status: company.phone_call_status || 'pending',
+      phone_call_notes: company.phone_call_notes || ''
     })
     setShowEditForm(true)
   }
@@ -703,6 +719,14 @@ export default function CompanyOutreachPage() {
     }
   }
 
+  const startEditingInline = (companyId: number, field: string) => {
+    const company = companies.find(c => c.id === companyId)
+    if (company) {
+      setEditingCell({ companyId, field })
+      setEditingValue(company[field as keyof CompanyOutreach] || '')
+    }
+  }
+
   const toggleFollowUpStatusInline = async (company: CompanyOutreach) => {
     try {
       const supabase = (await import('@/lib/supabase')).supabase
@@ -724,6 +748,30 @@ export default function CompanyOutreachPage() {
     } catch (error) {
       console.error('Error updating follow-up status:', error)
       alert('Failed to update follow-up status')
+    }
+  }
+
+  const togglePhoneCallStatusInline = async (company: CompanyOutreach) => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      const newStatus = company.phone_call_status === 'completed' ? 'pending' : 'completed'
+
+      const { error } = await supabase
+        .from('company_outreach')
+        .update({ phone_call_status: newStatus })
+        .eq('id', company.id)
+
+      if (error) throw error
+
+      // Update local state
+      setCompanies(prev => prev.map(c => 
+        c.id === company.id 
+          ? { ...c, phone_call_status: newStatus }
+          : c
+      ))
+    } catch (error) {
+      console.error('Error updating phone call status:', error)
+      alert('Failed to update phone call status')
     }
   }
 
@@ -1133,6 +1181,18 @@ export default function CompanyOutreachPage() {
                   <option value="pending">Pending</option>
                 </select>
               </div>
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Filter by Phone Call Status</label>
+                <select
+                  value={selectedPhoneCallStatus}
+                  onChange={(e) => setSelectedPhoneCallStatus(e.target.value)}
+                  style={formStyles.select}
+                >
+                  <option value="all">All Status</option>
+                  <option value="completed">Yes Completed</option>
+                  <option value="pending">No Pending</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1241,6 +1301,24 @@ export default function CompanyOutreachPage() {
                     color: '#374151',
                     borderBottom: '1px solid #e5e7eb'
                   }}>Status</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Phone Call Status</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>Phone Call Notes</th>
                   <th style={{
                     background: '#f9fafb',
                     padding: '1rem',
@@ -1462,6 +1540,96 @@ export default function CompanyOutreachPage() {
                         }}>
                           {company.follow_up_done ? '✓ Yes - Completed' : '○ No - Pending'}
                         </span>
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      <div 
+                        style={{
+                          cursor: 'pointer',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          transition: 'background-color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                        onClick={() => togglePhoneCallStatusInline(company)}
+                        title="Click to toggle phone call status"
+                      >
+                        <span style={{ 
+                          color: company.phone_call_status === 'completed' ? '#10b981' : '#f59e0b', 
+                          fontWeight: '600',
+                          fontSize: '0.875rem'
+                        }}>
+                          {company.phone_call_status === 'completed' ? '✓ Yes - Completed' : '○ No - Pending'}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const
+                    }}>
+                      <div 
+                        style={{
+                          cursor: 'pointer',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          transition: 'background-color 0.2s ease',
+                          minHeight: '1.5rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                        onDoubleClick={() => startEditingInline(company.id, 'phone_call_notes')}
+                        title="Double-click to edit phone call notes"
+                      >
+                        {editingCell?.companyId === company.id && editingCell?.field === 'phone_call_notes' ? (
+                          <textarea
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                                                      onBlur={() => saveInlineEdit()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.ctrlKey) {
+                              saveInlineEdit()
+                            } else if (e.key === 'Escape') {
+                              cancelInlineEdit()
+                            }
+                          }}
+                            autoFocus
+                            rows={3}
+                            style={{
+                              width: '100%',
+                              border: '2px solid #3b82f6',
+                              borderRadius: '4px',
+                              padding: '0.5rem',
+                              fontSize: '0.875rem',
+                              resize: 'vertical'
+                            }}
+                          />
+                        ) : (
+                          <span style={{ 
+                            color: company.phone_call_notes ? '#111827' : '#9ca3af',
+                            fontSize: '0.875rem',
+                            wordBreak: 'break-word'
+                          }}>
+                            {company.phone_call_notes || 'Click to add notes...'}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td style={{
@@ -1839,6 +2007,46 @@ export default function CompanyOutreachPage() {
                 />
               </div>
 
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Phone Call Status</label>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="phone_call_status_add"
+                      checked={formData.phone_call_status === 'completed'}
+                      onChange={() => setFormData({ ...formData, phone_call_status: 'completed' })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#10b981', fontWeight: '500' }}>Yes - Completed</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="phone_call_status_add"
+                      checked={formData.phone_call_status === 'pending'}
+                      onChange={() => setFormData({ ...formData, phone_call_status: 'pending' })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#f59e0b', fontWeight: '500' }}>No - Pending</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Phone Call Notes</label>
+                <textarea
+                  value={formData.phone_call_notes}
+                  onChange={(e) => setFormData({ ...formData, phone_call_notes: e.target.value })}
+                  style={{
+                    ...formStyles.input,
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Add notes from phone conversations..."
+                />
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
@@ -2147,6 +2355,46 @@ export default function CompanyOutreachPage() {
                     resize: 'vertical'
                   }}
                   placeholder="Add any notes about this company..."
+                />
+              </div>
+
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Phone Call Status</label>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="phone_call_status_edit"
+                      checked={formData.phone_call_status === 'completed'}
+                      onChange={() => setFormData({ ...formData, phone_call_status: 'completed' })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#10b981', fontWeight: '500' }}>Yes - Completed</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="phone_call_status_edit"
+                      checked={formData.phone_call_status === 'pending'}
+                      onChange={() => setFormData({ ...formData, phone_call_status: 'pending' })}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    <span style={{ color: '#f59e0b', fontWeight: '500' }}>No - Pending</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Phone Call Notes</label>
+                <textarea
+                  value={formData.phone_call_notes}
+                  onChange={(e) => setFormData({ ...formData, phone_call_notes: e.target.value })}
+                  style={{
+                    ...formStyles.input,
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Add notes from phone conversations..."
                 />
               </div>
 
