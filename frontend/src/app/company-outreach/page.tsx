@@ -1579,7 +1579,9 @@ export default function CompanyOutreachPage() {
                       borderBottom: '1px solid #f3f4f6',
                       fontSize: '0.875rem',
                       color: '#111827',
-                      verticalAlign: 'top' as const
+                      verticalAlign: 'top' as const,
+                      maxWidth: '200px',
+                      height: '60px'
                     }}>
                       <div 
                         style={{
@@ -1587,7 +1589,9 @@ export default function CompanyOutreachPage() {
                           padding: '0.5rem',
                           borderRadius: '4px',
                           transition: 'background-color 0.2s ease',
-                          minHeight: '1.5rem'
+                          minHeight: '1.5rem',
+                          maxHeight: '40px',
+                          overflow: 'hidden'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = '#f9fafb'
@@ -1625,11 +1629,15 @@ export default function CompanyOutreachPage() {
                           <span style={{ 
                             color: company.phone_call_notes ? '#111827' : '#9ca3af',
                             fontSize: '0.875rem',
-                            wordBreak: 'break-word'
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: 'block',
+                            maxWidth: '100%'
                           }}>
                             {company.phone_call_notes 
-                              ? company.phone_call_notes.length > 100 
-                                ? company.phone_call_notes.substring(0, 100) + '...'
+                              ? company.phone_call_notes.length > 50 
+                                ? company.phone_call_notes.substring(0, 50) + '...'
                                 : company.phone_call_notes
                               : 'Click to add notes...'
                             }
