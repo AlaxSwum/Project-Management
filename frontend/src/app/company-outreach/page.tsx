@@ -132,8 +132,10 @@ export default function CompanyOutreachPage() {
   // Form states
   const [showAddForm, setShowAddForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showViewForm, setShowViewForm] = useState(false)
   const [showMemberModal, setShowMemberModal] = useState(false)
   const [editingCompany, setEditingCompany] = useState<CompanyOutreach | null>(null)
+  const [viewingCompany, setViewingCompany] = useState<CompanyOutreach | null>(null)
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [selectedMembers, setSelectedMembers] = useState<{ [key: number]: string }>({}) // userId -> role
   const [showSpecializationForm, setShowSpecializationForm] = useState(false)
@@ -668,6 +670,12 @@ export default function CompanyOutreachPage() {
       facebook_url: company.facebook_url || ''
     })
     setShowEditForm(true)
+  }
+
+  // Start viewing
+  const startView = (company: CompanyOutreach) => {
+    setViewingCompany(company)
+    setShowViewForm(true)
   }
 
   // Inline editing functions
@@ -1663,35 +1671,62 @@ export default function CompanyOutreachPage() {
                     }}>
                       <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
                         <button
-                          onClick={() => company.facebook_url ? window.open(company.facebook_url, '_blank') : null}
+                          onClick={() => startView(company)}
                           style={{
                             padding: '0.5rem',
-                            background: company.facebook_url ? '#1877f2' : '#e5e7eb',
-                            color: company.facebook_url ? 'white' : '#9ca3af',
-                            border: 'none',
+                            background: '#f0f9ff',
+                            color: '#0369a1',
+                            border: '1px solid #bae6fd',
                             borderRadius: '6px',
-                            cursor: company.facebook_url ? 'pointer' : 'not-allowed',
+                            cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}
-                          title={company.facebook_url ? "View Facebook Page" : "No Facebook URL"}
+                          title="View Details"
                           onMouseEnter={(e) => {
-                            if (company.facebook_url) {
-                              e.currentTarget.style.background = '#166fe5'
-                            }
+                            e.currentTarget.style.background = '#e0f2fe'
+                            e.currentTarget.style.borderColor = '#7dd3fc'
                           }}
                           onMouseLeave={(e) => {
-                            if (company.facebook_url) {
-                              e.currentTarget.style.background = '#1877f2'
-                            }
+                            e.currentTarget.style.background = '#f0f9ff'
+                            e.currentTarget.style.borderColor = '#bae6fd'
                           }}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                            <circle cx="12" cy="12" r="3"/>
                           </svg>
                         </button>
+                        {company.facebook_url && (
+                          <button
+                            onClick={() => window.open(company.facebook_url, '_blank')}
+                            style={{
+                              padding: '0.5rem',
+                              background: '#1877f2',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="View Facebook Page"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#166fe5'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#1877f2'
+                            }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                          </button>
+                        )}
                         <button
                           onClick={() => startEdit(company)}
                           style={{
@@ -2712,6 +2747,203 @@ export default function CompanyOutreachPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Company Form */}
+      {showViewForm && viewingCompany && (
+        <div style={modalOverlayStyles}>
+          <div style={modalStyles}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                Company Details - {viewingCompany.company_name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowViewForm(false)
+                  setViewingCompany(null)
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '0.5rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Company Name
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                    {viewingCompany.company_name}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Specialization
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                    {viewingCompany.specializations?.map(spec => spec.name).join(', ') || 'Not specified'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Phone Number
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                    {viewingCompany.phone_number || 'Not provided'}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Email Address
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                    {viewingCompany.email_address || 'Not provided'}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  Address
+                </label>
+                <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                  {viewingCompany.address || 'Not provided'}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Contact Person
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                    {viewingCompany.contact_person?.name || 'Not assigned'}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Follow-up Person
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                    {viewingCompany.follow_up_person?.name || 'Not assigned'}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  Meet-up Persons
+                </label>
+                <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827' }}>
+                  {viewingCompany.meet_up_persons?.map(person => person.name).join(', ') || 'None assigned'}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Follow-up Status
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb' }}>
+                    <span style={{ 
+                      color: viewingCompany.follow_up_done ? '#10b981' : '#f59e0b',
+                      fontWeight: '500'
+                    }}>
+                      {viewingCompany.follow_up_done ? '✓ Yes - Completed' : '○ No - Pending'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Phone Call Status
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb' }}>
+                    <span style={{ 
+                      color: viewingCompany.phone_call_status === 'completed' ? '#10b981' : '#f59e0b',
+                      fontWeight: '500'
+                    }}>
+                      {viewingCompany.phone_call_status === 'completed' ? '✓ Yes - Completed' : '○ No - Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {viewingCompany.phone_call_notes && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Phone Call Notes
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827', whiteSpace: 'pre-wrap' }}>
+                    {viewingCompany.phone_call_notes}
+                  </div>
+                </div>
+              )}
+
+              {viewingCompany.facebook_url && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                    Facebook URL
+                  </label>
+                  <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb' }}>
+                    <a 
+                      href={viewingCompany.facebook_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ color: '#1877f2', textDecoration: 'underline' }}
+                    >
+                      {viewingCompany.facebook_url}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  Notes
+                </label>
+                <div style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f9fafb', color: '#111827', whiteSpace: 'pre-wrap', minHeight: '80px' }}>
+                  {viewingCompany.note || 'No notes'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button
+                  onClick={() => {
+                    setShowViewForm(false)
+                    setViewingCompany(null)
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
