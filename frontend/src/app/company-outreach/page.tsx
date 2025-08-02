@@ -1627,7 +1627,12 @@ export default function CompanyOutreachPage() {
                             fontSize: '0.875rem',
                             wordBreak: 'break-word'
                           }}>
-                            {company.phone_call_notes || 'Click to add notes...'}
+                            {company.phone_call_notes 
+                              ? company.phone_call_notes.length > 100 
+                                ? company.phone_call_notes.substring(0, 100) + '...'
+                                : company.phone_call_notes
+                              : 'Click to add notes...'
+                            }
                           </span>
                         )}
                       </div>
