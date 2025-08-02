@@ -100,6 +100,7 @@ interface CompanyOutreach {
   follow_up_done: boolean
   phone_call_status: string
   phone_call_notes: string
+  facebook_url: string
   contact_person?: User | null
   follow_up_person?: User | null
   meet_up_persons?: User[]
@@ -162,7 +163,8 @@ export default function CompanyOutreachPage() {
     meet_up_person_ids: [] as number[],
     follow_up_done: false,
     phone_call_status: 'pending',
-    phone_call_notes: ''
+    phone_call_notes: '',
+    facebook_url: ''
   })
 
   // Check access control - STRICT ACCESS ONLY
@@ -485,7 +487,8 @@ export default function CompanyOutreachPage() {
       meet_up_person_ids: [],
       follow_up_done: false,
       phone_call_status: 'pending',
-      phone_call_notes: ''
+      phone_call_notes: '',
+      facebook_url: ''
     })
   }
 
@@ -661,7 +664,8 @@ export default function CompanyOutreachPage() {
       meet_up_person_ids: company.meet_up_person_ids || [],
       follow_up_done: company.follow_up_done,
       phone_call_status: company.phone_call_status || 'pending',
-      phone_call_notes: company.phone_call_notes || ''
+      phone_call_notes: company.phone_call_notes || '',
+      facebook_url: company.facebook_url || ''
     })
     setShowEditForm(true)
   }
@@ -1327,6 +1331,15 @@ export default function CompanyOutreachPage() {
                     fontWeight: '600',
                     color: '#374151',
                     borderBottom: '1px solid #e5e7eb'
+                  }}>Facebook</th>
+                  <th style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    textAlign: 'left' as const,
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    borderBottom: '1px solid #e5e7eb'
                   }}>Actions</th>
                 </tr>
               </thead>
@@ -1645,6 +1658,46 @@ export default function CompanyOutreachPage() {
                         )}
                       </div>
                     </td> */}
+                    <td style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #f3f4f6',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      verticalAlign: 'top' as const,
+                      textAlign: 'center' as const
+                    }}>
+                      {company.facebook_url ? (
+                        <button
+                          onClick={() => window.open(company.facebook_url, '_blank')}
+                          style={{
+                            padding: '0.5rem',
+                            background: '#1877f2',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto'
+                          }}
+                          title="View Facebook Page"
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#166fe5'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#1877f2'
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                          </svg>
+                        </button>
+                      ) : (
+                        <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>No URL</span>
+                      )}
+                    </td>
                     <td style={{
                       padding: '1rem',
                       borderBottom: '1px solid #f3f4f6',
@@ -2060,6 +2113,17 @@ export default function CompanyOutreachPage() {
                 />
               </div>
 
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Facebook URL</label>
+                <input
+                  type="url"
+                  value={formData.facebook_url}
+                  onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                  style={formStyles.input}
+                  placeholder="https://facebook.com/company-page"
+                />
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
@@ -2408,6 +2472,17 @@ export default function CompanyOutreachPage() {
                     resize: 'vertical'
                   }}
                   placeholder="Add notes from phone conversations..."
+                />
+              </div>
+
+              <div style={formStyles.inputGroup}>
+                <label style={formStyles.label}>Facebook URL</label>
+                <input
+                  type="url"
+                  value={formData.facebook_url}
+                  onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                  style={formStyles.input}
+                  placeholder="https://facebook.com/company-page"
                 />
               </div>
 
