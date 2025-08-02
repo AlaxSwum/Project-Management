@@ -1310,7 +1310,7 @@ export default function CompanyOutreachPage() {
                     color: '#374151',
                     borderBottom: '1px solid #e5e7eb'
                   }}>Phone Call Status</th>
-                  <th style={{
+                  {/* <th style={{
                     background: '#f9fafb',
                     padding: '1rem',
                     textAlign: 'left' as const,
@@ -1318,7 +1318,7 @@ export default function CompanyOutreachPage() {
                     fontWeight: '600',
                     color: '#374151',
                     borderBottom: '1px solid #e5e7eb'
-                  }}>Phone Call Notes</th>
+                  }}>Phone Call Notes</th> */}
                   <th style={{
                     background: '#f9fafb',
                     padding: '1rem',
@@ -1574,7 +1574,7 @@ export default function CompanyOutreachPage() {
                         </span>
                       </div>
                     </td>
-                    <td style={{
+                    {/* <td style={{
                       padding: '1rem',
                       borderBottom: '1px solid #f3f4f6',
                       fontSize: '0.875rem',
@@ -1644,7 +1644,7 @@ export default function CompanyOutreachPage() {
                           </span>
                         )}
                       </div>
-                    </td>
+                    </td> */}
                     <td style={{
                       padding: '1rem',
                       borderBottom: '1px solid #f3f4f6',
