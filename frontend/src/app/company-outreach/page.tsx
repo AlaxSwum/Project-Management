@@ -1073,7 +1073,9 @@ export default function CompanyOutreachPage() {
           padding: '2rem', 
           background: '#F5F5ED', 
           flex: 1,
-          minHeight: '100vh'
+          minHeight: '100vh',
+          overflow: 'hidden',
+          maxWidth: 'calc(100vw - 256px)'
         }}>
           {/* Header */}
           <div style={{ 
@@ -1220,18 +1222,19 @@ export default function CompanyOutreachPage() {
             borderRadius: '16px',
             border: '1px solid #e5e7eb',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-            maxWidth: '100%',
+            width: '100%',
             overflow: 'hidden'
           }}>
             <div style={{
               overflowX: 'auto' as const,
+              overflowY: 'auto' as const,
               width: '100%',
               maxHeight: '70vh'
             }}>
             <table style={{
               borderCollapse: 'collapse' as const,
               minWidth: '1200px',
-              width: '1200px'
+              width: 'max-content'
             }}>
               <thead>
                 <tr>
@@ -1659,34 +1662,36 @@ export default function CompanyOutreachPage() {
                       verticalAlign: 'top' as const
                     }}>
                       <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-                        {company.facebook_url && (
-                          <button
-                            onClick={() => window.open(company.facebook_url, '_blank')}
-                            style={{
-                              padding: '0.5rem',
-                              background: '#1877f2',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                            title="View Facebook Page"
-                            onMouseEnter={(e) => {
+                        <button
+                          onClick={() => company.facebook_url ? window.open(company.facebook_url, '_blank') : null}
+                          style={{
+                            padding: '0.5rem',
+                            background: company.facebook_url ? '#1877f2' : '#e5e7eb',
+                            color: company.facebook_url ? 'white' : '#9ca3af',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: company.facebook_url ? 'pointer' : 'not-allowed',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title={company.facebook_url ? "View Facebook Page" : "No Facebook URL"}
+                          onMouseEnter={(e) => {
+                            if (company.facebook_url) {
                               e.currentTarget.style.background = '#166fe5'
-                            }}
-                            onMouseLeave={(e) => {
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (company.facebook_url) {
                               e.currentTarget.style.background = '#1877f2'
-                            }}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                          </button>
-                        )}
+                            }
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                          </svg>
+                        </button>
                         <button
                           onClick={() => startEdit(company)}
                           style={{
