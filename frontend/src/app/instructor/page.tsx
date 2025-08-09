@@ -914,22 +914,48 @@ export default function InstructorDashboard() {
                                 textAlign: 'center',
                                 color: 'var(--text-secondary)',
                                 borderRight: '1px solid var(--border)',
-                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                              }}>{student.email}</td>
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                                maxWidth: '280px',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }} title={student.email}>{student.email}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
                                 textAlign: 'center',
                                 color: 'var(--text-secondary)',
                                 borderRight: '1px solid var(--border)',
                                 fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                              }}>{student.phone_number || 'N/A'}</td>
+                              }}>{student.phone_number ? student.phone_number : (
+                                <span style={{
+                                  background: 'var(--surface-dark)',
+                                  color: 'var(--text-secondary)',
+                                  padding: '0.125rem 0.5rem',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.75rem',
+                                  border: '1px solid var(--border)'
+                                }}>N/A</span>
+                              )}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
                                 textAlign: 'center',
                                 color: 'var(--text-secondary)',
                                 borderRight: '1px solid var(--border)',
-                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                              }}>{student.discord_id || 'N/A'}</td>
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                                maxWidth: '220px',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }} title={student.discord_id || 'N/A'}>{student.discord_id ? student.discord_id : (
+                                <span style={{
+                                  background: 'var(--surface-dark)',
+                                  color: 'var(--text-secondary)',
+                                  padding: '0.125rem 0.5rem',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.75rem',
+                                  border: '1px solid var(--border)'
+                                }}>N/A</span>
+                              )}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
                                 textAlign: 'center',
