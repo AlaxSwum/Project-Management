@@ -88,91 +88,43 @@ export default function InstructorDashboard() {
   const loadInstructorClasses = async () => {
     try {
       setLoading(true);
-      console.log('📚 Loading classes for instructor:', user?.id);
+      console.log('📚 Loading classes for instructor:', user?.id, user?.name);
       
-      // Fetch classes from classes_instructors junction table where instructor is assigned
-      const { data: instructorClasses, error: instructorError } = await supabase
-        .from('classes_instructors')
+      // Use original working method - query classes table directly
+      const { data: classesData, error: classesError } = await supabase
+        .from('classes')
         .select(`
-          classes!inner (
-            *,
-            classes_folders(name)
-          )
+          *,
+          classes_folders(name)
         `)
-        .eq('instructor_id', user?.id)
-        .eq('is_active', true);
+        .or(`instructor_id.eq.${user?.id},instructor_name.eq.${user?.name || ''}`);
 
-      console.log('🔍 Junction table query result:', { instructorClasses, instructorError });
-
-      if (instructorError) {
-        console.error('❌ Error loading instructor classes from junction table:', instructorError);
-        // Fallback to old method if junction table doesn't exist
-        console.log('🔄 Falling back to old method...');
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('classes')
-          .select(`
-            *,
-            classes_folders(name)
-          `)
-          .or(`instructor_id.eq.${user?.id},instructor_name.eq.${user?.name || ''}`);
-
-        if (fallbackError) {
-          console.error('❌ Fallback error:', fallbackError);
-          setMessage('Error loading classes');
-          return;
-        }
-
-        const formattedClasses = fallbackData
-          ?.filter(classItem => 
-            classItem.status !== 'planning' && 
-            !classItem.class_title?.toLowerCase().includes('general training all staff')
-          )
-          ?.map(classItem => ({
-            ...classItem,
-            folder_name: classItem.classes_folders?.name || 'No Folder'
-          })) || [];
-
-        // Get actual student counts for each class
-        const classesWithCounts = await Promise.all(
-          formattedClasses.map(async (classItem) => {
-            const { data: participants, error } = await supabase
-              .from('classes_participants')
-              .select('id')
-              .eq('class_id', classItem.id);
-            
-            return {
-              ...classItem,
-              current_participants: participants?.length || 0
-            };
-          })
-        );
-
-        console.log('📚 Loaded classes (fallback):', classesWithCounts);
-        setClasses(classesWithCounts);
-        setMessage('');
+      if (classesError) {
+        console.error('❌ Error loading instructor classes:', classesError);
+        setMessage('Error loading classes');
         return;
       }
 
-      // Format classes from junction table result
-      console.log('🔍 Raw instructor classes data:', instructorClasses);
-      
-      const formattedClasses = instructorClasses
-        ?.filter((item: any) => {
-          const shouldInclude = item.classes.status !== 'planning' && 
-            !item.classes.class_title?.toLowerCase().includes('general training all staff');
-          console.log(`🔍 Class "${item.classes.class_title}" - Status: ${item.classes.status}, Include: ${shouldInclude}`);
+      console.log('🔍 Raw classes data:', classesData);
+
+      // Filter out planning status and general training classes
+      const filteredClasses = classesData
+        ?.filter(classItem => {
+          const shouldInclude = classItem.status !== 'planning' && 
+            !classItem.class_title?.toLowerCase().includes('general training all staff');
+          console.log(`🔍 Class "${classItem.class_title}" - Status: ${classItem.status}, Include: ${shouldInclude}`);
           return shouldInclude;
         })
-        ?.map((item: any) => ({
-          ...item.classes,
-          folder_name: item.classes.classes_folders?.name || 'No Folder'
+        ?.map(classItem => ({
+          ...classItem,
+          folder_name: classItem.classes_folders?.name || 'No Folder'
         })) || [];
 
-      console.log('🔍 Classes after filtering:', formattedClasses);
+      console.log('🔍 Classes after filtering:', filteredClasses);
 
       // Get actual student counts for each class
       const classesWithCounts = await Promise.all(
-        formattedClasses.map(async (classItem) => {
+        filteredClasses.map(async (classItem) => {
           const { data: participants, error } = await supabase
             .from('classes_participants')
             .select('id')
@@ -185,7 +137,7 @@ export default function InstructorDashboard() {
         })
       );
 
-      console.log('📚 Loaded classes from junction table:', classesWithCounts);
+      console.log('📚 Final loaded classes:', classesWithCounts);
       setClasses(classesWithCounts);
       setMessage('');
     } catch (error) {
