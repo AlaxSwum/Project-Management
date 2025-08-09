@@ -289,6 +289,14 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       
       console.log('🔍 Checking Company Outreach access for user:', user.id, user.email, user);
       
+      // First check user role - instructors should NOT have access to company outreach
+      const contextRole = user.role || (user as any)?.user_metadata?.role;
+      if (contextRole === 'instructor') {
+        console.log('❌ Company Outreach access denied: User is instructor (restricted)');
+        setHasCompanyOutreachAccess(false);
+        return;
+      }
+      
       // First check if user is a company outreach member
       const { data: memberData, error: memberError } = await supabase
         .from('company_outreach_members')
@@ -305,7 +313,6 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       }
 
       // Check user properties from auth context first
-      const contextRole = user.role || (user as any)?.user_metadata?.role;
       const isAdmin = contextRole === 'admin' || contextRole === 'hr' || contextRole === 'superuser';
       
       console.log('🔍 Auth context check:', {
@@ -331,6 +338,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       console.log('👤 Company Outreach database user check:', userData, userError);
 
       if (!userError && userData) {
+        // Double-check role in database - no access for instructors
+        if (userData.role === 'instructor') {
+          console.log('❌ Company Outreach access denied: Database role is instructor');
+          setHasCompanyOutreachAccess(false);
+          return;
+        }
+        
         const hasAdminPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
         console.log('🔐 Company Outreach admin/HR check:', {
           is_superuser: userData.is_superuser,
@@ -346,15 +360,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         }
       }
 
-      // Grant access to all authenticated users (fallback for development)
-      console.log('⚠️ Granting access to authenticated user (fallback)');
-      setHasCompanyOutreachAccess(true);
+      // If we get here, user doesn't have access
+      console.log('❌ Company Outreach access denied: User not in member table and not admin');
+      setHasCompanyOutreachAccess(false);
       
     } catch (err) {
       console.error('Error checking company outreach access:', err);
-      // Grant access on error for testing
-      console.log('⚠️ Granting access due to error for testing');
-      setHasCompanyOutreachAccess(true);
+      setHasCompanyOutreachAccess(false);
     }
   };
 
