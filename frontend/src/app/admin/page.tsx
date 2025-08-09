@@ -269,7 +269,8 @@ export default function AdminDashboardPage() {
           role: newUser.role,
           is_superuser: false,
           is_staff: false,
-          is_active: true
+          is_active: true,
+          date_joined: new Date().toISOString()
         }])
         .select()
         .single();
