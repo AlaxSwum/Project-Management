@@ -32,15 +32,8 @@ interface Student {
   student_name: string;
   email: string;
   phone_number?: string;
+  discord_id?: string;
   facebook_link?: string;
-  payment_method: string;
-  payment_type: string;
-  course_fee: number;
-  total_amount: number;
-  paid_amount: number;
-  remaining_amount: number;
-  enrollment_status: string;
-  payment_status: string;
   enrolled_at: string;
   notes?: string;
 }
@@ -96,14 +89,15 @@ export default function InstructorDashboard() {
     try {
       setLoading(true);
       
-      // Get classes where instructor_name matches user's name or user is assigned
-      const { data, error } = await supabase
+      // Prefer instructor_id match; fallback to instructor_name
+      const query = supabase
         .from('classes')
         .select(`
           *,
           classes_folders(name)
-        `)
-        .eq('instructor_name', user?.name);
+        `);
+
+      const { data, error } = await query.or(`instructor_id.eq.${user?.id},instructor_name.eq.${user?.name || ''}`);
 
       if (error) {
         console.error('Error loading instructor classes:', error);
@@ -131,7 +125,7 @@ export default function InstructorDashboard() {
       
       const { data, error } = await supabase
         .from('classes_participants')
-        .select('*')
+        .select('id, student_name, email, phone_number, discord_id, enrolled_at, notes')
         .eq('class_id', classId);
 
       if (error) {
@@ -411,10 +405,7 @@ export default function InstructorDashboard() {
                             Contact
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Payment
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
+                            Discord
                           </th>
                         </tr>
                       </thead>
@@ -437,25 +428,8 @@ export default function InstructorDashboard() {
                                 <div className="text-sm text-gray-500">{student.phone_number}</div>
                               )}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                ${student.paid_amount}/${student.total_amount}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {student.payment_method} ({student.payment_type})
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                student.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                                student.payment_status === 'partial' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {student.payment_status}
-                              </span>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {student.enrollment_status}
-                              </div>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {student.discord_id || 'N/A'}
                             </td>
                           </tr>
                         ))}
