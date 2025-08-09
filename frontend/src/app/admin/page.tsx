@@ -111,6 +111,8 @@ export default function AdminDashboardPage() {
   const [classesLoading, setClassesLoading] = useState(false);
   const [assigningInstructor, setAssigningInstructor] = useState<number | null>(null);
   const [classInstructors, setClassInstructors] = useState<Record<number, InstructorUser[]>>({});
+  const [backfillLoading, setBackfillLoading] = useState(false);
+  const [backfillMessage, setBackfillMessage] = useState('');
 
   useEffect(() => {
     if (isLoading) return;
@@ -171,6 +173,81 @@ export default function AdminDashboardPage() {
       setAdminProjects([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const backfillClassInstructors = async () => {
+    try {
+      setBackfillLoading(true);
+      setBackfillMessage('');
+
+      // Load all classes with possible instructor hints
+      const { data: classesData, error: classesErr } = await supabase
+        .from('classes')
+        .select('id, instructor_id, instructor_name');
+
+      if (classesErr) throw classesErr;
+
+      const classesList = classesData || [];
+
+      // Collect instructor names that need lookup
+      const missingIdNames = Array.from(
+        new Set(
+          classesList
+            .filter((c: any) => !c.instructor_id && c.instructor_name)
+            .map((c: any) => c.instructor_name as string)
+            .filter(Boolean)
+        )
+      );
+
+      const nameToUserId = new Map<string, number>();
+      if (missingIdNames.length > 0) {
+        const { data: usersByName, error: usersErr } = await supabase
+          .from('auth_user')
+          .select('id, name')
+          .eq('role', 'instructor')
+          .in('name', missingIdNames);
+
+        if (usersErr) throw usersErr;
+        (usersByName || []).forEach((u: any) => {
+          if (u?.name && u?.id) nameToUserId.set(u.name, u.id);
+        });
+      }
+
+      const rows = classesList
+        .map((c: any) => {
+          const resolvedInstructorId = c.instructor_id || (c.instructor_name ? nameToUserId.get(c.instructor_name) : undefined);
+          if (!resolvedInstructorId) return null;
+          return {
+            class_id: c.id,
+            instructor_id: resolvedInstructorId,
+            role: 'instructor',
+            is_active: true,
+            assigned_by: (user?.id as any) || null
+          };
+        })
+        .filter(Boolean) as Array<{ class_id: number; instructor_id: number; role: string; is_active: boolean; assigned_by: number | null }>;
+
+      if (rows.length === 0) {
+        setBackfillMessage('No instructor assignments to backfill.');
+        return;
+      }
+
+      const { error: upsertErr } = await supabase
+        .from('classes_instructors')
+        .upsert(rows, { onConflict: 'class_id,instructor_id' });
+
+      if (upsertErr) throw upsertErr;
+
+      setBackfillMessage(`Backfill complete: ${rows.length} instructor assignment(s) created/updated.`);
+
+      // Refresh displayed instructors
+      await fetchClassInstructors(classesList.map((c: any) => c.id));
+    } catch (err: any) {
+      console.error('Backfill error:', err);
+      setBackfillMessage('Error backfilling instructors: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setBackfillLoading(false);
     }
   };
 
@@ -791,7 +868,40 @@ export default function AdminDashboardPage() {
 
       {activeTab === 'classes' && (
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Classes Management</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>Classes Management</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={backfillClassInstructors}
+                disabled={backfillLoading}
+                style={{
+                  backgroundColor: backfillLoading ? '#9ca3af' : '#0ea5e9',
+                  color: 'white',
+                  padding: '0.5rem 0.9rem',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  cursor: backfillLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {backfillLoading ? 'Syncing…' : 'Auto-assign Instructors'}
+              </button>
+            </div>
+          </div>
+
+          {backfillMessage && (
+            <div style={{
+              marginBottom: '1rem',
+              padding: '0.75rem',
+              borderRadius: 8,
+              background: backfillMessage.toLowerCase().includes('error') ? '#fee2e2' : '#d1fae5',
+              color: backfillMessage.toLowerCase().includes('error') ? '#991b1b' : '#065f46',
+              border: `1px solid ${backfillMessage.toLowerCase().includes('error') ? '#ef4444' : '#10b981'}`
+            }}>
+              {backfillMessage}
+            </div>
+          )}
           
           {classesLoading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>Loading classes...</div>
