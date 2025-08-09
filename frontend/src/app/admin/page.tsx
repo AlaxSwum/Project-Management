@@ -398,7 +398,7 @@ export default function AdminDashboardPage() {
     try {
       const { data, error } = await supabase
         .from('classes_instructors')
-        .select('class_id, auth_user:auth_user(id, name, email)')
+        .select('class_id, instructor_id, auth_user!classes_instructors_instructor_id_fkey(id, name, email)')
         .in('class_id', classIds)
         .eq('is_active', true);
 
