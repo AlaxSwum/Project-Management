@@ -430,25 +430,32 @@ export default function AdminDashboardPage() {
         .eq('role', 'instructor');
 
       if (error) {
-        console.error('Error fetching instructors:', error);
+        console.error('❌ Error fetching instructors:', error);
         return;
       }
 
+      console.log('👨‍🏫 Found instructors:', data);
       setInstructors(data || []);
     } catch (error) {
-      console.error('Error in fetchInstructors:', error);
+      console.error('💥 Error in fetchInstructors:', error);
     }
   };
 
   const assignInstructor = async (classId: number, instructorId: number) => {
     try {
+      console.log('🎯 Assigning instructor:', { classId, instructorId });
       setAssigningInstructor(classId);
       
       const instructor = instructors.find(i => i.id === instructorId);
-      if (!instructor) return;
+      if (!instructor) {
+        console.error('❌ Instructor not found:', instructorId);
+        return;
+      }
+
+      console.log('👨‍🏫 Found instructor:', instructor);
 
       // Insert or activate instructor assignment in junction table
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('classes_instructors')
         .upsert({
           class_id: classId,
@@ -459,14 +466,18 @@ export default function AdminDashboardPage() {
         }, { onConflict: 'class_id,instructor_id' });
 
       if (error) {
-        console.error('Error assigning instructor:', error);
+        console.error('❌ Error assigning instructor:', error);
+        alert('Error assigning instructor: ' + error.message);
         return;
       }
+
+      console.log('✅ Instructor assigned successfully:', data);
 
       // Refresh instructors for this class
       await fetchClassInstructors([classId]);
     } catch (error) {
-      console.error('Error in assignInstructor:', error);
+      console.error('💥 Error in assignInstructor:', error);
+      alert('Unexpected error: ' + (error as any).message);
     } finally {
       setAssigningInstructor(null);
     }
