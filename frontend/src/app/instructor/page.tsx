@@ -93,14 +93,14 @@ export default function InstructorDashboard() {
       // Use original working method - query classes table directly
       console.log('🔍 User data for query:', { id: user?.id, name: user?.name, email: user?.email });
       
-      // Try simpler query first - just by instructor_id
+      // Query by instructor_name since instructor_id column doesn't exist
       const { data: classesData, error: classesError } = await supabase
         .from('classes')
         .select(`
           *,
           classes_folders(name)
         `)
-        .eq('instructor_id', user?.id);
+        .eq('instructor_name', user?.name || '');
 
       if (classesError) {
         console.error('❌ Error loading instructor classes:', classesError);
