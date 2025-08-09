@@ -93,17 +93,19 @@ export default function InstructorDashboard() {
       // Use original working method - query classes table directly
       console.log('🔍 User data for query:', { id: user?.id, name: user?.name, email: user?.email });
       
-      // Query by instructor_name since instructor_id column doesn't exist
-      const instructorName = user?.name || '';
-      console.log(`🔍 Querying classes where instructor_name = "${instructorName}"`);
+      // Use junction table method since classes.instructor_name is always "TBD"
+      console.log(`🔍 Querying classes_instructors for instructor_id = ${user?.id}`);
       
-      const { data: classesData, error: classesError } = await supabase
-        .from('classes')
+      const { data: instructorClasses, error: classesError } = await supabase
+        .from('classes_instructors')
         .select(`
-          *,
-          classes_folders(name)
+          classes!inner (
+            *,
+            classes_folders(name)
+          )
         `)
-        .eq('instructor_name', instructorName);
+        .eq('instructor_id', user?.id)
+        .eq('is_active', true);
 
       if (classesError) {
         console.error('❌ Error loading instructor classes:', classesError);
@@ -117,19 +119,19 @@ export default function InstructorDashboard() {
         return;
       }
 
-      console.log('🔍 Raw classes data:', classesData);
+      console.log('🔍 Raw instructor classes data:', instructorClasses);
 
-      // Temporarily disable filters to see all classes for debugging
-      const filteredClasses = classesData
-        ?.filter(classItem => {
-          // Show ALL classes for now to debug
-          const shouldInclude = true; // Temporarily disabled: classItem.status !== 'planning' && !classItem.class_title?.toLowerCase().includes('general training all staff');
-          console.log(`🔍 Class "${classItem.class_title}" - Status: ${classItem.status}, Instructor: ${classItem.instructor_name}, Include: ${shouldInclude}`);
+      // Format classes from junction table result  
+      const filteredClasses = instructorClasses
+        ?.filter((item: any) => {
+          // Re-enable status filtering but allow planning for now since that's what we have
+          const shouldInclude = !item.classes.class_title?.toLowerCase().includes('general training all staff');
+          console.log(`🔍 Class "${item.classes.class_title}" - Status: ${item.classes.status}, Include: ${shouldInclude}`);
           return shouldInclude;
         })
-        ?.map(classItem => ({
-          ...classItem,
-          folder_name: classItem.classes_folders?.name || 'No Folder'
+        ?.map((item: any) => ({
+          ...item.classes,
+          folder_name: item.classes.classes_folders?.name || 'No Folder'
         })) || [];
 
       console.log('🔍 Classes after filtering:', filteredClasses);
