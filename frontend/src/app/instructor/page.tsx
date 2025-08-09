@@ -440,23 +440,55 @@ export default function InstructorDashboard() {
   }
 
   return (
-    <div className="instructor-dashboard flex min-h-screen" style={{background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #a855f7 100%)'}}>
+    <div className="instructor-dashboard" style={{
+      display: 'flex',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #a855f7 100%)',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
       <Sidebar projects={[]} onCreateProject={() => {}} />
       
-      <div className="flex-1 ml-64 p-8">
-        <div className="bg-white rounded-3xl p-8" style={{backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'}}>
+      <div style={{
+        flex: '1',
+        marginLeft: '16rem',
+        padding: '2rem'
+      }}>
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '1.5rem',
+          padding: '2rem',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        }}>
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <div style={{ marginBottom: '2rem' }}>
+            <h1 style={{
+              fontSize: '1.875rem',
+              fontWeight: 'bold',
+              color: '#1f2937',
+              marginBottom: '0.5rem',
+              fontFamily: 'Inter, sans-serif'
+            }}>
               Instructor Dashboard
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p style={{
+              color: '#4b5563',
+              fontSize: '1.125rem',
+              fontFamily: 'Inter, sans-serif'
+            }}>
               Welcome back, {user.name}! Manage your classes and track student progress.
             </p>
           </div>
 
           {message && (
-            <div className={`p-4 rounded-lg mb-6 ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            <div style={{
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              marginBottom: '1.5rem',
+              backgroundColor: message.includes('Error') ? '#fee2e2' : '#dcfce7',
+              color: message.includes('Error') ? '#991b1b' : '#166534',
+              fontFamily: 'Inter, sans-serif'
+            }}>
               {message}
             </div>
           )}
@@ -464,60 +496,114 @@ export default function InstructorDashboard() {
           {!selectedClass ? (
             /* My Classes View */
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              <h2 style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                marginBottom: '1.5rem',
+                fontFamily: 'Inter, sans-serif'
+              }}>
                 My Classes
               </h2>
 
               {loading ? (
-                <div className="text-center py-8">Loading classes...</div>
+                <div style={{ textAlign: 'center', padding: '2rem 0', fontFamily: 'Inter, sans-serif' }}>Loading classes...</div>
               ) : classes.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="text-5xl mb-4">📚</div>
-                  <h3 className="text-xl font-semibold mb-2">No Classes Assigned</h3>
+                <div style={{ textAlign: 'center', padding: '3rem 0', color: '#6b7280', fontFamily: 'Inter, sans-serif' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>No Classes Assigned</h3>
                   <p>You don't have any classes assigned yet. Contact your administrator.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gap: '1.5rem'
+                }}>
                   {classes.map((classItem) => (
                     <div
                       key={classItem.id}
                       onClick={() => setSelectedClass(classItem)}
-                      className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                      style={{
+                        backgroundColor: 'white',
+                        borderRadius: '1rem',
+                        padding: '1.5rem',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        border: '1px solid #e5e7eb',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                      }}
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-bold text-gray-800 leading-tight flex-1 mr-2">
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                        <h3 style={{
+                          fontSize: '1.125rem',
+                          fontWeight: 'bold',
+                          color: '#1f2937',
+                          lineHeight: '1.25',
+                          flex: '1',
+                          marginRight: '0.5rem',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                           {classItem.class_title}
                         </h3>
-                        <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          color: '#4b5563',
+                          backgroundColor: '#f3f4f6',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.375rem',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                           {classItem.status}
                         </span>
                       </div>
 
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <CalendarIcon className="h-4 w-4 mr-2" />
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
+                          <CalendarIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
                           {classItem.class_date}
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <ClockIcon className="h-4 w-4 mr-2" />
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
+                          <ClockIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
                           {classItem.start_time} - {classItem.end_time}
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <MapPinIcon className="h-4 w-4 mr-2" />
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
+                          <MapPinIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
                           {classItem.location}
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <FolderIcon className="h-4 w-4 mr-2" />
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563' }}>
+                          <FolderIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
                           {classItem.folder_name}
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-700">
-                          <span className="font-semibold">{classItem.current_participants}</span>
-                          <span className="text-gray-500"> / {classItem.max_participants} students</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: '0.875rem', color: '#374151', fontFamily: 'Inter, sans-serif' }}>
+                          <span style={{ fontWeight: '600' }}>{classItem.current_participants}</span>
+                          <span style={{ color: '#6b7280' }}> / {classItem.max_participants} students</span>
                         </div>
-                        <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200">
+                        <button style={{
+                          background: 'linear-gradient(to right, #3b82f6, #9333ea)',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                           Manage
                         </button>
                       </div>
