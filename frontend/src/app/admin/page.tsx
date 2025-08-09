@@ -483,6 +483,32 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const removeInstructor = async (classId: number, instructorId: number) => {
+    try {
+      console.log('🗑️ Removing instructor:', { classId, instructorId });
+      
+      const { error } = await supabase
+        .from('classes_instructors')
+        .update({ is_active: false })
+        .eq('class_id', classId)
+        .eq('instructor_id', instructorId);
+
+      if (error) {
+        console.error('❌ Error removing instructor:', error);
+        alert('Error removing instructor: ' + error.message);
+        return;
+      }
+
+      console.log('✅ Instructor removed successfully');
+
+      // Refresh instructors for this class
+      await fetchClassInstructors([classId]);
+    } catch (error) {
+      console.error('💥 Error in removeInstructor:', error);
+      alert('Unexpected error: ' + (error as any).message);
+    }
+  };
+
   // Load classes and instructors when tab becomes active
   useEffect(() => {
     if (activeTab === 'classes') {
@@ -826,13 +852,51 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                    <div>
-                      <p style={{ fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.25rem' }}>
-                        Instructors: <span style={{ fontWeight: 500, color: '#111827' }}>
-                          {(classInstructors[classItem.id]?.map(i => i.name).join(', ')) || 'None assigned'}
-                        </span>
+                  <div style={{ paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
+                        Assigned Instructors:
                       </p>
+                      {classInstructors[classItem.id]?.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                          {classInstructors[classItem.id].map((instructor) => (
+                            <div 
+                              key={instructor.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.375rem 0.75rem',
+                                backgroundColor: '#f3f4f6',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              <span style={{ fontWeight: 500 }}>{instructor.name}</span>
+                              <button
+                                onClick={() => removeInstructor(classItem.id, instructor.id)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#ef4444',
+                                  cursor: 'pointer',
+                                  fontSize: '0.75rem',
+                                  padding: '0.125rem',
+                                  lineHeight: 1
+                                }}
+                                title="Remove instructor"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+                          No instructors assigned
+                        </p>
+                      )}
                       <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                         Participants: {classItem.current_participants}/{classItem.max_participants}
                       </p>
@@ -853,7 +917,7 @@ export default function AdminDashboardPage() {
                         }}
                       >
                         <option value="">
-                          {assigningInstructor === classItem.id ? 'Assigning...' : 'Assign Instructor'}
+                          {assigningInstructor === classItem.id ? 'Assigning...' : 'Add Instructor'}
                         </option>
                         {instructors.map((instructor) => (
                           <option key={instructor.id} value={instructor.id}>

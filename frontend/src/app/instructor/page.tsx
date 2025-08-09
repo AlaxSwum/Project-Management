@@ -88,31 +88,60 @@ export default function InstructorDashboard() {
   const loadInstructorClasses = async () => {
     try {
       setLoading(true);
+      console.log('📚 Loading classes for instructor:', user?.id);
       
-      // Prefer instructor_id match; fallback to instructor_name
-      const query = supabase
-        .from('classes')
+      // Fetch classes from classes_instructors junction table where instructor is assigned
+      const { data: instructorClasses, error: instructorError } = await supabase
+        .from('classes_instructors')
         .select(`
-          *,
-          classes_folders(name)
-        `);
+          classes!inner (
+            *,
+            classes_folders(name)
+          )
+        `)
+        .eq('instructor_id', user?.id)
+        .eq('is_active', true);
 
-      const { data, error } = await query.or(`instructor_id.eq.${user?.id},instructor_name.eq.${user?.name || ''}`);
+      if (instructorError) {
+        console.error('❌ Error loading instructor classes from junction table:', instructorError);
+        // Fallback to old method if junction table doesn't exist
+        console.log('🔄 Falling back to old method...');
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('classes')
+          .select(`
+            *,
+            classes_folders(name)
+          `)
+          .or(`instructor_id.eq.${user?.id},instructor_name.eq.${user?.name || ''}`);
 
-      if (error) {
-        console.error('Error loading instructor classes:', error);
-        setMessage('Error loading classes');
+        if (fallbackError) {
+          console.error('❌ Fallback error:', fallbackError);
+          setMessage('Error loading classes');
+          return;
+        }
+
+        const formattedClasses = fallbackData?.map(classItem => ({
+          ...classItem,
+          folder_name: classItem.classes_folders?.name || 'No Folder'
+        })) || [];
+
+        console.log('📚 Loaded classes (fallback):', formattedClasses);
+        setClasses(formattedClasses);
+        setMessage('');
         return;
       }
 
-      const formattedClasses = data?.map(classItem => ({
-        ...classItem,
-        folder_name: classItem.classes_folders?.name || 'No Folder'
+      // Format classes from junction table result
+      const formattedClasses = instructorClasses?.map((item: any) => ({
+        ...item.classes,
+        folder_name: item.classes.classes_folders?.name || 'No Folder'
       })) || [];
 
+      console.log('📚 Loaded classes from junction table:', formattedClasses);
       setClasses(formattedClasses);
+      setMessage('');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('💥 Error in loadInstructorClasses:', error);
       setMessage('Error loading classes');
     } finally {
       setLoading(false);
