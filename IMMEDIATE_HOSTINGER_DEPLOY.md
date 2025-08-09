@@ -68,7 +68,9 @@ sudo systemctl status nextjs-pm
 
 ## Step 3: Verify Deployment
 
-1. **Visit:** https://srv875725.hstgr.cloud
+1. **Visit:** SpsSps2003@A
+SpsSps2003@A
+https://srv875725.hstgr.cloud
 2. **Login** with your admin account
 3. **Look for "Idea Lounge"** section in sidebar
 4. **"Company Outreach"** tab should appear

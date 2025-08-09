@@ -257,6 +257,18 @@ export default function AdminDashboardPage() {
     setCreateUserMessage('');
 
     try {
+      // Debug: Check auth_user table schema
+      const { data: schemaData, error: schemaError } = await supabase
+        .from('auth_user')
+        .select('*')
+        .limit(1);
+      
+      if (schemaError) {
+        console.log('Schema check error:', schemaError);
+      } else {
+        console.log('auth_user sample row structure:', schemaData?.[0] ? Object.keys(schemaData[0]) : 'No rows found');
+      }
+
       // Creating user globally (not tied to a project)
 
       // Create user in auth_user table
@@ -270,7 +282,8 @@ export default function AdminDashboardPage() {
           is_superuser: false,
           is_staff: false,
           is_active: true,
-          date_joined: new Date().toISOString()
+          date_joined: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }])
         .select()
         .single();
