@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
+import { CalendarIcon, ClockIcon, MapPinIcon, FolderIcon } from '@heroicons/react/24/outline';
 
 export const dynamic = 'force-dynamic';
 
@@ -334,13 +335,25 @@ export default function InstructorDashboard() {
                             <p className="text-sm text-gray-600 mt-1">
                               {classItem.class_type} • {classItem.target_audience}
                             </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                              📅 {new Date(classItem.class_date).toLocaleDateString()} • 
-                              ⏰ {classItem.start_time} - {classItem.end_time} • 
-                              📍 {classItem.location}
+                            <p className="text-sm text-gray-500 mt-2 flex items-center flex-wrap gap-3">
+                              <span className="inline-flex items-center gap-1">
+                                <CalendarIcon className="h-4 w-4 text-gray-400" />
+                                {new Date(classItem.class_date).toLocaleDateString()}
+                              </span>
+                              <span className="text-gray-300">•</span>
+                              <span className="inline-flex items-center gap-1">
+                                <ClockIcon className="h-4 w-4 text-gray-400" />
+                                {classItem.start_time} - {classItem.end_time}
+                              </span>
+                              <span className="text-gray-300">•</span>
+                              <span className="inline-flex items-center gap-1">
+                                <MapPinIcon className="h-4 w-4 text-gray-400" />
+                                {classItem.location}
+                              </span>
                             </p>
-                            <p className="text-sm text-gray-500">
-                              📁 {classItem.folder_name}
+                            <p className="text-sm text-gray-500 mt-1 inline-flex items-center gap-1">
+                              <FolderIcon className="h-4 w-4 text-gray-400" />
+                              {classItem.folder_name}
                             </p>
                           </div>
                           <div className="text-right">

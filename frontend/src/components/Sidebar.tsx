@@ -1011,6 +1011,16 @@ Your report is now available in the system.`);
     { name: 'Instructor', href: '/instructor', icon: AcademicCapIcon }
   ] : [];
 
+  // If instructor, limit the main nav to only the allowed items
+  const filteredMainNavItems = isInstructorUser
+    ? [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
+        { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
+        { name: 'Timetable', href: '/timetable', icon: ClockIcon },
+      ]
+    : mainNavItems;
+
   // HR-only navigation items (will be blank pages for now)
   const hrNavItems = [
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
@@ -2088,7 +2098,7 @@ Your report is now available in the system.`);
         <nav className="sidebar-nav">
           {/* Main Navigation */}
           <div className="nav-section">
-            {mainNavItems.map((item) => (
+            {(isInstructorUser ? filteredMainNavItems : mainNavItems).map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -2100,8 +2110,8 @@ Your report is now available in the system.`);
               </Link>
             ))}
             
-            {/* HR Navigation Items */}
-            {(user?.role === 'hr' || user?.role === 'admin' || (user as any)?.user_metadata?.role === 'hr' || (user as any)?.user_metadata?.role === 'admin') ? (
+          {/* HR Navigation Items */}
+          {!isInstructorUser && (user?.role === 'hr' || user?.role === 'admin' || (user as any)?.user_metadata?.role === 'hr' || (user as any)?.user_metadata?.role === 'admin') ? (
               <>
                 <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>HR Tools</span>
@@ -2119,6 +2129,7 @@ Your report is now available in the system.`);
                 ))}
               </>
             ) : (
+            !isInstructorUser && (
               <>
                 <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Personal</span>
@@ -2135,6 +2146,7 @@ Your report is now available in the system.`);
                   </Link>
                 ))}
               </>
+            )
             )}
             
             {/* Inbox Item - Hidden for first prototype */}
@@ -2188,7 +2200,7 @@ Your report is now available in the system.`);
             )}
 
           {/* Admin Section */}
-          {adminNavItems.length > 0 && (
+          {!isInstructorUser && adminNavItems.length > 0 && (
             <>
               <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Admin</span>
