@@ -102,6 +102,8 @@ export default function InstructorDashboard() {
         .eq('instructor_id', user?.id)
         .eq('is_active', true);
 
+      console.log('🔍 Junction table query result:', { instructorClasses, instructorError });
+
       if (instructorError) {
         console.error('❌ Error loading instructor classes from junction table:', instructorError);
         // Fallback to old method if junction table doesn't exist
@@ -152,15 +154,21 @@ export default function InstructorDashboard() {
       }
 
       // Format classes from junction table result
+      console.log('🔍 Raw instructor classes data:', instructorClasses);
+      
       const formattedClasses = instructorClasses
-        ?.filter((item: any) => 
-          item.classes.status !== 'planning' && 
-          !item.classes.class_title?.toLowerCase().includes('general training all staff')
-        )
+        ?.filter((item: any) => {
+          const shouldInclude = item.classes.status !== 'planning' && 
+            !item.classes.class_title?.toLowerCase().includes('general training all staff');
+          console.log(`🔍 Class "${item.classes.class_title}" - Status: ${item.classes.status}, Include: ${shouldInclude}`);
+          return shouldInclude;
+        })
         ?.map((item: any) => ({
           ...item.classes,
           folder_name: item.classes.classes_folders?.name || 'No Folder'
         })) || [];
+
+      console.log('🔍 Classes after filtering:', formattedClasses);
 
       // Get actual student counts for each class
       const classesWithCounts = await Promise.all(
