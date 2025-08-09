@@ -443,38 +443,39 @@ export default function InstructorDashboard() {
     <div className="instructor-dashboard" style={{
       display: 'flex',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #a855f7 100%)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      background: 'var(--gradient-background)',
+      fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     }}>
       <Sidebar projects={[]} onCreateProject={() => {}} />
       
       <div style={{
         flex: '1',
         marginLeft: '16rem',
-        padding: '2rem'
+        padding: 'var(--spacing-xl)'
       }}>
         <div style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '1.5rem',
-          padding: '2rem',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          background: 'var(--gradient-surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-2xl)',
+          padding: 'var(--spacing-xl)',
+          boxShadow: 'var(--shadow-lg)'
         }}>
           {/* Header */}
-          <div style={{ marginBottom: '2rem' }}>
+          <div style={{ marginBottom: 'var(--spacing-xl)' }}>
             <h1 style={{
-              fontSize: '1.875rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '0.5rem',
-              fontFamily: 'Inter, sans-serif'
+              fontSize: '2rem',
+              fontWeight: '650',
+              color: 'var(--text-primary)',
+              marginBottom: 'var(--spacing-sm)',
+              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+              letterSpacing: '-0.025em'
             }}>
               Instructor Dashboard
             </h1>
             <p style={{
-              color: '#4b5563',
+              color: 'var(--text-secondary)',
               fontSize: '1.125rem',
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: "'Mabry Pro', 'Inter', sans-serif"
             }}>
               Welcome back, {user.name}! Manage your classes and track student progress.
             </p>
@@ -482,12 +483,13 @@ export default function InstructorDashboard() {
 
           {message && (
             <div style={{
-              padding: '1rem',
-              borderRadius: '0.5rem',
-              marginBottom: '1.5rem',
-              backgroundColor: message.includes('Error') ? '#fee2e2' : '#dcfce7',
-              color: message.includes('Error') ? '#991b1b' : '#166534',
-              fontFamily: 'Inter, sans-serif'
+              padding: 'var(--spacing-md)',
+              borderRadius: 'var(--radius-lg)',
+              marginBottom: 'var(--spacing-lg)',
+              backgroundColor: message.includes('Error') ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+              color: message.includes('Error') ? 'var(--status-blocked)' : 'var(--status-completed)',
+              border: message.includes('Error') ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+              fontFamily: "'Mabry Pro', 'Inter', sans-serif"
             }}>
               {message}
             </div>
@@ -497,112 +499,161 @@ export default function InstructorDashboard() {
             /* My Classes View */
             <div>
               <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                marginBottom: '1.5rem',
-                fontFamily: 'Inter, sans-serif'
+                fontSize: '1.75rem',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--spacing-lg)',
+                fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                letterSpacing: '-0.025em'
               }}>
                 My Classes
               </h2>
 
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '2rem 0', fontFamily: 'Inter, sans-serif' }}>Loading classes...</div>
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: 'var(--spacing-xl) 0', 
+                  fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                  color: 'var(--text-secondary)'
+                }}>Loading classes...</div>
               ) : classes.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem 0', color: '#6b7280', fontFamily: 'Inter, sans-serif' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>No Classes Assigned</h3>
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: 'var(--spacing-2xl) 0', 
+                  color: 'var(--text-muted)', 
+                  fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>📚</div>
+                  <h3 style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: '600', 
+                    marginBottom: 'var(--spacing-sm)', 
+                    color: 'var(--text-primary)',
+                    fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                  }}>No Classes Assigned</h3>
                   <p>You don't have any classes assigned yet. Contact your administrator.</p>
                 </div>
               ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: '1.5rem'
+                <div className="grid-responsive-3" style={{
+                  gap: 'var(--spacing-lg)'
                 }}>
                   {classes.map((classItem) => (
                     <div
                       key={classItem.id}
                       onClick={() => setSelectedClass(classItem)}
+                      className="card-hover"
                       style={{
-                        backgroundColor: 'white',
-                        borderRadius: '1rem',
-                        padding: '1.5rem',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        border: '1px solid #e5e7eb',
+                        background: 'var(--gradient-surface)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-xl)',
+                        padding: 'var(--spacing-lg)',
+                        boxShadow: 'var(--shadow-sm)',
                         cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        fontFamily: 'Inter, sans-serif'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                        transition: 'all var(--transition-normal)',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                        position: 'relative',
+                        overflow: 'hidden'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'flex-start', 
+                        justifyContent: 'space-between', 
+                        marginBottom: 'var(--spacing-sm)' 
+                      }}>
                         <h3 style={{
                           fontSize: '1.125rem',
-                          fontWeight: 'bold',
-                          color: '#1f2937',
+                          fontWeight: '600',
+                          color: 'var(--text-primary)',
                           lineHeight: '1.25',
                           flex: '1',
-                          marginRight: '0.5rem',
-                          fontFamily: 'Inter, sans-serif'
+                          marginRight: 'var(--spacing-sm)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                          letterSpacing: '-0.025em'
                         }}>
                           {classItem.class_title}
                         </h3>
-                        <span style={{
+                        <span className="status-badge" style={{
                           fontSize: '0.75rem',
                           fontWeight: '600',
-                          color: '#4b5563',
-                          backgroundColor: '#f3f4f6',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '0.375rem',
-                          fontFamily: 'Inter, sans-serif'
+                          color: 'var(--text-secondary)',
+                          backgroundColor: 'var(--surface-dark)',
+                          padding: 'var(--spacing-xs) var(--spacing-sm)',
+                          borderRadius: 'var(--radius-full)',
+                          border: '1px solid var(--border)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                         }}>
                           {classItem.status}
                         </span>
                       </div>
 
-                      <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
-                          <CalendarIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
+                      <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          fontSize: '0.875rem', 
+                          color: 'var(--text-secondary)', 
+                          marginBottom: 'var(--spacing-sm)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                        }}>
+                          <CalendarIcon style={{ height: '1rem', width: '1rem', marginRight: 'var(--spacing-sm)' }} />
                           {classItem.class_date}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
-                          <ClockIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          fontSize: '0.875rem', 
+                          color: 'var(--text-secondary)', 
+                          marginBottom: 'var(--spacing-sm)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                        }}>
+                          <ClockIcon style={{ height: '1rem', width: '1rem', marginRight: 'var(--spacing-sm)' }} />
                           {classItem.start_time} - {classItem.end_time}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
-                          <MapPinIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          fontSize: '0.875rem', 
+                          color: 'var(--text-secondary)', 
+                          marginBottom: 'var(--spacing-sm)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                        }}>
+                          <MapPinIcon style={{ height: '1rem', width: '1rem', marginRight: 'var(--spacing-sm)' }} />
                           {classItem.location}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4b5563' }}>
-                          <FolderIcon style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          fontSize: '0.875rem', 
+                          color: 'var(--text-secondary)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                        }}>
+                          <FolderIcon style={{ height: '1rem', width: '1rem', marginRight: 'var(--spacing-sm)' }} />
                           {classItem.folder_name}
                         </div>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ fontSize: '0.875rem', color: '#374151', fontFamily: 'Inter, sans-serif' }}>
+                        <div style={{ 
+                          fontSize: '0.875rem', 
+                          color: 'var(--text-primary)', 
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif" 
+                        }}>
                           <span style={{ fontWeight: '600' }}>{classItem.current_participants}</span>
-                          <span style={{ color: '#6b7280' }}> / {classItem.max_participants} students</span>
+                          <span style={{ color: 'var(--text-muted)' }}> / {classItem.max_participants} students</span>
                         </div>
-                        <button style={{
-                          background: 'linear-gradient(to right, #3b82f6, #9333ea)',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '0.5rem',
+                        <button className="btn-primary" style={{
+                          background: 'var(--gradient-primary)',
+                          color: 'var(--text-inverse)',
+                          padding: 'var(--spacing-sm) var(--spacing-md)',
+                          borderRadius: 'var(--radius-lg)',
                           fontSize: '0.875rem',
                           fontWeight: '600',
                           border: 'none',
                           cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontFamily: 'Inter, sans-serif'
+                          transition: 'all var(--transition-normal)',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                          boxShadow: 'var(--shadow-sm)'
                         }}>
                           Manage
                         </button>
@@ -621,23 +672,45 @@ export default function InstructorDashboard() {
                   setSelectedClass(null);
                   setClassTab('students');
                 }}
-                className="bg-transparent text-blue-600 border border-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors duration-200 mb-6"
+                className="btn-outline"
+                style={{
+                  marginBottom: 'var(--spacing-lg)',
+                  fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                }}
               >
                 ← Back to My Classes
               </button>
 
               {/* Class Header */}
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: 'var(--spacing-sm)',
+                  fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                  letterSpacing: '-0.025em'
+                }}>
                   {selectedClass.class_title}
                 </h2>
-                <p className="text-gray-600">
+                <p style={{
+                  color: 'var(--text-secondary)',
+                  fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                }}>
                   {selectedClass.current_participants} students • {selectedClass.class_date} • {selectedClass.start_time} - {selectedClass.end_time}
                 </p>
               </div>
 
               {/* Class Tabs */}
-              <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-xl">
+              <div style={{
+                display: 'flex',
+                gap: 'var(--spacing-xs)',
+                marginBottom: 'var(--spacing-lg)',
+                backgroundColor: 'var(--surface-dark)',
+                padding: 'var(--spacing-xs)',
+                borderRadius: 'var(--radius-xl)',
+                border: '1px solid var(--border)'
+              }}>
                 {[
                   { id: 'students', label: 'Students', icon: UserGroupIcon },
                   { id: 'attendance', label: 'Attendance', icon: ClipboardDocumentListIcon },
@@ -648,13 +721,26 @@ export default function InstructorDashboard() {
                     <button
                       key={tab.id}
                       onClick={() => setClassTab(tab.id)}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                        classTab === tab.id 
-                          ? 'bg-white text-blue-600 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-800'
-                      }`}
+                      style={{
+                        flex: '1',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 'var(--spacing-sm)',
+                        padding: 'var(--spacing-sm) var(--spacing-lg)',
+                        borderRadius: 'var(--radius-lg)',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        transition: 'all var(--transition-normal)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                        backgroundColor: classTab === tab.id ? 'var(--surface)' : 'transparent',
+                        color: classTab === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
+                        boxShadow: classTab === tab.id ? 'var(--shadow-sm)' : 'none'
+                      }}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon style={{ height: '1rem', width: '1rem' }} />
                       {tab.label}
                     </button>
                   );
@@ -664,38 +750,140 @@ export default function InstructorDashboard() {
               {/* Tab Content */}
               {classTab === 'students' && (
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  <h3 style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    color: 'var(--text-primary)',
+                    marginBottom: 'var(--spacing-md)',
+                    fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                    letterSpacing: '-0.025em'
+                  }}>
                     Student List
                   </h3>
                   
                   {loading ? (
-                    <div className="text-center py-8">Loading students...</div>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: 'var(--spacing-xl) 0',
+                      color: 'var(--text-secondary)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                    }}>Loading students...</div>
                   ) : students.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <UserGroupIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                      <h4 className="text-lg font-semibold mb-2">No Students Enrolled</h4>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: 'var(--spacing-2xl) 0', 
+                      color: 'var(--text-muted)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                    }}>
+                      <UserGroupIcon style={{ height: '4rem', width: '4rem', margin: '0 auto var(--spacing-md)', color: 'var(--border-dark)' }} />
+                      <h4 style={{ 
+                        fontSize: '1.125rem', 
+                        fontWeight: '600', 
+                        marginBottom: 'var(--spacing-sm)',
+                        color: 'var(--text-primary)',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                      }}>No Students Enrolled</h4>
                       <p>No students are currently enrolled in this class.</p>
                     </div>
                   ) : (
-                    <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-200">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
+                    <div className="table-container">
+                      <table className="table">
+                        <thead>
                           <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student Name</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Phone</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Discord ID</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Enrolled</th>
+                            <th style={{ 
+                              padding: 'var(--spacing-sm) var(--spacing-md)', 
+                              textAlign: 'left', 
+                              fontSize: '0.875rem', 
+                              fontWeight: '600', 
+                              color: 'var(--text-secondary)',
+                              background: 'var(--surface-light)',
+                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.025em'
+                            }}>Student Name</th>
+                            <th style={{ 
+                              padding: 'var(--spacing-sm) var(--spacing-md)', 
+                              textAlign: 'left', 
+                              fontSize: '0.875rem', 
+                              fontWeight: '600', 
+                              color: 'var(--text-secondary)',
+                              background: 'var(--surface-light)',
+                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.025em'
+                            }}>Email</th>
+                            <th style={{ 
+                              padding: 'var(--spacing-sm) var(--spacing-md)', 
+                              textAlign: 'left', 
+                              fontSize: '0.875rem', 
+                              fontWeight: '600', 
+                              color: 'var(--text-secondary)',
+                              background: 'var(--surface-light)',
+                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.025em'
+                            }}>Phone</th>
+                            <th style={{ 
+                              padding: 'var(--spacing-sm) var(--spacing-md)', 
+                              textAlign: 'left', 
+                              fontSize: '0.875rem', 
+                              fontWeight: '600', 
+                              color: 'var(--text-secondary)',
+                              background: 'var(--surface-light)',
+                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.025em'
+                            }}>Discord ID</th>
+                            <th style={{ 
+                              padding: 'var(--spacing-sm) var(--spacing-md)', 
+                              textAlign: 'left', 
+                              fontSize: '0.875rem', 
+                              fontWeight: '600', 
+                              color: 'var(--text-secondary)',
+                              background: 'var(--surface-light)',
+                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.025em'
+                            }}>Enrolled</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody>
                           {students.map((student) => (
-                            <tr key={student.id} className="hover:bg-gray-50 transition-colors duration-150">
-                              <td className="px-4 py-3 text-gray-900 font-medium">{student.student_name}</td>
-                              <td className="px-4 py-3 text-gray-600">{student.email}</td>
-                              <td className="px-4 py-3 text-gray-600">{student.phone_number || 'N/A'}</td>
-                              <td className="px-4 py-3 text-gray-600">{student.discord_id || 'N/A'}</td>
-                              <td className="px-4 py-3 text-gray-600 text-sm">
+                            <tr key={student.id} style={{
+                              borderBottom: '1px solid var(--border)',
+                              transition: 'background-color var(--transition-normal)',
+                              cursor: 'default'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <td style={{ 
+                                padding: 'var(--spacing-md)', 
+                                color: 'var(--text-primary)', 
+                                fontWeight: '500',
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                              }}>{student.student_name}</td>
+                              <td style={{ 
+                                padding: 'var(--spacing-md)', 
+                                color: 'var(--text-secondary)',
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                              }}>{student.email}</td>
+                              <td style={{ 
+                                padding: 'var(--spacing-md)', 
+                                color: 'var(--text-secondary)',
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                              }}>{student.phone_number || 'N/A'}</td>
+                              <td style={{ 
+                                padding: 'var(--spacing-md)', 
+                                color: 'var(--text-secondary)',
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                              }}>{student.discord_id || 'N/A'}</td>
+                              <td style={{ 
+                                padding: 'var(--spacing-md)', 
+                                color: 'var(--text-muted)', 
+                                fontSize: '0.875rem',
+                                fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                              }}>
                                 {new Date(student.enrolled_at).toLocaleDateString()}
                               </td>
                             </tr>
