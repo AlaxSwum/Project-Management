@@ -32,6 +32,24 @@ interface NewUser {
   projectId: number;
 }
 
+interface ProjectMember {
+  user_id: number;
+  role: string | null;
+  auth_user?: {
+    id: number;
+    name: string | null;
+    email: string;
+    role: string | null;
+  };
+}
+
+interface UserSearchResult {
+  id: number;
+  name: string | null;
+  email: string;
+  role: string | null;
+}
+
 export default function AdminDashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -50,6 +68,16 @@ export default function AdminDashboardPage() {
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [createUserMessage, setCreateUserMessage] = useState('');
   const sidebarProjects = adminProjects.map(p => ({ id: p.project_id, name: p.project_name }));
+
+  // Members modal state
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [membersProject, setMembersProject] = useState<AdminProject | null>(null);
+  const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [userQuery, setUserQuery] = useState('');
+  const [userResults, setUserResults] = useState<UserSearchResult[]>([]);
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [membersMessage, setMembersMessage] = useState('');
 
   useEffect(() => {
     if (isLoading) return;
@@ -110,6 +138,114 @@ export default function AdminDashboardPage() {
       setAdminProjects([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openMembersModal = async (project: AdminProject) => {
+    // permission guard
+    if (!(project.can_manage_project || project.can_create_users || project.can_edit_users)) return;
+    setMembersProject(project);
+    setIsMembersOpen(true);
+    setMembersMessage('');
+    await fetchProjectMembers(project.project_id);
+  };
+
+  const fetchProjectMembers = async (projectId: number) => {
+    try {
+      setMembersLoading(true);
+      const { data, error } = await supabase
+        .from('projects_project_members')
+        .select(`
+          user_id,
+          role,
+          auth_user:auth_user!inner(id, name, email, role)
+        `)
+        .eq('project_id', projectId)
+        .order('user_id');
+
+      if (error) throw error;
+      setProjectMembers((data as any) || []);
+    } catch (err: any) {
+      console.error('Fetch members error:', err);
+      setMembersMessage('Error loading members: ' + (err?.message || 'Unknown error'));
+      setProjectMembers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const handleUserSearch = async (query: string) => {
+    setUserQuery(query);
+    setMembersMessage('');
+    if (!membersProject) return;
+    if (!query || query.trim().length < 2) {
+      setUserResults([]);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role')
+        .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+        .limit(10);
+      if (error) throw error;
+      setUserResults((data as any) || []);
+    } catch (err: any) {
+      console.error('User search error:', err);
+      setMembersMessage('Error searching users');
+      setUserResults([]);
+    }
+  };
+
+  const addProjectMember = async (userId: number) => {
+    if (!membersProject) return;
+    if (!(membersProject.can_manage_project || membersProject.can_create_users || membersProject.can_edit_users)) return;
+    setAddMemberLoading(true);
+    setMembersMessage('');
+    try {
+      // prevent duplicate
+      const { data: existing, error: existErr } = await supabase
+        .from('projects_project_members')
+        .select('user_id')
+        .eq('project_id', membersProject.project_id)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (existErr) throw existErr;
+      if (existing) {
+        setMembersMessage('User is already a member of this project.');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('projects_project_members')
+        .insert([{ project_id: membersProject.project_id, user_id: userId, role: 'member', joined_at: new Date().toISOString() }]);
+      if (error) throw error;
+      await fetchProjectMembers(membersProject.project_id);
+      setMembersMessage('Member added successfully');
+      setUserResults([]);
+      setUserQuery('');
+    } catch (err: any) {
+      console.error('Add member error:', err);
+      setMembersMessage('Error adding member: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setAddMemberLoading(false);
+    }
+  };
+
+  const removeProjectMember = async (userId: number) => {
+    if (!membersProject) return;
+    if (!(membersProject.can_manage_project || membersProject.can_edit_users)) return;
+    try {
+      const { error } = await supabase
+        .from('projects_project_members')
+        .delete()
+        .match({ project_id: membersProject.project_id, user_id: userId });
+      if (error) throw error;
+      await fetchProjectMembers(membersProject.project_id);
+      setMembersMessage('Member removed');
+    } catch (err: any) {
+      console.error('Remove member error:', err);
+      setMembersMessage('Error removing member: ' + (err?.message || 'Unknown error'));
     }
   };
 
@@ -568,9 +704,28 @@ export default function AdminDashboardPage() {
                     boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
                   }}
                 >
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                    {project.project_name}
-                  </h3>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                      {project.project_name}
+                    </h3>
+                    {(project.can_manage_project || project.can_create_users || project.can_edit_users) && (
+                      <button
+                        onClick={() => openMembersModal(project)}
+                        style={{
+                          background: 'linear-gradient(135deg, #5884FD, #8BA4FE)',
+                          color: 'white',
+                          padding: '0.45rem 0.8rem',
+                          border: 'none',
+                          borderRadius: 8,
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Edit Members
+                      </button>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {project.can_create_users && (
                       <span style={{
@@ -621,6 +776,90 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Members Modal */}
+      {isMembersOpen && membersProject && (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="modal-content" style={{ background: '#fff', width: '100%', maxWidth: 720, borderRadius: 16, border: '1px solid #E5E7EB', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ margin: 0, fontWeight: 700 }}>Edit Members — {membersProject.project_name}</h3>
+              <button onClick={() => setIsMembersOpen(false)} style={{ border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer' }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '1rem 1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Add existing user</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      placeholder="Search by name or email"
+                      value={userQuery}
+                      onChange={(e) => handleUserSearch(e.target.value)}
+                      style={{ flex: 1, padding: '0.6rem 0.8rem', border: '1px solid #D1D5DB', borderRadius: 8 }}
+                    />
+                  </div>
+                  {userResults.length > 0 && (
+                    <div style={{ marginTop: 8, border: '1px solid #E5E7EB', borderRadius: 8, overflow: 'hidden' }}>
+                      {userResults.map(u => (
+                        <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.8rem', background: '#fff' }}>
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{u.name || 'Unnamed'}</div>
+                            <div style={{ fontSize: 12, color: '#6B7280' }}>{u.email}</div>
+                          </div>
+                          <button
+                            disabled={addMemberLoading}
+                            onClick={() => addProjectMember(u.id)}
+                            style={{ background: 'linear-gradient(135deg, #10B981, #34D399)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.4rem 0.7rem', cursor: 'pointer' }}
+                          >
+                            {addMemberLoading ? 'Adding...' : 'Add to project'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontWeight: 700 }}>Current members</label>
+                    <span style={{ color: '#6B7280', fontSize: 12 }}>{projectMembers.length} total</span>
+                  </div>
+                  <div style={{ border: '1px solid #E5E7EB', borderRadius: 8 }}>
+                    {membersLoading ? (
+                      <div style={{ padding: 12 }}>Loading members...</div>
+                    ) : projectMembers.length === 0 ? (
+                      <div style={{ padding: 12, color: '#6B7280' }}>No members yet.</div>
+                    ) : (
+                      projectMembers.map(m => (
+                        <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.8rem', background: '#fff', borderBottom: '1px solid #F3F4F6' }}>
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{m.auth_user?.name || 'Unnamed'}</div>
+                            <div style={{ fontSize: 12, color: '#6B7280' }}>{m.auth_user?.email}</div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 12, color: '#374151', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: 999, padding: '0.2rem 0.6rem' }}>{m.role || 'member'}</span>
+                            <button onClick={() => removeProjectMember(m.user_id)} style={{ background: '#EF4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.4rem 0.7rem', cursor: 'pointer' }}>Remove</button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+                {membersMessage && (
+                  <div style={{
+                    padding: '0.6rem 0.8rem',
+                    borderRadius: 8,
+                    background: membersMessage.toLowerCase().includes('error') ? '#fee2e2' : '#d1fae5',
+                    color: membersMessage.toLowerCase().includes('error') ? '#991b1b' : '#065f46',
+                    border: `1px solid ${membersMessage.toLowerCase().includes('error') ? '#ef4444' : '#10b981'}`
+                  }}>
+                    {membersMessage}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
           </div>
