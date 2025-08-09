@@ -493,48 +493,136 @@ export default function InstructorDashboard() {
                 </div>
                 
                 {loading ? (
-                  <div className="text-center py-4">Loading students...</div>
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Loading students...</div>
                 ) : students.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No students enrolled in this class yet.</p>
+                  <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>No students enrolled yet</p>
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Students will appear here when they enroll in this class.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                  <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead style={{ backgroundColor: '#f8fafc' }}>
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Student
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Student Information
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Contact
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Contact Details
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Discord
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Discord ID
+                          </th>
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Enrollment Date
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {students.map((student) => (
-                          <tr key={student.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {student.student_name}
+                      <tbody style={{ backgroundColor: 'white' }}>
+                        {students.map((student, index) => (
+                          <tr key={student.id} style={{
+                            backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb',
+                            borderBottom: '1px solid #f3f4f6'
+                          }}>
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div style={{
+                                  width: '2.5rem',
+                                  height: '2.5rem',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#3b82f6',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  marginRight: '0.75rem'
+                                }}>
+                                  <span style={{ color: 'white', fontWeight: '600', fontSize: '0.875rem' }}>
+                                    {student.student_name.charAt(0).toUpperCase()}
+                                  </span>
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  Enrolled: {new Date(student.enrolled_at).toLocaleDateString()}
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827' }}>
+                                    {student.student_name}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    Student ID: {student.id}
+                                  </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{student.email}</div>
-                              {student.phone_number && (
-                                <div className="text-sm text-gray-500">{student.phone_number}</div>
-                              )}
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div>
+                                <div style={{ fontSize: '0.875rem', color: '#111827', marginBottom: '0.25rem' }}>
+                                  {student.email}
+                                </div>
+                                {student.phone_number && (
+                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    📞 {student.phone_number}
+                                  </div>
+                                )}
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {student.discord_id || 'N/A'}
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '0.25rem 0.75rem',
+                                backgroundColor: student.discord_id ? '#dbeafe' : '#f3f4f6',
+                                color: student.discord_id ? '#1e40af' : '#6b7280',
+                                borderRadius: '9999px',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                              }}>
+                                {student.discord_id ? `@${student.discord_id}` : 'Not provided'}
+                              </div>
+                            </td>
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ fontSize: '0.875rem', color: '#111827' }}>
+                                {new Date(student.enrolled_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                {new Date(student.enrolled_at).toLocaleDateString('en-US', { weekday: 'long' })}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -663,54 +751,169 @@ export default function InstructorDashboard() {
                 
                 {/* Absences List */}
                 {loading ? (
-                  <div className="text-center py-4">Loading attendance records...</div>
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Loading attendance records...</div>
                 ) : absences.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No absence records for this class yet.</p>
+                  <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>No absence records yet</p>
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Attendance records will appear here when absences are recorded.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                  <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead style={{ backgroundColor: '#f8fafc' }}>
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
                             Student
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Absence Date
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
                             Type
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Reason
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Details
+                          </th>
+                          <th style={{
+                            padding: '1rem 1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#4b5563',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e5e7eb'
+                          }}>
+                            Recorded
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {absences.map((absence) => (
-                          <tr key={absence.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {absence.student_name}
+                      <tbody style={{ backgroundColor: 'white' }}>
+                        {absences.map((absence, index) => (
+                          <tr key={absence.id} style={{
+                            backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb',
+                            borderBottom: '1px solid #f3f4f6'
+                          }}>
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div style={{
+                                  width: '2rem',
+                                  height: '2rem',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#ef4444',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  marginRight: '0.75rem'
+                                }}>
+                                  <span style={{ color: 'white', fontWeight: '600', fontSize: '0.75rem' }}>
+                                    {absence.student_name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                                    {absence.student_name}
+                                  </div>
+                                </div>
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(absence.absence_date).toLocaleDateString()}
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ fontSize: '0.875rem', color: '#111827', marginBottom: '0.125rem' }}>
+                                {new Date(absence.absence_date).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                {new Date(absence.absence_date).toLocaleDateString('en-US', { weekday: 'long' })}
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                absence.absence_type === 'excused' ? 'bg-green-100 text-green-800' :
-                                absence.absence_type === 'sick' ? 'bg-blue-100 text-blue-800' :
-                                absence.absence_type === 'family' ? 'bg-purple-100 text-purple-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {absence.absence_type}
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '0.375rem 0.75rem',
+                                borderRadius: '9999px',
+                                fontSize: '0.75rem',
+                                fontWeight: '500',
+                                backgroundColor: 
+                                  absence.absence_type === 'excused' ? '#dcfce7' :
+                                  absence.absence_type === 'sick' ? '#dbeafe' :
+                                  absence.absence_type === 'family' ? '#f3e8ff' : '#fee2e2',
+                                color:
+                                  absence.absence_type === 'excused' ? '#166534' :
+                                  absence.absence_type === 'sick' ? '#1e40af' :
+                                  absence.absence_type === 'family' ? '#7c3aed' : '#991b1b'
+                              }}>
+                                {absence.absence_type === 'excused' ? '✓ Excused' :
+                                 absence.absence_type === 'sick' ? '🤒 Sick' :
+                                 absence.absence_type === 'family' ? '👨‍👩‍👧‍👦 Family' : '❌ Unexcused'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-900">
-                              {absence.reason}
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ fontSize: '0.875rem', color: '#111827', marginBottom: '0.25rem' }}>
+                                {absence.reason}
+                              </div>
                               {absence.notes && (
-                                <div className="text-xs text-gray-500 mt-1">{absence.notes}</div>
+                                <div style={{ 
+                                  fontSize: '0.75rem', 
+                                  color: '#6b7280',
+                                  fontStyle: 'italic',
+                                  padding: '0.25rem 0.5rem',
+                                  backgroundColor: '#f9fafb',
+                                  borderRadius: '4px',
+                                  borderLeft: '3px solid #e5e7eb'
+                                }}>
+                                  {absence.notes}
+                                </div>
                               )}
+                            </td>
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                {new Date(absence.recorded_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
                             </td>
                           </tr>
                         ))}
