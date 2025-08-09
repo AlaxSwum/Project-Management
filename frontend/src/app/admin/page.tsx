@@ -268,7 +268,8 @@ export default function AdminDashboardPage() {
           password: newUser.password, // In production, this should be hashed
           role: newUser.role,
           is_superuser: false,
-          is_staff: false
+          is_staff: false,
+          is_active: true
         }])
         .select()
         .single();
