@@ -270,15 +270,65 @@ export default function InstructorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar projects={[]} onCreateProject={() => {}} />
-      
-      <div className="flex-1 ml-64 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Instructor Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user.name}</p>
+    <>
+      <style jsx>{`
+        .instructor-container {
+          min-height: 100vh;
+          display: flex;
+          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+          position: relative;
+          overflow: hidden;
+        }
+        .main-content {
+          flex: 1;
+          margin-left: 280px;
+          background: transparent;
+          position: relative;
+          z-index: 1;
+        }
+        .header {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+          padding: 2.25rem 2rem;
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        .header-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+        .title {
+          font-size: 2.25rem;
+          font-weight: 900;
+          background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+        .section-container {
+          padding: 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+      `}</style>
+      <div className="instructor-container">
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="main-content">
+          <div className="header">
+            <div className="header-content">
+              <h1 className="title">Instructor Dashboard</h1>
+              <p style={{ color: '#6b7280', fontSize: '1rem' }}>Welcome back, {user.name}</p>
+            </div>
           </div>
+          <div className="section-container">
 
           {message && (
             <div className={`mb-6 p-4 rounded-lg ${
@@ -288,107 +338,133 @@ export default function InstructorDashboard() {
             </div>
           )}
 
-          {/* Tab Navigation */}
-          <div className="mb-6">
-            <nav className="flex space-x-8">
+      {/* Tab Navigation */}
+      <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb' }}>
+        <nav style={{ display: 'flex', gap: '2rem' }}>
+          <button
+            onClick={() => setActiveTab('classes')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'classes' ? '2px solid #3b82f6' : '2px solid transparent',
+              color: activeTab === 'classes' ? '#3b82f6' : '#6b7280',
+              fontWeight: activeTab === 'classes' ? '600' : '400',
+              cursor: 'pointer'
+            }}
+          >
+            My Classes
+          </button>
+          {selectedClass && (
+            <>
               <button
-                onClick={() => setActiveTab('classes')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'classes'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                onClick={() => setActiveTab('students')}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'students' ? '2px solid #3b82f6' : '2px solid transparent',
+                  color: activeTab === 'students' ? '#3b82f6' : '#6b7280',
+                  fontWeight: activeTab === 'students' ? '600' : '400',
+                  cursor: 'pointer'
+                }}
               >
-                My Classes
+                Students ({selectedClass.class_title})
               </button>
-              {selectedClass && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('students')}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'students'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Students ({selectedClass.class_title})
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('absences')}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'absences'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Attendance
-                  </button>
-                </>
-              )}
-            </nav>
-          </div>
+              <button
+                onClick={() => setActiveTab('absences')}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'absences' ? '2px solid #3b82f6' : '2px solid transparent',
+                  color: activeTab === 'absences' ? '#3b82f6' : '#6b7280',
+                  fontWeight: activeTab === 'absences' ? '600' : '400',
+                  cursor: 'pointer'
+                }}
+              >
+                Attendance
+              </button>
+            </>
+          )}
+        </nav>
+      </div>
 
           {/* Tab Content */}
           {activeTab === 'classes' && (
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            <div style={{ backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', borderRadius: '8px' }}>
+              <div style={{ padding: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#111827', marginBottom: '1rem' }}>
                   Your Assigned Classes
                 </h3>
                 
                 {loading ? (
-                  <div className="text-center py-4">Loading classes...</div>
+                  <div style={{ textAlign: 'center', padding: '1rem' }}>Loading classes...</div>
                 ) : classes.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
                     <p>No classes assigned to you yet.</p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
+                  <div style={{ display: 'grid', gap: '1rem' }}>
                     {classes.map((classItem) => (
                       <div
                         key={classItem.id}
                         onClick={() => handleClassSelect(classItem)}
-                        className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                        style={{
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s',
+                          backgroundColor: 'white'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                       >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-lg text-gray-900">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ fontWeight: '600', fontSize: '1.125rem', color: '#111827', marginBottom: '0.25rem' }}>
                               {classItem.class_title}
                             </h4>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
                               {classItem.class_type} • {classItem.target_audience}
                             </p>
-                            <p className="text-sm text-gray-500 mt-2 flex items-center flex-wrap gap-3">
-                              <span className="inline-flex items-center gap-1">
-                                <CalendarIcon className="h-4 w-4 text-gray-400" />
+                            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <CalendarIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
                                 {new Date(classItem.class_date).toLocaleDateString()}
                               </span>
-                              <span className="text-gray-300">•</span>
-                              <span className="inline-flex items-center gap-1">
-                                <ClockIcon className="h-4 w-4 text-gray-400" />
+                              <span style={{ color: '#d1d5db' }}>•</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <ClockIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
                                 {classItem.start_time} - {classItem.end_time}
                               </span>
-                              <span className="text-gray-300">•</span>
-                              <span className="inline-flex items-center gap-1">
-                                <MapPinIcon className="h-4 w-4 text-gray-400" />
+                              <span style={{ color: '#d1d5db' }}>•</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <MapPinIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
                                 {classItem.location}
                               </span>
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1 inline-flex items-center gap-1">
-                              <FolderIcon className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <p style={{ fontSize: '0.875rem', color: '#6b7280', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <FolderIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
                               {classItem.folder_name}
                             </p>
                           </div>
-                          <div className="text-right">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              classItem.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              classItem.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                              classItem.status === 'planning' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              padding: '0.125rem 0.625rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              backgroundColor: '#f3f4f6',
+                              color: '#374151',
+                              border: '1px solid #d1d5db'
+                            }}>
                               {classItem.status}
                             </span>
-                            <p className="text-sm text-gray-500 mt-2">
+                            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>
                               {classItem.current_participants}/{classItem.max_participants} students
                             </p>
                           </div>
@@ -402,15 +478,15 @@ export default function InstructorDashboard() {
           )}
 
           {activeTab === 'students' && selectedClass && (
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+            <div style={{ backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', borderRadius: '8px' }}>
+              <div style={{ padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#111827' }}>
                     Students in {selectedClass.class_title}
                   </h3>
                   <button
                     onClick={() => setActiveTab('classes')}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    style={{ color: '#3b82f6', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     ← Back to Classes
                   </button>
@@ -645,8 +721,9 @@ export default function InstructorDashboard() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
