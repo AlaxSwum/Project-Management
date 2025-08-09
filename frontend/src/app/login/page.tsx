@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to avoid stale cached HTML on CDNs/proxies
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
