@@ -29,7 +29,6 @@ interface NewUser {
   role: string;
   position: string;
   phone: string;
-  projectId: number;
 }
 
 interface ProjectMember {
@@ -63,7 +62,6 @@ export default function AdminDashboardPage() {
     role: 'member',
     position: '',
     phone: '',
-    projectId: 0
   });
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [createUserMessage, setCreateUserMessage] = useState('');
@@ -250,7 +248,7 @@ export default function AdminDashboardPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUser.projectId || !newUser.email || !newUser.password || !newUser.name) {
+    if (!newUser.email || !newUser.password || !newUser.name) {
       setCreateUserMessage('Please fill in all required fields');
       return;
     }
@@ -259,12 +257,7 @@ export default function AdminDashboardPage() {
     setCreateUserMessage('');
 
     try {
-      // Check if admin has permission to create users for this project
-      const selectedProject = adminProjects.find(p => p.project_id === newUser.projectId);
-      if (!selectedProject || !selectedProject.can_create_users) {
-        setCreateUserMessage('You do not have permission to create users for this project');
-        return;
-      }
+      // Creating user globally (not tied to a project)
 
       // Create user in auth_user table
       const { data: insertedUser, error: userError } = await supabase
@@ -288,31 +281,14 @@ export default function AdminDashboardPage() {
         return;
       }
 
-      // Add user to project members
-      const { error: memberError } = await supabase
-        .from('projects_project_members')
-        .insert([{
-          project_id: newUser.projectId,
-          user_id: insertedUser.id,
-          role: newUser.role,
-          joined_at: new Date().toISOString()
-        }]);
-
-      if (memberError) {
-        console.error('Error adding user to project:', memberError);
-        setCreateUserMessage('User created but failed to add to project: ' + memberError.message);
-        return;
-      }
-
-      // Log the user creation
+      // Log the user creation (no project context)
       await supabase
         .from('project_user_creation_log')
         .insert([{
           created_user_id: insertedUser.id,
           created_by_admin_id: user?.id,
-          project_id: newUser.projectId,
           user_role: newUser.role,
-          notes: `User created by admin for project ${selectedProject.project_name}`
+          notes: `User created by admin (no project assigned)`
         }]);
 
       setCreateUserMessage('User created successfully!');
@@ -322,8 +298,7 @@ export default function AdminDashboardPage() {
         password: '',
         role: 'member',
         position: '',
-        phone: '',
-        projectId: 0
+        phone: ''
       });
     } catch (error) {
       console.error('Error in handleCreateUser:', error);
@@ -434,47 +409,7 @@ export default function AdminDashboardPage() {
       {activeTab === 'create-user' && (
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Create New User</h2>
-          {adminProjects.length === 0 ? (
-            <div style={{ 
-              padding: '2rem', 
-              backgroundColor: '#fef3cd', 
-              borderRadius: '8px', 
-              border: '1px solid #f59e0b',
-              textAlign: 'center'
-            }}>
-              <p style={{ color: '#92400e' }}>
-                You are not assigned as an admin to any projects. Contact a super admin to assign you to projects.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleCreateUser} style={{ maxWidth: '600px' }}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Project *
-                </label>
-                <select
-                  value={newUser.projectId}
-                  onChange={(e) => setNewUser({ ...newUser, projectId: parseInt(e.target.value) })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
-                  }}
-                  required
-                >
-                  <option value={0}>Select a project</option>
-                  {adminProjects
-                    .filter(p => p.can_create_users)
-                    .map(project => (
-                      <option key={project.project_id} value={project.project_id}>
-                        {project.project_name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
+          <form onSubmit={handleCreateUser} style={{ maxWidth: '600px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
@@ -628,7 +563,6 @@ export default function AdminDashboardPage() {
                 </div>
               )}
             </form>
-          )}
         </div>
       )}
 
