@@ -637,8 +637,8 @@ export default function InstructorDashboard() {
                   </div>
 
                   {showNewFolderForm && (
-                    <div style={{ background: '#f7fafc', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
-                      <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#2d3748', marginBottom: '12px' }}>
+                    <div className="bg-gray-50 p-5 rounded-xl mb-5">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">
                         Create New Attendance Folder
                       </h4>
                       <div className="flex items-center gap-4">
@@ -646,41 +646,18 @@ export default function InstructorDashboard() {
                           type="date"
                           value={newFolderDate}
                           onChange={(e) => setNewFolderDate(e.target.value)}
-                          style={{
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid #d1d5db',
-                            fontSize: '14px'
-                          }}
+                          className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
                           onClick={createAttendanceFolder}
                           disabled={loading}
-                          style={{
-                            background: '#10b981',
-                            color: 'white',
-                            padding: '8px 16px',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            border: 'none',
-                            cursor: 'pointer'
-                          }}
+                          className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors duration-200"
                         >
                           Create
                         </button>
                         <button
                           onClick={() => setShowNewFolderForm(false)}
-                          style={{
-                            background: '#6b7280',
-                            color: 'white',
-                            padding: '8px 16px',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            border: 'none',
-                            cursor: 'pointer'
-                          }}
+                          className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition-colors duration-200"
                         >
                           Cancel
                         </button>
@@ -692,9 +669,9 @@ export default function InstructorDashboard() {
                   {loading ? (
                     <div className="text-center py-8">Loading attendance data...</div>
                   ) : attendanceFolders.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: '#718096' }}>
-                      <ClipboardDocumentListIcon className="h-16 w-16 mx-auto mb-4" style={{ color: '#cbd5e0' }} />
-                      <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No Attendance Records</h4>
+                    <div className="text-center py-12 text-gray-500">
+                      <ClipboardDocumentListIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                      <h4 className="text-lg font-semibold mb-2">No Attendance Records</h4>
                       <p>Create your first attendance folder to start tracking.</p>
                     </div>
                   ) : (
@@ -703,17 +680,13 @@ export default function InstructorDashboard() {
                         <div
                           key={folder.date}
                           onClick={() => setSelectedAttendanceDate(folder.date)}
-                          className="cursor-pointer"
-                          style={{
-                            background: selectedAttendanceDate === folder.date ? '#e0e7ff' : 'white',
-                            borderRadius: '12px',
-                            padding: '20px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                            border: selectedAttendanceDate === folder.date ? '2px solid #667eea' : '1px solid #e2e8f0',
-                            transition: 'all 0.2s ease'
-                          }}
+                          className={`cursor-pointer rounded-xl p-5 transition-all duration-200 ${
+                            selectedAttendanceDate === folder.date 
+                              ? 'bg-blue-50 border-2 border-blue-500' 
+                              : 'bg-white border border-gray-200 hover:shadow-md'
+                          }`}
                         >
-                          <div style={{ fontSize: '16px', fontWeight: '600', color: '#2d3748', marginBottom: '8px' }}>
+                          <div className="text-lg font-semibold text-gray-800 mb-2">
                             {new Date(folder.date).toLocaleDateString('en-US', {
                               weekday: 'long',
                               year: 'numeric',
@@ -722,14 +695,14 @@ export default function InstructorDashboard() {
                             })}
                           </div>
                           <div className="flex items-center justify-between">
-                            <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600' }}>
+                            <span className="text-green-600 text-sm font-semibold">
                               Present: {folder.present_count}
                             </span>
-                            <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: '600' }}>
+                            <span className="text-red-500 text-sm font-semibold">
                               Absent: {folder.absent_count}
                             </span>
                           </div>
-                          <div style={{ color: '#718096', fontSize: '12px', marginTop: '4px' }}>
+                          <div className="text-gray-500 text-xs mt-1">
                             Total: {folder.total_students} students
                           </div>
                         </div>
@@ -740,67 +713,55 @@ export default function InstructorDashboard() {
                   {/* Selected Date Attendance */}
                   {selectedAttendanceDate && (
                     <div>
-                      <h4 style={{ fontSize: '18px', fontWeight: '600', color: '#2d3748', marginBottom: '16px' }}>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-4">
                         Attendance for {new Date(selectedAttendanceDate).toLocaleDateString()}
                       </h4>
                       
                       {attendanceRecords.length === 0 ? (
-                        <div className="text-center py-8" style={{ color: '#718096' }}>
+                        <div className="text-center py-8 text-gray-500">
                           No attendance records for this date.
                         </div>
                       ) : (
-                        <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                          <table style={{ width: '100%' }}>
-                            <thead style={{ backgroundColor: '#f8fafc' }}>
+                        <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-200">
+                          <table className="w-full">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Student</th>
-                                <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Status</th>
-                                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Type</th>
-                                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Reason</th>
-                                <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Action</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student</th>
+                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Status</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Reason</th>
+                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
                               </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-200">
                               {attendanceRecords.map((record) => (
-                                <tr key={record.id} style={{ borderTop: '1px solid #e2e8f0' }}>
-                                  <td style={{ padding: '16px', color: '#2d3748', fontWeight: '500' }}>{record.student_name}</td>
-                                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                                <tr key={record.id} className="hover:bg-gray-50 transition-colors duration-150">
+                                  <td className="px-4 py-3 text-gray-900 font-medium">{record.student_name}</td>
+                                  <td className="px-4 py-3 text-center">
                                     <span
-                                      style={{
-                                        background: record.status === 'present' ? '#d1fae5' : '#fee2e2',
-                                        color: record.status === 'present' ? '#065f46' : '#991b1b',
-                                        padding: '4px 12px',
-                                        borderRadius: '20px',
-                                        fontSize: '12px',
-                                        fontWeight: '600'
-                                      }}
+                                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                        record.status === 'present' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : 'bg-red-100 text-red-800'
+                                      }`}
                                     >
                                       {record.status === 'present' ? 'Present' : 'Absent'}
                                     </span>
                                   </td>
-                                  <td style={{ padding: '16px', color: '#718096' }}>
+                                  <td className="px-4 py-3 text-gray-600">
                                     {record.status === 'absent' ? record.absence_type || 'N/A' : '-'}
                                   </td>
-                                  <td style={{ padding: '16px', color: '#718096' }}>
+                                  <td className="px-4 py-3 text-gray-600">
                                     {record.reason || '-'}
                                   </td>
-                                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                                  <td className="px-4 py-3 text-center">
                                     <button
                                       onClick={() => toggleAttendanceStatus(record.id, record.status)}
-                                      style={{
-                                        background: record.status === 'present' ? '#ef4444' : '#10b981',
-                                        color: 'white',
-                                        padding: '6px 12px',
-                                        borderRadius: '6px',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        margin: '0 auto'
-                                      }}
+                                      className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-200 mx-auto ${
+                                        record.status === 'present' 
+                                          ? 'bg-red-500 text-white hover:bg-red-600' 
+                                          : 'bg-green-500 text-white hover:bg-green-600'
+                                      }`}
                                     >
                                       {record.status === 'present' ? (
                                         <>
@@ -828,75 +789,62 @@ export default function InstructorDashboard() {
 
               {classTab === 'kpi' && (
                 <div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2d3748', marginBottom: '16px' }}>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">
                     Student KPI & Performance
                   </h3>
                   
                   {loading ? (
                     <div className="text-center py-8">Loading KPI data...</div>
                   ) : studentKPIs.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: '#718096' }}>
-                      <ChartBarIcon className="h-16 w-16 mx-auto mb-4" style={{ color: '#cbd5e0' }} />
-                      <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No KPI Data</h4>
+                    <div className="text-center py-12 text-gray-500">
+                      <ChartBarIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                      <h4 className="text-lg font-semibold mb-2">No KPI Data</h4>
                       <p>Start tracking attendance to generate student KPIs.</p>
                     </div>
                   ) : (
-                    <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                      <table style={{ width: '100%' }}>
-                        <thead style={{ backgroundColor: '#f8fafc' }}>
+                    <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-200">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
                           <tr>
-                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Student Name</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Attendance Rate</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Total Classes</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Attended</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Excused</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Unexcused</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Trend</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student Name</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Attendance Rate</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Total Classes</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Attended</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Excused</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Unexcused</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Trend</th>
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-gray-200">
                           {studentKPIs.map((kpi) => (
-                            <tr key={kpi.student_id} style={{ borderTop: '1px solid #e2e8f0' }}>
-                              <td style={{ padding: '16px', color: '#2d3748', fontWeight: '500' }}>{kpi.student_name}</td>
-                              <td style={{ padding: '16px', textAlign: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                  <div
-                                    style={{
-                                      width: '60px',
-                                      height: '6px',
-                                      backgroundColor: '#e2e8f0',
-                                      borderRadius: '3px',
-                                      overflow: 'hidden'
-                                    }}
-                                  >
+                            <tr key={kpi.student_id} className="hover:bg-gray-50 transition-colors duration-150">
+                              <td className="px-4 py-3 text-gray-900 font-medium">{kpi.student_name}</td>
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                                     <div
-                                      style={{
-                                        width: `${kpi.attendance_rate}%`,
-                                        height: '100%',
-                                        backgroundColor: kpi.attendance_rate >= 80 ? '#10b981' : kpi.attendance_rate >= 60 ? '#f59e0b' : '#ef4444',
-                                        borderRadius: '3px'
-                                      }}
+                                      className={`h-full rounded-full ${
+                                        kpi.attendance_rate >= 80 ? 'bg-green-500' : 
+                                        kpi.attendance_rate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                      }`}
+                                      style={{ width: `${kpi.attendance_rate}%` }}
                                     />
                                   </div>
-                                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#2d3748' }}>
+                                  <span className="text-sm font-semibold text-gray-800">
                                     {kpi.attendance_rate}%
                                   </span>
                                 </div>
                               </td>
-                              <td style={{ padding: '16px', textAlign: 'center', color: '#718096' }}>{kpi.total_classes}</td>
-                              <td style={{ padding: '16px', textAlign: 'center', color: '#10b981', fontWeight: '600' }}>{kpi.attended_classes}</td>
-                              <td style={{ padding: '16px', textAlign: 'center', color: '#f59e0b', fontWeight: '600' }}>{kpi.absent_excused}</td>
-                              <td style={{ padding: '16px', textAlign: 'center', color: '#ef4444', fontWeight: '600' }}>{kpi.absent_unexcused}</td>
-                              <td style={{ padding: '16px', textAlign: 'center' }}>
+                              <td className="px-4 py-3 text-center text-gray-600">{kpi.total_classes}</td>
+                              <td className="px-4 py-3 text-center text-green-600 font-semibold">{kpi.attended_classes}</td>
+                              <td className="px-4 py-3 text-center text-yellow-600 font-semibold">{kpi.absent_excused}</td>
+                              <td className="px-4 py-3 text-center text-red-600 font-semibold">{kpi.absent_unexcused}</td>
+                              <td className="px-4 py-3 text-center">
                                 <span
-                                  style={{
-                                    background: kpi.recent_trend === 'improving' ? '#d1fae5' : kpi.recent_trend === 'declining' ? '#fee2e2' : '#f3f4f6',
-                                    color: kpi.recent_trend === 'improving' ? '#065f46' : kpi.recent_trend === 'declining' ? '#991b1b' : '#374151',
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontSize: '12px',
-                                    fontWeight: '600'
-                                  }}
+                                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                    kpi.recent_trend === 'improving' ? 'bg-green-100 text-green-800' : 
+                                    kpi.recent_trend === 'declining' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                                  }`}
                                 >
                                   {kpi.recent_trend}
                                 </span>
