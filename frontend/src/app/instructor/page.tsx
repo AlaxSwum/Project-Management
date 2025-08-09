@@ -459,7 +459,7 @@ export default function InstructorDashboard() {
     <div className="instructor-dashboard" style={{
       display: 'flex',
       minHeight: '100vh',
-      background: 'var(--gradient-background)',
+      background: 'var(--background)',
       fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     }}>
       <Sidebar projects={[]} onCreateProject={() => {}} />
@@ -470,7 +470,7 @@ export default function InstructorDashboard() {
         padding: 'var(--spacing-xl)'
       }}>
         <div style={{
-          background: 'var(--gradient-surface)',
+          background: 'var(--surface)',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-2xl)',
           padding: 'var(--spacing-xl)',
@@ -559,7 +559,7 @@ export default function InstructorDashboard() {
                       onClick={() => setSelectedClass(classItem)}
                       className="card-hover"
                       style={{
-                        background: 'var(--gradient-surface)',
+                        background: 'var(--surface)',
                         border: '1px solid var(--border)',
                         borderRadius: 'var(--radius-xl)',
                         padding: 'var(--spacing-lg)',
@@ -658,8 +658,8 @@ export default function InstructorDashboard() {
                           <span style={{ fontWeight: '600' }}>{classItem.current_participants}</span>
                           <span style={{ color: 'var(--text-muted)' }}> / {classItem.max_participants} students</span>
                         </div>
-                        <button className="btn-primary" style={{
-                          background: 'var(--gradient-primary)',
+                        <button className="btn-primary-solid" style={{
+                          background: 'var(--primary)',
                           color: 'var(--text-inverse)',
                           padding: 'var(--spacing-sm) var(--spacing-md)',
                           borderRadius: 'var(--radius-lg)',
@@ -803,7 +803,7 @@ export default function InstructorDashboard() {
                     </div>
                   ) : (
                     <div style={{
-                      background: 'var(--gradient-surface)',
+                      background: 'var(--surface)',
                       borderRadius: 'var(--radius-2xl)',
                       border: '2px solid var(--border)',
                       overflow: 'hidden',
@@ -984,7 +984,7 @@ export default function InstructorDashboard() {
                   textAlign: 'center'
                 }}>
                   <div style={{
-                    background: 'var(--gradient-surface)',
+                    background: 'var(--surface)',
                     borderRadius: 'var(--radius-2xl)',
                     border: '2px solid var(--border)',
                     padding: 'var(--spacing-2xl)',
@@ -1036,7 +1036,7 @@ export default function InstructorDashboard() {
                   textAlign: 'center'
                 }}>
                   <div style={{
-                    background: 'var(--gradient-surface)',
+                    background: 'var(--surface)',
                     borderRadius: 'var(--radius-2xl)',
                     border: '2px solid var(--border)',
                     padding: 'var(--spacing-2xl)',

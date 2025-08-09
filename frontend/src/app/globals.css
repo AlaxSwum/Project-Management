@@ -677,6 +677,30 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   .gradient-accent {
     background: linear-gradient(135deg, var(--accent), var(--accent-light)) !important;
   }
+
+  .btn-primary-solid {
+    @apply px-6 py-3 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--primary) !important;
+    color: var(--text-inverse) !important;
+    border: none !important;
+    border-radius: var(--radius-lg) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.025em !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: all var(--transition-normal) !important;
+  }
+
+  .btn-primary-solid:hover:not(:disabled) {
+    filter: brightness(0.97) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+
+  .btn-primary-solid:active:not(:disabled) {
+    transform: translateY(0) !important;
+    box-shadow: var(--shadow-md) !important;
+  }
 }
 
 /* Enhanced custom animations */
