@@ -802,71 +802,99 @@ export default function InstructorDashboard() {
                       <p>No students are currently enrolled in this class.</p>
                     </div>
                   ) : (
-                    <div className="table-container">
-                      <table className="table">
-                        <thead>
+                    <div style={{
+                      background: 'var(--gradient-surface)',
+                      borderRadius: 'var(--radius-2xl)',
+                      border: '2px solid var(--border)',
+                      overflow: 'hidden',
+                      boxShadow: 'var(--shadow-lg)',
+                      margin: '0 auto',
+                      maxWidth: '100%'
+                    }}>
+                      <div style={{
+                        background: 'var(--surface-light)',
+                        padding: 'var(--spacing-md)',
+                        borderBottom: '2px solid var(--border)'
+                      }}>
+                        <h4 style={{
+                          fontSize: '1.125rem',
+                          fontWeight: '600',
+                          color: 'var(--text-primary)',
+                          textAlign: 'center',
+                          margin: '0',
+                          fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                        }}>
+                          Class Students ({students.length})
+                        </h4>
+                      </div>
+                      
+                      <table style={{ 
+                        width: '100%', 
+                        borderCollapse: 'collapse',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                      }}>
+                        <thead style={{ background: 'var(--surface-dark)' }}>
                           <tr>
                             <th style={{ 
-                              padding: 'var(--spacing-sm) var(--spacing-md)', 
-                              textAlign: 'left', 
+                              padding: 'var(--spacing-md)', 
+                              textAlign: 'center', 
                               fontSize: '0.875rem', 
                               fontWeight: '600', 
                               color: 'var(--text-secondary)',
-                              background: 'var(--surface-light)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              borderBottom: '2px solid var(--border)',
+                              borderRight: '1px solid var(--border)',
                               textTransform: 'uppercase',
                               letterSpacing: '0.025em'
                             }}>Student Name</th>
                             <th style={{ 
-                              padding: 'var(--spacing-sm) var(--spacing-md)', 
-                              textAlign: 'left', 
+                              padding: 'var(--spacing-md)', 
+                              textAlign: 'center', 
                               fontSize: '0.875rem', 
                               fontWeight: '600', 
                               color: 'var(--text-secondary)',
-                              background: 'var(--surface-light)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              borderBottom: '2px solid var(--border)',
+                              borderRight: '1px solid var(--border)',
                               textTransform: 'uppercase',
                               letterSpacing: '0.025em'
                             }}>Email</th>
                             <th style={{ 
-                              padding: 'var(--spacing-sm) var(--spacing-md)', 
-                              textAlign: 'left', 
+                              padding: 'var(--spacing-md)', 
+                              textAlign: 'center', 
                               fontSize: '0.875rem', 
                               fontWeight: '600', 
                               color: 'var(--text-secondary)',
-                              background: 'var(--surface-light)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              borderBottom: '2px solid var(--border)',
+                              borderRight: '1px solid var(--border)',
                               textTransform: 'uppercase',
                               letterSpacing: '0.025em'
                             }}>Phone</th>
                             <th style={{ 
-                              padding: 'var(--spacing-sm) var(--spacing-md)', 
-                              textAlign: 'left', 
+                              padding: 'var(--spacing-md)', 
+                              textAlign: 'center', 
                               fontSize: '0.875rem', 
                               fontWeight: '600', 
                               color: 'var(--text-secondary)',
-                              background: 'var(--surface-light)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              borderBottom: '2px solid var(--border)',
+                              borderRight: '1px solid var(--border)',
                               textTransform: 'uppercase',
                               letterSpacing: '0.025em'
                             }}>Discord ID</th>
                             <th style={{ 
-                              padding: 'var(--spacing-sm) var(--spacing-md)', 
-                              textAlign: 'left', 
+                              padding: 'var(--spacing-md)', 
+                              textAlign: 'center', 
                               fontSize: '0.875rem', 
                               fontWeight: '600', 
                               color: 'var(--text-secondary)',
-                              background: 'var(--surface-light)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              borderBottom: '2px solid var(--border)',
                               textTransform: 'uppercase',
                               letterSpacing: '0.025em'
-                            }}>Enrolled</th>
+                            }}>Enrolled Date</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {students.map((student) => (
+                          {students.map((student, index) => (
                             <tr key={student.id} style={{
-                              borderBottom: '1px solid var(--border)',
+                              borderBottom: index < students.length - 1 ? '1px solid var(--border)' : 'none',
                               transition: 'background-color var(--transition-normal)',
                               cursor: 'default'
                             }}
@@ -875,27 +903,36 @@ export default function InstructorDashboard() {
                             >
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
+                                textAlign: 'center',
                                 color: 'var(--text-primary)', 
                                 fontWeight: '500',
+                                borderRight: '1px solid var(--border)',
                                 fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                               }}>{student.student_name}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
+                                textAlign: 'center',
                                 color: 'var(--text-secondary)',
+                                borderRight: '1px solid var(--border)',
                                 fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                               }}>{student.email}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
+                                textAlign: 'center',
                                 color: 'var(--text-secondary)',
+                                borderRight: '1px solid var(--border)',
                                 fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                               }}>{student.phone_number || 'N/A'}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
+                                textAlign: 'center',
                                 color: 'var(--text-secondary)',
+                                borderRight: '1px solid var(--border)',
                                 fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                               }}>{student.discord_id || 'N/A'}</td>
                               <td style={{ 
                                 padding: 'var(--spacing-md)', 
+                                textAlign: 'center',
                                 color: 'var(--text-muted)', 
                                 fontSize: '0.875rem',
                                 fontFamily: "'Mabry Pro', 'Inter', sans-serif"
@@ -912,301 +949,106 @@ export default function InstructorDashboard() {
               )}
 
               {classTab === 'attendance' && (
-                <div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    marginBottom: 'var(--spacing-lg)' 
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 'var(--spacing-2xl)',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    background: 'var(--gradient-surface)',
+                    borderRadius: 'var(--radius-2xl)',
+                    border: '2px solid var(--border)',
+                    padding: 'var(--spacing-2xl)',
+                    boxShadow: 'var(--shadow-lg)',
+                    maxWidth: '500px',
+                    width: '100%'
                   }}>
+                    <ClipboardDocumentListIcon style={{ 
+                      height: '4rem', 
+                      width: '4rem', 
+                      margin: '0 auto var(--spacing-lg)', 
+                      color: 'var(--text-muted)' 
+                    }} />
                     <h3 style={{
-                      fontSize: '1.25rem',
+                      fontSize: '1.5rem',
                       fontWeight: '600',
                       color: 'var(--text-primary)',
-                      fontFamily: "'Mabry Pro', 'Inter', sans-serif",
-                      letterSpacing: '-0.025em'
+                      marginBottom: 'var(--spacing-sm)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                     }}>
                       Attendance Tracking
                     </h3>
-                    <button
-                      onClick={() => setShowNewFolderForm(true)}
-                      className="btn-primary"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--spacing-sm)',
-                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                      }}
-                    >
-                      <PlusIcon style={{ height: '1rem', width: '1rem' }} />
-                      New Attendance
-                    </button>
-                  </div>
-
-                  {showNewFolderForm && (
-                    <div style={{
-                      backgroundColor: 'var(--surface-light)',
-                      padding: 'var(--spacing-lg)',
-                      borderRadius: 'var(--radius-xl)',
-                      marginBottom: 'var(--spacing-lg)',
-                      border: '1px solid var(--border)'
+                    <p style={{
+                      fontSize: '1.125rem',
+                      color: 'var(--text-secondary)',
+                      marginBottom: 'var(--spacing-md)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                     }}>
-                      <h4 style={{
-                        fontSize: '1.125rem',
-                        fontWeight: '600',
-                        color: 'var(--text-primary)',
-                        marginBottom: 'var(--spacing-sm)',
-                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                      }}>
-                        Create New Attendance Folder
-                      </h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-                        <input
-                          type="date"
-                          value={newFolderDate}
-                          onChange={(e) => setNewFolderDate(e.target.value)}
-                          className="input-field"
-                          style={{
-                            width: 'auto',
-                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                          }}
-                        />
-                        <button
-                          onClick={createAttendanceFolder}
-                          disabled={loading}
-                          className="btn-primary"
-                          style={{
-                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                          }}
-                        >
-                          Create
-                        </button>
-                        <button
-                          onClick={() => setShowNewFolderForm(false)}
-                          className="btn-ghost"
-                          style={{
-                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Attendance Folders */}
-                  {loading ? (
-                    <div className="text-center py-8">Loading attendance data...</div>
-                  ) : attendanceFolders.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <ClipboardDocumentListIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                      <h4 className="text-lg font-semibold mb-2">No Attendance Records</h4>
-                      <p>Create your first attendance folder to start tracking.</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                      {attendanceFolders.map((folder) => (
-                        <div
-                          key={folder.date}
-                          onClick={() => setSelectedAttendanceDate(folder.date)}
-                          className={`cursor-pointer rounded-xl p-5 transition-all duration-200 ${
-                            selectedAttendanceDate === folder.date 
-                              ? 'bg-blue-50 border-2 border-blue-500' 
-                              : 'bg-white border border-gray-200 hover:shadow-md'
-                          }`}
-                        >
-                          <div className="text-lg font-semibold text-gray-800 mb-2">
-                            {new Date(folder.date).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-green-600 text-sm font-semibold">
-                              Present: {folder.present_count}
-                            </span>
-                            <span className="text-red-500 text-sm font-semibold">
-                              Absent: {folder.absent_count}
-                            </span>
-                          </div>
-                          <div className="text-gray-500 text-xs mt-1">
-                            Total: {folder.total_students} students
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Selected Date Attendance */}
-                  {selectedAttendanceDate && (
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                        Attendance for {new Date(selectedAttendanceDate).toLocaleDateString()}
-                      </h4>
-                      
-                      {attendanceRecords.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          No attendance records for this date.
-                        </div>
-                      ) : (
-                        <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-200">
-                          <table className="w-full">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student</th>
-                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Status</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Reason</th>
-                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                              {attendanceRecords.map((record) => (
-                                <tr key={record.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                  <td className="px-4 py-3 text-gray-900 font-medium">{record.student_name}</td>
-                                  <td className="px-4 py-3 text-center">
-                                    <span
-                                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                        record.status === 'present' 
-                                          ? 'bg-green-100 text-green-800' 
-                                          : 'bg-red-100 text-red-800'
-                                      }`}
-                                    >
-                                      {record.status === 'present' ? 'Present' : 'Absent'}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-gray-600">
-                                    {record.status === 'absent' ? record.absence_type || 'N/A' : '-'}
-                                  </td>
-                                  <td className="px-4 py-3 text-gray-600">
-                                    {record.reason || '-'}
-                                  </td>
-                                  <td className="px-4 py-3 text-center">
-                                    <button
-                                      onClick={() => toggleAttendanceStatus(record.id, record.status)}
-                                      className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-200 mx-auto ${
-                                        record.status === 'present' 
-                                          ? 'bg-red-500 text-white hover:bg-red-600' 
-                                          : 'bg-green-500 text-white hover:bg-green-600'
-                                      }`}
-                                    >
-                                      {record.status === 'present' ? (
-                                        <>
-                                          <XMarkIcon className="h-3 w-3" />
-                                          Mark Absent
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CheckIcon className="h-3 w-3" />
-                                          Mark Present
-                                        </>
-                                      )}
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                      Coming Soon
+                    </p>
+                    <p style={{
+                      fontSize: '0.875rem',
+                      color: 'var(--text-muted)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                    }}>
+                      Advanced attendance tracking features will be available soon. Track student presence, absences, and generate detailed reports.
+                    </p>
+                  </div>
                 </div>
               )}
 
               {classTab === 'kpi' && (
-                <div>
-                  <h3 style={{
-                    fontSize: '1.25rem',
-                    fontWeight: '600',
-                    color: 'var(--text-primary)',
-                    marginBottom: 'var(--spacing-md)',
-                    fontFamily: "'Mabry Pro', 'Inter', sans-serif",
-                    letterSpacing: '-0.025em'
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 'var(--spacing-2xl)',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    background: 'var(--gradient-surface)',
+                    borderRadius: 'var(--radius-2xl)',
+                    border: '2px solid var(--border)',
+                    padding: 'var(--spacing-2xl)',
+                    boxShadow: 'var(--shadow-lg)',
+                    maxWidth: '500px',
+                    width: '100%'
                   }}>
-                    Student KPI & Performance
-                  </h3>
-                  
-                  {loading ? (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: 'var(--spacing-xl) 0',
-                      color: 'var(--text-secondary)',
+                    <ChartBarIcon style={{ 
+                      height: '4rem', 
+                      width: '4rem', 
+                      margin: '0 auto var(--spacing-lg)', 
+                      color: 'var(--text-muted)' 
+                    }} />
+                    <h3 style={{
+                      fontSize: '1.5rem',
+                      fontWeight: '600',
+                      color: 'var(--text-primary)',
+                      marginBottom: 'var(--spacing-sm)',
                       fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                    }}>Loading KPI data...</div>
-                  ) : studentKPIs.length === 0 ? (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: 'var(--spacing-2xl) 0', 
+                    }}>
+                      Student KPI & Performance
+                    </h3>
+                    <p style={{
+                      fontSize: '1.125rem',
+                      color: 'var(--text-secondary)',
+                      marginBottom: 'var(--spacing-md)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                    }}>
+                      Coming Soon
+                    </p>
+                    <p style={{
+                      fontSize: '0.875rem',
                       color: 'var(--text-muted)',
                       fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                     }}>
-                      <ChartBarIcon style={{ height: '4rem', width: '4rem', margin: '0 auto var(--spacing-md)', color: 'var(--border-dark)' }} />
-                      <h4 style={{ 
-                        fontSize: '1.125rem', 
-                        fontWeight: '600', 
-                        marginBottom: 'var(--spacing-sm)',
-                        color: 'var(--text-primary)',
-                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                      }}>No KPI Data</h4>
-                      <p>Start tracking attendance to generate student KPIs.</p>
-                    </div>
-                  ) : (
-                    <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-200">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student Name</th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Attendance Rate</th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Total Classes</th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Attended</th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Excused</th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Unexcused</th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Trend</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {studentKPIs.map((kpi) => (
-                            <tr key={kpi.student_id} className="hover:bg-gray-50 transition-colors duration-150">
-                              <td className="px-4 py-3 text-gray-900 font-medium">{kpi.student_name}</td>
-                              <td className="px-4 py-3 text-center">
-                                <div className="flex items-center justify-center gap-2">
-                                  <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full rounded-full ${
-                                        kpi.attendance_rate >= 80 ? 'bg-green-500' : 
-                                        kpi.attendance_rate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                      }`}
-                                      style={{ width: `${kpi.attendance_rate}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-sm font-semibold text-gray-800">
-                                    {kpi.attendance_rate}%
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-center text-gray-600">{kpi.total_classes}</td>
-                              <td className="px-4 py-3 text-center text-green-600 font-semibold">{kpi.attended_classes}</td>
-                              <td className="px-4 py-3 text-center text-yellow-600 font-semibold">{kpi.absent_excused}</td>
-                              <td className="px-4 py-3 text-center text-red-600 font-semibold">{kpi.absent_unexcused}</td>
-                              <td className="px-4 py-3 text-center">
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                    kpi.recent_trend === 'improving' ? 'bg-green-100 text-green-800' : 
-                                    kpi.recent_trend === 'declining' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                                  }`}
-                                >
-                                  {kpi.recent_trend}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                      Comprehensive KPI tracking and performance analytics will be available soon. Monitor student progress, attendance rates, and achievement metrics.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
