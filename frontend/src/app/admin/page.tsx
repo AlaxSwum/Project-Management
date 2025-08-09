@@ -49,6 +49,34 @@ interface UserSearchResult {
   role: string | null;
 }
 
+interface ClassItem {
+  id: number;
+  class_title: string;
+  class_type: string;
+  target_audience: string;
+  class_date: string;
+  start_time: string;
+  end_time: string;
+  duration: string;
+  location: string;
+  instructor_name: string;
+  instructor_id?: number;
+  class_description: string;
+  learning_objectives: string[];
+  max_participants: number;
+  current_participants: number;
+  status: string;
+  folder_name?: string;
+  folder_id?: number;
+}
+
+interface InstructorUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function AdminDashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -76,6 +104,12 @@ export default function AdminDashboardPage() {
   const [userResults, setUserResults] = useState<UserSearchResult[]>([]);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [membersMessage, setMembersMessage] = useState('');
+
+  // Classes state
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [instructors, setInstructors] = useState<InstructorUser[]>([]);
+  const [classesLoading, setClassesLoading] = useState(false);
+  const [assigningInstructor, setAssigningInstructor] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
@@ -321,6 +355,92 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Classes management functions
+  const fetchClasses = async () => {
+    try {
+      setClassesLoading(true);
+      
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          classes_folders(name)
+        `)
+        .order('class_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching classes:', error);
+        return;
+      }
+
+      const formattedClasses = data?.map(classItem => ({
+        ...classItem,
+        folder_name: classItem.classes_folders?.name || 'No Folder'
+      })) || [];
+
+      setClasses(formattedClasses);
+    } catch (error) {
+      console.error('Error in fetchClasses:', error);
+    } finally {
+      setClassesLoading(false);
+    }
+  };
+
+  const fetchInstructors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role')
+        .eq('role', 'instructor');
+
+      if (error) {
+        console.error('Error fetching instructors:', error);
+        return;
+      }
+
+      setInstructors(data || []);
+    } catch (error) {
+      console.error('Error in fetchInstructors:', error);
+    }
+  };
+
+  const assignInstructor = async (classId: number, instructorId: number) => {
+    try {
+      setAssigningInstructor(classId);
+      
+      const instructor = instructors.find(i => i.id === instructorId);
+      if (!instructor) return;
+
+      const { error } = await supabase
+        .from('classes')
+        .update({
+          instructor_name: instructor.name,
+          instructor_id: instructorId
+        })
+        .eq('id', classId);
+
+      if (error) {
+        console.error('Error assigning instructor:', error);
+        return;
+      }
+
+      // Refresh classes list
+      await fetchClasses();
+    } catch (error) {
+      console.error('Error in assignInstructor:', error);
+    } finally {
+      setAssigningInstructor(null);
+    }
+  };
+
+  // Load classes and instructors when tab becomes active
+  useEffect(() => {
+    if (activeTab === 'classes') {
+      fetchClasses();
+      fetchInstructors();
+    }
+  }, [activeTab]);
+
   if (isLoading || loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
 
   return (
@@ -400,7 +520,20 @@ export default function AdminDashboardPage() {
           >
             Create User
           </button>
-          {/* Only Projects tab per requirements */}
+          <button
+            onClick={() => setActiveTab('classes')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'classes' ? '2px solid #3b82f6' : '2px solid transparent',
+              color: activeTab === 'classes' ? '#3b82f6' : '#6b7280',
+              fontWeight: activeTab === 'classes' ? '600' : '400',
+              cursor: 'pointer'
+            }}
+          >
+            Classes
+          </button>
           <button
             onClick={() => setActiveTab('projects')}
             style={{
@@ -580,7 +713,117 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Removed create-user per requirements */}
+      {activeTab === 'classes' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Classes Management</h2>
+          
+          {classesLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading classes...</div>
+          ) : classes.length === 0 ? (
+            <div style={{ 
+              padding: '2rem', 
+              backgroundColor: '#f8fafc', 
+              borderRadius: '8px', 
+              border: '1px solid #e2e8f0',
+              textAlign: 'center'
+            }}>
+              <p style={{ color: '#64748b', marginBottom: '0.5rem' }}>No classes found</p>
+              <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Classes will appear here when they are created.</p>
+            </div>
+          ) : (
+            <div style={{ 
+              display: 'grid', 
+              gap: '1rem' 
+            }}>
+              {classes.map((classItem) => (
+                <div 
+                  key={classItem.id}
+                  style={{ 
+                    padding: '1.5rem', 
+                    backgroundColor: 'white', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
+                        {classItem.class_title}
+                      </h3>
+                      <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                        {classItem.class_type} • {classItem.target_audience}
+                      </p>
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                        <span>📅 {new Date(classItem.class_date).toLocaleDateString()}</span>
+                        <span>⏰ {classItem.start_time} - {classItem.end_time}</span>
+                        <span>📍 {classItem.location}</span>
+                      </div>
+                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        📁 {classItem.folder_name}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{
+                        padding: '0.25rem 0.75rem',
+                        backgroundColor: classItem.status === 'completed' ? '#dcfce7' : 
+                                       classItem.status === 'in_progress' ? '#dbeafe' :
+                                       classItem.status === 'planning' ? '#fef3c7' : '#f3f4f6',
+                        color: classItem.status === 'completed' ? '#166534' :
+                               classItem.status === 'in_progress' ? '#1e40af' :
+                               classItem.status === 'planning' ? '#92400e' : '#374151',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        {classItem.status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                    <div>
+                      <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                        Current Instructor: <span style={{ fontWeight: '500', color: '#1f2937' }}>
+                          {classItem.instructor_name || 'Not assigned'}
+                        </span>
+                      </p>
+                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        Participants: {classItem.current_participants}/{classItem.max_participants}
+                      </p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <select
+                        onChange={(e) => e.target.value && assignInstructor(classItem.id, parseInt(e.target.value))}
+                        disabled={assigningInstructor === classItem.id}
+                        style={{
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '0.875rem',
+                          backgroundColor: 'white',
+                          cursor: assigningInstructor === classItem.id ? 'not-allowed' : 'pointer',
+                          opacity: assigningInstructor === classItem.id ? 0.5 : 1
+                        }}
+                      >
+                        <option value="">
+                          {assigningInstructor === classItem.id ? 'Assigning...' : 'Assign Instructor'}
+                        </option>
+                        {instructors.map((instructor) => (
+                          <option key={instructor.id} value={instructor.id}>
+                            {instructor.name} ({instructor.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {activeTab === 'projects' && (
         <div>

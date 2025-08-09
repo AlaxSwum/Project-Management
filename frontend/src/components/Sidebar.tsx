@@ -18,6 +18,7 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
+  AcademicCapIcon,
   DocumentTextIcon,
   ClipboardDocumentListIcon,
   InboxIcon,
@@ -25,7 +26,6 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   TableCellsIcon,
-  AcademicCapIcon,
   UserIcon,
   ShieldCheckIcon,
   KeyIcon,
@@ -1003,6 +1003,12 @@ Your report is now available in the system.`);
   const isAdminUser = (user?.role === 'admin') || (user as any)?.user_metadata?.role === 'admin';
   const adminNavItems = isAdminUser ? [
     { name: 'Admin', href: '/admin', icon: ShieldCheckIcon }
+  ] : [];
+
+  // Instructor-only navigation
+  const isInstructorUser = (user?.role === 'instructor') || (user as any)?.user_metadata?.role === 'instructor';
+  const instructorNavItems = isInstructorUser ? [
+    { name: 'Instructor', href: '/instructor', icon: AcademicCapIcon }
   ] : [];
 
   // HR-only navigation items (will be blank pages for now)
@@ -2188,6 +2194,26 @@ Your report is now available in the system.`);
                 <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Admin</span>
               </div>
               {adminNavItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
+                  onClick={closeMobileMenu}
+                >
+                  <item.icon className="nav-icon" />
+                  <span className="nav-text">{item.name}</span>
+                </Link>
+              ))}
+            </>
+          )}
+
+          {/* Instructor Section */}
+          {instructorNavItems.length > 0 && (
+            <>
+              <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Instructor</span>
+              </div>
+              {instructorNavItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
