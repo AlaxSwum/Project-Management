@@ -440,11 +440,11 @@ export default function InstructorDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600">
+    <div className="instructor-dashboard flex min-h-screen" style={{background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #a855f7 100%)'}}>
       <Sidebar projects={[]} onCreateProject={() => {}} />
       
       <div className="flex-1 ml-64 p-8">
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white rounded-3xl p-8" style={{backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'}}>
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">

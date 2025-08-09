@@ -1458,3 +1458,98 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* Instructor Dashboard Override - Force Tailwind styles to work */
+.instructor-dashboard * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.instructor-dashboard .bg-gradient-to-br {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #a855f7 100%) !important;
+}
+
+.instructor-dashboard .bg-white {
+  background-color: white !important;
+}
+
+.instructor-dashboard .text-gray-800 {
+  color: #1f2937 !important;
+}
+
+.instructor-dashboard .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.instructor-dashboard .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.instructor-dashboard .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+
+.instructor-dashboard .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+
+.instructor-dashboard .border-gray-200 {
+  border-color: #e5e7eb !important;
+}
+
+.instructor-dashboard .hover\:bg-gray-50:hover {
+  background-color: #f9fafb !important;
+}
+
+.instructor-dashboard .bg-green-100 {
+  background-color: #dcfce7 !important;
+}
+
+.instructor-dashboard .text-green-800 {
+  color: #166534 !important;
+}
+
+.instructor-dashboard .bg-red-100 {
+  background-color: #fee2e2 !important;
+}
+
+.instructor-dashboard .text-red-800 {
+  color: #991b1b !important;
+}
+
+.instructor-dashboard .bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+
+.instructor-dashboard .border-blue-500 {
+  border-color: #3b82f6 !important;
+}
+
+.instructor-dashboard .text-blue-600 {
+  color: #2563eb !important;
+}
+
+.instructor-dashboard .hover\:bg-blue-50:hover {
+  background-color: #eff6ff !important;
+}
+
+.instructor-dashboard .bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important;
+}
+
+.instructor-dashboard .from-blue-500 {
+  --tw-gradient-from: #3b82f6 !important;
+  --tw-gradient-to: rgba(59, 130, 246, 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.instructor-dashboard .to-purple-600 {
+  --tw-gradient-to: #9333ea !important;
+}
+
+.instructor-dashboard .hover\:from-blue-600:hover {
+  --tw-gradient-from: #2563eb !important;
+}
+
+.instructor-dashboard .hover\:to-purple-700:hover {
+  --tw-gradient-to: #7c3aed !important;
+}
