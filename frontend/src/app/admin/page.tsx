@@ -266,10 +266,7 @@ export default function AdminDashboardPage() {
           name: newUser.name,
           email: newUser.email,
           password: newUser.password, // In production, this should be hashed
-          role: newUser.role,
-          position: newUser.position,
-          phone_number: newUser.phone,
-          is_active: true
+          role: newUser.role
         }])
         .select()
         .single();
