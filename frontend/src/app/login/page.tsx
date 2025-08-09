@@ -373,19 +373,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="divider">
-            <span className="divider-label">Don't have an account?</span>
-          </div>
-
-          {/* Sign Up Link */}
-          <div className="signup-section">
-            <p className="signup-text">
-              <Link href="/register" className="signup-link">
-                Create your account
-              </Link>
-            </p>
-          </div>
+          {/* Registration disabled for internal-use app */}
         </div>
       </div>
     </>

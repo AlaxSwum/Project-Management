@@ -33,9 +33,6 @@ export default function WelcomePage() {
               <Link href="/login" className="btn-ghost">
                 Sign In
               </Link>
-              <Link href="/register" className="btn-primary">
-                Get Started
-              </Link>
             </div>
           </div>
         </div>
@@ -55,8 +52,8 @@ export default function WelcomePage() {
               Streamline workflows, collaborate seamlessly, and deliver exceptional results with our comprehensive project management platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register" className="btn-primary px-8 py-4 text-lg">
-                Start Free Trial
+              <Link href="/login" className="btn-primary px-8 py-4 text-lg">
+                Sign In
               </Link>
               <Link href="/login" className="btn-outline px-8 py-4 text-lg">
                 View Demo
@@ -178,8 +175,8 @@ export default function WelcomePage() {
             Join thousands of teams who have transformed their project management workflow.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register" className="btn-primary px-8 py-4 text-lg">
-              Start Free Trial
+            <Link href="/login" className="btn-primary px-8 py-4 text-lg">
+              Sign In
             </Link>
             <Link href="/login" className="btn-outline px-8 py-4 text-lg border-white text-white hover:bg-white hover:text-gray-900">
               View Demo

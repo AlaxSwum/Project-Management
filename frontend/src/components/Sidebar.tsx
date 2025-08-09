@@ -999,6 +999,12 @@ Your report is now available in the system.`);
     ...(hasCompanyOutreachAccess ? [{ name: 'Company Outreach', href: '/company-outreach', icon: BuildingOfficeIcon }] : [])
   ];
 
+  // Admin-only navigation
+  const isAdminUser = (user?.role === 'admin') || (user as any)?.user_metadata?.role === 'admin';
+  const adminNavItems = isAdminUser ? [
+    { name: 'Admin', href: '/admin', icon: ShieldCheckIcon }
+  ] : [];
+
   // HR-only navigation items (will be blank pages for now)
   const hrNavItems = [
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
@@ -2174,6 +2180,26 @@ Your report is now available in the system.`);
                 ))}
               </>
             )}
+
+          {/* Admin Section */}
+          {adminNavItems.length > 0 && (
+            <>
+              <div className="nav-section-header" style={{ borderTop: '1px solid #e5e7eb', margin: '1rem 0 0.5rem 0', paddingTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#666666', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '0.75rem' }}>Admin</span>
+              </div>
+              {adminNavItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
+                  onClick={closeMobileMenu}
+                >
+                  <item.icon className="nav-icon" />
+                  <span className="nav-text">{item.name}</span>
+                </Link>
+              ))}
+            </>
+          )}
           </div>
 
           {/* Projects List */}

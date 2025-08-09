@@ -47,21 +47,7 @@ export default function TermsPage() {
                 Sign In
               </button>
             </Link>
-            <Link href="/register">
-              <button style={{ 
-                padding: '0.5rem 1rem', 
-                color: '#FFFFFF', 
-                background: '#FFB333',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(255, 179, 51, 0.2)'
-              }}>
-                Get Started
-              </button>
-            </Link>
+            {/* Registration disabled for internal app */}
           </div>
         </div>
       </header>

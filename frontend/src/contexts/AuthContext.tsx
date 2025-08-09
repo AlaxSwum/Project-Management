@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  // Registration disabled in internal app
   register: (userData: {
     email: string;
     name: string;
@@ -25,7 +26,7 @@ interface AuthContextType {
     position?: string;
     password: string;
     password_confirm: string;
-  }) => Promise<void>;
+  }) => Promise<never>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -150,32 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string;
     password_confirm: string;
   }) => {
-    try {
-      if (userData.password !== userData.password_confirm) {
-        throw new Error("Passwords don't match");
-      }
-
-      const { user: authUser, error } = await supabaseAuth.signUp(userData);
-      
-      if (error) {
-        throw new Error(error instanceof Error ? error.message : 'Registration failed');
-      }
-
-      if (authUser) {
-        const newUser: User = {
-          id: authUser.id,
-          email: authUser.email,
-          name: authUser.user_metadata?.name || authUser.email,
-          phone: authUser.user_metadata?.phone || '',
-          role: authUser.user_metadata?.role || 'member',
-          position: authUser.user_metadata?.position || '',
-          date_joined: new Date().toISOString()
-        };
-        setUser(newUser);
-      }
-    } catch (error: any) {
-      throw new Error(error.message || 'Registration failed');
-    }
+    throw new Error('Registration is disabled. Please contact an administrator.');
   };
 
   const logout = async () => {

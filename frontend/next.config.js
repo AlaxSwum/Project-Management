@@ -24,13 +24,8 @@ const nextConfig = {
   
   // Redirects for better SEO and user experience
   async redirects() {
-    return [
-      {
-        source: '/admin',
-        destination: '/dashboard',
-        permanent: false,
-      },
-    ];
+    // No special redirects; allow /admin route to be handled by app router
+    return [];
   },
   
   // Headers for security and performance
