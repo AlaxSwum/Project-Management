@@ -213,11 +213,12 @@ export default function InstructorDashboard() {
 
     try {
       setLoading(true);
-      // Get unique attendance dates for this class
-      const { data: attendanceData, error } = await supabase
-        .from('class_attendance')
-        .select('date')
-        .eq('class_id', selectedClass.id);
+      // Get attendance folders for this class
+      const { data: folderData, error } = await supabase
+        .from('class_attendance_folders')
+        .select('*')
+        .eq('class_id', selectedClass.id)
+        .order('attendance_date', { ascending: false });
 
       if (error && error.code !== 'PGRST116') { // Table might not exist yet
         console.error('Error loading attendance folders:', error);
@@ -225,32 +226,30 @@ export default function InstructorDashboard() {
         return;
       }
 
-      // Group by date and calculate stats
-      const dateGroups = (attendanceData || []).reduce((acc: any, record: any) => {
-        const date = record.date;
-        if (!acc[date]) {
-          acc[date] = { date, records: [] };
-        }
-        acc[date].records.push(record);
-        return acc;
-      }, {});
+      if (!folderData || folderData.length === 0) {
+        setAttendanceFolders([]);
+        setMessage('');
+        return;
+      }
 
+      // Get stats for each folder
       const folders: AttendanceFolder[] = await Promise.all(
-        Object.values(dateGroups).map(async (group: any) => {
-          const { data: dayRecords } = await supabase
-            .from('class_attendance')
+        folderData.map(async (folder) => {
+          // Get all attendance records for this folder
+          const { data: attendanceRecords } = await supabase
+            .from('class_daily_attendance')
             .select('status')
-            .eq('class_id', selectedClass.id)
-            .eq('date', group.date);
+            .eq('folder_id', folder.id);
 
-          const present = dayRecords?.filter(r => r.status === 'present').length || 0;
-          const absent = dayRecords?.filter(r => r.status === 'absent').length || 0;
+          const present = attendanceRecords?.filter(r => r.status === 'present').length || 0;
+          const absent = attendanceRecords?.filter(r => r.status === 'absent').length || 0;
+          const excused = attendanceRecords?.filter(r => r.status === 'excused').length || 0;
 
           return {
-            date: group.date,
-            total_students: present + absent,
+            date: folder.attendance_date,
             present_count: present,
-            absent_count: absent
+            absent_count: absent + excused,
+            total_students: present + absent + excused
           };
         })
       );
@@ -360,34 +359,51 @@ export default function InstructorDashboard() {
     try {
       setLoading(true);
       
-      // Create attendance records for all students in the class
+      // First create the attendance folder
+      const { data: folder, error: folderError } = await supabase
+        .from('class_attendance_folders')
+        .insert({
+          class_id: selectedClass.id,
+          attendance_date: newFolderDate,
+          created_by: user?.id
+        })
+        .select()
+        .single();
+
+      if (folderError) {
+        console.error('Error creating attendance folder:', folderError);
+        setMessage(`Error creating attendance folder: ${folderError.message}`);
+        return;
+      }
+
+      // Get all students in the class
       const { data: classStudents } = await supabase
         .from('classes_participants')
         .select('*')
         .eq('class_id', selectedClass.id);
 
-      if (!classStudents) {
+      if (!classStudents || classStudents.length === 0) {
         setMessage('No students found in this class');
         return;
       }
 
-      // Insert attendance records for each student (default to present)
+      // Create daily attendance records for each student
       const attendanceRecords = classStudents.map(student => ({
-        class_id: selectedClass.id,
+        folder_id: folder.id,
         student_id: student.id,
         student_name: student.student_name,
-        date: newFolderDate,
         status: 'present' as const,
+        reason: null,
         recorded_by: user?.id
       }));
 
-      const { error } = await supabase
-        .from('class_attendance')
+      const { error: recordsError } = await supabase
+        .from('class_daily_attendance')
         .insert(attendanceRecords);
 
-      if (error) {
-        console.error('Error creating attendance folder:', error);
-        setMessage('Error creating attendance folder');
+      if (recordsError) {
+        console.error('Error creating attendance records:', recordsError);
+        setMessage(`Error creating attendance records: ${recordsError.message}`);
         return;
       }
 
@@ -397,7 +413,7 @@ export default function InstructorDashboard() {
       loadAttendanceFolders();
     } catch (error) {
       console.error('Error creating attendance folder:', error);
-      setMessage('Error creating attendance folder');
+      setMessage(`Error creating attendance folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -897,41 +913,80 @@ export default function InstructorDashboard() {
 
               {classTab === 'attendance' && (
                 <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-800">
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    marginBottom: 'var(--spacing-lg)' 
+                  }}>
+                    <h3 style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '600',
+                      color: 'var(--text-primary)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                      letterSpacing: '-0.025em'
+                    }}>
                       Attendance Tracking
                     </h3>
                     <button
                       onClick={() => setShowNewFolderForm(true)}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2"
+                      className="btn-primary"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-sm)',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                      }}
                     >
-                      <PlusIcon className="h-4 w-4" />
+                      <PlusIcon style={{ height: '1rem', width: '1rem' }} />
                       New Attendance
                     </button>
                   </div>
 
                   {showNewFolderForm && (
-                    <div className="bg-gray-50 p-5 rounded-xl mb-5">
-                      <h4 className="text-lg font-semibold text-gray-800 mb-3">
+                    <div style={{
+                      backgroundColor: 'var(--surface-light)',
+                      padding: 'var(--spacing-lg)',
+                      borderRadius: 'var(--radius-xl)',
+                      marginBottom: 'var(--spacing-lg)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <h4 style={{
+                        fontSize: '1.125rem',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        marginBottom: 'var(--spacing-sm)',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                      }}>
                         Create New Attendance Folder
                       </h4>
-                      <div className="flex items-center gap-4">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
                         <input
                           type="date"
                           value={newFolderDate}
                           onChange={(e) => setNewFolderDate(e.target.value)}
-                          className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="input-field"
+                          style={{
+                            width: 'auto',
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                          }}
                         />
                         <button
                           onClick={createAttendanceFolder}
                           disabled={loading}
-                          className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors duration-200"
+                          className="btn-primary"
+                          style={{
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                          }}
                         >
                           Create
                         </button>
                         <button
                           onClick={() => setShowNewFolderForm(false)}
-                          className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition-colors duration-200"
+                          className="btn-ghost"
+                          style={{
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                          }}
                         >
                           Cancel
                         </button>
@@ -1063,16 +1118,39 @@ export default function InstructorDashboard() {
 
               {classTab === 'kpi' && (
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  <h3 style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    color: 'var(--text-primary)',
+                    marginBottom: 'var(--spacing-md)',
+                    fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                    letterSpacing: '-0.025em'
+                  }}>
                     Student KPI & Performance
                   </h3>
                   
                   {loading ? (
-                    <div className="text-center py-8">Loading KPI data...</div>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: 'var(--spacing-xl) 0',
+                      color: 'var(--text-secondary)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                    }}>Loading KPI data...</div>
                   ) : studentKPIs.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <ChartBarIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                      <h4 className="text-lg font-semibold mb-2">No KPI Data</h4>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: 'var(--spacing-2xl) 0', 
+                      color: 'var(--text-muted)',
+                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                    }}>
+                      <ChartBarIcon style={{ height: '4rem', width: '4rem', margin: '0 auto var(--spacing-md)', color: 'var(--border-dark)' }} />
+                      <h4 style={{ 
+                        fontSize: '1.125rem', 
+                        fontWeight: '600', 
+                        marginBottom: 'var(--spacing-sm)',
+                        color: 'var(--text-primary)',
+                        fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                      }}>No KPI Data</h4>
                       <p>Start tracking attendance to generate student KPIs.</p>
                     </div>
                   ) : (
