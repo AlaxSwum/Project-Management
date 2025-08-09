@@ -398,6 +398,20 @@ export default function AdminDashboardPage() {
       {/* Tab Navigation */}
       <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb' }}>
         <nav style={{ display: 'flex', gap: '2rem' }}>
+          <button
+            onClick={() => setActiveTab('create-user')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'create-user' ? '2px solid #3b82f6' : '2px solid transparent',
+              color: activeTab === 'create-user' ? '#3b82f6' : '#6b7280',
+              fontWeight: activeTab === 'create-user' ? '600' : '400',
+              cursor: 'pointer'
+            }}
+          >
+            Create User
+          </button>
           {/* Only Projects tab per requirements */}
           <button
             onClick={() => setActiveTab('projects')}
@@ -417,6 +431,206 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'create-user' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Create New User</h2>
+          {adminProjects.length === 0 ? (
+            <div style={{ 
+              padding: '2rem', 
+              backgroundColor: '#fef3cd', 
+              borderRadius: '8px', 
+              border: '1px solid #f59e0b',
+              textAlign: 'center'
+            }}>
+              <p style={{ color: '#92400e' }}>
+                You are not assigned as an admin to any projects. Contact a super admin to assign you to projects.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleCreateUser} style={{ maxWidth: '600px' }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Project *
+                </label>
+                <select
+                  value={newUser.projectId}
+                  onChange={(e) => setNewUser({ ...newUser, projectId: parseInt(e.target.value) })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                  required
+                >
+                  <option value={0}>Select a project</option>
+                  {adminProjects
+                    .filter(p => p.can_create_users)
+                    .map(project => (
+                      <option key={project.project_id} value={project.project_id}>
+                        {project.project_name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newUser.name}
+                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                    required
+                    minLength={8}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Role
+                  </label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    <option value="member">Member</option>
+                    <option value="staff">Staff</option>
+                    <option value="hr">HR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    value={newUser.position}
+                    onChange={(e) => setNewUser({ ...newUser, position: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                    placeholder="e.g. Project Manager"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={newUser.phone}
+                    onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={createUserLoading}
+                style={{
+                  backgroundColor: createUserLoading ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: createUserLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {createUserLoading ? 'Creating User...' : 'Create User'}
+              </button>
+
+              {createUserMessage && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  backgroundColor: createUserMessage.includes('successfully') ? '#d1fae5' : '#fee2e2',
+                  color: createUserMessage.includes('successfully') ? '#065f46' : '#991b1b',
+                  border: `1px solid ${createUserMessage.includes('successfully') ? '#10b981' : '#ef4444'}`
+                }}>
+                  {createUserMessage}
+                </div>
+              )}
+            </form>
+          )}
+        </div>
+      )}
 
       {/* Removed create-user per requirements */}
 
