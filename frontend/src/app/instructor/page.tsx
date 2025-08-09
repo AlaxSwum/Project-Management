@@ -440,17 +440,17 @@ export default function InstructorDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600">
       <Sidebar projects={[]} onCreateProject={() => {}} />
       
       <div className="flex-1 ml-64 p-8">
-        <div style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRadius: '20px', padding: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
           {/* Header */}
           <div className="mb-8">
-            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2d3748', marginBottom: '8px' }}>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
               Instructor Dashboard
             </h1>
-            <p style={{ color: '#718096', fontSize: '16px' }}>
+            <p className="text-gray-600 text-lg">
               Welcome back, {user.name}! Manage your classes and track student progress.
             </p>
           </div>
@@ -464,16 +464,16 @@ export default function InstructorDashboard() {
           {!selectedClass ? (
             /* My Classes View */
             <div>
-              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2d3748', marginBottom: '24px' }}>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 My Classes
               </h2>
 
               {loading ? (
                 <div className="text-center py-8">Loading classes...</div>
               ) : classes.length === 0 ? (
-                <div className="text-center py-12" style={{ color: '#718096' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
-                  <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>No Classes Assigned</h3>
+                <div className="text-center py-12 text-gray-500">
+                  <div className="text-5xl mb-4">📚</div>
+                  <h3 className="text-xl font-semibold mb-2">No Classes Assigned</h3>
                   <p>You don't have any classes assigned yet. Contact your administrator.</p>
                 </div>
               ) : (
@@ -482,78 +482,42 @@ export default function InstructorDashboard() {
                     <div
                       key={classItem.id}
                       onClick={() => setSelectedClass(classItem)}
-                      className="cursor-pointer"
-                      style={{
-                        background: 'white',
-                        borderRadius: '16px',
-                        padding: '24px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        border: '1px solid #e2e8f0',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
-                      }}
+                      className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#2d3748', lineHeight: '1.4' }}>
+                        <h3 className="text-lg font-bold text-gray-800 leading-tight flex-1 mr-2">
                           {classItem.class_title}
                         </h3>
-                        <span 
-                          style={{ 
-                            fontSize: '12px', 
-                            fontWeight: '600', 
-                            color: '#718096',
-                            backgroundColor: '#f7fafc',
-                            padding: '4px 8px',
-                            borderRadius: '6px'
-                          }}
-                        >
+                        <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
                           {classItem.status}
                         </span>
                       </div>
 
                       <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                        <div className="flex items-center text-sm text-gray-600">
                           <CalendarIcon className="h-4 w-4 mr-2" />
                           {classItem.class_date}
                         </div>
-                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                        <div className="flex items-center text-sm text-gray-600">
                           <ClockIcon className="h-4 w-4 mr-2" />
                           {classItem.start_time} - {classItem.end_time}
                         </div>
-                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                        <div className="flex items-center text-sm text-gray-600">
                           <MapPinIcon className="h-4 w-4 mr-2" />
                           {classItem.location}
                         </div>
-                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                        <div className="flex items-center text-sm text-gray-600">
                           <FolderIcon className="h-4 w-4 mr-2" />
                           {classItem.folder_name}
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="text-sm" style={{ color: '#4a5568' }}>
-                          <span style={{ fontWeight: '600' }}>{classItem.current_participants}</span>
-                          <span style={{ color: '#718096' }}> / {classItem.max_participants} students</span>
+                        <div className="text-sm text-gray-700">
+                          <span className="font-semibold">{classItem.current_participants}</span>
+                          <span className="text-gray-500"> / {classItem.max_participants} students</span>
                         </div>
-                        <button
-                          style={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            color: 'white',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            border: 'none',
-                            cursor: 'pointer'
-                          }}
-                        >
+                        <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200">
                           Manage
                         </button>
                       </div>
@@ -571,33 +535,23 @@ export default function InstructorDashboard() {
                   setSelectedClass(null);
                   setClassTab('students');
                 }}
-                style={{
-                  background: 'transparent',
-                  color: '#667eea',
-                  border: '1px solid #667eea',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  marginBottom: '24px'
-                }}
+                className="bg-transparent text-blue-600 border border-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors duration-200 mb-6"
               >
                 ← Back to My Classes
               </button>
 
               {/* Class Header */}
               <div className="mb-6">
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2d3748', marginBottom: '8px' }}>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {selectedClass.class_title}
                 </h2>
-                <p style={{ color: '#718096' }}>
+                <p className="text-gray-600">
                   {selectedClass.current_participants} students • {selectedClass.class_date} • {selectedClass.start_time} - {selectedClass.end_time}
                 </p>
               </div>
 
               {/* Class Tabs */}
-              <div className="flex space-x-1 mb-6" style={{ backgroundColor: '#f7fafc', padding: '4px', borderRadius: '12px' }}>
+              <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-xl">
                 {[
                   { id: 'students', label: 'Students', icon: UserGroupIcon },
                   { id: 'attendance', label: 'Attendance', icon: ClipboardDocumentListIcon },
@@ -608,21 +562,11 @@ export default function InstructorDashboard() {
                     <button
                       key={tab.id}
                       onClick={() => setClassTab(tab.id)}
-                      style={{
-                        background: classTab === tab.id ? 'white' : 'transparent',
-                        color: classTab === tab.id ? '#667eea' : '#718096',
-                        padding: '12px 24px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'all 0.2s ease',
-                        boxShadow: classTab === tab.id ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
-                      }}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        classTab === tab.id 
+                          ? 'bg-white text-blue-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
                     >
                       <Icon className="h-4 w-4" />
                       {tab.label}
@@ -634,38 +578,38 @@ export default function InstructorDashboard() {
               {/* Tab Content */}
               {classTab === 'students' && (
                 <div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2d3748', marginBottom: '16px' }}>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">
                     Student List
                   </h3>
                   
                   {loading ? (
                     <div className="text-center py-8">Loading students...</div>
                   ) : students.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: '#718096' }}>
-                      <UserGroupIcon className="h-16 w-16 mx-auto mb-4" style={{ color: '#cbd5e0' }} />
-                      <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No Students Enrolled</h4>
+                    <div className="text-center py-12 text-gray-500">
+                      <UserGroupIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                      <h4 className="text-lg font-semibold mb-2">No Students Enrolled</h4>
                       <p>No students are currently enrolled in this class.</p>
                     </div>
                   ) : (
-                    <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                      <table style={{ width: '100%' }}>
-                        <thead style={{ backgroundColor: '#f8fafc' }}>
+                    <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-200">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
                           <tr>
-                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Student Name</th>
-                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Email</th>
-                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Phone</th>
-                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Discord ID</th>
-                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Enrolled</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student Name</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Phone</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Discord ID</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Enrolled</th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {students.map((student, index) => (
-                            <tr key={student.id} style={{ borderTop: '1px solid #e2e8f0' }}>
-                              <td style={{ padding: '16px', color: '#2d3748', fontWeight: '500' }}>{student.student_name}</td>
-                              <td style={{ padding: '16px', color: '#718096' }}>{student.email}</td>
-                              <td style={{ padding: '16px', color: '#718096' }}>{student.phone_number || 'N/A'}</td>
-                              <td style={{ padding: '16px', color: '#718096' }}>{student.discord_id || 'N/A'}</td>
-                              <td style={{ padding: '16px', color: '#718096', fontSize: '14px' }}>
+                        <tbody className="divide-y divide-gray-200">
+                          {students.map((student) => (
+                            <tr key={student.id} className="hover:bg-gray-50 transition-colors duration-150">
+                              <td className="px-4 py-3 text-gray-900 font-medium">{student.student_name}</td>
+                              <td className="px-4 py-3 text-gray-600">{student.email}</td>
+                              <td className="px-4 py-3 text-gray-600">{student.phone_number || 'N/A'}</td>
+                              <td className="px-4 py-3 text-gray-600">{student.discord_id || 'N/A'}</td>
+                              <td className="px-4 py-3 text-gray-600 text-sm">
                                 {new Date(student.enrolled_at).toLocaleDateString()}
                               </td>
                             </tr>
@@ -680,24 +624,12 @@ export default function InstructorDashboard() {
               {classTab === 'attendance' && (
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2d3748' }}>
+                    <h3 className="text-xl font-bold text-gray-800">
                       Attendance Tracking
                     </h3>
                     <button
                       onClick={() => setShowNewFolderForm(true)}
-                      style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        padding: '12px 20px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2"
                     >
                       <PlusIcon className="h-4 w-4" />
                       New Attendance
