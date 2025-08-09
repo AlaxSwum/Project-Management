@@ -317,7 +317,7 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="form">
+          <form onSubmit={handleSubmit} className="form" autoComplete="on">
             {/* Email */}
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
@@ -328,6 +328,7 @@ export default function LoginPage() {
                 required
                 className="form-input"
                 placeholder="Enter your email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -343,6 +344,7 @@ export default function LoginPage() {
                 required
                 className="form-input"
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -351,7 +353,7 @@ export default function LoginPage() {
             {/* Remember Me & Forgot Password */}
             <div className="remember-forgot">
               <label className="remember-me">
-                <input type="checkbox" className="checkbox" />
+                <input type="checkbox" name="remember" autoComplete="off" className="checkbox" />
                 <span className="checkbox-label">Remember me</span>
               </label>
               <Link href="/forgot-password" className="forgot-link">

@@ -24,8 +24,13 @@ const nextConfig = {
   
   // Redirects for better SEO and user experience
   async redirects() {
-    // No special redirects; allow /admin route to be handled by app router
-    return [];
+    return [
+      {
+        source: '/register',
+        destination: '/login',
+        permanent: true,
+      },
+    ];
   },
   
   // Headers for security and performance
@@ -55,6 +60,23 @@ const nextConfig = {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin-allow-popups',
           },
+        ],
+      },
+      {
+        // Disable caching for critical HTML routes to avoid stale pages
+        source: '/login',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+        ],
+      },
+      {
+        source: '/register',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
         ],
       },
       {
