@@ -269,8 +269,7 @@ export default function AdminDashboardPage() {
           role: newUser.role,
           position: newUser.position,
           phone_number: newUser.phone,
-          is_active: true,
-          created_at: new Date().toISOString()
+          is_active: true
         }])
         .select()
         .single();
@@ -489,6 +488,7 @@ export default function AdminDashboardPage() {
                     <option value="member">Member</option>
                     <option value="staff">Staff</option>
                     <option value="hr">HR</option>
+                    <option value="instructor">Instructor</option>
                   </select>
                 </div>
               </div>
