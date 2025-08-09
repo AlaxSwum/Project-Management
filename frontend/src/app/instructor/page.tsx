@@ -120,25 +120,65 @@ export default function InstructorDashboard() {
           return;
         }
 
-        const formattedClasses = fallbackData?.map(classItem => ({
-          ...classItem,
-          folder_name: classItem.classes_folders?.name || 'No Folder'
-        })) || [];
+        const formattedClasses = fallbackData
+          ?.filter(classItem => 
+            classItem.status !== 'planning' && 
+            !classItem.class_title?.toLowerCase().includes('general training all staff')
+          )
+          ?.map(classItem => ({
+            ...classItem,
+            folder_name: classItem.classes_folders?.name || 'No Folder'
+          })) || [];
 
-        console.log('📚 Loaded classes (fallback):', formattedClasses);
-        setClasses(formattedClasses);
+        // Get actual student counts for each class
+        const classesWithCounts = await Promise.all(
+          formattedClasses.map(async (classItem) => {
+            const { data: participants, error } = await supabase
+              .from('classes_participants')
+              .select('id')
+              .eq('class_id', classItem.id);
+            
+            return {
+              ...classItem,
+              current_participants: participants?.length || 0
+            };
+          })
+        );
+
+        console.log('📚 Loaded classes (fallback):', classesWithCounts);
+        setClasses(classesWithCounts);
         setMessage('');
         return;
       }
 
       // Format classes from junction table result
-      const formattedClasses = instructorClasses?.map((item: any) => ({
-        ...item.classes,
-        folder_name: item.classes.classes_folders?.name || 'No Folder'
-      })) || [];
+      const formattedClasses = instructorClasses
+        ?.filter((item: any) => 
+          item.classes.status !== 'planning' && 
+          !item.classes.class_title?.toLowerCase().includes('general training all staff')
+        )
+        ?.map((item: any) => ({
+          ...item.classes,
+          folder_name: item.classes.classes_folders?.name || 'No Folder'
+        })) || [];
 
-      console.log('📚 Loaded classes from junction table:', formattedClasses);
-      setClasses(formattedClasses);
+      // Get actual student counts for each class
+      const classesWithCounts = await Promise.all(
+        formattedClasses.map(async (classItem) => {
+          const { data: participants, error } = await supabase
+            .from('classes_participants')
+            .select('id')
+            .eq('class_id', classItem.id);
+          
+          return {
+            ...classItem,
+            current_participants: participants?.length || 0
+          };
+        })
+      );
+
+      console.log('📚 Loaded classes from junction table:', classesWithCounts);
+      setClasses(classesWithCounts);
       setMessage('');
     } catch (error) {
       console.error('💥 Error in loadInstructorClasses:', error);
@@ -411,15 +451,26 @@ export default function InstructorDashboard() {
                         key={classItem.id}
                         onClick={() => handleClassSelect(classItem)}
                         style={{
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          padding: '1rem',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          padding: '1.5rem',
                           cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          backgroundColor: 'white'
+                          transition: 'all 0.2s ease',
+                          backgroundColor: 'white',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                          position: 'relative' as const,
+                          overflow: 'hidden'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div style={{ flex: 1 }}>
@@ -451,22 +502,33 @@ export default function InstructorDashboard() {
                             </p>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '0.125rem 0.625rem',
-                              borderRadius: '9999px',
-                              fontSize: '0.75rem',
-                              fontWeight: '500',
-                              backgroundColor: '#f3f4f6',
-                              color: '#374151',
-                              border: '1px solid #d1d5db'
+                            <div style={{ 
+                              display: 'flex', 
+                              flexDirection: 'column', 
+                              alignItems: 'flex-end',
+                              gap: '0.5rem' 
                             }}>
-                              {classItem.status}
-                            </span>
-                            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                              {classItem.current_participants}/{classItem.max_participants} students
-                            </p>
+                              <div style={{
+                                padding: '0.5rem 1rem',
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: '#475569'
+                              }}>
+                                {classItem.current_participants || 0}/{classItem.max_participants} Students
+                              </div>
+                              {classItem.status !== 'active' && (
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  color: '#64748b',
+                                  textTransform: 'capitalize'
+                                }}>
+                                  {classItem.status}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
