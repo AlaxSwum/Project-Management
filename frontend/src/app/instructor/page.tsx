@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
-import { CalendarIcon, ClockIcon, MapPinIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, MapPinIcon, FolderIcon, UserGroupIcon, ClipboardDocumentListIcon, ChartBarIcon, PlusIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,38 +38,51 @@ interface Student {
   notes?: string;
 }
 
-interface AbsenceRecord {
+interface AttendanceFolder {
+  date: string;
+  total_students: number;
+  present_count: number;
+  absent_count: number;
+}
+
+interface AttendanceRecord {
   id: number;
-  class_id: number;
   student_id: number;
   student_name: string;
-  absence_date: string;
-  absence_type: 'excused' | 'unexcused' | 'sick' | 'family';
-  reason: string;
+  status: 'present' | 'absent';
+  absence_type?: 'excused' | 'unexcused' | 'sick' | 'family';
+  reason?: string;
   notes?: string;
-  recorded_by: number;
-  recorded_at: string;
+  date: string;
+}
+
+interface StudentKPI {
+  student_id: number;
+  student_name: string;
+  total_classes: number;
+  attended_classes: number;
+  attendance_rate: number;
+  absent_excused: number;
+  absent_unexcused: number;
+  recent_trend: 'improving' | 'declining' | 'stable';
 }
 
 export default function InstructorDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('classes');
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
+  const [classTab, setClassTab] = useState('students'); // students, attendance, kpi
   const [students, setStudents] = useState<Student[]>([]);
-  const [absences, setAbsences] = useState<AbsenceRecord[]>([]);
+  const [attendanceFolders, setAttendanceFolders] = useState<AttendanceFolder[]>([]);
+  const [selectedAttendanceDate, setSelectedAttendanceDate] = useState<string>('');
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [studentKPIs, setStudentKPIs] = useState<StudentKPI[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  // New absence form state
-  const [showAbsenceForm, setShowAbsenceForm] = useState(false);
-  const [newAbsence, setNewAbsence] = useState({
-    student_id: '',
-    absence_date: new Date().toISOString().split('T')[0],
-    absence_type: 'excused' as 'excused' | 'unexcused' | 'sick' | 'family',
-    reason: '',
-    notes: ''
-  });
+  // New attendance folder form
+  const [showNewFolderForm, setShowNewFolderForm] = useState(false);
+  const [newFolderDate, setNewFolderDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Check if user is instructor
   useEffect(() => {
@@ -85,16 +98,30 @@ export default function InstructorDashboard() {
     }
   }, [user]);
 
+  // Load class data when class is selected
+  useEffect(() => {
+    if (selectedClass) {
+      if (classTab === 'students') {
+        loadClassStudents();
+      } else if (classTab === 'attendance') {
+        loadAttendanceFolders();
+      } else if (classTab === 'kpi') {
+        loadStudentKPIs();
+      }
+    }
+  }, [selectedClass, classTab]);
+
+  // Load attendance records when date is selected
+  useEffect(() => {
+    if (selectedClass && selectedAttendanceDate) {
+      loadAttendanceRecords();
+    }
+  }, [selectedClass, selectedAttendanceDate]);
+
   const loadInstructorClasses = async () => {
     try {
       setLoading(true);
       console.log('📚 Loading classes for instructor:', user?.id, user?.name);
-      
-      // Use original working method - query classes table directly
-      console.log('🔍 User data for query:', { id: user?.id, name: user?.name, email: user?.email });
-      
-      // Use junction table method since classes.instructor_name is always "TBD"
-      console.log(`🔍 Querying classes_instructors for instructor_id = ${user?.id}`);
       
       const { data: instructorClasses, error: classesError } = await supabase
         .from('classes_instructors')
@@ -109,12 +136,6 @@ export default function InstructorDashboard() {
 
       if (classesError) {
         console.error('❌ Error loading instructor classes:', classesError);
-        console.error('❌ Error details:', {
-          message: classesError.message,
-          details: classesError.details,
-          hint: classesError.hint,
-          code: classesError.code
-        });
         setMessage(`Error loading classes: ${classesError.message}`);
         return;
       }
@@ -124,7 +145,6 @@ export default function InstructorDashboard() {
       // Format classes from junction table result  
       const filteredClasses = instructorClasses
         ?.filter((item: any) => {
-          // Re-enable status filtering but allow planning for now since that's what we have
           const shouldInclude = !item.classes.class_title?.toLowerCase().includes('general training all staff');
           console.log(`🔍 Class "${item.classes.class_title}" - Status: ${item.classes.status}, Include: ${shouldInclude}`);
           return shouldInclude;
@@ -162,14 +182,15 @@ export default function InstructorDashboard() {
     }
   };
 
-  const loadClassStudents = async (classId: number) => {
+  const loadClassStudents = async () => {
+    if (!selectedClass) return;
+
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
+      const { data: studentsData, error } = await supabase
         .from('classes_participants')
-        .select('id, student_name, email, phone_number, discord_id, enrolled_at, notes')
-        .eq('class_id', classId);
+        .select('*')
+        .eq('class_id', selectedClass.id);
 
       if (error) {
         console.error('Error loading students:', error);
@@ -177,792 +198,789 @@ export default function InstructorDashboard() {
         return;
       }
 
-      setStudents(data || []);
+      setStudents(studentsData || []);
+      setMessage('');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading students:', error);
       setMessage('Error loading students');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadClassAbsences = async (classId: number) => {
+  const loadAttendanceFolders = async () => {
+    if (!selectedClass) return;
+
     try {
       setLoading(true);
-      
-      // First check if absence table exists, if not we'll show a message
-      const { data, error } = await supabase
-        .from('class_absences')
+      // Get unique attendance dates for this class
+      const { data: attendanceData, error } = await supabase
+        .from('class_attendance')
+        .select('date')
+        .eq('class_id', selectedClass.id);
+
+      if (error && error.code !== 'PGRST116') { // Table might not exist yet
+        console.error('Error loading attendance folders:', error);
+        setMessage('Error loading attendance data');
+        return;
+      }
+
+      // Group by date and calculate stats
+      const dateGroups = (attendanceData || []).reduce((acc: any, record: any) => {
+        const date = record.date;
+        if (!acc[date]) {
+          acc[date] = { date, records: [] };
+        }
+        acc[date].records.push(record);
+        return acc;
+      }, {});
+
+      const folders: AttendanceFolder[] = await Promise.all(
+        Object.values(dateGroups).map(async (group: any) => {
+          const { data: dayRecords } = await supabase
+            .from('class_attendance')
+            .select('status')
+            .eq('class_id', selectedClass.id)
+            .eq('date', group.date);
+
+          const present = dayRecords?.filter(r => r.status === 'present').length || 0;
+          const absent = dayRecords?.filter(r => r.status === 'absent').length || 0;
+
+          return {
+            date: group.date,
+            total_students: present + absent,
+            present_count: present,
+            absent_count: absent
+          };
+        })
+      );
+
+      setAttendanceFolders(folders);
+      setMessage('');
+    } catch (error) {
+      console.error('Error loading attendance folders:', error);
+      setMessage('Error loading attendance data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAttendanceRecords = async () => {
+    if (!selectedClass || !selectedAttendanceDate) return;
+
+    try {
+      setLoading(true);
+      const { data: records, error } = await supabase
+        .from('class_attendance')
         .select('*')
-        .eq('class_id', classId);
+        .eq('class_id', selectedClass.id)
+        .eq('date', selectedAttendanceDate);
 
       if (error) {
-        console.error('Error loading absences:', error);
-        // Table might not exist yet
-        setAbsences([]);
+        console.error('Error loading attendance records:', error);
+        setMessage('Error loading attendance records');
         return;
       }
 
-      setAbsences(data || []);
+      setAttendanceRecords(records || []);
+      setMessage('');
     } catch (error) {
-      console.error('Error:', error);
-      setAbsences([]);
+      console.error('Error loading attendance records:', error);
+      setMessage('Error loading attendance records');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClassSelect = (classItem: ClassItem) => {
-    setSelectedClass(classItem);
-    setActiveTab('students');
-    loadClassStudents(classItem.id);
-    loadClassAbsences(classItem.id);
-  };
-
-  const handleRecordAbsence = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedClass || !newAbsence.student_id) {
-      setMessage('Please select a student');
-      return;
-    }
+  const loadStudentKPIs = async () => {
+    if (!selectedClass) return;
 
     try {
       setLoading(true);
       
-      // Create absence table if it doesn't exist
-      await supabase.rpc('create_absence_table_if_not_exists');
-      
-      const { data, error } = await supabase
-        .from('class_absences')
-        .insert([{
-          class_id: selectedClass.id,
-          student_id: parseInt(newAbsence.student_id),
-          student_name: students.find(s => s.id === parseInt(newAbsence.student_id))?.student_name || '',
-          absence_date: newAbsence.absence_date,
-          absence_type: newAbsence.absence_type,
-          reason: newAbsence.reason,
-          notes: newAbsence.notes,
-          recorded_by: user?.id
-        }]);
+      // Get all students for this class
+      const { data: classStudents } = await supabase
+        .from('classes_participants')
+        .select('*')
+        .eq('class_id', selectedClass.id);
 
-      if (error) {
-        console.error('Error recording absence:', error);
-        setMessage('Error recording absence');
+      if (!classStudents) {
+        setStudentKPIs([]);
         return;
       }
 
-      setMessage('Absence recorded successfully');
-      setShowAbsenceForm(false);
-      setNewAbsence({
-        student_id: '',
-        absence_date: new Date().toISOString().split('T')[0],
-        absence_type: 'excused',
-        reason: '',
-        notes: ''
-      });
-      
-      // Reload absences
-      loadClassAbsences(selectedClass.id);
+      // Calculate KPIs for each student
+      const kpis: StudentKPI[] = await Promise.all(
+        classStudents.map(async (student) => {
+          // Get attendance records for this student
+          const { data: attendanceRecords } = await supabase
+            .from('class_attendance')
+            .select('status, absence_type')
+            .eq('class_id', selectedClass.id)
+            .eq('student_id', student.id);
+
+          const totalClasses = attendanceRecords?.length || 0;
+          const attendedClasses = attendanceRecords?.filter(r => r.status === 'present').length || 0;
+          const absentExcused = attendanceRecords?.filter(r => r.status === 'absent' && r.absence_type === 'excused').length || 0;
+          const absentUnexcused = attendanceRecords?.filter(r => r.status === 'absent' && ['unexcused', 'sick', 'family'].includes(r.absence_type)).length || 0;
+          
+          const attendanceRate = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
+          
+          // Determine trend (simplified)
+          let recent_trend: 'improving' | 'declining' | 'stable' = 'stable';
+          if (attendanceRate > 80) recent_trend = 'improving';
+          else if (attendanceRate < 60) recent_trend = 'declining';
+
+          return {
+            student_id: student.id,
+            student_name: student.student_name,
+            total_classes: totalClasses,
+            attended_classes: attendedClasses,
+            attendance_rate: Math.round(attendanceRate),
+            absent_excused: absentExcused,
+            absent_unexcused: absentUnexcused,
+            recent_trend
+          };
+        })
+      );
+
+      setStudentKPIs(kpis);
+      setMessage('');
     } catch (error) {
-      console.error('Error:', error);
-      setMessage('Error recording absence');
+      console.error('Error loading student KPIs:', error);
+      setMessage('Error loading student KPIs');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user || user.role !== 'instructor') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">This page is only accessible to instructors.</p>
-        </div>
-      </div>
-    );
+  const createAttendanceFolder = async () => {
+    if (!selectedClass || !newFolderDate) return;
+
+    try {
+      setLoading(true);
+      
+      // Create attendance records for all students in the class
+      const { data: classStudents } = await supabase
+        .from('classes_participants')
+        .select('*')
+        .eq('class_id', selectedClass.id);
+
+      if (!classStudents) {
+        setMessage('No students found in this class');
+        return;
+      }
+
+      // Insert attendance records for each student (default to present)
+      const attendanceRecords = classStudents.map(student => ({
+        class_id: selectedClass.id,
+        student_id: student.id,
+        student_name: student.student_name,
+        date: newFolderDate,
+        status: 'present' as const,
+        recorded_by: user?.id
+      }));
+
+      const { error } = await supabase
+        .from('class_attendance')
+        .insert(attendanceRecords);
+
+      if (error) {
+        console.error('Error creating attendance folder:', error);
+        setMessage('Error creating attendance folder');
+        return;
+      }
+
+      setMessage('Attendance folder created successfully');
+      setShowNewFolderForm(false);
+      setNewFolderDate(new Date().toISOString().split('T')[0]);
+      loadAttendanceFolders();
+    } catch (error) {
+      console.error('Error creating attendance folder:', error);
+      setMessage('Error creating attendance folder');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleAttendanceStatus = async (recordId: number, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'present' ? 'absent' : 'present';
+      
+      const { error } = await supabase
+        .from('class_attendance')
+        .update({ 
+          status: newStatus,
+          absence_type: newStatus === 'absent' ? 'unexcused' : null
+        })
+        .eq('id', recordId);
+
+      if (error) {
+        console.error('Error updating attendance:', error);
+        setMessage('Error updating attendance');
+        return;
+      }
+
+      // Reload records
+      loadAttendanceRecords();
+      loadAttendanceFolders(); // Refresh folder stats
+      setMessage('Attendance updated successfully');
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      setMessage('Error updating attendance');
+    }
+  };
+
+  if (!user) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
+
+  if (user.role !== 'instructor') {
+    return <div className="flex justify-center items-center min-h-screen">Access denied. Instructor role required.</div>;
   }
 
   return (
-    <>
-      <style jsx>{`
-        .instructor-container {
-          min-height: 100vh;
-          display: flex;
-          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
-          position: relative;
-          overflow: hidden;
-        }
-        .main-content {
-          flex: 1;
-          margin-left: 280px;
-          background: transparent;
-          position: relative;
-          z-index: 1;
-        }
-        .header {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-          padding: 2.25rem 2rem;
-          position: sticky;
-          top: 0;
-          z-index: 20;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-        }
-        .header-content {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-        .title {
-          font-size: 2.25rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin: 0;
-          letter-spacing: -0.02em;
-        }
-        .section-container {
-          padding: 2rem;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-      `}</style>
-      <div className="instructor-container">
-        <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div className="main-content">
-          <div className="header">
-            <div className="header-content">
-              <h1 className="title">Instructor Dashboard</h1>
-              <p style={{ color: '#6b7280', fontSize: '1rem' }}>Welcome back, {user.name}</p>
-            </div>
+    <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <Sidebar projects={[]} onCreateProject={() => {}} />
+      
+      <div className="flex-1 ml-64 p-8">
+        <div style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderRadius: '20px', padding: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+          {/* Header */}
+          <div className="mb-8">
+            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2d3748', marginBottom: '8px' }}>
+              Instructor Dashboard
+            </h1>
+            <p style={{ color: '#718096', fontSize: '16px' }}>
+              Welcome back, {user.name}! Manage your classes and track student progress.
+            </p>
           </div>
-          <div className="section-container">
 
           {message && (
-            <div className={`mb-6 p-4 rounded-lg ${
-              message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
-            }`}>
+            <div className={`p-4 rounded-lg mb-6 ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
               {message}
             </div>
           )}
 
-      {/* Tab Navigation */}
-      <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb' }}>
-        <nav style={{ display: 'flex', gap: '2rem' }}>
-          <button
-            onClick={() => setActiveTab('classes')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'classes' ? '2px solid #3b82f6' : '2px solid transparent',
-              color: activeTab === 'classes' ? '#3b82f6' : '#6b7280',
-              fontWeight: activeTab === 'classes' ? '600' : '400',
-              cursor: 'pointer'
-            }}
-          >
-            My Classes
-          </button>
-          {selectedClass && (
-            <>
-              <button
-                onClick={() => setActiveTab('students')}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderBottom: activeTab === 'students' ? '2px solid #3b82f6' : '2px solid transparent',
-                  color: activeTab === 'students' ? '#3b82f6' : '#6b7280',
-                  fontWeight: activeTab === 'students' ? '600' : '400',
-                  cursor: 'pointer'
-                }}
-              >
-                Students ({selectedClass.class_title})
-              </button>
-              <button
-                onClick={() => setActiveTab('absences')}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderBottom: activeTab === 'absences' ? '2px solid #3b82f6' : '2px solid transparent',
-                  color: activeTab === 'absences' ? '#3b82f6' : '#6b7280',
-                  fontWeight: activeTab === 'absences' ? '600' : '400',
-                  cursor: 'pointer'
-                }}
-              >
-                Attendance
-              </button>
-            </>
-          )}
-        </nav>
-      </div>
+          {!selectedClass ? (
+            /* My Classes View */
+            <div>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2d3748', marginBottom: '24px' }}>
+                My Classes
+              </h2>
 
-          {/* Tab Content */}
-          {activeTab === 'classes' && (
-            <div style={{ backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', borderRadius: '8px' }}>
-              <div style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#111827', marginBottom: '1rem' }}>
-                  Your Assigned Classes
-                </h3>
-                
-                {loading ? (
-                  <div style={{ textAlign: 'center', padding: '1rem' }}>Loading classes...</div>
-                ) : classes.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                    <p>No classes assigned to you yet.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gap: '1rem' }}>
-                    {classes.map((classItem) => (
-                      <div
-                        key={classItem.id}
-                        onClick={() => handleClassSelect(classItem)}
-                        style={{
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '12px',
-                          padding: '1.5rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          backgroundColor: 'white',
-                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                          position: 'relative' as const,
-                          overflow: 'hidden'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8fafc';
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'white';
-                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ flex: 1 }}>
-                            <h4 style={{ fontWeight: '600', fontSize: '1.125rem', color: '#111827', marginBottom: '0.25rem' }}>
-                              {classItem.class_title}
-                            </h4>
-                            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                              {classItem.class_type} • {classItem.target_audience}
-                            </p>
-                            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                                <CalendarIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
-                                {new Date(classItem.class_date).toLocaleDateString()}
-                              </span>
-                              <span style={{ color: '#d1d5db' }}>•</span>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                                <ClockIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
-                                {classItem.start_time} - {classItem.end_time}
-                              </span>
-                              <span style={{ color: '#d1d5db' }}>•</span>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                                <MapPinIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
-                                {classItem.location}
-                              </span>
-                            </div>
-                            <p style={{ fontSize: '0.875rem', color: '#6b7280', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <FolderIcon style={{ height: '1rem', width: '1rem', color: '#9ca3af' }} />
-                              {classItem.folder_name}
-                            </p>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ 
-                              display: 'flex', 
-                              flexDirection: 'column', 
-                              alignItems: 'flex-end',
-                              gap: '0.5rem' 
-                            }}>
-                              <div style={{
-                                padding: '0.5rem 1rem',
-                                backgroundColor: '#f8fafc',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '6px',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: '#475569'
-                              }}>
-                                {classItem.current_participants || 0}/{classItem.max_participants} Students
-                              </div>
-                              {classItem.status !== 'active' && (
-                                <span style={{
-                                  fontSize: '0.75rem',
-                                  color: '#64748b',
-                                  textTransform: 'capitalize'
-                                }}>
-                                  {classItem.status}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+              {loading ? (
+                <div className="text-center py-8">Loading classes...</div>
+              ) : classes.length === 0 ? (
+                <div className="text-center py-12" style={{ color: '#718096' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
+                  <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>No Classes Assigned</h3>
+                  <p>You don't have any classes assigned yet. Contact your administrator.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {classes.map((classItem) => (
+                    <div
+                      key={classItem.id}
+                      onClick={() => setSelectedClass(classItem)}
+                      className="cursor-pointer"
+                      style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        padding: '24px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                        border: '1px solid #e2e8f0',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#2d3748', lineHeight: '1.4' }}>
+                          {classItem.class_title}
+                        </h3>
+                        <span 
+                          style={{ 
+                            fontSize: '12px', 
+                            fontWeight: '600', 
+                            color: '#718096',
+                            backgroundColor: '#f7fafc',
+                            padding: '4px 8px',
+                            borderRadius: '6px'
+                          }}
+                        >
+                          {classItem.status}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                          <CalendarIcon className="h-4 w-4 mr-2" />
+                          {classItem.class_date}
+                        </div>
+                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                          <ClockIcon className="h-4 w-4 mr-2" />
+                          {classItem.start_time} - {classItem.end_time}
+                        </div>
+                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                          <MapPinIcon className="h-4 w-4 mr-2" />
+                          {classItem.location}
+                        </div>
+                        <div className="flex items-center text-sm" style={{ color: '#718096' }}>
+                          <FolderIcon className="h-4 w-4 mr-2" />
+                          {classItem.folder_name}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'students' && selectedClass && (
-            <div style={{ backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', borderRadius: '8px' }}>
-              <div style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#111827' }}>
-                    Students in {selectedClass.class_title}
-                  </h3>
-                  <button
-                    onClick={() => setActiveTab('classes')}
-                    style={{ color: '#3b82f6', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    ← Back to Classes
-                  </button>
-                </div>
-                
-                {loading ? (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Loading students...</div>
-                ) : students.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
-                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>No students enrolled yet</p>
-                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Students will appear here when they enroll in this class.</p>
-                  </div>
-                ) : (
-                  <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead style={{ backgroundColor: '#f8fafc' }}>
-                        <tr>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm" style={{ color: '#4a5568' }}>
+                          <span style={{ fontWeight: '600' }}>{classItem.current_participants}</span>
+                          <span style={{ color: '#718096' }}> / {classItem.max_participants} students</span>
+                        </div>
+                        <button
+                          style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            fontSize: '14px',
                             fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Student Information
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Contact Details
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Discord ID
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Enrollment Date
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody style={{ backgroundColor: 'white' }}>
-                        {students.map((student, index) => (
-                          <tr key={student.id} style={{
-                            backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb',
-                            borderBottom: '1px solid #f3f4f6'
-                          }}>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <div style={{
-                                  width: '2.5rem',
-                                  height: '2.5rem',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#3b82f6',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  marginRight: '0.75rem'
-                                }}>
-                                  <span style={{ color: 'white', fontWeight: '600', fontSize: '0.875rem' }}>
-                                    {student.student_name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827' }}>
-                                    {student.student_name}
-                                  </div>
-                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                    Student ID: {student.id}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div>
-                                <div style={{ fontSize: '0.875rem', color: '#111827', marginBottom: '0.25rem' }}>
-                                  {student.email}
-                                </div>
-                                {student.phone_number && (
-                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                    📞 {student.phone_number}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '0.25rem 0.75rem',
-                                backgroundColor: student.discord_id ? '#dbeafe' : '#f3f4f6',
-                                color: student.discord_id ? '#1e40af' : '#6b7280',
-                                borderRadius: '9999px',
-                                fontSize: '0.75rem',
-                                fontWeight: '500'
-                              }}>
-                                {student.discord_id ? `@${student.discord_id}` : 'Not provided'}
-                              </div>
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{ fontSize: '0.875rem', color: '#111827' }}>
-                                {new Date(student.enrolled_at).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                              </div>
-                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                {new Date(student.enrolled_at).toLocaleDateString('en-US', { weekday: 'long' })}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'absences' && selectedClass && (
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Attendance - {selectedClass.class_title}
-                  </h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setShowAbsenceForm(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
-                    >
-                      Record Absence
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('students')}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      ← Back to Students
-                    </button>
-                  </div>
-                </div>
-
-                {/* Absence Form Modal */}
-                {showAbsenceForm && (
-                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                      <div className="mt-3">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Record Student Absence</h3>
-                        <form onSubmit={handleRecordAbsence}>
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Student</label>
-                            <select
-                              value={newAbsence.student_id}
-                              onChange={(e) => setNewAbsence({...newAbsence, student_id: e.target.value})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                              required
-                            >
-                              <option value="">Select a student</option>
-                              {students.map((student) => (
-                                <option key={student.id} value={student.id}>
-                                  {student.student_name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Absence Date</label>
-                            <input
-                              type="date"
-                              value={newAbsence.absence_date}
-                              onChange={(e) => setNewAbsence({...newAbsence, absence_date: e.target.value})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                              required
-                            />
-                          </div>
-
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Absence Type</label>
-                            <select
-                              value={newAbsence.absence_type}
-                              onChange={(e) => setNewAbsence({...newAbsence, absence_type: e.target.value as any})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                            >
-                              <option value="excused">Excused</option>
-                              <option value="unexcused">Unexcused</option>
-                              <option value="sick">Sick</option>
-                              <option value="family">Family Emergency</option>
-                            </select>
-                          </div>
-
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Reason</label>
-                            <input
-                              type="text"
-                              value={newAbsence.reason}
-                              onChange={(e) => setNewAbsence({...newAbsence, reason: e.target.value})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                              required
-                            />
-                          </div>
-
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
-                            <textarea
-                              value={newAbsence.notes}
-                              onChange={(e) => setNewAbsence({...newAbsence, notes: e.target.value})}
-                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                              rows={3}
-                            />
-                          </div>
-
-                          <div className="flex justify-end space-x-2">
-                            <button
-                              type="button"
-                              onClick={() => setShowAbsenceForm(false)}
-                              className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="submit"
-                              disabled={loading}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
-                            >
-                              {loading ? 'Recording...' : 'Record Absence'}
-                            </button>
-                          </div>
-                        </form>
+                            border: 'none',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Manage
+                        </button>
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Class Details View */
+            <div>
+              {/* Back Button */}
+              <button
+                onClick={() => {
+                  setSelectedClass(null);
+                  setClassTab('students');
+                }}
+                style={{
+                  background: 'transparent',
+                  color: '#667eea',
+                  border: '1px solid #667eea',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  marginBottom: '24px'
+                }}
+              >
+                ← Back to My Classes
+              </button>
+
+              {/* Class Header */}
+              <div className="mb-6">
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2d3748', marginBottom: '8px' }}>
+                  {selectedClass.class_title}
+                </h2>
+                <p style={{ color: '#718096' }}>
+                  {selectedClass.current_participants} students • {selectedClass.class_date} • {selectedClass.start_time} - {selectedClass.end_time}
+                </p>
+              </div>
+
+              {/* Class Tabs */}
+              <div className="flex space-x-1 mb-6" style={{ backgroundColor: '#f7fafc', padding: '4px', borderRadius: '12px' }}>
+                {[
+                  { id: 'students', label: 'Students', icon: UserGroupIcon },
+                  { id: 'attendance', label: 'Attendance', icon: ClipboardDocumentListIcon },
+                  { id: 'kpi', label: 'KPI', icon: ChartBarIcon }
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setClassTab(tab.id)}
+                      style={{
+                        background: classTab === tab.id ? 'white' : 'transparent',
+                        color: classTab === tab.id ? '#667eea' : '#718096',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: classTab === tab.id ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                      }}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tab Content */}
+              {classTab === 'students' && (
+                <div>
+                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2d3748', marginBottom: '16px' }}>
+                    Student List
+                  </h3>
+                  
+                  {loading ? (
+                    <div className="text-center py-8">Loading students...</div>
+                  ) : students.length === 0 ? (
+                    <div className="text-center py-12" style={{ color: '#718096' }}>
+                      <UserGroupIcon className="h-16 w-16 mx-auto mb-4" style={{ color: '#cbd5e0' }} />
+                      <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No Students Enrolled</h4>
+                      <p>No students are currently enrolled in this class.</p>
+                    </div>
+                  ) : (
+                    <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                      <table style={{ width: '100%' }}>
+                        <thead style={{ backgroundColor: '#f8fafc' }}>
+                          <tr>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Student Name</th>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Email</th>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Phone</th>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Discord ID</th>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Enrolled</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {students.map((student, index) => (
+                            <tr key={student.id} style={{ borderTop: '1px solid #e2e8f0' }}>
+                              <td style={{ padding: '16px', color: '#2d3748', fontWeight: '500' }}>{student.student_name}</td>
+                              <td style={{ padding: '16px', color: '#718096' }}>{student.email}</td>
+                              <td style={{ padding: '16px', color: '#718096' }}>{student.phone_number || 'N/A'}</td>
+                              <td style={{ padding: '16px', color: '#718096' }}>{student.discord_id || 'N/A'}</td>
+                              <td style={{ padding: '16px', color: '#718096', fontSize: '14px' }}>
+                                {new Date(student.enrolled_at).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {classTab === 'attendance' && (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2d3748' }}>
+                      Attendance Tracking
+                    </h3>
+                    <button
+                      onClick={() => setShowNewFolderForm(true)}
+                      style={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        padding: '12px 20px',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      New Attendance
+                    </button>
                   </div>
-                )}
-                
-                {/* Absences List */}
-                {loading ? (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Loading attendance records...</div>
-                ) : absences.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
-                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>No absence records yet</p>
-                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Attendance records will appear here when absences are recorded.</p>
-                  </div>
-                ) : (
-                  <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead style={{ backgroundColor: '#f8fafc' }}>
-                        <tr>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
+
+                  {showNewFolderForm && (
+                    <div style={{ background: '#f7fafc', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
+                      <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#2d3748', marginBottom: '12px' }}>
+                        Create New Attendance Folder
+                      </h4>
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="date"
+                          value={newFolderDate}
+                          onChange={(e) => setNewFolderDate(e.target.value)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: '1px solid #d1d5db',
+                            fontSize: '14px'
+                          }}
+                        />
+                        <button
+                          onClick={createAttendanceFolder}
+                          disabled={loading}
+                          style={{
+                            background: '#10b981',
+                            color: 'white',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
                             fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Student
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
+                            border: 'none',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Create
+                        </button>
+                        <button
+                          onClick={() => setShowNewFolderForm(false)}
+                          style={{
+                            background: '#6b7280',
+                            color: 'white',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
                             fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Absence Date
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Type
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Details
-                          </th>
-                          <th style={{
-                            padding: '1rem 1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: '#4b5563',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            borderBottom: '1px solid #e5e7eb'
-                          }}>
-                            Recorded
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody style={{ backgroundColor: 'white' }}>
-                        {absences.map((absence, index) => (
-                          <tr key={absence.id} style={{
-                            backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb',
-                            borderBottom: '1px solid #f3f4f6'
-                          }}>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <div style={{
-                                  width: '2rem',
-                                  height: '2rem',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#ef4444',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  marginRight: '0.75rem'
-                                }}>
-                                  <span style={{ color: 'white', fontWeight: '600', fontSize: '0.75rem' }}>
-                                    {absence.student_name.charAt(0).toUpperCase()}
+                            border: 'none',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Attendance Folders */}
+                  {loading ? (
+                    <div className="text-center py-8">Loading attendance data...</div>
+                  ) : attendanceFolders.length === 0 ? (
+                    <div className="text-center py-12" style={{ color: '#718096' }}>
+                      <ClipboardDocumentListIcon className="h-16 w-16 mx-auto mb-4" style={{ color: '#cbd5e0' }} />
+                      <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No Attendance Records</h4>
+                      <p>Create your first attendance folder to start tracking.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      {attendanceFolders.map((folder) => (
+                        <div
+                          key={folder.date}
+                          onClick={() => setSelectedAttendanceDate(folder.date)}
+                          className="cursor-pointer"
+                          style={{
+                            background: selectedAttendanceDate === folder.date ? '#e0e7ff' : 'white',
+                            borderRadius: '12px',
+                            padding: '20px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                            border: selectedAttendanceDate === folder.date ? '2px solid #667eea' : '1px solid #e2e8f0',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ fontSize: '16px', fontWeight: '600', color: '#2d3748', marginBottom: '8px' }}>
+                            {new Date(folder.date).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '600' }}>
+                              Present: {folder.present_count}
+                            </span>
+                            <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: '600' }}>
+                              Absent: {folder.absent_count}
+                            </span>
+                          </div>
+                          <div style={{ color: '#718096', fontSize: '12px', marginTop: '4px' }}>
+                            Total: {folder.total_students} students
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Selected Date Attendance */}
+                  {selectedAttendanceDate && (
+                    <div>
+                      <h4 style={{ fontSize: '18px', fontWeight: '600', color: '#2d3748', marginBottom: '16px' }}>
+                        Attendance for {new Date(selectedAttendanceDate).toLocaleDateString()}
+                      </h4>
+                      
+                      {attendanceRecords.length === 0 ? (
+                        <div className="text-center py-8" style={{ color: '#718096' }}>
+                          No attendance records for this date.
+                        </div>
+                      ) : (
+                        <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                          <table style={{ width: '100%' }}>
+                            <thead style={{ backgroundColor: '#f8fafc' }}>
+                              <tr>
+                                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Student</th>
+                                <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Status</th>
+                                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Type</th>
+                                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Reason</th>
+                                <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {attendanceRecords.map((record) => (
+                                <tr key={record.id} style={{ borderTop: '1px solid #e2e8f0' }}>
+                                  <td style={{ padding: '16px', color: '#2d3748', fontWeight: '500' }}>{record.student_name}</td>
+                                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                                    <span
+                                      style={{
+                                        background: record.status === 'present' ? '#d1fae5' : '#fee2e2',
+                                        color: record.status === 'present' ? '#065f46' : '#991b1b',
+                                        padding: '4px 12px',
+                                        borderRadius: '20px',
+                                        fontSize: '12px',
+                                        fontWeight: '600'
+                                      }}
+                                    >
+                                      {record.status === 'present' ? 'Present' : 'Absent'}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '16px', color: '#718096' }}>
+                                    {record.status === 'absent' ? record.absence_type || 'N/A' : '-'}
+                                  </td>
+                                  <td style={{ padding: '16px', color: '#718096' }}>
+                                    {record.reason || '-'}
+                                  </td>
+                                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                                    <button
+                                      onClick={() => toggleAttendanceStatus(record.id, record.status)}
+                                      style={{
+                                        background: record.status === 'present' ? '#ef4444' : '#10b981',
+                                        color: 'white',
+                                        padding: '6px 12px',
+                                        borderRadius: '6px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        margin: '0 auto'
+                                      }}
+                                    >
+                                      {record.status === 'present' ? (
+                                        <>
+                                          <XMarkIcon className="h-3 w-3" />
+                                          Mark Absent
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CheckIcon className="h-3 w-3" />
+                                          Mark Present
+                                        </>
+                                      )}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {classTab === 'kpi' && (
+                <div>
+                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2d3748', marginBottom: '16px' }}>
+                    Student KPI & Performance
+                  </h3>
+                  
+                  {loading ? (
+                    <div className="text-center py-8">Loading KPI data...</div>
+                  ) : studentKPIs.length === 0 ? (
+                    <div className="text-center py-12" style={{ color: '#718096' }}>
+                      <ChartBarIcon className="h-16 w-16 mx-auto mb-4" style={{ color: '#cbd5e0' }} />
+                      <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No KPI Data</h4>
+                      <p>Start tracking attendance to generate student KPIs.</p>
+                    </div>
+                  ) : (
+                    <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                      <table style={{ width: '100%' }}>
+                        <thead style={{ backgroundColor: '#f8fafc' }}>
+                          <tr>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Student Name</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Attendance Rate</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Total Classes</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Attended</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Excused</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Unexcused</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#4a5568', fontSize: '14px' }}>Trend</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {studentKPIs.map((kpi) => (
+                            <tr key={kpi.student_id} style={{ borderTop: '1px solid #e2e8f0' }}>
+                              <td style={{ padding: '16px', color: '#2d3748', fontWeight: '500' }}>{kpi.student_name}</td>
+                              <td style={{ padding: '16px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                  <div
+                                    style={{
+                                      width: '60px',
+                                      height: '6px',
+                                      backgroundColor: '#e2e8f0',
+                                      borderRadius: '3px',
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${kpi.attendance_rate}%`,
+                                        height: '100%',
+                                        backgroundColor: kpi.attendance_rate >= 80 ? '#10b981' : kpi.attendance_rate >= 60 ? '#f59e0b' : '#ef4444',
+                                        borderRadius: '3px'
+                                      }}
+                                    />
+                                  </div>
+                                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#2d3748' }}>
+                                    {kpi.attendance_rate}%
                                   </span>
                                 </div>
-                                <div>
-                                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
-                                    {absence.student_name}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{ fontSize: '0.875rem', color: '#111827', marginBottom: '0.125rem' }}>
-                                {new Date(absence.absence_date).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                              </div>
-                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                {new Date(absence.absence_date).toLocaleDateString('en-US', { weekday: 'long' })}
-                              </div>
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '0.375rem 0.75rem',
-                                borderRadius: '9999px',
-                                fontSize: '0.75rem',
-                                fontWeight: '500',
-                                backgroundColor: 
-                                  absence.absence_type === 'excused' ? '#dcfce7' :
-                                  absence.absence_type === 'sick' ? '#dbeafe' :
-                                  absence.absence_type === 'family' ? '#f3e8ff' : '#fee2e2',
-                                color:
-                                  absence.absence_type === 'excused' ? '#166534' :
-                                  absence.absence_type === 'sick' ? '#1e40af' :
-                                  absence.absence_type === 'family' ? '#7c3aed' : '#991b1b'
-                              }}>
-                                {absence.absence_type === 'excused' ? '✓ Excused' :
-                                 absence.absence_type === 'sick' ? '🤒 Sick' :
-                                 absence.absence_type === 'family' ? '👨‍👩‍👧‍👦 Family' : '❌ Unexcused'}
-                              </span>
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{ fontSize: '0.875rem', color: '#111827', marginBottom: '0.25rem' }}>
-                                {absence.reason}
-                              </div>
-                              {absence.notes && (
-                                <div style={{ 
-                                  fontSize: '0.75rem', 
-                                  color: '#6b7280',
-                                  fontStyle: 'italic',
-                                  padding: '0.25rem 0.5rem',
-                                  backgroundColor: '#f9fafb',
-                                  borderRadius: '4px',
-                                  borderLeft: '3px solid #e5e7eb'
-                                }}>
-                                  {absence.notes}
-                                </div>
-                              )}
-                            </td>
-                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                {new Date(absence.recorded_at).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+                              </td>
+                              <td style={{ padding: '16px', textAlign: 'center', color: '#718096' }}>{kpi.total_classes}</td>
+                              <td style={{ padding: '16px', textAlign: 'center', color: '#10b981', fontWeight: '600' }}>{kpi.attended_classes}</td>
+                              <td style={{ padding: '16px', textAlign: 'center', color: '#f59e0b', fontWeight: '600' }}>{kpi.absent_excused}</td>
+                              <td style={{ padding: '16px', textAlign: 'center', color: '#ef4444', fontWeight: '600' }}>{kpi.absent_unexcused}</td>
+                              <td style={{ padding: '16px', textAlign: 'center' }}>
+                                <span
+                                  style={{
+                                    background: kpi.recent_trend === 'improving' ? '#d1fae5' : kpi.recent_trend === 'declining' ? '#fee2e2' : '#f3f4f6',
+                                    color: kpi.recent_trend === 'improving' ? '#065f46' : kpi.recent_trend === 'declining' ? '#991b1b' : '#374151',
+                                    padding: '4px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '12px',
+                                    fontWeight: '600'
+                                  }}
+                                >
+                                  {kpi.recent_trend}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
-          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
