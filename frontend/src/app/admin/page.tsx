@@ -110,6 +110,7 @@ export default function AdminDashboardPage() {
   const [instructors, setInstructors] = useState<InstructorUser[]>([]);
   const [classesLoading, setClassesLoading] = useState(false);
   const [assigningInstructor, setAssigningInstructor] = useState<number | null>(null);
+  const [classInstructors, setClassInstructors] = useState<Record<number, InstructorUser[]>>({});
 
   useEffect(() => {
     if (isLoading) return;
@@ -379,10 +380,45 @@ export default function AdminDashboardPage() {
       })) || [];
 
       setClasses(formattedClasses);
+      // After classes load, fetch assigned instructors for these classes
+      const classIds = formattedClasses.map(c => c.id);
+      await fetchClassInstructors(classIds);
     } catch (error) {
       console.error('Error in fetchClasses:', error);
     } finally {
       setClassesLoading(false);
+    }
+  };
+
+  const fetchClassInstructors = async (classIds: number[]) => {
+    if (!classIds || classIds.length === 0) {
+      setClassInstructors({});
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('classes_instructors')
+        .select('class_id, auth_user:auth_user(id, name, email)')
+        .in('class_id', classIds)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error fetching class instructors:', error);
+        setClassInstructors({});
+        return;
+      }
+
+      const map: Record<number, InstructorUser[]> = {};
+      (data as any[] | null)?.forEach(row => {
+        if (!row || !row.class_id || !row.auth_user) return;
+        const list = map[row.class_id] || [];
+        list.push({ id: row.auth_user.id, name: row.auth_user.name, email: row.auth_user.email, role: 'instructor' });
+        map[row.class_id] = list;
+      });
+      setClassInstructors(map);
+    } catch (err) {
+      console.error('fetchClassInstructors error:', err);
+      setClassInstructors({});
     }
   };
 
@@ -411,21 +447,24 @@ export default function AdminDashboardPage() {
       const instructor = instructors.find(i => i.id === instructorId);
       if (!instructor) return;
 
+      // Insert or activate instructor assignment in junction table
       const { error } = await supabase
-        .from('classes')
-        .update({
-          instructor_name: instructor.name,
-          instructor_id: instructorId
-        })
-        .eq('id', classId);
+        .from('classes_instructors')
+        .upsert({
+          class_id: classId,
+          instructor_id: instructorId,
+          role: 'instructor',
+          is_active: true,
+          assigned_by: user?.id as any
+        }, { onConflict: 'class_id,instructor_id' });
 
       if (error) {
         console.error('Error assigning instructor:', error);
         return;
       }
 
-      // Refresh classes list
-      await fetchClasses();
+      // Refresh instructors for this class
+      await fetchClassInstructors([classId]);
     } catch (error) {
       console.error('Error in assignInstructor:', error);
     } finally {
@@ -754,38 +793,33 @@ export default function AdminDashboardPage() {
                       <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                         {classItem.class_type} • {classItem.target_audience}
                       </p>
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                        <span>📅 {new Date(classItem.class_date).toLocaleDateString()}</span>
-                        <span>⏰ {classItem.start_time} - {classItem.end_time}</span>
-                        <span>📍 {classItem.location}</span>
-                      </div>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        📁 {classItem.folder_name}
-                      </p>
+                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
+                         <span>Date: {new Date(classItem.class_date).toLocaleDateString()}</span>
+                         <span>Time: {classItem.start_time} - {classItem.end_time}</span>
+                         <span>Location: {classItem.location}</span>
+                       </div>
+                       <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>
+                         Folder: {classItem.folder_name}
+                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{
-                        padding: '0.25rem 0.75rem',
-                        backgroundColor: classItem.status === 'completed' ? '#dcfce7' : 
-                                       classItem.status === 'in_progress' ? '#dbeafe' :
-                                       classItem.status === 'planning' ? '#fef3c7' : '#f3f4f6',
-                        color: classItem.status === 'completed' ? '#166534' :
-                               classItem.status === 'in_progress' ? '#1e40af' :
-                               classItem.status === 'planning' ? '#92400e' : '#374151',
+                        padding: '0.25rem 0.6rem',
+                        border: '1px solid #d1d5db',
+                        color: '#374151',
                         borderRadius: '9999px',
                         fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        {classItem.status}
-                      </span>
+                        fontWeight: 500,
+                        background: '#ffffff'
+                      }}>{classItem.status}</span>
                     </div>
                   </div>
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
                     <div>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-                        Current Instructor: <span style={{ fontWeight: '500', color: '#1f2937' }}>
-                          {classItem.instructor_name || 'Not assigned'}
+                      <p style={{ fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.25rem' }}>
+                        Instructors: <span style={{ fontWeight: 500, color: '#111827' }}>
+                          {(classInstructors[classItem.id]?.map(i => i.name).join(', ')) || 'None assigned'}
                         </span>
                       </p>
                       <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>

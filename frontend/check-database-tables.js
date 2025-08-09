@@ -99,21 +99,16 @@ async function getTableSchema(tableName) {
 }
 
 async function listAllTables() {
+  // Prefer RPC function (requires running add_list_public_tables_function.sql once)
   try {
-    const { data, error } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .eq('table_type', 'BASE TABLE')
-      .order('table_name');
-
+    const { data, error } = await supabase.rpc('list_public_tables');
     if (error) {
-      return { tables: null, error: error.message };
+      throw error;
     }
-    
     return { tables: data };
-  } catch (err) {
-    return { tables: null, error: err.message };
+  } catch (rpcErr) {
+    // Fallback message
+    return { tables: null, error: `RPC list_public_tables not available (${rpcErr.message}). Please run add_list_public_tables_function.sql in Supabase.` };
   }
 }
 
@@ -162,23 +157,57 @@ async function checkAbsenceTables() {
   return allTablesExist;
 }
 
+const path = require('path');
+const fs = require('fs');
+
+function extractTableNamesFromSQLFiles(rootDir) {
+  const sqlFiles = fs.readdirSync(rootDir).filter(f => f.endsWith('.sql'));
+  const tableNames = new Set();
+  const regex = /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+([a-zA-Z0-9_\.\"]+)/gi;
+  for (const file of sqlFiles) {
+    try {
+      const content = fs.readFileSync(path.join(rootDir, file), 'utf8');
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        let fullName = match[1].replace(/\"/g, '').trim();
+        // Keep only table name (strip schema if present)
+        const parts = fullName.split('.');
+        const nameOnly = parts[parts.length - 1];
+        if (nameOnly) tableNames.add(nameOnly);
+      }
+    } catch (_) { /* ignore */ }
+  }
+  return Array.from(tableNames);
+}
+
 async function checkExistingTables() {
   logSection('📋 LISTING ALL EXISTING TABLES');
-
+  // Try RPC first
   const { tables, error } = await listAllTables();
-  
-  if (error) {
-    logError(`Failed to list tables: ${error}`);
+  if (!error && tables && tables.length > 0) {
+    logSuccess(`Found ${tables.length} tables in your database:`);
+    tables.forEach(t => {
+      const name = t.table_name || t.table_name;
+      const schema = t.table_schema || 'public';
+      logInfo(`  • ${schema}.${name}`);
+    });
     return;
   }
 
-  if (tables && tables.length > 0) {
-    logSuccess(`Found ${tables.length} tables in your database:`);
-    tables.forEach(table => {
-      logInfo(`  • ${table.table_name}`);
-    });
+  // Fallback: derive candidates from local SQL files, then verify existence by querying each
+  logWarning('Falling back to verification from local SQL files...');
+  const rootDir = path.resolve(__dirname, '..', '..');
+  const candidates = extractTableNamesFromSQLFiles(rootDir);
+  const existing = [];
+  for (const name of candidates) {
+    const { exists } = await checkTableExists(name);
+    if (exists) existing.push(name);
+  }
+  if (existing.length > 0) {
+    logSuccess(`Verified ${existing.length} existing tables (from ${candidates.length} candidates):`);
+    existing.sort().forEach(n => logInfo(`  • public.${n}`));
   } else {
-    logWarning('No tables found in the database');
+    logWarning('Could not verify any tables via fallback method.');
   }
 }
 
