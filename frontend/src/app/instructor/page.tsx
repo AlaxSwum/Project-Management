@@ -94,13 +94,16 @@ export default function InstructorDashboard() {
       console.log('🔍 User data for query:', { id: user?.id, name: user?.name, email: user?.email });
       
       // Query by instructor_name since instructor_id column doesn't exist
+      const instructorName = user?.name || '';
+      console.log(`🔍 Querying classes where instructor_name = "${instructorName}"`);
+      
       const { data: classesData, error: classesError } = await supabase
         .from('classes')
         .select(`
           *,
           classes_folders(name)
         `)
-        .eq('instructor_name', user?.name || '');
+        .eq('instructor_name', instructorName);
 
       if (classesError) {
         console.error('❌ Error loading instructor classes:', classesError);
@@ -116,12 +119,12 @@ export default function InstructorDashboard() {
 
       console.log('🔍 Raw classes data:', classesData);
 
-      // Filter out planning status and general training classes
+      // Temporarily disable filters to see all classes for debugging
       const filteredClasses = classesData
         ?.filter(classItem => {
-          const shouldInclude = classItem.status !== 'planning' && 
-            !classItem.class_title?.toLowerCase().includes('general training all staff');
-          console.log(`🔍 Class "${classItem.class_title}" - Status: ${classItem.status}, Include: ${shouldInclude}`);
+          // Show ALL classes for now to debug
+          const shouldInclude = true; // Temporarily disabled: classItem.status !== 'planning' && !classItem.class_title?.toLowerCase().includes('general training all staff');
+          console.log(`🔍 Class "${classItem.class_title}" - Status: ${classItem.status}, Instructor: ${classItem.instructor_name}, Include: ${shouldInclude}`);
           return shouldInclude;
         })
         ?.map(classItem => ({
