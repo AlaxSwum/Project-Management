@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@supabase/supabase-js';
+import Sidebar from '@/components/Sidebar';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-interface Project {
+interface AdminProject {
   project_id: number;
   project_name: string;
   can_create_users: boolean;
@@ -35,7 +36,7 @@ export default function AdminDashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
-  const [adminProjects, setAdminProjects] = useState<Project[]>([]);
+  const [adminProjects, setAdminProjects] = useState<AdminProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState<NewUser>({
     name: '',
@@ -48,6 +49,7 @@ export default function AdminDashboardPage() {
   });
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [createUserMessage, setCreateUserMessage] = useState('');
+  const sidebarProjects = adminProjects.map(p => ({ id: p.project_id, name: p.project_name }));
 
   useEffect(() => {
     if (isLoading) return;
@@ -199,8 +201,64 @@ export default function AdminDashboardPage() {
   if (isLoading || loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '2rem' }}>Admin Dashboard</h1>
+    <>
+      <style jsx>{`
+        .admin-container {
+          min-height: 100vh;
+          display: flex;
+          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+          position: relative;
+          overflow: hidden;
+        }
+        .main-content {
+          flex: 1;
+          margin-left: 280px;
+          background: transparent;
+          position: relative;
+          z-index: 1;
+        }
+        .header {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+          padding: 2.25rem 2rem;
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        .header-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+        .title {
+          font-size: 2.25rem;
+          font-weight: 900;
+          background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+        .section-container {
+          padding: 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+      `}</style>
+      <div className="admin-container">
+        <Sidebar projects={sidebarProjects} onCreateProject={() => router.push('/dashboard')} />
+        <div className="main-content">
+          <div className="header">
+            <div className="header-content">
+              <h1 className="title">Admin Dashboard</h1>
+            </div>
+          </div>
+          <div className="section-container">
       
       {/* Tab Navigation */}
       <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb' }}>
@@ -565,6 +623,9 @@ export default function AdminDashboardPage() {
           )}
         </div>
       )}
-    </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
