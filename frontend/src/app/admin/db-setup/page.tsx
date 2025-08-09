@@ -7,6 +7,16 @@ export default function DatabaseSetup() {
   const [status, setStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
+  // Tables listing state
+  interface TableInfo {
+    table_name: string;
+    table_schema: string;
+    table_type: string;
+  }
+  const [tables, setTables] = useState<TableInfo[]>([]);
+  const [tablesLoading, setTablesLoading] = useState(false);
+  const [tablesError, setTablesError] = useState<string>('');
+
   const createMeetingNotesTable = async () => {
     setLoading(true);
     setStatus('Creating meeting_notes table...');
@@ -146,6 +156,23 @@ export default function DatabaseSetup() {
     }
 
     setLoading(false);
+  };
+
+  const fetchSupabaseTables = async () => {
+    setTablesLoading(true);
+    setTablesError('');
+    try {
+      // Prefer RPC function if available
+      const { data, error } = await supabase.rpc('list_public_tables');
+      if (error) throw error;
+      setTables((data as any) || []);
+    } catch (err: any) {
+      console.error('Fetch tables error:', err);
+      setTables([]);
+      setTablesError('Could not fetch tables. Please run add_list_public_tables_function.sql in Supabase SQL editor.');
+    } finally {
+      setTablesLoading(false);
+    }
   };
 
   const createTodoItemsTable = async () => {
@@ -318,6 +345,46 @@ export default function DatabaseSetup() {
           
           <div className="p-6">
             <div className="space-y-6">
+              {/* Supabase Tables Listing */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Supabase Tables</h2>
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <button
+                    onClick={fetchSupabaseTables}
+                    disabled={tablesLoading}
+                    className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {tablesLoading ? 'Fetching...' : 'Fetch Tables'}
+                  </button>
+                </div>
+                {tablesError && (
+                  <div className="p-3 rounded bg-red-50 text-red-700 text-sm border border-red-200 mb-3">
+                    {tablesError}
+                  </div>
+                )}
+                {tables.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Table</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schema</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {tables.map((t) => (
+                          <tr key={`${t.table_schema}.${t.table_name}`}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{t.table_name}</td>
+                            <td className="px-4 py-2 text-sm text-gray-500">{t.table_schema}</td>
+                            <td className="px-4 py-2 text-sm text-gray-500">{t.table_type}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
               {/* Meeting Notes Section */}
               <div className="border border-gray-200 rounded-lg p-4">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Meeting Notes Table</h2>
