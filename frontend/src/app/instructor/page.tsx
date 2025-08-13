@@ -39,21 +39,20 @@ interface Student {
 }
 
 interface AttendanceFolder {
-  date: string;
+  id: number;
+  attendance_date: string;
   total_students: number;
   present_count: number;
   absent_count: number;
+  late_count: number;
 }
 
 interface AttendanceRecord {
   id: number;
   student_id: number;
   student_name: string;
-  status: 'present' | 'absent';
-  absence_type?: 'excused' | 'unexcused' | 'sick' | 'family';
-  reason?: string;
-  notes?: string;
-  date: string;
+  status: 'present' | 'absent' | 'late';
+  reason?: string | null;
 }
 
 interface StudentKPI {
@@ -75,6 +74,7 @@ export default function InstructorDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [attendanceFolders, setAttendanceFolders] = useState<AttendanceFolder[]>([]);
   const [selectedAttendanceDate, setSelectedAttendanceDate] = useState<string>('');
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [studentKPIs, setStudentKPIs] = useState<StudentKPI[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,12 +111,12 @@ export default function InstructorDashboard() {
     }
   }, [selectedClass, classTab]);
 
-  // Load attendance records when date is selected
+  // Load attendance records when folder/date is selected
   useEffect(() => {
-    if (selectedClass && selectedAttendanceDate) {
+    if (selectedClass && selectedAttendanceDate && selectedFolderId) {
       loadAttendanceRecords();
     }
-  }, [selectedClass, selectedAttendanceDate]);
+  }, [selectedClass, selectedAttendanceDate, selectedFolderId]);
 
   const loadInstructorClasses = async () => {
     try {
@@ -216,7 +216,7 @@ export default function InstructorDashboard() {
       // Get attendance folders for this class
       const { data: folderData, error } = await supabase
         .from('class_attendance_folders')
-        .select('*')
+        .select('id, class_id, attendance_date')
         .eq('class_id', selectedClass.id)
         .order('attendance_date', { ascending: false });
 
@@ -235,22 +235,23 @@ export default function InstructorDashboard() {
       // Get stats for each folder
       const folders: AttendanceFolder[] = await Promise.all(
         folderData.map(async (folder) => {
-          // Get all attendance records for this folder
-          const { data: attendanceRecords } = await supabase
+          const { data: daily } = await supabase
             .from('class_daily_attendance')
             .select('status')
             .eq('folder_id', folder.id);
 
-          const present = attendanceRecords?.filter(r => r.status === 'present').length || 0;
-          const absent = attendanceRecords?.filter(r => r.status === 'absent').length || 0;
-          const excused = attendanceRecords?.filter(r => r.status === 'excused').length || 0;
+          const present = daily?.filter((r: any) => r.status === 'present').length || 0;
+          const absent = daily?.filter((r: any) => r.status === 'absent').length || 0;
+          const late = daily?.filter((r: any) => r.status === 'late').length || 0;
 
           return {
-            date: folder.attendance_date,
+            id: folder.id,
+            attendance_date: folder.attendance_date,
             present_count: present,
-            absent_count: absent + excused,
-            total_students: present + absent + excused
-          };
+            absent_count: absent,
+            late_count: late,
+            total_students: present + absent + late
+          } as AttendanceFolder;
         })
       );
 
@@ -265,15 +266,14 @@ export default function InstructorDashboard() {
   };
 
   const loadAttendanceRecords = async () => {
-    if (!selectedClass || !selectedAttendanceDate) return;
+    if (!selectedClass || !selectedAttendanceDate || !selectedFolderId) return;
 
     try {
       setLoading(true);
       const { data: records, error } = await supabase
-        .from('class_attendance')
-        .select('*')
-        .eq('class_id', selectedClass.id)
-        .eq('date', selectedAttendanceDate);
+        .from('class_daily_attendance')
+        .select('id, student_id, student_name, status, reason')
+        .eq('folder_id', selectedFolderId);
 
       if (error) {
         console.error('Error loading attendance records:', error);
@@ -292,65 +292,8 @@ export default function InstructorDashboard() {
   };
 
   const loadStudentKPIs = async () => {
-    if (!selectedClass) return;
-
-    try {
-      setLoading(true);
-      
-      // Get all students for this class
-      const { data: classStudents } = await supabase
-        .from('classes_participants')
-        .select('*')
-        .eq('class_id', selectedClass.id);
-
-      if (!classStudents) {
-        setStudentKPIs([]);
-        return;
-      }
-
-      // Calculate KPIs for each student
-      const kpis: StudentKPI[] = await Promise.all(
-        classStudents.map(async (student) => {
-          // Get attendance records for this student
-          const { data: attendanceRecords } = await supabase
-            .from('class_attendance')
-            .select('status, absence_type')
-            .eq('class_id', selectedClass.id)
-            .eq('student_id', student.id);
-
-          const totalClasses = attendanceRecords?.length || 0;
-          const attendedClasses = attendanceRecords?.filter(r => r.status === 'present').length || 0;
-          const absentExcused = attendanceRecords?.filter(r => r.status === 'absent' && r.absence_type === 'excused').length || 0;
-          const absentUnexcused = attendanceRecords?.filter(r => r.status === 'absent' && ['unexcused', 'sick', 'family'].includes(r.absence_type)).length || 0;
-          
-          const attendanceRate = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
-          
-          // Determine trend (simplified)
-          let recent_trend: 'improving' | 'declining' | 'stable' = 'stable';
-          if (attendanceRate > 80) recent_trend = 'improving';
-          else if (attendanceRate < 60) recent_trend = 'declining';
-
-          return {
-            student_id: student.id,
-            student_name: student.student_name,
-            total_classes: totalClasses,
-            attended_classes: attendedClasses,
-            attendance_rate: Math.round(attendanceRate),
-            absent_excused: absentExcused,
-            absent_unexcused: absentUnexcused,
-            recent_trend
-          };
-        })
-      );
-
-      setStudentKPIs(kpis);
-      setMessage('');
-    } catch (error) {
-      console.error('Error loading student KPIs:', error);
-      setMessage('Error loading student KPIs');
-    } finally {
-      setLoading(false);
-    }
+    // Placeholder to avoid runtime errors while KPI UI is "Coming Soon"
+    setStudentKPIs([]);
   };
 
   const createAttendanceFolder = async () => {
@@ -387,8 +330,8 @@ export default function InstructorDashboard() {
         return;
       }
 
-      // Create daily attendance records for each student
-      const attendanceRecords = classStudents.map(student => ({
+      // Create daily attendance records for each student (default present)
+      const attendanceRecords = classStudents.map((student: any) => ({
         folder_id: folder.id,
         student_id: student.id,
         student_name: student.student_name,
@@ -410,7 +353,10 @@ export default function InstructorDashboard() {
       setMessage('Attendance folder created successfully');
       setShowNewFolderForm(false);
       setNewFolderDate(new Date().toISOString().split('T')[0]);
-      loadAttendanceFolders();
+      await loadAttendanceFolders();
+      setSelectedFolderId(folder.id);
+      setSelectedAttendanceDate(folder.attendance_date);
+      await loadAttendanceRecords();
     } catch (error) {
       console.error('Error creating attendance folder:', error);
       setMessage(`Error creating attendance folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -419,16 +365,11 @@ export default function InstructorDashboard() {
     }
   };
 
-  const toggleAttendanceStatus = async (recordId: number, currentStatus: string) => {
+  const updateAttendanceStatus = async (recordId: number, newStatus: 'present' | 'absent' | 'late') => {
     try {
-      const newStatus = currentStatus === 'present' ? 'absent' : 'present';
-      
       const { error } = await supabase
-        .from('class_attendance')
-        .update({ 
-          status: newStatus,
-          absence_type: newStatus === 'absent' ? 'unexcused' : null
-        })
+        .from('class_daily_attendance')
+        .update({ status: newStatus })
         .eq('id', recordId);
 
       if (error) {
@@ -975,54 +916,162 @@ export default function InstructorDashboard() {
               )}
 
               {classTab === 'attendance' && (
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 'var(--spacing-2xl)',
-                  textAlign: 'center'
-                }}>
+                <div>
+                  {/* Create Folder */}
                   <div style={{
-                    background: 'var(--surface)',
-                    borderRadius: 'var(--radius-2xl)',
-                    border: '2px solid var(--border)',
-                    padding: 'var(--spacing-2xl)',
-                    boxShadow: 'var(--shadow-lg)',
-                    maxWidth: '500px',
-                    width: '100%'
+                    display: 'flex',
+                    gap: 'var(--spacing-sm)',
+                    alignItems: 'center',
+                    marginBottom: 'var(--spacing-lg)'
                   }}>
-                    <ClipboardDocumentListIcon style={{ 
-                      height: '4rem', 
-                      width: '4rem', 
-                      margin: '0 auto var(--spacing-lg)', 
-                      color: 'var(--text-muted)' 
-                    }} />
-                    <h3 style={{
-                      fontSize: '1.5rem',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      marginBottom: 'var(--spacing-sm)',
-                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                    }}>
-                      Attendance Tracking
-                    </h3>
-                    <p style={{
-                      fontSize: '1.125rem',
-                      color: 'var(--text-secondary)',
-                      marginBottom: 'var(--spacing-md)',
-                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                    }}>
-                      Coming Soon
-                    </p>
-                    <p style={{
-                      fontSize: '0.875rem',
-                      color: 'var(--text-muted)',
-                      fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                    }}>
-                      Advanced attendance tracking features will be available soon. Track student presence, absences, and generate detailed reports.
-                    </p>
+                    <input
+                      type="date"
+                      value={newFolderDate}
+                      onChange={(e) => setNewFolderDate(e.target.value)}
+                      style={{
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid var(--border)',
+                        background: 'var(--surface)',
+                        color: 'var(--text-primary)'
+                      }}
+                    />
+                    <button
+                      onClick={createAttendanceFolder}
+                      className="btn-primary-solid"
+                      style={{
+                        background: 'var(--primary)',
+                        color: 'var(--text-inverse)',
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        borderRadius: 'var(--radius-lg)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      Create Attendance Day
+                    </button>
                   </div>
+
+                  {/* Folders list */}
+                  <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                    <h4 style={{
+                      fontSize: '1.125rem',
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
+                      marginBottom: 'var(--spacing-sm)'
+                    }}>
+                      Attendance Days
+                    </h4>
+                    {attendanceFolders.length === 0 ? (
+                      <div style={{ color: 'var(--text-secondary)' }}>No attendance days yet.</div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+                        {attendanceFolders.map((f) => (
+                          <button
+                            key={f.id}
+                            onClick={() => {
+                              setSelectedFolderId(f.id);
+                              setSelectedAttendanceDate(f.attendance_date);
+                            }}
+                            style={{
+                              padding: 'var(--spacing-sm) var(--spacing-md)',
+                              borderRadius: 'var(--radius-full)',
+                              border: '1px solid var(--border)',
+                              background: selectedFolderId === f.id ? 'var(--primary-soft)' : 'var(--surface)',
+                              color: selectedFolderId === f.id ? 'var(--primary)' : 'var(--text-secondary)'
+                            }}
+                          >
+                            {new Date(f.attendance_date).toLocaleDateString()} · P {f.present_count} · A {f.absent_count} · L {f.late_count}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Records table */}
+                  {selectedFolderId && (
+                    <div style={{
+                      background: 'var(--surface)',
+                      borderRadius: 'var(--radius-2xl)',
+                      border: '2px solid var(--border)',
+                      overflow: 'hidden',
+                      boxShadow: 'var(--shadow-lg)'
+                    }}>
+                      <div style={{
+                        background: 'var(--surface-light)',
+                        padding: 'var(--spacing-md)',
+                        borderBottom: '2px solid var(--border)'
+                      }}>
+                        <h4 style={{ margin: 0, textAlign: 'center' }}>
+                          {new Date(selectedAttendanceDate).toLocaleDateString()} Attendance
+                        </h4>
+                      </div>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ background: 'var(--surface-dark)' }}>
+                          <tr>
+                            <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Student</th>
+                            <th style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>Status</th>
+                            <th style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attendanceRecords.map((rec) => (
+                            <tr key={rec.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                              <td style={{ padding: 'var(--spacing-md)' }}>{rec.student_name}</td>
+                              <td style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>
+                                <span style={{
+                                  padding: '0.25rem 0.75rem',
+                                  borderRadius: '9999px',
+                                  border: '1px solid var(--border)',
+                                  background: 'var(--surface-light)',
+                                  color: rec.status === 'present' ? 'var(--status-completed)' : rec.status === 'late' ? 'var(--status-in-progress)' : 'var(--status-blocked)',
+                                  fontWeight: 600,
+                                  fontSize: '0.875rem'
+                                }}>
+                                  {rec.status}
+                                </span>
+                              </td>
+                              <td style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>
+                                <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                                  <button
+                                    onClick={() => updateAttendanceStatus(rec.id, 'present')}
+                                    style={{
+                                      padding: '0.25rem 0.75rem',
+                                      borderRadius: '0.5rem',
+                                      border: '1px solid var(--border)',
+                                      background: rec.status === 'present' ? 'var(--primary-soft)' : 'var(--surface)',
+                                      color: rec.status === 'present' ? 'var(--primary)' : 'var(--text-secondary)'
+                                    }}
+                                  >Present</button>
+                                  <button
+                                    onClick={() => updateAttendanceStatus(rec.id, 'late')}
+                                    style={{
+                                      padding: '0.25rem 0.75rem',
+                                      borderRadius: '0.5rem',
+                                      border: '1px solid var(--border)',
+                                      background: rec.status === 'late' ? 'var(--primary-soft)' : 'var(--surface)',
+                                      color: rec.status === 'late' ? 'var(--primary)' : 'var(--text-secondary)'
+                                    }}
+                                  >Late</button>
+                                  <button
+                                    onClick={() => updateAttendanceStatus(rec.id, 'absent')}
+                                    style={{
+                                      padding: '0.25rem 0.75rem',
+                                      borderRadius: '0.5rem',
+                                      border: '1px solid var(--border)',
+                                      background: rec.status === 'absent' ? 'var(--primary-soft)' : 'var(--surface)',
+                                      color: rec.status === 'absent' ? 'var(--primary)' : 'var(--text-secondary)'
+                                    }}
+                                  >Absent</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
 
