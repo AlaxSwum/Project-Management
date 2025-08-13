@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
-import { CalendarIcon, ClockIcon, MapPinIcon, FolderIcon, UserGroupIcon, ClipboardDocumentListIcon, ChartBarIcon, PlusIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, MapPinIcon, FolderIcon, UserGroupIcon, ClipboardDocumentListIcon, ChartBarIcon, PlusIcon, CheckIcon, XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 export const dynamic = 'force-dynamic';
 
@@ -1730,7 +1730,7 @@ export default function InstructorDashboard() {
                       marginBottom: 'var(--spacing-md)',
                       fontFamily: "'Mabry Pro', 'Inter', sans-serif"
                     }}>
-                      📊 Grading Criteria
+                      Grading Criteria
                     </h4>
                     <div style={{
                       display: 'grid',
@@ -2126,7 +2126,8 @@ export default function InstructorDashboard() {
                                         (e.target as HTMLElement).style.color = 'var(--status-completed)';
                                       }}
                                     >
-                                      🎓 Certificate
+                                      <DocumentTextIcon style={{ height: '1rem', width: '1rem' }} />
+                                      Certificate
                                     </button>
                                   ) : (
                                     <span style={{
