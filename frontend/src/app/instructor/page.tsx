@@ -341,7 +341,7 @@ export default function InstructorDashboard() {
             .from('class_daily_attendance')
             .select('status, folder_id')
             .eq('student_id', student.id)
-            .in('folder_id', attendanceFolders.map(f => f.id));
+            .in('folder_id', (attendanceFolders || []).map(f => f.id));
 
           const presentDays = attendanceRecords?.filter(r => r.status === 'present').length || 0;
           const lateDays = attendanceRecords?.filter(r => r.status === 'late').length || 0;
