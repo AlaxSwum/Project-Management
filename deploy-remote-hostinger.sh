@@ -15,8 +15,15 @@ PROJECT_PATH="/var/www/project_management"
 
 echo "🔌 Connecting to $SERVER_HOST..."
 
+# Support non-interactive password via SSHPASS if provided
+if [ -n "$SSHPASS" ]; then
+  SSH_BIN="sshpass -e ssh -o StrictHostKeyChecking=no -t"
+else
+  SSH_BIN="ssh -t"
+fi
+
 # SSH into server and run deployment commands
-ssh -t $SERVER_USER@$SERVER_HOST << 'ENDSSH'
+$SSH_BIN $SERVER_USER@$SERVER_HOST << 'ENDSSH'
 echo "📍 Connected to Hostinger server"
 echo "📅 Server time: $(date)"
 
