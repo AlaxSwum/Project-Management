@@ -388,6 +388,79 @@ export default function InstructorDashboard() {
     }
   };
 
+  const updateAttendanceStatusRealtime = async (recordId: number, newStatus: 'present' | 'absent' | 'late') => {
+    try {
+      // Optimistically update the UI first
+      setAttendanceRecords(prev => 
+        prev.map(rec => 
+          rec.id === recordId ? { ...rec, status: newStatus } : rec
+        )
+      );
+
+      // Update in database
+      const { error } = await supabase
+        .from('class_daily_attendance')
+        .update({ status: newStatus })
+        .eq('id', recordId);
+
+      if (error) {
+        console.error('Error updating attendance:', error);
+        setMessage('Error updating attendance');
+        // Revert optimistic update on error
+        loadAttendanceRecords();
+        return;
+      }
+
+      // Refresh folder stats in background
+      loadAttendanceFolders();
+      setMessage(''); // Clear any previous error messages
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      setMessage('Error updating attendance');
+      // Revert optimistic update on error
+      loadAttendanceRecords();
+    }
+  };
+
+  const deleteAttendanceFolder = async (folderId: number) => {
+    if (!confirm('Are you sure you want to delete this attendance day? This will also delete all attendance records for this day.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Delete the folder (cascade will delete daily records)
+      const { error } = await supabase
+        .from('class_attendance_folders')
+        .delete()
+        .eq('id', folderId);
+
+      if (error) {
+        console.error('Error deleting attendance folder:', error);
+        setMessage('Error deleting attendance folder');
+        return;
+      }
+
+      setMessage('Attendance day deleted successfully');
+      
+      // Clear selection if this folder was selected
+      if (selectedFolderId === folderId) {
+        setSelectedFolderId(null);
+        setSelectedAttendanceDate('');
+        setAttendanceRecords([]);
+      }
+      
+      // Refresh folders list
+      loadAttendanceFolders();
+    } catch (error) {
+      console.error('Error deleting attendance folder:', error);
+      setMessage('Error deleting attendance folder');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!user) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -1010,7 +1083,7 @@ export default function InstructorDashboard() {
                     </div>
                   </div>
 
-                  {/* Enhanced Folders List */}
+                  {/* Attendance History Table */}
                   <div style={{ marginBottom: 'var(--spacing-xl)' }}>
                     <div style={{
                       display: 'flex',
@@ -1058,108 +1131,199 @@ export default function InstructorDashboard() {
                         </p>
                       </div>
                     ) : (
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-                        gap: 'var(--spacing-md)' 
+                      <div style={{
+                        background: 'var(--surface)',
+                        borderRadius: 'var(--radius-2xl)',
+                        border: '2px solid var(--border)',
+                        overflow: 'hidden',
+                        boxShadow: 'var(--shadow-lg)'
                       }}>
-                        {attendanceFolders.map((f, index) => (
-                          <button
-                            key={f.id}
-                            onClick={() => {
-                              setSelectedFolderId(f.id);
-                              setSelectedAttendanceDate(f.attendance_date);
-                            }}
-                            style={{
-                              padding: 'var(--spacing-lg)',
-                              borderRadius: 'var(--radius-xl)',
-                              border: selectedFolderId === f.id ? '2px solid var(--primary)' : '2px solid var(--border)',
-                              background: selectedFolderId === f.id ? 'var(--primary-soft)' : 'var(--surface)',
-                              cursor: 'pointer',
-                              transition: 'all var(--transition-normal)',
-                              boxShadow: selectedFolderId === f.id ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
-                              animation: `fadeIn 0.4s ease-out ${index * 0.1}s both`,
-                              transform: selectedFolderId === f.id ? 'translateY(-2px)' : 'translateY(0)',
-                              textAlign: 'left'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (selectedFolderId !== f.id) {
-                                (e.target as HTMLElement).style.transform = 'translateY(-2px)';
-                                (e.target as HTMLElement).style.boxShadow = 'var(--shadow-md)';
-                                (e.target as HTMLElement).style.borderColor = 'var(--border-dark)';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (selectedFolderId !== f.id) {
-                                (e.target as HTMLElement).style.transform = 'translateY(0)';
-                                (e.target as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
-                                (e.target as HTMLElement).style.borderColor = 'var(--border)';
-                              }
-                            }}
-                          >
-                            <div style={{
-                              fontSize: '1.125rem',
-                              fontWeight: '600',
-                              color: selectedFolderId === f.id ? 'var(--primary)' : 'var(--text-primary)',
-                              marginBottom: 'var(--spacing-sm)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                            }}>
-                              {new Date(f.attendance_date).toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
-                            </div>
-                            <div style={{
-                              display: 'flex',
-                              gap: 'var(--spacing-lg)',
-                              fontSize: '0.875rem',
-                              color: 'var(--text-secondary)',
-                              fontFamily: "'Mabry Pro', 'Inter', sans-serif"
-                            }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 'var(--spacing-xs)'
-                              }}>
-                                <div style={{
-                                  width: '8px',
-                                  height: '8px',
-                                  borderRadius: '50%',
-                                  background: 'var(--status-completed)'
-                                }}></div>
-                                Present: {f.present_count}
-                              </div>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 'var(--spacing-xs)'
-                              }}>
-                                <div style={{
-                                  width: '8px',
-                                  height: '8px',
-                                  borderRadius: '50%',
-                                  background: 'var(--status-in-progress)'
-                                }}></div>
-                                Late: {f.late_count}
-                              </div>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 'var(--spacing-xs)'
-                              }}>
-                                <div style={{
-                                  width: '8px',
-                                  height: '8px',
-                                  borderRadius: '50%',
-                                  background: 'var(--status-blocked)'
-                                }}></div>
-                                Absent: {f.absent_count}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Mabry Pro', 'Inter', sans-serif" }}>
+                          <thead style={{ background: 'var(--surface-dark)' }}>
+                            <tr>
+                              <th style={{ 
+                                padding: 'var(--spacing-lg)', 
+                                textAlign: 'left',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: 'var(--text-secondary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.025em'
+                              }}>Date</th>
+                              <th style={{ 
+                                padding: 'var(--spacing-lg)', 
+                                textAlign: 'center',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: 'var(--text-secondary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.025em'
+                              }}>Day</th>
+                              <th style={{ 
+                                padding: 'var(--spacing-lg)', 
+                                textAlign: 'center',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: 'var(--text-secondary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.025em'
+                              }}>Present</th>
+                              <th style={{ 
+                                padding: 'var(--spacing-lg)', 
+                                textAlign: 'center',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: 'var(--text-secondary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.025em'
+                              }}>Late</th>
+                              <th style={{ 
+                                padding: 'var(--spacing-lg)', 
+                                textAlign: 'center',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: 'var(--text-secondary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.025em'
+                              }}>Absent</th>
+                              <th style={{ 
+                                padding: 'var(--spacing-lg)', 
+                                textAlign: 'center',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                color: 'var(--text-secondary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.025em'
+                              }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {attendanceFolders.map((f, index) => (
+                              <tr 
+                                key={f.id}
+                                style={{ 
+                                  borderBottom: index < attendanceFolders.length - 1 ? '1px solid var(--border)' : 'none',
+                                  transition: 'background-color var(--transition-normal)',
+                                  animation: `fadeIn 0.4s ease-out ${index * 0.05}s both`
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'var(--surface-light)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                <td style={{ 
+                                  padding: 'var(--spacing-lg)',
+                                  fontSize: '1rem',
+                                  fontWeight: '500',
+                                  color: 'var(--text-primary)'
+                                }}>
+                                  {new Date(f.attendance_date).toLocaleDateString()}
+                                </td>
+                                <td style={{ 
+                                  padding: 'var(--spacing-lg)', 
+                                  textAlign: 'center',
+                                  fontSize: '0.875rem',
+                                  color: 'var(--text-secondary)'
+                                }}>
+                                  {new Date(f.attendance_date).toLocaleDateString('en-US', { weekday: 'long' })}
+                                </td>
+                                <td style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+                                  <span style={{
+                                    padding: 'var(--spacing-xs) var(--spacing-sm)',
+                                    borderRadius: 'var(--radius-full)',
+                                    background: 'rgba(16, 185, 129, 0.1)',
+                                    color: 'var(--status-completed)',
+                                    fontWeight: '600',
+                                    fontSize: '0.875rem'
+                                  }}>
+                                    {f.present_count}
+                                  </span>
+                                </td>
+                                <td style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+                                  <span style={{
+                                    padding: 'var(--spacing-xs) var(--spacing-sm)',
+                                    borderRadius: 'var(--radius-full)',
+                                    background: 'rgba(255, 179, 51, 0.1)',
+                                    color: 'var(--status-in-progress)',
+                                    fontWeight: '600',
+                                    fontSize: '0.875rem'
+                                  }}>
+                                    {f.late_count}
+                                  </span>
+                                </td>
+                                <td style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+                                  <span style={{
+                                    padding: 'var(--spacing-xs) var(--spacing-sm)',
+                                    borderRadius: 'var(--radius-full)',
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    color: 'var(--status-blocked)',
+                                    fontWeight: '600',
+                                    fontSize: '0.875rem'
+                                  }}>
+                                    {f.absent_count}
+                                  </span>
+                                </td>
+                                <td style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
+                                  <div style={{ display: 'inline-flex', gap: 'var(--spacing-sm)' }}>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedFolderId(f.id);
+                                        setSelectedAttendanceDate(f.attendance_date);
+                                      }}
+                                      style={{
+                                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        border: '1px solid var(--primary)',
+                                        background: 'var(--primary-soft)',
+                                        color: 'var(--primary)',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '0.75rem',
+                                        transition: 'all var(--transition-normal)'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        (e.target as HTMLElement).style.background = 'var(--primary)';
+                                        (e.target as HTMLElement).style.color = 'white';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        (e.target as HTMLElement).style.background = 'var(--primary-soft)';
+                                        (e.target as HTMLElement).style.color = 'var(--primary)';
+                                      }}
+                                    >
+                                      View
+                                    </button>
+                                    <button
+                                      onClick={() => deleteAttendanceFolder(f.id)}
+                                      style={{
+                                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        border: '1px solid var(--status-blocked)',
+                                        background: 'rgba(239, 68, 68, 0.1)',
+                                        color: 'var(--status-blocked)',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '0.75rem',
+                                        transition: 'all var(--transition-normal)'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        (e.target as HTMLElement).style.background = 'var(--status-blocked)';
+                                        (e.target as HTMLElement).style.color = 'white';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        (e.target as HTMLElement).style.background = 'rgba(239, 68, 68, 0.1)';
+                                        (e.target as HTMLElement).style.color = 'var(--status-blocked)';
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     )}
                   </div>
@@ -1291,43 +1455,36 @@ export default function InstructorDashboard() {
                                     </span>
                                   </td>
                                   <td style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
-                                    <div style={{ display: 'inline-flex', gap: 'var(--spacing-sm)' }}>
-                                      {['present', 'late', 'absent'].map((status) => (
-                                        <button
-                                          key={status}
-                                          onClick={() => updateAttendanceStatus(rec.id, status as 'present' | 'absent' | 'late')}
-                                          style={{
-                                            padding: 'var(--spacing-sm) var(--spacing-md)',
-                                            borderRadius: 'var(--radius-lg)',
-                                            border: '2px solid var(--border)',
-                                            background: rec.status === status ? 'var(--primary)' : 'var(--surface)',
-                                            color: rec.status === status ? 'white' : 'var(--text-secondary)',
-                                            cursor: 'pointer',
-                                            fontWeight: '600',
-                                            fontSize: '0.75rem',
-                                            textTransform: 'capitalize',
-                                            transition: 'all var(--transition-normal)',
-                                            boxShadow: rec.status === status ? 'var(--shadow-md)' : 'var(--shadow-sm)'
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            if (rec.status !== status) {
-                                              (e.target as HTMLElement).style.borderColor = 'var(--primary)';
-                                              (e.target as HTMLElement).style.color = 'var(--primary)';
-                                              (e.target as HTMLElement).style.transform = 'translateY(-1px)';
-                                            }
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            if (rec.status !== status) {
-                                              (e.target as HTMLElement).style.borderColor = 'var(--border)';
-                                              (e.target as HTMLElement).style.color = 'var(--text-secondary)';
-                                              (e.target as HTMLElement).style.transform = 'translateY(0)';
-                                            }
-                                          }}
-                                        >
-                                          {status}
-                                        </button>
-                                      ))}
-                                    </div>
+                                    <select
+                                      value={rec.status}
+                                      onChange={(e) => updateAttendanceStatusRealtime(rec.id, e.target.value as 'present' | 'absent' | 'late')}
+                                      style={{
+                                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        border: '2px solid var(--border)',
+                                        background: 'var(--surface)',
+                                        color: 'var(--text-primary)',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '0.875rem',
+                                        fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                                        transition: 'all var(--transition-normal)',
+                                        boxShadow: 'var(--shadow-sm)',
+                                        minWidth: '100px'
+                                      }}
+                                      onFocus={(e) => {
+                                        (e.target as HTMLElement).style.borderColor = 'var(--primary)';
+                                        (e.target as HTMLElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1), var(--shadow-md)';
+                                      }}
+                                      onBlur={(e) => {
+                                        (e.target as HTMLElement).style.borderColor = 'var(--border)';
+                                        (e.target as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
+                                      }}
+                                    >
+                                      <option value="present" style={{ color: 'var(--status-completed)' }}>Present</option>
+                                      <option value="late" style={{ color: 'var(--status-in-progress)' }}>Late</option>
+                                      <option value="absent" style={{ color: 'var(--status-blocked)' }}>Absent</option>
+                                    </select>
                                   </td>
                                 </tr>
                               ))}
