@@ -995,13 +995,13 @@ export default function InstructorDashboard() {
                         }}
                         onMouseEnter={(e) => {
                           if (!loading) {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = 'var(--shadow-lg)';
+                            (e.target as HTMLElement).style.transform = 'translateY(-2px)';
+                            (e.target as HTMLElement).style.boxShadow = 'var(--shadow-lg)';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = 'var(--shadow-sm)';
+                          (e.target as HTMLElement).style.transform = 'translateY(0)';
+                          (e.target as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
                         }}
                       >
                         <PlusIcon style={{ height: '1rem', width: '1rem' }} />
@@ -1084,16 +1084,16 @@ export default function InstructorDashboard() {
                             }}
                             onMouseEnter={(e) => {
                               if (selectedFolderId !== f.id) {
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = 'var(--shadow-md)';
-                                e.target.style.borderColor = 'var(--border-dark)';
+                                (e.target as HTMLElement).style.transform = 'translateY(-2px)';
+                                (e.target as HTMLElement).style.boxShadow = 'var(--shadow-md)';
+                                (e.target as HTMLElement).style.borderColor = 'var(--border-dark)';
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (selectedFolderId !== f.id) {
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = 'var(--shadow-sm)';
-                                e.target.style.borderColor = 'var(--border)';
+                                (e.target as HTMLElement).style.transform = 'translateY(0)';
+                                (e.target as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
+                                (e.target as HTMLElement).style.borderColor = 'var(--border)';
                               }
                             }}
                           >
@@ -1311,16 +1311,16 @@ export default function InstructorDashboard() {
                                           }}
                                           onMouseEnter={(e) => {
                                             if (rec.status !== status) {
-                                              e.target.style.borderColor = 'var(--primary)';
-                                              e.target.style.color = 'var(--primary)';
-                                              e.target.style.transform = 'translateY(-1px)';
+                                              (e.target as HTMLElement).style.borderColor = 'var(--primary)';
+                                              (e.target as HTMLElement).style.color = 'var(--primary)';
+                                              (e.target as HTMLElement).style.transform = 'translateY(-1px)';
                                             }
                                           }}
                                           onMouseLeave={(e) => {
                                             if (rec.status !== status) {
-                                              e.target.style.borderColor = 'var(--border)';
-                                              e.target.style.color = 'var(--text-secondary)';
-                                              e.target.style.transform = 'translateY(0)';
+                                              (e.target as HTMLElement).style.borderColor = 'var(--border)';
+                                              (e.target as HTMLElement).style.color = 'var(--text-secondary)';
+                                              (e.target as HTMLElement).style.transform = 'translateY(0)';
                                             }
                                           }}
                                         >
