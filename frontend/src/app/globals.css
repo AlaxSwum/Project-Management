@@ -10,6 +10,7 @@
   --primary: #FFB333 !important;
   --primary-light: #FFD480 !important;
   --primary-dark: #E69A00 !important;
+  --primary-soft: rgba(255, 179, 51, 0.1) !important;
   --secondary: #C483D9 !important;
   --secondary-light: #D9A3E6 !important;
   --secondary-dark: #A855F7 !important;
@@ -727,6 +728,17 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
 @keyframes slideUp {
   from {
     transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
     opacity: 0;
   }
   to {
