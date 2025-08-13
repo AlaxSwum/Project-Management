@@ -79,6 +79,7 @@ export default function InstructorDashboard() {
   const [studentKPIs, setStudentKPIs] = useState<StudentKPI[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [updatingRecordId, setUpdatingRecordId] = useState<number | null>(null);
 
   // New attendance folder form
   const [showNewFolderForm, setShowNewFolderForm] = useState(false);
@@ -390,14 +391,48 @@ export default function InstructorDashboard() {
 
   const updateAttendanceStatusRealtime = async (recordId: number, newStatus: 'present' | 'absent' | 'late') => {
     try {
-      // Optimistically update the UI first
+      // Set loading state for this specific record
+      setUpdatingRecordId(recordId);
+      
+      // Get the current record to know the old status
+      const currentRecord = attendanceRecords.find(rec => rec.id === recordId);
+      if (!currentRecord) {
+        setUpdatingRecordId(null);
+        return;
+      }
+      
+      const oldStatus = currentRecord.status;
+
+      // Optimistically update the attendance records
       setAttendanceRecords(prev => 
         prev.map(rec => 
           rec.id === recordId ? { ...rec, status: newStatus } : rec
         )
       );
 
-      // Update in database
+      // Optimistically update the folder stats without refreshing
+      setAttendanceFolders(prev => 
+        prev.map(folder => {
+          if (folder.id === selectedFolderId) {
+            const newFolder = { ...folder };
+            
+            // Decrease old status count
+            if (oldStatus === 'present') newFolder.present_count--;
+            else if (oldStatus === 'late') newFolder.late_count--;
+            else if (oldStatus === 'absent') newFolder.absent_count--;
+            
+            // Increase new status count
+            if (newStatus === 'present') newFolder.present_count++;
+            else if (newStatus === 'late') newFolder.late_count++;
+            else if (newStatus === 'absent') newFolder.absent_count++;
+            
+            return newFolder;
+          }
+          return folder;
+        })
+      );
+
+      // Update in database (silent background operation)
       const { error } = await supabase
         .from('class_daily_attendance')
         .update({ status: newStatus })
@@ -406,19 +441,43 @@ export default function InstructorDashboard() {
       if (error) {
         console.error('Error updating attendance:', error);
         setMessage('Error updating attendance');
-        // Revert optimistic update on error
-        loadAttendanceRecords();
+        
+        // Revert optimistic updates on error
+        setAttendanceRecords(prev => 
+          prev.map(rec => 
+            rec.id === recordId ? { ...rec, status: oldStatus } : rec
+          )
+        );
+        
+        setAttendanceFolders(prev => 
+          prev.map(folder => {
+            if (folder.id === selectedFolderId) {
+              const revertFolder = { ...folder };
+              
+              // Revert status count changes
+              if (newStatus === 'present') revertFolder.present_count--;
+              else if (newStatus === 'late') revertFolder.late_count--;
+              else if (newStatus === 'absent') revertFolder.absent_count--;
+              
+              if (oldStatus === 'present') revertFolder.present_count++;
+              else if (oldStatus === 'late') revertFolder.late_count++;
+              else if (oldStatus === 'absent') revertFolder.absent_count++;
+              
+              return revertFolder;
+            }
+            return folder;
+          })
+        );
+        setUpdatingRecordId(null);
         return;
       }
 
-      // Refresh folder stats in background
-      loadAttendanceFolders();
       setMessage(''); // Clear any previous error messages
+      setUpdatingRecordId(null);
     } catch (error) {
       console.error('Error updating attendance:', error);
       setMessage('Error updating attendance');
-      // Revert optimistic update on error
-      loadAttendanceRecords();
+      setUpdatingRecordId(null);
     }
   };
 
@@ -1457,34 +1516,52 @@ export default function InstructorDashboard() {
                                   <td style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
                                     <select
                                       value={rec.status}
-                                      onChange={(e) => updateAttendanceStatusRealtime(rec.id, e.target.value as 'present' | 'absent' | 'late')}
+                                      onChange={(e) => {
+                                        e.preventDefault();
+                                        updateAttendanceStatusRealtime(rec.id, e.target.value as 'present' | 'absent' | 'late');
+                                      }}
+                                      disabled={updatingRecordId === rec.id}
                                       style={{
                                         padding: 'var(--spacing-sm) var(--spacing-md)',
                                         borderRadius: 'var(--radius-lg)',
                                         border: '2px solid var(--border)',
-                                        background: 'var(--surface)',
-                                        color: 'var(--text-primary)',
-                                        cursor: 'pointer',
+                                        background: updatingRecordId === rec.id ? 'var(--surface-dark)' : 'var(--surface)',
+                                        color: updatingRecordId === rec.id ? 'var(--text-muted)' : 'var(--text-primary)',
+                                        cursor: updatingRecordId === rec.id ? 'wait' : 'pointer',
                                         fontWeight: '600',
                                         fontSize: '0.875rem',
                                         fontFamily: "'Mabry Pro', 'Inter', sans-serif",
                                         transition: 'all var(--transition-normal)',
                                         boxShadow: 'var(--shadow-sm)',
-                                        minWidth: '100px'
+                                        minWidth: '100px',
+                                        opacity: updatingRecordId === rec.id ? 0.7 : 1
                                       }}
                                       onFocus={(e) => {
-                                        (e.target as HTMLElement).style.borderColor = 'var(--primary)';
-                                        (e.target as HTMLElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1), var(--shadow-md)';
+                                        if (updatingRecordId !== rec.id) {
+                                          (e.target as HTMLElement).style.borderColor = 'var(--primary)';
+                                          (e.target as HTMLElement).style.boxShadow = '0 0 0 3px rgba(255, 179, 51, 0.1), var(--shadow-md)';
+                                        }
                                       }}
                                       onBlur={(e) => {
                                         (e.target as HTMLElement).style.borderColor = 'var(--border)';
                                         (e.target as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
                                       }}
                                     >
-                                      <option value="present" style={{ color: 'var(--status-completed)' }}>Present</option>
-                                      <option value="late" style={{ color: 'var(--status-in-progress)' }}>Late</option>
-                                      <option value="absent" style={{ color: 'var(--status-blocked)' }}>Absent</option>
+                                      <option value="present">Present</option>
+                                      <option value="late">Late</option>
+                                      <option value="absent">Absent</option>
                                     </select>
+                                    {updatingRecordId === rec.id && (
+                                      <div style={{
+                                        position: 'absolute',
+                                        marginLeft: 'var(--spacing-sm)',
+                                        fontSize: '0.75rem',
+                                        color: 'var(--primary)',
+                                        fontWeight: '500'
+                                      }}>
+                                        Updating...
+                                      </div>
+                                    )}
                                   </td>
                                 </tr>
                               ))}
