@@ -1237,12 +1237,14 @@ export default function CompanyOutreachPage() {
               overflowX: 'auto' as const,
               overflowY: 'auto' as const,
               width: '100%',
-              maxHeight: '70vh'
+              maxHeight: '70vh',
+              position: 'relative' as const
             }}>
             <table style={{
               borderCollapse: 'collapse' as const,
               minWidth: '1200px',
-              width: 'max-content'
+              width: 'max-content',
+              position: 'relative' as const
             }}>
               <thead>
                 <tr>
@@ -1253,7 +1255,14 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    left: 0,
+                    zIndex: 30,
+                    minWidth: '200px',
+                    maxWidth: '200px',
+                    borderRight: '2px solid #e5e7eb'
                   }}>Company Name</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1262,7 +1271,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Specializations</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1271,7 +1283,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Contact Person</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1280,7 +1295,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Phone</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1289,7 +1307,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Email</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1298,7 +1319,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Follow-up Person</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1307,7 +1331,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Meet-up Persons</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1316,7 +1343,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Status</th>
                   <th style={{
                     background: '#f9fafb',
@@ -1325,7 +1355,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Phone Call Status</th>
                   {/* <th style={{
                     background: '#f9fafb',
@@ -1343,7 +1376,10 @@ export default function CompanyOutreachPage() {
                     fontSize: '0.875rem',
                     fontWeight: '600',
                     color: '#374151',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid #e5e7eb',
+                    position: 'sticky' as const,
+                    top: 0,
+                    zIndex: 20
                   }}>Actions</th>
                 </tr>
               </thead>
@@ -1355,7 +1391,14 @@ export default function CompanyOutreachPage() {
                       borderBottom: '1px solid #f3f4f6',
                       fontSize: '0.875rem',
                       color: '#111827',
-                      verticalAlign: 'top' as const
+                      verticalAlign: 'top' as const,
+                      position: 'sticky' as const,
+                      left: 0,
+                      background: '#ffffff',
+                      zIndex: 10,
+                      minWidth: '200px',
+                      maxWidth: '200px',
+                      borderRight: '2px solid #e5e7eb'
                     }}>
                       <div 
                         style={{ 
