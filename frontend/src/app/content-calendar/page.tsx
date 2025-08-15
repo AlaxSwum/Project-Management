@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
-import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface ContentCalendarItem {
   id: number
@@ -82,6 +82,9 @@ export default function ContentCalendarPage() {
     folder_type: 'month',
     color: '#ffffff'
   })
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' })
+  const [editingCell, setEditingCell] = useState<{ itemId: number; field: string } | null>(null)
+  const [cellValues, setCellValues] = useState<{ [key: string]: any }>({})
 
   const checkAccess = async () => {
     if (!user?.id) return
@@ -397,6 +400,89 @@ export default function ContentCalendarPage() {
       case 'completed': return 'Completed'
       default: return status
     }
+  }
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+    
+    const sortedItems = [...filteredItems].sort((a, b) => {
+      const aVal = getValueByKey(a, key)
+      const bVal = getValueByKey(b, key)
+      
+      if (aVal === null || aVal === undefined) return direction === 'asc' ? 1 : -1
+      if (bVal === null || bVal === undefined) return direction === 'asc' ? -1 : 1
+      
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+    
+    setFilteredItems(sortedItems)
+  }
+
+  const getValueByKey = (item: ContentCalendarItem, key: string) => {
+    switch (key) {
+      case 'date': return new Date(item.date)
+      case 'content_type': return item.content_type
+      case 'category': return item.category
+      case 'social_media': return item.social_media
+      case 'content_title': return item.content_title
+      case 'assigned': return item.assignees?.map(a => a.name).join(', ') || ''
+      case 'content_deadline': return item.content_deadline ? new Date(item.content_deadline) : null
+      case 'graphic_deadline': return item.graphic_deadline ? new Date(item.graphic_deadline) : null
+      case 'status': return item.status
+      default: return ''
+    }
+  }
+
+  const handleCellDoubleClick = (itemId: number, field: string, currentValue: any) => {
+    setEditingCell({ itemId, field })
+    setCellValues({ ...cellValues, [`${itemId}-${field}`]: currentValue })
+  }
+
+  const handleCellEdit = async (itemId: number, field: string, newValue: any) => {
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      
+      const updateData = { [field]: newValue }
+      await supabaseDb.updateContentCalendarItem(itemId, updateData)
+      
+      // Update local state
+      const updatedItems = contentItems.map(item => 
+        item.id === itemId ? { ...item, [field]: newValue } : item
+      )
+      setContentItems(updatedItems)
+      filterItemsByFolder(updatedItems, selectedFolder)
+      
+      setEditingCell(null)
+      setCellValues({})
+    } catch (err) {
+      console.error('Error updating item:', err)
+      setError('Failed to update content item')
+    }
+  }
+
+  const handleCellKeyDown = (e: React.KeyboardEvent, itemId: number, field: string) => {
+    if (e.key === 'Enter') {
+      const newValue = cellValues[`${itemId}-${field}`]
+      handleCellEdit(itemId, field, newValue)
+    } else if (e.key === 'Escape') {
+      setEditingCell(null)
+      setCellValues({})
+    }
+  }
+
+  const renderSortIcon = (columnKey: string) => {
+    if (sortConfig.key !== columnKey) {
+      return <ChevronUpIcon style={{ width: '12px', height: '12px', opacity: 0.3 }} />
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUpIcon style={{ width: '12px', height: '12px', color: '#5884FD' }} />
+      : <ChevronDownIcon style={{ width: '12px', height: '12px', color: '#5884FD' }} />
   }
 
   if (authLoading || isLoading) {
@@ -775,29 +861,224 @@ export default function ContentCalendarPage() {
               background: '#ffffff',
               border: '1px solid #e8e8e8',
               borderRadius: '16px',
-              overflow: 'hidden',
-              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+              overflow: 'auto',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
+              maxHeight: '70vh'
             }}>
+              {/* Sticky Header */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
+                gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 120px',
                 gap: '0',
                 background: '#fafafa',
-                borderBottom: '1px solid #e8e8e8',
-                fontWeight: '500',
+                borderBottom: '2px solid #e8e8e8',
+                fontWeight: '600',
                 fontSize: '0.8rem',
-                color: '#666666',
-                letterSpacing: '0.025em'
+                color: '#444444',
+                letterSpacing: '0.025em',
+                position: 'sticky',
+                top: '0',
+                zIndex: 10
               }}>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PUBLISHED DATE</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TYPE</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CATEGORY</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>PLATFORM</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>TITLE</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>ASSIGNED</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>CONTENT DUE</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>GRAPHIC DUE</div>
-                <div style={{ padding: '1.25rem 1rem', borderRight: '1px solid #f0f0f0' }}>STATUS</div>
+                <div 
+                  onClick={() => handleSort('date')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#ffffff',
+                    position: 'sticky',
+                    left: '0',
+                    zIndex: 20,
+                    borderBottom: '2px solid #e8e8e8',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff'
+                  }}
+                >
+                  PUBLISHED DATE
+                  {renderSortIcon('date')}
+                </div>
+                <div 
+                  onClick={() => handleSort('content_type')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  TYPE
+                  {renderSortIcon('content_type')}
+                </div>
+                <div 
+                  onClick={() => handleSort('category')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  CATEGORY
+                  {renderSortIcon('category')}
+                </div>
+                <div 
+                  onClick={() => handleSort('social_media')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  PLATFORM
+                  {renderSortIcon('social_media')}
+                </div>
+                <div 
+                  onClick={() => handleSort('content_title')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#ffffff',
+                    position: 'sticky',
+                    left: '140px',
+                    zIndex: 20,
+                    borderBottom: '2px solid #e8e8e8',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff'
+                  }}
+                >
+                  TITLE
+                  {renderSortIcon('content_title')}
+                </div>
+                <div 
+                  onClick={() => handleSort('assigned')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  ASSIGNED
+                  {renderSortIcon('assigned')}
+                </div>
+                <div 
+                  onClick={() => handleSort('content_deadline')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  CONTENT DUE
+                  {renderSortIcon('content_deadline')}
+                </div>
+                <div 
+                  onClick={() => handleSort('graphic_deadline')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  GRAPHIC DUE
+                  {renderSortIcon('graphic_deadline')}
+                </div>
+                <div 
+                  onClick={() => handleSort('status')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  STATUS
+                  {renderSortIcon('status')}
+                </div>
                 <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
               </div>
 
@@ -827,25 +1108,179 @@ export default function ContentCalendarPage() {
                 filteredItems.map((item) => (
                   <div key={item.id} style={{
                     display: 'grid',
-                    gridTemplateColumns: '120px 100px 120px 120px 1fr 120px 120px 120px 100px 100px',
+                    gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 120px',
                     gap: '0',
                     borderBottom: '1px solid #f0f0f0',
                     fontSize: '0.85rem',
                     transition: 'all 0.2s ease'
                   }}>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
-                      {formatDate(item.date)}
+                    {/* Published Date - Frozen */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'date', item.date)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0', 
+                        color: '#666666',
+                        background: '#ffffff',
+                        position: 'sticky',
+                        left: '0',
+                        zIndex: 5,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'date' ? (
+                        <input
+                          type="date"
+                          value={cellValues[`${item.id}-date`] || item.date}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-date`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'date')}
+                          onBlur={() => handleCellEdit(item.id, 'date', cellValues[`${item.id}-date`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        />
+                      ) : (
+                        formatDate(item.date)
+                      )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
+
+                    {/* Content Type */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'content_type', item.content_type)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'content_type' ? (
+                        <select
+                          value={cellValues[`${item.id}-content_type`] || item.content_type}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-content_type`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'content_type')}
+                          onBlur={() => handleCellEdit(item.id, 'content_type', cellValues[`${item.id}-content_type`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          {CONTENT_TYPES.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      ) : (
                       <div style={{ fontWeight: '500', color: '#1a1a1a' }}>{item.content_type}</div>
+                      )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
-                      {item.category}
+
+                    {/* Category */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'category', item.category)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0', 
+                        color: '#666666',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'category' ? (
+                        <select
+                          value={cellValues[`${item.id}-category`] || item.category}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-category`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'category')}
+                          onBlur={() => handleCellEdit(item.id, 'category', cellValues[`${item.id}-category`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          {CATEGORIES.map(category => (
+                            <option key={category} value={category}>{category}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        item.category
+                      )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
-                      {item.social_media}
+
+                    {/* Social Media Platform */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'social_media', item.social_media)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0', 
+                        color: '#666666',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'social_media' ? (
+                        <select
+                          value={cellValues[`${item.id}-social_media`] || item.social_media}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-social_media`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'social_media')}
+                          onBlur={() => handleCellEdit(item.id, 'social_media', cellValues[`${item.id}-social_media`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          {SOCIAL_MEDIA.map(platform => (
+                            <option key={platform} value={platform}>{platform}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        item.social_media
+                      )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
+
+                    {/* Title - Frozen */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'content_title', item.content_title)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0',
+                        background: '#ffffff',
+                        position: 'sticky',
+                        left: '140px',
+                        zIndex: 5,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'content_title' ? (
+                        <input
+                          type="text"
+                          value={cellValues[`${item.id}-content_title`] || item.content_title}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-content_title`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'content_title')}
+                          onBlur={() => handleCellEdit(item.id, 'content_title', cellValues[`${item.id}-content_title`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        />
+                      ) : (
+                        <div>
                       <div style={{ fontWeight: '500', marginBottom: '0.25rem', color: '#1a1a1a' }}>{item.content_title}</div>
                       {item.description && (
                         <div style={{ fontSize: '0.75rem', color: '#666666', lineHeight: '1.4' }}>
@@ -853,7 +1288,13 @@ export default function ContentCalendarPage() {
                         </div>
                       )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
+
+                    {/* Assigned */}
+                    <div style={{ 
+                      padding: '1rem', 
+                      borderRight: '1px solid #f0f0f0', 
+                      color: '#666666'
+                    }}>
                       {item.assignees && item.assignees.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                           {item.assignees.map((assignee, index) => (
@@ -874,13 +1315,98 @@ export default function ContentCalendarPage() {
                         <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Unassigned</span>
                       )}
                      </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
-                      {item.content_deadline ? formatDate(item.content_deadline) : '-'}
+
+                    {/* Content Deadline */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'content_deadline', item.content_deadline)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0', 
+                        color: '#666666',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'content_deadline' ? (
+                        <input
+                          type="date"
+                          value={cellValues[`${item.id}-content_deadline`] || item.content_deadline || ''}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-content_deadline`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'content_deadline')}
+                          onBlur={() => handleCellEdit(item.id, 'content_deadline', cellValues[`${item.id}-content_deadline`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        />
+                      ) : (
+                        item.content_deadline ? formatDate(item.content_deadline) : '-'
+                      )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0', color: '#666666' }}>
-                      {item.graphic_deadline ? formatDate(item.graphic_deadline) : '-'}
+
+                    {/* Graphic Deadline */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'graphic_deadline', item.graphic_deadline)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0', 
+                        color: '#666666',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'graphic_deadline' ? (
+                        <input
+                          type="date"
+                          value={cellValues[`${item.id}-graphic_deadline`] || item.graphic_deadline || ''}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-graphic_deadline`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'graphic_deadline')}
+                          onBlur={() => handleCellEdit(item.id, 'graphic_deadline', cellValues[`${item.id}-graphic_deadline`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        />
+                      ) : (
+                        item.graphic_deadline ? formatDate(item.graphic_deadline) : '-'
+                      )}
                     </div>
-                    <div style={{ padding: '1rem', borderRight: '1px solid #f0f0f0' }}>
+
+                    {/* Status */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'status', item.status)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'status' ? (
+                        <select
+                          value={cellValues[`${item.id}-status`] || item.status}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-status`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'status')}
+                          onBlur={() => handleCellEdit(item.id, 'status', cellValues[`${item.id}-status`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          {STATUSES.map(status => (
+                            <option key={status} value={status}>{getStatusLabel(status)}</option>
+                          ))}
+                        </select>
+                      ) : (
                       <span style={{
                         padding: '0.375rem 0.75rem',
                         background: item.status === 'completed' ? '#10B981' : item.status === 'in_progress' ? '#5884FD' : item.status === 'review' ? '#FFB333' : '#C483D9',
@@ -891,7 +1417,10 @@ export default function ContentCalendarPage() {
                       }}>
                         {getStatusLabel(item.status)}
                       </span>
+                      )}
                     </div>
+
+                    {/* Actions */}
                     <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
                       <button
                         onClick={() => startEdit(item)}
