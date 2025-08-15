@@ -1281,10 +1281,12 @@ export default function ContentCalendarPage() {
                         />
                       ) : (
                         <div>
-                      <div style={{ fontWeight: '500', marginBottom: '0.25rem', color: '#1a1a1a' }}>{item.content_title}</div>
-                      {item.description && (
-                        <div style={{ fontSize: '0.75rem', color: '#666666', lineHeight: '1.4' }}>
-                          {item.description.length > 50 ? `${item.description.substring(0, 50)}...` : item.description}
+                          <div style={{ fontWeight: '500', marginBottom: '0.25rem', color: '#1a1a1a' }}>{item.content_title}</div>
+                          {item.description && (
+                            <div style={{ fontSize: '0.75rem', color: '#666666', lineHeight: '1.4' }}>
+                              {item.description.length > 50 ? `${item.description.substring(0, 50)}...` : item.description}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
