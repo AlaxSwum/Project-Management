@@ -798,7 +798,7 @@ export default function PersonalCalendarPage() {
     });
   };
 
-  const render5MinView = () => {
+  const render15MinView = () => {
     const allDayEvents = getAllEventsForDay(currentDate);
     
     // Separate main tasks from micro-tasks
@@ -811,7 +811,7 @@ export default function PersonalCalendarPage() {
     );
     
     // Debug logging
-    console.log('5-Min View Debug:', {
+    console.log('15-Min View Debug:', {
       currentDate: currentDate.toISOString(),
       allEvents: events.length,
       allDayEvents: allDayEvents.length,
@@ -819,24 +819,24 @@ export default function PersonalCalendarPage() {
       microTasks: microTasks.length
     });
 
-    // Generate 5-minute time slots (show every 15 minutes for cleaner look, but maintain 5-min precision)
-    const fiveMinSlots: { hour: number; minute: number; isMainSlot: boolean }[] = [];
+    // Generate 15-minute time slots
+    const fifteenMinSlots: { hour: number; minute: number; isMainSlot: boolean }[] = [];
     for (let hour = settings.start_hour; hour <= settings.end_hour; hour++) {
-      for (let minute = 0; minute < 60; minute += 5) {
-        fiveMinSlots.push({ 
+      for (let minute = 0; minute < 60; minute += 15) {
+        fifteenMinSlots.push({ 
           hour, 
           minute, 
-          isMainSlot: minute === 0 || minute === 15 || minute === 30 || minute === 45 
+          isMainSlot: true // All slots are main slots now
         });
       }
     }
 
-    const slotHeight = 30; // Much larger for better visibility
+    const slotHeight = 40; // Larger for better visibility with 15-min intervals
     const headerHeight = 100;
-    const totalHeight = fiveMinSlots.length * slotHeight + headerHeight;
+    const totalHeight = fifteenMinSlots.length * slotHeight + headerHeight;
 
     return (
-      <div className="calendar-5min-container" style={{ 
+      <div className="calendar-15min-container" style={{ 
         display: 'flex', 
         height: `${Math.min(totalHeight, 800)}px`, 
         overflow: 'auto', 
@@ -867,14 +867,12 @@ export default function PersonalCalendarPage() {
             borderTopLeftRadius: '12px'
           }}>
             <div style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '2px' }}>TIME</div>
-            <div style={{ fontSize: '0.6rem', opacity: 0.8, fontWeight: '500' }}>5-Min Precision</div>
+            <div style={{ fontSize: '0.6rem', opacity: 0.8, fontWeight: '500' }}>15-Min Intervals</div>
           </div>
-          {fiveMinSlots.map((slot, index) => {
-            if (!slot.isMainSlot) return null; // Only show 15-minute intervals in sidebar for cleaner look
-            
+          {fifteenMinSlots.map((slot, index) => {
             return (
               <div key={`${slot.hour}-${slot.minute}`} style={{
-                height: `${slotHeight * 3}px`, // 3 slots height (15 minutes)
+                height: `${slotHeight}px`, // Single slot height (15 minutes)
                 borderBottom: slot.minute === 0 ? '2px solid #d1d5db' : '1px solid #e5e7eb',
                 display: 'flex',
                 alignItems: 'center',
@@ -921,17 +919,17 @@ export default function PersonalCalendarPage() {
           </div>
 
           {/* Main task time slots */}
-          {fiveMinSlots.map((slot, index) => {
+          {fifteenMinSlots.map((slot, index) => {
             const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
-            const isQuarterHour = slot.minute % 15 === 0;
+            const isQuarterHour = true; // All slots are quarter-hour now
             
             return (
               <div 
                 key={`main-${slot.hour}-${slot.minute}`} 
                 style={{
                   height: `${slotHeight}px`,
-                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : isQuarterHour ? '1px solid #e5e7eb' : '1px solid #f1f5f9',
-                  borderRight: isQuarterHour ? '1px solid #e5e7eb' : 'none',
+                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : '1px solid #e5e7eb',
+                  borderRight: '1px solid #e5e7eb',
                   position: 'relative',
                   background: isWorkingHour ? 'rgba(5, 150, 105, 0.02)' : '#ffffff',
                   transition: 'all 0.2s ease',
@@ -948,13 +946,13 @@ export default function PersonalCalendarPage() {
             const startHour = eventStart.getHours();
             const startMinutes = eventStart.getMinutes();
             
-            // Calculate position based on 5-minute slots
+            // Calculate position based on 15-minute slots
             const totalMinutesFromStart = (startHour - settings.start_hour) * 60 + startMinutes;
-            const slotIndex = Math.floor(totalMinutesFromStart / 5);
+            const slotIndex = Math.floor(totalMinutesFromStart / 15);
             
-            // Calculate duration in 5-minute slots
+            // Calculate duration in 15-minute slots
             const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-            const durationInSlots = Math.ceil(durationInMinutes / 5);
+            const durationInSlots = Math.ceil(durationInMinutes / 15);
             
             const topPosition = headerHeight + (slotIndex * slotHeight);
             const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
@@ -1087,14 +1085,14 @@ export default function PersonalCalendarPage() {
               MICRO-TASKS
             </div>
             <div style={{ fontSize: '0.7rem', opacity: 0.9, fontWeight: '500', textAlign: 'center' }}>
-              5-Minute Focus Blocks
+              15-Minute Focus Blocks
             </div>
           </div>
 
           {/* Micro-task time slots */}
-          {fiveMinSlots.map((slot, index) => {
+          {fifteenMinSlots.map((slot, index) => {
             const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
-            const isQuarterHour = slot.minute % 15 === 0;
+            const isQuarterHour = true; // All slots are quarter-hour now
             
             return (
               <div 
@@ -1136,7 +1134,7 @@ export default function PersonalCalendarPage() {
                 }}
                 style={{
                   height: `${slotHeight}px`,
-                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : isQuarterHour ? '1px solid #e5e7eb' : '1px solid #f1f5f9',
+                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : '1px solid #e5e7eb',
                   position: 'relative',
                   background: isWorkingHour ? 'rgba(124, 58, 237, 0.02)' : '#ffffff',
                   cursor: 'pointer',
@@ -1183,13 +1181,13 @@ export default function PersonalCalendarPage() {
             const startHour = eventStart.getHours();
             const startMinutes = eventStart.getMinutes();
             
-            // Calculate position based on 5-minute slots
+            // Calculate position based on 15-minute slots
             const totalMinutesFromStart = (startHour - settings.start_hour) * 60 + startMinutes;
-            const slotIndex = Math.floor(totalMinutesFromStart / 5);
+            const slotIndex = Math.floor(totalMinutesFromStart / 15);
             
-            // Calculate duration in 5-minute slots
+            // Calculate duration in 15-minute slots
             const durationInMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-            const durationInSlots = Math.ceil(durationInMinutes / 5);
+            const durationInSlots = Math.ceil(durationInMinutes / 15);
             
             const topPosition = headerHeight + (slotIndex * slotHeight);
             const eventHeight = Math.max(slotHeight, durationInSlots * slotHeight);
@@ -2226,7 +2224,7 @@ export default function PersonalCalendarPage() {
             {currentView === 'month' && renderMonthView()}
             {currentView === 'week' && renderWeekView()}
             {currentView === 'day' && renderDayView()}
-            {currentView === '5min' && render5MinView()}
+            {currentView === '5min' && render15MinView()}
             
             {/* Drag Preview Tooltip */}
             {isDragging && dragPreview && (
