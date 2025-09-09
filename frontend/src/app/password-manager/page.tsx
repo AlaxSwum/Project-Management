@@ -87,6 +87,12 @@ export default function PasswordManagerPage() {
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
   const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({});
   const [accessControls, setAccessControls] = useState<{ [key: number]: AccessControl[] }>({});
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermissions, setSharePermissions] = useState({
+    can_edit: false,
+    can_delete: false,
+    can_share: false
+  });
 
   const [newPassword, setNewPassword] = useState({
     account_name: '',
@@ -240,6 +246,99 @@ export default function PasswordManagerPage() {
     if (score <= 3) return 'fair';
     if (score <= 4) return 'good';
     return 'strong';
+  };
+
+  const handleSharePassword = (password: PasswordEntry) => {
+    setSelectedPassword(password);
+    setShareEmail('');
+    setSharePermissions({
+      can_edit: false,
+      can_delete: false,
+      can_share: false
+    });
+    setShowShareModal(true);
+    // Fetch current access controls for this password
+    fetchAccessControls(password.id);
+  };
+
+  const sharePassword = async () => {
+    if (!selectedPassword || !shareEmail.trim()) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Call the share function
+      const { data, error } = await supabase.rpc('share_password_with_user', {
+        password_id: selectedPassword.id,
+        target_user_email: shareEmail.trim(),
+        permission_level: sharePermissions.can_edit ? 'editor' : 'viewer',
+        can_edit: sharePermissions.can_edit,
+        can_delete: sharePermissions.can_delete,
+        can_share: sharePermissions.can_share
+      });
+
+      if (error) throw error;
+
+      if (data && !data.success) {
+        setError(data.message || 'Failed to share password');
+        return;
+      }
+
+      // Refresh access controls
+      await fetchAccessControls(selectedPassword.id);
+      
+      // Reset form and close modal
+      setShareEmail('');
+      setSharePermissions({
+        can_edit: false,
+        can_delete: false,
+        can_share: false
+      });
+      setShowShareModal(false);
+      setError('');
+      
+      // Show success message (you can replace with a toast notification)
+      alert('Password shared successfully!');
+
+    } catch (err: any) {
+      console.error('Error sharing password:', err);
+      setError('Failed to share password: ' + err.message);
+    }
+  };
+
+  const revokeAccess = async (passwordId: number, userEmail: string) => {
+    if (!confirm(`Are you sure you want to revoke access for ${userEmail}?`)) {
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { data, error } = await supabase.rpc('revoke_password_access', {
+        password_id: passwordId,
+        target_user_email: userEmail
+      });
+
+      if (error) throw error;
+
+      if (data && !data.success) {
+        setError(data.message || 'Failed to revoke access');
+        return;
+      }
+
+      // Refresh access controls
+      await fetchAccessControls(passwordId);
+      
+      setError('');
+      alert('Access revoked successfully!');
+
+    } catch (err: any) {
+      console.error('Error revoking access:', err);
+      setError('Failed to revoke access: ' + err.message);
+    }
   };
 
   const createPassword = async () => {
@@ -740,11 +839,7 @@ export default function PasswordManagerPage() {
                       </button>
 
                       <button
-                        onClick={() => {
-                          setSelectedPassword(password);
-                          fetchAccessControls(password.id);
-                          setShowShareModal(true);
-                        }}
+                        onClick={() => handleSharePassword(password)}
                         style={{
                           padding: '0.5rem',
                           background: 'transparent',
@@ -1130,7 +1225,221 @@ export default function PasswordManagerPage() {
         </div>
       )}
 
-      {/* Edit Modal and Share Modal would go here - similar structure */}
+      {/* Share Password Modal */}
+      {showShareModal && selectedPassword && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600', color: '#1a1a1a' }}>
+                  Share Password
+                </h2>
+                <p style={{ margin: '0.5rem 0 0 0', color: '#666666', fontSize: '0.9rem' }}>
+                  {selectedPassword.account_name}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#666666',
+                  padding: '0.5rem',
+                  borderRadius: '8px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+              {error && (
+                <div style={{
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  marginBottom: '1rem',
+                  fontSize: '0.9rem'
+                }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Share New User Section */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600', color: '#1a1a1a' }}>
+                  Share with Team Member
+                </h3>
+                
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={shareEmail}
+                    onChange={(e) => setShareEmail(e.target.value)}
+                    placeholder="colleague@company.com"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                    Permissions
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: '#374151' }}>
+                      <input
+                        type="checkbox"
+                        checked={sharePermissions.can_edit}
+                        onChange={(e) => setSharePermissions({ ...sharePermissions, can_edit: e.target.checked })}
+                        style={{ margin: 0 }}
+                      />
+                      Can edit password details
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: '#374151' }}>
+                      <input
+                        type="checkbox"
+                        checked={sharePermissions.can_delete}
+                        onChange={(e) => setSharePermissions({ ...sharePermissions, can_delete: e.target.checked })}
+                        style={{ margin: 0 }}
+                      />
+                      Can delete this password
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: '#374151' }}>
+                      <input
+                        type="checkbox"
+                        checked={sharePermissions.can_share}
+                        onChange={(e) => setSharePermissions({ ...sharePermissions, can_share: e.target.checked })}
+                        style={{ margin: 0 }}
+                      />
+                      Can share with others
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  onClick={sharePassword}
+                  disabled={!shareEmail.trim()}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: shareEmail.trim() ? '#3b82f6' : '#9ca3af',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: shareEmail.trim() ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Share Password
+                </button>
+              </div>
+
+              {/* Current Access List */}
+              {accessControls[selectedPassword.id] && accessControls[selectedPassword.id].length > 0 && (
+                <div>
+                  <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600', color: '#1a1a1a' }}>
+                    Current Access ({accessControls[selectedPassword.id].length})
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {accessControls[selectedPassword.id].map((access, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.75rem',
+                          backgroundColor: '#f9fafb',
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '0.9rem' }}>
+                            {access.user_name || access.user_email}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#666666' }}>
+                            {access.user_email}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#666666', marginTop: '0.25rem' }}>
+                            Permissions: {access.permission_level}
+                            {access.can_edit && ', Can Edit'}
+                            {access.can_delete && ', Can Delete'}
+                            {access.can_share && ', Can Share'}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => revokeAccess(selectedPassword.id, access.user_email)}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Revoke Access"
+                        >
+                          Revoke
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 

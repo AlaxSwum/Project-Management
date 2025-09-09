@@ -198,6 +198,22 @@ export default function ProjectDetailPage() {
       const createdTask = await taskService.createTask(Number(params?.id), taskData);
       setTasks([...tasks, createdTask]);
       
+      // Send notifications for task assignment
+      if (taskData.assignee_ids && taskData.assignee_ids.length > 0 && user && project) {
+        try {
+          const { notificationService } = await import('@/lib/notification-service');
+          await notificationService.sendTaskAssignmentNotifications(
+            createdTask,
+            taskData.assignee_ids,
+            user,
+            project
+          );
+        } catch (notificationError) {
+          console.error('Failed to send task assignment notifications:', notificationError);
+          // Don't fail the task creation if notifications fail
+        }
+      }
+      
       setNewTask({
         name: '',
         description: '',
@@ -216,6 +232,9 @@ export default function ProjectDetailPage() {
 
   const handleTaskStatusChange = async (taskId: number, newStatus: string) => {
     try {
+      const task = tasks.find(t => t.id === taskId);
+      const oldStatus = task?.status || '';
+      
       await taskService.updateTaskStatus(taskId, newStatus);
       setTasks(tasks.map(task => 
         task.id === taskId 
@@ -227,6 +246,23 @@ export default function ProjectDetailPage() {
       if (selectedTask && selectedTask.id === taskId) {
         setSelectedTask({ ...selectedTask, status: newStatus });
       }
+
+      // Send notifications for status change
+      if (task && user && project && oldStatus !== newStatus) {
+        try {
+          const { notificationService } = await import('@/lib/notification-service');
+          await notificationService.sendTaskStatusChangeNotifications(
+            { ...task, status: newStatus },
+            oldStatus,
+            newStatus,
+            user,
+            project
+          );
+        } catch (notificationError) {
+          console.error('Failed to send task status change notifications:', notificationError);
+          // Don't fail the status update if notifications fail
+        }
+      }
     } catch (err) {
       setError('Failed to update task status');
     }
@@ -236,11 +272,32 @@ export default function ProjectDetailPage() {
     if (!selectedTask) return;
     
     try {
+      const oldAssigneeIds = selectedTask.assignee_ids || [];
+      const newAssigneeIds = taskData.assignee_ids || [];
+      
       const updatedTask = await taskService.updateTask(selectedTask.id, taskData);
       setTasks(tasks.map(task => 
         task.id === selectedTask.id ? updatedTask : task
       ));
       setSelectedTask(updatedTask);
+
+      // Send notifications for new assignees
+      const addedAssigneeIds = newAssigneeIds.filter((id: number) => !oldAssigneeIds.includes(id));
+      if (addedAssigneeIds.length > 0 && user && project) {
+        try {
+          const { notificationService } = await import('@/lib/notification-service');
+          await notificationService.sendTaskAssignmentNotifications(
+            updatedTask,
+            addedAssigneeIds,
+            user,
+            project
+          );
+        } catch (notificationError) {
+          console.error('Failed to send task assignment notifications:', notificationError);
+          // Don't fail the task update if notifications fail
+        }
+      }
+
       setError('');
     } catch (err: any) {
       setError('Failed to update task');

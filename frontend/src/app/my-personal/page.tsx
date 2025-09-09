@@ -46,7 +46,7 @@ interface CalendarSettings {
   theme_color: string;
 }
 
-type ViewType = 'month' | 'week' | 'day' | '5min';
+type ViewType = 'month' | 'week' | 'day' | '15min';
 
 export default function PersonalCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -528,7 +528,7 @@ export default function PersonalCalendarPage() {
       }
 
       // Save current scroll position before refresh
-      const scrollContainer = document.querySelector('.calendar-5min-container');
+      const scrollContainer = document.querySelector('.calendar-15min-container');
       const scrollPosition = scrollContainer ? scrollContainer.scrollTop : 0;
 
       const supabase = (await import('@/lib/supabase')).supabase;
@@ -569,7 +569,7 @@ export default function PersonalCalendarPage() {
       
       // Restore scroll position after refresh
       setTimeout(() => {
-        const scrollContainer = document.querySelector('.calendar-5min-container');
+        const scrollContainer = document.querySelector('.calendar-15min-container');
         if (scrollContainer) {
           scrollContainer.scrollTop = scrollPosition;
         }
@@ -2130,7 +2130,7 @@ export default function PersonalCalendarPage() {
               {/* View Controls */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {(['month', 'week', 'day', '5min'] as ViewType[]).map(view => (
+                  {(['month', 'week', 'day', '15min'] as ViewType[]).map(view => (
                     <button
                       key={view}
                       onClick={() => setCurrentView(view)}
@@ -2144,10 +2144,10 @@ export default function PersonalCalendarPage() {
                         fontWeight: '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        textTransform: view === '5min' ? 'none' : 'capitalize'
+                        textTransform: view === '15min' ? 'none' : 'capitalize'
                       }}
                     >
-                      {view === '5min' ? '5-Min Time-Blocking' : view}
+                      {view === '15min' ? '15-Min Time-Blocking' : view}
                     </button>
                   ))}
                 </div>
@@ -2191,7 +2191,7 @@ export default function PersonalCalendarPage() {
                   {currentView === 'month' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   {currentView === 'week' && `${getViewStartDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${getViewEndDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
                   {currentView === 'day' && formatDate(currentDate)}
-                  {currentView === '5min' && formatDate(currentDate)}
+                  {currentView === '15min' && formatDate(currentDate)}
                 </div>
 
                 <button
@@ -2224,7 +2224,7 @@ export default function PersonalCalendarPage() {
             {currentView === 'month' && renderMonthView()}
             {currentView === 'week' && renderWeekView()}
             {currentView === 'day' && renderDayView()}
-            {currentView === '5min' && render15MinView()}
+            {currentView === '15min' && render15MinView()}
             
             {/* Drag Preview Tooltip */}
             {isDragging && dragPreview && (
@@ -3193,7 +3193,7 @@ export default function PersonalCalendarPage() {
                         }
 
                         // Save current scroll position before refresh
-                        const scrollContainer = document.querySelector('.calendar-5min-container');
+                        const scrollContainer = document.querySelector('.calendar-15min-container');
                         const scrollPosition = scrollContainer ? scrollContainer.scrollTop : 0;
 
                         const supabase = (await import('@/lib/supabase')).supabase;
@@ -3226,7 +3226,7 @@ export default function PersonalCalendarPage() {
                         
                         // Restore scroll position after refresh
                         setTimeout(() => {
-                          const scrollContainer = document.querySelector('.calendar-5min-container');
+                          const scrollContainer = document.querySelector('.calendar-15min-container');
                           if (scrollContainer) {
                             scrollContainer.scrollTop = scrollPosition;
                           }

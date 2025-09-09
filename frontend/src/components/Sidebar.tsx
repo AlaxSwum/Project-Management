@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 import {
   HomeIcon,
   FolderIcon,
@@ -2087,19 +2088,22 @@ Your report is now available in the system.`);
               <Bars3Icon style={{ width: '20px', height: '20px' }} />
             </button>
             <h1 className="sidebar-title">Projects</h1>
-            <div className="sidebar-add-container" ref={dropdownRef}>
-              <button
-                onClick={(e) => {
-                  console.log('🔥 DEBUG: Plus (+) button clicked!', e);
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleDropdown();
-                }}
-                className={`sidebar-add-btn ${isDropdownOpen ? 'active' : ''}`}
-                title="Create new..."
-              >
-                <PlusIcon style={{ width: '20px', height: '20px' }} />
-                </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <NotificationDropdown />
+              <div className="sidebar-add-container" ref={dropdownRef}>
+                <button
+                  onClick={(e) => {
+                    console.log('🔥 DEBUG: Plus (+) button clicked!', e);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDropdown();
+                  }}
+                  className={`sidebar-add-btn ${isDropdownOpen ? 'active' : ''}`}
+                  title="Create new..."
+                >
+                  <PlusIcon style={{ width: '20px', height: '20px' }} />
+                  </button>
+              </div>
             </div>
           </div>
 
