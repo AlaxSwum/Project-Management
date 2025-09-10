@@ -1329,6 +1329,61 @@ export const supabaseDb = {
     }
   },
 
+  // Add member by email
+  addContentCalendarMemberByEmail: async (email, role) => {
+    try {
+      // First find the user by email
+      const { data: users, error: userError } = await supabase
+        .from('auth_user')
+        .select('id')
+        .eq('email', email)
+        .eq('is_active', true);
+
+      if (userError) throw userError;
+      if (!users || users.length === 0) {
+        throw new Error('User not found with that email address');
+      }
+
+      const userId = users[0].id;
+      
+      // Use the existing addContentCalendarMember function
+      return await supabaseDb.addContentCalendarMember(userId, role);
+    } catch (error) {
+      console.error('Error in addContentCalendarMemberByEmail:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Update member role
+  updateContentCalendarMemberRole: async (userId, newRole) => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?user_id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          role: newRole,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Error in updateContentCalendarMemberRole:', error);
+      return { data: null, error };
+    }
+  },
+
   removeContentCalendarMember: async (memberId) => {
     try {
       // Use direct HTTP request to bypass RLS issues

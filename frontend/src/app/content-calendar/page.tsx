@@ -82,7 +82,12 @@ export default function ContentCalendarPage() {
     folder_type: 'month',
     color: '#ffffff'
   })
-  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' })
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'}>({ key: 'date', direction: 'asc' })
+  const [draggedItem, setDraggedItem] = useState<ContentCalendarItem | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [showMemberManagementModal, setShowMemberManagementModal] = useState(false)
+  const [memberEmail, setMemberEmail] = useState('')
+  const [memberRole, setMemberRole] = useState('member')
   const [editingCell, setEditingCell] = useState<{ itemId: number; field: string } | null>(null)
   const [cellValues, setCellValues] = useState<{ [key: string]: any }>({})
 
@@ -485,6 +490,160 @@ export default function ContentCalendarPage() {
       : <ChevronDownIcon style={{ width: '12px', height: '12px', color: '#5884FD' }} />
   }
 
+  // Enhanced sorting function
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+    
+    const sortedItems = [...filteredItems].sort((a, b) => {
+      let aValue = a[key as keyof ContentCalendarItem]
+      let bValue = b[key as keyof ContentCalendarItem]
+      
+      // Handle array fields (assigned_to)
+      if (key === 'assigned') {
+        aValue = a.assignees?.map(u => u.name).join(', ') || ''
+        bValue = b.assignees?.map(u => u.name).join(', ') || ''
+      }
+      
+      // Handle date fields
+      if (key.includes('date') || key.includes('deadline')) {
+        aValue = new Date(aValue as string).getTime()
+        bValue = new Date(bValue as string).getTime()
+      }
+      
+      // Handle string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return direction === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
+      }
+      
+      // Handle numeric comparison
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return direction === 'asc' ? aValue - bValue : bValue - aValue
+      }
+      
+      return 0
+    })
+    
+    setFilteredItems(sortedItems)
+  }
+
+  // Drag and drop functions
+  const handleDragStart = (e: React.DragEvent, item: ContentCalendarItem) => {
+    setDraggedItem(item)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML)
+    
+    // Add visual feedback
+    e.currentTarget.style.opacity = '0.5'
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.style.opacity = '1'
+    setDraggedItem(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+    
+    if (!draggedItem) return
+    
+    const draggedIndex = filteredItems.findIndex(item => item.id === draggedItem.id)
+    if (draggedIndex === targetIndex) return
+    
+    // Reorder items
+    const newItems = [...filteredItems]
+    const [movedItem] = newItems.splice(draggedIndex, 1)
+    newItems.splice(targetIndex, 0, movedItem)
+    
+    setFilteredItems(newItems)
+    setDragOverIndex(null)
+    setDraggedItem(null)
+    
+    // Optionally, you can save the new order to the database here
+    // updateItemOrder(newItems)
+  }
+
+  // Member management functions
+  const addMember = async () => {
+    if (!memberEmail.trim()) {
+      setError('Please enter a valid email address')
+      return
+    }
+
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.addContentCalendarMemberByEmail(memberEmail.trim(), memberRole)
+      
+      // Refresh members list
+      await fetchMembers()
+      
+      // Reset form
+      setMemberEmail('')
+      setMemberRole('member')
+      setError('')
+      
+      // Show success message
+      alert('Member added successfully!')
+      
+    } catch (err: any) {
+      console.error('Error adding member:', err)
+      setError('Failed to add member: ' + err.message)
+    }
+  }
+
+  const removeMember = async (userId: number) => {
+    if (!confirm('Are you sure you want to remove this member?')) {
+      return
+    }
+
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.removeContentCalendarMember(userId)
+      
+      // Refresh members list
+      await fetchMembers()
+      
+      setError('')
+      alert('Member removed successfully!')
+      
+    } catch (err: any) {
+      console.error('Error removing member:', err)
+      setError('Failed to remove member: ' + err.message)
+    }
+  }
+
+  const updateMemberRole = async (userId: number, newRole: string) => {
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.updateContentCalendarMemberRole(userId, newRole)
+      
+      // Refresh members list
+      await fetchMembers()
+      
+      setError('')
+      
+    } catch (err: any) {
+      console.error('Error updating member role:', err)
+      setError('Failed to update member role: ' + err.message)
+    }
+  }
+
   if (authLoading || isLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -648,29 +807,64 @@ export default function ContentCalendarPage() {
                 </button>
               )}
               
-              <button
-                onClick={() => {
-                  setFormData({
-                    ...formData,
-                    folder_id: currentFolder?.id || null
-                  })
-                  setShowAddForm(true)
-                }}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: '#5884FD',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '0.9rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
-                }}
-              >
-                {currentFolder ? `Add to ${currentFolder.name}` : 'Add Content'}
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <button
+                  onClick={() => setShowMemberManagementModal(true)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#ffffff',
+                    color: '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                    e.currentTarget.style.borderColor = '#9ca3af'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff'
+                    e.currentTarget.style.borderColor = '#d1d5db'
+                  }}
+                >
+                  <UserGroupIcon style={{ width: '16px', height: '16px' }} />
+                  Manage Members
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setFormData({
+                      ...formData,
+                      folder_id: currentFolder?.id || null
+                    })
+                    setShowAddForm(true)
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#5884FD',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <PlusIcon style={{ width: '16px', height: '16px' }} />
+                  {currentFolder ? `Add to ${currentFolder.name}` : 'Add Content'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1105,15 +1299,37 @@ export default function ContentCalendarPage() {
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666666' }}>Click "Add Content" to create one.</p>
                 </div>
               ) : (
-                filteredItems.map((item) => (
-                  <div key={item.id} style={{
-                    display: 'grid',
-                    gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 120px',
-                    gap: '0',
-                    borderBottom: '1px solid #f0f0f0',
-                    fontSize: '0.85rem',
-                    transition: 'all 0.2s ease'
-                  }}>
+                filteredItems.map((item, index) => (
+                  <div 
+                    key={item.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 120px',
+                      gap: '0',
+                      borderBottom: '1px solid #f0f0f0',
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s ease',
+                      cursor: 'grab',
+                      backgroundColor: dragOverIndex === index ? '#f0f9ff' : '#ffffff',
+                      borderTop: dragOverIndex === index ? '2px solid #3b82f6' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!draggedItem) {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!draggedItem) {
+                        e.currentTarget.style.backgroundColor = '#ffffff'
+                      }
+                    }}
+                  >
                     {/* Published Date - Frozen */}
                     <div 
                       onDoubleClick={() => handleCellDoubleClick(item.id, 'date', item.date)}
@@ -2370,6 +2586,238 @@ export default function ContentCalendarPage() {
           )}
         </div>
       </div>
+
+      {/* Member Management Modal */}
+      {showMemberManagementModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: '#f8fafc'
+            }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600', color: '#1a1a1a' }}>
+                  Manage Calendar Members
+                </h2>
+                <p style={{ margin: '0.5rem 0 0 0', color: '#666666', fontSize: '0.9rem' }}>
+                  Control who can view and edit the content calendar
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMemberManagementModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#666666',
+                  padding: '0.5rem',
+                  borderRadius: '8px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
+              {error && (
+                <div style={{
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  marginBottom: '1rem',
+                  fontSize: '0.9rem'
+                }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Add New Member Section */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600', color: '#1a1a1a' }}>
+                  Add New Member
+                </h3>
+                
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={memberEmail}
+                      onChange={(e) => setMemberEmail(e.target.value)}
+                      placeholder="colleague@company.com"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        outline: 'none',
+                        transition: 'border-color 0.2s ease',
+                        boxSizing: 'border-box'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                  </div>
+                  
+                  <div style={{ minWidth: '120px' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                      Role
+                    </label>
+                    <select
+                      value={memberRole}
+                      onChange={(e) => setMemberRole(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        outline: 'none',
+                        backgroundColor: '#ffffff',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  onClick={addMember}
+                  disabled={!memberEmail.trim()}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: memberEmail.trim() ? '#3b82f6' : '#9ca3af',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: memberEmail.trim() ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Add Member
+                </button>
+              </div>
+
+              {/* Current Members List */}
+              <div>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600', color: '#1a1a1a' }}>
+                  Current Members ({members.length})
+                </h3>
+                
+                {members.length === 0 ? (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '2rem', 
+                    color: '#666666',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <UserGroupIcon style={{ width: '24px', height: '24px', margin: '0 auto 0.5rem', color: '#9ca3af' }} />
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>No members added yet</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {members.map((member) => (
+                      <div
+                        key={member.user_id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '1rem',
+                          backgroundColor: '#f9fafb',
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '0.9rem' }}>
+                            {member.user.name}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#666666' }}>
+                            {member.user.email}
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <select
+                            value={member.role}
+                            onChange={(e) => updateMemberRole(member.user_id, e.target.value)}
+                            style={{
+                              padding: '0.5rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '0.8rem',
+                              backgroundColor: '#ffffff'
+                            }}
+                          >
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          
+                          <button
+                            onClick={() => removeMember(member.user_id)}
+                            style={{
+                              padding: '0.5rem',
+                              backgroundColor: '#fee2e2',
+                              color: '#dc2626',
+                              border: 'none',
+                              borderRadius: '6px',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            title="Remove Member"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 } 
