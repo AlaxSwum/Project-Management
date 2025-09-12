@@ -21,44 +21,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     switch (testType) {
       case 'basic':
         // Test basic email functionality
-        result = await brevoService.sendTestEmail({
-          email,
-          name: 'Test User'
+        result = await brevoService.sendEmail({
+          to: [email],
+          subject: 'Test Email from Project Management System',
+          htmlContent: `<h1>Test Email</h1><p>Hello Test User, this is a test email from your project management system.</p>`,
+          sender: {
+            name: 'Project Management System',
+            email: 'noreply@projectmanagement.com'
+          }
         });
         break;
 
       case 'task-assignment':
         // Test task assignment email
-        result = await brevoService.sendTaskAssignmentNotification(
-          [{ email, name: 'Test User' }],
-          {
-            taskName: 'Test Task Assignment',
-            taskDescription: 'This is a test task to verify the notification system is working correctly.',
-            projectName: 'Test Project',
-            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-            priority: 'medium',
-            assignedBy: 'System Administrator',
-            assignedByEmail: 'admin@projectmanagement.com',
-            projectUrl: 'http://localhost:3000/projects/1',
-            taskUrl: 'http://localhost:3000/projects/1#task-1'
-          }
+        result = await brevoService.sendTaskAssignmentEmail(
+          email,
+          'Test User',
+          'Test Task Assignment',
+          'This is a test task to verify the notification system is working correctly.',
+          'Test Project'
         );
         break;
 
       case 'task-reminder':
         // Test task reminder email
-        result = await brevoService.sendTaskReminderNotification(
-          [{ email, name: 'Test User' }],
-          {
-            taskName: 'Test Task Reminder',
-            taskDescription: 'This is a test task reminder to verify the notification system is working correctly.',
-            projectName: 'Test Project',
-            dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-            priority: 'high',
-            timeUntilDue: 'tomorrow',
-            projectUrl: 'http://localhost:3000/projects/1',
-            taskUrl: 'http://localhost:3000/projects/1#task-1'
-          }
+        result = await brevoService.sendTaskReminderEmail(
+          email,
+          'Test User',
+          [{
+            title: 'Test Task Reminder',
+            due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            project_name: 'Test Project'
+          }]
         );
         break;
 
