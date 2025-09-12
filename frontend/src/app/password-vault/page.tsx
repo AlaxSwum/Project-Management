@@ -929,6 +929,64 @@ export default function PasswordVaultPage() {
                       <div style={{ fontSize: '0.8rem', color: '#999999' }}>
                         {password.folder_name}
                       </div>
+                      
+                      {/* Team Access Display */}
+                      {password.is_shared && password.shared_with && password.shared_with.length > 0 && (
+                        <div style={{ 
+                          marginTop: '0.75rem',
+                          padding: '10px',
+                          background: '#f8f9fa',
+                          border: '1px solid #e9ecef',
+                          borderRadius: '4px'
+                        }}>
+                          <div style={{ 
+                            fontSize: '0.8rem', 
+                            fontWeight: '600', 
+                            color: '#495057',
+                            marginBottom: '6px'
+                          }}>
+                            👥 Shared with {password.shared_with.length} team member{password.shared_with.length > 1 ? 's' : ''}:
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {password.shared_with.map((share: any, index: number) => (
+                              <div key={index} style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                fontSize: '0.8rem',
+                                background: '#ffffff',
+                                padding: '6px 8px',
+                                borderRadius: '3px',
+                                border: '1px solid #dee2e6'
+                              }}>
+                                <span style={{ fontWeight: '500', color: '#212529' }}>
+                                  {share.user_email}
+                                </span>
+                                <span style={{ 
+                                  fontSize: '0.7rem',
+                                  color: '#6c757d',
+                                  background: '#f1f3f4',
+                                  padding: '2px 6px',
+                                  borderRadius: '2px'
+                                }}>
+                                  {share.can_edit ? 'Can Edit' : 
+                                   share.can_delete ? 'Can Delete' : 
+                                   share.can_share ? 'Can Share' : 'View Only'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Owner display */}
+                      <div style={{ 
+                        marginTop: '0.5rem',
+                        fontSize: '0.75rem',
+                        color: '#6c757d'
+                      }}>
+                        Owner: You {password.is_shared ? `• Shared with ${password.shared_with?.length || 0} others` : '• Private'}
+                      </div>
                     </div>
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
