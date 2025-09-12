@@ -200,6 +200,27 @@ export default function ContentCalendarPage() {
     }
   }
 
+  const fetchMembers = async () => {
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      const { data: membersData } = await supabaseDb.getContentCalendarMembers()
+      
+      // Transform members data to ensure user object exists
+      const transformedMembers = (membersData || []).map((member: any) => ({
+        ...member,
+        user: member.auth_user || member.user || {
+          id: member.user_id,
+          name: 'Unknown User',
+          email: '',
+          role: 'member'
+        }
+      }))
+      setMembers(transformedMembers)
+    } catch (err) {
+      console.error('Error fetching members:', err)
+    }
+  }
+
   const filterItemsByFolder = (items: ContentCalendarItem[], folderId: number | null) => {
     if (folderId === null) {
       setFilteredItems(items)
