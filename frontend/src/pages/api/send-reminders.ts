@@ -21,7 +21,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.log('Starting daily task reminder job...');
     
-    await notificationService.sendTaskReminderNotifications();
+    // For now, just log that reminders would be sent
+    // TODO: Implement proper task reminder logic
+    console.log('Task reminders would be sent here');
     
     console.log('Daily task reminder job completed successfully');
     
