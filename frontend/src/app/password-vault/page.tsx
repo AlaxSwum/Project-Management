@@ -886,7 +886,7 @@ export default function PasswordVaultPage() {
               </div>
 
               {/* Password list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', margin: '1rem 0' }}>
                 {filteredPasswords.map(password => (
                   <div
                     key={password.id}
@@ -895,10 +895,12 @@ export default function PasswordVaultPage() {
                       background: '#ffffff',
                       border: '1px solid #e2e8f0',
                       borderRadius: '8px',
-                      padding: '1rem',
+                      padding: '1.5rem',
+                      margin: '0.5rem',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '1rem'
+                      gap: '1.5rem',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                     }}
                   >
                     <div style={{ flex: 1 }}>
@@ -926,67 +928,20 @@ export default function PasswordVaultPage() {
                       <div style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '0.25rem' }}>
                         {password.email || password.username}
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: '#999999' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#999999', marginBottom: '0.5rem' }}>
                         {password.folder_name}
                       </div>
                       
-                      {/* Team Access Display */}
-                      {password.is_shared && password.shared_with && password.shared_with.length > 0 && (
+                      {/* Simple shared indicator */}
+                      {password.is_shared && (
                         <div style={{ 
-                          marginTop: '0.75rem',
-                          padding: '10px',
-                          background: '#f8f9fa',
-                          border: '1px solid #e9ecef',
-                          borderRadius: '4px'
+                          fontSize: '0.75rem',
+                          color: '#666',
+                          marginTop: '0.25rem'
                         }}>
-                          <div style={{ 
-                            fontSize: '0.8rem', 
-                            fontWeight: '600', 
-                            color: '#495057',
-                            marginBottom: '6px'
-                          }}>
-                            👥 Shared with {password.shared_with.length} team member{password.shared_with.length > 1 ? 's' : ''}:
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {password.shared_with.map((share: any, index: number) => (
-                              <div key={index} style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                fontSize: '0.8rem',
-                                background: '#ffffff',
-                                padding: '6px 8px',
-                                borderRadius: '3px',
-                                border: '1px solid #dee2e6'
-                              }}>
-                                <span style={{ fontWeight: '500', color: '#212529' }}>
-                                  {share.user_email}
-                                </span>
-                                <span style={{ 
-                                  fontSize: '0.7rem',
-                                  color: '#6c757d',
-                                  background: '#f1f3f4',
-                                  padding: '2px 6px',
-                                  borderRadius: '2px'
-                                }}>
-                                  {share.can_edit ? 'Can Edit' : 
-                                   share.can_delete ? 'Can Delete' : 
-                                   share.can_share ? 'Can Share' : 'View Only'}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
+                          Shared with {password.shared_with?.length || 0} team member{(password.shared_with?.length || 0) > 1 ? 's' : ''}
                         </div>
                       )}
-                      
-                      {/* Owner display */}
-                      <div style={{ 
-                        marginTop: '0.5rem',
-                        fontSize: '0.75rem',
-                        color: '#6c757d'
-                      }}>
-                        Owner: You {password.is_shared ? `• Shared with ${password.shared_with?.length || 0} others` : '• Private'}
-                      </div>
                     </div>
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1625,12 +1580,17 @@ export default function PasswordVaultPage() {
       {/* View Password Modal */}
       {showViewModal && passwordToView && (
         <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ 
+            margin: '2rem',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
               {passwordToView.account_name}
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', margin: '1rem 0' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
                   Username/Email
@@ -1757,14 +1717,58 @@ export default function PasswordVaultPage() {
       {/* Share Password Modal */}
       {showShareModal && passwordToShare && (
         <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ 
+            margin: '2rem',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
               Share Password: {passwordToShare.account_name}
             </h3>
 
-            <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
-                Share with (Email)
+            {/* Show current shared members */}
+            {passwordToShare.is_shared && passwordToShare.shared_with && passwordToShare.shared_with.length > 0 && (
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
+                  Currently Shared With:
+                </label>
+                <div style={{
+                  padding: '1rem',
+                  background: '#f8f9fa',
+                  border: '1px solid #e9ecef',
+                  borderRadius: '4px'
+                }}>
+                  {passwordToShare.shared_with.map((share: any, index: number) => (
+                    <div key={index} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.5rem 0',
+                      borderBottom: index < passwordToShare.shared_with!.length - 1 ? '1px solid #e5e7eb' : 'none'
+                    }}>
+                      <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{share.user_email}</span>
+                      <span style={{ 
+                        fontSize: '0.8rem',
+                        color: '#6c757d',
+                        background: '#ffffff',
+                        padding: '4px 8px',
+                        borderRadius: '3px',
+                        border: '1px solid #dee2e6'
+                      }}>
+                        {share.can_edit ? 'Can Edit' : 
+                         share.can_delete ? 'Can Delete' : 
+                         share.can_share ? 'Can Share' : 'View Only'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginBottom: '2rem', position: 'relative' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
+                Add New Team Member:
               </label>
               <input
                 type="email"
@@ -1821,12 +1825,20 @@ export default function PasswordVaultPage() {
               )}
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
               <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
-                Permissions
+                Set Permissions:
               </label>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1rem',
+                padding: '1rem',
+                background: '#f8f9fa',
+                border: '1px solid #e9ecef',
+                borderRadius: '4px'
+              }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
