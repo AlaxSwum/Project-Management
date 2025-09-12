@@ -490,47 +490,6 @@ export default function ContentCalendarPage() {
       : <ChevronDownIcon style={{ width: '12px', height: '12px', color: '#5884FD' }} />
   }
 
-  // Enhanced sorting function
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc'
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc'
-    }
-    setSortConfig({ key, direction })
-    
-    const sortedItems = [...filteredItems].sort((a, b) => {
-      let aValue = a[key as keyof ContentCalendarItem]
-      let bValue = b[key as keyof ContentCalendarItem]
-      
-      // Handle array fields (assigned_to)
-      if (key === 'assigned') {
-        aValue = a.assignees?.map(u => u.name).join(', ') || ''
-        bValue = b.assignees?.map(u => u.name).join(', ') || ''
-      }
-      
-      // Handle date fields
-      if (key.includes('date') || key.includes('deadline')) {
-        aValue = new Date(aValue as string).getTime()
-        bValue = new Date(bValue as string).getTime()
-      }
-      
-      // Handle string comparison
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return direction === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue)
-      }
-      
-      // Handle numeric comparison
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return direction === 'asc' ? aValue - bValue : bValue - aValue
-      }
-      
-      return 0
-    })
-    
-    setFilteredItems(sortedItems)
-  }
 
   // Drag and drop functions
   const handleDragStart = (e: React.DragEvent, item: ContentCalendarItem) => {
