@@ -127,7 +127,7 @@ export default function PasswordVaultPage() {
     
     if (error) throw error;
     
-    const transformedData = data.map(item => ({
+    const transformedData = data.map((item: any) => ({
       ...item,
       folder_name: item.folder_name || 'Personal'
     }));
