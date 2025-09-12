@@ -202,12 +202,15 @@ export default function ProjectDetailPage() {
       if (taskData.assignee_ids && taskData.assignee_ids.length > 0 && user && project) {
         try {
           const { notificationService } = await import('@/lib/notification-service');
-          await notificationService.sendTaskAssignmentNotifications(
-            createdTask,
-            taskData.assignee_ids,
-            user,
-            project
-          );
+          // Send notification to each assignee
+          for (const assigneeId of taskData.assignee_ids) {
+            await notificationService.sendTaskAssignmentNotification(
+              createdTask.id,
+              assigneeId,
+              user.id,
+              taskData.title
+            );
+          }
         } catch (notificationError) {
           console.error('Failed to send task assignment notifications:', notificationError);
           // Don't fail the task creation if notifications fail
@@ -286,12 +289,15 @@ export default function ProjectDetailPage() {
       if (addedAssigneeIds.length > 0 && user && project) {
         try {
           const { notificationService } = await import('@/lib/notification-service');
-          await notificationService.sendTaskAssignmentNotifications(
-            updatedTask,
-            addedAssigneeIds,
-            user,
-            project
-          );
+          // Send notification to each new assignee
+          for (const assigneeId of addedAssigneeIds) {
+            await notificationService.sendTaskAssignmentNotification(
+              updatedTask.id,
+              assigneeId,
+              user.id,
+              updatedTask.title
+            );
+          }
         } catch (notificationError) {
           console.error('Failed to send task assignment notifications:', notificationError);
           // Don't fail the task update if notifications fail
