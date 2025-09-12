@@ -145,7 +145,7 @@ export default function PasswordVaultPage() {
     
     // Count passwords per folder and try to get access data separately
     const foldersWithCounts = await Promise.all(
-      (data || []).map(async (folder) => {
+      (data || []).map(async (folder: any) => {
         const { count } = await supabase
           .from('password_vault')
           .select('*', { count: 'exact' })
