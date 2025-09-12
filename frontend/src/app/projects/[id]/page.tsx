@@ -208,7 +208,7 @@ export default function ProjectDetailPage() {
               createdTask.id,
               assigneeId,
               user.id,
-              taskData.title
+              taskData.name
             );
           }
         } catch (notificationError) {
@@ -261,7 +261,7 @@ export default function ProjectDetailPage() {
                 task.id,
                 assignee.id,
                 user.id,
-                task.title,
+                task.name,
                 `status changed from ${oldStatus} to ${newStatus}`
               );
             }
@@ -300,7 +300,7 @@ export default function ProjectDetailPage() {
               updatedTask.id,
               assigneeId,
               user.id,
-              updatedTask.title
+              updatedTask.name
             );
           }
         } catch (notificationError) {
