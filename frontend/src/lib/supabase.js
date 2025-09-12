@@ -1671,7 +1671,7 @@ export const supabaseDb = {
   // Get password folders
   getPasswordFolders: async () => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/password_folders_with_details?order=name.asc`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_vault_folders?order=name.asc`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1719,7 +1719,7 @@ export const supabaseDb = {
   // Create password folder
   createPasswordFolder: async (folderData) => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/password_folders`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_vault_folders`, {
         method: 'POST',
         headers: {
           'apikey': supabaseAnonKey,

@@ -193,19 +193,22 @@ export default function PasswordVaultPage() {
         return;
       }
 
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { data, error } = await supabase
-        .from('password_vault_folders')
-        .insert([{
-          ...newFolder,
-          created_by_id: user?.id
-        }])
-        .select()
-        .single();
+      const folderData = {
+        ...newFolder,
+        created_by_id: user?.id
+      };
       
-      if (error) throw error;
+      console.log('Creating folder with data:', folderData);
+      const { data, error } = await supabaseDb.createPasswordFolder(folderData);
       
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Folder created successfully:', data);
       await fetchFolders();
       setShowFolderModal(false);
       setNewFolder({
@@ -216,6 +219,7 @@ export default function PasswordVaultPage() {
       });
       setError('');
     } catch (err: any) {
+      console.error('Error creating folder:', err);
       setError('Failed to create folder: ' + err.message);
     }
   };
