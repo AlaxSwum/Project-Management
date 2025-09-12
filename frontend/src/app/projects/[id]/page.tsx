@@ -254,13 +254,18 @@ export default function ProjectDetailPage() {
       if (task && user && project && oldStatus !== newStatus) {
         try {
           const { notificationService } = await import('@/lib/notification-service');
-          await notificationService.sendTaskStatusChangeNotifications(
-            { ...task, status: newStatus },
-            oldStatus,
-            newStatus,
-            user,
-            project
-          );
+          // Send notification to task assignees about status change
+          if (task.assignees && task.assignees.length > 0) {
+            for (const assignee of task.assignees) {
+              await notificationService.sendTaskUpdateNotification(
+                task.id,
+                assignee.id,
+                user.id,
+                task.title,
+                `status changed from ${oldStatus} to ${newStatus}`
+              );
+            }
+          }
         } catch (notificationError) {
           console.error('Failed to send task status change notifications:', notificationError);
           // Don't fail the status update if notifications fail
