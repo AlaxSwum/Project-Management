@@ -280,7 +280,7 @@ export default function ProjectDetailPage() {
     if (!selectedTask) return;
     
     try {
-      const oldAssigneeIds = selectedTask.assignee_ids || [];
+      const oldAssigneeIds = selectedTask.assignees?.map(a => a.id) || [];
       const newAssigneeIds = taskData.assignee_ids || [];
       
       const updatedTask = await taskService.updateTask(selectedTask.id, taskData);
