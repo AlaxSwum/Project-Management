@@ -1410,7 +1410,7 @@ export default function PasswordManagerPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => revokeAccess(selectedPassword.id, access.user_email)}
+                          onClick={() => revokeAccess(selectedPassword.id, access.user_email || '')}
                           style={{
                             padding: '0.5rem',
                             backgroundColor: '#fee2e2',
