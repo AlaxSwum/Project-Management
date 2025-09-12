@@ -137,14 +137,10 @@ export default function PasswordManagerPage() {
       setIsLoading(true);
       setError('');
       
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      // Fetch passwords with access control
-      const { data, error } = await supabase
-        .from('password_vault_with_access')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+      // Fetch passwords using the new service function
+      const { data, error } = await supabaseDb.getPasswordEntries();
 
       if (error) throw error;
       
@@ -174,13 +170,10 @@ export default function PasswordManagerPage() {
 
   const fetchFolders = async () => {
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
-      const { data, error } = await supabase
-        .from('password_vault_folders')
-        .select('*')
-        .eq('created_by_id', user?.id)
-        .order('sort_order', { ascending: true });
+      // Fetch folders using the new service function
+      const { data, error } = await supabaseDb.getPasswordFolders();
 
       if (error) throw error;
       setFolders(data || []);

@@ -120,35 +120,26 @@ export default function PasswordVaultPage() {
   };
 
   const fetchPasswords = async () => {
-    const supabase = (await import('@/lib/supabase')).supabase;
+    const { supabaseDb } = await import('@/lib/supabase');
     
-    const { data, error } = await supabase
-      .from('password_vault')
-      .select(`
-        *,
-        password_vault_folders(name)
-      `)
-      .eq('is_active', true)
-      .order('account_name');
+    // Use the new service function
+    const { data, error } = await supabaseDb.getPasswordEntries();
     
     if (error) throw error;
     
     const transformedData = data.map(item => ({
       ...item,
-      folder_name: item.password_vault_folders?.name || 'Personal'
+      folder_name: item.folder_name || 'Personal'
     }));
     
     setPasswords(transformedData);
   };
 
   const fetchFolders = async () => {
-    const supabase = (await import('@/lib/supabase')).supabase;
+    const { supabaseDb } = await import('@/lib/supabase');
     
-    // First try to get folders with access data, fallback to basic query if table doesn't exist
-    let { data, error } = await supabase
-      .from('password_vault_folders')
-      .select('*')
-      .order('name');
+    // Use the new service function
+    const { data, error } = await supabaseDb.getPasswordFolders();
     
     if (error) throw error;
     

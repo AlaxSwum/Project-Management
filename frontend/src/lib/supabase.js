@@ -1662,6 +1662,152 @@ export const supabaseDb = {
       console.error('Error in getContentCalendarItemsWithFolders:', error);
       return { data: [], error };
     }
+  },
+
+  // =====================================================
+  // PASSWORD MANAGER OPERATIONS
+  // =====================================================
+
+  // Get password folders
+  getPasswordFolders: async () => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_folders_with_details?order=name.asc`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error in getPasswordFolders:', error);
+      return { data: [], error };
+    }
+  },
+
+  // Get password entries
+  getPasswordEntries: async () => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_entries_with_details?order=name.asc`, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error in getPasswordEntries:', error);
+      return { data: [], error };
+    }
+  },
+
+  // Create password folder
+  createPasswordFolder: async (folderData) => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_folders`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          ...folderData,
+          created_by: 60 // Replace with actual user ID
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Error in createPasswordFolder:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Create password entry
+  createPasswordEntry: async (entryData) => {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_entries`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          ...entryData,
+          created_by: 60 // Replace with actual user ID
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { data: data?.[0], error: null };
+    } catch (error) {
+      console.error('Error in createPasswordEntry:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Share password with user
+  sharePassword: async (passwordId, targetUserId, canEdit = false) => {
+    try {
+      const { data, error } = await supabase.rpc('share_password_with_user', {
+        password_id: passwordId,
+        target_user_id: targetUserId,
+        can_edit: canEdit
+      });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error in sharePassword:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Share folder with user
+  shareFolder: async (folderId, targetUserId, canEdit = false) => {
+    try {
+      const { data, error } = await supabase.rpc('share_folder_with_user', {
+        folder_id: folderId,
+        target_user_id: targetUserId,
+        can_edit: canEdit
+      });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error in shareFolder:', error);
+      return { data: null, error };
+    }
   }
 }
 
