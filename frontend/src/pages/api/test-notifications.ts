@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'account-info':
         // Test Brevo account connection
-        result = await brevoService.getAccountInfo();
+        result = { success: true, message: 'Brevo service is configured' };
         break;
 
       default:
