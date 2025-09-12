@@ -1695,7 +1695,7 @@ export const supabaseDb = {
   // Get password entries
   getPasswordEntries: async () => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/password_entries_with_details?order=name.asc`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_vault?is_active=eq.true&order=account_name.asc`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1749,7 +1749,7 @@ export const supabaseDb = {
   // Create password entry
   createPasswordEntry: async (entryData) => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/password_entries`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/password_vault`, {
         method: 'POST',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1757,10 +1757,7 @@ export const supabaseDb = {
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
         },
-        body: JSON.stringify({
-          ...entryData,
-          created_by: 60 // Replace with actual user ID
-        })
+        body: JSON.stringify(entryData)
       });
 
       if (!response.ok) {

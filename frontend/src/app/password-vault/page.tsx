@@ -77,10 +77,21 @@ export default function PasswordVaultPage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
   const [selectedFolderForMembers, setSelectedFolderForMembers] = useState<PasswordFolder | null>(null);
+  const [passwordToShare, setPasswordToShare] = useState<PasswordEntry | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
+  
+  // Share states
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermissions, setSharePermissions] = useState({
+    can_view: true,
+    can_edit: false,
+    can_delete: false,
+    can_share: false
+  });
   
   const [newPassword, setNewPassword] = useState({
     account_name: '',
@@ -231,24 +242,27 @@ export default function PasswordVaultPage() {
         return;
       }
 
-      const supabase = (await import('@/lib/supabase')).supabase;
+      const { supabaseDb } = await import('@/lib/supabase');
       
       // Simple "encryption" - in production, use proper encryption
       const encryptedPassword = btoa(newPassword.password_encrypted);
       
-      const { data, error } = await supabase
-        .from('password_vault')
-        .insert([{
-          ...newPassword,
-          password_encrypted: encryptedPassword,
-          created_by_id: user?.id,
-          folder_id: newPassword.folder_id || folders[0]?.id || null
-        }])
-        .select()
-        .single();
+      const entryData = {
+        ...newPassword,
+        password_encrypted: encryptedPassword,
+        created_by_id: user?.id,
+        folder_id: newPassword.folder_id || folders[0]?.id || null
+      };
       
-      if (error) throw error;
+      console.log('Creating password with data:', entryData);
+      const { data, error } = await supabaseDb.createPasswordEntry(entryData);
       
+      if (error) {
+        console.error('Password creation error:', error);
+        throw error;
+      }
+      
+      console.log('Password created successfully:', data);
       await fetchPasswords();
       setShowPasswordModal(false);
       setNewPassword({
@@ -262,6 +276,7 @@ export default function PasswordVaultPage() {
       });
       setError('');
     } catch (err: any) {
+      console.error('Error creating password:', err);
       setError('Failed to create password entry: ' + err.message);
     }
   };
@@ -324,6 +339,61 @@ export default function PasswordVaultPage() {
       // You could add a toast notification here
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
+    }
+  };
+
+  const openShareModal = (password: PasswordEntry) => {
+    setPasswordToShare(password);
+    setShowShareModal(true);
+    setShareEmail('');
+    setSharePermissions({
+      can_view: true,
+      can_edit: false,
+      can_delete: false,
+      can_share: false
+    });
+  };
+
+  const sharePassword = async () => {
+    try {
+      if (!passwordToShare || !shareEmail.trim()) {
+        setError('Email is required');
+        return;
+      }
+
+      const { supabase } = await import('@/lib/supabase');
+      
+      const shareData = {
+        vault_id: passwordToShare.id,
+        user_email: shareEmail.trim(),
+        ...sharePermissions,
+        granted_by_id: user?.id
+      };
+      
+      console.log('Sharing password with data:', shareData);
+      const { data, error } = await supabase
+        .from('password_vault_access')
+        .insert([shareData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Share error:', error);
+        throw error;
+      }
+      
+      console.log('Password shared successfully:', data);
+      setShowShareModal(false);
+      setPasswordToShare(null);
+      setShareEmail('');
+      setError('');
+      
+      // Show success message
+      alert(`Password shared with ${shareEmail} successfully!`);
+      
+    } catch (err: any) {
+      console.error('Error sharing password:', err);
+      setError('Failed to share password: ' + err.message);
     }
   };
 
@@ -881,6 +951,22 @@ export default function PasswordVaultPage() {
                         title="Edit"
                       >
                         <PencilIcon style={{ width: '16px', height: '16px' }} />
+                      </button>
+                      
+                      <button
+                        onClick={() => openShareModal(password)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: '0.5rem',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          color: '#10B981',
+                          transition: 'all 0.2s ease'
+                        }}
+                        title="Share"
+                      >
+                        <ShareIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                       
                       <button
@@ -1462,6 +1548,117 @@ export default function PasswordVaultPage() {
                   <li><strong>Owner:</strong> Full access including member management</li>
                 </ul>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Password Modal */}
+      {showShareModal && passwordToShare && (
+        <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
+              Share Password: {passwordToShare.account_name}
+            </h3>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                Share with (Email)
+              </label>
+              <input
+                type="email"
+                value={shareEmail}
+                onChange={(e) => setShareEmail(e.target.value)}
+                placeholder="user@example.com"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
+                Permissions
+              </label>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={sharePermissions.can_view}
+                    onChange={(e) => setSharePermissions(prev => ({ ...prev, can_view: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>Can View - User can see this password</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={sharePermissions.can_edit}
+                    onChange={(e) => setSharePermissions(prev => ({ ...prev, can_edit: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>Can Edit - User can modify this password</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={sharePermissions.can_delete}
+                    onChange={(e) => setSharePermissions(prev => ({ ...prev, can_delete: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>Can Delete - User can delete this password</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={sharePermissions.can_share}
+                    onChange={(e) => setSharePermissions(prev => ({ ...prev, can_share: e.target.checked }))}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>Can Share - User can share this password with others</span>
+                </label>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  background: '#ffffff',
+                  color: '#666666',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sharePassword}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#10B981',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}
+              >
+                Share Password
+              </button>
             </div>
           </div>
         </div>
