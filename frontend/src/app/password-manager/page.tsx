@@ -149,7 +149,7 @@ export default function PasswordManagerPage() {
       // Log access for each password
       if (data && data.length > 0) {
         for (const password of data) {
-          await supabase
+          await supabaseDb.supabase
             .from('password_audit_log')
             .insert([{
               vault_id: password.id,
