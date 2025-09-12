@@ -136,7 +136,7 @@ export default function PasswordVaultPage() {
   };
 
   const fetchFolders = async () => {
-    const { supabaseDb } = await import('@/lib/supabase');
+    const { supabaseDb, supabase } = await import('@/lib/supabase');
     
     // Use the new service function
     const { data, error } = await supabaseDb.getPasswordFolders();
