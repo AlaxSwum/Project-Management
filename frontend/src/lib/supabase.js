@@ -1692,10 +1692,11 @@ export const supabaseDb = {
     }
   },
 
-  // Get password entries
-  getPasswordEntries: async () => {
+  // Get password entries for specific user (owned + shared)
+  getPasswordEntries: async (userId, userEmail) => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/password_vault?is_active=eq.true&order=account_name.asc`, {
+      // Get owned passwords
+      const ownedResponse = await fetch(`${supabaseUrl}/rest/v1/password_vault?created_by_id=eq.${userId}&is_active=eq.true&order=account_name.asc`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1704,12 +1705,41 @@ export const supabaseDb = {
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!ownedResponse.ok) {
+        throw new Error(`HTTP error! status: ${ownedResponse.status}`);
       }
 
-      const data = await response.json();
-      return { data: data || [], error: null };
+      const ownedData = await ownedResponse.json();
+      
+      // Get shared passwords
+      let sharedData = [];
+      try {
+        const sharedResponse = await fetch(`${supabaseUrl}/rest/v1/password_vault_access?user_email=eq.${userEmail}&can_view=eq.true&select=vault_id,password_vault(*)`, {
+          method: 'GET',
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (sharedResponse.ok) {
+          const sharedAccess = await sharedResponse.json();
+          sharedData = (sharedAccess || [])
+            .map(access => access.password_vault)
+            .filter(Boolean);
+        }
+      } catch (sharedError) {
+        console.warn('Could not fetch shared passwords:', sharedError);
+      }
+      
+      // Combine and remove duplicates
+      const allPasswords = [...(ownedData || []), ...sharedData];
+      const uniquePasswords = allPasswords.filter((password, index, self) => 
+        index === self.findIndex(p => p.id === password.id)
+      );
+
+      return { data: uniquePasswords, error: null };
     } catch (error) {
       console.error('Error in getPasswordEntries:', error);
       return { data: [], error };

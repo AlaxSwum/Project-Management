@@ -37,6 +37,7 @@ interface PasswordEntry {
   password_strength: string;
   shared_with?: any[];
   is_shared?: boolean;
+  is_owner?: boolean;
 }
 
 interface PasswordFolder {
@@ -139,38 +140,47 @@ export default function PasswordVaultPage() {
   const fetchPasswords = async () => {
     const { supabaseDb, supabase } = await import('@/lib/supabase');
     
-    // Use the new service function
-    const { data, error } = await supabaseDb.getPasswordEntries();
+    if (!user?.id || !user?.email) return;
     
-    if (error) throw error;
-    
-    // Enhance each password with shared member information
-    const passwordsWithSharing = await Promise.all(
-      data.map(async (item: any) => {
-        // Get shared members for this password
-        let sharedWith: any[] = [];
-        try {
-          const { data: shareData } = await supabase
-            .from('password_vault_access')
-            .select('*')
-            .eq('vault_id', item.id);
+    try {
+      // Use the updated service method that filters by user
+      const { data, error } = await supabaseDb.getPasswordEntries(user.id, user.email);
+      
+      if (error) throw error;
+      
+      // Enhance each password with shared member information
+      const passwordsWithSharing = await Promise.all(
+        (data || []).map(async (item: any) => {
+          // Get shared members for this password
+          let sharedWith: any[] = [];
+          try {
+            const { data: shareData } = await supabase
+              .from('password_vault_access')
+              .select('*')
+              .eq('vault_id', item.id);
+            
+            sharedWith = shareData || [];
+          } catch (shareError) {
+            console.warn('Could not fetch sharing data for password:', item.id);
+            sharedWith = [];
+          }
           
-          sharedWith = shareData || [];
-        } catch (shareError) {
-          console.warn('Could not fetch sharing data for password:', item.id);
-          sharedWith = [];
-        }
-        
-        return {
-          ...item,
-          folder_name: item.folder_name || 'Personal',
-          shared_with: sharedWith,
-          is_shared: sharedWith.length > 0
-        };
-      })
-    );
-    
-    setPasswords(passwordsWithSharing);
+          return {
+            ...item,
+            folder_name: item.folder_name || 'Personal',
+            shared_with: sharedWith,
+            is_shared: sharedWith.length > 0,
+            is_owner: item.created_by_id === user.id
+          };
+        })
+      );
+      
+      console.log(`Loaded ${passwordsWithSharing.length} passwords for user ${user.email}`);
+      setPasswords(passwordsWithSharing);
+    } catch (error) {
+      console.error('Error fetching passwords:', error);
+      setError('Failed to load passwords');
+    }
   };
 
   const fetchFolders = async () => {
