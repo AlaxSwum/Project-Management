@@ -80,14 +80,18 @@ export default function PasswordVaultPage() {
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
   const [selectedFolderForMembers, setSelectedFolderForMembers] = useState<PasswordFolder | null>(null);
   const [passwordToShare, setPasswordToShare] = useState<PasswordEntry | null>(null);
+  const [passwordToView, setPasswordToView] = useState<PasswordEntry | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
   
   // Share states
   const [shareEmail, setShareEmail] = useState('');
+  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
   const [sharePermissions, setSharePermissions] = useState({
     can_view: true,
     can_edit: false,
@@ -365,16 +369,52 @@ export default function PasswordVaultPage() {
     }
   };
 
+  const openViewModal = (password: PasswordEntry) => {
+    setPasswordToView(password);
+    setShowViewModal(true);
+  };
+
   const openShareModal = (password: PasswordEntry) => {
     setPasswordToShare(password);
     setShowShareModal(true);
     setShareEmail('');
+    setEmailSuggestions([]);
+    setShowEmailSuggestions(false);
     setSharePermissions({
       can_view: true,
       can_edit: false,
       can_delete: false,
       can_share: false
     });
+    // Load available team member emails
+    loadTeamMemberEmails();
+  };
+
+  const loadTeamMemberEmails = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data } = await supabase
+        .from('auth_user')
+        .select('email')
+        .eq('is_active', true);
+      
+      const emails = (data || []).map((user: any) => user.email).filter(Boolean);
+      setEmailSuggestions(emails);
+    } catch (error) {
+      console.error('Error loading team member emails:', error);
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setShareEmail(value);
+    if (value.length > 0) {
+      const filtered = emailSuggestions.filter(email => 
+        email.toLowerCase().includes(value.toLowerCase())
+      );
+      setShowEmailSuggestions(filtered.length > 0);
+    } else {
+      setShowEmailSuggestions(false);
+    }
   };
 
   const sharePassword = async () => {
@@ -852,315 +892,107 @@ export default function PasswordVaultPage() {
                     key={password.id}
                     className="password-item"
                     style={{
-                      background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                      border: password.is_shared ? '2px solid #10B981' : '2px solid #e2e8f0',
-                      borderRadius: '16px',
-                      padding: '1.5rem',
+                      background: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '1rem',
                       display: 'flex',
-                      flexDirection: 'column',
-                      gap: '1rem',
-                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                      transition: 'all 0.3s ease',
-                      position: 'relative',
-                      overflow: 'hidden'
+                      alignItems: 'center',
+                      gap: '1rem'
                     }}
                   >
-                    {/* Shared indicator */}
-                    {password.is_shared && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
-                        background: 'linear-gradient(135deg, #10B981, #059669)',
-                        color: 'white',
-                        fontSize: '0.7rem',
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <ShareIcon style={{ width: '12px', height: '12px' }} />
-                        Shared
-                      </div>
-                    )}
-
-                    {/* Header section */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '16px',
-                        background: 'linear-gradient(135deg, #5884FD, #6c91ff)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#ffffff',
-                        fontWeight: '700',
-                        fontSize: '1.4rem',
-                        boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
-                      }}>
-                        {password.account_name.charAt(0).toUpperCase()}
-                      </div>
-                      
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                          <h4 style={{ 
-                            fontSize: '1.3rem', 
-                            fontWeight: '700', 
-                            margin: '0',
-                            color: '#1a202c',
-                            letterSpacing: '-0.025em'
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <h4 style={{ 
+                          fontSize: '1.1rem', 
+                          fontWeight: '600', 
+                          margin: '0',
+                          color: '#1a1a1a'
+                        }}>
+                          {password.account_name}
+                        </h4>
+                        {password.is_shared && (
+                          <span style={{
+                            fontSize: '0.75rem',
+                            background: '#f0f0f0',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            color: '#666'
                           }}>
-                            {password.account_name}
-                          </h4>
-                          {password.website_url && (
-                            <a 
-                              href={password.website_url.startsWith('http') ? password.website_url : `https://${password.website_url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ 
-                                color: '#5884FD', 
-                                textDecoration: 'none',
-                                padding: '6px',
-                                borderRadius: '8px',
-                                background: 'rgba(88, 132, 253, 0.1)',
-                                transition: 'all 0.2s ease'
-                              }}
-                            >
-                              <GlobeAltIcon style={{ width: '18px', height: '18px' }} />
-                            </a>
-                          )}
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                          <div style={{ 
-                            fontSize: '0.95rem', 
-                            color: '#4a5568',
-                            background: '#f7fafc',
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #e2e8f0'
-                          }}>
-                            {password.email || password.username || 'No username'}
-                          </div>
-                          
-                          <div style={{ 
-                            fontSize: '0.85rem', 
-                            color: '#718096',
-                            background: password.folder_name === 'Personal' ? '#fef5e7' : '#e6fffa',
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            border: `1px solid ${password.folder_name === 'Personal' ? '#f6e05e' : '#38b2ac'}`
-                          }}>
-                            📁 {password.folder_name}
-                          </div>
-                        </div>
-
-                        {/* Shared with information */}
-                        {password.is_shared && password.shared_with && password.shared_with.length > 0 && (
-                          <div style={{ 
-                            marginTop: '0.75rem',
-                            padding: '8px 12px',
-                            background: 'linear-gradient(135deg, #f0fff4, #e6fffa)',
-                            borderRadius: '8px',
-                            border: '1px solid #9ae6b4'
-                          }}>
-                            <div style={{ 
-                              fontSize: '0.8rem', 
-                              fontWeight: '600', 
-                              color: '#2f855a',
-                              marginBottom: '4px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}>
-                              <UserIcon style={{ width: '14px', height: '14px' }} />
-                              Shared with {password.shared_with.length} team member{password.shared_with.length > 1 ? 's' : ''}:
-                            </div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                              {password.shared_with.map((share: any, index: number) => (
-                                <span key={index} style={{
-                                  fontSize: '0.75rem',
-                                  background: '#ffffff',
-                                  color: '#2f855a',
-                                  padding: '2px 6px',
-                                  borderRadius: '4px',
-                                  border: '1px solid #c6f6d5',
-                                  fontWeight: '500'
-                                }}>
-                                  {share.user_email}
-                                  {share.can_edit && ' (Edit)'}
-                                  {share.can_delete && ' (Delete)'}
-                                  {share.can_share && ' (Share)'}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+                            Shared
+                          </span>
                         )}
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '0.25rem' }}>
+                        {password.email || password.username}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#999999' }}>
+                        {password.folder_name}
                       </div>
                     </div>
                     
-                    {/* Action buttons section */}
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.75rem',
-                      padding: '12px 0',
-                      borderTop: '1px solid #e2e8f0',
-                      marginTop: '0.5rem'
-                    }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <button
-                        onClick={() => copyToClipboard(password.username || password.email, 'username')}
+                        onClick={() => openViewModal(password)}
                         style={{
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '10px',
+                          background: '#ffffff',
+                          border: '1px solid #d1d5db',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#ffffff',
-                          transition: 'all 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                          color: '#374151',
+                          fontSize: '0.875rem'
                         }}
-                        title="Copy username"
+                        title="View password details"
                       >
-                        <UserIcon style={{ width: '14px', height: '14px' }} />
-                        Copy User
+                        View
                       </button>
-                      
-                      <button
-                        onClick={() => togglePasswordVisibility(password.id)}
-                        style={{
-                          background: showPasswords[password.id] 
-                            ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-                            : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '10px',
-                          cursor: 'pointer',
-                          color: '#ffffff',
-                          transition: 'all 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          boxShadow: showPasswords[password.id]
-                            ? '0 2px 8px rgba(240, 147, 251, 0.3)'
-                            : '0 2px 8px rgba(79, 172, 254, 0.3)'
-                        }}
-                        title={showPasswords[password.id] ? 'Hide password' : 'Show password'}
-                      >
-                        {showPasswords[password.id] ? (
-                          <>
-                            <EyeSlashIcon style={{ width: '14px', height: '14px' }} />
-                            Hide
-                          </>
-                        ) : (
-                          <>
-                            <EyeIcon style={{ width: '14px', height: '14px' }} />
-                            View
-                          </>
-                        )}
-                      </button>
-                      
-                      {showPasswords[password.id] && (
-                        <button
-                          onClick={() => copyToClipboard(decryptPassword(password.password_encrypted), 'password')}
-                          style={{
-                            background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                            border: 'none',
-                            padding: '10px 16px',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            color: '#ffffff',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '0.85rem',
-                            fontWeight: '600',
-                            boxShadow: '0 2px 8px rgba(250, 112, 154, 0.3)'
-                          }}
-                          title="Copy password"
-                        >
-                          <DocumentDuplicateIcon style={{ width: '14px', height: '14px' }} />
-                          Copy Pass
-                        </button>
-                      )}
                       
                       <button
                         onClick={() => openEditModal(password)}
                         style={{
-                          background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '10px',
+                          background: '#ffffff',
+                          border: '1px solid #d1d5db',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#2d3748',
-                          transition: 'all 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 8px rgba(168, 237, 234, 0.3)'
+                          color: '#374151',
+                          fontSize: '0.875rem'
                         }}
                         title="Edit password"
                       >
-                        <PencilIcon style={{ width: '14px', height: '14px' }} />
                         Edit
                       </button>
                       
                       <button
                         onClick={() => openShareModal(password)}
                         style={{
-                          background: 'linear-gradient(135deg, #10B981, #059669)',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '10px',
+                          background: '#ffffff',
+                          border: '1px solid #d1d5db',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#ffffff',
-                          transition: 'all 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                          color: '#374151',
+                          fontSize: '0.875rem'
                         }}
                         title="Share with team"
                       >
-                        <ShareIcon style={{ width: '14px', height: '14px' }} />
                         Share
                       </button>
                       
                       <button
                         onClick={() => deletePassword(password.id)}
                         style={{
-                          background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '10px',
+                          background: '#ffffff',
+                          border: '1px solid #dc2626',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#ffffff',
-                          transition: 'all 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)'
+                          color: '#dc2626',
+                          fontSize: '0.875rem'
                         }}
                         title="Delete password"
                       >
-                        <TrashIcon style={{ width: '14px', height: '14px' }} />
                         Delete
                       </button>
                     </div>
@@ -1732,6 +1564,138 @@ export default function PasswordVaultPage() {
         </div>
       )}
 
+      {/* View Password Modal */}
+      {showViewModal && passwordToView && (
+        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
+              {passwordToView.account_name}
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  Username/Email
+                </label>
+                <div style={{
+                  padding: '0.75rem',
+                  background: '#f9f9f9',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '4px',
+                  fontSize: '0.9rem'
+                }}>
+                  {passwordToView.email || passwordToView.username || 'Not provided'}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  Password
+                </label>
+                <div style={{
+                  padding: '0.75rem',
+                  background: '#f9f9f9',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '4px',
+                  fontSize: '0.9rem',
+                  fontFamily: 'monospace'
+                }}>
+                  {decryptPassword(passwordToView.password_encrypted)}
+                </div>
+              </div>
+
+              {passwordToView.website_url && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    Website
+                  </label>
+                  <div style={{
+                    padding: '0.75rem',
+                    background: '#f9f9f9',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem'
+                  }}>
+                    <a href={passwordToView.website_url.startsWith('http') ? passwordToView.website_url : `https://${passwordToView.website_url}`} 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       style={{ color: '#0066cc', textDecoration: 'underline' }}>
+                      {passwordToView.website_url}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {passwordToView.notes && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    Notes
+                  </label>
+                  <div style={{
+                    padding: '0.75rem',
+                    background: '#f9f9f9',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem'
+                  }}>
+                    {passwordToView.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Shared with information */}
+              {passwordToView.is_shared && passwordToView.shared_with && passwordToView.shared_with.length > 0 && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    Shared with Team Members
+                  </label>
+                  <div style={{
+                    padding: '0.75rem',
+                    background: '#f0f9ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '4px'
+                  }}>
+                    {passwordToView.shared_with.map((share: any, index: number) => (
+                      <div key={index} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.5rem 0',
+                        borderBottom: index < passwordToView.shared_with!.length - 1 ? '1px solid #e5e7eb' : 'none'
+                      }}>
+                        <span style={{ fontWeight: '500' }}>{share.user_email}</span>
+                        <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                          {share.can_edit && 'Edit '}
+                          {share.can_delete && 'Delete '}
+                          {share.can_share && 'Share'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+              <button
+                onClick={() => setShowViewModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
+                  background: '#ffffff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Share Password Modal */}
       {showShareModal && passwordToShare && (
         <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
@@ -1740,24 +1704,63 @@ export default function PasswordVaultPage() {
               Share Password: {passwordToShare.account_name}
             </h3>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
               <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
                 Share with (Email)
               </label>
               <input
                 type="email"
                 value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-                placeholder="user@example.com"
+                onChange={(e) => handleEmailChange(e.target.value)}
+                placeholder="Start typing email address..."
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
                   fontSize: '0.9rem',
                   boxSizing: 'border-box'
                 }}
               />
+              
+              {/* Email suggestions dropdown */}
+              {showEmailSuggestions && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '0',
+                  right: '0',
+                  background: '#ffffff',
+                  border: '1px solid #d1d5db',
+                  borderTop: 'none',
+                  borderRadius: '0 0 4px 4px',
+                  maxHeight: '150px',
+                  overflowY: 'auto',
+                  zIndex: 10
+                }}>
+                  {emailSuggestions
+                    .filter(email => email.toLowerCase().includes(shareEmail.toLowerCase()))
+                    .map((email, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setShareEmail(email);
+                          setShowEmailSuggestions(false);
+                        }}
+                        style={{
+                          padding: '0.75rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f3f4f6',
+                          fontSize: '0.9rem'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                      >
+                        {email}
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
@@ -1813,10 +1816,10 @@ export default function PasswordVaultPage() {
                 onClick={() => setShowShareModal(false)}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
                   background: '#ffffff',
-                  color: '#666666',
+                  color: '#374151',
                   cursor: 'pointer',
                   fontSize: '0.9rem'
                 }}
@@ -1827,13 +1830,12 @@ export default function PasswordVaultPage() {
                 onClick={sharePassword}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: '#10B981',
+                  border: '1px solid #374151',
+                  borderRadius: '4px',
+                  background: '#374151',
                   color: '#ffffff',
                   cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: '500'
+                  fontSize: '0.9rem'
                 }}
               >
                 Share Password
