@@ -103,8 +103,8 @@ export default function PersonalTaskManager() {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    status: 'pending' as const,
-    priority: 'medium' as const,
+    status: 'pending' as PersonalTask['status'],
+    priority: 'medium' as PersonalTask['priority'],
     category: '',
     tags: [] as string[],
     due_date: '',
@@ -117,7 +117,7 @@ export default function PersonalTaskManager() {
     description: '',
     start_time: '',
     end_time: '',
-    block_type: 'task' as const,
+    block_type: 'task' as PersonalTimeBlock['block_type'],
     color: '#3B82F6',
     notes: ''
   });
@@ -424,8 +424,8 @@ export default function PersonalTaskManager() {
     setNewTask({
       title: '',
       description: '',
-      status: 'pending',
-      priority: 'medium',
+      status: 'pending' as PersonalTask['status'],
+      priority: 'medium' as PersonalTask['priority'],
       category: '',
       tags: [],
       due_date: '',
@@ -442,7 +442,7 @@ export default function PersonalTaskManager() {
       description: '',
       start_time: '',
       end_time: '',
-      block_type: 'task',
+      block_type: 'task' as PersonalTimeBlock['block_type'],
       color: '#3B82F6',
       notes: ''
     });
