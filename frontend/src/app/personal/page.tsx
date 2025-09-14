@@ -13,9 +13,17 @@ import {
   TagIcon,
   FlagIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  XMarkIcon,
+  ListBulletIcon,
+  Squares2X2Icon,
+  CalendarDaysIcon,
+  ExclamationTriangleIcon,
+  StarIcon,
+  EyeIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
-import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
+import { CheckCircleIcon as CheckCircleIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
 import { createClient } from '@supabase/supabase-js';
 
@@ -61,8 +69,9 @@ interface PersonalTimeBlock {
 }
 
 type ViewType = 'month' | 'week' | 'day';
+type LayoutType = 'list' | 'kanban' | 'calendar';
 
-export default function PersonalTaskPage() {
+export default function PersonalTaskManager() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   
@@ -71,9 +80,16 @@ export default function PersonalTaskPage() {
   const [timeBlocks, setTimeBlocks] = useState<PersonalTimeBlock[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [currentView, setCurrentView] = useState<ViewType>('week');
+  const [layoutType, setLayoutType] = useState<LayoutType>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  // Filters
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Modal states
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -106,6 +122,11 @@ export default function PersonalTaskPage() {
     notes: ''
   });
 
+  // Categories for dropdown
+  const categories = [
+    'Work', 'Personal', 'Health', 'Learning', 'Finance', 'Shopping', 'Travel', 'Other'
+  ];
+
   // Load data
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -122,13 +143,20 @@ export default function PersonalTaskPage() {
       const { startDate, endDate } = getDateRange();
 
       // Load tasks
-      const { data: tasksData, error: tasksError } = await supabase
+      let taskQuery = supabase
         .from('personal_tasks')
         .select('*')
         .eq('user_id', user?.id)
-        .gte('due_date', startDate.toISOString())
-        .lte('due_date', endDate.toISOString())
-        .order('due_date', { ascending: true });
+        .order('created_at', { ascending: false });
+
+      // Apply date filter if not showing all
+      if (currentView !== 'month' || layoutType === 'calendar') {
+        taskQuery = taskQuery
+          .gte('due_date', startDate.toISOString())
+          .lte('due_date', endDate.toISOString());
+      }
+
+      const { data: tasksData, error: tasksError } = await taskQuery;
 
       if (tasksError) {
         console.error('Error loading tasks:', tasksError);
@@ -218,12 +246,52 @@ export default function PersonalTaskPage() {
         return;
       }
 
-      setTasks(prev => [...prev, data]);
+      setTasks(prev => [data, ...prev]);
       setShowTaskModal(false);
       resetTaskForm();
+      setSuccessMessage('Task created successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error creating task:', error);
       setError('Failed to create task');
+    }
+  };
+
+  const handleUpdateTask = async () => {
+    try {
+      if (!selectedTask || !newTask.title.trim()) {
+        setError('Task title is required');
+        return;
+      }
+
+      const updateData = {
+        ...newTask,
+        tags: newTask.tags.length > 0 ? newTask.tags : null,
+        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
+        estimated_duration: newTask.estimated_duration || null
+      };
+
+      const { data, error } = await supabase
+        .from('personal_tasks')
+        .update(updateData)
+        .eq('id', selectedTask.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task:', error);
+        setError('Failed to update task');
+        return;
+      }
+
+      setTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task));
+      setShowTaskModal(false);
+      resetTaskForm();
+      setSuccessMessage('Task updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      setError('Failed to update task');
     }
   };
 
@@ -234,11 +302,19 @@ export default function PersonalTaskPage() {
         return;
       }
 
+      const startTime = new Date(newTimeBlock.start_time);
+      const endTime = new Date(newTimeBlock.end_time);
+
+      if (endTime <= startTime) {
+        setError('End time must be after start time');
+        return;
+      }
+
       const timeBlockData = {
         ...newTimeBlock,
         user_id: user?.id,
-        start_time: new Date(newTimeBlock.start_time).toISOString(),
-        end_time: new Date(newTimeBlock.end_time).toISOString()
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString()
       };
 
       const { data, error } = await supabase
@@ -256,6 +332,8 @@ export default function PersonalTaskPage() {
       setTimeBlocks(prev => [...prev, data]);
       setShowTimeBlockModal(false);
       resetTimeBlockForm();
+      setSuccessMessage('Time block created successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error creating time block:', error);
       setError('Failed to create time block');
@@ -285,6 +363,9 @@ export default function PersonalTaskPage() {
           ? { ...task, status, ...(status === 'completed' ? { completed_at: updateData.completed_at } : {}) }
           : task
       ));
+
+      setSuccessMessage(`Task marked as ${status.replace('_', ' ')}!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error updating task:', error);
       setError('Failed to update task');
@@ -292,6 +373,8 @@ export default function PersonalTaskPage() {
   };
 
   const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
     try {
       const { error } = await supabase
         .from('personal_tasks')
@@ -305,6 +388,8 @@ export default function PersonalTaskPage() {
       }
 
       setTasks(prev => prev.filter(task => task.id !== taskId));
+      setSuccessMessage('Task deleted successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error deleting task:', error);
       setError('Failed to delete task');
@@ -312,6 +397,8 @@ export default function PersonalTaskPage() {
   };
 
   const handleDeleteTimeBlock = async (timeBlockId: string) => {
+    if (!confirm('Are you sure you want to delete this time block?')) return;
+
     try {
       const { error } = await supabase
         .from('personal_time_blocks')
@@ -325,6 +412,8 @@ export default function PersonalTaskPage() {
       }
 
       setTimeBlocks(prev => prev.filter(block => block.id !== timeBlockId));
+      setSuccessMessage('Time block deleted successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error deleting time block:', error);
       setError('Failed to delete time block');
@@ -359,6 +448,23 @@ export default function PersonalTaskPage() {
     });
     setSelectedTimeBlock(null);
     setIsEditingTimeBlock(false);
+  };
+
+  const openEditTask = (task: PersonalTask) => {
+    setSelectedTask(task);
+    setNewTask({
+      title: task.title,
+      description: task.description || '',
+      status: task.status,
+      priority: task.priority,
+      category: task.category || '',
+      tags: task.tags || [],
+      due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
+      estimated_duration: task.estimated_duration || 0,
+      is_recurring: task.is_recurring
+    });
+    setIsEditingTask(true);
+    setShowTaskModal(true);
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -419,28 +525,30 @@ export default function PersonalTaskPage() {
     }
   };
 
-  const generate15MinSlots = () => {
-    const slots = [];
-    const startHour = 9; // 9 AM
-    const endHour = 17; // 5 PM
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     
-    for (let hour = startHour; hour < endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(time);
-      }
-    }
-    return slots;
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  const tasksByStatus = {
+    pending: filteredTasks.filter(task => task.status === 'pending'),
+    in_progress: filteredTasks.filter(task => task.status === 'in_progress'),
+    completed: filteredTasks.filter(task => task.status === 'completed'),
+    cancelled: filteredTasks.filter(task => task.status === 'cancelled')
   };
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
         <Sidebar projects={projects} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#F5F5ED', 
+          background: '#F8FAFC', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -448,10 +556,10 @@ export default function PersonalTaskPage() {
           minHeight: '100vh'
         }}>
           <div style={{ 
-            width: '32px', 
-            height: '32px', 
-            border: '3px solid #C483D9', 
-            borderTop: '3px solid #5884FD', 
+            width: '40px', 
+            height: '40px', 
+            border: '4px solid #E2E8F0', 
+            borderTop: '4px solid #3B82F6', 
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -475,40 +583,67 @@ export default function PersonalTaskPage() {
           
           .task-card {
             background: white;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
             border-left: 4px solid #3B82F6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #E2E8F0;
           }
           
           .task-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+          }
+          
+          .task-card.completed {
+            opacity: 0.7;
+            background: #F8FAFC;
+          }
+          
+          .kanban-column {
+            background: #F1F5F9;
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 600px;
+          }
+          
+          .kanban-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
           }
           
           .time-block {
             background: white;
-            border-radius: 6px;
-            padding: 8px;
-            margin: 2px 0;
-            border-left: 3px solid #3B82F6;
-            font-size: 12px;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 4px 0;
+            border-left: 4px solid #3B82F6;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
           }
           
           .time-block:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
           }
           
           .priority-badge {
             display: inline-flex;
             align-items: center;
-            padding: 2px 6px;
-            border-radius: 12px;
-            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -517,31 +652,60 @@ export default function PersonalTaskPage() {
           .status-badge {
             display: inline-flex;
             align-items: center;
-            padding: 4px 8px;
-            border-radius: 14px;
-            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 500;
+            text-transform: capitalize;
           }
           
           .view-tabs {
             display: flex;
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #E2E8F0;
           }
           
           .view-tab {
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: 8px;
             border: none;
             background: transparent;
             cursor: pointer;
             font-weight: 500;
+            font-size: 14px;
             transition: all 0.2s ease;
+            color: #64748B;
           }
           
           .view-tab.active {
+            background: #3B82F6;
+            color: white;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+          }
+          
+          .layout-tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #E2E8F0;
+          }
+          
+          .layout-tab {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #64748B;
+          }
+          
+          .layout-tab.active {
             background: #3B82F6;
             color: white;
           }
@@ -552,55 +716,70 @@ export default function PersonalTaskPage() {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            backdrop-filter: blur(4px);
           }
           
           .modal-content {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 500px;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
           }
           
           .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
           }
           
           .form-label {
             display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
+            margin-bottom: 6px;
+            font-weight: 600;
             color: #374151;
+            font-size: 14px;
           }
           
           .form-input {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #D1D5DB;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
             font-size: 14px;
+            transition: all 0.2s ease;
+            background: #FAFBFC;
           }
           
           .form-input:focus {
             outline: none;
             border-color: #3B82F6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: white;
+          }
+          
+          .form-textarea {
+            resize: vertical;
+            min-height: 80px;
           }
           
           .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
           }
           
           .btn-primary {
@@ -610,6 +789,8 @@ export default function PersonalTaskPage() {
           
           .btn-primary:hover {
             background: #2563EB;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
           }
           
           .btn-secondary {
@@ -629,153 +810,369 @@ export default function PersonalTaskPage() {
           .btn-danger:hover {
             background: #DC2626;
           }
+          
+          .btn-success {
+            background: #10B981;
+            color: white;
+          }
+          
+          .btn-success:hover {
+            background: #059669;
+          }
+          
+          .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.2s ease;
+          }
+          
+          .search-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+          
+          .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+          }
+          
+          .filter-select:focus {
+            outline: none;
+            border-color: #3B82F6;
+          }
+          
+          .stats-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #E2E8F0;
+            text-align: center;
+          }
+          
+          .stats-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+          
+          .stats-label {
+            font-size: 12px;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+          }
+          
+          .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+          }
+          
+          .alert-error {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+          }
+          
+          .alert-success {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            color: #166534;
+          }
+          
+          .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748B;
+          }
+          
+          .empty-state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+          }
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
         <Sidebar projects={projects} onCreateProject={() => {}} />
         
-        <div style={{ marginLeft: '256px', flex: 1, padding: '24px' }}>
+        <div style={{ marginLeft: '256px', flex: 1, padding: '32px' }}>
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div>
-              <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>
-                Personal Task Management
-              </h1>
-              <p style={{ color: '#6B7280', margin: '4px 0 0 0' }}>
-                Manage your personal tasks and time blocks
-              </p>
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <div>
+                <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#1F2937', margin: 0, marginBottom: '8px' }}>
+                  Personal Task Manager
+                </h1>
+                <p style={{ color: '#64748B', margin: 0, fontSize: '16px' }}>
+                  Organize your personal tasks and manage your time effectively
+                </p>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    resetTaskForm();
+                    setShowTaskModal(true);
+                  }}
+                  className="btn btn-primary"
+                >
+                  <PlusIcon style={{ width: '18px', height: '18px' }} />
+                  New Task
+                </button>
+                <button
+                  onClick={() => {
+                    resetTimeBlockForm();
+                    setShowTimeBlockModal(true);
+                  }}
+                  className="btn btn-secondary"
+                >
+                  <ClockIcon style={{ width: '18px', height: '18px' }} />
+                  Time Block
+                </button>
+              </div>
             </div>
-            
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => setShowTaskModal(true)}
-                className="btn btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
-                Add Task
-              </button>
-              <button
-                onClick={() => setShowTimeBlockModal(true)}
-                className="btn btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <ClockIcon style={{ width: '16px', height: '16px' }} />
-                Add Time Block
-              </button>
+
+            {/* Stats Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
+              <div className="stats-card">
+                <div className="stats-number" style={{ color: '#F59E0B' }}>{tasksByStatus.pending.length}</div>
+                <div className="stats-label">Pending</div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-number" style={{ color: '#3B82F6' }}>{tasksByStatus.in_progress.length}</div>
+                <div className="stats-label">In Progress</div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-number" style={{ color: '#10B981' }}>{tasksByStatus.completed.length}</div>
+                <div className="stats-label">Completed</div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-number" style={{ color: '#64748B' }}>{tasks.length}</div>
+                <div className="stats-label">Total Tasks</div>
+              </div>
             </div>
           </div>
 
-          {/* View Controls */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div className="view-tabs">
-              <button
-                className={`view-tab ${currentView === 'month' ? 'active' : ''}`}
-                onClick={() => setCurrentView('month')}
+          {/* Controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+            {/* Search and Filters */}
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1 }}>
+              <div style={{ position: 'relative', maxWidth: '300px', flex: 1 }}>
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }}>
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="filter-select"
               >
-                Month
-              </button>
-              <button
-                className={`view-tab ${currentView === 'week' ? 'active' : ''}`}
-                onClick={() => setCurrentView('week')}
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="filter-select"
               >
-                Week
-              </button>
-              <button
-                className={`view-tab ${currentView === 'day' ? 'active' : ''}`}
-                onClick={() => setCurrentView('day')}
-              >
-                Day
-              </button>
+                <option value="all">All Priority</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                onClick={() => navigateDate('prev')}
-                className="btn btn-secondary"
-                style={{ padding: '6px' }}
-              >
-                <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
-              </button>
-              
-              <h2 style={{ margin: 0, color: '#1F2937', fontSize: '18px', minWidth: '200px', textAlign: 'center' }}>
-                {formatDate(currentDate)}
-              </h2>
-              
-              <button
-                onClick={() => navigateDate('next')}
-                className="btn btn-secondary"
-                style={{ padding: '6px' }}
-              >
-                <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
-              </button>
+            {/* Layout and View Controls */}
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div className="layout-tabs">
+                <button
+                  className={`layout-tab ${layoutType === 'list' ? 'active' : ''}`}
+                  onClick={() => setLayoutType('list')}
+                  title="List View"
+                >
+                  <ListBulletIcon style={{ width: '18px', height: '18px' }} />
+                </button>
+                <button
+                  className={`layout-tab ${layoutType === 'kanban' ? 'active' : ''}`}
+                  onClick={() => setLayoutType('kanban')}
+                  title="Kanban View"
+                >
+                  <Squares2X2Icon style={{ width: '18px', height: '18px' }} />
+                </button>
+                <button
+                  className={`layout-tab ${layoutType === 'calendar' ? 'active' : ''}`}
+                  onClick={() => setLayoutType('calendar')}
+                  title="Calendar View"
+                >
+                  <CalendarDaysIcon style={{ width: '18px', height: '18px' }} />
+                </button>
+              </div>
+
+              {layoutType === 'calendar' && (
+                <>
+                  <div className="view-tabs">
+                    <button
+                      className={`view-tab ${currentView === 'month' ? 'active' : ''}`}
+                      onClick={() => setCurrentView('month')}
+                    >
+                      Month
+                    </button>
+                    <button
+                      className={`view-tab ${currentView === 'week' ? 'active' : ''}`}
+                      onClick={() => setCurrentView('week')}
+                    >
+                      Week
+                    </button>
+                    <button
+                      className={`view-tab ${currentView === 'day' ? 'active' : ''}`}
+                      onClick={() => setCurrentView('day')}
+                    >
+                      Day
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button
+                      onClick={() => navigateDate('prev')}
+                      className="btn btn-secondary"
+                      style={{ padding: '8px' }}
+                    >
+                      <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
+                    </button>
+                    
+                    <h3 style={{ margin: 0, color: '#1F2937', fontSize: '16px', minWidth: '200px', textAlign: 'center' }}>
+                      {formatDate(currentDate)}
+                    </h3>
+                    
+                    <button
+                      onClick={() => navigateDate('next')}
+                      className="btn btn-secondary"
+                      style={{ padding: '8px' }}
+                    >
+                      <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Error Display */}
+          {/* Alerts */}
           {error && (
-            <div style={{ 
-              background: '#FEF2F2', 
-              border: '1px solid #FECACA', 
-              color: '#B91C1C', 
-              padding: '12px', 
-              borderRadius: '6px', 
-              marginBottom: '24px' 
-            }}>
+            <div className="alert alert-error">
+              <ExclamationTriangleIcon style={{ width: '16px', height: '16px' }} />
               {error}
+              <button
+                onClick={() => setError('')}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <XMarkIcon style={{ width: '16px', height: '16px' }} />
+              </button>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="alert alert-success">
+              <CheckIcon style={{ width: '16px', height: '16px' }} />
+              {successMessage}
+              <button
+                onClick={() => setSuccessMessage('')}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <XMarkIcon style={{ width: '16px', height: '16px' }} />
+              </button>
             </div>
           )}
 
           {/* Main Content */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
-            {/* Tasks Section */}
+          {layoutType === 'list' && (
             <div>
-              <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#1F2937', marginBottom: '16px' }}>
-                Tasks ({tasks.length})
-              </h3>
-              
-              {tasks.length === 0 ? (
-                <div style={{ 
-                  background: 'white', 
-                  padding: '48px', 
-                  borderRadius: '8px', 
-                  textAlign: 'center',
-                  color: '#6B7280'
-                }}>
-                  <CalendarIcon style={{ width: '48px', height: '48px', margin: '0 auto 16px', opacity: 0.5 }} />
-                  <p>No tasks found for this {currentView}</p>
-                  <button
-                    onClick={() => setShowTaskModal(true)}
-                    className="btn btn-primary"
-                    style={{ marginTop: '12px' }}
-                  >
-                    Create your first task
-                  </button>
+              {filteredTasks.length === 0 ? (
+                <div className="empty-state">
+                  <ListBulletIcon className="empty-state-icon" />
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 8px 0' }}>No tasks found</h3>
+                  <p style={{ margin: '0 0 20px 0' }}>
+                    {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' 
+                      ? 'Try adjusting your filters or search terms'
+                      : 'Create your first task to get started'
+                    }
+                  </p>
+                  {!searchQuery && statusFilter === 'all' && priorityFilter === 'all' && (
+                    <button
+                      onClick={() => {
+                        resetTaskForm();
+                        setShowTaskModal(true);
+                      }}
+                      className="btn btn-primary"
+                    >
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      Create Task
+                    </button>
+                  )}
                 </div>
               ) : (
-                tasks.map(task => (
-                  <div key={task.id} className="task-card" style={{ borderLeftColor: getPriorityColor(task.priority) }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                filteredTasks.map(task => (
+                  <div 
+                    key={task.id} 
+                    className={`task-card ${task.status === 'completed' ? 'completed' : ''}`}
+                    style={{ borderLeftColor: getPriorityColor(task.priority) }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <h4 style={{ 
                         margin: 0, 
-                        fontSize: '16px', 
+                        fontSize: '18px', 
                         fontWeight: '600',
                         color: task.status === 'completed' ? '#6B7280' : '#1F2937',
-                        textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                        textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                        flex: 1
                       }}>
                         {task.title}
                       </h4>
                       
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
                           onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed')}
                           style={{ 
                             background: 'none', 
                             border: 'none', 
                             cursor: 'pointer',
-                            color: task.status === 'completed' ? '#10B981' : '#6B7280'
+                            color: task.status === 'completed' ? '#10B981' : '#6B7280',
+                            padding: '4px'
                           }}
+                          title={task.status === 'completed' ? 'Mark as pending' : 'Mark as completed'}
                         >
                           {task.status === 'completed' ? (
                             <CheckCircleIconSolid style={{ width: '20px', height: '20px' }} />
@@ -785,8 +1182,17 @@ export default function PersonalTaskPage() {
                         </button>
                         
                         <button
+                          onClick={() => openEditTask(task)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6', padding: '4px' }}
+                          title="Edit task"
+                        >
+                          <PencilIcon style={{ width: '16px', height: '16px' }} />
+                        </button>
+                        
+                        <button
                           onClick={() => handleDeleteTask(task.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}
+                          title="Delete task"
                         >
                           <TrashIcon style={{ width: '16px', height: '16px' }} />
                         </button>
@@ -794,12 +1200,12 @@ export default function PersonalTaskPage() {
                     </div>
                     
                     {task.description && (
-                      <p style={{ margin: '0 0 8px 0', color: '#6B7280', fontSize: '14px' }}>
+                      <p style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: '14px', lineHeight: '1.5' }}>
                         {task.description}
                       </p>
                     )}
                     
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span 
                         className="priority-badge"
                         style={{ 
@@ -807,7 +1213,7 @@ export default function PersonalTaskPage() {
                           color: getPriorityColor(task.priority)
                         }}
                       >
-                        <FlagIcon style={{ width: '10px', height: '10px', marginRight: '2px' }} />
+                        <FlagIcon style={{ width: '12px', height: '12px', marginRight: '4px' }} />
                         {task.priority}
                       </span>
                       
@@ -821,15 +1227,29 @@ export default function PersonalTaskPage() {
                         {task.status.replace('_', ' ')}
                       </span>
                       
+                      {task.category && (
+                        <span style={{ 
+                          fontSize: '12px', 
+                          color: '#64748B',
+                          background: '#F1F5F9',
+                          padding: '4px 8px',
+                          borderRadius: '12px'
+                        }}>
+                          <TagIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px' }} />
+                          {task.category}
+                        </span>
+                      )}
+                      
                       {task.due_date && (
-                        <span style={{ fontSize: '12px', color: '#6B7280' }}>
+                        <span style={{ fontSize: '12px', color: '#64748B' }}>
+                          <CalendarIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px' }} />
                           Due: {new Date(task.due_date).toLocaleDateString()}
                         </span>
                       )}
                       
                       {task.estimated_duration && (
-                        <span style={{ fontSize: '12px', color: '#6B7280' }}>
-                          <ClockIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '2px' }} />
+                        <span style={{ fontSize: '12px', color: '#64748B' }}>
+                          <ClockIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px' }} />
                           {task.estimated_duration}m
                         </span>
                       )}
@@ -838,96 +1258,164 @@ export default function PersonalTaskPage() {
                 ))
               )}
             </div>
+          )}
 
-            {/* Time Blocks Section */}
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#1F2937', marginBottom: '16px' }}>
-                Time Blocks
-              </h3>
-              
-              <div style={{ background: 'white', borderRadius: '8px', padding: '16px' }}>
-                {currentView === 'day' && (
-                  <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                    {generate15MinSlots().map(time => {
-                      const blocksAtTime = timeBlocks.filter(block => {
-                        const blockStart = new Date(block.start_time);
-                        const slotTime = `${blockStart.getHours().toString().padStart(2, '0')}:${blockStart.getMinutes().toString().padStart(2, '0')}`;
-                        return slotTime === time;
-                      });
+          {layoutType === 'kanban' && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+              {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
+                <div key={status} className="kanban-column">
+                  <div className="kanban-header" style={{ color: getStatusColor(status) }}>
+                    <span style={{ textTransform: 'capitalize' }}>{status.replace('_', ' ')}</span>
+                    <span style={{ 
+                      background: getStatusColor(status) + '20',
+                      color: getStatusColor(status),
+                      padding: '2px 6px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '600'
+                    }}>
+                      {statusTasks.length}
+                    </span>
+                  </div>
+                  
+                  {statusTasks.map(task => (
+                    <div 
+                      key={task.id} 
+                      className="task-card"
+                      style={{ 
+                        borderLeftColor: getPriorityColor(task.priority),
+                        marginBottom: '12px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => openEditTask(task)}
+                    >
+                      <h5 style={{ 
+                        margin: '0 0 8px 0', 
+                        fontSize: '14px', 
+                        fontWeight: '600',
+                        color: '#1F2937'
+                      }}>
+                        {task.title}
+                      </h5>
                       
-                      return (
-                        <div key={time} style={{ marginBottom: '1px', minHeight: '20px' }}>
-                          <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '2px' }}>
-                            {time}
-                          </div>
-                          {blocksAtTime.map(block => (
-                            <div
-                              key={block.id}
-                              className="time-block"
-                              style={{ 
-                                borderLeftColor: block.color,
-                                background: block.is_completed ? '#F3F4F6' : 'white'
-                              }}
-                              onClick={() => {
-                                setSelectedTimeBlock(block);
-                                setShowTimeBlockModal(true);
-                                setIsEditingTimeBlock(true);
-                              }}
-                            >
-                              <div style={{ fontWeight: '500', fontSize: '11px' }}>{block.title}</div>
-                              <div style={{ color: '#6B7280', fontSize: '10px' }}>
-                                {new Date(block.start_time).toLocaleTimeString('en-US', { 
-                                  hour: 'numeric', 
-                                  minute: '2-digit',
-                                  hour12: true 
-                                })} - {new Date(block.end_time).toLocaleTimeString('en-US', { 
-                                  hour: 'numeric', 
-                                  minute: '2-digit',
-                                  hour12: true 
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                
-                {currentView !== 'day' && (
-                  <div>
-                    {timeBlocks.length === 0 ? (
-                      <div style={{ textAlign: 'center', color: '#6B7280', padding: '24px' }}>
-                        <ClockIcon style={{ width: '32px', height: '32px', margin: '0 auto 12px', opacity: 0.5 }} />
-                        <p>No time blocks for this {currentView}</p>
+                      {task.description && (
+                        <p style={{ 
+                          margin: '0 0 8px 0', 
+                          color: '#64748B', 
+                          fontSize: '12px',
+                          lineHeight: '1.4'
+                        }}>
+                          {task.description.length > 60 
+                            ? task.description.substring(0, 60) + '...'
+                            : task.description
+                          }
+                        </p>
+                      )}
+                      
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span 
+                          className="priority-badge"
+                          style={{ 
+                            background: getPriorityColor(task.priority) + '20',
+                            color: getPriorityColor(task.priority),
+                            fontSize: '10px',
+                            padding: '2px 6px'
+                          }}
+                        >
+                          {task.priority}
+                        </span>
+                        
+                        {task.due_date && (
+                          <span style={{ fontSize: '10px', color: '#64748B' }}>
+                            {new Date(task.due_date).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      timeBlocks.map(block => (
-                        <div key={block.id} className="time-block" style={{ borderLeftColor: block.color, marginBottom: '8px' }}>
-                          <div style={{ fontWeight: '500', fontSize: '12px' }}>{block.title}</div>
-                          <div style={{ color: '#6B7280', fontSize: '11px' }}>
-                            {new Date(block.start_time).toLocaleDateString()} {new Date(block.start_time).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '4px', marginTop: '4px' }}>
-                            <button
-                              onClick={() => handleDeleteTimeBlock(block.id)}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}
-                            >
-                              <TrashIcon style={{ width: '12px', height: '12px' }} />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {layoutType === 'calendar' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+              <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+                  Tasks for {formatDate(currentDate)}
+                </h3>
+                
+                {filteredTasks.length === 0 ? (
+                  <div className="empty-state">
+                    <CalendarIcon className="empty-state-icon" />
+                    <p>No tasks for this {currentView}</p>
                   </div>
+                ) : (
+                  filteredTasks.map(task => (
+                    <div key={task.id} className="task-card" style={{ borderLeftColor: getPriorityColor(task.priority) }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h5 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>{task.title}</h5>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed')}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: task.status === 'completed' ? '#10B981' : '#6B7280' }}
+                          >
+                            {task.status === 'completed' ? (
+                              <CheckCircleIconSolid style={{ width: '16px', height: '16px' }} />
+                            ) : (
+                              <CheckCircleIcon style={{ width: '16px', height: '16px' }} />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => openEditTask(task)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6' }}
+                          >
+                            <PencilIcon style={{ width: '14px', height: '14px' }} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>Time Blocks</h3>
+                
+                {timeBlocks.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#64748B', padding: '20px' }}>
+                    <ClockIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
+                    <p style={{ margin: 0, fontSize: '14px' }}>No time blocks</p>
+                  </div>
+                ) : (
+                  timeBlocks.map(block => (
+                    <div key={block.id} className="time-block" style={{ borderLeftColor: block.color }}>
+                      <div style={{ fontWeight: '500', fontSize: '13px', marginBottom: '4px' }}>{block.title}</div>
+                      <div style={{ color: '#64748B', fontSize: '11px' }}>
+                        {new Date(block.start_time).toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true 
+                        })} - {new Date(block.end_time).toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true 
+                        })}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                        <button
+                          onClick={() => handleDeleteTimeBlock(block.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}
+                        >
+                          <TrashIcon style={{ width: '12px', height: '12px' }} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -935,9 +1423,20 @@ export default function PersonalTaskPage() {
       {showTaskModal && (
         <div className="modal-overlay" onClick={() => setShowTaskModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 20px 0' }}>
-              {isEditingTask ? 'Edit Task' : 'Create New Task'}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>
+                {isEditingTask ? 'Edit Task' : 'Create New Task'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowTaskModal(false);
+                  resetTaskForm();
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
             
             <div className="form-group">
               <label className="form-label">Title *</label>
@@ -946,22 +1445,23 @@ export default function PersonalTaskPage() {
                 className="form-input"
                 value={newTask.title}
                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                placeholder="Enter task title"
+                placeholder="Enter task title..."
+                required
               />
             </div>
             
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea
-                className="form-input"
+                className="form-input form-textarea"
                 value={newTask.description}
                 onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                placeholder="Enter task description"
+                placeholder="Enter task description..."
                 rows={3}
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Priority</label>
                 <select
@@ -986,19 +1486,24 @@ export default function PersonalTaskPage() {
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group">
-                <label className="form-label">Due Date</label>
-                <input
-                  type="datetime-local"
+                <label className="form-label">Category</label>
+                <select
                   className="form-input"
-                  value={newTask.due_date}
-                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                />
+                  value={newTask.category}
+                  onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+                >
+                  <option value="">Select category...</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-group">
@@ -1009,22 +1514,22 @@ export default function PersonalTaskPage() {
                   value={newTask.estimated_duration}
                   onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) || 0 })}
                   placeholder="0"
+                  min="0"
                 />
               </div>
             </div>
             
             <div className="form-group">
-              <label className="form-label">Category</label>
+              <label className="form-label">Due Date</label>
               <input
-                type="text"
+                type="datetime-local"
                 className="form-input"
-                value={newTask.category}
-                onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
-                placeholder="Enter category (optional)"
+                value={newTask.due_date}
+                onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
               />
             </div>
             
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
               <button
                 onClick={() => {
                   setShowTaskModal(false);
@@ -1035,7 +1540,7 @@ export default function PersonalTaskPage() {
                 Cancel
               </button>
               <button
-                onClick={handleCreateTask}
+                onClick={isEditingTask ? handleUpdateTask : handleCreateTask}
                 className="btn btn-primary"
               >
                 {isEditingTask ? 'Update Task' : 'Create Task'}
@@ -1049,9 +1554,20 @@ export default function PersonalTaskPage() {
       {showTimeBlockModal && (
         <div className="modal-overlay" onClick={() => setShowTimeBlockModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 20px 0' }}>
-              {isEditingTimeBlock ? 'Edit Time Block' : 'Create New Time Block'}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>
+                {isEditingTimeBlock ? 'Edit Time Block' : 'Create New Time Block'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowTimeBlockModal(false);
+                  resetTimeBlockForm();
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
             
             <div className="form-group">
               <label className="form-label">Title *</label>
@@ -1060,22 +1576,23 @@ export default function PersonalTaskPage() {
                 className="form-input"
                 value={newTimeBlock.title}
                 onChange={(e) => setNewTimeBlock({ ...newTimeBlock, title: e.target.value })}
-                placeholder="Enter time block title"
+                placeholder="Enter time block title..."
+                required
               />
             </div>
             
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea
-                className="form-input"
+                className="form-input form-textarea"
                 value={newTimeBlock.description}
                 onChange={(e) => setNewTimeBlock({ ...newTimeBlock, description: e.target.value })}
-                placeholder="Enter description"
+                placeholder="Enter description..."
                 rows={2}
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Start Time *</label>
                 <input
@@ -1083,6 +1600,7 @@ export default function PersonalTaskPage() {
                   className="form-input"
                   value={newTimeBlock.start_time}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, start_time: e.target.value })}
+                  required
                 />
               </div>
               
@@ -1093,11 +1611,12 @@ export default function PersonalTaskPage() {
                   className="form-input"
                   value={newTimeBlock.end_time}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, end_time: e.target.value })}
+                  required
                 />
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Block Type</label>
                 <select
@@ -1121,6 +1640,7 @@ export default function PersonalTaskPage() {
                   className="form-input"
                   value={newTimeBlock.color}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, color: e.target.value })}
+                  style={{ height: '44px' }}
                 />
               </div>
             </div>
@@ -1128,15 +1648,15 @@ export default function PersonalTaskPage() {
             <div className="form-group">
               <label className="form-label">Notes</label>
               <textarea
-                className="form-input"
+                className="form-input form-textarea"
                 value={newTimeBlock.notes}
                 onChange={(e) => setNewTimeBlock({ ...newTimeBlock, notes: e.target.value })}
-                placeholder="Additional notes"
+                placeholder="Additional notes..."
                 rows={2}
               />
             </div>
             
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
               <button
                 onClick={() => {
                   setShowTimeBlockModal(false);
