@@ -99,6 +99,12 @@ export default function PersonalTaskManager() {
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isEditingTimeBlock, setIsEditingTimeBlock] = useState(false);
   
+  // Drag-to-create state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartTime, setDragStartTime] = useState<Date | null>(null);
+  const [dragEndTime, setDragEndTime] = useState<Date | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
+  
   // Form states
   const [newTask, setNewTask] = useState({
     title: '',
@@ -727,12 +733,19 @@ export default function PersonalTaskManager() {
           .modal-content {
             background: white;
             border-radius: 16px;
-            padding: 32px;
+            padding: 40px;
+            margin: 20px;
             max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
+            width: calc(100% - 40px);
+            max-height: calc(100vh - 40px);
             overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 25px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: scale(1);
+            transition: all 0.3s ease;
+          }
+          
+          .modal-content:hover {
+            transform: scale(1.01);
           }
           
           .form-group {
@@ -906,6 +919,36 @@ export default function PersonalTaskManager() {
             height: 64px;
             margin: 0 auto 16px;
             opacity: 0.5;
+          }
+          
+          .drag-selection {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important;
+            color: white !important;
+            border: 2px solid #1E40AF !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+          }
+          
+          .drag-selection::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            pointer-events: none;
+          }
+          
+          .time-slot-draggable {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+          }
+          
+          .time-slot-draggable:active {
+            cursor: grabbing !important;
           }
         `
       }} />
@@ -1420,6 +1463,12 @@ export default function PersonalTaskManager() {
                     });
                     setShowTimeBlockModal(true);
                   }}
+                  isDragging={isDragging}
+                  dragPreview={dragPreview}
+                  setIsDragging={setIsDragging}
+                  setDragStartTime={setDragStartTime}
+                  setDragEndTime={setDragEndTime}
+                  setDragPreview={setDragPreview}
                   getPriorityColor={getPriorityColor}
                 />
               )}
@@ -1701,6 +1750,12 @@ interface CalendarViewProps {
 
 interface DayCalendarViewProps extends CalendarViewProps {
   onCreateTimeBlock: (startTime: Date, endTime: Date) => void;
+  isDragging: boolean;
+  dragPreview: { start: Date; end: Date } | null;
+  setIsDragging: (dragging: boolean) => void;
+  setDragStartTime: (time: Date | null) => void;
+  setDragEndTime: (time: Date | null) => void;
+  setDragPreview: (preview: { start: Date; end: Date } | null) => void;
 }
 
 // Month Calendar View
@@ -2013,7 +2068,8 @@ const WeekCalendarView: React.FC<CalendarViewProps> = ({
 
 // Day Calendar View with 15-minute time blocking
 const DayCalendarView: React.FC<DayCalendarViewProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, getPriorityColor 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, 
+  isDragging, dragPreview, setIsDragging, setDragStartTime, setDragEndTime, setDragPreview, getPriorityColor 
 }) => {
   const dayTasks = tasks.filter(task => {
     if (!task.due_date) return false;
@@ -2049,6 +2105,49 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
     endTime.setMinutes(endTime.getMinutes() + 15);
     
     onCreateTimeBlock(startTime, endTime);
+  };
+  
+  const handleMouseDown = (hour: number, minute: number) => {
+    const startTime = new Date(currentDate);
+    startTime.setHours(hour, minute, 0, 0);
+    setDragStartTime(startTime);
+    setIsDragging(true);
+  };
+  
+  const handleMouseMove = (hour: number, minute: number) => {
+    if (isDragging && dragStartTime) {
+      const currentTime = new Date(currentDate);
+      currentTime.setHours(hour, minute, 0, 0);
+      setDragEndTime(currentTime);
+      
+      const start = dragStartTime < currentTime ? dragStartTime : currentTime;
+      const end = dragStartTime < currentTime ? currentTime : dragStartTime;
+      end.setMinutes(end.getMinutes() + 15); // Add 15 minutes to end time
+      
+      setDragPreview({ start, end });
+    }
+  };
+  
+  const handleMouseUp = () => {
+    if (isDragging && dragStartTime && dragEndTime) {
+      const start = dragStartTime < dragEndTime ? dragStartTime : dragEndTime;
+      const end = dragStartTime < dragEndTime ? dragEndTime : dragStartTime;
+      end.setMinutes(end.getMinutes() + 15);
+      
+      onCreateTimeBlock(start, end);
+    }
+    
+    setIsDragging(false);
+    setDragStartTime(null);
+    setDragEndTime(null);
+    setDragPreview(null);
+  };
+  
+  const isTimeInDragRange = (hour: number, minute: number, dragRange: { start: Date; end: Date }) => {
+    const slotTime = new Date(currentDate);
+    slotTime.setHours(hour, minute, 0, 0);
+    
+    return slotTime >= dragRange.start && slotTime <= dragRange.end;
   };
   
   return (
@@ -2093,24 +2192,32 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                 </div>
                 
                 <div 
+                  className={`time-slot-draggable ${
+                    dragPreview && isTimeInDragRange(hour, minute, dragPreview) ? 'drag-selection' : ''
+                  }`}
                   style={{ 
                     minHeight: '32px',
-                    background: blocks.length > 0 ? 'transparent' : '#FAFBFC',
+                    background: blocks.length > 0 ? 'transparent' : 
+                               (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '#3B82F6' : '#FAFBFC',
                     borderRadius: '4px',
                     padding: '4px',
-                    cursor: blocks.length === 0 ? 'pointer' : 'default',
+                    cursor: blocks.length === 0 ? (isDragging ? 'grabbing' : 'grab') : 'default',
                     border: '1px dashed transparent',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    position: 'relative'
                   }}
-                  onClick={() => blocks.length === 0 && handleSlotClick(hour, minute)}
+                  onClick={() => blocks.length === 0 && !isDragging && handleSlotClick(hour, minute)}
+                  onMouseDown={() => blocks.length === 0 && handleMouseDown(hour, minute)}
+                  onMouseMove={() => handleMouseMove(hour, minute)}
+                  onMouseUp={handleMouseUp}
                   onMouseEnter={(e) => {
-                    if (blocks.length === 0) {
+                    if (blocks.length === 0 && !isDragging) {
                       e.currentTarget.style.border = '1px dashed #3B82F6';
                       e.currentTarget.style.background = '#EFF6FF';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (blocks.length === 0) {
+                    if (blocks.length === 0 && !isDragging) {
                       e.currentTarget.style.border = '1px dashed transparent';
                       e.currentTarget.style.background = '#FAFBFC';
                     }
@@ -2118,12 +2225,16 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                 >
                   {blocks.length === 0 ? (
                     <div style={{ 
-                      color: '#9CA3AF', 
+                      color: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 'white' : '#9CA3AF', 
                       fontSize: '11px',
                       textAlign: 'center',
-                      paddingTop: '6px'
+                      paddingTop: '6px',
+                      fontWeight: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '600' : '400'
                     }}>
-                      Click to add time block
+                      {(dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 
+                        '📅 Creating block...' : 
+                        '✋ Drag to select time'
+                      }
                     </div>
                   ) : (
                     blocks.map(block => (
