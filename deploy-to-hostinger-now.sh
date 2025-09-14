@@ -78,3 +78,4 @@ else
     echo "❌ Service failed to start"
     echo "Check logs: journalctl -u nextjs-pm -f"
 fi
+
