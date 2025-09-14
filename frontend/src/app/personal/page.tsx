@@ -1712,7 +1712,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
   const startDate = new Date(monthStart);
   startDate.setDate(startDate.getDate() - startDate.getDay());
   
-  const days = [];
+  const days: Date[] = [];
   const currentDay = new Date(startDate);
   
   for (let i = 0; i < 42; i++) {
@@ -1874,7 +1874,7 @@ const WeekCalendarView: React.FC<CalendarViewProps> = ({
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - currentDate.getDay());
   
-  const weekDays = [];
+  const weekDays: Date[] = [];
   for (let i = 0; i < 7; i++) {
     const day = new Date(weekStart);
     day.setDate(weekStart.getDate() + i);
@@ -2027,7 +2027,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
   });
   
   // Generate 15-minute slots
-  const timeSlots = [];
+  const timeSlots: { hour: number; minute: number }[] = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
       timeSlots.push({ hour, minute });
