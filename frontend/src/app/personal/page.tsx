@@ -1339,81 +1339,90 @@ export default function PersonalTaskManager() {
           )}
 
           {layoutType === 'calendar' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
-              <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
-                  Tasks for {formatDate(currentDate)}
-                </h3>
-                
-                {filteredTasks.length === 0 ? (
-                  <div className="empty-state">
-                    <CalendarIcon className="empty-state-icon" />
-                    <p>No tasks for this {currentView}</p>
-                  </div>
-                ) : (
-                  filteredTasks.map(task => (
-                    <div key={task.id} className="task-card" style={{ borderLeftColor: getPriorityColor(task.priority) }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h5 style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>{task.title}</h5>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button
-                            onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed')}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: task.status === 'completed' ? '#10B981' : '#6B7280' }}
-                          >
-                            {task.status === 'completed' ? (
-                              <CheckCircleIconSolid style={{ width: '16px', height: '16px' }} />
-                            ) : (
-                              <CheckCircleIcon style={{ width: '16px', height: '16px' }} />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => openEditTask(task)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6' }}
-                          >
-                            <PencilIcon style={{ width: '14px', height: '14px' }} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>Time Blocks</h3>
-                
-                {timeBlocks.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#64748B', padding: '20px' }}>
-                    <ClockIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
-                    <p style={{ margin: 0, fontSize: '14px' }}>No time blocks</p>
-                  </div>
-                ) : (
-                  timeBlocks.map(block => (
-                    <div key={block.id} className="time-block" style={{ borderLeftColor: block.color }}>
-                      <div style={{ fontWeight: '500', fontSize: '13px', marginBottom: '4px' }}>{block.title}</div>
-                      <div style={{ color: '#64748B', fontSize: '11px' }}>
-                        {new Date(block.start_time).toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true 
-                        })} - {new Date(block.end_time).toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true 
-                        })}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-                        <button
-                          onClick={() => handleDeleteTimeBlock(block.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}
-                        >
-                          <TrashIcon style={{ width: '12px', height: '12px' }} />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+            <div>
+              {currentView === 'month' && (
+                <MonthCalendarView 
+                  currentDate={currentDate}
+                  tasks={filteredTasks}
+                  timeBlocks={timeBlocks}
+                  onTaskClick={openEditTask}
+                  onTimeBlockClick={(block) => {
+                    setSelectedTimeBlock(block);
+                    setNewTimeBlock({
+                      title: block.title,
+                      description: block.description || '',
+                      start_time: new Date(block.start_time).toISOString().slice(0, 16),
+                      end_time: new Date(block.end_time).toISOString().slice(0, 16),
+                      block_type: block.block_type,
+                      color: block.color,
+                      notes: block.notes || ''
+                    });
+                    setIsEditingTimeBlock(true);
+                    setShowTimeBlockModal(true);
+                  }}
+                  getPriorityColor={getPriorityColor}
+                />
+              )}
+              
+              {currentView === 'week' && (
+                <WeekCalendarView 
+                  currentDate={currentDate}
+                  tasks={filteredTasks}
+                  timeBlocks={timeBlocks}
+                  onTaskClick={openEditTask}
+                  onTimeBlockClick={(block) => {
+                    setSelectedTimeBlock(block);
+                    setNewTimeBlock({
+                      title: block.title,
+                      description: block.description || '',
+                      start_time: new Date(block.start_time).toISOString().slice(0, 16),
+                      end_time: new Date(block.end_time).toISOString().slice(0, 16),
+                      block_type: block.block_type,
+                      color: block.color,
+                      notes: block.notes || ''
+                    });
+                    setIsEditingTimeBlock(true);
+                    setShowTimeBlockModal(true);
+                  }}
+                  getPriorityColor={getPriorityColor}
+                />
+              )}
+              
+              {currentView === 'day' && (
+                <DayCalendarView 
+                  currentDate={currentDate}
+                  tasks={filteredTasks}
+                  timeBlocks={timeBlocks}
+                  onTaskClick={openEditTask}
+                  onTimeBlockClick={(block) => {
+                    setSelectedTimeBlock(block);
+                    setNewTimeBlock({
+                      title: block.title,
+                      description: block.description || '',
+                      start_time: new Date(block.start_time).toISOString().slice(0, 16),
+                      end_time: new Date(block.end_time).toISOString().slice(0, 16),
+                      block_type: block.block_type,
+                      color: block.color,
+                      notes: block.notes || ''
+                    });
+                    setIsEditingTimeBlock(true);
+                    setShowTimeBlockModal(true);
+                  }}
+                  onCreateTimeBlock={(startTime, endTime) => {
+                    setNewTimeBlock({
+                      title: '',
+                      description: '',
+                      start_time: startTime.toISOString().slice(0, 16),
+                      end_time: endTime.toISOString().slice(0, 16),
+                      block_type: 'task',
+                      color: '#3B82F6',
+                      notes: ''
+                    });
+                    setShowTimeBlockModal(true);
+                  }}
+                  getPriorityColor={getPriorityColor}
+                />
+              )}
             </div>
           )}
         </div>
@@ -1679,3 +1688,542 @@ export default function PersonalTaskManager() {
     </>
   );
 }
+
+// Calendar View Components
+interface CalendarViewProps {
+  currentDate: Date;
+  tasks: PersonalTask[];
+  timeBlocks: PersonalTimeBlock[];
+  onTaskClick: (task: PersonalTask) => void;
+  onTimeBlockClick: (block: PersonalTimeBlock) => void;
+  getPriorityColor: (priority: string) => string;
+}
+
+interface DayCalendarViewProps extends CalendarViewProps {
+  onCreateTimeBlock: (startTime: Date, endTime: Date) => void;
+}
+
+// Month Calendar View
+const MonthCalendarView: React.FC<CalendarViewProps> = ({ 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, getPriorityColor 
+}) => {
+  const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  const startDate = new Date(monthStart);
+  startDate.setDate(startDate.getDate() - startDate.getDay());
+  
+  const days = [];
+  const currentDay = new Date(startDate);
+  
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(currentDay));
+    currentDay.setDate(currentDay.getDate() + 1);
+  }
+  
+  const getDayTasks = (day: Date) => {
+    return tasks.filter(task => {
+      if (!task.due_date) return false;
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === day.toDateString();
+    });
+  };
+  
+  const getDayTimeBlocks = (day: Date) => {
+    return timeBlocks.filter(block => {
+      const blockDate = new Date(block.start_time);
+      return blockDate.toDateString() === day.toDateString();
+    });
+  };
+  
+  return (
+    <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+      {/* Calendar Header */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '1px', 
+        marginBottom: '8px',
+        background: '#F1F5F9',
+        borderRadius: '8px',
+        padding: '8px'
+      }}>
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} style={{ 
+            textAlign: 'center', 
+            fontWeight: '600', 
+            color: '#64748B', 
+            fontSize: '12px',
+            padding: '8px'
+          }}>
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '1px',
+        background: '#E2E8F0',
+        borderRadius: '8px'
+      }}>
+        {days.map((day, index) => {
+          const dayTasks = getDayTasks(day);
+          const dayTimeBlocks = getDayTimeBlocks(day);
+          const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+          const isToday = day.toDateString() === new Date().toDateString();
+          
+          return (
+            <div
+              key={index}
+              style={{
+                background: 'white',
+                minHeight: '120px',
+                padding: '8px',
+                opacity: isCurrentMonth ? 1 : 0.5,
+                border: isToday ? '2px solid #3B82F6' : 'none',
+                position: 'relative'
+              }}
+            >
+              <div style={{ 
+                fontWeight: isToday ? '700' : '500',
+                color: isToday ? '#3B82F6' : '#1F2937',
+                marginBottom: '4px',
+                fontSize: '14px'
+              }}>
+                {day.getDate()}
+              </div>
+              
+              {/* Tasks */}
+              {dayTasks.slice(0, 2).map(task => (
+                <div
+                  key={task.id}
+                  onClick={() => onTaskClick(task)}
+                  style={{
+                    background: getPriorityColor(task.priority) + '20',
+                    color: getPriorityColor(task.priority),
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '10px',
+                    marginBottom: '2px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                  }}
+                >
+                  {task.title.length > 15 ? task.title.substring(0, 15) + '...' : task.title}
+                </div>
+              ))}
+              
+              {/* Time Blocks */}
+              {dayTimeBlocks.slice(0, 1).map(block => (
+                <div
+                  key={block.id}
+                  onClick={() => onTimeBlockClick(block)}
+                  style={{
+                    background: block.color + '40',
+                    color: block.color,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '9px',
+                    marginBottom: '2px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  🕒 {new Date(block.start_time).toLocaleTimeString('en-US', { 
+                    hour: 'numeric',
+                    hour12: true 
+                  })}
+                </div>
+              ))}
+              
+              {/* More indicator */}
+              {(dayTasks.length > 2 || dayTimeBlocks.length > 1) && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '4px',
+                  right: '4px',
+                  background: '#6B7280',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '8px',
+                  fontWeight: '600'
+                }}>
+                  +{Math.max(0, dayTasks.length - 2) + Math.max(0, dayTimeBlocks.length - 1)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Week Calendar View
+const WeekCalendarView: React.FC<CalendarViewProps> = ({ 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, getPriorityColor 
+}) => {
+  const weekStart = new Date(currentDate);
+  weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+  
+  const weekDays = [];
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(weekStart);
+    day.setDate(weekStart.getDate() + i);
+    weekDays.push(day);
+  }
+  
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  
+  const getItemsForDayAndHour = (day: Date, hour: number) => {
+    const dayTasks = tasks.filter(task => {
+      if (!task.due_date) return false;
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === day.toDateString();
+    });
+    
+    const hourBlocks = timeBlocks.filter(block => {
+      const blockDate = new Date(block.start_time);
+      return blockDate.toDateString() === day.toDateString() && 
+             blockDate.getHours() === hour;
+    });
+    
+    return { tasks: dayTasks, blocks: hourBlocks };
+  };
+  
+  return (
+    <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+      {/* Week Header */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '60px repeat(7, 1fr)', 
+        gap: '1px',
+        marginBottom: '12px'
+      }}>
+        <div></div>
+        {weekDays.map((day, index) => {
+          const isToday = day.toDateString() === new Date().toDateString();
+          return (
+            <div key={index} style={{ 
+              textAlign: 'center', 
+              padding: '12px 8px',
+              background: isToday ? '#3B82F6' : '#F8FAFC',
+              color: isToday ? 'white' : '#1F2937',
+              borderRadius: '8px',
+              fontWeight: '600'
+            }}>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                {day.toLocaleDateString('en-US', { weekday: 'short' })}
+              </div>
+              <div style={{ fontSize: '16px' }}>
+                {day.getDate()}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Week Grid */}
+      <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+        {hours.map(hour => (
+          <div key={hour} style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '60px repeat(7, 1fr)', 
+            gap: '1px',
+            minHeight: '60px',
+            borderBottom: '1px solid #F1F5F9'
+          }}>
+            <div style={{ 
+              padding: '8px', 
+              fontSize: '12px', 
+              color: '#64748B',
+              textAlign: 'right',
+              fontWeight: '500'
+            }}>
+              {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+            </div>
+            
+            {weekDays.map((day, dayIndex) => {
+              const { tasks: dayTasks, blocks: hourBlocks } = getItemsForDayAndHour(day, hour);
+              
+              return (
+                <div key={dayIndex} style={{ 
+                  padding: '4px',
+                  background: '#FAFBFC',
+                  minHeight: '56px',
+                  position: 'relative'
+                }}>
+                  {/* Time Blocks */}
+                  {hourBlocks.map(block => (
+                    <div
+                      key={block.id}
+                      onClick={() => onTimeBlockClick(block)}
+                      style={{
+                        background: block.color,
+                        color: 'white',
+                        padding: '4px 6px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        marginBottom: '2px',
+                        cursor: 'pointer',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {block.title}
+                    </div>
+                  ))}
+                  
+                  {/* Tasks (if no specific time) */}
+                  {hour === 9 && dayTasks.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => onTaskClick(task)}
+                      style={{
+                        background: getPriorityColor(task.priority) + '20',
+                        color: getPriorityColor(task.priority),
+                        padding: '2px 4px',
+                        borderRadius: '3px',
+                        fontSize: '10px',
+                        marginBottom: '1px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                      }}
+                    >
+                      {task.title.length > 12 ? task.title.substring(0, 12) + '...' : task.title}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Day Calendar View with 15-minute time blocking
+const DayCalendarView: React.FC<DayCalendarViewProps> = ({ 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, getPriorityColor 
+}) => {
+  const dayTasks = tasks.filter(task => {
+    if (!task.due_date) return false;
+    const taskDate = new Date(task.due_date);
+    return taskDate.toDateString() === currentDate.toDateString();
+  });
+  
+  const dayTimeBlocks = timeBlocks.filter(block => {
+    const blockDate = new Date(block.start_time);
+    return blockDate.toDateString() === currentDate.toDateString();
+  });
+  
+  // Generate 15-minute slots
+  const timeSlots = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      timeSlots.push({ hour, minute });
+    }
+  }
+  
+  const getBlocksForSlot = (hour: number, minute: number) => {
+    return dayTimeBlocks.filter(block => {
+      const blockStart = new Date(block.start_time);
+      return blockStart.getHours() === hour && 
+             Math.floor(blockStart.getMinutes() / 15) * 15 === minute;
+    });
+  };
+  
+  const handleSlotClick = (hour: number, minute: number) => {
+    const startTime = new Date(currentDate);
+    startTime.setHours(hour, minute, 0, 0);
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + 15);
+    
+    onCreateTimeBlock(startTime, endTime);
+  };
+  
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+      {/* Time Slots */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+          {currentDate.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </h3>
+        
+        <div style={{ maxHeight: '700px', overflowY: 'auto' }}>
+          {timeSlots.map(({ hour, minute }) => {
+            const blocks = getBlocksForSlot(hour, minute);
+            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            const displayTime = hour === 0 ? '12:00 AM' : 
+                               hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
+                               hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM` :
+                               `${hour - 12}:${minute.toString().padStart(2, '0')} PM`;
+            
+            return (
+              <div key={timeString} style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '80px 1fr', 
+                gap: '12px',
+                minHeight: '40px',
+                borderBottom: minute === 0 ? '2px solid #E2E8F0' : '1px solid #F1F5F9',
+                padding: '8px 0'
+              }}>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: '#64748B',
+                  fontWeight: '500',
+                  textAlign: 'right',
+                  paddingTop: '4px'
+                }}>
+                  {minute === 0 ? displayTime : ''}
+                </div>
+                
+                <div 
+                  style={{ 
+                    minHeight: '32px',
+                    background: blocks.length > 0 ? 'transparent' : '#FAFBFC',
+                    borderRadius: '4px',
+                    padding: '4px',
+                    cursor: blocks.length === 0 ? 'pointer' : 'default',
+                    border: '1px dashed transparent',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => blocks.length === 0 && handleSlotClick(hour, minute)}
+                  onMouseEnter={(e) => {
+                    if (blocks.length === 0) {
+                      e.currentTarget.style.border = '1px dashed #3B82F6';
+                      e.currentTarget.style.background = '#EFF6FF';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (blocks.length === 0) {
+                      e.currentTarget.style.border = '1px dashed transparent';
+                      e.currentTarget.style.background = '#FAFBFC';
+                    }
+                  }}
+                >
+                  {blocks.length === 0 ? (
+                    <div style={{ 
+                      color: '#9CA3AF', 
+                      fontSize: '11px',
+                      textAlign: 'center',
+                      paddingTop: '6px'
+                    }}>
+                      Click to add time block
+                    </div>
+                  ) : (
+                    blocks.map(block => (
+                      <div
+                        key={block.id}
+                        onClick={() => onTimeBlockClick(block)}
+                        style={{
+                          background: block.color,
+                          color: 'white',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          marginBottom: '4px',
+                          fontWeight: '500',
+                          fontSize: '13px'
+                        }}
+                      >
+                        <div>{block.title}</div>
+                        <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                          {new Date(block.start_time).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          })} - {new Date(block.end_time).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Day Tasks */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+          Tasks for Today
+        </h3>
+        
+        {dayTasks.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#64748B', padding: '20px' }}>
+            <CalendarIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
+            <p style={{ margin: 0, fontSize: '14px' }}>No tasks for today</p>
+          </div>
+        ) : (
+          dayTasks.map(task => (
+            <div 
+              key={task.id} 
+              className="task-card" 
+              style={{ 
+                borderLeftColor: getPriorityColor(task.priority),
+                marginBottom: '12px',
+                cursor: 'pointer'
+              }}
+              onClick={() => onTaskClick(task)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h5 style={{ 
+                  margin: 0, 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                }}>
+                  {task.title}
+                </h5>
+                <span 
+                  className="priority-badge"
+                  style={{ 
+                    background: getPriorityColor(task.priority) + '20',
+                    color: getPriorityColor(task.priority),
+                    fontSize: '10px',
+                    padding: '2px 6px'
+                  }}
+                >
+                  {task.priority}
+                </span>
+              </div>
+              
+              {task.description && (
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  color: '#64748B', 
+                  fontSize: '12px'
+                }}>
+                  {task.description.length > 80 
+                    ? task.description.substring(0, 80) + '...'
+                    : task.description
+                  }
+                </p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
