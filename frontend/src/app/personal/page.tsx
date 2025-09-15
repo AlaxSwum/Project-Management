@@ -82,7 +82,7 @@ export default function PersonalTaskManager() {
   const [timeBlocks, setTimeBlocks] = useState<PersonalTimeBlock[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [currentView, setCurrentView] = useState<ViewType>('week');
-  const [layoutType, setLayoutType] = useState<LayoutType>('kanban');
+  const [layoutType, setLayoutType] = useState<LayoutType>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -2138,230 +2138,218 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
     weekDays.push(day);
   }
   
-  const hours = Array.from({ length: 24 }, (_, i) => i); // Full 24 hours (0-23)
-  
-  const isHourSelected = (day: Date, hour: number) => {
-    return selectedHours.some(selected => 
-      selected.day.toDateString() === day.toDateString() && selected.hour === hour
-    );
+  const getDayTasks = (day: Date) => {
+    return filteredTasks.filter(task => {
+      if (!task.due_date) return false;
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === day.toDateString();
+    });
   };
   
-  const handleHourMouseDown = (day: Date, hour: number) => {
-    setIsSelecting(true);
-    setDragStartHour({ day, hour });
-    setSelectedHours([{ day, hour }]);
+  const getDayTimeBlocks = (day: Date) => {
+    return timeBlocks.filter(block => {
+      const blockDate = new Date(block.start_time);
+      return blockDate.toDateString() === day.toDateString();
+    });
   };
   
-  const handleHourMouseEnter = (day: Date, hour: number) => {
-    if (isSelecting && dragStartHour) {
-      // Calculate range from drag start to current position
-      const range = calculateHourRange(dragStartHour, { day, hour });
-      setSelectedHours(range);
-    }
-  };
-  
-  const handleHourMouseUp = () => {
-    setIsSelecting(false);
-    setDragStartHour(null);
-  };
-  
-  const calculateHourRange = (start: {day: Date, hour: number}, end: {day: Date, hour: number}) => {
-    const range: {day: Date, hour: number}[] = [];
+  const handleDayClick = (day: Date) => {
+    // Create task for clicked day
+    const taskDate = new Date(day);
+    taskDate.setHours(9, 0, 0, 0);
     
-    // Simple same-day selection for now
-    if (start.day.toDateString() === end.day.toDateString()) {
-      const startHour = Math.min(start.hour, end.hour);
-      const endHour = Math.max(start.hour, end.hour);
-      
-      for (let h = startHour; h <= endHour; h++) {
-        range.push({ day: start.day, hour: h });
-      }
-    } else {
-      // Multi-day selection - add start day hours, then end day hours
-      range.push(start);
-      range.push(end);
-    }
-    
-    return range;
+    const taskData = {
+      title: `Task for ${day.toLocaleDateString()}`,
+      description: `Created by clicking on ${day.toLocaleDateString()} in week view`,
+      status: 'pending' as PersonalTask['status'],
+      priority: 'medium' as PersonalTask['priority'],
+      category: 'Work',
+      tags: null,
+      due_date: taskDate.toISOString(),
+      estimated_duration: 60,
+      is_recurring: false,
+      user_id: 60 // Your user ID
+    };
+
+    // You can call the create task function here
+    console.log('Creating task for day:', taskData);
   };
   
   return (
     <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+      {/* Debug Panel */}
+      <div style={{ marginBottom: '20px', padding: '16px', background: '#EFF6FF', borderRadius: '12px' }}>
+        <p style={{ margin: 0, fontSize: '14px', color: '#3B82F6', fontWeight: '700' }}>
+          Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks
+        </p>
+        <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#64748B' }}>
+          Week tasks: {weekDays.map((day, i) => {
+            const dayTasks = getDayTasks(day);
+            return `${day.toLocaleDateString('en-US', { weekday: 'short' })}: ${dayTasks.length}`;
+          }).join(' | ')}
+        </p>
+        {filteredTasks.length > 0 && (
+          <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#64748B' }}>
+            Sample tasks: {filteredTasks.slice(0, 3).map(t => `"${t.title}"`).join(', ')}
+          </p>
+        )}
+      </div>
+
       {/* Week Header */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: isMobile ? '60px repeat(7, 1fr)' : '80px repeat(7, 1fr)', 
-        gap: '1px',
-        marginBottom: '16px'
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '2px', 
+        marginBottom: '12px',
+        background: '#F1F5F9',
+        borderRadius: '12px',
+        padding: '12px'
       }}>
-        <div style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#64748B' }}>
-          {selectedHours.length > 0 ? (
-            <button
-              onClick={() => setSelectedHours([])}
-              style={{
-                background: '#EF4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '4px 8px',
-                fontSize: '10px',
-                cursor: 'pointer'
-              }}
-            >
-              Clear
-            </button>
-          ) : (
-            'Time'
-          )}
-        </div>
-        {weekDays.map((day, index) => {
+        {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((dayName, index) => {
+          const day = weekDays[index];
           const isToday = day.toDateString() === new Date().toDateString();
+          const dayTasks = getDayTasks(day);
+          
           return (
-            <div key={index} style={{ 
+            <div key={dayName} style={{ 
               textAlign: 'center', 
-              padding: '12px 8px',
-              background: isToday ? '#3B82F6' : '#F8FAFC',
-              color: isToday ? 'white' : '#1F2937',
-              borderRadius: '12px',
-              fontWeight: '600'
+              fontWeight: '700', 
+              color: isToday ? '#3B82F6' : '#64748B', 
+              fontSize: isMobile ? '11px' : '14px',
+              padding: '8px'
             }}>
-              <div style={{ fontSize: isMobile ? '10px' : '12px', opacity: 0.8 }}>
-                {day.toLocaleDateString('en-US', { weekday: 'short' })}
-              </div>
-              <div style={{ fontSize: isMobile ? '14px' : '16px' }}>
+              <div>{dayName}</div>
+              <div style={{ 
+                fontSize: isMobile ? '16px' : '20px', 
+                fontWeight: '800',
+                color: isToday ? '#3B82F6' : '#1F2937',
+                marginTop: '4px'
+              }}>
                 {day.getDate()}
+              </div>
+              <div style={{ 
+                fontSize: '10px', 
+                color: '#64748B',
+                marginTop: '4px',
+                fontWeight: '500'
+              }}>
+                {dayTasks.length} task{dayTasks.length !== 1 ? 's' : ''}
               </div>
             </div>
           );
         })}
       </div>
       
-      {/* Week Grid - Full 24 Hours */}
-      <div style={{ maxHeight: isMobile ? '400px' : '700px', overflowY: 'auto' }}>
-        <div style={{ marginBottom: '16px', padding: '12px', background: '#EFF6FF', borderRadius: '8px' }}>
-          <p style={{ margin: 0, fontSize: '12px', color: '#3B82F6', fontWeight: '600' }}>
-            Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks
-          </p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#64748B' }}>
-            Week tasks: {weekDays.map((day, i) => {
-              const dayTasks = filteredTasks.filter(task => {
-                if (!task.due_date) return false;
-                const taskDate = new Date(task.due_date);
-                return taskDate.toDateString() === day.toDateString();
-              });
-              return `${day.toLocaleDateString('en-US', { weekday: 'short' })}: ${dayTasks.length}`;
-            }).join(' | ')}
-          </p>
-          {filteredTasks.length > 0 && (
-            <p style={{ margin: '4px 0 0 0', fontSize: '10px', color: '#64748B' }}>
-              Sample tasks: {filteredTasks.slice(0, 3).map(t => t.title).join(', ')}
-            </p>
-          )}
-        </div>
-        {hours.map(hour => {
-          // Get tasks for this hour across all days - FIXED LOGIC
-          const hourTasks = weekDays.map(day => {
-            const dayTasks = filteredTasks.filter(task => {
-              if (!task.due_date) return false;
-              const taskDate = new Date(task.due_date);
-              const isSameDay = taskDate.toDateString() === day.toDateString();
-              
-              // FIXED: Show all tasks for the day at their scheduled hour OR at 9 AM as default
-              if (isSameDay) {
-                const taskHour = taskDate.getHours();
-                // If task has specific hour, show at that hour
-                if (taskHour > 0) {
-                  return taskHour === hour;
-                } else {
-                  // If no specific hour (or midnight), show at 9 AM
-                  return hour === 9;
-                }
-              }
-              return false;
-            });
-            
-            console.log(`Hour ${hour}, Day ${day.toDateString()}: ${dayTasks.length} tasks`);
-            return dayTasks;
-          });
+      {/* Week Calendar Grid - Like Month View */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '2px',
+        background: '#E2E8F0',
+        borderRadius: '12px',
+        padding: '2px'
+      }}>
+        {weekDays.map((day, index) => {
+          const dayTasks = getDayTasks(day);
+          const dayTimeBlocks = getDayTimeBlocks(day);
+          const isToday = day.toDateString() === new Date().toDateString();
           
           return (
-            <div key={hour} style={{ 
-              display: 'grid', 
-              gridTemplateColumns: isMobile ? '60px repeat(7, 1fr)' : '80px repeat(7, 1fr)', 
-              gap: '1px',
-              marginBottom: '2px'
-            }}>
+            <div
+              key={index}
+              style={{
+                background: 'white',
+                minHeight: isMobile ? '120px' : '200px',
+                padding: isMobile ? '8px' : '12px',
+                border: isToday ? '3px solid #3B82F6' : 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                borderRadius: '8px'
+              }}
+              onClick={() => handleDayClick(day)}
+              title={`Click to create task for ${day.toLocaleDateString()}`}
+            >
               <div style={{ 
-                padding: '8px', 
-                fontSize: isMobile ? '10px' : '12px', 
-                color: '#64748B',
-                textAlign: 'right',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end'
+                fontWeight: isToday ? '800' : '600',
+                color: isToday ? '#3B82F6' : '#1F2937',
+                marginBottom: '8px',
+                fontSize: isMobile ? '14px' : '16px',
+                textAlign: 'center'
               }}>
-                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                {day.getDate()}
               </div>
-            
-            {weekDays.map((day, dayIndex) => {
-              const isSelected = isHourSelected(day, hour);
               
-              return (
-                <div 
-                  key={dayIndex} 
-                  style={{
-                    background: isSelected ? '#3B82F6' : (isSelecting ? '#EFF6FF' : '#FAFBFC'),
-                    color: isSelected ? 'white' : '#1F2937',
-                    border: isSelected ? '2px solid #2563EB' : (isSelecting ? '2px solid #3B82F6' : '1px solid #E2E8F0'),
-                    borderRadius: '8px',
-                    padding: isMobile ? '8px 4px' : '12px 8px',
-                    minHeight: isMobile ? '40px' : '60px',
-                    fontSize: isMobile ? '10px' : '12px',
-                    fontWeight: isSelected ? '600' : '400',
-                    userSelect: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+              {/* Tasks for this day */}
+              {dayTasks.slice(0, isMobile ? 3 : 5).map(task => (
+                <div
+                  key={task.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTaskClick(task);
                   }}
-                  onMouseDown={() => handleHourMouseDown(day, hour)}
-                  onMouseEnter={() => handleHourMouseEnter(day, hour)}
-                  onMouseUp={handleHourMouseUp}
-                  title={`Press and drag to select multiple hours starting from ${hour}:00 on ${day.toLocaleDateString()}`}
+                  style={{
+                    background: getPriorityColor(task.priority) + '20',
+                    color: getPriorityColor(task.priority),
+                    padding: isMobile ? '4px 6px' : '6px 8px',
+                    borderRadius: '6px',
+                    fontSize: isMobile ? '9px' : '11px',
+                    marginBottom: '4px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                    border: `1px solid ${getPriorityColor(task.priority)}40`
+                  }}
                 >
-                  {isSelected && (
-                    <div style={{ textAlign: 'center', fontWeight: '600' }}>
-                      Selected
-                    </div>
-                  )}
-                  
-                  {/* Show tasks for this day and hour */}
-                  {!isSelected && hourTasks[dayIndex] && hourTasks[dayIndex].map(task => (
-                    <div
-                      key={task.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTaskClick(task);
-                      }}
-                      style={{
-                        background: getPriorityColor(task.priority),
-                        color: 'white',
-                        padding: '2px 4px',
-                        borderRadius: '3px',
-                        fontSize: '9px',
-                        marginBottom: '1px',
-                        cursor: 'pointer',
-                        fontWeight: '500',
-                        textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                      }}
-                    >
-                      {task.title.length > 8 ? task.title.substring(0, 8) + '...' : task.title}
-                    </div>
-                  ))}
+                  {task.title.length > (isMobile ? 12 : 18) ? task.title.substring(0, isMobile ? 12 : 18) + '...' : task.title}
                 </div>
-              );
-            })}
-          </div>
-        ))}
+              ))}
+              
+              {/* Time Blocks for this day */}
+              {dayTimeBlocks.slice(0, 2).map(block => (
+                <div
+                  key={block.id}
+                  style={{
+                    background: block.color + '40',
+                    color: block.color,
+                    padding: isMobile ? '3px 5px' : '4px 6px',
+                    borderRadius: '4px',
+                    fontSize: isMobile ? '8px' : '10px',
+                    marginBottom: '3px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    border: `1px solid ${block.color}`
+                  }}
+                >
+                  🕒 {new Date(block.start_time).toLocaleTimeString('en-US', { 
+                    hour: 'numeric',
+                    hour12: true 
+                  })} {block.title.substring(0, 8)}...
+                </div>
+              ))}
+              
+              {/* More indicator */}
+              {(dayTasks.length > (isMobile ? 3 : 5) || dayTimeBlocks.length > 2) && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '8px',
+                  background: '#6B7280',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: '700'
+                }}>
+                  +{Math.max(0, dayTasks.length - (isMobile ? 3 : 5)) + Math.max(0, dayTimeBlocks.length - 2)}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       
       {selectedHours.length > 0 && (
