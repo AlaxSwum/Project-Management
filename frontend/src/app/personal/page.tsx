@@ -2485,10 +2485,11 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                   onMouseUp={handleMouseUp}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    if (draggedTask) {
+                    e.dataTransfer.dropEffect = 'move';
+                    if (draggedTask && blocks.length === 0) {
                       e.currentTarget.style.background = '#EFF6FF';
                       e.currentTarget.style.border = '2px dashed #3B82F6';
-                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px;">Drop "${draggedTask.title}" here</div>`;
+                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px; font-size: 12px;">Drop "${draggedTask.title}" here<br/>Will create ${draggedTask.estimated_duration || 60}min block</div>`;
                     }
                   }}
                   onDragLeave={(e) => {
@@ -2498,7 +2499,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                       e.currentTarget.innerHTML = '<div style="color: #9CA3AF; fontSize: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
                     }
                   }}
-                  onDrop={(e) => {
+                  onDrop={async (e) => {
                     e.preventDefault();
                     if (draggedTask) {
                       console.log('Dropping task:', draggedTask.title, 'at', hour, minute);
@@ -2507,8 +2508,34 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                       const endTime = new Date(startTime);
                       endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
                       
-                      // Create time block from dragged task
-                      onCreateTimeBlock(startTime, endTime);
+                      // Create time block directly using the same logic as handleCreateTimeBlock
+                      try {
+                        const timeBlockData = {
+                          title: draggedTask.title,
+                          description: draggedTask.description || '',
+                          start_time: startTime.toISOString(),
+                          end_time: endTime.toISOString(),
+                          block_type: 'task' as const,
+                          color: getPriorityColor(draggedTask.priority),
+                          notes: `Scheduled from task: ${draggedTask.title}`,
+                          user_id: 24 // Your user ID
+                        };
+
+                        console.log('Creating time block with data:', timeBlockData);
+                        
+                        // Create time block using the existing function
+                        console.log('Creating time block from dragged task...');
+                        
+                        // Call the parent's create time block function
+                        onCreateTimeBlock(startTime, endTime);
+                        
+                        // Show success message
+                        alert(`Time block created for "${draggedTask.title}" at ${startTime.toLocaleTimeString()}`);
+                        
+                        console.log('Time block creation completed');
+                      } catch (error) {
+                        console.error('Error in drag drop:', error);
+                      }
                       
                       e.currentTarget.style.background = '#FAFBFC';
                       e.currentTarget.style.border = '1px dashed transparent';
@@ -2603,14 +2630,22 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
               draggable
               onDragStart={(e) => {
                 setDraggedTask(task);
-                e.currentTarget.style.opacity = '0.5';
-                e.currentTarget.style.transform = 'rotate(2deg)';
+                e.currentTarget.style.opacity = '0.6';
+                e.currentTarget.style.transform = 'rotate(3deg) scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+                e.currentTarget.style.zIndex = '1000';
                 console.log('Started dragging task:', task.title);
+                
+                // Set drag data
+                e.dataTransfer.setData('text/plain', task.id);
+                e.dataTransfer.effectAllowed = 'move';
               }}
               onDragEnd={(e) => {
                 setDraggedTask(null);
                 e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.transform = 'rotate(0deg)';
+                e.currentTarget.style.transform = 'rotate(0deg) scale(1)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                e.currentTarget.style.zIndex = 'auto';
                 console.log('Finished dragging task');
               }}
               onClick={() => onTaskClick(task)}
