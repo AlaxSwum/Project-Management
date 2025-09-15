@@ -2662,6 +2662,9 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
         <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
           Tasks for Today
         </h3>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748B', fontStyle: 'italic' }}>
+          Double-click any task to schedule it automatically
+        </p>
         
         {dayTasks.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#64748B', padding: '20px' }}>
@@ -2679,25 +2682,50 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                 cursor: 'grab'
               }}
               draggable
-              onDragStart={(e) => {
-                setDraggedTask(task);
-                e.currentTarget.style.opacity = '0.6';
-                e.currentTarget.style.transform = 'rotate(3deg) scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
-                e.currentTarget.style.zIndex = '1000';
-                console.log('Started dragging task:', task.title);
+              onDoubleClick={async () => {
+                console.log('Double-clicked task:', task.title);
                 
-                // Set drag data
-                e.dataTransfer.setData('text/plain', task.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onDragEnd={(e) => {
-                setDraggedTask(null);
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.transform = 'rotate(0deg) scale(1)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-                e.currentTarget.style.zIndex = 'auto';
-                console.log('Finished dragging task');
+                // Simple scheduling: place at next available 9 AM slot
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(9, 0, 0, 0);
+                
+                const endTime = new Date(tomorrow);
+                endTime.setMinutes(endTime.getMinutes() + (task.estimated_duration || 60));
+                
+                const timeBlockData = {
+                  title: task.title,
+                  description: task.description || '',
+                  start_time: tomorrow.toISOString(),
+                  end_time: endTime.toISOString(),
+                  block_type: 'task',
+                  color: getPriorityColor(task.priority),
+                  notes: `Scheduled from task: ${task.title}`,
+                  user_id: 24,
+                  is_completed: false
+                };
+
+                console.log('Creating time block from double-click:', timeBlockData);
+
+                try {
+                  const { data, error } = await supabase
+                    .from('personal_time_blocks')
+                    .insert([timeBlockData])
+                    .select()
+                    .single();
+
+                  if (error) {
+                    console.error('Error creating time block:', error);
+                    alert('Error: ' + error.message);
+                  } else {
+                    console.log('✅ Time block created successfully!', data);
+                    alert(`✅ Task "${task.title}" scheduled for ${tomorrow.toLocaleString()}`);
+                    window.location.reload();
+                  }
+                } catch (error) {
+                  console.error('Error:', error);
+                  alert('Error creating time block');
+                }
               }}
               onClick={() => onTaskClick(task)}
             >
