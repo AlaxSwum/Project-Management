@@ -729,52 +729,53 @@ export default function PersonalTaskManager() {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            padding: 60px;
           }
           
           .modal-content {
             background: white;
-            border-radius: 20px;
-            padding: 60px;
-            margin: 40px;
-            max-width: 700px;
-            width: calc(100% - 80px);
-            max-height: calc(100vh - 80px);
+            border-radius: 24px;
+            padding: 80px !important;
+            margin: 0 !important;
+            max-width: 750px;
+            width: 100%;
+            max-height: 100%;
             overflow-y: auto;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 25px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.35), 0 25px 25px -5px rgba(0, 0, 0, 0.2);
             transform: scale(1);
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
           }
           
           .modal-content:hover {
-            transform: scale(1.005);
-            box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.3), 0 25px 25px -5px rgba(0, 0, 0, 0.15);
+            transform: scale(1.002);
+            box-shadow: 0 35px 70px -12px rgba(0, 0, 0, 0.4), 0 25px 25px -5px rgba(0, 0, 0, 0.25);
           }
           
           .form-group {
-            margin-bottom: 28px;
+            margin-bottom: 32px !important;
           }
           
           .form-label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 600;
             color: #374151;
-            font-size: 15px;
+            font-size: 16px;
           }
           
           .form-input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 16px 20px !important;
             border: 2px solid #E2E8F0;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 15px;
             transition: all 0.2s ease;
             background: #FAFBFC;
           }
@@ -792,16 +793,16 @@ export default function PersonalTaskManager() {
           }
           
           .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 16px 32px !important;
+            border-radius: 12px;
             border: none;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 16px;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
           }
           
           .btn-primary {
@@ -1267,7 +1268,6 @@ export default function PersonalTaskManager() {
                           color: getPriorityColor(task.priority)
                         }}
                       >
-                        <FlagIcon style={{ width: '12px', height: '12px', marginRight: '4px' }} />
                         {task.priority}
                       </span>
                       
@@ -1289,21 +1289,18 @@ export default function PersonalTaskManager() {
                           padding: '4px 8px',
                           borderRadius: '12px'
                         }}>
-                          <TagIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px' }} />
                           {task.category}
                         </span>
                       )}
                       
                       {task.due_date && (
                         <span style={{ fontSize: '12px', color: '#64748B' }}>
-                          <CalendarIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px' }} />
                           Due: {new Date(task.due_date).toLocaleDateString()}
                         </span>
                       )}
                       
                       {task.estimated_duration && (
                         <span style={{ fontSize: '12px', color: '#64748B' }}>
-                          <ClockIcon style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px' }} />
                           {task.estimated_duration}m
                         </span>
                       )}
@@ -1487,10 +1484,33 @@ export default function PersonalTaskManager() {
 
       {/* Task Modal */}
       {showTaskModal && (
-        <div className="modal-overlay" onClick={() => setShowTaskModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(6px)',
+          padding: '60px'
+        }} onClick={() => setShowTaskModal(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '24px',
+            padding: '80px',
+            maxWidth: '750px',
+            width: '100%',
+            maxHeight: '100%',
+            overflowY: 'auto',
+            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.35), 0 25px 25px -5px rgba(0, 0, 0, 0.2)',
+            border: '2px solid rgba(255, 255, 255, 0.3)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+              <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#1F2937' }}>
                 {isEditingTask ? 'Edit Task' : 'Create New Task'}
               </h3>
               <button
@@ -1498,32 +1518,82 @@ export default function PersonalTaskManager() {
                   setShowTaskModal(false);
                   resetTaskForm();
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '8px' }}
               >
-                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                <XMarkIcon style={{ width: '24px', height: '24px' }} />
               </button>
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Title *</label>
+            <div style={{ marginBottom: '32px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '12px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '16px' 
+              }}>Title *</label>
               <input
                 type="text"
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '16px 20px',
+                  border: '2px solid #E2E8F0',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  background: '#FAFBFC',
+                  transition: 'all 0.2s ease'
+                }}
                 value={newTask.title}
                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                 placeholder="Enter task title..."
                 required
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3B82F6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                  e.target.style.background = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#E2E8F0';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.background = '#FAFBFC';
+                }}
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Description</label>
+            <div style={{ marginBottom: '32px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '12px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '16px' 
+              }}>Description</label>
               <textarea
-                className="form-input form-textarea"
+                style={{
+                  width: '100%',
+                  padding: '16px 20px',
+                  border: '2px solid #E2E8F0',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  background: '#FAFBFC',
+                  transition: 'all 0.2s ease',
+                  resize: 'vertical',
+                  minHeight: '100px'
+                }}
                 value={newTask.description}
                 onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                 placeholder="Enter task description..."
                 rows={3}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3B82F6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                  e.target.style.background = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#E2E8F0';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.background = '#FAFBFC';
+                }}
               />
             </div>
             
@@ -1595,19 +1665,57 @@ export default function PersonalTaskManager() {
               />
             </div>
             
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', marginTop: '40px' }}>
               <button
                 onClick={() => {
                   setShowTaskModal(false);
                   resetTaskForm();
                 }}
-                className="btn btn-secondary"
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  background: '#6B7280',
+                  color: 'white',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#4B5563';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#6B7280';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={isEditingTask ? handleUpdateTask : handleCreateTask}
-                className="btn btn-primary"
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  background: '#3B82F6',
+                  color: 'white',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#2563EB';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#3B82F6';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
                 {isEditingTask ? 'Update Task' : 'Create Task'}
               </button>
