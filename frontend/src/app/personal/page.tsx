@@ -2238,25 +2238,40 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       
       {/* Week Grid - Full 24 Hours */}
       <div style={{ maxHeight: isMobile ? '400px' : '700px', overflowY: 'auto' }}>
-        {hours.map(hour => (
-          <div key={hour} style={{ 
-            display: 'grid', 
-            gridTemplateColumns: isMobile ? '60px repeat(7, 1fr)' : '80px repeat(7, 1fr)', 
-            gap: '1px',
-            marginBottom: '2px'
-          }}>
-            <div style={{ 
-              padding: '8px', 
-              fontSize: isMobile ? '10px' : '12px', 
-              color: '#64748B',
-              textAlign: 'right',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end'
+        <div style={{ marginBottom: '16px', padding: '12px', background: '#EFF6FF', borderRadius: '8px' }}>
+          <p style={{ margin: 0, fontSize: '12px', color: '#3B82F6', fontWeight: '600' }}>
+            Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks
+          </p>
+        </div>
+        {hours.map(hour => {
+          // Get tasks for this hour across all days
+          const hourTasks = weekDays.map(day => {
+            return filteredTasks.filter(task => {
+              if (!task.due_date) return false;
+              const taskDate = new Date(task.due_date);
+              return taskDate.toDateString() === day.toDateString() && taskDate.getHours() === hour;
+            });
+          });
+          
+          return (
+            <div key={hour} style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '60px repeat(7, 1fr)' : '80px repeat(7, 1fr)', 
+              gap: '1px',
+              marginBottom: '2px'
             }}>
-              {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
-            </div>
+              <div style={{ 
+                padding: '8px', 
+                fontSize: isMobile ? '10px' : '12px', 
+                color: '#64748B',
+                textAlign: 'right',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end'
+              }}>
+                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+              </div>
             
             {weekDays.map((day, dayIndex) => {
               const isSelected = isHourSelected(day, hour);
@@ -2287,6 +2302,30 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                       Selected
                     </div>
                   )}
+                  
+                  {/* Show tasks for this day and hour */}
+                  {hourTasks[dayIndex] && hourTasks[dayIndex].map(task => (
+                    <div
+                      key={task.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTaskClick(task);
+                      }}
+                      style={{
+                        background: getPriorityColor(task.priority),
+                        color: 'white',
+                        padding: '2px 4px',
+                        borderRadius: '3px',
+                        fontSize: '9px',
+                        marginBottom: '1px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                      }}
+                    >
+                      {task.title.length > 8 ? task.title.substring(0, 8) + '...' : task.title}
+                    </div>
+                  ))}
                 </div>
               );
             })}
