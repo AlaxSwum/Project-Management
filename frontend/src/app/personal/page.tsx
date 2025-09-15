@@ -179,11 +179,17 @@ export default function PersonalTaskManager() {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Apply date filter if not showing all
-      if (currentView !== 'month' || layoutType === 'calendar') {
+      // Apply date filter for calendar views - but make it more inclusive
+      if (layoutType === 'calendar' && currentView !== 'month') {
+        // For week and day views, include tasks from a wider range
+        const extendedStart = new Date(startDate);
+        extendedStart.setDate(extendedStart.getDate() - 7); // Include tasks from week before
+        const extendedEnd = new Date(endDate);
+        extendedEnd.setDate(extendedEnd.getDate() + 7); // Include tasks from week after
+        
         taskQuery = taskQuery
-          .gte('due_date', startDate.toISOString())
-          .lte('due_date', endDate.toISOString());
+          .gte('due_date', extendedStart.toISOString())
+          .lte('due_date', extendedEnd.toISOString());
       }
 
       const { data: tasksData, error: tasksError } = await taskQuery;
@@ -1868,10 +1874,23 @@ export default function PersonalTaskManager() {
                     fontSize: '15px',
                     background: '#FAFBFC',
                     cursor: 'pointer',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    fontWeight: '600',
+                    color: '#374151',
+                    transition: 'all 0.2s ease'
                   }}
                   value={newTask.priority}
                   onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    e.target.style.background = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E2E8F0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.background = '#FAFBFC';
+                  }}
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1897,10 +1916,23 @@ export default function PersonalTaskManager() {
                     fontSize: '15px',
                     background: '#FAFBFC',
                     cursor: 'pointer',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    fontWeight: '600',
+                    color: '#374151',
+                    transition: 'all 0.2s ease'
                   }}
                   value={newTask.status}
                   onChange={(e) => setNewTask({ ...newTask, status: e.target.value as any })}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    e.target.style.background = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E2E8F0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.background = '#FAFBFC';
+                  }}
                 >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
@@ -1928,10 +1960,23 @@ export default function PersonalTaskManager() {
                     fontSize: '15px',
                     background: '#FAFBFC',
                     cursor: 'pointer',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    fontWeight: '600',
+                    color: '#374151',
+                    transition: 'all 0.2s ease'
                   }}
                   value={newTask.category}
                   onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    e.target.style.background = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E2E8F0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.background = '#FAFBFC';
+                  }}
                 >
                   <option value="">Select category...</option>
                   {categories.map(cat => (
@@ -2094,7 +2139,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
     weekDays.push(day);
   }
   
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const hours = Array.from({ length: 24 }, (_, i) => i); // Full 24 hours (0-23)
   
   const isHourSelected = (day: Date, hour: number) => {
     return selectedHours.some(selected => 
@@ -2194,7 +2239,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       
       {/* Week Grid */}
       <div style={{ maxHeight: isMobile ? '400px' : '600px', overflowY: 'auto' }}>
-        {hours.filter(hour => hour >= 6 && hour <= 22).map(hour => (
+        {hours.map(hour => (
           <div key={hour} style={{ 
             display: 'grid', 
             gridTemplateColumns: isMobile ? '60px repeat(7, 1fr)' : '80px repeat(7, 1fr)', 
