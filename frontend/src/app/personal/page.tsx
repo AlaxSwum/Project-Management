@@ -1027,6 +1027,10 @@ export default function PersonalTaskManager() {
           }
           
           @media (max-width: 768px) {
+            html, body {
+              overflow-x: hidden !important;
+            }
+            
             .desktop-only {
               display: none !important;
             }
@@ -1042,11 +1046,18 @@ export default function PersonalTaskManager() {
             
             .controls-mobile {
               flex-direction: column !important;
-              gap: 16px !important;
+              gap: 12px !important;
+              width: 100% !important;
             }
             
             .view-tabs {
               width: 100% !important;
+              justify-content: center !important;
+            }
+            
+            .view-tabs button {
+              flex: 1 !important;
+              min-width: 0 !important;
             }
             
             .kanban-grid {
@@ -1055,18 +1066,22 @@ export default function PersonalTaskManager() {
             }
             
             .task-card {
-              padding: 16px !important;
+              padding: 12px !important;
+              margin-bottom: 8px !important;
             }
             
             .modal-content-mobile {
-              margin: 20px !important;
-              padding: 40px !important;
-              max-width: calc(100vw - 40px) !important;
+              margin: 16px !important;
+              padding: 24px !important;
+              max-width: calc(100vw - 32px) !important;
+              border-radius: 16px !important;
             }
             
             .filter-select {
               width: 100% !important;
-              margin-bottom: 12px !important;
+              margin-bottom: 8px !important;
+              padding: 12px 16px !important;
+              font-size: 16px !important;
             }
             
             .btn-small {
@@ -1074,17 +1089,28 @@ export default function PersonalTaskManager() {
               padding: 12px 16px !important;
               font-size: 14px !important;
               text-align: center !important;
+              border-radius: 8px !important;
             }
             
             .mobile-task-item {
-              touch-action: manipulation;
-              -webkit-tap-highlight-color: transparent;
+              touch-action: manipulation !important;
+              -webkit-tap-highlight-color: transparent !important;
             }
             
             .mobile-delete-btn {
-              min-width: 32px !important;
-              min-height: 32px !important;
-              padding: 8px !important;
+              min-width: 28px !important;
+              min-height: 28px !important;
+              padding: 6px !important;
+            }
+            
+            .week-calendar-grid {
+              gap: 1px !important;
+              padding: 1px !important;
+            }
+            
+            .week-day-cell {
+              min-height: 100px !important;
+              padding: 4px !important;
             }
           }
           
@@ -1122,7 +1148,18 @@ export default function PersonalTaskManager() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
         {/* Mobile Header */}
         {isMobile && (
-          <div className="mobile-header mobile-only" style={{ display: 'none' }}>
+          <div className="mobile-header mobile-only" style={{ 
+            display: 'block',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: 'white',
+            zIndex: 100,
+            padding: '12px 16px',
+            borderBottom: '1px solid #E5E7EB',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button
                 onClick={() => setShowMobileSidebar(true)}
@@ -1171,8 +1208,10 @@ export default function PersonalTaskManager() {
         <div style={{ 
           marginLeft: isMobile ? '0' : '256px', 
           flex: 1, 
-          padding: isMobile ? '20px' : '32px',
-          paddingTop: isMobile ? '0' : '32px'
+          padding: isMobile ? '12px' : '32px',
+          paddingTop: isMobile ? '70px' : '32px',
+          maxWidth: '100%',
+          overflow: 'hidden'
         }}>
           {/* Header */}
           <div style={{ marginBottom: '32px' }} className="desktop-only">
@@ -1237,9 +1276,24 @@ export default function PersonalTaskManager() {
           </div>
 
           {/* Controls */}
-          <div className="controls-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="controls-mobile" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: isMobile ? 'stretch' : 'center', 
+            marginBottom: isMobile ? '16px' : '24px', 
+            flexWrap: 'wrap', 
+            gap: isMobile ? '8px' : '16px',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
             {/* Filters */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: isMobile ? '8px' : '16px', 
+              alignItems: 'center', 
+              flex: 1, 
+              flexWrap: 'wrap',
+              width: isMobile ? '100%' : 'auto'
+            }}>
               
               {!isMobile && (
                 <>
