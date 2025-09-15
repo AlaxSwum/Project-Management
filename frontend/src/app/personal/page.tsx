@@ -1683,6 +1683,7 @@ export default function PersonalTaskManager() {
                   }}
                   getPriorityColor={getPriorityColor}
                   isMobile={isMobile}
+                  user={user}
                 />
               )}
             </div>
@@ -2031,6 +2032,7 @@ interface WeekCalendarProps extends CalendarViewProps {
 
 interface DayCalendarProps extends CalendarViewProps {
   onCreateTimeBlock: (startTime: Date, endTime: Date) => void;
+  user: any;
 }
 
 const WeekCalendarView: React.FC<WeekCalendarProps> = ({ 
@@ -2368,7 +2370,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
 
 // Day Calendar View - Previous Design with Enhanced Functionality
 const DayCalendarView: React.FC<DayCalendarProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile 
+  currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile, user 
 }) => {
   // Local drag state for this component
   const [isDragging, setIsDragging] = useState(false);
