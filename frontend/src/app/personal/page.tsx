@@ -358,6 +358,7 @@ export default function PersonalTaskManager() {
       }
 
       setTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task));
+      setAllTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task)); // Also update allTasks
       setShowTaskModal(false);
       resetTaskForm();
       setSuccessMessage('Task updated successfully!');
@@ -391,6 +392,11 @@ export default function PersonalTaskManager() {
           ? { ...task, status, ...(status === 'completed' ? { completed_at: updateData.completed_at } : {}) }
           : task
       ));
+      setAllTasks(prev => prev.map(task => 
+        task.id === taskId 
+          ? { ...task, status, ...(status === 'completed' ? { completed_at: updateData.completed_at } : {}) }
+          : task
+      )); // Also update allTasks
 
       setSuccessMessage(`Task marked as ${status.replace('_', ' ')}!`);
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -416,6 +422,7 @@ export default function PersonalTaskManager() {
       }
 
       setTasks(prev => prev.filter(task => task.id !== taskId));
+      setAllTasks(prev => prev.filter(task => task.id !== taskId)); // Also update allTasks
       setSuccessMessage('Task deleted successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
@@ -2188,7 +2195,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
   }
   
   const getDayTasks = (day: Date) => {
-    return filteredTasks.filter(task => {
+    return tasks.filter(task => {
       if (!task.due_date) return false;
       const taskDate = new Date(task.due_date);
       return taskDate.toDateString() === day.toDateString();
