@@ -319,6 +319,7 @@ export default function PersonalTaskManager() {
       }
 
       setTasks(prev => [data, ...prev]);
+      setAllTasks(prev => [data, ...prev]); // Also update allTasks
       setShowTaskModal(false);
       resetTaskForm();
       setSuccessMessage('Task created successfully!');
@@ -514,6 +515,7 @@ export default function PersonalTaskManager() {
       }
 
       setTasks(prev => [data, ...prev]);
+      setAllTasks(prev => [data, ...prev]); // Also update allTasks
       setSelectedHours([]);
       setSuccessMessage(`Task created for ${selectedHours.length} hour${selectedHours.length > 1 ? 's' : ''}!`);
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -2200,7 +2202,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
     });
   };
   
-  const handleDayClick = (day: Date) => {
+  const handleDayClick = async (day: Date) => {
     // Create task for clicked day
     const taskDate = new Date(day);
     taskDate.setHours(9, 0, 0, 0);
@@ -2215,11 +2217,35 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       due_date: taskDate.toISOString(),
       estimated_duration: 60,
       is_recurring: false,
-      user_id: 60 // Your user ID
+      user_id: user?.id || 60
     };
 
-    // You can call the create task function here
-    console.log('Creating task for day:', taskData);
+    try {
+      console.log('Creating task for day:', taskData);
+      
+      const { data, error } = await supabase
+        .from('personal_tasks')
+        .insert([taskData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating task from day click:', error);
+        alert('Error creating task: ' + error.message);
+        return;
+      }
+
+      console.log('Task created successfully:', data);
+      
+      // Update both tasks and allTasks state
+      setTasks(prev => [data, ...prev]);
+      setAllTasks(prev => [data, ...prev]);
+      
+      alert(`✅ Task created for ${day.toLocaleDateString()}!`);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('Error creating task');
+    }
   };
   
   return (
