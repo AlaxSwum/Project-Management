@@ -108,6 +108,7 @@ export default function PersonalTaskManager() {
   // Week multi-selection state
   const [selectedHours, setSelectedHours] = useState<{day: Date, hour: number}[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
+  const [dragStartHour, setDragStartHour] = useState<{day: Date, hour: number} | null>(null);
   
   // Form states
   const getDefaultTaskForm = () => {
@@ -1634,6 +1635,17 @@ export default function PersonalTaskManager() {
           {/* Calendar View */}
           {layoutType === 'calendar' && (
             <div>
+              {currentView === 'month' && (
+                <MonthCalendarView 
+                  currentDate={currentDate}
+                  tasks={filteredTasks}
+                  timeBlocks={timeBlocks}
+                  onTaskClick={openEditTask}
+                  getPriorityColor={getPriorityColor}
+                  isMobile={isMobile}
+                />
+              )}
+              
               {currentView === 'week' && (
                 <WeekCalendarView 
                   currentDate={currentDate}
@@ -1643,7 +1655,32 @@ export default function PersonalTaskManager() {
                   setSelectedHours={setSelectedHours}
                   isSelecting={isSelecting}
                   setIsSelecting={setIsSelecting}
+                  dragStartHour={dragStartHour}
+                  setDragStartHour={setDragStartHour}
                   onTaskClick={openEditTask}
+                  getPriorityColor={getPriorityColor}
+                  isMobile={isMobile}
+                />
+              )}
+              
+              {currentView === 'day' && (
+                <DayCalendarView 
+                  currentDate={currentDate}
+                  tasks={filteredTasks}
+                  timeBlocks={timeBlocks}
+                  onTaskClick={openEditTask}
+                  onCreateTimeBlock={(startTime, endTime) => {
+                    setNewTimeBlock({
+                      title: '',
+                      description: '',
+                      start_time: startTime.toISOString().slice(0, 16),
+                      end_time: endTime.toISOString().slice(0, 16),
+                      block_type: 'task',
+                      color: '#3B82F6',
+                      notes: ''
+                    });
+                    setShowTimeBlockModal(true);
+                  }}
                   getPriorityColor={getPriorityColor}
                   isMobile={isMobile}
                 />
@@ -1973,23 +2010,32 @@ export default function PersonalTaskManager() {
   );
 }
 
-// Week Calendar View with Multi-Hour Selection
-interface WeekCalendarProps {
+// Calendar View Interfaces
+interface CalendarViewProps {
   currentDate: Date;
   tasks: PersonalTask[];
   timeBlocks: PersonalTimeBlock[];
-  selectedHours: {day: Date, hour: number}[];
-  setSelectedHours: (hours: {day: Date, hour: number}[]) => void;
-  isSelecting: boolean;
-  setIsSelecting: (selecting: boolean) => void;
   onTaskClick: (task: PersonalTask) => void;
   getPriorityColor: (priority: string) => string;
   isMobile: boolean;
 }
 
+interface WeekCalendarProps extends CalendarViewProps {
+  selectedHours: {day: Date, hour: number}[];
+  setSelectedHours: (hours: {day: Date, hour: number}[]) => void;
+  isSelecting: boolean;
+  setIsSelecting: (selecting: boolean) => void;
+  dragStartHour: {day: Date, hour: number} | null;
+  setDragStartHour: (hour: {day: Date, hour: number} | null) => void;
+}
+
+interface DayCalendarProps extends CalendarViewProps {
+  onCreateTimeBlock: (startTime: Date, endTime: Date) => void;
+}
+
 const WeekCalendarView: React.FC<WeekCalendarProps> = ({ 
   currentDate, tasks, timeBlocks, selectedHours, setSelectedHours, isSelecting, setIsSelecting,
-  onTaskClick, getPriorityColor, isMobile 
+  dragStartHour, setDragStartHour, onTaskClick, getPriorityColor, isMobile 
 }) => {
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - currentDate.getDay());
@@ -2009,16 +2055,43 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
     );
   };
   
-  const handleHourClick = (day: Date, hour: number) => {
-    const isSelected = isHourSelected(day, hour);
-    
-    if (isSelected) {
-      setSelectedHours(selectedHours.filter(selected => 
-        !(selected.day.toDateString() === day.toDateString() && selected.hour === hour)
-      ));
-    } else {
-      setSelectedHours([...selectedHours, { day, hour }]);
+  const handleHourMouseDown = (day: Date, hour: number) => {
+    setIsSelecting(true);
+    setDragStartHour({ day, hour });
+    setSelectedHours([{ day, hour }]);
+  };
+  
+  const handleHourMouseEnter = (day: Date, hour: number) => {
+    if (isSelecting && dragStartHour) {
+      // Calculate range from drag start to current position
+      const range = calculateHourRange(dragStartHour, { day, hour });
+      setSelectedHours(range);
     }
+  };
+  
+  const handleHourMouseUp = () => {
+    setIsSelecting(false);
+    setDragStartHour(null);
+  };
+  
+  const calculateHourRange = (start: {day: Date, hour: number}, end: {day: Date, hour: number}) => {
+    const range: {day: Date, hour: number}[] = [];
+    
+    // Simple same-day selection for now
+    if (start.day.toDateString() === end.day.toDateString()) {
+      const startHour = Math.min(start.hour, end.hour);
+      const endHour = Math.max(start.hour, end.hour);
+      
+      for (let h = startHour; h <= endHour; h++) {
+        range.push({ day: start.day, hour: h });
+      }
+    } else {
+      // Multi-day selection - add start day hours, then end day hours
+      range.push(start);
+      range.push(end);
+    }
+    
+    return range;
   };
   
   return (
@@ -2100,19 +2173,23 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
               return (
                 <div 
                   key={dayIndex} 
-                  className={`hour-slot ${isSelected ? 'selected' : ''}`}
                   style={{
-                    background: isSelected ? '#3B82F6' : '#FAFBFC',
+                    background: isSelected ? '#3B82F6' : (isSelecting ? '#EFF6FF' : '#FAFBFC'),
                     color: isSelected ? 'white' : '#1F2937',
-                    border: isSelected ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                    border: isSelected ? '2px solid #2563EB' : (isSelecting ? '2px solid #3B82F6' : '1px solid #E2E8F0'),
                     borderRadius: '8px',
                     padding: isMobile ? '8px 4px' : '12px 8px',
                     minHeight: isMobile ? '40px' : '60px',
                     fontSize: isMobile ? '10px' : '12px',
-                    fontWeight: isSelected ? '600' : '400'
+                    fontWeight: isSelected ? '600' : '400',
+                    userSelect: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
-                  onClick={() => handleHourClick(day, hour)}
-                  title={`Click to ${isSelected ? 'deselect' : 'select'} ${hour}:00 on ${day.toLocaleDateString()}`}
+                  onMouseDown={() => handleHourMouseDown(day, hour)}
+                  onMouseEnter={() => handleHourMouseEnter(day, hour)}
+                  onMouseUp={handleHourMouseUp}
+                  title={`Press and drag to select multiple hours starting from ${hour}:00 on ${day.toLocaleDateString()}`}
                 >
                   {isSelected && (
                     <div style={{ textAlign: 'center', fontWeight: '600' }}>
@@ -2140,6 +2217,368 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
           <p style={{ margin: 0, fontSize: '12px', color: '#64748B' }}>
             Click "Create Task" above to create a task for the selected time slots
           </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Month Calendar View
+const MonthCalendarView: React.FC<CalendarViewProps> = ({ 
+  currentDate, tasks, timeBlocks, onTaskClick, getPriorityColor, isMobile 
+}) => {
+  const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const startDate = new Date(monthStart);
+  startDate.setDate(startDate.getDate() - startDate.getDay());
+  
+  const days: Date[] = [];
+  const currentDay = new Date(startDate);
+  
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(currentDay));
+    currentDay.setDate(currentDay.getDate() + 1);
+  }
+  
+  const getDayTasks = (day: Date) => {
+    return tasks.filter(task => {
+      if (!task.due_date) return false;
+      const taskDate = new Date(task.due_date);
+      return taskDate.toDateString() === day.toDateString();
+    });
+  };
+  
+  return (
+    <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+      {/* Calendar Header */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '1px', 
+        marginBottom: '12px',
+        background: '#F1F5F9',
+        borderRadius: '12px',
+        padding: '12px'
+      }}>
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} style={{ 
+            textAlign: 'center', 
+            fontWeight: '700', 
+            color: '#64748B', 
+            fontSize: isMobile ? '11px' : '13px',
+            padding: '8px'
+          }}>
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '2px',
+        background: '#E2E8F0',
+        borderRadius: '12px',
+        padding: '2px'
+      }}>
+        {days.map((day, index) => {
+          const dayTasks = getDayTasks(day);
+          const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+          const isToday = day.toDateString() === new Date().toDateString();
+          
+          return (
+            <div
+              key={index}
+              style={{
+                background: 'white',
+                minHeight: isMobile ? '80px' : '120px',
+                padding: isMobile ? '6px' : '8px',
+                opacity: isCurrentMonth ? 1 : 0.5,
+                border: isToday ? '2px solid #3B82F6' : 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                borderRadius: '8px'
+              }}
+              onClick={() => {
+                const taskDate = new Date(day);
+                taskDate.setHours(9, 0, 0, 0);
+                // You can add create task functionality here
+              }}
+            >
+              <div style={{ 
+                fontWeight: isToday ? '700' : '500',
+                color: isToday ? '#3B82F6' : '#1F2937',
+                marginBottom: '4px',
+                fontSize: isMobile ? '12px' : '14px'
+              }}>
+                {day.getDate()}
+              </div>
+              
+              {/* Tasks */}
+              {dayTasks.slice(0, isMobile ? 1 : 2).map(task => (
+                <div
+                  key={task.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTaskClick(task);
+                  }}
+                  style={{
+                    background: getPriorityColor(task.priority) + '20',
+                    color: getPriorityColor(task.priority),
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: isMobile ? '8px' : '10px',
+                    marginBottom: '2px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                  }}
+                >
+                  {task.title.length > (isMobile ? 10 : 15) ? task.title.substring(0, isMobile ? 10 : 15) + '...' : task.title}
+                </div>
+              ))}
+              
+              {/* More indicator */}
+              {dayTasks.length > (isMobile ? 1 : 2) && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '4px',
+                  right: '4px',
+                  background: '#6B7280',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '8px',
+                  fontWeight: '600'
+                }}>
+                  +{dayTasks.length - (isMobile ? 1 : 2)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Day Calendar View
+const DayCalendarView: React.FC<DayCalendarProps> = ({ 
+  currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile 
+}) => {
+  const dayTasks = tasks.filter(task => {
+    if (!task.due_date) return false;
+    const taskDate = new Date(task.due_date);
+    return taskDate.toDateString() === currentDate.toDateString();
+  });
+  
+  const dayTimeBlocks = timeBlocks.filter(block => {
+    const blockDate = new Date(block.start_time);
+    return blockDate.toDateString() === currentDate.toDateString();
+  });
+  
+  // Generate 15-minute slots for business hours
+  const timeSlots: { hour: number; minute: number }[] = [];
+  for (let hour = 6; hour <= 22; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      timeSlots.push({ hour, minute });
+    }
+  }
+  
+  const getBlocksForSlot = (hour: number, minute: number) => {
+    return dayTimeBlocks.filter(block => {
+      const blockStart = new Date(block.start_time);
+      return blockStart.getHours() === hour && 
+             Math.floor(blockStart.getMinutes() / 15) * 15 === minute;
+    });
+  };
+  
+  const handleSlotClick = (hour: number, minute: number) => {
+    const startTime = new Date(currentDate);
+    startTime.setHours(hour, minute, 0, 0);
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + 15);
+    
+    onCreateTimeBlock(startTime, endTime);
+  };
+  
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '24px' }}>
+      {/* Time Slots */}
+      <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ margin: '0 0 20px 0', fontSize: isMobile ? '16px' : '20px', fontWeight: '700' }}>
+          {currentDate.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </h3>
+        
+        <div style={{ maxHeight: isMobile ? '400px' : '600px', overflowY: 'auto' }}>
+          {timeSlots.map(({ hour, minute }) => {
+            const blocks = getBlocksForSlot(hour, minute);
+            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            const displayTime = hour === 0 ? '12:00 AM' : 
+                               hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
+                               hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM` :
+                               `${hour - 12}:${minute.toString().padStart(2, '0')} PM`;
+            
+            return (
+              <div key={timeString} style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '60px 1fr' : '100px 1fr', 
+                gap: '12px',
+                minHeight: isMobile ? '30px' : '40px',
+                borderBottom: minute === 0 ? '2px solid #E2E8F0' : '1px solid #F1F5F9',
+                padding: '8px 0'
+              }}>
+                <div style={{ 
+                  fontSize: isMobile ? '10px' : '12px', 
+                  color: '#64748B',
+                  fontWeight: '500',
+                  textAlign: 'right',
+                  paddingTop: '4px'
+                }}>
+                  {minute === 0 ? displayTime : ''}
+                </div>
+                
+                <div 
+                  style={{ 
+                    minHeight: isMobile ? '24px' : '32px',
+                    background: blocks.length > 0 ? 'transparent' : '#FAFBFC',
+                    borderRadius: '6px',
+                    padding: '4px',
+                    cursor: blocks.length === 0 ? 'pointer' : 'default',
+                    border: '1px dashed transparent',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => blocks.length === 0 && handleSlotClick(hour, minute)}
+                  onMouseEnter={(e) => {
+                    if (blocks.length === 0) {
+                      e.currentTarget.style.border = '1px dashed #3B82F6';
+                      e.currentTarget.style.background = '#EFF6FF';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (blocks.length === 0) {
+                      e.currentTarget.style.border = '1px dashed transparent';
+                      e.currentTarget.style.background = '#FAFBFC';
+                    }
+                  }}
+                >
+                  {blocks.length === 0 ? (
+                    <div style={{ 
+                      color: '#9CA3AF', 
+                      fontSize: isMobile ? '9px' : '11px',
+                      textAlign: 'center',
+                      paddingTop: '4px'
+                    }}>
+                      Click to add block
+                    </div>
+                  ) : (
+                    blocks.map(block => (
+                      <div
+                        key={block.id}
+                        style={{
+                          background: block.color,
+                          color: 'white',
+                          padding: isMobile ? '6px 8px' : '8px 12px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          marginBottom: '4px',
+                          fontWeight: '500',
+                          fontSize: isMobile ? '10px' : '13px'
+                        }}
+                      >
+                        <div>{block.title}</div>
+                        <div style={{ fontSize: isMobile ? '8px' : '11px', opacity: 0.9 }}>
+                          {new Date(block.start_time).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          })} - {new Date(block.end_time).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Day Tasks Sidebar */}
+      {!isMobile && (
+        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '700' }}>
+            Tasks for Today
+          </h3>
+          
+          {dayTasks.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#64748B', padding: '40px 20px' }}>
+              <CalendarIcon style={{ width: '32px', height: '32px', margin: '0 auto 12px', opacity: 0.5 }} />
+              <p style={{ margin: 0, fontSize: '14px' }}>No tasks for today</p>
+            </div>
+          ) : (
+            dayTasks.map(task => (
+              <div 
+                key={task.id} 
+                className="task-card" 
+                style={{ 
+                  borderLeftColor: getPriorityColor(task.priority),
+                  marginBottom: '12px',
+                  cursor: 'pointer',
+                  padding: '16px'
+                }}
+                onClick={() => onTaskClick(task)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h5 style={{ 
+                    margin: 0, 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                  }}>
+                    {task.title}
+                  </h5>
+                  <span 
+                    className="priority-badge"
+                    style={{ 
+                      background: getPriorityColor(task.priority) + '20',
+                      color: getPriorityColor(task.priority),
+                      fontSize: '10px',
+                      padding: '2px 6px'
+                    }}
+                  >
+                    {task.priority}
+                  </span>
+                </div>
+                
+                {task.description && (
+                  <p style={{ 
+                    margin: '4px 0 0 0', 
+                    color: '#64748B', 
+                    fontSize: '12px'
+                  }}>
+                    {task.description.length > 60 
+                      ? task.description.substring(0, 60) + '...'
+                      : task.description
+                    }
+                  </p>
+                )}
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
