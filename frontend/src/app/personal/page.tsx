@@ -2211,51 +2211,6 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
     });
   };
   
-  const handleDayClick = async (day: Date) => {
-    // Create task for clicked day
-    const taskDate = new Date(day);
-    taskDate.setHours(9, 0, 0, 0);
-    
-    const taskData = {
-      title: `Task for ${day.toLocaleDateString()}`,
-      description: `Created by clicking on ${day.toLocaleDateString()} in week view`,
-      status: 'pending' as PersonalTask['status'],
-      priority: 'medium' as PersonalTask['priority'],
-      category: 'Work',
-      tags: null,
-      due_date: taskDate.toISOString(),
-      estimated_duration: 60,
-      is_recurring: false,
-      user_id: user?.id || 60
-    };
-
-    try {
-      console.log('Creating task for day:', taskData);
-      
-      const { data, error } = await supabase
-        .from('personal_tasks')
-        .insert([taskData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating task from day click:', error);
-        alert('Error creating task: ' + error.message);
-        return;
-      }
-
-      console.log('Task created successfully:', data);
-      
-      // Update both tasks and allTasks state
-      setTasks(prev => [data, ...prev]);
-      setAllTasks(prev => [data, ...prev]);
-      
-      alert(`✅ Task created for ${day.toLocaleDateString()}!`);
-    } catch (error) {
-      console.error('Error creating task:', error);
-      alert('Error creating task');
-    }
-  };
   
   return (
     <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
@@ -2348,8 +2303,6 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                 cursor: 'pointer',
                 borderRadius: '8px'
               }}
-              onClick={() => handleDayClick(day)}
-              title={`Click to create task for ${day.toLocaleDateString()}`}
             >
               <div style={{ 
                 fontWeight: isToday ? '800' : '600',
