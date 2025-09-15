@@ -321,7 +321,7 @@ export default function PersonalTaskManager() {
 
       const timeBlockData = {
         ...newTimeBlock,
-        user_id: 24, // Use integer user ID
+        user_id: user?.id || 60, // Use current user ID
         start_time: startTime.toISOString(),
         end_time: endTime.toISOString()
       };
@@ -370,7 +370,7 @@ export default function PersonalTaskManager() {
         block_type: 'task',
         color: getPriorityColor(draggedTask.priority),
         notes: `Scheduled from task: ${draggedTask.title}`,
-        user_id: 24,
+        user_id: user?.id || 60,
         is_completed: false
       };
 
@@ -2571,7 +2571,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                         block_type: 'task',
                         color: getPriorityColor(draggedTask.priority),
                         notes: `Scheduled from task: ${draggedTask.title}`,
-                        user_id: 24,
+                        user_id: user?.id || 60,
                         is_completed: false
                       };
 
@@ -2701,7 +2701,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                   block_type: 'task',
                   color: getPriorityColor(task.priority),
                   notes: `Scheduled from task: ${task.title}`,
-                  user_id: 24,
+                  user_id: user?.id || 60,
                   is_completed: false
                 };
 
