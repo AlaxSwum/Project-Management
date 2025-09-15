@@ -2240,16 +2240,25 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       <div style={{ maxHeight: isMobile ? '400px' : '700px', overflowY: 'auto' }}>
         <div style={{ marginBottom: '16px', padding: '12px', background: '#EFF6FF', borderRadius: '8px' }}>
           <p style={{ margin: 0, fontSize: '12px', color: '#3B82F6', fontWeight: '600' }}>
-            Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks
+            Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks, Week: {weekDays.map(day => 
+              filteredTasks.filter(task => {
+                if (!task.due_date) return false;
+                const taskDate = new Date(task.due_date);
+                return taskDate.toDateString() === day.toDateString();
+              }).length
+            ).join('-')} tasks per day
           </p>
         </div>
         {hours.map(hour => {
-          // Get tasks for this hour across all days
+          // Get tasks for this hour across all days - simplified logic
           const hourTasks = weekDays.map(day => {
             return filteredTasks.filter(task => {
               if (!task.due_date) return false;
               const taskDate = new Date(task.due_date);
-              return taskDate.toDateString() === day.toDateString() && taskDate.getHours() === hour;
+              const isSameDay = taskDate.toDateString() === day.toDateString();
+              // Show tasks at 9 AM if no specific hour is set, or at their scheduled hour
+              const taskHour = taskDate.getHours();
+              return isSameDay && (taskHour === hour || (hour === 9 && taskHour === 0));
             });
           });
           
