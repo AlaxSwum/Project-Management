@@ -2516,38 +2516,38 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                 </div>
                 
                 <div 
-                  className={`time-slot-draggable ${
-                    dragPreview && isTimeInDragRange(hour, minute, dragPreview) ? 'drag-selection' : ''
-                  }`}
                   style={{ 
-                    minHeight: '32px',
-                    background: blocks.length > 0 ? 'transparent' : 
-                               (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '#3B82F6' : '#FAFBFC',
+                    minHeight: '40px',
+                    background: blocks.length > 0 ? 'transparent' : '#FAFBFC',
                     borderRadius: '4px',
-                    padding: '4px',
-                    cursor: blocks.length === 0 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                    border: '1px dashed transparent',
+                    padding: '8px',
+                    cursor: blocks.length === 0 ? 'pointer' : 'default',
+                    border: '2px dashed transparent',
                     transition: 'all 0.2s ease',
-                    position: 'relative'
+                    position: 'relative',
+                    userSelect: 'none'
                   }}
-                  onClick={() => blocks.length === 0 && !isDragging && handleSlotClick(hour, minute)}
-                  onMouseDown={() => blocks.length === 0 && handleMouseDown(hour, minute)}
-                  onMouseMove={() => handleMouseMove(hour, minute)}
-                  onMouseUp={handleMouseUp}
+                  onClick={() => {
+                    if (blocks.length === 0 && !isDragging) {
+                      handleSlotClick(hour, minute);
+                    }
+                  }}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
+                    e.stopPropagation();
+                    console.log('🔄 DRAG OVER:', { hour, minute, draggedTask: !!draggedTask });
                     if (draggedTask && blocks.length === 0) {
                       e.currentTarget.style.background = '#EFF6FF';
                       e.currentTarget.style.border = '2px dashed #3B82F6';
-                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px; font-size: 12px;">Drop "${draggedTask.title}" here<br/>Will create ${draggedTask.estimated_duration || 60}min block</div>`;
+                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px; font-size: 12px;">DROP HERE<br/>${draggedTask.title}</div>`;
                     }
                   }}
                   onDragLeave={(e) => {
+                    console.log('🔄 DRAG LEAVE:', { hour, minute });
                     if (draggedTask) {
                       e.currentTarget.style.background = '#FAFBFC';
-                      e.currentTarget.style.border = '1px dashed transparent';
-                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; fontSize: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
+                      e.currentTarget.style.border = '2px dashed transparent';
+                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Drop zone</div>';
                     }
                   }}
                   onDrop={async (e) => {
@@ -2573,20 +2573,8 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                     
                     // Reset visual state
                     e.currentTarget.style.background = '#FAFBFC';
-                    e.currentTarget.style.border = '1px dashed transparent';
-                    e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (blocks.length === 0 && !isDragging) {
-                      e.currentTarget.style.border = '1px dashed #3B82F6';
-                      e.currentTarget.style.background = '#EFF6FF';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (blocks.length === 0 && !isDragging) {
-                      e.currentTarget.style.border = '1px dashed transparent';
-                      e.currentTarget.style.background = '#FAFBFC';
-                    }
+                    e.currentTarget.style.border = '2px dashed transparent';
+                    e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Drop zone</div>';
                   }}
                 >
                   {blocks.length === 0 ? (
