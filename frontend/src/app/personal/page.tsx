@@ -466,6 +466,20 @@ export default function PersonalTaskManager() {
     setShowTaskModal(true);
   };
 
+  const openCreateTaskForDate = (date: Date) => {
+    // Set the due date to the clicked date at 9 AM
+    const taskDate = new Date(date);
+    taskDate.setHours(9, 0, 0, 0);
+    
+    setNewTask({
+      ...getDefaultTaskForm(),
+      due_date: taskDate.toISOString().slice(0, 16)
+    });
+    setIsEditingTask(false);
+    setSelectedTask(null);
+    setShowTaskModal(true);
+  };
+
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     
@@ -726,9 +740,9 @@ export default function PersonalTaskManager() {
           .modal-content {
             background: white;
             border-radius: 20px;
-            padding: 48px;
+            padding: 60px;
             margin: 40px;
-            max-width: 650px;
+            max-width: 700px;
             width: calc(100% - 80px);
             max-height: calc(100vh - 80px);
             overflow-y: auto;
@@ -744,7 +758,7 @@ export default function PersonalTaskManager() {
           }
           
           .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
           }
           
           .form-label {
@@ -1400,6 +1414,7 @@ export default function PersonalTaskManager() {
                     setIsEditingTimeBlock(true);
                     setShowTimeBlockModal(true);
                   }}
+                  onCreateTask={openCreateTaskForDate}
                   getPriorityColor={getPriorityColor}
                 />
               )}
@@ -1424,6 +1439,7 @@ export default function PersonalTaskManager() {
                     setIsEditingTimeBlock(true);
                     setShowTimeBlockModal(true);
                   }}
+                  onCreateTask={openCreateTaskForDate}
                   getPriorityColor={getPriorityColor}
                 />
               )}
@@ -1460,6 +1476,7 @@ export default function PersonalTaskManager() {
                     });
                     setShowTimeBlockModal(true);
                   }}
+                  onCreateTask={openCreateTaskForDate}
                   getPriorityColor={getPriorityColor}
                 />
               )}
@@ -1736,6 +1753,7 @@ interface CalendarViewProps {
   timeBlocks: PersonalTimeBlock[];
   onTaskClick: (task: PersonalTask) => void;
   onTimeBlockClick: (block: PersonalTimeBlock) => void;
+  onCreateTask: (date: Date) => void;
   getPriorityColor: (priority: string) => string;
 }
 
@@ -1745,7 +1763,7 @@ interface DayCalendarViewProps extends CalendarViewProps {
 
 // Month Calendar View
 const MonthCalendarView: React.FC<CalendarViewProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, getPriorityColor 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTask, getPriorityColor 
 }) => {
   const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -1823,8 +1841,11 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
                 padding: '8px',
                 opacity: isCurrentMonth ? 1 : 0.5,
                 border: isToday ? '2px solid #3B82F6' : 'none',
-                position: 'relative'
+                position: 'relative',
+                cursor: 'pointer'
               }}
+              onClick={() => onCreateTask(day)}
+              title="Click to create task for this date"
             >
               <div style={{ 
                 fontWeight: isToday ? '700' : '500',
@@ -1909,7 +1930,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
 
 // Week Calendar View
 const WeekCalendarView: React.FC<CalendarViewProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, getPriorityColor 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTask, getPriorityColor 
 }) => {
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - currentDate.getDay());
@@ -1999,8 +2020,16 @@ const WeekCalendarView: React.FC<CalendarViewProps> = ({
                   padding: '4px',
                   background: '#FAFBFC',
                   minHeight: '56px',
-                  position: 'relative'
-                }}>
+                  position: 'relative',
+                  cursor: 'pointer'
+                }}
+                onClick={() => {
+                  const taskDate = new Date(day);
+                  taskDate.setHours(hour, 0, 0, 0);
+                  onCreateTask(taskDate);
+                }}
+                title="Click to create task for this time"
+                >
                   {/* Time Blocks */}
                   {hourBlocks.map(block => (
                     <div
@@ -2053,7 +2082,7 @@ const WeekCalendarView: React.FC<CalendarViewProps> = ({
 
 // Day Calendar View with 15-minute time blocking
 const DayCalendarView: React.FC<DayCalendarViewProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, getPriorityColor 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, onCreateTask, getPriorityColor 
 }) => {
   // Local drag state for this component
   const [isDragging, setIsDragging] = useState(false);
