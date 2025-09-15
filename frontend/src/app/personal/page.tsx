@@ -321,10 +321,12 @@ export default function PersonalTaskManager() {
 
       const timeBlockData = {
         ...newTimeBlock,
-        user_id: user?.id,
+        user_id: 24, // Use integer user ID
         start_time: startTime.toISOString(),
         end_time: endTime.toISOString()
       };
+
+      console.log('Creating time block with data:', timeBlockData);
 
       const { data, error } = await supabase
         .from('personal_time_blocks')
@@ -334,10 +336,11 @@ export default function PersonalTaskManager() {
 
       if (error) {
         console.error('Error creating time block:', error);
-        setError('Failed to create time block');
+        setError('Failed to create time block: ' + error.message);
         return;
       }
 
+      console.log('Time block created successfully:', data);
       setTimeBlocks(prev => [...prev, data]);
       setShowTimeBlockModal(false);
       resetTimeBlockForm();
@@ -346,6 +349,54 @@ export default function PersonalTaskManager() {
     } catch (error) {
       console.error('Error creating time block:', error);
       setError('Failed to create time block');
+    }
+  };
+
+  // New function specifically for drag-drop time block creation
+  const handleCreateTimeBlockFromDrag = async (draggedTask: PersonalTask, hour: number, minute: number) => {
+    try {
+      console.log('Creating time block from drag:', draggedTask.title, 'at', hour, minute);
+      
+      const startTime = new Date(currentDate);
+      startTime.setHours(hour, minute, 0, 0);
+      const endTime = new Date(startTime);
+      endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
+      
+      const timeBlockData = {
+        title: draggedTask.title,
+        description: draggedTask.description || '',
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        block_type: 'task',
+        color: getPriorityColor(draggedTask.priority),
+        notes: `Scheduled from task: ${draggedTask.title}`,
+        user_id: 24,
+        is_completed: false
+      };
+
+      console.log('Inserting time block data:', timeBlockData);
+
+      const { data, error } = await supabase
+        .from('personal_time_blocks')
+        .insert([timeBlockData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating time block from drag:', error);
+        alert('Error: ' + error.message);
+        return false;
+      }
+
+      console.log('Time block created from drag:', data);
+      setTimeBlocks(prev => [...prev, data]);
+      setSuccessMessage(`Time block created for "${draggedTask.title}"!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+      return true;
+    } catch (error) {
+      console.error('Error in drag-drop time block creation:', error);
+      alert('Error creating time block: ' + error);
+      return false;
     }
   };
 
@@ -2501,46 +2552,29 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                   }}
                   onDrop={async (e) => {
                     e.preventDefault();
-                    if (draggedTask) {
-                      console.log('Dropping task:', draggedTask.title, 'at', hour, minute);
-                      const startTime = new Date(currentDate);
-                      startTime.setHours(hour, minute, 0, 0);
-                      const endTime = new Date(startTime);
-                      endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
-                      
-                      // Create time block directly using the same logic as handleCreateTimeBlock
-                      try {
-                        const timeBlockData = {
-                          title: draggedTask.title,
-                          description: draggedTask.description || '',
-                          start_time: startTime.toISOString(),
-                          end_time: endTime.toISOString(),
-                          block_type: 'task' as const,
-                          color: getPriorityColor(draggedTask.priority),
-                          notes: `Scheduled from task: ${draggedTask.title}`,
-                          user_id: 24 // Your user ID
-                        };
-
-                        console.log('Creating time block with data:', timeBlockData);
-                        
-                        // Create time block using the existing function
-                        console.log('Creating time block from dragged task...');
-                        
-                        // Call the parent's create time block function
-                        onCreateTimeBlock(startTime, endTime);
-                        
-                        // Show success message
-                        alert(`Time block created for "${draggedTask.title}" at ${startTime.toLocaleTimeString()}`);
-                        
-                        console.log('Time block creation completed');
-                      } catch (error) {
-                        console.error('Error in drag drop:', error);
+                    e.stopPropagation();
+                    console.log('🎯 DROP EVENT FIRED!', { draggedTask, hour, minute, blocks: blocks.length });
+                    
+                    if (draggedTask && blocks.length === 0) {
+                      console.log('✅ Valid drop - processing...');
+                      const success = await handleCreateTimeBlockFromDrag(draggedTask, hour, minute);
+                      if (success) {
+                        console.log('✅ Time block created successfully!');
+                      } else {
+                        console.log('❌ Failed to create time block');
                       }
-                      
-                      e.currentTarget.style.background = '#FAFBFC';
-                      e.currentTarget.style.border = '1px dashed transparent';
-                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; fontSize: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
+                    } else {
+                      console.log('❌ Drop ignored:', { 
+                        hasDraggedTask: !!draggedTask, 
+                        blocksLength: blocks.length,
+                        reason: !draggedTask ? 'No dragged task' : 'Slot occupied'
+                      });
                     }
+                    
+                    // Reset visual state
+                    e.currentTarget.style.background = '#FAFBFC';
+                    e.currentTarget.style.border = '1px dashed transparent';
+                    e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
                   }}
                   onMouseEnter={(e) => {
                     if (blocks.length === 0 && !isDragging) {
