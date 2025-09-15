@@ -1760,6 +1760,7 @@ export default function PersonalTaskManager() {
                   onTaskClick={openEditTask}
                   getPriorityColor={getPriorityColor}
                   isMobile={isMobile}
+                  user={user}
                 />
               )}
               
@@ -2170,6 +2171,7 @@ interface WeekCalendarProps extends CalendarViewProps {
   setIsSelecting: (selecting: boolean) => void;
   dragStartHour: {day: Date, hour: number} | null;
   setDragStartHour: (hour: {day: Date, hour: number} | null) => void;
+  user: any;
 }
 
 interface DayCalendarProps extends CalendarViewProps {
@@ -2182,7 +2184,7 @@ interface DayCalendarProps extends CalendarViewProps {
 
 const WeekCalendarView: React.FC<WeekCalendarProps> = ({ 
   currentDate, tasks, timeBlocks, selectedHours, setSelectedHours, isSelecting, setIsSelecting,
-  dragStartHour, setDragStartHour, onTaskClick, getPriorityColor, isMobile 
+  dragStartHour, setDragStartHour, onTaskClick, getPriorityColor, isMobile, user
 }) => {
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - currentDate.getDay());
