@@ -444,14 +444,43 @@ export default function PersonalTaskManager() {
     const endTime = new Date(lastSelection.day);
     endTime.setHours(lastSelection.hour + 1, 0, 0, 0);
     
-    setNewTask({
-      ...getDefaultTaskForm(),
-      due_date: startTime.toISOString().slice(0, 16),
-      estimated_duration: selectedHours.length * 60 // 1 hour per selected slot
-    });
-    
-    setSelectedHours([]);
-    setShowTaskModal(true);
+    // Create the task directly instead of opening modal
+    const taskData = {
+      title: `Task for ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}`,
+      description: `Created from ${selectedHours.length} hour selection in week view`,
+      status: 'pending' as PersonalTask['status'],
+      priority: 'medium' as PersonalTask['priority'],
+      category: 'Work',
+      tags: null,
+      due_date: startTime.toISOString(),
+      estimated_duration: selectedHours.length * 60,
+      is_recurring: false,
+      user_id: user?.id
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('personal_tasks')
+        .insert([taskData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating task from selection:', error);
+        setError('Failed to create task from selection');
+        return;
+      }
+
+      setTasks(prev => [data, ...prev]);
+      setSelectedHours([]);
+      setSuccessMessage(`Task created for ${selectedHours.length} hour${selectedHours.length > 1 ? 's' : ''}!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+      
+      console.log('Task created from week selection:', data);
+    } catch (error) {
+      console.error('Error creating task from selection:', error);
+      setError('Failed to create task from selection');
+    }
   };
 
   const resetTaskForm = () => {
@@ -818,18 +847,28 @@ export default function PersonalTaskManager() {
           }
           
           .filter-select {
-            padding: 12px 16px;
+            padding: 14px 20px;
             border: 2px solid #E2E8F0;
-            border-radius: 12px;
-            font-size: 13px;
+            border-radius: 16px;
+            font-size: 14px;
             background: white;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            color: #374151;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
           }
           
           .filter-select:focus {
             outline: none;
             border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 2px 8px rgba(0,0,0,0.05);
+          }
+          
+          .filter-select:hover {
+            border-color: #C4B5FD;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
           }
           
           .stats-card {
