@@ -2444,15 +2444,118 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                   style={{
                     background: '#FEF3C7',
                     color: '#92400E',
-                    padding: isMobile ? '4px 6px' : '6px 8px',
-                    borderRadius: '4px',
-                    fontSize: isMobile ? '9px' : '10px',
-                    cursor: 'pointer',
+                    padding: isMobile ? '6px 8px' : '8px 10px',
+                    borderRadius: '6px',
+                    fontSize: isMobile ? '10px' : '12px',
                     fontWeight: '500',
-                    border: '1px solid #FCD34D'
+                    border: '1px solid #FCD34D',
+                    transition: 'all 0.2s ease',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#FDE68A';
+                    e.currentTarget.style.borderColor = '#F59E0B';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#FEF3C7';
+                    e.currentTarget.style.borderColor = '#FCD34D';
                   }}
                 >
-                  {block.title}
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (clickedTaskId === `timeblock_${block.id}`) {
+                        setClickedTaskId(null); // Hide details if already shown
+                      } else {
+                        setClickedTaskId(`timeblock_${block.id}`); // Show details
+                      }
+                    }}
+                    style={{ 
+                      fontWeight: '600', 
+                      marginBottom: clickedTaskId === `timeblock_${block.id}` ? '4px' : '0',
+                      cursor: 'pointer',
+                      paddingRight: '20px' // Space for delete button
+                    }}
+                  >
+                    {block.title}
+                  </div>
+                  
+                  {/* Delete button for time block */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Delete time block "${block.title}"?`)) {
+                        const handleDelete = async () => {
+                          try {
+                            const { error } = await supabase
+                              .from('personal_time_blocks')
+                              .delete()
+                              .eq('id', block.id);
+                            
+                            if (error) throw error;
+                            
+                            // Refresh the page
+                            window.location.reload();
+                          } catch (error) {
+                            console.error('Error deleting time block:', error);
+                            alert('Failed to delete time block');
+                          }
+                        };
+                        handleDelete();
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#DC2626',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      padding: '2px',
+                      borderRadius: '2px',
+                      opacity: 0.7
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.background = '#FEE2E2';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    ×
+                  </button>
+                  
+                  {clickedTaskId === `timeblock_${block.id}` && (
+                    <div style={{ 
+                      fontSize: isMobile ? '9px' : '10px', 
+                      color: '#92400E',
+                      fontWeight: '400',
+                      marginTop: '4px'
+                    }}>
+                      <div style={{ marginBottom: '2px' }}>
+                        {new Date(block.start_time).toLocaleString('en-US', { 
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true 
+                        })} - {new Date(block.end_time).toLocaleString('en-US', { 
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true 
+                        })}
+                      </div>
+                      {block.description && (
+                        <div style={{ fontSize: isMobile ? '8px' : '9px', color: '#78716C' }}>
+                          {block.description}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
