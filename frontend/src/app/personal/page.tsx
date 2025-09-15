@@ -1726,10 +1726,33 @@ export default function PersonalTaskManager() {
 
       {/* Time Block Modal */}
       {showTimeBlockModal && (
-        <div className="modal-overlay" onClick={() => setShowTimeBlockModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(6px)',
+          padding: '40px'
+        }} onClick={() => setShowTimeBlockModal(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '24px',
+            padding: '60px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: 'calc(100vh - 80px)',
+            overflowY: 'auto',
+            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.35), 0 25px 25px -5px rgba(0, 0, 0, 0.2)',
+            border: '2px solid rgba(255, 255, 255, 0.3)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+              <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#1F2937' }}>
                 {isEditingTimeBlock ? 'Edit Time Block' : 'Create New Time Block'}
               </h3>
               <button
@@ -1737,17 +1760,31 @@ export default function PersonalTaskManager() {
                   setShowTimeBlockModal(false);
                   resetTimeBlockForm();
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '8px' }}
               >
-                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                <XMarkIcon style={{ width: '24px', height: '24px' }} />
               </button>
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Title *</label>
+            <div style={{ marginBottom: '28px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '10px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '15px' 
+              }}>Title *</label>
               <input
                 type="text"
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  border: '2px solid #E2E8F0',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  background: '#FAFBFC',
+                  boxSizing: 'border-box'
+                }}
                 value={newTimeBlock.title}
                 onChange={(e) => setNewTimeBlock({ ...newTimeBlock, title: e.target.value })}
                 placeholder="Enter time block title..."
@@ -1755,10 +1792,26 @@ export default function PersonalTaskManager() {
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Description</label>
+            <div style={{ marginBottom: '28px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '10px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '15px' 
+              }}>Description</label>
               <textarea
-                className="form-input form-textarea"
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  border: '2px solid #E2E8F0',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  background: '#FAFBFC',
+                  resize: 'vertical',
+                  minHeight: '80px',
+                  boxSizing: 'border-box'
+                }}
                 value={newTimeBlock.description}
                 onChange={(e) => setNewTimeBlock({ ...newTimeBlock, description: e.target.value })}
                 placeholder="Enter description..."
@@ -1766,23 +1819,51 @@ export default function PersonalTaskManager() {
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div className="form-group">
-                <label className="form-label">Start Time *</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '28px' }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '10px', 
+                  fontWeight: '600', 
+                  color: '#374151', 
+                  fontSize: '15px' 
+                }}>Start Time *</label>
                 <input
                   type="datetime-local"
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    border: '2px solid #E2E8F0',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    background: '#FAFBFC',
+                    boxSizing: 'border-box'
+                  }}
                   value={newTimeBlock.start_time}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, start_time: e.target.value })}
                   required
                 />
               </div>
               
-              <div className="form-group">
-                <label className="form-label">End Time *</label>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '10px', 
+                  fontWeight: '600', 
+                  color: '#374151', 
+                  fontSize: '15px' 
+                }}>End Time *</label>
                 <input
                   type="datetime-local"
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    border: '2px solid #E2E8F0',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    background: '#FAFBFC',
+                    boxSizing: 'border-box'
+                  }}
                   value={newTimeBlock.end_time}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, end_time: e.target.value })}
                   required
@@ -1790,11 +1871,26 @@ export default function PersonalTaskManager() {
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div className="form-group">
-                <label className="form-label">Block Type</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '28px' }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '10px', 
+                  fontWeight: '600', 
+                  color: '#374151', 
+                  fontSize: '15px' 
+                }}>Block Type</label>
                 <select
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    border: '2px solid #E2E8F0',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    background: '#FAFBFC',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
                   value={newTimeBlock.block_type}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, block_type: e.target.value as any })}
                 >
@@ -1807,22 +1903,52 @@ export default function PersonalTaskManager() {
                 </select>
               </div>
               
-              <div className="form-group">
-                <label className="form-label">Color</label>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '10px', 
+                  fontWeight: '600', 
+                  color: '#374151', 
+                  fontSize: '15px' 
+                }}>Color</label>
                 <input
                   type="color"
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    height: '52px',
+                    padding: '4px',
+                    border: '2px solid #E2E8F0',
+                    borderRadius: '10px',
+                    background: '#FAFBFC',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
                   value={newTimeBlock.color}
                   onChange={(e) => setNewTimeBlock({ ...newTimeBlock, color: e.target.value })}
-                  style={{ height: '44px' }}
                 />
               </div>
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Notes</label>
+            <div style={{ marginBottom: '28px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '10px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '15px' 
+              }}>Notes</label>
               <textarea
-                className="form-input form-textarea"
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  border: '2px solid #E2E8F0',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  background: '#FAFBFC',
+                  resize: 'vertical',
+                  minHeight: '80px',
+                  boxSizing: 'border-box'
+                }}
                 value={newTimeBlock.notes}
                 onChange={(e) => setNewTimeBlock({ ...newTimeBlock, notes: e.target.value })}
                 placeholder="Additional notes..."
@@ -1830,19 +1956,39 @@ export default function PersonalTaskManager() {
               />
             </div>
             
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', marginTop: '32px' }}>
               <button
                 onClick={() => {
                   setShowTimeBlockModal(false);
                   resetTimeBlockForm();
                 }}
-                className="btn btn-secondary"
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '15px',
+                  background: '#6B7280',
+                  color: 'white',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateTimeBlock}
-                className="btn btn-primary"
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '15px',
+                  background: '#3B82F6',
+                  color: 'white',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 {isEditingTimeBlock ? 'Update Time Block' : 'Create Time Block'}
               </button>
