@@ -2186,6 +2186,8 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
   currentDate, tasks, timeBlocks, selectedHours, setSelectedHours, isSelecting, setIsSelecting,
   dragStartHour, setDragStartHour, onTaskClick, getPriorityColor, isMobile, user
 }) => {
+  // State for showing task details
+  const [clickedTaskId, setClickedTaskId] = useState<string | null>(null);
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - currentDate.getDay());
   
@@ -2296,12 +2298,15 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
               key={index}
               style={{
                 background: 'white',
-                minHeight: isMobile ? '120px' : '200px',
+                minHeight: 'auto',
                 padding: isMobile ? '8px' : '12px',
                 border: isToday ? '3px solid #3B82F6' : 'none',
                 position: 'relative',
                 cursor: 'pointer',
-                borderRadius: '8px'
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
               }}
             >
               <div style={{ 
@@ -2315,73 +2320,77 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
               </div>
               
               {/* Tasks for this day */}
-              {dayTasks.slice(0, isMobile ? 3 : 5).map(task => (
+              {dayTasks.map(task => (
                 <div
                   key={task.id}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onTaskClick(task);
+                    if (clickedTaskId === task.id) {
+                      setClickedTaskId(null); // Hide details if already shown
+                    } else {
+                      setClickedTaskId(task.id); // Show details
+                    }
                   }}
                   style={{
-                    background: getPriorityColor(task.priority) + '20',
-                    color: getPriorityColor(task.priority),
-                    padding: isMobile ? '4px 6px' : '6px 8px',
+                    background: '#F8FAFC',
+                    color: '#374151',
+                    padding: isMobile ? '6px 8px' : '8px 10px',
                     borderRadius: '6px',
-                    fontSize: isMobile ? '9px' : '11px',
-                    marginBottom: '4px',
+                    fontSize: isMobile ? '10px' : '12px',
                     cursor: 'pointer',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                    border: `1px solid ${getPriorityColor(task.priority)}40`
+                    border: '1px solid #E5E7EB',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#F1F5F9';
+                    e.currentTarget.style.borderColor = '#CBD5E1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#F8FAFC';
+                    e.currentTarget.style.borderColor = '#E5E7EB';
                   }}
                 >
-                  {task.title.length > (isMobile ? 12 : 18) ? task.title.substring(0, isMobile ? 12 : 18) + '...' : task.title}
+                  <div style={{ fontWeight: '600', marginBottom: clickedTaskId === task.id ? '4px' : '0' }}>
+                    {task.title}
+                  </div>
+                  {clickedTaskId === task.id && task.due_date && (
+                    <div style={{ 
+                      fontSize: isMobile ? '9px' : '10px', 
+                      color: '#6B7280',
+                      fontWeight: '400'
+                    }}>
+                      🕒 {new Date(task.due_date).toLocaleString('en-US', { 
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true 
+                      })}
+                    </div>
+                  )}
                 </div>
               ))}
               
               {/* Time Blocks for this day */}
-              {dayTimeBlocks.slice(0, 2).map(block => (
+              {dayTimeBlocks.map(block => (
                 <div
                   key={block.id}
                   style={{
-                    background: block.color + '40',
-                    color: block.color,
-                    padding: isMobile ? '3px 5px' : '4px 6px',
+                    background: '#FEF3C7',
+                    color: '#92400E',
+                    padding: isMobile ? '4px 6px' : '6px 8px',
                     borderRadius: '4px',
-                    fontSize: isMobile ? '8px' : '10px',
-                    marginBottom: '3px',
+                    fontSize: isMobile ? '9px' : '10px',
                     cursor: 'pointer',
                     fontWeight: '500',
-                    border: `1px solid ${block.color}`
+                    border: '1px solid #FCD34D'
                   }}
                 >
-                  🕒 {new Date(block.start_time).toLocaleTimeString('en-US', { 
-                    hour: 'numeric',
-                    hour12: true 
-                  })} {block.title.substring(0, 8)}...
+                  📅 {block.title}
                 </div>
               ))}
-              
-              {/* More indicator */}
-              {(dayTasks.length > (isMobile ? 3 : 5) || dayTimeBlocks.length > 2) && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: '8px',
-                  right: '8px',
-                  background: '#6B7280',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '20px',
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  fontWeight: '700'
-                }}>
-                  +{Math.max(0, dayTasks.length - (isMobile ? 3 : 5)) + Math.max(0, dayTimeBlocks.length - 2)}
-                </div>
-              )}
             </div>
           );
         })}
