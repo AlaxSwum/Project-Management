@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -37,6 +38,17 @@ export default function DashboardPage() {
     color: '#FFB333',
   });
   const router = useRouter();
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -185,17 +197,18 @@ export default function DashboardPage() {
         
         .main-content {
           flex: 1;
-          margin-left: 280px;
+          margin-left: ${isMobile ? '0' : '280px'};
           background: transparent;
           position: relative;
           z-index: 1;
+          padding: ${isMobile ? '0 12px' : '0'};
         }
         
         .header {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-          padding: 3rem 2rem;
+          padding: ${isMobile ? '1.5rem 1rem' : '3rem 2rem'};
           position: sticky;
           top: 0;
           z-index: 20;
@@ -204,10 +217,12 @@ export default function DashboardPage() {
         
         .header-content {
           display: flex;
-          align-items: center;
+          align-items: ${isMobile ? 'flex-start' : 'center'};
           justify-content: space-between;
           max-width: 1400px;
           margin: 0 auto;
+          flex-direction: ${isMobile ? 'column' : 'row'};
+          gap: ${isMobile ? '1rem' : '0'};
         }
         
         .welcome-section {
@@ -911,17 +926,22 @@ export default function DashboardPage() {
         
         @media (max-width: 768px) {
           .main-content {
-            margin-left: 0;
+            margin-left: 0 !important;
+            padding: 0 12px !important;
           }
           
           .header {
-            padding: 2rem 1rem;
+            padding: 1.5rem 1rem !important;
           }
           
           .header-content {
-            flex-direction: column;
-            gap: 1.5rem;
-            align-items: stretch;
+            flex-direction: column !important;
+            gap: 1rem !important;
+            align-items: flex-start !important;
+          }
+          
+          .sidebar {
+            display: none !important;
           }
           
           .header-actions {
@@ -1014,10 +1034,12 @@ export default function DashboardPage() {
       `}</style>
       
       <div className="dashboard-container">
-        <Sidebar 
-          projects={projects} 
-          onCreateProject={() => setShowCreateForm(true)} 
-        />
+        {!isMobile && (
+          <Sidebar 
+            projects={projects} 
+            onCreateProject={() => setShowCreateForm(true)} 
+          />
+        )}
         
         <div className="main-content">
           <header className="header">
