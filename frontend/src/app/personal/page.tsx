@@ -179,18 +179,8 @@ export default function PersonalTaskManager() {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Apply date filter for calendar views - but make it more inclusive
-      if (layoutType === 'calendar' && currentView !== 'month') {
-        // For week and day views, include tasks from a wider range
-        const extendedStart = new Date(startDate);
-        extendedStart.setDate(extendedStart.getDate() - 7); // Include tasks from week before
-        const extendedEnd = new Date(endDate);
-        extendedEnd.setDate(extendedEnd.getDate() + 7); // Include tasks from week after
-        
-        taskQuery = taskQuery
-          .gte('due_date', extendedStart.toISOString())
-          .lte('due_date', extendedEnd.toISOString());
-      }
+      // Don't apply date filters - show all user tasks so they appear in all views
+      console.log('Loading all tasks for user:', user?.id);
 
       const { data: tasksData, error: tasksError } = await taskQuery;
 
@@ -215,6 +205,10 @@ export default function PersonalTaskManager() {
         return;
       }
 
+      console.log('Tasks loaded:', tasksData?.length || 0, 'tasks');
+      console.log('Time blocks loaded:', timeBlocksData?.length || 0, 'blocks');
+      console.log('Current view:', currentView, 'Layout:', layoutType);
+      
       setTasks(tasksData || []);
       setTimeBlocks(timeBlocksData || []);
     } catch (error) {
@@ -592,6 +586,11 @@ export default function PersonalTaskManager() {
     
     return matchesSearch && matchesStatus && matchesPriority;
   });
+  
+  // Debug logging for task visibility
+  console.log('Total tasks:', tasks.length);
+  console.log('Filtered tasks:', filteredTasks.length);
+  console.log('Current filters:', { statusFilter, priorityFilter, searchQuery });
 
   const tasksByStatus = {
     pending: filteredTasks.filter(task => task.status === 'pending'),
@@ -2237,8 +2236,8 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
         })}
       </div>
       
-      {/* Week Grid */}
-      <div style={{ maxHeight: isMobile ? '400px' : '600px', overflowY: 'auto' }}>
+      {/* Week Grid - Full 24 Hours */}
+      <div style={{ maxHeight: isMobile ? '400px' : '700px', overflowY: 'auto' }}>
         {hours.map(hour => (
           <div key={hour} style={{ 
             display: 'grid', 
