@@ -2217,7 +2217,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       {/* Debug Panel */}
       <div style={{ marginBottom: '20px', padding: '16px', background: '#EFF6FF', borderRadius: '12px' }}>
         <p style={{ margin: 0, fontSize: '14px', color: '#3B82F6', fontWeight: '700' }}>
-          Debug: {tasks.length} personal + {projectTasks.length} project = {allTasks.length} total tasks, {filteredTasks.length} filtered
+          Week View Debug: {tasks.length} tasks loaded
         </p>
         <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#64748B' }}>
           Week tasks: {weekDays.map((day, i) => {
@@ -2225,9 +2225,9 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
             return `${day.toLocaleDateString('en-US', { weekday: 'short' })}: ${dayTasks.length}`;
           }).join(' | ')}
         </p>
-        {filteredTasks.length > 0 && (
+        {tasks.length > 0 && (
           <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#64748B' }}>
-            Sample: {filteredTasks.slice(0, 3).map(t => `"${t.title}"`).join(', ')}
+            Sample: {tasks.slice(0, 3).map(t => `"${t.title}"`).join(', ')}
           </p>
         )}
       </div>
