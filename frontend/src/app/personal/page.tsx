@@ -79,6 +79,8 @@ export default function PersonalTaskManager() {
   
   // State
   const [tasks, setTasks] = useState<PersonalTask[]>([]);
+  const [projectTasks, setProjectTasks] = useState<any[]>([]);
+  const [allTasks, setAllTasks] = useState<PersonalTask[]>([]); // Combined personal + project tasks
   const [timeBlocks, setTimeBlocks] = useState<PersonalTimeBlock[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [currentView, setCurrentView] = useState<ViewType>('week');
@@ -205,11 +207,51 @@ export default function PersonalTaskManager() {
         return;
       }
 
-      console.log('Tasks loaded:', tasksData?.length || 0, 'tasks');
+      // Load project tasks assigned to current user
+      const { data: projectTasksData, error: projectTasksError } = await supabase
+        .from('tasks')
+        .select(`
+          id, name, description, status, priority, due_date, start_date, 
+          estimated_hours, actual_hours, created_at, updated_at, project_id,
+          projects(name, color),
+          task_assignees!inner(user_id)
+        `)
+        .eq('task_assignees.user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (projectTasksError) {
+        console.error('Error loading project tasks:', projectTasksError);
+      }
+
+      // Convert project tasks to personal task format
+      const convertedProjectTasks: PersonalTask[] = (projectTasksData || []).map(task => ({
+        id: `project_${task.id}`,
+        user_id: user?.id?.toString() || '60',
+        title: `[${task.projects?.name || 'Project'}] ${task.name}`,
+        description: task.description,
+        status: task.status === 'todo' ? 'pending' : 
+                task.status === 'in_progress' ? 'in_progress' :
+                task.status === 'done' ? 'completed' : 'pending',
+        priority: task.priority as PersonalTask['priority'],
+        category: 'Project Work',
+        tags: [`Project: ${task.projects?.name || 'Unknown'}`],
+        due_date: task.due_date,
+        estimated_duration: task.estimated_hours ? task.estimated_hours * 60 : undefined,
+        actual_duration: task.actual_hours ? task.actual_hours * 60 : undefined,
+        is_recurring: false,
+        created_at: task.created_at,
+        updated_at: task.updated_at,
+        completed_at: task.status === 'done' ? task.updated_at : undefined
+      }));
+
+      console.log('Personal tasks loaded:', tasksData?.length || 0);
+      console.log('Project tasks loaded:', projectTasksData?.length || 0);
       console.log('Time blocks loaded:', timeBlocksData?.length || 0, 'blocks');
       console.log('Current view:', currentView, 'Layout:', layoutType);
       
       setTasks(tasksData || []);
+      setProjectTasks(projectTasksData || []);
+      setAllTasks([...(tasksData || []), ...convertedProjectTasks]);
       setTimeBlocks(timeBlocksData || []);
     } catch (error) {
       console.error('Error loading personal data:', error);
@@ -578,7 +620,7 @@ export default function PersonalTaskManager() {
     }
   };
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = allTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
@@ -588,7 +630,9 @@ export default function PersonalTaskManager() {
   });
   
   // Debug logging for task visibility
-  console.log('Total tasks:', tasks.length);
+  console.log('Personal tasks:', tasks.length);
+  console.log('Project tasks:', projectTasks.length);
+  console.log('Total combined tasks:', allTasks.length);
   console.log('Filtered tasks:', filteredTasks.length);
   console.log('Current filters:', { statusFilter, priorityFilter, searchQuery });
 
@@ -1151,8 +1195,11 @@ export default function PersonalTaskManager() {
                 <div className="stats-label">Completed</div>
               </div>
               <div className="stats-card">
-                <div className="stats-number" style={{ color: '#64748B' }}>{tasks.length}</div>
+                <div className="stats-number" style={{ color: '#64748B' }}>{allTasks.length}</div>
                 <div className="stats-label">Total Tasks</div>
+                <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '4px' }}>
+                  {tasks.length} personal + {projectTasks.length} project
+                </div>
               </div>
             </div>
           </div>
@@ -2180,7 +2227,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       {/* Debug Panel */}
       <div style={{ marginBottom: '20px', padding: '16px', background: '#EFF6FF', borderRadius: '12px' }}>
         <p style={{ margin: 0, fontSize: '14px', color: '#3B82F6', fontWeight: '700' }}>
-          Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks
+          Debug: {tasks.length} personal + {projectTasks.length} project = {allTasks.length} total tasks, {filteredTasks.length} filtered
         </p>
         <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#64748B' }}>
           Week tasks: {weekDays.map((day, i) => {
@@ -2190,7 +2237,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
         </p>
         {filteredTasks.length > 0 && (
           <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#64748B' }}>
-            Sample tasks: {filteredTasks.slice(0, 3).map(t => `"${t.title}"`).join(', ')}
+            Sample: {filteredTasks.slice(0, 3).map(t => `"${t.title}"`).join(', ')}
           </p>
         )}
       </div>
