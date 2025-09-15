@@ -80,7 +80,7 @@ export default function PersonalTaskManager() {
   const [timeBlocks, setTimeBlocks] = useState<PersonalTimeBlock[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [currentView, setCurrentView] = useState<ViewType>('week');
-  const [layoutType, setLayoutType] = useState<LayoutType>('list');
+  const [layoutType, setLayoutType] = useState<LayoutType>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -106,17 +106,25 @@ export default function PersonalTaskManager() {
   const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
   
   // Form states
-  const [newTask, setNewTask] = useState({
-    title: '',
-    description: '',
-    status: 'pending' as PersonalTask['status'],
-    priority: 'medium' as PersonalTask['priority'],
-    category: '',
-    tags: [] as string[],
-    due_date: '',
-    estimated_duration: 0,
-    is_recurring: false
-  });
+  const getDefaultTaskForm = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    
+    return {
+      title: '',
+      description: '',
+      status: 'pending' as PersonalTask['status'],
+      priority: 'medium' as PersonalTask['priority'],
+      category: '',
+      tags: [] as string[],
+      due_date: tomorrow.toISOString().slice(0, 16),
+      estimated_duration: 60,
+      is_recurring: false
+    };
+  };
+  
+  const [newTask, setNewTask] = useState(getDefaultTaskForm());
   
   const [newTimeBlock, setNewTimeBlock] = useState({
     title: '',
@@ -427,17 +435,7 @@ export default function PersonalTaskManager() {
   };
 
   const resetTaskForm = () => {
-    setNewTask({
-      title: '',
-      description: '',
-      status: 'pending' as PersonalTask['status'],
-      priority: 'medium' as PersonalTask['priority'],
-      category: '',
-      tags: [],
-      due_date: '',
-      estimated_duration: 0,
-      is_recurring: false
-    });
+    setNewTask(getDefaultTaskForm());
     setSelectedTask(null);
     setIsEditingTask(false);
   };
@@ -732,32 +730,34 @@ export default function PersonalTaskManager() {
           
           .modal-content {
             background: white;
-            border-radius: 16px;
-            padding: 40px;
-            margin: 20px;
-            max-width: 600px;
-            width: calc(100% - 40px);
-            max-height: calc(100vh - 40px);
+            border-radius: 20px;
+            padding: 48px;
+            margin: 40px;
+            max-width: 650px;
+            width: calc(100% - 80px);
+            max-height: calc(100vh - 80px);
             overflow-y: auto;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 25px 25px -5px rgba(0, 0, 0, 0.1);
             transform: scale(1);
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
           }
           
           .modal-content:hover {
-            transform: scale(1.01);
+            transform: scale(1.005);
+            box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.3), 0 25px 25px -5px rgba(0, 0, 0, 0.15);
           }
           
           .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
           }
           
           .form-label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #374151;
-            font-size: 14px;
+            font-size: 15px;
           }
           
           .form-input {
@@ -972,7 +972,9 @@ export default function PersonalTaskManager() {
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => {
-                    resetTaskForm();
+                    setNewTask(getDefaultTaskForm());
+                    setIsEditingTask(false);
+                    setSelectedTask(null);
                     setShowTaskModal(true);
                   }}
                   className="btn btn-primary"
