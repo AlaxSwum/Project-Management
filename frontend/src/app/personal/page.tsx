@@ -2366,10 +2366,17 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
   );
 };
 
-// Day Calendar View
+// Day Calendar View - Previous Design with Enhanced Functionality
 const DayCalendarView: React.FC<DayCalendarProps> = ({ 
   currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile 
 }) => {
+  // Local drag state for this component
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartTime, setDragStartTime] = useState<Date | null>(null);
+  const [dragEndTime, setDragEndTime] = useState<Date | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
+  const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
+  
   const dayTasks = tasks.filter(task => {
     if (!task.due_date) return false;
     const taskDate = new Date(task.due_date);
@@ -2381,9 +2388,9 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     return blockDate.toDateString() === currentDate.toDateString();
   });
   
-  // Generate 15-minute slots for business hours
+  // Generate 15-minute slots
   const timeSlots: { hour: number; minute: number }[] = [];
-  for (let hour = 6; hour <= 22; hour++) {
+  for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
       timeSlots.push({ hour, minute });
     }
@@ -2406,11 +2413,54 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     onCreateTimeBlock(startTime, endTime);
   };
   
+  const handleMouseDown = (hour: number, minute: number) => {
+    const startTime = new Date(currentDate);
+    startTime.setHours(hour, minute, 0, 0);
+    setDragStartTime(startTime);
+    setIsDragging(true);
+  };
+  
+  const handleMouseMove = (hour: number, minute: number) => {
+    if (isDragging && dragStartTime) {
+      const currentTime = new Date(currentDate);
+      currentTime.setHours(hour, minute, 0, 0);
+      setDragEndTime(currentTime);
+      
+      const start = dragStartTime < currentTime ? dragStartTime : currentTime;
+      const end = dragStartTime < currentTime ? currentTime : dragStartTime;
+      end.setMinutes(end.getMinutes() + 15);
+      
+      setDragPreview({ start, end });
+    }
+  };
+  
+  const handleMouseUp = () => {
+    if (isDragging && dragStartTime && dragEndTime) {
+      const start = dragStartTime < dragEndTime ? dragStartTime : dragEndTime;
+      const end = dragStartTime < dragEndTime ? dragEndTime : dragStartTime;
+      end.setMinutes(end.getMinutes() + 15);
+      
+      onCreateTimeBlock(start, end);
+    }
+    
+    setIsDragging(false);
+    setDragStartTime(null);
+    setDragEndTime(null);
+    setDragPreview(null);
+  };
+  
+  const isTimeInDragRange = (hour: number, minute: number, dragRange: { start: Date; end: Date }) => {
+    const slotTime = new Date(currentDate);
+    slotTime.setHours(hour, minute, 0, 0);
+    
+    return slotTime >= dragRange.start && slotTime <= dragRange.end;
+  };
+  
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '24px' }}>
-      {/* Time Slots */}
-      <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: isMobile ? '16px' : '20px', fontWeight: '700' }}>
+      {/* Time Slots - Previous Design */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
           {currentDate.toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -2419,7 +2469,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
           })}
         </h3>
         
-        <div style={{ maxHeight: isMobile ? '400px' : '600px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '700px', overflowY: 'auto' }}>
           {timeSlots.map(({ hour, minute }) => {
             const blocks = getBlocksForSlot(hour, minute);
             const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
@@ -2431,14 +2481,14 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
             return (
               <div key={timeString} style={{ 
                 display: 'grid', 
-                gridTemplateColumns: isMobile ? '60px 1fr' : '100px 1fr', 
+                gridTemplateColumns: '80px 1fr', 
                 gap: '12px',
-                minHeight: isMobile ? '30px' : '40px',
+                minHeight: '40px',
                 borderBottom: minute === 0 ? '2px solid #E2E8F0' : '1px solid #F1F5F9',
                 padding: '8px 0'
               }}>
                 <div style={{ 
-                  fontSize: isMobile ? '10px' : '12px', 
+                  fontSize: '12px', 
                   color: '#64748B',
                   fontWeight: '500',
                   textAlign: 'right',
@@ -2449,23 +2499,95 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                 
                 <div 
                   style={{ 
-                    minHeight: isMobile ? '24px' : '32px',
-                    background: blocks.length > 0 ? 'transparent' : '#FAFBFC',
-                    borderRadius: '6px',
+                    minHeight: '32px',
+                    background: blocks.length > 0 ? 'transparent' : 
+                               (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '#3B82F6' : '#FAFBFC',
+                    borderRadius: '4px',
                     padding: '4px',
-                    cursor: blocks.length === 0 ? 'pointer' : 'default',
+                    cursor: blocks.length === 0 ? (isDragging ? 'grabbing' : 'grab') : 'default',
                     border: '1px dashed transparent',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                    userSelect: 'none'
                   }}
-                  onClick={() => blocks.length === 0 && handleSlotClick(hour, minute)}
+                  onClick={() => blocks.length === 0 && !isDragging && handleSlotClick(hour, minute)}
+                  onMouseDown={() => blocks.length === 0 && handleMouseDown(hour, minute)}
+                  onMouseMove={() => handleMouseMove(hour, minute)}
+                  onMouseUp={handleMouseUp}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (draggedTask && blocks.length === 0) {
+                      e.currentTarget.style.background = '#EFF6FF';
+                      e.currentTarget.style.border = '2px dashed #3B82F6';
+                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px; font-size: 12px;">DROP HERE<br/>${draggedTask.title}</div>`;
+                    }
+                  }}
+                  onDragLeave={(e) => {
+                    if (draggedTask) {
+                      e.currentTarget.style.background = '#FAFBFC';
+                      e.currentTarget.style.border = '2px dashed transparent';
+                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Drop zone</div>';
+                    }
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('DROP EVENT FIRED!', { draggedTask, hour, minute, blocks: blocks.length });
+                    
+                    if (draggedTask && blocks.length === 0) {
+                      console.log('Valid drop - processing...');
+                      // Create time block directly here
+                      const startTime = new Date(currentDate);
+                      startTime.setHours(hour, minute, 0, 0);
+                      const endTime = new Date(startTime);
+                      endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
+                      
+                      const timeBlockData = {
+                        title: draggedTask.title,
+                        description: draggedTask.description || '',
+                        start_time: startTime.toISOString(),
+                        end_time: endTime.toISOString(),
+                        block_type: 'task',
+                        color: getPriorityColor(draggedTask.priority),
+                        notes: `Scheduled from task: ${draggedTask.title}`,
+                        user_id: user?.id || 60,
+                        is_completed: false
+                      };
+
+                      try {
+                        const { data, error } = await supabase
+                          .from('personal_time_blocks')
+                          .insert([timeBlockData])
+                          .select()
+                          .single();
+
+                        if (error) {
+                          console.error('Supabase error:', error);
+                          alert('Error creating time block: ' + error.message);
+                        } else {
+                          console.log('Time block created successfully!', data);
+                          alert(`Time block created for "${draggedTask.title}" at ${startTime.toLocaleTimeString()}`);
+                          window.location.reload();
+                        }
+                      } catch (error) {
+                        console.error('Error:', error);
+                      }
+                    }
+                    
+                    // Reset visual state
+                    e.currentTarget.style.background = '#FAFBFC';
+                    e.currentTarget.style.border = '1px dashed transparent';
+                    e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
+                  }}
                   onMouseEnter={(e) => {
-                    if (blocks.length === 0) {
+                    if (blocks.length === 0 && !isDragging) {
                       e.currentTarget.style.border = '1px dashed #3B82F6';
                       e.currentTarget.style.background = '#EFF6FF';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (blocks.length === 0) {
+                    if (blocks.length === 0 && !isDragging) {
                       e.currentTarget.style.border = '1px dashed transparent';
                       e.currentTarget.style.background = '#FAFBFC';
                     }
@@ -2473,12 +2595,16 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                 >
                   {blocks.length === 0 ? (
                     <div style={{ 
-                      color: '#9CA3AF', 
-                      fontSize: isMobile ? '9px' : '11px',
+                      color: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 'white' : '#9CA3AF', 
+                      fontSize: '11px',
                       textAlign: 'center',
-                      paddingTop: '4px'
+                      paddingTop: '6px',
+                      fontWeight: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '600' : '400'
                     }}>
-                      Click to add block
+                      {(dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 
+                        'Creating block...' : 
+                        'Click to select time'
+                      }
                     </div>
                   ) : (
                     blocks.map(block => (
@@ -2487,16 +2613,16 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                         style={{
                           background: block.color,
                           color: 'white',
-                          padding: isMobile ? '6px 8px' : '8px 12px',
+                          padding: '8px 12px',
                           borderRadius: '6px',
                           cursor: 'pointer',
                           marginBottom: '4px',
                           fontWeight: '500',
-                          fontSize: isMobile ? '10px' : '13px'
+                          fontSize: '13px'
                         }}
                       >
                         <div>{block.title}</div>
-                        <div style={{ fontSize: isMobile ? '8px' : '11px', opacity: 0.9 }}>
+                        <div style={{ fontSize: '11px', opacity: 0.9 }}>
                           {new Date(block.start_time).toLocaleTimeString('en-US', { 
                             hour: 'numeric', 
                             minute: '2-digit',
@@ -2517,70 +2643,165 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
         </div>
       </div>
       
-      {/* Day Tasks Sidebar */}
-      {!isMobile && (
-        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '700' }}>
-            Tasks for Today
-          </h3>
-          
-          {dayTasks.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#64748B', padding: '40px 20px' }}>
-              <CalendarIcon style={{ width: '32px', height: '32px', margin: '0 auto 12px', opacity: 0.5 }} />
-              <p style={{ margin: 0, fontSize: '14px' }}>No tasks for today</p>
-            </div>
-          ) : (
-            dayTasks.map(task => (
-              <div 
-                key={task.id} 
-                className="task-card" 
-                style={{ 
-                  borderLeftColor: getPriorityColor(task.priority),
-                  marginBottom: '12px',
-                  cursor: 'pointer',
-                  padding: '16px'
-                }}
-                onClick={() => onTaskClick(task)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h5 style={{ 
-                    margin: 0, 
-                    fontSize: '14px', 
-                    fontWeight: '600',
-                    textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                  }}>
-                    {task.title}
-                  </h5>
-                  <span 
-                    className="priority-badge"
-                    style={{ 
-                      background: getPriorityColor(task.priority) + '20',
-                      color: getPriorityColor(task.priority),
-                      fontSize: '10px',
-                      padding: '2px 6px'
-                    }}
-                  >
-                    {task.priority}
-                  </span>
-                </div>
+      {/* Day Tasks Sidebar - Previous Design */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+          Tasks for Today
+        </h3>
+        <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748B', fontStyle: 'italic' }}>
+          Double-click any task to schedule it automatically
+        </p>
+        
+        {dayTasks.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#64748B', padding: '20px' }}>
+            <CalendarIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
+            <p style={{ margin: 0, fontSize: '14px' }}>No tasks for today</p>
+          </div>
+        ) : (
+          dayTasks.map(task => (
+            <div 
+              key={task.id} 
+              className="task-card" 
+              style={{ 
+                borderLeftColor: getPriorityColor(task.priority),
+                marginBottom: '12px',
+                cursor: 'grab',
+                padding: '16px'
+              }}
+              draggable
+              onDragStart={(e) => {
+                setDraggedTask(task);
+                e.currentTarget.style.opacity = '0.6';
+                e.currentTarget.style.transform = 'rotate(3deg) scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+                e.currentTarget.style.zIndex = '1000';
+                console.log('Started dragging task:', task.title);
                 
-                {task.description && (
-                  <p style={{ 
-                    margin: '4px 0 0 0', 
-                    color: '#64748B', 
-                    fontSize: '12px'
-                  }}>
-                    {task.description.length > 60 
-                      ? task.description.substring(0, 60) + '...'
-                      : task.description
-                    }
-                  </p>
+                // Set drag data
+                e.dataTransfer.setData('text/plain', task.id);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragEnd={(e) => {
+                setDraggedTask(null);
+                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.transform = 'rotate(0deg) scale(1)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                e.currentTarget.style.zIndex = 'auto';
+                console.log('Finished dragging task');
+              }}
+              onDoubleClick={async () => {
+                console.log('Double-clicked task:', task.title);
+                
+                // Simple scheduling: place at next available 9 AM slot
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(9, 0, 0, 0);
+                
+                const endTime = new Date(tomorrow);
+                endTime.setMinutes(endTime.getMinutes() + (task.estimated_duration || 60));
+                
+                const timeBlockData = {
+                  title: task.title,
+                  description: task.description || '',
+                  start_time: tomorrow.toISOString(),
+                  end_time: endTime.toISOString(),
+                  block_type: 'task',
+                  color: getPriorityColor(task.priority),
+                  notes: `Scheduled from task: ${task.title}`,
+                  user_id: user?.id || 60,
+                  is_completed: false
+                };
+
+                try {
+                  const { data, error } = await supabase
+                    .from('personal_time_blocks')
+                    .insert([timeBlockData])
+                    .select()
+                    .single();
+
+                  if (error) {
+                    console.error('Error creating time block:', error);
+                    alert('Error: ' + error.message);
+                  } else {
+                    console.log('Time block created successfully!', data);
+                    alert(`Task "${task.title}" scheduled for ${tomorrow.toLocaleString()}`);
+                    window.location.reload();
+                  }
+                } catch (error) {
+                  console.error('Error:', error);
+                  alert('Error creating time block');
+                }
+              }}
+              onClick={() => onTaskClick(task)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h5 style={{ 
+                  margin: 0, 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                }}>
+                  {task.title}
+                </h5>
+                
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed');
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: task.status === 'completed' ? '#10B981' : '#6B7280' }}
+                  >
+                    {task.status === 'completed' ? (
+                      <CheckCircleIconSolid style={{ width: '16px', height: '16px' }} />
+                    ) : (
+                      <CheckCircleIcon style={{ width: '16px', height: '16px' }} />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditTask(task);
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6' }}
+                  >
+                    <PencilIcon style={{ width: '14px', height: '14px' }} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteTask(task.id);
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}
+                  >
+                    <TrashIcon style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px' }}>
+                <span 
+                  className="priority-badge"
+                  style={{ 
+                    background: getPriorityColor(task.priority) + '20',
+                    color: getPriorityColor(task.priority),
+                    fontSize: '10px',
+                    padding: '2px 6px'
+                  }}
+                >
+                  {task.priority}
+                </span>
+                
+                {task.due_date && (
+                  <span style={{ fontSize: '10px', color: '#64748B' }}>
+                    {new Date(task.due_date).toLocaleDateString()}
+                  </span>
                 )}
               </div>
-            ))
-          )}
-        </div>
-      )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
