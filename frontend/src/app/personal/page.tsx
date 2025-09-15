@@ -2197,6 +2197,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
   const [dragStartTime, setDragStartTime] = useState<Date | null>(null);
   const [dragEndTime, setDragEndTime] = useState<Date | null>(null);
   const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
+  const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
   const dayTasks = tasks.filter(task => {
     if (!task.due_date) return false;
     const taskDate = new Date(task.due_date);
@@ -2336,6 +2337,34 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                   onMouseDown={() => blocks.length === 0 && handleMouseDown(hour, minute)}
                   onMouseMove={() => handleMouseMove(hour, minute)}
                   onMouseUp={handleMouseUp}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (draggedTask) {
+                      e.currentTarget.style.background = '#EFF6FF';
+                      e.currentTarget.style.border = '2px dashed #3B82F6';
+                    }
+                  }}
+                  onDragLeave={(e) => {
+                    if (draggedTask) {
+                      e.currentTarget.style.background = '#FAFBFC';
+                      e.currentTarget.style.border = '1px dashed transparent';
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedTask) {
+                      const startTime = new Date(currentDate);
+                      startTime.setHours(hour, minute, 0, 0);
+                      const endTime = new Date(startTime);
+                      endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
+                      
+                      // Create time block from dragged task
+                      onCreateTimeBlock(startTime, endTime);
+                      
+                      e.currentTarget.style.background = '#FAFBFC';
+                      e.currentTarget.style.border = '1px dashed transparent';
+                    }
+                  }}
                   onMouseEnter={(e) => {
                     if (blocks.length === 0 && !isDragging) {
                       e.currentTarget.style.border = '1px dashed #3B82F6';
@@ -2359,7 +2388,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                     }}>
                       {(dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 
                         'Creating block...' : 
-                        'Drag to select time'
+                        'Click to select time'
                       }
                     </div>
                   ) : (
@@ -2419,7 +2448,16 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
               style={{ 
                 borderLeftColor: getPriorityColor(task.priority),
                 marginBottom: '12px',
-                cursor: 'pointer'
+                cursor: 'grab'
+              }}
+              draggable
+              onDragStart={(e) => {
+                setDraggedTask(task);
+                e.currentTarget.style.opacity = '0.5';
+              }}
+              onDragEnd={(e) => {
+                setDraggedTask(null);
+                e.currentTarget.style.opacity = '1';
               }}
               onClick={() => onTaskClick(task)}
             >
