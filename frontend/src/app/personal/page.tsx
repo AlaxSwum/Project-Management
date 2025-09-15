@@ -2342,17 +2342,20 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                     if (draggedTask) {
                       e.currentTarget.style.background = '#EFF6FF';
                       e.currentTarget.style.border = '2px dashed #3B82F6';
+                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px;">Drop "${draggedTask.title}" here</div>`;
                     }
                   }}
                   onDragLeave={(e) => {
                     if (draggedTask) {
                       e.currentTarget.style.background = '#FAFBFC';
                       e.currentTarget.style.border = '1px dashed transparent';
+                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; fontSize: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
                     }
                   }}
                   onDrop={(e) => {
                     e.preventDefault();
                     if (draggedTask) {
+                      console.log('Dropping task:', draggedTask.title, 'at', hour, minute);
                       const startTime = new Date(currentDate);
                       startTime.setHours(hour, minute, 0, 0);
                       const endTime = new Date(startTime);
@@ -2363,6 +2366,7 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                       
                       e.currentTarget.style.background = '#FAFBFC';
                       e.currentTarget.style.border = '1px dashed transparent';
+                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; fontSize: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
                     }
                   }}
                   onMouseEnter={(e) => {
@@ -2454,10 +2458,14 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
               onDragStart={(e) => {
                 setDraggedTask(task);
                 e.currentTarget.style.opacity = '0.5';
+                e.currentTarget.style.transform = 'rotate(2deg)';
+                console.log('Started dragging task:', task.title);
               }}
               onDragEnd={(e) => {
                 setDraggedTask(null);
                 e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.transform = 'rotate(0deg)';
+                console.log('Finished dragging task');
               }}
               onClick={() => onTaskClick(task)}
             >
