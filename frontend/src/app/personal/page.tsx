@@ -2557,11 +2557,40 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                     
                     if (draggedTask && blocks.length === 0) {
                       console.log('✅ Valid drop - processing...');
-                      const success = await handleCreateTimeBlockFromDrag(draggedTask, hour, minute);
-                      if (success) {
-                        console.log('✅ Time block created successfully!');
+                      // Create time block directly here
+                      const startTime = new Date(currentDate);
+                      startTime.setHours(hour, minute, 0, 0);
+                      const endTime = new Date(startTime);
+                      endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
+                      
+                      const timeBlockData = {
+                        title: draggedTask.title,
+                        description: draggedTask.description || '',
+                        start_time: startTime.toISOString(),
+                        end_time: endTime.toISOString(),
+                        block_type: 'task',
+                        color: getPriorityColor(draggedTask.priority),
+                        notes: `Scheduled from task: ${draggedTask.title}`,
+                        user_id: 24,
+                        is_completed: false
+                      };
+
+                      console.log('Inserting time block data:', timeBlockData);
+
+                      const { data, error } = await supabase
+                        .from('personal_time_blocks')
+                        .insert([timeBlockData])
+                        .select()
+                        .single();
+
+                      if (error) {
+                        console.error('❌ Supabase error:', error);
+                        alert('Error creating time block: ' + error.message);
                       } else {
-                        console.log('❌ Failed to create time block');
+                        console.log('✅ Time block created successfully!', data);
+                        alert(`✅ Time block created for "${draggedTask.title}" at ${startTime.toLocaleTimeString()}`);
+                        // Reload the page to show the new time block
+                        window.location.reload();
                       }
                     } else {
                       console.log('❌ Drop ignored:', { 
