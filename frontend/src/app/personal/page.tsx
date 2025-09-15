@@ -2323,25 +2323,17 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
               {dayTasks.map(task => (
                 <div
                   key={task.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (clickedTaskId === task.id) {
-                      setClickedTaskId(null); // Hide details if already shown
-                    } else {
-                      setClickedTaskId(task.id); // Show details
-                    }
-                  }}
                   style={{
                     background: '#F8FAFC',
                     color: '#374151',
                     padding: isMobile ? '6px 8px' : '8px 10px',
                     borderRadius: '6px',
                     fontSize: isMobile ? '10px' : '12px',
-                    cursor: 'pointer',
                     fontWeight: '500',
                     textDecoration: task.status === 'completed' ? 'line-through' : 'none',
                     border: '1px solid #E5E7EB',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    position: 'relative'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#F1F5F9';
@@ -2352,16 +2344,88 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                     e.currentTarget.style.borderColor = '#E5E7EB';
                   }}
                 >
-                  <div style={{ fontWeight: '600', marginBottom: clickedTaskId === task.id ? '4px' : '0' }}>
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (clickedTaskId === task.id) {
+                        setClickedTaskId(null); // Hide details if already shown
+                      } else {
+                        setClickedTaskId(task.id); // Show details
+                      }
+                    }}
+                    style={{ 
+                      fontWeight: '600', 
+                      marginBottom: clickedTaskId === task.id ? '4px' : '0',
+                      cursor: 'pointer',
+                      paddingRight: '20px' // Space for delete button
+                    }}
+                  >
                     {task.title}
                   </div>
+                  
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Delete task "${task.title}"?`)) {
+                        // Call the delete function from parent component
+                        if (task.id.startsWith('project_')) {
+                          // Handle project tasks differently if needed
+                          alert('Project tasks cannot be deleted from here');
+                        } else {
+                          // Delete personal task
+                          const handleDelete = async () => {
+                            try {
+                              const { error } = await supabase
+                                .from('personal_tasks')
+                                .delete()
+                                .eq('id', task.id);
+                              
+                              if (error) throw error;
+                              
+                              // Refresh the page or update state
+                              window.location.reload();
+                            } catch (error) {
+                              console.error('Error deleting task:', error);
+                              alert('Failed to delete task');
+                            }
+                          };
+                          handleDelete();
+                        }
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#DC2626',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      padding: '2px',
+                      borderRadius: '2px',
+                      opacity: 0.7
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.background = '#FEE2E2';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    ×
+                  </button>
+                  
                   {clickedTaskId === task.id && task.due_date && (
                     <div style={{ 
                       fontSize: isMobile ? '9px' : '10px', 
                       color: '#6B7280',
                       fontWeight: '400'
                     }}>
-                      🕒 {new Date(task.due_date).toLocaleString('en-US', { 
+                      {new Date(task.due_date).toLocaleString('en-US', { 
                         month: 'short',
                         day: 'numeric',
                         hour: 'numeric',
@@ -2388,7 +2452,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                     border: '1px solid #FCD34D'
                   }}
                 >
-                  📅 {block.title}
+                  {block.title}
                 </div>
               ))}
             </div>
