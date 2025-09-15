@@ -227,14 +227,14 @@ export default function PersonalTaskManager() {
       const convertedProjectTasks: PersonalTask[] = (projectTasksData || []).map(task => ({
         id: `project_${task.id}`,
         user_id: user?.id?.toString() || '60',
-        title: `[${task.projects?.name || 'Project'}] ${task.name}`,
+        title: `[${(task.projects as any)?.name || 'Project'}] ${task.name}`,
         description: task.description,
         status: task.status === 'todo' ? 'pending' : 
                 task.status === 'in_progress' ? 'in_progress' :
                 task.status === 'done' ? 'completed' : 'pending',
         priority: task.priority as PersonalTask['priority'],
         category: 'Project Work',
-        tags: [`Project: ${task.projects?.name || 'Unknown'}`],
+        tags: [`Project: ${(task.projects as any)?.name || 'Unknown'}`],
         due_date: task.due_date,
         estimated_duration: task.estimated_hours ? task.estimated_hours * 60 : undefined,
         actual_duration: task.actual_hours ? task.actual_hours * 60 : undefined,
