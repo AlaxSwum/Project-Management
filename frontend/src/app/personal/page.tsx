@@ -99,11 +99,6 @@ export default function PersonalTaskManager() {
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isEditingTimeBlock, setIsEditingTimeBlock] = useState(false);
   
-  // Drag-to-create state
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStartTime, setDragStartTime] = useState<Date | null>(null);
-  const [dragEndTime, setDragEndTime] = useState<Date | null>(null);
-  const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
   
   // Form states
   const getDefaultTaskForm = () => {
@@ -1465,12 +1460,6 @@ export default function PersonalTaskManager() {
                     });
                     setShowTimeBlockModal(true);
                   }}
-                  isDragging={isDragging}
-                  dragPreview={dragPreview}
-                  setIsDragging={setIsDragging}
-                  setDragStartTime={setDragStartTime}
-                  setDragEndTime={setDragEndTime}
-                  setDragPreview={setDragPreview}
                   getPriorityColor={getPriorityColor}
                 />
               )}
@@ -1572,8 +1561,8 @@ export default function PersonalTaskManager() {
                   type="number"
                   className="form-input"
                   value={newTask.estimated_duration}
-                  onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) || 0 })}
-                  placeholder="0"
+                  onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) || 60 })}
+                  placeholder="60"
                   min="0"
                 />
               </div>
@@ -1752,12 +1741,6 @@ interface CalendarViewProps {
 
 interface DayCalendarViewProps extends CalendarViewProps {
   onCreateTimeBlock: (startTime: Date, endTime: Date) => void;
-  isDragging: boolean;
-  dragPreview: { start: Date; end: Date } | null;
-  setIsDragging: (dragging: boolean) => void;
-  setDragStartTime: (time: Date | null) => void;
-  setDragEndTime: (time: Date | null) => void;
-  setDragPreview: (preview: { start: Date; end: Date } | null) => void;
 }
 
 // Month Calendar View
@@ -2070,9 +2053,13 @@ const WeekCalendarView: React.FC<CalendarViewProps> = ({
 
 // Day Calendar View with 15-minute time blocking
 const DayCalendarView: React.FC<DayCalendarViewProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, 
-  isDragging, dragPreview, setIsDragging, setDragStartTime, setDragEndTime, setDragPreview, getPriorityColor 
+  currentDate, tasks, timeBlocks, onTaskClick, onTimeBlockClick, onCreateTimeBlock, getPriorityColor 
 }) => {
+  // Local drag state for this component
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartTime, setDragStartTime] = useState<Date | null>(null);
+  const [dragEndTime, setDragEndTime] = useState<Date | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
   const dayTasks = tasks.filter(task => {
     if (!task.due_date) return false;
     const taskDate = new Date(task.due_date);
