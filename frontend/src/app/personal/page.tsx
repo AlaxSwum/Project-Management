@@ -94,7 +94,6 @@ export default function PersonalTaskManager() {
   // Filters
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   
   // Modal states
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -630,12 +629,10 @@ export default function PersonalTaskManager() {
   };
 
   const filteredTasks = allTasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesStatus && matchesPriority;
   });
   
   // Debug logging for task visibility
@@ -643,7 +640,7 @@ export default function PersonalTaskManager() {
   console.log('Project tasks:', projectTasks.length);
   console.log('Total combined tasks:', allTasks.length);
   console.log('Filtered tasks:', filteredTasks.length);
-  console.log('Current filters:', { statusFilter, priorityFilter, searchQuery });
+  console.log('Current filters:', { statusFilter, priorityFilter });
 
   const tasksByStatus = {
     pending: filteredTasks.filter(task => task.status === 'pending'),
@@ -679,7 +676,7 @@ export default function PersonalTaskManager() {
         {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
         <div style={{ 
           marginLeft: isMobile ? '0' : '256px',
-          padding: '2rem', 
+          padding: isMobile ? '1rem' : '2rem', 
           background: '#F8FAFC', 
           flex: 1,
           display: 'flex',
@@ -888,21 +885,6 @@ export default function PersonalTaskManager() {
             font-size: 12px;
           }
           
-          .search-input {
-            width: 100%;
-            padding: 14px 20px 14px 48px;
-            border: 2px solid #E2E8F0;
-            border-radius: 16px;
-            font-size: 14px;
-            background: white;
-            transition: all 0.2s ease;
-          }
-          
-          .search-input:focus {
-            outline: none;
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-          }
           
           .filter-select {
             padding: 14px 20px;
@@ -1081,6 +1063,29 @@ export default function PersonalTaskManager() {
               padding: 40px !important;
               max-width: calc(100vw - 40px) !important;
             }
+            
+            .filter-select {
+              width: 100% !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .btn-small {
+              width: 100% !important;
+              padding: 12px 16px !important;
+              font-size: 14px !important;
+              text-align: center !important;
+            }
+            
+            .mobile-task-item {
+              touch-action: manipulation;
+              -webkit-tap-highlight-color: transparent;
+            }
+            
+            .mobile-delete-btn {
+              min-width: 32px !important;
+              min-height: 32px !important;
+              padding: 8px !important;
+            }
           }
           
           @media (max-width: 480px) {
@@ -1091,6 +1096,24 @@ export default function PersonalTaskManager() {
             .modal-content-mobile {
               margin: 10px !important;
               padding: 30px !important;
+            }
+            
+            .week-calendar-grid {
+              gap: 4px !important;
+            }
+            
+            .week-day-cell {
+              min-height: 120px !important;
+              padding: 6px !important;
+            }
+            
+            .mobile-task-text {
+              font-size: 11px !important;
+              line-height: 1.3 !important;
+            }
+            
+            .mobile-timeblock-text {
+              font-size: 10px !important;
             }
           }
         `
@@ -1215,22 +1238,8 @@ export default function PersonalTaskManager() {
 
           {/* Controls */}
           <div className="controls-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-            {/* Search and Filters */}
+            {/* Filters */}
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', maxWidth: isMobile ? '100%' : '300px', flex: 1 }}>
-                <input
-                  type="text"
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                />
-                <div style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }}>
-                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
               
               {!isMobile && (
                 <>
@@ -1599,12 +1608,12 @@ export default function PersonalTaskManager() {
                   <ListBulletIcon className="empty-state-icon" />
                   <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 12px 0' }}>No tasks found</h3>
                   <p style={{ margin: '0 0 24px 0' }}>
-                    {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' 
-                      ? 'Try adjusting your filters or search terms'
+                    {statusFilter !== 'all' || priorityFilter !== 'all' 
+                      ? 'Try adjusting your filters'
                       : 'Create your first task to get started'
                     }
                   </p>
-                  {!searchQuery && statusFilter === 'all' && priorityFilter === 'all' && (
+                  {statusFilter === 'all' && priorityFilter === 'all' && (
                     <button
                       onClick={() => {
                         setNewTask(getDefaultTaskForm());
@@ -2280,14 +2289,16 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       </div>
       
       {/* Week Calendar Grid - Like Month View */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(7, 1fr)', 
-        gap: '2px',
-        background: '#E2E8F0',
-        borderRadius: '12px',
-        padding: '2px'
-      }}>
+      <div 
+        className="week-calendar-grid"
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(7, 1fr)', 
+          gap: isMobile ? '1px' : '2px',
+          background: '#E2E8F0',
+          borderRadius: '12px',
+          padding: '2px'
+        }}>
         {weekDays.map((day, index) => {
           const dayTasks = getDayTasks(day);
           const dayTimeBlocks = getDayTimeBlocks(day);
@@ -2296,17 +2307,18 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
           return (
             <div
               key={index}
+              className={`week-day-cell ${isMobile ? 'mobile-task-item' : ''}`}
               style={{
                 background: 'white',
                 minHeight: 'auto',
-                padding: isMobile ? '8px' : '12px',
-                border: isToday ? '3px solid #3B82F6' : 'none',
+                padding: isMobile ? '6px' : '12px',
+                border: isToday ? (isMobile ? '2px solid #3B82F6' : '3px solid #3B82F6') : 'none',
                 position: 'relative',
                 cursor: 'pointer',
                 borderRadius: '8px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px'
+                gap: isMobile ? '2px' : '4px'
               }}
             >
               <div style={{ 
@@ -2323,17 +2335,19 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
               {dayTasks.map(task => (
                 <div
                   key={task.id}
+                  className={`${isMobile ? 'mobile-task-item' : ''}`}
                   style={{
                     background: '#F8FAFC',
                     color: '#374151',
-                    padding: isMobile ? '6px 8px' : '8px 10px',
+                    padding: isMobile ? '8px 10px' : '8px 10px',
                     borderRadius: '6px',
-                    fontSize: isMobile ? '10px' : '12px',
+                    fontSize: isMobile ? '11px' : '12px',
                     fontWeight: '500',
                     textDecoration: task.status === 'completed' ? 'line-through' : 'none',
                     border: '1px solid #E5E7EB',
                     transition: 'all 0.2s ease',
-                    position: 'relative'
+                    position: 'relative',
+                    minHeight: isMobile ? '36px' : 'auto'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#F1F5F9';
@@ -2365,6 +2379,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                   
                   {/* Delete button */}
                   <button
+                    className={`${isMobile ? 'mobile-delete-btn' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (confirm(`Delete task "${task.title}"?`)) {
@@ -2396,16 +2411,18 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                     }}
                     style={{
                       position: 'absolute',
-                      top: '4px',
-                      right: '4px',
+                      top: isMobile ? '2px' : '4px',
+                      right: isMobile ? '2px' : '4px',
                       background: 'transparent',
                       border: 'none',
                       color: '#DC2626',
                       cursor: 'pointer',
-                      fontSize: '12px',
-                      padding: '2px',
+                      fontSize: isMobile ? '14px' : '12px',
+                      padding: isMobile ? '4px' : '2px',
                       borderRadius: '2px',
-                      opacity: 0.7
+                      opacity: 0.7,
+                      minWidth: isMobile ? '24px' : 'auto',
+                      minHeight: isMobile ? '24px' : 'auto'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.opacity = '1';
