@@ -2240,26 +2240,48 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
       <div style={{ maxHeight: isMobile ? '400px' : '700px', overflowY: 'auto' }}>
         <div style={{ marginBottom: '16px', padding: '12px', background: '#EFF6FF', borderRadius: '8px' }}>
           <p style={{ margin: 0, fontSize: '12px', color: '#3B82F6', fontWeight: '600' }}>
-            Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks, Week: {weekDays.map(day => 
-              filteredTasks.filter(task => {
+            Debug: {tasks.length} total tasks, {filteredTasks.length} filtered tasks
+          </p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#64748B' }}>
+            Week tasks: {weekDays.map((day, i) => {
+              const dayTasks = filteredTasks.filter(task => {
                 if (!task.due_date) return false;
                 const taskDate = new Date(task.due_date);
                 return taskDate.toDateString() === day.toDateString();
-              }).length
-            ).join('-')} tasks per day
+              });
+              return `${day.toLocaleDateString('en-US', { weekday: 'short' })}: ${dayTasks.length}`;
+            }).join(' | ')}
           </p>
+          {filteredTasks.length > 0 && (
+            <p style={{ margin: '4px 0 0 0', fontSize: '10px', color: '#64748B' }}>
+              Sample tasks: {filteredTasks.slice(0, 3).map(t => t.title).join(', ')}
+            </p>
+          )}
         </div>
         {hours.map(hour => {
-          // Get tasks for this hour across all days - simplified logic
+          // Get tasks for this hour across all days - FIXED LOGIC
           const hourTasks = weekDays.map(day => {
-            return filteredTasks.filter(task => {
+            const dayTasks = filteredTasks.filter(task => {
               if (!task.due_date) return false;
               const taskDate = new Date(task.due_date);
               const isSameDay = taskDate.toDateString() === day.toDateString();
-              // Show tasks at 9 AM if no specific hour is set, or at their scheduled hour
-              const taskHour = taskDate.getHours();
-              return isSameDay && (taskHour === hour || (hour === 9 && taskHour === 0));
+              
+              // FIXED: Show all tasks for the day at their scheduled hour OR at 9 AM as default
+              if (isSameDay) {
+                const taskHour = taskDate.getHours();
+                // If task has specific hour, show at that hour
+                if (taskHour > 0) {
+                  return taskHour === hour;
+                } else {
+                  // If no specific hour (or midnight), show at 9 AM
+                  return hour === 9;
+                }
+              }
+              return false;
             });
+            
+            console.log(`Hour ${hour}, Day ${day.toDateString()}: ${dayTasks.length} tasks`);
+            return dayTasks;
           });
           
           return (
@@ -2313,7 +2335,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                   )}
                   
                   {/* Show tasks for this day and hour */}
-                  {hourTasks[dayIndex] && hourTasks[dayIndex].map(task => (
+                  {!isSelected && hourTasks[dayIndex] && hourTasks[dayIndex].map(task => (
                     <div
                       key={task.id}
                       onClick={(e) => {
