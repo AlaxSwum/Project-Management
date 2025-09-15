@@ -2001,7 +2001,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
                     fontWeight: '500'
                   }}
                 >
-                  🕒 {new Date(block.start_time).toLocaleTimeString('en-US', { 
+                  {new Date(block.start_time).toLocaleTimeString('en-US', { 
                     hour: 'numeric',
                     hour12: true 
                   })}
@@ -2358,8 +2358,8 @@ const DayCalendarView: React.FC<DayCalendarViewProps> = ({
                       fontWeight: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '600' : '400'
                     }}>
                       {(dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 
-                        '📅 Creating block...' : 
-                        '✋ Drag to select time'
+                        'Creating block...' : 
+                        'Drag to select time'
                       }
                     </div>
                   ) : (
