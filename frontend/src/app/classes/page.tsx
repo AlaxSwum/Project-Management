@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
+import MobileHeader from '@/components/MobileHeader'
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ClockIcon, MapPinIcon, UsersIcon, CurrencyDollarIcon, PhoneIcon, LinkIcon } from '@heroicons/react/24/outline'
 
 // Reusable form styles
@@ -147,6 +148,7 @@ export default function ClassesPage() {
   const [hasAccess, setHasAccess] = useState(false)
   const [userRole, setUserRole] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const [classItems, setClassItems] = useState<ClassItem[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [members, setMembers] = useState<ClassesMember[]>([])
@@ -436,6 +438,17 @@ export default function ClassesPage() {
     
     setStudentFormData(prev => ({ ...prev, ...updates }))
   }
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (authLoading) return
@@ -962,27 +975,177 @@ export default function ClassesPage() {
 
   return (
     <>
+      {isMobile && <MobileHeader title="Classes" isMobile={isMobile} />}
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          
+          /* Mobile Responsive Styles */
+          @media (max-width: 768px) {
+            * {
+              box-sizing: border-box;
+            }
+            
+            body, html {
+              width: 100%;
+              max-width: 100vw;
+              overflow-x: hidden;
+            }
+            
+            .classes-container {
+              display: block !important;
+              width: 100vw !important;
+              max-width: 100vw !important;
+              overflow-x: hidden;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .classes-main-content {
+              margin-left: 0 !important;
+              width: 100vw !important;
+              max-width: 100vw !important;
+              padding: 1rem !important;
+              padding-top: 80px !important;
+              overflow-x: hidden;
+              box-sizing: border-box;
+            }
+            
+            .classes-header {
+              flex-direction: column !important;
+              gap: 1rem !important;
+              align-items: stretch !important;
+              margin-bottom: 2rem !important;
+              padding-bottom: 1rem !important;
+            }
+            
+            .classes-title {
+              font-size: 1.75rem !important;
+              text-align: center !important;
+            }
+            
+            .classes-subtitle {
+              font-size: 0.9rem !important;
+              text-align: center !important;
+            }
+            
+            .classes-actions {
+              flex-direction: column !important;
+              gap: 0.75rem !important;
+              width: 100% !important;
+            }
+            
+            .classes-actions button {
+              width: 100% !important;
+              justify-content: center !important;
+              padding: 0.875rem !important;
+              font-size: 0.9rem !important;
+            }
+            
+            .classes-grid {
+              grid-template-columns: 1fr !important;
+              gap: 1rem !important;
+            }
+            
+            .class-card {
+              padding: 1rem !important;
+              margin-bottom: 1rem !important;
+            }
+            
+            .class-card-header {
+              flex-direction: column !important;
+              gap: 0.75rem !important;
+              align-items: flex-start !important;
+            }
+            
+            .class-card-actions {
+              width: 100% !important;
+              justify-content: space-between !important;
+            }
+            
+            .students-table {
+              overflow-x: auto !important;
+              -webkit-overflow-scrolling: touch !important;
+            }
+            
+            .students-table-header,
+            .students-table-row {
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 0.5rem !important;
+              padding: 1rem !important;
+              border-bottom: 1px solid #e5e7eb !important;
+            }
+            
+            .student-field {
+              display: flex !important;
+              justify-content: space-between !important;
+              align-items: center !important;
+              padding: 0.5rem 0 !important;
+              border-bottom: 1px solid #f1f5f9 !important;
+            }
+            
+            .student-field:last-child {
+              border-bottom: none !important;
+            }
+            
+            .student-field-label {
+              font-weight: 600 !important;
+              color: #374151 !important;
+              font-size: 0.8rem !important;
+              min-width: 80px !important;
+            }
+            
+            .student-field-value {
+              font-size: 0.85rem !important;
+              color: #6b7280 !important;
+              text-align: right !important;
+              flex: 1 !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .classes-main-content {
+              padding: 0.75rem !important;
+            }
+            
+            .classes-title {
+              font-size: 1.5rem !important;
+            }
+            
+            .classes-subtitle {
+              font-size: 0.8rem !important;
+            }
+            
+            .class-card {
+              padding: 0.75rem !important;
+            }
+            
+            .classes-actions button {
+              padding: 0.75rem !important;
+              font-size: 0.8rem !important;
+            }
+          }
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+      <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
-        <div style={{ 
-          marginLeft: '256px',
+        <div className="classes-main-content" style={{ 
+          marginLeft: isMobile ? '0' : '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
           flex: 1,
-          minHeight: '100vh'
+          minHeight: '100vh',
+          paddingTop: isMobile ? '80px' : '2rem'
         }}>
           {/* Header */}
-          <div style={{ 
+          <div className="classes-header" style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
@@ -990,7 +1153,7 @@ export default function ClassesPage() {
             paddingBottom: '1.5rem'
           }}>
             <div>
-              <h1 style={{ 
+              <h1 className="classes-title" style={{ 
                 fontSize: '2.5rem', 
                 fontWeight: '300', 
                 margin: '0', 
@@ -999,12 +1162,12 @@ export default function ClassesPage() {
               }}>
                 Classes (PR)
               </h1>
-              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              <p className="classes-subtitle" style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage PR and communication training classes and workshops
               </p>
             </div>
             
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div className="classes-actions" style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={() => {
                   setFolderFormData({

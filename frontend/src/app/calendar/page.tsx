@@ -380,7 +380,7 @@ export default function CalendarPage() {
         .calendar-container {
           min-height: 100vh;
           display: flex;
-          background: #F5F5ED;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           width: 100%;
           ${isMobile ? 'flex-direction: column;' : ''}
         }
@@ -399,15 +399,17 @@ export default function CalendarPage() {
         }
         
         .header {
-          background: rgba(255, 255, 255, 0.98);
-          backdrop-filter: blur(30px);
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
           border-bottom: none;
           padding: 2.5rem 2rem 1.5rem 2rem;
           position: sticky;
           top: 0;
           z-index: 20;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
+          border-radius: 0 0 24px 24px;
+          margin-bottom: 2rem;
         }
         .header-content {
           display: flex;
@@ -588,25 +590,26 @@ export default function CalendarPage() {
         }
         
         .calendar-grid {
-          background: #FFFFFF;
-          border: 1px solid #E5E7EB;
-          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 24px;
           overflow: hidden;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
         .calendar-header {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
-          background: #F9FAFB;
-          border-bottom: 1px solid #E5E7EB;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .calendar-header-cell {
           padding: 1rem;
           text-align: center;
           font-weight: 600;
-          color: #374151;
-          border-right: 1px solid #E5E7EB;
+          color: #ffffff;
+          border-right: 1px solid rgba(255, 255, 255, 0.2);
           font-family: 'Mabry Pro', 'Inter', sans-serif;
           font-size: 0.75rem;
           letter-spacing: 0.05em;
