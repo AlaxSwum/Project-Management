@@ -1274,19 +1274,27 @@ export default function TimetablePage() {
             .calendar-view > div > div {
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
-              width: 100% !important;
-              min-width: 100% !important;
+              width: calc(100vw - 2rem) !important;
+              min-width: calc(100vw - 2rem) !important;
               gap: 1px !important;
-              max-width: 100vw !important;
-              overflow-x: auto !important;
+              max-width: calc(100vw - 2rem) !important;
+              overflow-x: hidden !important;
               box-sizing: border-box !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
             
             /* FORCE ALL CALENDAR ELEMENTS */
             .calendar-view,
             .calendar-view * {
               box-sizing: border-box !important;
-              max-width: 100% !important;
+              max-width: calc(100vw - 2rem) !important;
+            }
+            
+            .calendar-view > div {
+              width: calc(100vw - 2rem) !important;
+              max-width: calc(100vw - 2rem) !important;
+              margin: 0 !important;
             }
             
             /* OVERRIDE ANY CONFLICTING GRID STYLES */
@@ -1324,9 +1332,11 @@ export default function TimetablePage() {
             
             /* FORCE CALENDAR STRUCTURE */
             .calendar-view {
-              width: 100% !important;
-              max-width: 100vw !important;
-              overflow-x: auto !important;
+              width: calc(100vw - 2rem) !important;
+              max-width: calc(100vw - 2rem) !important;
+              overflow-x: hidden !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
             
             /* Calendar Headers Mobile */
@@ -2663,11 +2673,12 @@ export default function TimetablePage() {
                   {/* Month View */}
                   {calendarView === 'month' && (
                 <div className="calendar-view" style={{ 
-                  width: '100%', 
-                  maxWidth: '100%', 
+                  width: isMobile ? 'calc(100vw - 2rem)' : '100%', 
+                  maxWidth: isMobile ? 'calc(100vw - 2rem)' : '100%', 
                   overflow: 'hidden',
                   padding: '0',
-                  margin: '0 auto'
+                  margin: '0 auto',
+                  boxSizing: 'border-box'
                 }}>
                   <div style={{
                     background: '#FFFFFF',
@@ -2961,11 +2972,12 @@ export default function TimetablePage() {
                   {/* Week View */}
                   {calendarView === 'week' && (
                     <div className="calendar-view" style={{ 
-                      width: '100%', 
-                      maxWidth: '100%', 
+                      width: isMobile ? 'calc(100vw - 2rem)' : '100%', 
+                      maxWidth: isMobile ? 'calc(100vw - 2rem)' : '100%', 
                       overflow: 'hidden',
                       padding: '0',
-                      margin: '0 auto'
+                      margin: '0 auto',
+                      boxSizing: 'border-box'
                     }}>
                       <div style={{
                         background: '#FFFFFF',
@@ -3077,11 +3089,12 @@ export default function TimetablePage() {
                   {/* Day View */}
                   {calendarView === 'day' && (
                     <div className="calendar-view" style={{ 
-                      width: '100%', 
-                      maxWidth: '100%', 
+                      width: isMobile ? 'calc(100vw - 2rem)' : '100%', 
+                      maxWidth: isMobile ? 'calc(100vw - 2rem)' : '100%', 
                       overflow: 'hidden',
                       padding: '0',
-                      margin: '0 auto'
+                      margin: '0 auto',
+                      boxSizing: 'border-box'
                     }}>
                       <div style={{
                         background: '#FFFFFF',
