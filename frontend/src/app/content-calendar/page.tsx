@@ -24,6 +24,10 @@ interface ContentCalendarItem {
   created_by: User
   created_at: string
   updated_at: string
+  security_level?: 'public' | 'restricted' | 'confidential' | 'secret'
+  allowed_users?: number[]
+  can_view?: boolean
+  can_edit?: boolean
 }
 
 interface User {
@@ -44,6 +48,12 @@ const CONTENT_TYPES = ['Article', 'Video', 'Image', 'Infographic', 'Story', 'Ree
 const CATEGORIES = ['Marketing', 'Educational', 'Promotional', 'Entertainment', 'News', 'Tutorial']
 const SOCIAL_MEDIA = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn', 'TikTok', 'YouTube', 'Pinterest']
 const STATUSES = ['planning', 'in_progress', 'review', 'completed']
+const SECURITY_LEVELS = [
+  { value: 'public', label: 'Public', description: 'Everyone can view', color: '#10b981' },
+  { value: 'restricted', label: 'Restricted', description: 'Selected members only', color: '#f59e0b' },
+  { value: 'confidential', label: 'Confidential', description: 'Manager+ only', color: '#ef4444' },
+  { value: 'secret', label: 'Secret', description: 'Admin only', color: '#7c3aed' }
+]
 
 export default function ContentCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -75,6 +85,11 @@ export default function ContentCalendarPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [showMemberModal, setShowMemberModal] = useState(false)
   const [showFolderForm, setShowFolderForm] = useState(false)
+  const [showFolderPermissions, setShowFolderPermissions] = useState(false)
+  const [showFilePermissions, setShowFilePermissions] = useState(false)
+  const [selectedFolderForPermissions, setSelectedFolderForPermissions] = useState<any | null>(null)
+  const [selectedFileForPermissions, setSelectedFileForPermissions] = useState<ContentCalendarItem | null>(null)
+  const [folderMembers, setFolderMembers] = useState<any[]>([])
   const [editingItem, setEditingItem] = useState<ContentCalendarItem | null>(null)
   const [formData, setFormData] = useState({
     date: '',
@@ -87,7 +102,9 @@ export default function ContentCalendarPage() {
     graphic_deadline: '',
     status: 'planning',
     description: '',
-    folder_id: null as number | null
+    folder_id: null as number | null,
+    security_level: 'public' as 'public' | 'restricted' | 'confidential' | 'secret',
+    allowed_users: [] as number[]
   })
   const [folderFormData, setFolderFormData] = useState({
     name: '',
@@ -359,6 +376,106 @@ export default function ContentCalendarPage() {
     }
   }
 
+  // Folder Permission Management
+  const handleManageFolderPermissions = async (folder: any) => {
+    setSelectedFolderForPermissions(folder)
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      const { data: members } = await supabaseDb.getContentCalendarFolderMembers(folder.id)
+      setFolderMembers(members || [])
+      setShowFolderPermissions(true)
+    } catch (err) {
+      console.error('Error fetching folder members:', err)
+      setError('Failed to load folder permissions')
+    }
+  }
+
+  const handleAddFolderMember = async (userId: number, permissions: any) => {
+    if (!selectedFolderForPermissions) return
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.addContentCalendarFolderMember(selectedFolderForPermissions.id, userId, permissions)
+      
+      // Refresh folder members
+      const { data: members } = await supabaseDb.getContentCalendarFolderMembers(selectedFolderForPermissions.id)
+      setFolderMembers(members || [])
+    } catch (err) {
+      console.error('Error adding folder member:', err)
+      setError('Failed to add folder member')
+    }
+  }
+
+  const handleRemoveFolderMember = async (membershipId: number) => {
+    if (!confirm('Remove this member from the folder?')) return
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.removeContentCalendarFolderMember(membershipId)
+      
+      // Refresh folder members
+      if (selectedFolderForPermissions) {
+        const { data: members } = await supabaseDb.getContentCalendarFolderMembers(selectedFolderForPermissions.id)
+        setFolderMembers(members || [])
+      }
+    } catch (err) {
+      console.error('Error removing folder member:', err)
+      setError('Failed to remove folder member')
+    }
+  }
+
+  // File Permission Management
+  const handleManageFilePermissions = (item: ContentCalendarItem) => {
+    setSelectedFileForPermissions(item)
+    setShowFilePermissions(true)
+  }
+
+  const updateFilePermissions = async (itemId: number, securityLevel: string, allowedUsers: number[]) => {
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      await supabaseDb.updateContentCalendarItem(itemId, {
+        security_level: securityLevel,
+        allowed_users: allowedUsers
+      })
+      
+      await fetchData()
+      setShowFilePermissions(false)
+    } catch (err) {
+      console.error('Error updating file permissions:', err)
+      setError('Failed to update file permissions')
+    }
+  }
+
+  // Check if user can access folder
+  const canAccessFolder = (folder: any) => {
+    if (!folder) return true
+    if (userRole === 'admin' || userRole === 'manager') return true
+    if (folder.created_by_id === user?.id) return true
+    
+    // Check if user is a member of this folder
+    return folderMembers.some(member => member.user_id === user?.id)
+  }
+
+  // Check if user can access file
+  const canAccessFile = (item: ContentCalendarItem) => {
+    if (userRole === 'admin') return true
+    if (item.created_by?.id === user?.id) return true
+    
+    switch (item.security_level) {
+      case 'public':
+        return true
+      case 'restricted':
+        return item.allowed_users?.includes(user?.id || 0) || false
+      case 'confidential':
+        return ['admin', 'manager'].includes(userRole)
+      case 'secret':
+        return userRole === 'admin'
+      default:
+        return true
+    }
+  }
+
   const handleCreateFolder = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -395,7 +512,9 @@ export default function ContentCalendarPage() {
       graphic_deadline: '',
       status: 'planning',
       description: '',
-      folder_id: currentFolder?.id || null
+      folder_id: currentFolder?.id || null,
+      security_level: 'public',
+      allowed_users: []
     })
     setEditingItem(null)
     setShowAddForm(false)
@@ -413,7 +532,9 @@ export default function ContentCalendarPage() {
       graphic_deadline: item.graphic_deadline || '',
       status: item.status,
       description: item.description || '',
-      folder_id: item.folder_id || null
+      folder_id: item.folder_id || null,
+      security_level: item.security_level || 'public',
+      allowed_users: item.allowed_users || []
     })
     setEditingItem(item)
     setShowAddForm(true)
@@ -989,18 +1110,17 @@ export default function ContentCalendarPage() {
                   {getCurrentFolderContents().map(folder => (
                     <div
                       key={folder.id}
-                      onClick={() => enterFolder(folder)}
                       style={{
                         padding: '1.5rem',
                         background: '#ffffff',
                         border: '1px solid #e8e8e8',
                         borderRadius: '12px',
-                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '1rem',
                         transition: 'all 0.2s ease',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                        position: 'relative'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = '#C483D9'
@@ -1015,26 +1135,69 @@ export default function ContentCalendarPage() {
                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
                       }}
                     >
-                      <div style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        background: '#f0f0f0',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
-                          {folder.name}
+                      <div 
+                        onClick={() => enterFolder(folder)}
+                        style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          flex: 1,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <div style={{ 
+                          width: '40px', 
+                          height: '40px', 
+                          background: '#f0f0f0',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
                         </div>
-                        {folder.description && (
-                          <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem', lineHeight: '1.4' }}>
-                            {folder.description}
+                        <div>
+                          <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
+                            {folder.name}
                           </div>
-                        )}
+                          {folder.description && (
+                            <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem', lineHeight: '1.4' }}>
+                              {folder.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Folder Actions */}
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleManageFolderPermissions(folder);
+                          }}
+                          style={{
+                            background: '#f3f4f6',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#e5e7eb';
+                            e.currentTarget.style.borderColor = '#9ca3af';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#f3f4f6';
+                            e.currentTarget.style.borderColor = '#d1d5db';
+                          }}
+                          title="Manage Folder Permissions"
+                        >
+                          <UserGroupIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1058,7 +1221,7 @@ export default function ContentCalendarPage() {
               {/* Sticky Header */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 120px',
+                gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
                 gap: '0',
                 background: '#fafafa',
                 borderBottom: '2px solid #e8e8e8',
@@ -1269,6 +1432,27 @@ export default function ContentCalendarPage() {
                   STATUS
                   {renderSortIcon('status')}
                 </div>
+                <div 
+                  onClick={() => handleSort('security_level')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  SECURITY
+                  {renderSortIcon('security_level')}
+                </div>
                 <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
               </div>
 
@@ -1306,7 +1490,7 @@ export default function ContentCalendarPage() {
                     onDrop={(e) => handleDrop(e, index)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 120px',
+                      gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
                       gap: '0',
                       borderBottom: '1px solid #f0f0f0',
                       fontSize: '0.85rem',
@@ -1631,6 +1815,72 @@ export default function ContentCalendarPage() {
                       }}>
                         {getStatusLabel(item.status)}
                       </span>
+                      )}
+                    </div>
+
+                    {/* Security Level */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'security_level', item.security_level)}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'security_level' ? (
+                        <select
+                          value={cellValues[`${item.id}-security_level`] || item.security_level || 'public'}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-security_level`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'security_level')}
+                          onBlur={() => handleCellEdit(item.id, 'security_level', cellValues[`${item.id}-security_level`])}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            border: '1px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          {SECURITY_LEVELS.map(level => (
+                            <option key={level.value} value={level.value}>{level.label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.5rem',
+                            background: SECURITY_LEVELS.find(l => l.value === (item.security_level || 'public'))?.color || '#10b981',
+                            color: '#ffffff',
+                            borderRadius: '8px',
+                            fontSize: '0.7rem',
+                            fontWeight: '500'
+                          }}>
+                            {SECURITY_LEVELS.find(l => l.value === (item.security_level || 'public'))?.label || 'Public'}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleManageFilePermissions(item);
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '0.25rem',
+                              borderRadius: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="Manage File Permissions"
+                          >
+                            <UserGroupIcon style={{ width: '14px', height: '14px', color: '#6b7280' }} />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -2045,6 +2295,30 @@ export default function ContentCalendarPage() {
                         </select>
                       </div>
 
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Security Level</label>
+                        <select
+                          value={formData.security_level}
+                          onChange={(e) => setFormData({ ...formData, security_level: e.target.value as any })}
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          {SECURITY_LEVELS.map(level => (
+                            <option key={level.value} value={level.value}>
+                              {level.label} - {level.description}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '2rem' }}>
                       <div>
                         <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Folder</label>
                         <select
@@ -2810,6 +3084,279 @@ export default function ContentCalendarPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Folder Permissions Modal */}
+      {showFolderPermissions && selectedFolderForPermissions && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{
+              padding: '2rem',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: '0 0 0.5rem 0'
+              }}>
+                Manage Folder Permissions
+              </h3>
+              <p style={{
+                color: '#6b7280',
+                margin: 0,
+                fontSize: '1rem'
+              }}>
+                Control who can access "{selectedFolderForPermissions.name}" folder
+              </p>
+            </div>
+
+            <div style={{ padding: '2rem' }}>
+              {/* Add Member Section */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>
+                  Add Member
+                </h4>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'end' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: '#374151' }}>
+                      Select User
+                    </label>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem'
+                      }}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleAddFolderMember(parseInt(e.target.value), {
+                            role: 'viewer',
+                            can_create: false,
+                            can_edit: false,
+                            can_delete: false,
+                            can_manage_members: false
+                          });
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Select a user...</option>
+                      {allUsers.filter(u => !folderMembers.some(m => m.user_id === u.id)).map(user => (
+                        <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Members */}
+              <div>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>
+                  Current Members ({folderMembers.length})
+                </h4>
+                {folderMembers.length === 0 ? (
+                  <p style={{ color: '#6b7280', fontStyle: 'italic' }}>No members assigned to this folder</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {folderMembers.map(member => (
+                      <div key={member.id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '1rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: '#f9fafb'
+                      }}>
+                        <div>
+                          <div style={{ fontWeight: '500', color: '#1f2937' }}>
+                            {member.auth_user?.name || 'Unknown User'}
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                            {member.auth_user?.email || ''}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#374151', marginTop: '0.25rem' }}>
+                            Role: {member.role} | 
+                            Create: {member.can_create ? '✓' : '✗'} | 
+                            Edit: {member.can_edit ? '✓' : '✗'} | 
+                            Delete: {member.can_delete ? '✓' : '✗'}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFolderMember(member.id)}
+                          style={{
+                            padding: '0.5rem',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{
+              padding: '2rem',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowFolderPermissions(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#6b7280',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Permissions Modal */}
+      {showFilePermissions && selectedFileForPermissions && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '500px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{
+              padding: '2rem',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: '0 0 0.5rem 0'
+              }}>
+                File Security Settings
+              </h3>
+              <p style={{
+                color: '#6b7280',
+                margin: 0,
+                fontSize: '1rem'
+              }}>
+                "{selectedFileForPermissions.content_title}"
+              </p>
+            </div>
+
+            <div style={{ padding: '2rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', fontSize: '1rem', color: '#374151' }}>
+                  Security Level
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {SECURITY_LEVELS.map(level => (
+                    <div key={level.value} style={{
+                      padding: '1rem',
+                      border: `2px solid ${selectedFileForPermissions.security_level === level.value ? level.color : '#e5e7eb'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      background: selectedFileForPermissions.security_level === level.value ? `${level.color}10` : '#ffffff'
+                    }}
+                    onClick={() => {
+                      updateFilePermissions(selectedFileForPermissions.id, level.value, selectedFileForPermissions.allowed_users || []);
+                    }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: level.color, fontSize: '1rem' }}>
+                            {level.label}
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                            {level.description}
+                          </div>
+                        </div>
+                        {selectedFileForPermissions.security_level === level.value && (
+                          <div style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            background: level.color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#ffffff',
+                            fontSize: '0.8rem'
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              padding: '2rem',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowFilePermissions(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#6b7280',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
