@@ -607,7 +607,7 @@ export default function TimetablePage() {
 
   return (
     <div>
-      <MobileHeader title="Timetable" isMobile={isMobile} />
+      {isMobile && <MobileHeader title="Timetable" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
         __html: `

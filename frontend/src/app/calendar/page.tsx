@@ -373,7 +373,7 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <MobileHeader title="Calendar" isMobile={isMobile} />
+      {isMobile && <MobileHeader title="Calendar" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -391,6 +391,8 @@ export default function CalendarPage() {
           position: relative;
           z-index: 1;
           padding-top: ${isMobile ? '70px' : '0'};
+          width: ${isMobile ? '100%' : 'auto'};
+          min-height: 100vh;
         }
         
         .header {
@@ -578,6 +580,8 @@ export default function CalendarPage() {
           padding: 2rem;
           max-width: 1200px;
           margin: 0 auto;
+          display: block;
+          visibility: visible;
         }
         
         .calendar-grid {
@@ -1355,16 +1359,26 @@ export default function CalendarPage() {
           
           /* Mobile styles */
           @media (max-width: 768px) {
+            .calendar-container {
+              min-height: 100vh;
+              display: block;
+              background: #F5F5ED;
+              width: 100%;
+              overflow-x: hidden;
+            }
+            
             .main-content {
               margin-left: 0;
               width: 100%;
               max-width: 100vw;
               overflow-x: hidden;
+              padding-top: ${isMobile ? '70px' : '0'};
             }
+            
             .header {
               padding: 0.875rem;
               position: sticky;
-              top: 0;
+              top: ${isMobile ? '70px' : '0'};
               background: rgba(255, 255, 255, 0.95);
               backdrop-filter: blur(10px);
               z-index: 30;
@@ -1447,7 +1461,10 @@ export default function CalendarPage() {
               padding: 0.875rem;
               width: 100%;
               box-sizing: border-box;
+              display: block !important;
+              visibility: visible !important;
             }
+            
             .calendar-grid {
               border-radius: 8px;
               overflow: hidden;
@@ -1456,6 +1473,8 @@ export default function CalendarPage() {
               width: 100%;
               max-width: 100%;
               box-sizing: border-box;
+              display: block !important;
+              visibility: visible !important;
             }
             
             /* Mobile Calendar Header */
