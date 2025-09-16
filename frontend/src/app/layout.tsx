@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: "ProjectFlow - Modern Project Management",
   description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
 export default function RootLayout({

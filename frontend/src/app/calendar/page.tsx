@@ -64,12 +64,24 @@ export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isMobile, setIsMobile] = useState(false);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showDayTasks, setShowDayTasks] = useState(false);
   const [selectedDayTasks, setSelectedDayTasks] = useState<Task[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     // Don't redirect if auth is still loading

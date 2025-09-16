@@ -3,7 +3,7 @@
 // Force dynamic rendering to avoid stale cached HTML on CDNs/proxies
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +15,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,19 +52,20 @@ export default function LoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 2rem;
+          padding: ${isMobile ? '1rem' : '2rem'};
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         .login-card {
           background: #ffffff;
-          border-radius: 16px;
+          border-radius: ${isMobile ? '12px' : '16px'};
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           border: 1px solid #e5e7eb;
-          padding: 3rem;
+          padding: ${isMobile ? '2rem 1.5rem' : '3rem'};
           width: 100%;
-          max-width: 420px;
+          max-width: ${isMobile ? '100%' : '420px'};
           position: relative;
+          margin: ${isMobile ? '0 16px' : '0'};
         }
         
         .title-section {
