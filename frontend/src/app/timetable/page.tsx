@@ -1156,34 +1156,23 @@ export default function TimetablePage() {
               min-width: 80px !important;
             }
             
-            /* ULTRA-AGGRESSIVE CALENDAR GRID FIXES */
-            .calendar-header-grid,
-            .calendar-body-grid,
+            /* Calendar Grid Mobile - FORCE 7 COLUMNS */
             .calendar-view div[style*="grid-template-columns"],
             .calendar-view > div:first-child,
-            .calendar-view > div:last-child,
-            .calendar-view > div > div {
+            .calendar-view > div:last-child {
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
               width: 100% !important;
-              min-width: 100% !important;
               gap: 1px !important;
               max-width: 100vw !important;
               overflow-x: auto !important;
-              box-sizing: border-box !important;
             }
             
-            /* FORCE ALL CALENDAR ELEMENTS */
-            .calendar-view,
-            .calendar-view * {
-              box-sizing: border-box !important;
-              max-width: 100% !important;
-            }
-            
-            /* OVERRIDE ANY CONFLICTING GRID STYLES */
-            .calendar-view div {
-              grid-column: unset !important;
-              grid-row: unset !important;
+            /* Force calendar body grid */
+            .calendar-view > div > div[style*="grid-template-columns"] {
+              display: grid !important;
+              grid-template-columns: repeat(7, 1fr) !important;
+              width: 100% !important;
             }
             
             /* Calendar Day Cells Mobile */
@@ -2372,43 +2361,38 @@ export default function TimetablePage() {
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                   }}>
                     {/* Calendar Header */}
-                  <div 
-                    className="calendar-header-grid"
-                    style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(7, 1fr)', 
-                      background: '#F9FAFB',
-                      borderBottom: '1px solid #E5E7EB',
-                      width: '100%',
-                      minWidth: '100%'
-                    }}>
-                      {daysOfWeek.map((day) => (
+                  <div style={{ 
+                    display: 'flex', 
+                    width: '100%',
+                    background: '#F9FAFB',
+                    borderBottom: '1px solid #E5E7EB'
+                  }}>
+                      {daysOfWeek.map((day, index) => (
                         <div key={day} style={{
-                        padding: '1rem', 
-                        textAlign: 'center',
+                          flex: '1 1 0',
+                          minWidth: 0,
+                          padding: isMobile ? '8px 4px' : '1rem', 
+                          textAlign: 'center',
                           fontWeight: '600',
                           color: '#374151',
-                          borderRight: '1px solid #E5E7EB',
+                          borderRight: index < 6 ? '1px solid #E5E7EB' : 'none',
                           fontFamily: "'Mabry Pro', 'Inter', sans-serif",
-                          fontSize: '0.75rem',
+                          fontSize: isMobile ? '10px' : '0.75rem',
                           letterSpacing: '0.05em',
-                          textTransform: 'uppercase'
-                      }}>
-                          {day}
-                      </div>
-                    ))}
+                          textTransform: 'uppercase',
+                          boxSizing: 'border-box'
+                        }}>
+                          {isMobile ? day.substring(0, 3) : day}
+                        </div>
+                      ))}
                     </div>
                     
-                    {/* Calendar Body */}
-                    <div 
-                      className="calendar-body-grid"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(7, 1fr)',
-                        width: '100%',
-                        minWidth: '100%',
-                        gap: '0'
-                      }}>
+                    {/* Calendar Body - SIMPLE FLEXBOX */}
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      width: '100%'
+                    }}>
                     
                     {/* Empty cells for days before the first day of the month */}
                     {Array.from({ length: firstDay }, (_, index) => {
@@ -2418,12 +2402,15 @@ export default function TimetablePage() {
                       
                       return (
                         <div key={`prev-${index}`} className="calendar-cell other-month" style={{
-                          minHeight: '120px',
-                          padding: '0.75rem',
+                          flex: '1 1 14.285%',
+                          minWidth: '14.285%',
+                          minHeight: isMobile ? '60px' : '120px',
+                          padding: isMobile ? '4px' : '0.75rem',
                           borderRight: '1px solid #E5E7EB',
                           borderBottom: '1px solid #E5E7EB',
                           background: '#F9FAFB',
-                          color: '#9CA3AF'
+                          color: '#9CA3AF',
+                          boxSizing: 'border-box'
                         }}>
                           <div style={{
                             fontWeight: '600',
@@ -2451,19 +2438,22 @@ export default function TimetablePage() {
                           key={dayNumber} 
                           className={`calendar-cell ${isToday ? 'today' : ''}`}
                           style={{
-                            minHeight: '120px',
-                            padding: '0.75rem',
+                            flex: '1 1 14.285%',
+                            minWidth: '14.285%',
+                            minHeight: isMobile ? '80px' : '120px',
+                            padding: isMobile ? '6px' : '0.75rem',
                             borderRight: '1px solid #E5E7EB',
                             borderBottom: '1px solid #E5E7EB',
                             background: isToday ? 'rgba(88, 132, 253, 0.05)' : '#FFFFFF',
-                          transition: 'all 0.2s ease',
+                            transition: 'all 0.2s ease',
                             cursor: 'pointer',
+                            boxSizing: 'border-box',
                             ...(isToday && {
                               borderRight: '1px solid #5884FD',
                               borderBottom: '1px solid #5884FD',
                               position: 'relative'
                             })
-                        }}
+                          }}
                           onMouseEnter={(e) => {
                           if (!isToday) {
                               e.currentTarget.style.background = '#F9FAFB';
