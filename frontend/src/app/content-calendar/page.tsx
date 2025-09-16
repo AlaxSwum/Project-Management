@@ -215,7 +215,10 @@ export default function ContentCalendarPage() {
       )
       
       // Filter content items based on user access
+      console.log('Total content items before filtering:', transformedContentItems.length)
       const accessibleContentItems = transformedContentItems.filter(item => canAccessFile(item))
+      console.log('Accessible content items after filtering:', accessibleContentItems.length)
+      console.log('Accessible items:', accessibleContentItems.map(item => ({ id: item.id, content_title: item.content_title, security_level: item.security_level })))
       setContentItems(accessibleContentItems)
       
       // Transform members data to ensure user object exists
@@ -307,15 +310,23 @@ export default function ContentCalendarPage() {
   }
 
   const filterItemsByFolder = (items: ContentCalendarItem[], folderId: number | null) => {
+    console.log(`Filtering items by folder: ${folderId || 'root'}, total items: ${items.length}`)
+    
     let folderFiltered = []
     if (folderId === null) {
       folderFiltered = items
+      console.log('Showing all items (root folder)')
     } else {
       folderFiltered = items.filter(item => item.folder_id === folderId)
+      console.log(`Items in folder ${folderId}:`, folderFiltered.length)
     }
     
     // Apply security filtering
+    console.log('Applying security filtering...')
     const securityFiltered = folderFiltered.filter(item => canAccessFile(item))
+    console.log(`Final filtered items: ${securityFiltered.length}`)
+    console.log('Final items:', securityFiltered.map(item => ({ id: item.id, content_title: item.content_title, folder_id: item.folder_id })))
+    
     setFilteredItems(securityFiltered)
   }
 
@@ -400,31 +411,45 @@ export default function ContentCalendarPage() {
       
       // Prepare form data, excluding security fields if they cause errors
       const submitData = { ...formData }
+      console.log('Submitting content:', submitData)
       
       try {
+        let result
         if (editingItem) {
-          await supabaseDb.updateContentCalendarItem(editingItem.id, submitData)
+          console.log('Updating existing item:', editingItem.id)
+          result = await supabaseDb.updateContentCalendarItem(editingItem.id, submitData)
         } else {
-          await supabaseDb.createContentCalendarItem(submitData)
+          console.log('Creating new item')
+          result = await supabaseDb.createContentCalendarItem(submitData)
         }
         
+        console.log('Submit result:', result)
+        
+        console.log('Refreshing data after successful submission...')
         await fetchData()
         resetForm()
+        console.log('Content submitted and data refreshed successfully')
       } catch (columnError: any) {
         if (columnError.message?.includes('allowed_users') || columnError.message?.includes('security_level')) {
           // Remove security fields and try again
           const { security_level, allowed_users, ...basicData } = submitData
           console.log('Retrying without security fields due to missing database columns')
+          console.log('Basic data:', basicData)
           
+          let result
           if (editingItem) {
-            await supabaseDb.updateContentCalendarItem(editingItem.id, basicData)
+            result = await supabaseDb.updateContentCalendarItem(editingItem.id, basicData)
           } else {
-            await supabaseDb.createContentCalendarItem(basicData)
+            result = await supabaseDb.createContentCalendarItem(basicData)
           }
           
+          console.log('Retry result:', result)
+          
+          console.log('Refreshing data after successful retry...')
           await fetchData()
           resetForm()
           setError('Content saved. Note: Security features require database migration.')
+          console.log('Content submitted and data refreshed successfully (without security fields)')
         } else {
           throw columnError
         }
@@ -620,19 +645,51 @@ export default function ContentCalendarPage() {
 
   // Check if user can access file
   const canAccessFile = (item: ContentCalendarItem) => {
-    if (userRole === 'admin') return true
-    if (item.created_by?.id === user?.id) return true
+    // Debug logging for file access
+    const itemId = item.id || 'new'
+    const itemTitle = item.content_title || 'untitled'
+    
+    console.log(`Checking access for item ${itemId} (${itemTitle}):`, {
+      userRole,
+      userId: user?.id,
+      itemCreatedBy: item.created_by?.id,
+      securityLevel: item.security_level,
+      allowedUsers: item.allowed_users
+    })
+    
+    // Admin can access everything
+    if (userRole === 'admin') {
+      console.log(`Access granted to ${itemId}: user is admin`)
+      return true
+    }
+    
+    // Creator can access their own content
+    if (item.created_by?.id === user?.id) {
+      console.log(`Access granted to ${itemId}: user is creator`)
+      return true
+    }
+    
+    // If no security level is set (new items or missing column), allow access
+    if (!item.security_level || item.security_level === 'public') {
+      console.log(`Access granted to ${itemId}: public or no security level`)
+      return true
+    }
     
     switch (item.security_level) {
-      case 'public':
-        return true
       case 'restricted':
-        return item.allowed_users?.includes(user?.id || 0) || false
+        const hasRestrictedAccess = item.allowed_users?.includes(user?.id || 0) || false
+        console.log(`Access ${hasRestrictedAccess ? 'granted' : 'denied'} to ${itemId}: restricted level, user in allowed list: ${hasRestrictedAccess}`)
+        return hasRestrictedAccess
       case 'confidential':
-        return ['admin', 'manager'].includes(userRole)
+        const hasConfidentialAccess = ['admin', 'manager'].includes(userRole)
+        console.log(`Access ${hasConfidentialAccess ? 'granted' : 'denied'} to ${itemId}: confidential level, user role sufficient: ${hasConfidentialAccess}`)
+        return hasConfidentialAccess
       case 'secret':
-        return userRole === 'admin'
+        const hasSecretAccess = userRole === 'admin'
+        console.log(`Access ${hasSecretAccess ? 'granted' : 'denied'} to ${itemId}: secret level, user is admin: ${hasSecretAccess}`)
+        return hasSecretAccess
       default:
+        console.log(`Access granted to ${itemId}: unknown security level, defaulting to allow`)
         return true
     }
   }
