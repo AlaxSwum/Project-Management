@@ -27,6 +27,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase client
@@ -103,8 +104,6 @@ export default function PersonalTaskManager() {
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [isEditingTimeBlock, setIsEditingTimeBlock] = useState(false);
   
-  // Mobile sidebar state
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   
   // Week multi-selection state
   const [selectedHours, setSelectedHours] = useState<{day: Date, hour: number}[]>([]);
@@ -1145,30 +1144,19 @@ export default function PersonalTaskManager() {
         `
       }} />
       
+      <MobileHeader title="Personal Tasks" isMobile={isMobile} />
+      
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
-        {/* Mobile Header */}
+        {/* Mobile New Task Button */}
         {isMobile && (
-          <div className="mobile-header mobile-only" style={{ 
-            display: 'block',
+          <div style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: 'white',
-            zIndex: 100,
-            padding: '12px 16px',
-            borderBottom: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            top: '60px',
+            left: '16px',
+            right: '16px',
+            zIndex: 50,
+            padding: '12px 0'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                onClick={() => setShowMobileSidebar(true)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1F2937' }}
-              >
-                <Bars3Icon style={{ width: '24px', height: '24px' }} />
-              </button>
-              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>Personal Tasks</h1>
-            </div>
             <button
               onClick={() => {
                 setNewTask(getDefaultTaskForm());
@@ -1176,31 +1164,24 @@ export default function PersonalTaskManager() {
                 setSelectedTask(null);
                 setShowTaskModal(true);
               }}
-              className="btn btn-primary btn-small"
+              style={{
+                background: '#3B82F6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%',
+                minHeight: '48px'
+              }}
             >
-              <PlusIcon style={{ width: '16px', height: '16px' }} />
-              New
+              + New Task
             </button>
           </div>
         )}
 
-        {/* Mobile Sidebar */}
-        {isMobile && (
-          <div className={`mobile-sidebar ${showMobileSidebar ? 'open' : ''}`}>
-            <div style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>Menu</h2>
-                <button
-                  onClick={() => setShowMobileSidebar(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  <XMarkIcon style={{ width: '24px', height: '24px' }} />
-                </button>
-              </div>
-              <Sidebar projects={projects} onCreateProject={() => {}} />
-            </div>
-          </div>
-        )}
 
         {/* Desktop Sidebar */}
         {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
@@ -1209,7 +1190,7 @@ export default function PersonalTaskManager() {
           marginLeft: isMobile ? '0' : '256px', 
           flex: 1, 
           padding: isMobile ? '12px' : '32px',
-          paddingTop: isMobile ? '70px' : '32px',
+          paddingTop: isMobile ? '130px' : '32px',
           maxWidth: '100%',
           overflow: 'hidden'
         }}>

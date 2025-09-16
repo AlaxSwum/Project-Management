@@ -1163,6 +1163,24 @@ export default function TimetablePage() {
               width: 100% !important;
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
+              overflow-x: auto !important;
+            }
+            
+            /* Calendar Day Cells Mobile */
+            .calendar-day,
+            [class*="calendar-day"] {
+              min-height: 60px !important;
+              padding: 4px !important;
+              font-size: 11px !important;
+              overflow: hidden !important;
+            }
+            
+            /* Calendar Headers Mobile */
+            .calendar-header,
+            [class*="calendar-header"] {
+              padding: 8px 4px !important;
+              font-size: 12px !important;
+              font-weight: 600 !important;
             }
             
             /* Calendar Legend Mobile */
