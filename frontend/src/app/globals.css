@@ -1176,17 +1176,56 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   
   /* PAGE-SPECIFIC MOBILE FIXES */
   
-  /* Calendar pages */
+  /* ULTRA-AGGRESSIVE CALENDAR FIXES - FORCE 7 COLUMNS */
+  
+  /* Target ALL possible calendar grids */
   .calendar-grid,
-  [class*="calendar"] {
+  .calendar-view,
+  .calendar-container,
+  [class*="calendar"],
+  div[style*="grid-template-columns"]:has(div:nth-child(7)),
+  div[style*="gridTemplateColumns"] {
+    display: grid !important;
     grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
     gap: 2px !important;
+    max-width: 100vw !important;
+    overflow-x: auto !important;
   }
   
-  .calendar-day {
-    min-height: 60px !important;
-    padding: 4px !important;
+  /* Force calendar headers */
+  .calendar-view > div:first-child,
+  .calendar-header,
+  [class*="calendar-header"] {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+  }
+  
+  /* Force calendar body */
+  .calendar-view > div:not(:first-child),
+  .calendar-body,
+  [class*="calendar-body"] {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+  }
+  
+  /* Calendar day cells */
+  .calendar-day,
+  [class*="calendar-day"],
+  div[style*="border-right"]:not(:nth-child(7n)) {
+    min-height: 80px !important;
+    padding: 6px !important;
     font-size: 12px !important;
+    border: 1px solid #E5E7EB !important;
+    background: white !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* FORCE OVERRIDE ANY CONFLICTING STYLES */
+  * {
+    box-sizing: border-box !important;
   }
   
   /* Task management pages */

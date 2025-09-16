@@ -1156,23 +1156,34 @@ export default function TimetablePage() {
               min-width: 80px !important;
             }
             
-            /* Calendar Grid Mobile - FORCE 7 COLUMNS */
+            /* ULTRA-AGGRESSIVE CALENDAR GRID FIXES */
+            .calendar-header-grid,
+            .calendar-body-grid,
             .calendar-view div[style*="grid-template-columns"],
             .calendar-view > div:first-child,
-            .calendar-view > div:last-child {
+            .calendar-view > div:last-child,
+            .calendar-view > div > div {
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
               width: 100% !important;
+              min-width: 100% !important;
               gap: 1px !important;
               max-width: 100vw !important;
               overflow-x: auto !important;
+              box-sizing: border-box !important;
             }
             
-            /* Force calendar body grid */
-            .calendar-view > div > div[style*="grid-template-columns"] {
-              display: grid !important;
-              grid-template-columns: repeat(7, 1fr) !important;
-              width: 100% !important;
+            /* FORCE ALL CALENDAR ELEMENTS */
+            .calendar-view,
+            .calendar-view * {
+              box-sizing: border-box !important;
+              max-width: 100% !important;
+            }
+            
+            /* OVERRIDE ANY CONFLICTING GRID STYLES */
+            .calendar-view div {
+              grid-column: unset !important;
+              grid-row: unset !important;
             }
             
             /* Calendar Day Cells Mobile */
@@ -2361,12 +2372,16 @@ export default function TimetablePage() {
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                   }}>
                     {/* Calendar Header */}
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(7, 1fr)', 
+                  <div 
+                    className="calendar-header-grid"
+                    style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(7, 1fr)', 
                       background: '#F9FAFB',
-                      borderBottom: '1px solid #E5E7EB'
-                  }}>
+                      borderBottom: '1px solid #E5E7EB',
+                      width: '100%',
+                      minWidth: '100%'
+                    }}>
                       {daysOfWeek.map((day) => (
                         <div key={day} style={{
                         padding: '1rem', 
@@ -2385,10 +2400,15 @@ export default function TimetablePage() {
                     </div>
                     
                     {/* Calendar Body */}
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(7, 1fr)'
-                    }}>
+                    <div 
+                      className="calendar-body-grid"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(7, 1fr)',
+                        width: '100%',
+                        minWidth: '100%',
+                        gap: '0'
+                      }}>
                     
                     {/* Empty cells for days before the first day of the month */}
                     {Array.from({ length: firstDay }, (_, index) => {
