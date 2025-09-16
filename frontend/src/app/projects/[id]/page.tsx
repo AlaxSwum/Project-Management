@@ -26,6 +26,7 @@ import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
 import ProjectMembersModal from '@/components/ProjectMembersModal';
 import TodoListComponent from '@/components/TodoListComponent';
+import MobileHeader from '@/components/MobileHeader';
 
 interface User {
   id: number;
@@ -106,6 +107,7 @@ export default function ProjectDetailPage() {
   const [showTaskDetail, setShowTaskDetail] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
@@ -115,6 +117,17 @@ export default function ProjectDetailPage() {
     due_date: '',
     tags: ''
   });
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -566,6 +579,8 @@ export default function ProjectDetailPage() {
 
   return (
     <div>
+      <MobileHeader title={project ? `Project: ${project.name}` : 'Project Details'} isMobile={isMobile} />
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -628,12 +643,15 @@ export default function ProjectDetailPage() {
           
           .main-content {
             flex: 1;
-            margin-left: 256px;
+            margin-left: ${isMobile ? '0' : '256px'};
             background: transparent;
             overflow-x: hidden;
-            max-width: calc(100vw - 256px);
+            max-width: ${isMobile ? '100vw' : 'calc(100vw - 256px)'};
             position: relative;
             z-index: 1;
+            padding-top: ${isMobile ? '70px' : '0'};
+            padding-left: ${isMobile ? '12px' : '0'};
+            padding-right: ${isMobile ? '12px' : '0'};
           }
           
           .header {
@@ -3853,10 +3871,12 @@ export default function ProjectDetailPage() {
       }} />
       
       <div className="project-container">
-      <Sidebar 
-        projects={allProjects} 
+      {!isMobile && (
+        <Sidebar 
+          projects={allProjects} 
           onCreateProject={() => {}} 
         />
+      )}
         
         <div className="main-content">
           <header className="header">
