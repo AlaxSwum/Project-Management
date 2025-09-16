@@ -17,6 +17,7 @@ import {
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
+import MobileHeader from '@/components/MobileHeader';
 
 interface Project {
   id: number;
@@ -69,6 +70,18 @@ export default function TimetablePage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showDayMeetings, setShowDayMeetings] = useState(false);
   const [selectedDayMeetings, setSelectedDayMeetings] = useState<Meeting[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [newMeeting, setNewMeeting] = useState({
     title: '',
@@ -528,6 +541,8 @@ export default function TimetablePage() {
 
   return (
     <div>
+      <MobileHeader title="Timetable" isMobile={isMobile} />
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -548,13 +563,16 @@ export default function TimetablePage() {
           }
           .main-content {
             flex: 1;
-            margin-left: 280px;
+            margin-left: ${isMobile ? '0' : '280px'};
             background: transparent;
-            max-width: calc(100vw - 280px);
+            max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
             overflow-x: hidden;
             box-sizing: border-box;
             position: relative;
             z-index: 1;
+            padding-top: ${isMobile ? '70px' : '0'};
+            padding-left: ${isMobile ? '12px' : '0'};
+            padding-right: ${isMobile ? '12px' : '0'};
           }
           .header {
             background: rgba(255, 255, 255, 0.98);
@@ -1965,7 +1983,7 @@ export default function TimetablePage() {
       }} />
 
       <div className="timetable-container">
-        <Sidebar projects={projects} onCreateProject={handleCreateProject} />
+        {!isMobile && <Sidebar projects={projects} onCreateProject={handleCreateProject} />}
 
         <main className="main-content">
           <header className="header">

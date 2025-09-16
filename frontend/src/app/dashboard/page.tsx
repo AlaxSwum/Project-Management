@@ -1137,7 +1137,7 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    📋 Personal Tasks
+                    Personal Tasks
                   </button>
                   <button 
                     onClick={() => { router.push('/my-tasks'); setShowMobileMenu(false); }} 
@@ -1155,7 +1155,7 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    ✅ My Tasks
+                    My Tasks
                   </button>
                   <button 
                     onClick={() => { router.push('/calendar'); setShowMobileMenu(false); }} 
@@ -1173,7 +1173,7 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    📅 Calendar
+                    Calendar
                   </button>
                   <button 
                     onClick={() => { router.push('/company-outreach'); setShowMobileMenu(false); }} 
@@ -1191,7 +1191,7 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    🏢 Company Outreach
+                    Company Outreach
                   </button>
                   <button 
                     onClick={() => { router.push('/content-calendar'); setShowMobileMenu(false); }} 
@@ -1209,7 +1209,7 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    📝 Content Calendar
+                    Content Calendar
                   </button>
                   <button 
                     onClick={() => { router.push('/password-manager'); setShowMobileMenu(false); }} 
@@ -1227,7 +1227,7 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    🔐 Password Manager
+                    Password Manager
                   </button>
                   <button 
                     onClick={() => { router.push('/timetable'); setShowMobileMenu(false); }} 
@@ -1245,7 +1245,43 @@ export default function DashboardPage() {
                       minHeight: '48px'
                     }}
                   >
-                    🕐 Timetable
+                    Timetable
+                  </button>
+                  <button 
+                    onClick={() => { router.push('/classes'); setShowMobileMenu(false); }} 
+                    style={{ 
+                      padding: '16px', 
+                      textAlign: 'left', 
+                      background: '#F8FAFC', 
+                      border: '1px solid #E5E7EB', 
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      width: '100%',
+                      minHeight: '48px'
+                    }}
+                  >
+                    Classes
+                  </button>
+                  <button 
+                    onClick={() => { router.push('/reporting'); setShowMobileMenu(false); }} 
+                    style={{ 
+                      padding: '16px', 
+                      textAlign: 'left', 
+                      background: '#F8FAFC', 
+                      border: '1px solid #E5E7EB', 
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      width: '100%',
+                      minHeight: '48px'
+                    }}
+                  >
+                    Reports
                   </button>
                 </div>
               </div>
@@ -1264,7 +1300,7 @@ export default function DashboardPage() {
                   minHeight: '48px'
                 }}
               >
-                ✕ Close Menu
+                Close Menu
               </button>
             </div>
           </div>
