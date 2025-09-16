@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, taskService } from '@/lib/api-compatibility';
@@ -299,9 +299,10 @@ export default function CalendarPage() {
     }
   }, [showTaskModal]);
 
+  // Calculate calendar values dynamically
   const today = new Date();
-  const daysInMonth = getDaysInMonth(currentDate);
-  const firstDay = getFirstDayOfMonth(currentDate);
+  const daysInMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
+  const firstDay = useMemo(() => getFirstDayOfMonth(currentDate), [currentDate]);
 
   // Show loading state while auth is initializing
   if (authLoading) {
