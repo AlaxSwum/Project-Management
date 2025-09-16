@@ -191,6 +191,21 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         return;
       }
 
+      // Check if user is a member of any folder
+      const { data: folderMemberData, error: folderMemberError } = await supabase
+        .from('content_calendar_folder_members')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      console.log('📁 Folder member check:', { folderMemberData, folderMemberError });
+
+      if (folderMemberData && folderMemberData.length > 0 && !folderMemberError) {
+        console.log('✅ Content Calendar access granted: User is a folder member');
+        setHasContentCalendarAccess(true);
+        return;
+      }
+
       // Check if user is admin/HR
       const { data: userData, error: userError } = await supabase
         .from('auth_user')
@@ -214,7 +229,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         hasPermission
       });
       
-      setHasContentCalendarAccess(hasPermission);
+      if (hasPermission) {
+        console.log('✅ Content Calendar access granted: User is admin/HR');
+        setHasContentCalendarAccess(true);
+      } else {
+        console.log('❌ Content Calendar access denied: No access found');
+        setHasContentCalendarAccess(false);
+      }
     } catch (err) {
       console.error('Error checking content calendar access:', err);
       setHasContentCalendarAccess(false);
