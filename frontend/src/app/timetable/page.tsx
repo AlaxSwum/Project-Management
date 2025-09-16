@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, meetingService, userService, taskService } from '@/lib/api-compatibility';
@@ -427,9 +427,9 @@ export default function TimetablePage() {
     return `${mins}m`;
   };
 
-  const filteredMeetings = meetings;
+  // Use meetings directly since filtering is done in fetchMeetings
 
-  const upcomingMeetings = filteredMeetings.filter(m => {
+  const upcomingMeetings = meetings.filter(m => {
     // Parse date and time manually to avoid timezone issues
     const [year, month, day] = m.date.split('-').map(Number);
     const [hours, minutes] = m.time.split(':').map(Number);
@@ -447,7 +447,7 @@ export default function TimetablePage() {
     return dateA.getTime() - dateB.getTime();
   });
 
-  const pastMeetings = filteredMeetings.filter(m => {
+  const pastMeetings = meetings.filter(m => {
     // Parse date and time manually to avoid timezone issues
     const [year, month, day] = m.date.split('-').map(Number);
     const [hours, minutes] = m.time.split(':').map(Number);
@@ -494,7 +494,7 @@ export default function TimetablePage() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
-    return filteredMeetings.filter(meeting => meeting.date === dateStr);
+    return meetings.filter(meeting => meeting.date === dateStr);
   };
 
   // Helper functions for week and day views
@@ -554,9 +554,18 @@ export default function TimetablePage() {
 
 
 
+  // Calculate calendar values dynamically
   const today = new Date();
-  const daysInMonth = getDaysInMonth(currentDate);
-  const firstDay = getFirstDayOfMonth(currentDate);
+  const daysInMonth = useMemo(() => {
+    const days = getDaysInMonth(currentDate);
+    console.log('Days in month:', days, 'for date:', currentDate);
+    return days;
+  }, [currentDate]);
+  const firstDay = useMemo(() => {
+    const first = getFirstDayOfMonth(currentDate);
+    console.log('First day of month:', first, 'for date:', currentDate);
+    return first;
+  }, [currentDate]);
 
   const getAttendeesList = (meeting: Meeting) => {
     if (meeting.attendees_list && meeting.attendees_list.length > 0) {
@@ -2566,6 +2575,7 @@ export default function TimetablePage() {
                 <>
                   {/* Month View */}
                   {calendarView === 'month' && (
+                    console.log('Rendering month view, daysInMonth:', daysInMonth, 'firstDay:', firstDay),
                 <div className="calendar-view" style={{ 
                   width: '100%', 
                   maxWidth: '100%', 
