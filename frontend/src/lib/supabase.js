@@ -1613,6 +1613,8 @@ export const supabaseDb = {
 
   removeContentCalendarFolderMember: async (membershipId) => {
     try {
+      console.log('Attempting to remove folder member with ID:', membershipId);
+      
       const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?id=eq.${membershipId}`, {
         method: 'DELETE',
         headers: {
@@ -1622,11 +1624,15 @@ export const supabaseDb = {
         }
       });
 
+      console.log('Delete response status:', response.status);
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('Delete failed with error:', errorText);
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
+      console.log('Folder member removed successfully');
       return { data: null, error: null };
     } catch (error) {
       console.error('Exception in removeContentCalendarFolderMember:', error);

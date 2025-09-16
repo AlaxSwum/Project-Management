@@ -523,16 +523,36 @@ export default function ContentCalendarPage() {
   }
 
   const handleRemoveFolderMember = async (membershipId: number) => {
-    if (!confirm('Remove this member from the folder?')) return
+    console.log('Attempting to remove folder member with ID:', membershipId)
+    
+    if (!confirm('Remove this member from the folder?')) {
+      console.log('User cancelled member removal')
+      return
+    }
     
     try {
+      console.log('Removing folder member...')
       const { supabaseDb } = await import('@/lib/supabase')
-      await supabaseDb.removeContentCalendarFolderMember(membershipId)
+      const result = await supabaseDb.removeContentCalendarFolderMember(membershipId)
+      
+      console.log('Remove folder member result:', result)
+      
+      if (result.error) {
+        console.error('Database error removing folder member:', result.error)
+        setError(`Failed to remove folder member: ${String(result.error)}`)
+        return
+      }
+      
+      console.log('Member removed successfully, refreshing folder members...')
       
       // Refresh folder members
       if (selectedFolderForPermissions) {
         const { data: members } = await supabaseDb.getContentCalendarFolderMembers(selectedFolderForPermissions.id)
         setFolderMembers(members || [])
+        console.log('Folder members refreshed:', members?.length || 0, 'members')
+        
+        // Also refresh the main folder list to update visibility
+        await fetchData()
       }
     } catch (err) {
       console.error('Error removing folder member:', err)
