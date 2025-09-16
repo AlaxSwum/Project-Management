@@ -1023,7 +1023,8 @@ Your report is now available in the system.`);
   // Conditionally add Content Calendar and Class Schedule based on user access
   const mainNavItems = [
     ...baseNavItems,
-    ...(hasContentCalendarAccess ? [{ name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon }] : []),
+    // Content Calendar is now available to all authenticated users (access control happens within the page)
+    { name: 'Content Calendar', href: '/content-calendar', icon: TableCellsIcon },
     ...(hasClassScheduleAccess ? [{ name: 'Class Schedule', href: '/class-schedule', icon: AcademicCapIcon }] : []),
     ...(hasClassesAccess ? [{ name: 'Classes', href: '/classes', icon: UserIcon }] : [])
   ];
