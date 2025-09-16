@@ -240,16 +240,38 @@ export default function ContentCalendarPage() {
         )
       } else {
         // Regular users can only see folders they're members of or created
-        const { data: userFolderMemberships } = await supabaseDb.getContentCalendarFolderMembers(0)
-        const userFolderIds = (userFolderMemberships || [])
-          .filter((membership: any) => membership.user_id === user.id)
-          .map((membership: any) => membership.folder_id)
-        
-        accessibleFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => {
-          const isUnique = index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
-          const hasAccess = folder.created_by_id === user.id || userFolderIds.includes(folder.id)
-          return isUnique && hasAccess
-        })
+        try {
+          // Get all folder memberships for this user by directly querying the database
+          const supabase = (await import('@/lib/supabase')).supabase
+          const { data: userFolderMemberships, error: membershipError } = await supabase
+            .from('content_calendar_folder_members')
+            .select('folder_id')
+            .eq('user_id', user.id)
+          
+          if (membershipError) {
+            console.error('Error fetching folder memberships:', membershipError)
+          }
+          
+          const userFolderIds = (userFolderMemberships || []).map((membership: any) => membership.folder_id)
+          console.log('User folder IDs:', userFolderIds)
+          
+          accessibleFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => {
+            const isUnique = index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
+            const hasAccess = folder.created_by_id === user.id || userFolderIds.includes(folder.id)
+            console.log(`Folder ${folder.name} (ID: ${folder.id}): created_by=${folder.created_by_id}, user_id=${user.id}, in_memberships=${userFolderIds.includes(folder.id)}, hasAccess=${hasAccess}`)
+            return isUnique && hasAccess
+          })
+          
+          console.log('Accessible folders for user:', accessibleFolders.map((f: any) => f.name))
+        } catch (err) {
+          console.error('Error in folder filtering:', err)
+          // Fallback: show only folders created by user
+          accessibleFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => {
+            const isUnique = index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
+            const hasAccess = folder.created_by_id === user.id
+            return isUnique && hasAccess
+          })
+        }
       }
       
       setFolders(accessibleFolders)
@@ -431,12 +453,31 @@ export default function ContentCalendarPage() {
     if (!selectedFolderForPermissions) return
     
     try {
+      console.log('Adding folder member:', {
+        folderId: selectedFolderForPermissions.id,
+        userId: userId,
+        permissions: permissions
+      })
+      
       const { supabaseDb } = await import('@/lib/supabase')
-      await supabaseDb.addContentCalendarFolderMember(selectedFolderForPermissions.id, userId, permissions)
+      const result = await supabaseDb.addContentCalendarFolderMember(selectedFolderForPermissions.id, userId, permissions)
+      
+      console.log('Add folder member result:', result)
+      
+      if (result.error) {
+        console.error('Database error adding folder member:', result.error)
+        setError(`Failed to add folder member: ${String(result.error)}`)
+        return
+      }
       
       // Refresh folder members
       const { data: members } = await supabaseDb.getContentCalendarFolderMembers(selectedFolderForPermissions.id)
       setFolderMembers(members || [])
+      
+      // Refresh the main folder list to update visibility
+      await fetchData()
+      
+      console.log('Folder member added successfully')
     } catch (err) {
       console.error('Error adding folder member:', err)
       setError('Failed to add folder member')
@@ -484,13 +525,26 @@ export default function ContentCalendarPage() {
   }
 
   // Check if user can access folder
-  const canAccessFolder = (folder: any) => {
+  const canAccessFolder = async (folder: any) => {
     if (!folder) return true
     if (userRole === 'admin' || userRole === 'manager') return true
     if (folder.created_by_id === user?.id) return true
     
-    // Check if user is a member of this folder
-    return folderMembers.some(member => member.user_id === user?.id)
+    // Check if user is a member of this folder by querying the database
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase
+      const { data: membership, error } = await supabase
+        .from('content_calendar_folder_members')
+        .select('id')
+        .eq('folder_id', folder.id)
+        .eq('user_id', user?.id)
+        .limit(1)
+      
+      return !error && membership && membership.length > 0
+    } catch (err) {
+      console.error('Error checking folder access:', err)
+      return false
+    }
   }
 
   // Check if user can access file
