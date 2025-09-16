@@ -398,14 +398,37 @@ export default function ContentCalendarPage() {
     try {
       const { supabaseDb } = await import('@/lib/supabase')
       
-      if (editingItem) {
-        await supabaseDb.updateContentCalendarItem(editingItem.id, formData)
-      } else {
-        await supabaseDb.createContentCalendarItem(formData)
-      }
+      // Prepare form data, excluding security fields if they cause errors
+      const submitData = { ...formData }
       
-      await fetchData()
-      resetForm()
+      try {
+        if (editingItem) {
+          await supabaseDb.updateContentCalendarItem(editingItem.id, submitData)
+        } else {
+          await supabaseDb.createContentCalendarItem(submitData)
+        }
+        
+        await fetchData()
+        resetForm()
+      } catch (columnError: any) {
+        if (columnError.message?.includes('allowed_users') || columnError.message?.includes('security_level')) {
+          // Remove security fields and try again
+          const { security_level, allowed_users, ...basicData } = submitData
+          console.log('Retrying without security fields due to missing database columns')
+          
+          if (editingItem) {
+            await supabaseDb.updateContentCalendarItem(editingItem.id, basicData)
+          } else {
+            await supabaseDb.createContentCalendarItem(basicData)
+          }
+          
+          await fetchData()
+          resetForm()
+          setError('Content saved. Note: Security features require database migration.')
+        } else {
+          throw columnError
+        }
+      }
     } catch (err) {
       console.error('Error saving item:', err)
       setError('Failed to save content item')
@@ -526,13 +549,26 @@ export default function ContentCalendarPage() {
   const updateFilePermissions = async (itemId: number, securityLevel: string, allowedUsers: number[]) => {
     try {
       const { supabaseDb } = await import('@/lib/supabase')
-      await supabaseDb.updateContentCalendarItem(itemId, {
-        security_level: securityLevel,
-        allowed_users: allowedUsers
-      })
       
-      await fetchData()
-      setShowFilePermissions(false)
+      // Try to update with security columns, but handle gracefully if they don't exist
+      const updateData: any = {}
+      
+      // Only add security fields if we're not getting column errors
+      try {
+        updateData.security_level = securityLevel
+        updateData.allowed_users = allowedUsers
+        
+        await supabaseDb.updateContentCalendarItem(itemId, updateData)
+        await fetchData()
+        setShowFilePermissions(false)
+      } catch (columnError: any) {
+        if (columnError.message?.includes('allowed_users') || columnError.message?.includes('security_level')) {
+          setError('Security columns not yet added to database. Please run the database migration first.')
+          console.error('Database schema needs updating. Run add_content_calendar_security_columns.sql')
+        } else {
+          throw columnError
+        }
+      }
     } catch (err) {
       console.error('Error updating file permissions:', err)
       setError('Failed to update file permissions')
