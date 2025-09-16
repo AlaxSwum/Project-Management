@@ -138,25 +138,37 @@ export default function ContentCalendarPage() {
         setHasAccess(true)
         setUserRole(memberData.role)
       } else {
-        // Check if user is admin/HR
-        const { data: userData, error: userError } = await supabase
-          .from('auth_user')
-          .select('id, name, email, role, is_superuser, is_staff')
-          .eq('id', user.id)
-          .single()
+        // Check if user is a member of any folder
+        const { data: folderMemberData, error: folderMemberError } = await supabase
+          .from('content_calendar_folder_members')
+          .select('id, role')
+          .eq('user_id', user.id)
+          .limit(1)
 
-        if (userError) {
-          setHasAccess(false)
-          return
-        }
-
-        const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
-        
-        if (hasPermission) {
+        if (folderMemberData && folderMemberData.length > 0 && !folderMemberError) {
           setHasAccess(true)
-          setUserRole('admin')
+          setUserRole(folderMemberData[0].role || 'member')
         } else {
-          setHasAccess(false)
+          // Check if user is admin/HR
+          const { data: userData, error: userError } = await supabase
+            .from('auth_user')
+            .select('id, name, email, role, is_superuser, is_staff')
+            .eq('id', user.id)
+            .single()
+
+          if (userError) {
+            setHasAccess(false)
+            return
+          }
+
+          const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
+          
+          if (hasPermission) {
+            setHasAccess(true)
+            setUserRole('admin')
+          } else {
+            setHasAccess(false)
+          }
         }
       }
     } catch (err) {
@@ -201,7 +213,9 @@ export default function ContentCalendarPage() {
         })
       )
       
-      setContentItems(transformedContentItems)
+      // Filter content items based on user access
+      const accessibleContentItems = transformedContentItems.filter(item => canAccessFile(item))
+      setContentItems(accessibleContentItems)
       
       // Transform members data to ensure user object exists
       const transformedMembers = (membersData || []).map((member: any) => ({
@@ -217,10 +231,28 @@ export default function ContentCalendarPage() {
       setAllUsers(usersData || [])
       
       // Remove duplicates from folders (in case of database issues)
-      const uniqueFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => 
-        index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
-      )
-      setFolders(uniqueFolders)
+      // Filter folders based on user access
+      let accessibleFolders = []
+      if (userRole === 'admin' || userRole === 'manager') {
+        // Admins and managers can see all folders
+        accessibleFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => 
+          index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
+        )
+      } else {
+        // Regular users can only see folders they're members of or created
+        const { data: userFolderMemberships } = await supabaseDb.getContentCalendarFolderMembers(0)
+        const userFolderIds = (userFolderMemberships || [])
+          .filter((membership: any) => membership.user_id === user.id)
+          .map((membership: any) => membership.folder_id)
+        
+        accessibleFolders = (foldersData || []).filter((folder: any, index: number, self: any[]) => {
+          const isUnique = index === self.findIndex((f: any) => f.name === folder.name && f.folder_type === folder.folder_type)
+          const hasAccess = folder.created_by_id === user.id || userFolderIds.includes(folder.id)
+          return isUnique && hasAccess
+        })
+      }
+      
+      setFolders(accessibleFolders)
       
       // Filter items based on current folder
       filterItemsByFolder(transformedContentItems, selectedFolder)
@@ -252,12 +284,16 @@ export default function ContentCalendarPage() {
   }
 
   const filterItemsByFolder = (items: ContentCalendarItem[], folderId: number | null) => {
+    let folderFiltered = []
     if (folderId === null) {
-      setFilteredItems(items)
+      folderFiltered = items
     } else {
-      const filtered = items.filter(item => item.folder_id === folderId)
-      setFilteredItems(filtered)
+      folderFiltered = items.filter(item => item.folder_id === folderId)
     }
+    
+    // Apply security filtering
+    const securityFiltered = folderFiltered.filter(item => canAccessFile(item))
+    setFilteredItems(securityFiltered)
   }
 
   const enterFolder = (folder: any) => {
