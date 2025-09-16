@@ -1395,10 +1395,10 @@ export default function CalendarPage() {
             
             .header {
               padding: 0.875rem;
-              position: sticky;
-              top: 70px;
-              background: rgba(255, 255, 255, 0.95);
-              backdrop-filter: blur(10px);
+              position: relative;
+              top: 0;
+              background: #ffffff;
+              border-bottom: 1px solid #e5e7eb;
               z-index: 30;
               width: 100vw !important;
               max-width: 100vw !important;
@@ -1417,12 +1417,21 @@ export default function CalendarPage() {
             .header-controls {
               width: 100%;
               max-width: 100%;
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              gap: 1rem;
             }
             .calendar-nav {
-              justify-content: space-between;
-              width: 100%;
-              max-width: 280px;
-              margin: 0 auto;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              gap: 1rem;
+              flex: 1;
+            }
+            .today-nav {
+              flex-shrink: 0;
             }
             .month-year {
               font-size: 1rem;
@@ -1491,7 +1500,7 @@ export default function CalendarPage() {
             
             .calendar-grid {
               border-radius: 8px;
-              overflow: hidden;
+              overflow: visible;
               box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
               border: 1px solid #e5e7eb;
               width: 100%;
@@ -1526,9 +1535,10 @@ export default function CalendarPage() {
             /* Mobile Calendar Body */
             .calendar-body {
               background: #ffffff;
-              display: grid;
-              grid-template-columns: repeat(7, 1fr);
+              display: grid !important;
+              grid-template-columns: repeat(7, 1fr) !important;
               width: 100%;
+              visibility: visible !important;
             }
             .calendar-cell {
               min-height: 85px;
@@ -1674,6 +1684,24 @@ export default function CalendarPage() {
             .header-title {
               font-size: 1.25rem;
             }
+            .header-controls {
+              flex-direction: column !important;
+              gap: 0.75rem !important;
+            }
+            .calendar-nav {
+              width: 100% !important;
+              max-width: none !important;
+              justify-content: space-between !important;
+              flex: none !important;
+            }
+            .today-nav {
+              width: 100% !important;
+            }
+            .today-btn {
+              width: 100% !important;
+              padding: 0.75rem !important;
+              font-size: 0.875rem !important;
+            }
             .calendar-stats {
               grid-template-columns: repeat(4, 1fr);
               gap: 0.25rem;
@@ -1688,16 +1716,15 @@ export default function CalendarPage() {
             .stat-label {
               font-size: 0.55rem;
             }
-            .calendar-nav {
-              max-width: 260px;
-            }
             .month-year {
-              font-size: 0.9rem;
+              font-size: 0.85rem;
+              flex: 1;
+              text-align: center;
             }
             .nav-btn {
-              min-width: 40px;
-              min-height: 40px;
-              padding: 0.625rem;
+              min-width: 36px;
+              min-height: 36px;
+              padding: 0.5rem;
             }
             .calendar-content {
               padding: 0.625rem;
@@ -2232,6 +2259,25 @@ export default function CalendarPage() {
                   </button>
                 </div>
                 
+                <div className="today-nav">
+                  <button 
+                    onClick={() => setCurrentDate(new Date())} 
+                    className="today-btn"
+                    style={{
+                      background: '#3b82f6',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Today
+                  </button>
+                </div>
 
               </div>
             </div>
