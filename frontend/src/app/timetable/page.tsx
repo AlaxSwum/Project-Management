@@ -1156,27 +1156,43 @@ export default function TimetablePage() {
               min-width: 80px !important;
             }
             
-            /* Calendar Grid Mobile - Fixed Column Widths */
-            .calendar-view,
-            .calendar-view > div,
-            [class*="calendar-grid"],
-            .calendar-container > div {
-              gap: 2px !important;
-              border-radius: 8px !important;
-              width: 100% !important;
+            /* Calendar Grid Mobile - FORCE 7 COLUMNS */
+            .calendar-view div[style*="grid-template-columns"],
+            .calendar-view > div:first-child,
+            .calendar-view > div:last-child {
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
-              overflow-x: auto !important;
+              width: 100% !important;
+              gap: 1px !important;
               max-width: 100vw !important;
+              overflow-x: auto !important;
+            }
+            
+            /* Force calendar body grid */
+            .calendar-view > div > div[style*="grid-template-columns"] {
+              display: grid !important;
+              grid-template-columns: repeat(7, 1fr) !important;
+              width: 100% !important;
             }
             
             /* Calendar Day Cells Mobile */
             .calendar-day,
-            [class*="calendar-day"] {
-              min-height: 60px !important;
-              padding: 4px !important;
+            [class*="calendar-day"],
+            .calendar-view div[style*="border-right"] {
+              min-height: 80px !important;
+              padding: 6px !important;
               font-size: 11px !important;
               overflow: hidden !important;
+              border: 1px solid #E5E7EB !important;
+              background: white !important;
+              box-sizing: border-box !important;
+            }
+            
+            /* FORCE CALENDAR STRUCTURE */
+            .calendar-view {
+              width: 100% !important;
+              max-width: 100vw !important;
+              overflow-x: auto !important;
             }
             
             /* Calendar Headers Mobile */
