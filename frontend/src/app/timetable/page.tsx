@@ -66,6 +66,7 @@ export default function TimetablePage() {
   const [showMeetingDetail, setShowMeetingDetail] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showDayMeetings, setShowDayMeetings] = useState(false);
@@ -494,6 +495,61 @@ export default function TimetablePage() {
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
     return filteredMeetings.filter(meeting => meeting.date === dateStr);
+  };
+
+  // Helper functions for week and day views
+  const getWeekDates = (date: Date) => {
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - day);
+    
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const weekDate = new Date(startOfWeek);
+      weekDate.setDate(startOfWeek.getDate() + i);
+      weekDates.push(weekDate);
+    }
+    return weekDates;
+  };
+
+  const formatDateHeader = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const previousPeriod = () => {
+    if (calendarView === 'month') {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+    } else if (calendarView === 'week') {
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() - 7);
+      setCurrentDate(newDate);
+    } else if (calendarView === 'day') {
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() - 1);
+      setCurrentDate(newDate);
+    }
+  };
+
+  const nextPeriod = () => {
+    if (calendarView === 'month') {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+    } else if (calendarView === 'week') {
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() + 7);
+      setCurrentDate(newDate);
+    } else if (calendarView === 'day') {
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() + 1);
+      setCurrentDate(newDate);
+    }
   };
 
 
@@ -1190,13 +1246,27 @@ export default function TimetablePage() {
             .calendar-day,
             [class*="calendar-day"],
             .calendar-view div[style*="border-right"] {
-              min-height: 80px !important;
-              padding: 6px !important;
-              font-size: 11px !important;
+              min-height: 100px !important;
+              padding: 8px !important;
+              font-size: 12px !important;
               overflow: hidden !important;
               border: 1px solid #E5E7EB !important;
               background: white !important;
               box-sizing: border-box !important;
+            }
+
+            /* Week and Day View Mobile Adjustments */
+            .calendar-view div[style*="gridTemplateColumns"] {
+              grid-template-columns: repeat(7, 1fr) !important;
+              gap: 1px !important;
+            }
+
+            .calendar-view div[style*="minHeight: 500px"] {
+              min-height: 300px !important;
+            }
+
+            .calendar-view div[style*="minHeight: 700px"] {
+              min-height: 400px !important;
             }
             
             /* FORCE CALENDAR STRUCTURE */
@@ -2137,7 +2207,7 @@ export default function TimetablePage() {
                   width: '100%'
                 }}>
                   <button
-                    onClick={() => previousMonth()}
+                    onClick={() => previousPeriod()}
                     className="nav-button"
                     style={{
                       padding: '0.75rem 1rem',
@@ -2161,19 +2231,52 @@ export default function TimetablePage() {
                     ← Previous
                   </button>
                   
-                  <h2 style={{ 
-                    margin: 0, 
-                    fontSize: '1.5rem', 
-                    fontWeight: '700', 
-                    color: '#000000',
-                    textAlign: 'center',
-                    flex: 1
-                  }}>
-                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+                    <button
+                      onClick={goToToday}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        border: '1px solid #6b7280',
+                        background: '#ffffff',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = '#f9fafb';
+                        e.currentTarget.style.borderColor = '#374151';
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = '#ffffff';
+                        e.currentTarget.style.borderColor = '#6b7280';
+                        e.currentTarget.style.color = '#6b7280';
+                      }}
+                    >
+                      Today
+                    </button>
+                    
+                    <h2 style={{ 
+                      margin: 0, 
+                      fontSize: '1.5rem', 
+                      fontWeight: '700', 
+                      color: '#000000',
+                      textAlign: 'center'
+                    }}>
+                      {calendarView === 'month' 
+                        ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+                        : calendarView === 'week'
+                        ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                        : currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                      }
+                    </h2>
+                  </div>
 
                   <button
-                    onClick={() => nextMonth()}
+                    onClick={() => nextPeriod()}
                     className="nav-button"
                     style={{
                       padding: '0.75rem 1rem',
@@ -2198,6 +2301,93 @@ export default function TimetablePage() {
                   </button>
                 </div>
                 
+                {/* Calendar View Selector */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setCalendarView('month')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      border: calendarView === 'month' ? '2px solid #5884FD' : '1px solid #d1d5db',
+                      background: calendarView === 'month' ? '#5884FD' : '#ffffff',
+                      color: calendarView === 'month' ? '#ffffff' : '#374151',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      if (calendarView !== 'month') {
+                        e.currentTarget.style.background = '#f9fafb';
+                        e.currentTarget.style.borderColor = '#9ca3af';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (calendarView !== 'month') {
+                        e.currentTarget.style.background = '#ffffff';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }
+                    }}
+                  >
+                    Month
+                  </button>
+                  <button
+                    onClick={() => setCalendarView('week')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      border: calendarView === 'week' ? '2px solid #5884FD' : '1px solid #d1d5db',
+                      background: calendarView === 'week' ? '#5884FD' : '#ffffff',
+                      color: calendarView === 'week' ? '#ffffff' : '#374151',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      if (calendarView !== 'week') {
+                        e.currentTarget.style.background = '#f9fafb';
+                        e.currentTarget.style.borderColor = '#9ca3af';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (calendarView !== 'week') {
+                        e.currentTarget.style.background = '#ffffff';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }
+                    }}
+                  >
+                    Week
+                  </button>
+                  <button
+                    onClick={() => setCalendarView('day')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      border: calendarView === 'day' ? '2px solid #5884FD' : '1px solid #d1d5db',
+                      background: calendarView === 'day' ? '#5884FD' : '#ffffff',
+                      color: calendarView === 'day' ? '#ffffff' : '#374151',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      if (calendarView !== 'day') {
+                        e.currentTarget.style.background = '#f9fafb';
+                        e.currentTarget.style.borderColor = '#9ca3af';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (calendarView !== 'day') {
+                        e.currentTarget.style.background = '#ffffff';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }
+                    }}
+                  >
+                    Day
+                  </button>
+                </div>
 
               </div>
             )}
@@ -2371,8 +2561,11 @@ export default function TimetablePage() {
                 </>
               )}
 
-              {/* Calendar View (Week/Month) */}
+              {/* Calendar Views */}
               {viewMode === 'calendar' && (
+                <>
+                  {/* Month View */}
+                  {calendarView === 'month' && (
                 <div className="calendar-view" style={{ 
                   width: '100%', 
                   maxWidth: '100%', 
@@ -2434,7 +2627,7 @@ export default function TimetablePage() {
                       
                       return (
                         <div key={`prev-${index}`} className="calendar-cell other-month" style={{
-                          minHeight: '120px',
+                          minHeight: '150px',
                           padding: '0.75rem',
                           borderRight: '1px solid #E5E7EB',
                           borderBottom: '1px solid #E5E7EB',
@@ -2467,7 +2660,7 @@ export default function TimetablePage() {
                           key={dayNumber} 
                           className={`calendar-cell ${isToday ? 'today' : ''}`}
                           style={{
-                            minHeight: '120px',
+                            minHeight: '150px',
                             padding: '0.75rem',
                             borderRight: '1px solid #E5E7EB',
                             borderBottom: '1px solid #E5E7EB',
@@ -2645,7 +2838,7 @@ export default function TimetablePage() {
                       
                       return (
                         <div key={`next-${index}`} className="calendar-cell other-month" style={{
-                          minHeight: '120px',
+                          minHeight: '150px',
                           padding: '0.75rem',
                           borderRight: '1px solid #E5E7EB',
                           borderBottom: '1px solid #E5E7EB',
@@ -2667,6 +2860,253 @@ export default function TimetablePage() {
                   
 
                 </div>
+                  )}
+
+                  {/* Week View */}
+                  {calendarView === 'week' && (
+                    <div className="calendar-view" style={{ 
+                      width: '100%', 
+                      maxWidth: '100%', 
+                      overflow: 'hidden',
+                      padding: '0',
+                      margin: '0 auto'
+                    }}>
+                      <div style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                        minHeight: '600px'
+                      }}>
+                        {/* Week Header */}
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(7, 1fr)', 
+                          background: '#F9FAFB',
+                          borderBottom: '1px solid #E5E7EB'
+                        }}>
+                          {getWeekDates(currentDate).map((date, index) => (
+                            <div key={index} style={{
+                              padding: '1rem', 
+                              textAlign: 'center',
+                              fontWeight: '600',
+                              color: '#374151',
+                              borderRight: index < 6 ? '1px solid #E5E7EB' : 'none',
+                              fontFamily: "'Mabry Pro', 'Inter', sans-serif",
+                              fontSize: '0.875rem'
+                            }}>
+                              <div>{formatDateHeader(date)}</div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Week Body */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(7, 1fr)',
+                          minHeight: '500px'
+                        }}>
+                          {getWeekDates(currentDate).map((date, index) => {
+                            const dayMeetings = getMeetingsForDate(date);
+                            const isToday = date.toDateString() === new Date().toDateString();
+                            
+                            return (
+                              <div key={index} style={{
+                                padding: '1rem',
+                                borderRight: index < 6 ? '1px solid #E5E7EB' : 'none',
+                                background: isToday ? 'rgba(88, 132, 253, 0.05)' : '#FFFFFF',
+                                minHeight: '500px',
+                                position: 'relative'
+                              }}>
+                                {isToday && (
+                                  <div style={{ 
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '4px',
+                                    height: '100%',
+                                    background: '#5884FD'
+                                  }}></div>
+                                )}
+                                
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  {dayMeetings.map((meeting) => (
+                                    <div 
+                                      key={meeting.id}
+                                      onClick={() => handleMeetingClick(meeting)}
+                                      style={{ 
+                                        background: '#F8FAFC',
+                                        border: '1px solid #E2E8F0',
+                                        borderRadius: '8px',
+                                        padding: '0.75rem',
+                                        fontSize: '0.875rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        borderLeft: '3px solid #5884FD'
+                                      }}
+                                      onMouseOver={(e) => {
+                                        e.currentTarget.style.background = '#F1F5F9';
+                                        e.currentTarget.style.borderColor = '#5884FD';
+                                      }}
+                                      onMouseOut={(e) => {
+                                        e.currentTarget.style.background = '#F8FAFC';
+                                        e.currentTarget.style.borderColor = '#E2E8F0';
+                                      }}
+                                    >
+                                      <div style={{
+                                        fontWeight: '600',
+                                        color: '#1F2937',
+                                        marginBottom: '0.25rem'
+                                      }}>
+                                        {meeting.title}
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.75rem',
+                                        color: '#6B7280'
+                                      }}>
+                                        {formatTime(meeting.time)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Day View */}
+                  {calendarView === 'day' && (
+                    <div className="calendar-view" style={{ 
+                      width: '100%', 
+                      maxWidth: '100%', 
+                      overflow: 'hidden',
+                      padding: '0',
+                      margin: '0 auto'
+                    }}>
+                      <div style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                        minHeight: '700px'
+                      }}>
+                        {/* Day Header */}
+                        <div style={{ 
+                          background: '#F9FAFB',
+                          borderBottom: '1px solid #E5E7EB',
+                          padding: '1.5rem',
+                          textAlign: 'center'
+                        }}>
+                          <h3 style={{
+                            margin: 0,
+                            fontSize: '1.25rem',
+                            fontWeight: '600',
+                            color: '#1F2937',
+                            fontFamily: "'Mabry Pro', 'Inter', sans-serif"
+                          }}>
+                            {currentDate.toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              month: 'long', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </h3>
+                        </div>
+                        
+                        {/* Day Body - Time Grid */}
+                        <div style={{ padding: '1rem' }}>
+                          {Array.from({ length: 24 }, (_, hour) => {
+                            const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+                            const hourMeetings = getMeetingsForDate(currentDate).filter(meeting => 
+                              meeting.time.startsWith(hour.toString().padStart(2, '0'))
+                            );
+                            
+                            return (
+                              <div key={hour} style={{
+                                display: 'flex',
+                                borderBottom: '1px solid #F3F4F6',
+                                minHeight: '60px',
+                                alignItems: 'flex-start'
+                              }}>
+                                <div style={{
+                                  width: '80px',
+                                  padding: '0.5rem',
+                                  fontSize: '0.875rem',
+                                  color: '#6B7280',
+                                  fontWeight: '500',
+                                  textAlign: 'right',
+                                  borderRight: '1px solid #F3F4F6'
+                                }}>
+                                  {timeStr}
+                                </div>
+                                <div style={{
+                                  flex: 1,
+                                  padding: '0.5rem',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '0.25rem'
+                                }}>
+                                  {hourMeetings.map((meeting) => (
+                                    <div 
+                                      key={meeting.id}
+                                      onClick={() => handleMeetingClick(meeting)}
+                                      style={{ 
+                                        background: '#EEF2FF',
+                                        border: '1px solid #C7D2FE',
+                                        borderRadius: '8px',
+                                        padding: '0.75rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        borderLeft: '4px solid #5884FD'
+                                      }}
+                                      onMouseOver={(e) => {
+                                        e.currentTarget.style.background = '#E0E7FF';
+                                        e.currentTarget.style.borderColor = '#A5B4FC';
+                                      }}
+                                      onMouseOut={(e) => {
+                                        e.currentTarget.style.background = '#EEF2FF';
+                                        e.currentTarget.style.borderColor = '#C7D2FE';
+                                      }}
+                                    >
+                                      <div style={{
+                                        fontWeight: '600',
+                                        color: '#1F2937',
+                                        marginBottom: '0.25rem',
+                                        fontSize: '1rem'
+                                      }}>
+                                        {meeting.title}
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.875rem',
+                                        color: '#6B7280',
+                                        marginBottom: '0.25rem'
+                                      }}>
+                                        {formatTime(meeting.time)} • {meeting.project_name}
+                                      </div>
+                                      {meeting.description && (
+                                        <div style={{
+                                          fontSize: '0.75rem',
+                                          color: '#9CA3AF'
+                                        }}>
+                                          {meeting.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
           </div>
         </main>
