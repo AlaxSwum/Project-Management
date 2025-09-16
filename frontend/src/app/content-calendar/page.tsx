@@ -619,14 +619,21 @@ export default function ContentCalendarPage() {
 
   // Get assignable users for current folder
   const getAssignableUsers = async () => {
+    console.log('getAssignableUsers called, currentFolder:', currentFolder?.name || 'No folder')
+    
     if (!currentFolder) {
       // If no folder selected, show all content calendar members
+      console.log('No current folder, returning all members:', members.map(m => m.user?.name || 'Unknown'))
       return members
     }
     
     try {
+      console.log('Getting folder members for folder ID:', currentFolder.id)
       const { supabaseDb } = await import('@/lib/supabase')
-      const { data: folderMembersData } = await supabaseDb.getContentCalendarFolderMembers(currentFolder.id)
+      const { data: folderMembersData, error } = await supabaseDb.getContentCalendarFolderMembers(currentFolder.id)
+      
+      console.log('Folder members data:', folderMembersData)
+      console.log('Folder members error:', error)
       
       // Transform folder members to match the expected format
       const folderMembers = (folderMembersData || []).map((member: any) => ({
@@ -644,6 +651,7 @@ export default function ContentCalendarPage() {
       if (currentFolder.created_by_id && !folderMembers.some((m: any) => m.user_id === currentFolder.created_by_id)) {
         const creator = allUsers.find(u => u.id === currentFolder.created_by_id)
         if (creator) {
+          console.log('Adding folder creator to assignable users:', creator.name)
           folderMembers.push({
             user_id: creator.id,
             role: 'creator',
@@ -652,11 +660,12 @@ export default function ContentCalendarPage() {
         }
       }
       
-      console.log('Assignable users for folder:', folderMembers.map((m: any) => m.user.name))
+      console.log('Final assignable users for folder:', folderMembers.map((m: any) => m.user.name))
       return folderMembers
     } catch (err) {
       console.error('Error getting assignable users:', err)
       // Fallback to general members
+      console.log('Fallback: returning all members due to error')
       return members
     }
   }
@@ -705,7 +714,7 @@ export default function ContentCalendarPage() {
     setShowAddForm(false)
   }
 
-  const startEdit = (item: ContentCalendarItem) => {
+  const startEdit = async (item: ContentCalendarItem) => {
     setFormData({
       date: item.date,
       content_type: item.content_type,
@@ -722,6 +731,19 @@ export default function ContentCalendarPage() {
       allowed_users: item.allowed_users || []
     })
     setEditingItem(item)
+    
+    // Update assignable users for the item's folder
+    if (item.folder_id) {
+      const folder = folders.find(f => f.id === item.folder_id)
+      if (folder) {
+        setCurrentFolder(folder)
+        const users = await getAssignableUsers()
+        setAssignableUsers(users)
+      }
+    } else {
+      setAssignableUsers(members)
+    }
+    
     setShowAddForm(true)
   }
 
@@ -1279,11 +1301,16 @@ export default function ContentCalendarPage() {
                 </button>
                 
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     setFormData({
                       ...formData,
                       folder_id: currentFolder?.id || null
                     })
+                    
+                    // Update assignable users for current folder
+                    const users = await getAssignableUsers()
+                    setAssignableUsers(users)
+                    
                     setShowAddForm(true)
                   }}
                   style={{
