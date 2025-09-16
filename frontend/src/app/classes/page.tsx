@@ -1073,13 +1073,12 @@ export default function ClassesPage() {
             }
             
             .student-mobile-card {
-              background: rgba(255, 255, 255, 0.95) !important;
-              backdrop-filter: blur(20px) !important;
-              border-radius: 16px !important;
+              background: #ffffff !important;
+              border-radius: 12px !important;
               padding: 1.5rem !important;
               margin-bottom: 1rem !important;
-              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-              border: 1px solid rgba(255, 255, 255, 0.2) !important;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+              border: 1px solid #e5e7eb !important;
             }
             
             .student-mobile-card > div {
@@ -1155,7 +1154,7 @@ export default function ClassesPage() {
         `
       }} />
       
-      <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div className="classes-main-content" style={{ 
