@@ -372,7 +372,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div>
+    <div className="calendar-container">
       {isMobile && <MobileHeader title="Calendar" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
@@ -381,6 +381,8 @@ export default function CalendarPage() {
           min-height: 100vh;
           display: flex;
           background: #F5F5ED;
+          width: 100%;
+          ${isMobile ? 'flex-direction: column;' : ''}
         }
         
 
@@ -391,8 +393,9 @@ export default function CalendarPage() {
           position: relative;
           z-index: 1;
           padding-top: ${isMobile ? '70px' : '0'};
-          width: ${isMobile ? '100%' : 'auto'};
+          width: ${isMobile ? '100vw' : 'auto'};
           min-height: 100vh;
+          ${isMobile ? 'margin-left: 0 !important; max-width: 100vw; overflow-x: hidden;' : ''}
         }
         
         .header {
@@ -1359,31 +1362,50 @@ export default function CalendarPage() {
           
           /* Mobile styles */
           @media (max-width: 768px) {
-            .calendar-container {
-              min-height: 100vh;
-              display: block;
-              background: #F5F5ED;
-              width: 100%;
-              overflow-x: hidden;
+            * {
+              box-sizing: border-box;
             }
             
-            .main-content {
-              margin-left: 0;
+            body, html {
               width: 100%;
               max-width: 100vw;
               overflow-x: hidden;
-              padding-top: ${isMobile ? '70px' : '0'};
+            }
+            
+            .calendar-container {
+              min-height: 100vh;
+              display: block !important;
+              background: #F5F5ED;
+              width: 100vw !important;
+              max-width: 100vw !important;
+              overflow-x: hidden;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .main-content {
+              margin-left: 0 !important;
+              width: 100vw !important;
+              max-width: 100vw !important;
+              overflow-x: hidden;
+              padding-top: 70px;
+              margin: 0;
+              padding-left: 0;
+              padding-right: 0;
             }
             
             .header {
               padding: 0.875rem;
               position: sticky;
-              top: ${isMobile ? '70px' : '0'};
+              top: 70px;
               background: rgba(255, 255, 255, 0.95);
               backdrop-filter: blur(10px);
               z-index: 30;
-              width: 100%;
+              width: 100vw !important;
+              max-width: 100vw !important;
               box-sizing: border-box;
+              margin: 0;
+              overflow-x: hidden;
             }
             .header-title {
               font-size: 1.375rem;
@@ -1459,10 +1481,13 @@ export default function CalendarPage() {
             }
             .calendar-content {
               padding: 0.875rem;
-              width: 100%;
+              width: 100vw !important;
+              max-width: 100vw !important;
               box-sizing: border-box;
               display: block !important;
               visibility: visible !important;
+              margin: 0;
+              overflow-x: hidden;
             }
             
             .calendar-grid {

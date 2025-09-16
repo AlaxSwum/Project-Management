@@ -1106,18 +1106,31 @@ export default function TimetablePage() {
           }
           
           @media (max-width: 768px) {
-            .main-content {
-              margin-left: 0;
+            * {
+              box-sizing: border-box;
+            }
+            
+            body, html {
               width: 100%;
               max-width: 100vw;
+              overflow-x: hidden;
+            }
+            
+            .main-content {
+              margin-left: 0 !important;
+              width: 100vw !important;
+              max-width: 100vw !important;
               overflow-x: hidden;
             }
             
             .header {
               padding: 1rem;
               position: relative;
-              width: 100%;
+              width: 100vw !important;
+              max-width: 100vw !important;
               box-sizing: border-box;
+              margin: 0;
+              overflow-x: hidden;
             }
             
             .header-content {
@@ -1196,10 +1209,12 @@ export default function TimetablePage() {
             
             .main-content-area {
               padding: 1rem;
-              max-width: 100%;
+              max-width: 100vw !important;
               min-height: calc(100vh - 150px);
-              width: 100%;
+              width: 100vw !important;
               box-sizing: border-box;
+              margin: 0;
+              overflow-x: hidden;
             }
             
             /* Calendar Navigation Mobile - 2 Row Layout */
