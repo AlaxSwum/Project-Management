@@ -19,6 +19,7 @@ import {
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
+import MobileHeader from '@/components/MobileHeader';
 
 interface User {
   id: number;
@@ -325,6 +326,8 @@ export default function CalendarPage() {
 
   return (
     <div>
+      <MobileHeader title="Calendar" isMobile={isMobile} />
+      
       <style dangerouslySetInnerHTML={{
         __html: `
         .calendar-container {
@@ -336,10 +339,11 @@ export default function CalendarPage() {
 
         .main-content {
           flex: 1;
-          margin-left: 280px;
+          margin-left: ${isMobile ? '0' : '280px'};
           background: transparent;
           position: relative;
           z-index: 1;
+          padding-top: ${isMobile ? '70px' : '0'};
         }
         
         .header {
@@ -2110,10 +2114,12 @@ export default function CalendarPage() {
       }} />
       
       <div className="calendar-container">
-        <Sidebar 
-          projects={projects} 
-          onCreateProject={() => {}} 
-        />
+        {!isMobile && (
+          <Sidebar 
+            projects={projects} 
+            onCreateProject={() => {}} 
+          />
+        )}
         
         <div className="main-content">
           <header className="header">

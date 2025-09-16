@@ -26,6 +26,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
+import MobileHeader from '@/components/MobileHeader';
 
 interface User {
   id: number;
@@ -128,6 +129,18 @@ export default function MyTasksPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Calendar view state
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -637,6 +650,8 @@ export default function MyTasksPage() {
 
   return (
     <div>
+      <MobileHeader title="My Tasks" isMobile={isMobile} />
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -666,8 +681,11 @@ export default function MyTasksPage() {
           }
           .main-content {
             flex: 1;
-            margin-left: 256px;
+            margin-left: ${isMobile ? '0' : '256px'};
             background: transparent;
+            padding-top: ${isMobile ? '70px' : '0'};
+            padding-left: ${isMobile ? '12px' : '0'};
+            padding-right: ${isMobile ? '12px' : '0'};
           }
           .header {
             background: transparent;
@@ -1587,10 +1605,12 @@ export default function MyTasksPage() {
       }} />
       
       <div className="my-tasks-container">
-        <Sidebar 
-          projects={allProjects} 
-          onCreateProject={() => {}} 
-        />
+        {!isMobile && (
+          <Sidebar 
+            projects={allProjects} 
+            onCreateProject={() => {}} 
+          />
+        )}
         
         <div className="main-content">
           <header className="header">
