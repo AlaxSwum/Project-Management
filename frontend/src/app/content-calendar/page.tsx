@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
+import MobileHeader from '@/components/MobileHeader'
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface ContentCalendarItem {
@@ -48,6 +49,18 @@ export default function ContentCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const [hasAccess, setHasAccess] = useState(false)
   const [userRole, setUserRole] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
@@ -698,6 +711,8 @@ export default function ContentCalendarPage() {
 
   return (
     <>
+      <MobileHeader title="Content Calendar" isMobile={isMobile} />
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -708,11 +723,12 @@ export default function ContentCalendarPage() {
       }} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
           background: '#F5F5ED', 
           flex: 1,
           minHeight: '100vh'

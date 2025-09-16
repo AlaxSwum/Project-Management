@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -121,6 +122,18 @@ export default function CompanyOutreachPage() {
   const [hasAccess, setHasAccess] = useState(false)
   const [userRole, setUserRole] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Data states
   const [companies, setCompanies] = useState<CompanyOutreach[]>([])
@@ -989,10 +1002,12 @@ export default function CompanyOutreachPage() {
   if (authLoading || isLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <MobileHeader title="Company Outreach" isMobile={isMobile} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
           background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
@@ -1021,10 +1036,12 @@ export default function CompanyOutreachPage() {
   if (!hasAccess) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <MobileHeader title="Company Outreach" isMobile={isMobile} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
           background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
@@ -1073,12 +1090,15 @@ export default function CompanyOutreachPage() {
         `
       }} />
       
+      <MobileHeader title="Company Outreach" isMobile={isMobile} />
+      
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
           background: '#F5F5ED', 
           flex: 1,
           minHeight: '100vh',
