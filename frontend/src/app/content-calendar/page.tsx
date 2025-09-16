@@ -868,7 +868,7 @@ export default function ContentCalendarPage() {
 
   return (
     <>
-      <MobileHeader title="Content Calendar" isMobile={isMobile} />
+      {isMobile && <MobileHeader title="Content Calendar" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -876,22 +876,161 @@ export default function ContentCalendarPage() {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          
+          /* Mobile Responsive Styles */
+          @media (max-width: 768px) {
+            .content-calendar-container {
+              display: block !important;
+              width: 100vw !important;
+              max-width: 100vw !important;
+              overflow-x: hidden;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .content-calendar-main {
+              margin-left: 0 !important;
+              width: 100vw !important;
+              max-width: 100vw !important;
+              padding: 1rem !important;
+              padding-top: 80px !important;
+              overflow-x: hidden;
+              box-sizing: border-box;
+            }
+            
+            .content-calendar-header {
+              flex-direction: column !important;
+              gap: 1rem !important;
+              align-items: stretch !important;
+              margin-bottom: 2rem !important;
+              padding-bottom: 1rem !important;
+            }
+            
+            .content-calendar-title {
+              font-size: 1.75rem !important;
+              text-align: center !important;
+            }
+            
+            .content-calendar-subtitle {
+              font-size: 0.9rem !important;
+              text-align: center !important;
+            }
+            
+            .content-calendar-actions {
+              flex-direction: column !important;
+              gap: 0.75rem !important;
+              width: 100% !important;
+            }
+            
+            .content-calendar-actions button {
+              width: 100% !important;
+              justify-content: center !important;
+              padding: 0.875rem !important;
+              font-size: 0.9rem !important;
+            }
+            
+            .folder-grid {
+              grid-template-columns: 1fr !important;
+              gap: 1rem !important;
+            }
+            
+            .content-table {
+              overflow-x: auto !important;
+              -webkit-overflow-scrolling: touch !important;
+            }
+            
+            .content-table-header {
+              display: none !important;
+            }
+            
+            .content-item-row {
+              display: block !important;
+              background: #ffffff !important;
+              border-radius: 12px !important;
+              padding: 1.5rem !important;
+              margin-bottom: 1rem !important;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+              border: 1px solid #e5e7eb !important;
+            }
+            
+            .content-field {
+              display: flex !important;
+              justify-content: space-between !important;
+              align-items: center !important;
+              padding: 0.5rem 0 !important;
+              border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+            }
+            
+            .content-field:last-child {
+              border-bottom: none !important;
+            }
+            
+            .content-field-label {
+              font-weight: 600 !important;
+              color: #374151 !important;
+              font-size: 0.8rem !important;
+              min-width: 80px !important;
+            }
+            
+            .content-field-value {
+              font-size: 0.85rem !important;
+              color: #6b7280 !important;
+              text-align: right !important;
+              flex: 1 !important;
+            }
+            
+            .mobile-actions {
+              display: flex !important;
+              gap: 0.5rem !important;
+              justify-content: center !important;
+              margin-top: 1rem !important;
+            }
+            
+            .mobile-actions button {
+              flex: 1 !important;
+              padding: 0.75rem !important;
+              font-size: 0.8rem !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .content-calendar-main {
+              padding: 0.75rem !important;
+            }
+            
+            .content-calendar-title {
+              font-size: 1.5rem !important;
+            }
+            
+            .content-calendar-subtitle {
+              font-size: 0.8rem !important;
+            }
+            
+            .content-item-row {
+              padding: 1rem !important;
+            }
+            
+            .content-calendar-actions button {
+              padding: 0.75rem !important;
+              font-size: 0.8rem !important;
+            }
+          }
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div className="content-calendar-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
-        <div style={{ 
+        <div className="content-calendar-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
-          paddingTop: isMobile ? '70px' : '2rem',
-          background: '#F5F5ED', 
+          paddingTop: isMobile ? '80px' : '2rem',
+          background: 'transparent', 
           flex: 1,
           minHeight: '100vh'
         }}>
           {/* Header */}
-          <div style={{ 
+          <div className="content-calendar-header" style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
@@ -899,7 +1038,7 @@ export default function ContentCalendarPage() {
             paddingBottom: '1.5rem'
           }}>
             <div>
-              <h1 style={{ 
+              <h1 className="content-calendar-title" style={{ 
                 fontSize: '2.5rem', 
                 fontWeight: '300', 
                 margin: '0', 
@@ -908,12 +1047,12 @@ export default function ContentCalendarPage() {
               }}>
                 Content Calendar
               </h1>
-              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              <p className="content-calendar-subtitle" style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage your social media content planning and scheduling
               </p>
             </div>
             
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div className="content-calendar-actions" style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={() => {
                   setFolderFormData({
@@ -1246,7 +1385,7 @@ export default function ContentCalendarPage() {
 
                     {/* Content Table - Only show when inside a folder */}
           {currentFolder && (
-            <div style={{
+            <div className="content-table" style={{
               background: '#ffffff',
               border: '1px solid #e8e8e8',
               borderRadius: '16px',
@@ -1255,7 +1394,7 @@ export default function ContentCalendarPage() {
               maxHeight: '70vh'
             }}>
               {/* Sticky Header */}
-              <div style={{
+              <div className="content-table-header" style={{
                 display: 'grid',
                 gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
                 gap: '0',
@@ -1518,20 +1657,21 @@ export default function ContentCalendarPage() {
                 filteredItems.map((item, index) => (
                   <div 
                     key={item.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, item)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, index)}
+                    className={isMobile ? "content-item-mobile" : "content-item-row"}
+                    draggable={!isMobile}
+                    onDragStart={!isMobile ? (e) => handleDragStart(e, item) : undefined}
+                    onDragEnd={!isMobile ? handleDragEnd : undefined}
+                    onDragOver={!isMobile ? (e) => handleDragOver(e, index) : undefined}
+                    onDragLeave={!isMobile ? handleDragLeave : undefined}
+                    onDrop={!isMobile ? (e) => handleDrop(e, index) : undefined}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
+                      display: isMobile ? 'block' : 'grid',
+                      gridTemplateColumns: isMobile ? 'none' : '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
                       gap: '0',
                       borderBottom: '1px solid #f0f0f0',
                       fontSize: '0.85rem',
                       transition: 'all 0.2s ease',
-                      cursor: 'grab',
+                      cursor: isMobile ? 'default' : 'grab',
                       backgroundColor: dragOverIndex === index ? '#f0f9ff' : '#ffffff',
                       borderTop: dragOverIndex === index ? '2px solid #3b82f6' : 'none'
                     }}
@@ -1546,6 +1686,117 @@ export default function ContentCalendarPage() {
                       }
                     }}
                   >
+                    {isMobile ? (
+                      /* Mobile Card Layout */
+                      <div className="content-item-mobile">
+                        <div className="content-field">
+                          <span className="content-field-label">Date:</span>
+                          <span className="content-field-value">{formatDate(item.date)}</span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Type:</span>
+                          <span className="content-field-value">{item.content_type}</span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Category:</span>
+                          <span className="content-field-value">{item.category}</span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Platform:</span>
+                          <span className="content-field-value">{item.social_media}</span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Title:</span>
+                          <span className="content-field-value">{item.content_title}</span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Assigned:</span>
+                          <span className="content-field-value">
+                            {item.assignees?.map(a => a.name).join(', ') || 'Unassigned'}
+                          </span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Status:</span>
+                          <span className="content-field-value">
+                            <span style={{
+                              padding: '0.25rem 0.5rem',
+                              background: item.status === 'completed' ? '#10B981' : item.status === 'in_progress' ? '#5884FD' : item.status === 'review' ? '#FFB333' : '#C483D9',
+                              color: '#ffffff',
+                              borderRadius: '8px',
+                              fontSize: '0.7rem',
+                              fontWeight: '500'
+                            }}>
+                              {getStatusLabel(item.status)}
+                            </span>
+                          </span>
+                        </div>
+                        <div className="content-field">
+                          <span className="content-field-label">Security:</span>
+                          <span className="content-field-value">
+                            <span style={{
+                              padding: '0.25rem 0.5rem',
+                              background: SECURITY_LEVELS.find(l => l.value === (item.security_level || 'public'))?.color || '#10b981',
+                              color: '#ffffff',
+                              borderRadius: '8px',
+                              fontSize: '0.7rem',
+                              fontWeight: '500'
+                            }}>
+                              {SECURITY_LEVELS.find(l => l.value === (item.security_level || 'public'))?.label || 'Public'}
+                            </span>
+                          </span>
+                        </div>
+                        
+                        <div className="mobile-actions">
+                          <button
+                            onClick={() => startEdit(item)}
+                            style={{
+                              padding: '0.75rem',
+                              background: '#5884FD',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: '500'
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            style={{
+                              padding: '0.75rem',
+                              background: '#F87239',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: '500'
+                            }}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => handleManageFilePermissions(item)}
+                            style={{
+                              padding: '0.75rem',
+                              background: '#6b7280',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: '500'
+                            }}
+                          >
+                            Security
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Desktop Grid Layout */
+                      <>
                     {/* Published Date - Frozen */}
                     <div 
                       onDoubleClick={() => handleCellDoubleClick(item.id, 'date', item.date)}
@@ -1991,6 +2242,8 @@ export default function ContentCalendarPage() {
                         <TrashIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                     </div>
+                    </>
+                    )}
                   </div>
                 ))
               )}
