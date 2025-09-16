@@ -90,6 +90,7 @@ export default function ContentCalendarPage() {
   const [selectedFolderForPermissions, setSelectedFolderForPermissions] = useState<any | null>(null)
   const [selectedFileForPermissions, setSelectedFileForPermissions] = useState<ContentCalendarItem | null>(null)
   const [folderMembers, setFolderMembers] = useState<any[]>([])
+  const [assignableUsers, setAssignableUsers] = useState<any[]>([])
   const [editingItem, setEditingItem] = useState<ContentCalendarItem | null>(null)
   const [formData, setFormData] = useState({
     date: '',
@@ -377,6 +378,20 @@ export default function ContentCalendarPage() {
     filterItemsByFolder(contentItems, selectedFolder)
   }, [contentItems, selectedFolder])
 
+  useEffect(() => {
+    // Update assignable users when folder changes
+    const updateAssignableUsers = async () => {
+      const users = await getAssignableUsers()
+      setAssignableUsers(users)
+    }
+    
+    if (currentFolder) {
+      updateAssignableUsers()
+    } else {
+      setAssignableUsers(members)
+    }
+  }, [currentFolder, members])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -563,6 +578,50 @@ export default function ContentCalendarPage() {
         return userRole === 'admin'
       default:
         return true
+    }
+  }
+
+  // Get assignable users for current folder
+  const getAssignableUsers = async () => {
+    if (!currentFolder) {
+      // If no folder selected, show all content calendar members
+      return members
+    }
+    
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      const { data: folderMembersData } = await supabaseDb.getContentCalendarFolderMembers(currentFolder.id)
+      
+      // Transform folder members to match the expected format
+      const folderMembers = (folderMembersData || []).map((member: any) => ({
+        user_id: member.user_id,
+        role: member.role,
+        user: member.auth_user || {
+          id: member.user_id,
+          name: 'Unknown User',
+          email: '',
+          role: 'member'
+        }
+      }))
+      
+      // Also include the folder creator if not already in members
+      if (currentFolder.created_by_id && !folderMembers.some((m: any) => m.user_id === currentFolder.created_by_id)) {
+        const creator = allUsers.find(u => u.id === currentFolder.created_by_id)
+        if (creator) {
+          folderMembers.push({
+            user_id: creator.id,
+            role: 'creator',
+            user: creator
+          })
+        }
+      }
+      
+      console.log('Assignable users for folder:', folderMembers.map((m: any) => m.user.name))
+      return folderMembers
+    } catch (err) {
+      console.error('Error getting assignable users:', err)
+      // Fallback to general members
+      return members
     }
   }
 
@@ -2685,7 +2744,9 @@ export default function ContentCalendarPage() {
                     </div>
 
                     <div style={{ marginBottom: '2rem' }}>
-                      <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Assign To</label>
+                      <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>
+                        Assign To {currentFolder ? `(${currentFolder.name} members only)` : '(All members)'}
+                      </label>
                       <div style={{ 
                         border: '2px solid #e5e7eb', 
                         borderRadius: '8px', 
@@ -2694,7 +2755,7 @@ export default function ContentCalendarPage() {
                         overflow: 'auto',
                         backgroundColor: '#fafafa'
                       }}>
-                        {(members || []).map(member => (
+                        {(assignableUsers || []).map(member => (
                           <label key={member.user_id} style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
