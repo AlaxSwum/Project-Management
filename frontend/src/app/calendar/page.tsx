@@ -413,9 +413,10 @@ export default function CalendarPage() {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 1.5rem;
-          max-width: 1200px;
+          max-width: ${isMobile ? 'none' : '1200px'};
           margin-left: auto;
           margin-right: auto;
+          width: ${isMobile ? '100%' : 'auto'};
         }
         
         .header-controls {
@@ -481,8 +482,9 @@ export default function CalendarPage() {
           grid-template-columns: repeat(4, 1fr);
           gap: 1rem;
           padding-top: 1.5rem;
-          max-width: 1000px;
+          max-width: ${isMobile ? 'none' : '1000px'};
           margin: 0 auto;
+          width: ${isMobile ? '100%' : 'auto'};
         }
         
         .calendar-stats .stat-item {
@@ -580,10 +582,11 @@ export default function CalendarPage() {
         }
         .calendar-content {
           padding: 2rem;
-          max-width: 1200px;
+          max-width: ${isMobile ? 'none' : '1200px'};
           margin: 0 auto;
           display: block;
           visibility: visible;
+          width: ${isMobile ? '100%' : 'auto'};
         }
         
         .calendar-grid {
@@ -1362,13 +1365,15 @@ export default function CalendarPage() {
           /* Mobile styles */
           @media (max-width: 768px) {
             * {
-              box-sizing: border-box;
+              box-sizing: border-box !important;
             }
             
             body, html {
-              width: 100%;
-              max-width: 100vw;
-              overflow-x: hidden;
+              width: 100% !important;
+              max-width: 100vw !important;
+              overflow-x: hidden !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
             
             .calendar-container {
@@ -1488,13 +1493,13 @@ export default function CalendarPage() {
               word-break: break-word;
             }
             .calendar-content {
-              padding: 0.875rem;
+              padding: 0.5rem !important;
               width: 100vw !important;
               max-width: 100vw !important;
               box-sizing: border-box;
               display: block !important;
               visibility: visible !important;
-              margin: 0;
+              margin: 0 !important;
               overflow-x: hidden;
             }
             
@@ -1503,20 +1508,21 @@ export default function CalendarPage() {
               overflow: visible;
               box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
               border: 1px solid #e5e7eb;
-              width: 100%;
-              max-width: 100%;
+              width: calc(100vw - 1rem) !important;
+              max-width: calc(100vw - 1rem) !important;
               box-sizing: border-box;
               display: block !important;
               visibility: visible !important;
+              margin: 0 !important;
             }
             
             /* Mobile Calendar Header */
             .calendar-header {
               background: #f9fafb;
               padding: 0;
-              display: grid;
-              grid-template-columns: repeat(7, 1fr);
-              width: 100%;
+              display: grid !important;
+              grid-template-columns: repeat(7, 1fr) !important;
+              width: 100% !important;
             }
             .calendar-header-cell {
               color: #374151;
@@ -2090,8 +2096,24 @@ export default function CalendarPage() {
           
           /* Small mobile styles */
           @media (max-width: 480px) {
+            .calendar-container,
+            .main-content,
+            .header,
+            .header-content,
+            .calendar-content,
+            .calendar-grid,
+            .calendar-header,
+            .calendar-body {
+              width: 100vw !important;
+              max-width: 100vw !important;
+              margin: 0 !important;
+              padding-left: 0.5rem !important;
+              padding-right: 0.5rem !important;
+              box-sizing: border-box !important;
+            }
+            
             .header {
-              padding: 0.875rem;
+              padding: 0.875rem 0.5rem;
             }
             .header-title {
               font-size: 1.375rem;
@@ -2099,19 +2121,30 @@ export default function CalendarPage() {
             .calendar-stats {
               grid-template-columns: 1fr;
               gap: 0.5rem;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
             .stat-item {
               padding: 0.75rem;
             }
             .calendar-nav {
-              gap: 1rem;
+              gap: 0.5rem;
+              width: 100% !important;
             }
             .month-year {
-              font-size: 1rem;
-              min-width: 150px;
+              font-size: 0.9rem;
+              flex: 1;
+              text-align: center;
             }
             .calendar-content {
-              padding: 0.75rem;
+              padding: 0.5rem !important;
+              width: 100vw !important;
+              margin: 0 !important;
+            }
+            .calendar-grid {
+              width: calc(100vw - 1rem) !important;
+              margin: 0 !important;
             }
             .calendar-cell {
               padding: 0.875rem;
