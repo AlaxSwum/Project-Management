@@ -2323,16 +2323,17 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
         })}
       </div>
       
-      {/* Week Calendar Grid - Like Month View */}
+      {/* Week Calendar Grid - Proper Calendar Layout */}
       <div 
         className="week-calendar-grid"
         style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(7, 1fr)', 
-          gap: isMobile ? '1px' : '2px',
+          gap: isMobile ? '2px' : '4px',
           background: '#E2E8F0',
           borderRadius: '12px',
-          padding: '2px'
+          padding: '4px',
+          minHeight: isMobile ? '300px' : '400px'
         }}>
         {weekDays.map((day, index) => {
           const dayTasks = getDayTasks(day);
@@ -2345,25 +2346,36 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
               className={`week-day-cell ${isMobile ? 'mobile-task-item' : ''}`}
               style={{
                 background: 'white',
-                minHeight: 'auto',
-                padding: isMobile ? '6px' : '12px',
-                border: isToday ? (isMobile ? '2px solid #3B82F6' : '3px solid #3B82F6') : 'none',
+                minHeight: isMobile ? '120px' : '150px',
+                padding: isMobile ? '8px' : '12px',
+                border: isToday ? '2px solid #3B82F6' : '1px solid #E5E7EB',
                 position: 'relative',
                 cursor: 'pointer',
                 borderRadius: '8px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: isMobile ? '2px' : '4px'
+                gap: isMobile ? '4px' : '6px'
               }}
             >
               <div style={{ 
-                fontWeight: isToday ? '800' : '600',
-                color: isToday ? '#3B82F6' : '#1F2937',
-                marginBottom: '8px',
-                fontSize: isMobile ? '14px' : '16px',
-                textAlign: 'center'
+                textAlign: 'center',
+                marginBottom: '8px'
               }}>
-                {day.getDate()}
+                <div style={{
+                  fontSize: isMobile ? '10px' : '12px',
+                  color: '#64748B',
+                  fontWeight: '500',
+                  marginBottom: '2px'
+                }}>
+                  {day.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                </div>
+                <div style={{
+                  fontSize: isMobile ? '18px' : '20px',
+                  fontWeight: '800',
+                  color: isToday ? '#3B82F6' : '#1F2937'
+                }}>
+                  {day.getDate()}
+                </div>
               </div>
               
               {/* Tasks for this day */}
