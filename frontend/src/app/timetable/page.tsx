@@ -556,16 +556,8 @@ export default function TimetablePage() {
 
   // Calculate calendar values dynamically
   const today = new Date();
-  const daysInMonth = useMemo(() => {
-    const days = getDaysInMonth(currentDate);
-    console.log('Days in month:', days, 'for date:', currentDate);
-    return days;
-  }, [currentDate]);
-  const firstDay = useMemo(() => {
-    const first = getFirstDayOfMonth(currentDate);
-    console.log('First day of month:', first, 'for date:', currentDate);
-    return first;
-  }, [currentDate]);
+  const daysInMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
+  const firstDay = useMemo(() => getFirstDayOfMonth(currentDate), [currentDate]);
 
   const getAttendeesList = (meeting: Meeting) => {
     if (meeting.attendees_list && meeting.attendees_list.length > 0) {
@@ -2575,7 +2567,6 @@ export default function TimetablePage() {
                 <>
                   {/* Month View */}
                   {calendarView === 'month' && (
-                    console.log('Rendering month view, daysInMonth:', daysInMonth, 'firstDay:', firstDay),
                 <div className="calendar-view" style={{ 
                   width: '100%', 
                   maxWidth: '100%', 
