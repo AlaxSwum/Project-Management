@@ -1103,13 +1103,20 @@ export default function PersonalTaskManager() {
             }
             
             .week-calendar-grid {
-              gap: 1px !important;
-              padding: 1px !important;
+              gap: 2px !important;
+              padding: 2px !important;
+              display: grid !important;
+              grid-template-columns: repeat(7, 1fr) !important;
+              width: 100% !important;
             }
             
             .week-day-cell {
-              min-height: 100px !important;
-              padding: 4px !important;
+              min-height: 120px !important;
+              padding: 6px !important;
+              display: flex !important;
+              flex-direction: column !important;
+              background: white !important;
+              border-radius: 6px !important;
             }
           }
           

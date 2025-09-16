@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { reportingService } from '@/lib/api-compatibility';
 // Icons removed for clean design;
 import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
 
 export default function ReportingPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -15,6 +16,18 @@ export default function ReportingPage() {
   const [error, setError] = useState('');
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     // Require authentication for project-based access control
@@ -92,6 +105,8 @@ export default function ReportingPage() {
 
   return (
     <div>
+      <MobileHeader title="Reports" isMobile={isMobile} />
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -109,8 +124,11 @@ export default function ReportingPage() {
           }
           .main-content {
             flex: 1;
-            margin-left: 256px;
+            margin-left: ${isMobile ? '0' : '256px'};
             background: #F5F5ED;
+            padding-top: ${isMobile ? '70px' : '0'};
+            padding-left: ${isMobile ? '12px' : '0'};
+            padding-right: ${isMobile ? '12px' : '0'};
           }
           .header {
             background: transparent;
@@ -362,7 +380,7 @@ export default function ReportingPage() {
         }} />
 
       <div className="reporting-container">
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
 
         <main className="main-content">
           <header className="header">

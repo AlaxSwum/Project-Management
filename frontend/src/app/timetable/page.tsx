@@ -1157,13 +1157,17 @@ export default function TimetablePage() {
             }
             
             /* Calendar Grid Mobile - Fixed Column Widths */
-            .calendar-view > div {
-              gap: 1px !important;
-              border-radius: 4px !important;
+            .calendar-view,
+            .calendar-view > div,
+            [class*="calendar-grid"],
+            .calendar-container > div {
+              gap: 2px !important;
+              border-radius: 8px !important;
               width: 100% !important;
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
               overflow-x: auto !important;
+              max-width: 100vw !important;
             }
             
             /* Calendar Day Cells Mobile */
