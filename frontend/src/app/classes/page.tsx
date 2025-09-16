@@ -1072,13 +1072,35 @@ export default function ClassesPage() {
               -webkit-overflow-scrolling: touch !important;
             }
             
-            .students-table-header,
-            .students-table-row {
+            .student-mobile-card {
+              background: rgba(255, 255, 255, 0.95) !important;
+              backdrop-filter: blur(20px) !important;
+              border-radius: 16px !important;
+              padding: 1.5rem !important;
+              margin-bottom: 1rem !important;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+              border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }
+            
+            .student-mobile-card > div {
               display: flex !important;
-              flex-direction: column !important;
-              gap: 0.5rem !important;
-              padding: 1rem !important;
-              border-bottom: 1px solid #e5e7eb !important;
+              justify-content: space-between !important;
+              align-items: center !important;
+              padding: 0.75rem 0 !important;
+              border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+              border-right: none !important;
+            }
+            
+            .student-mobile-card > div:last-child {
+              border-bottom: none !important;
+            }
+            
+            .students-table {
+              overflow: visible !important;
+            }
+            
+            .students-table-header {
+              display: none !important;
             }
             
             .student-field {
@@ -1133,13 +1155,13 @@ export default function ClassesPage() {
         `
       }} />
       
-      <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div className="classes-main-content" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: '2rem', 
-          background: '#F5F5ED', 
+          background: 'transparent', 
           flex: 1,
           minHeight: '100vh',
           paddingTop: isMobile ? '80px' : '2rem'
@@ -1515,13 +1537,18 @@ export default function ClassesPage() {
                 </div>
 
                                                   {students.map(student => (
-                   <div key={student.id} style={{
-                     display: 'grid',
-                     gridTemplateColumns: '180px 120px 120px 120px 120px 100px 120px 120px 100px 120px',
+                   <div key={student.id} className={isMobile ? "student-mobile-card" : "student-desktop-row"} style={{
+                     display: isMobile ? 'block' : 'grid',
+                     gridTemplateColumns: isMobile ? 'none' : '180px 120px 120px 120px 120px 100px 120px 120px 100px 120px',
                      gap: '0',
                      borderBottom: '1px solid #f1f5f9',
                      fontSize: '0.85rem',
-                     minWidth: '1120px'
+                     minWidth: isMobile ? 'auto' : '1120px',
+                     background: isMobile ? '#ffffff' : 'transparent',
+                     borderRadius: isMobile ? '12px' : '0',
+                     padding: isMobile ? '1rem' : '0',
+                     marginBottom: isMobile ? '1rem' : '0',
+                     boxShadow: isMobile ? '0 4px 12px rgba(0, 0, 0, 0.1)' : 'none'
                    }}>
                      <div style={{ padding: '1rem 0.75rem', borderRight: '1px solid #f1f5f9' }}>
                        <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.student_name}</div>
