@@ -119,12 +119,19 @@ export default function TimetablePage() {
 
   const fetchData = async () => {
     try {
+      setError('');
+      console.log('Timetable: Fetching data for user:', user?.id);
+      
       const [projectsData, meetingsData, usersData, userTasks] = await Promise.all([
         projectService.getProjects(),
         meetingService.getMeetings(),
         projectService.getUsers(),
         taskService.getUserTasks()
       ]);
+      
+      console.log('Timetable: Fetched projects:', projectsData?.length || 0);
+      console.log('Timetable: Fetched meetings:', meetingsData?.length || 0);
+      console.log('Timetable: Fetched users:', usersData?.length || 0);
       
       // Use all projects the user has access to (same as dashboard)
       // The projectService.getProjects() already filters based on user access
@@ -191,12 +198,14 @@ export default function TimetablePage() {
       });
       
       setAccessibleProjectIds(accessibleProjects);
-      setProjects(projectsData);
-      setMeetings(filteredMeetings);
-      setUsers(usersData);
+      setProjects(projectsData || []);
+      setMeetings(filteredMeetings || []);
+      setUsers(usersData || []);
+      console.log('Timetable: Data loaded successfully');
     } catch (err: any) {
-      setError('Failed to fetch data');
-      console.error('Fetch error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load timetable data';
+      setError(errorMessage);
+      console.error('Timetable: Fetch error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -1054,6 +1063,8 @@ export default function TimetablePage() {
             .main-content {
               margin-left: 0;
               max-width: 100vw;
+              width: 100%;
+              overflow-x: hidden;
             }
             
             .header-controls {
@@ -1068,6 +1079,7 @@ export default function TimetablePage() {
             
             .timetable-stats {
               grid-template-columns: repeat(2, 1fr);
+              gap: 0.75rem;
             }
           }
           
@@ -1096,17 +1108,24 @@ export default function TimetablePage() {
           @media (max-width: 768px) {
             .main-content {
               margin-left: 0;
+              width: 100%;
+              max-width: 100vw;
+              overflow-x: hidden;
             }
             
             .header {
               padding: 1rem;
               position: relative;
+              width: 100%;
+              box-sizing: border-box;
             }
             
             .header-content {
               flex-direction: column;
               gap: 1rem;
               align-items: stretch;
+              width: 100%;
+              max-width: 100%;
             }
             
             .header-title {
@@ -1123,18 +1142,21 @@ export default function TimetablePage() {
               flex-direction: column;
               gap: 1rem;
               align-items: stretch;
+              width: 100%;
             }
             
             .filter-controls {
               display: flex;
               gap: 0.5rem;
               justify-content: center;
+              flex-wrap: wrap;
             }
             
             .filter-btn {
               flex: 1;
               padding: 0.5rem 1rem;
               font-size: 0.8rem;
+              min-width: 120px;
             }
             
             .create-button {
@@ -1143,26 +1165,41 @@ export default function TimetablePage() {
               font-size: 0.8rem;
               align-self: center;
               min-width: 200px;
+              width: 100%;
+              max-width: 300px;
             }
             
             .timetable-stats {
               grid-template-columns: repeat(2, 1fr);
               gap: 0.75rem;
               padding-top: 1rem;
+              width: 100%;
+              box-sizing: border-box;
             }
             
             .timetable-stats .stat-item {
               padding: 1rem 0.75rem;
+              min-height: 80px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
             }
             
             .stat-value {
               font-size: 1.5rem;
             }
             
+            .stat-label {
+              font-size: 0.7rem;
+              text-align: center;
+            }
+            
             .main-content-area {
               padding: 1rem;
               max-width: 100%;
               min-height: calc(100vh - 150px);
+              width: 100%;
+              box-sizing: border-box;
             }
             
             /* Calendar Navigation Mobile - 2 Row Layout */
@@ -1432,22 +1469,65 @@ export default function TimetablePage() {
           
           @media (max-width: 480px) {
             .header {
-              padding: 0.5rem;
+              padding: 0.75rem;
             }
             
             .header-title {
-              font-size: 1rem;
+              font-size: 1.25rem;
               text-align: center;
             }
             
             .header-title p {
-              font-size: 0.7rem;
+              font-size: 0.8rem;
               line-height: 1.3;
             }
             
             .main-content-area {
               padding: 0.75rem;
               min-height: calc(100vh - 120px);
+            }
+            
+            .timetable-stats {
+              grid-template-columns: 1fr;
+              gap: 0.5rem;
+            }
+            
+            .stat-item {
+              padding: 0.75rem;
+              min-height: 60px;
+            }
+            
+            .stat-value {
+              font-size: 1.25rem;
+            }
+            
+            .stat-label {
+              font-size: 0.65rem;
+            }
+            
+            .filter-btn {
+              padding: 0.5rem 0.75rem;
+              font-size: 0.75rem;
+              min-width: 100px;
+            }
+            
+            .create-button {
+              padding: 0.75rem;
+              font-size: 0.8rem;
+              width: 100%;
+              max-width: none;
+            }
+            
+            .meeting-card {
+              padding: 0.75rem;
+            }
+            
+            .meeting-title {
+              font-size: 1rem;
+            }
+            
+            .meeting-project {
+              font-size: 0.8rem;
             }
             
             .header-actions {

@@ -64,6 +64,7 @@ export default function CalendarPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
 
@@ -97,15 +98,30 @@ export default function CalendarPage() {
 
   const fetchData = async () => {
     try {
+      setError(null);
+      console.log('Calendar: Fetching data for user:', user?.id);
+      
       const [projectsData, tasksData] = await Promise.all([
         projectService.getProjects(),
         taskService.getUserTasks()
       ]);
       
+      console.log('Calendar: Fetched projects:', projectsData?.length || 0);
+      console.log('Calendar: Fetched tasks:', tasksData?.length || 0);
+      
       // Filter tasks to only show those assigned to the user or created by the user
       const userTasks = tasksData.filter((task: Task) => {
-        return task.assignee?.id === user?.id || task.created_by?.id === user?.id;
+        // Check if user is in assignees array (multiple assignee support)
+        const isAssignee = task.assignees && task.assignees.some(assignee => assignee.id === user?.id);
+        // Check if user is the single assignee (backward compatibility)
+        const isSingleAssignee = task.assignee?.id === user?.id;
+        // Check if user created the task
+        const isCreator = task.created_by?.id === user?.id;
+        
+        return isAssignee || isSingleAssignee || isCreator;
       });
+      
+      console.log('Calendar: Filtered user tasks:', userTasks?.length || 0);
       
       // Add project info to tasks
       const tasksWithProjectInfo = userTasks.map((task: Task) => {
@@ -120,10 +136,12 @@ export default function CalendarPage() {
         };
       });
       
-      setProjects(projectsData);
-      setTasks(tasksWithProjectInfo);
+      setProjects(projectsData || []);
+      setTasks(tasksWithProjectInfo || []);
+      console.log('Calendar: Data loaded successfully');
     } catch (err) {
-      console.error('Failed to fetch data:', err);
+      console.error('Calendar: Failed to fetch data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load calendar data');
     } finally {
       setIsLoading(false);
     }
@@ -321,6 +339,34 @@ export default function CalendarPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
         <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', flexDirection: 'column', gap: '1rem', padding: '2rem' }}>
+        <ExclamationTriangleIcon style={{ width: '48px', height: '48px', color: '#F87239' }} />
+        <h2 style={{ color: '#1F2937', fontSize: '1.5rem', fontWeight: '600', textAlign: 'center' }}>Calendar Error</h2>
+        <p style={{ color: '#6B7280', textAlign: 'center', maxWidth: '400px' }}>{error}</p>
+        <button
+          onClick={() => {
+            setError(null);
+            fetchData();
+          }}
+          style={{
+            background: '#000000',
+            color: '#ffffff',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Try Again
+        </button>
       </div>
     );
   }
