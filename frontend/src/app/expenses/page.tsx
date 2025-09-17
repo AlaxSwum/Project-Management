@@ -101,9 +101,16 @@ export default function ExpensesPage() {
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showFolderSettings, setShowFolderSettings] = useState(false);
+  const [showMemberManagement, setShowMemberManagement] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [monthlyExpenses, setMonthlyExpenses] = useState<{[key: string]: ExpenseItem[]}>({});
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Member management state
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState<'editor' | 'viewer'>('viewer');
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   
   // Form state
   const [folderForm, setFolderForm] = useState({
@@ -137,6 +144,17 @@ export default function ExpensesPage() {
     
     fetchData();
   }, [isAuthenticated, authLoading, router, user]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Organize expenses by month when data changes
   useEffect(() => {
@@ -433,21 +451,138 @@ export default function ExpensesPage() {
     return monthExpenses.reduce((sum, expense) => sum + expense.total_amount, 0);
   };
 
+  const fetchAvailableUsers = async () => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Fetch all users (you might want to limit this based on your system)
+      const { data: usersData, error: usersError } = await supabase
+        .from('auth_user')
+        .select('id, name, email')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (usersError) throw usersError;
+      setAvailableUsers(usersData || []);
+      
+    } catch (err: any) {
+      console.error('Error fetching users:', err);
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!selectedFolder || !newMemberEmail.trim()) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Find user by email
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email')
+        .eq('email', newMemberEmail.trim())
+        .single();
+      
+      if (userError || !userData) {
+        alert('User not found with that email address');
+        return;
+      }
+      
+      // Check if user is already a member
+      const existingMember = folderMembers.find(member => member.user_id === userData.id);
+      if (existingMember) {
+        alert('User is already a member of this folder');
+        return;
+      }
+      
+      // Add member to folder
+      const { error: addError } = await supabase
+        .from('expense_folder_members')
+        .insert([{
+          folder_id: selectedFolder.id,
+          user_id: userData.id,
+          role: newMemberRole,
+          added_by: user?.id
+        }]);
+      
+      if (addError) throw addError;
+      
+      // Reset form
+      setNewMemberEmail('');
+      setNewMemberRole('viewer');
+      
+      // Refresh folder data
+      await fetchFolderExpenses(selectedFolder.id);
+      
+      alert(`Successfully added ${userData.name || userData.email} as ${newMemberRole}`);
+      
+    } catch (err: any) {
+      console.error('Error adding member:', err);
+      alert('Failed to add member. Please try again.');
+    }
+  };
+
+  const handleRemoveMember = async (memberId: number, memberName: string) => {
+    if (!confirm(`Remove ${memberName} from this folder?`)) return;
+    
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { error } = await supabase
+        .from('expense_folder_members')
+        .delete()
+        .eq('id', memberId);
+      
+      if (error) throw error;
+      
+      // Refresh folder data
+      await fetchFolderExpenses(selectedFolder!.id);
+      
+    } catch (err: any) {
+      console.error('Error removing member:', err);
+      alert('Failed to remove member. Please try again.');
+    }
+  };
+
+  const handleUpdateMemberRole = async (memberId: number, newRole: string) => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      const { error } = await supabase
+        .from('expense_folder_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+      
+      if (error) throw error;
+      
+      // Refresh folder data
+      await fetchFolderExpenses(selectedFolder!.id);
+      
+    } catch (err: any) {
+      console.error('Error updating member role:', err);
+      alert('Failed to update member role. Please try again.');
+    }
+  };
+
   if (!isAuthenticated) {
     return null;
   }
 
   return (
     <>
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#fafafa', 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '1rem' : '2rem', 
+          background: '#f8fafc', 
           flex: 1,
-          minHeight: '100vh'
+          minHeight: '100vh',
+          paddingTop: isMobile ? '4rem' : '2rem'
         }}>
           {/* Header */}
           <div style={{ 
@@ -527,9 +662,16 @@ export default function ExpensesPage() {
               <p style={{ color: '#6b7280', fontSize: '1rem' }}>Loading expense data...</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '2rem' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: isMobile ? '1rem' : '2rem',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
               {/* Folders Sidebar */}
-              <div style={{ width: '320px' }}>
+              <div style={{ 
+                width: isMobile ? '100%' : '320px',
+                marginBottom: isMobile ? '1rem' : '0'
+              }}>
                 <div style={{
                   background: '#ffffff',
                   borderRadius: '12px',
@@ -722,7 +864,10 @@ export default function ExpensesPage() {
                           Add Expense
                         </button>
                         <button
-                          onClick={() => setShowFolderSettings(true)}
+                          onClick={() => {
+                            setShowMemberManagement(true);
+                            fetchAvailableUsers();
+                          }}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -737,8 +882,8 @@ export default function ExpensesPage() {
                             fontWeight: '500'
                           }}
                         >
-                          <CogIcon style={{ width: '16px', height: '16px' }} />
-                          Settings
+                          <ShareIcon style={{ width: '16px', height: '16px' }} />
+                          Share & Members
                         </button>
                       </div>
                     </div>
@@ -824,28 +969,30 @@ export default function ExpensesPage() {
                         
                         return (
                           <>
-                            {/* Sheet Header */}
-                            <div style={{
-                              background: '#f9fafb',
-                              padding: '1rem',
-                              borderBottom: '1px solid #e5e7eb',
-                              display: 'grid',
-                              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px',
-                              gap: '1rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              color: '#6b7280',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em'
-                            }}>
-                              <div>Item & Description</div>
-                              <div>Category</div>
-                              <div>Price</div>
-                              <div>Quantity</div>
-                              <div>Total</div>
-                              <div>Date</div>
-                              <div>Actions</div>
-                            </div>
+                            {/* Sheet Header - Desktop */}
+                            {!isMobile && (
+                              <div style={{
+                                background: '#f9fafb',
+                                padding: '1rem',
+                                borderBottom: '1px solid #e5e7eb',
+                                display: 'grid',
+                                gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px',
+                                gap: '1rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                color: '#6b7280',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em'
+                              }}>
+                                <div>Item & Description</div>
+                                <div>Category</div>
+                                <div>Price</div>
+                                <div>Quantity</div>
+                                <div>Total</div>
+                                <div>Date</div>
+                                <div>Actions</div>
+                              </div>
+                            )}
 
                             {/* Expense Rows */}
                             <div style={{ maxHeight: '600px', overflow: 'auto' }}>
@@ -870,13 +1017,17 @@ export default function ExpensesPage() {
                                   <div
                                     key={expense.id}
                                     style={{
-                                      display: 'grid',
-                                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px',
-                                      gap: '1rem',
+                                      display: isMobile ? 'block' : 'grid',
+                                      gridTemplateColumns: isMobile ? 'none' : '2fr 1fr 1fr 1fr 1fr 1fr 100px',
+                                      gap: isMobile ? '0.5rem' : '1rem',
                                       padding: '1rem',
                                       borderBottom: index < monthExpenses.length - 1 ? '1px solid #f3f4f6' : 'none',
-                                      alignItems: 'center',
-                                      fontSize: '0.875rem'
+                                      alignItems: isMobile ? 'stretch' : 'center',
+                                      fontSize: '0.875rem',
+                                      background: isMobile ? '#ffffff' : 'transparent',
+                                      border: isMobile ? '1px solid #e5e7eb' : 'none',
+                                      borderRadius: isMobile ? '8px' : '0',
+                                      marginBottom: isMobile ? '0.75rem' : '0'
                                     }}
                                   >
                                     <div>
@@ -1594,6 +1745,298 @@ export default function ExpensesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Member Management Modal */}
+      {showMemberManagement && selectedFolder && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: '0',
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem',
+            zIndex: 1000
+          }}
+          onClick={() => setShowMemberManagement(false)}
+        >
+          <div 
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              width: '100%',
+              maxWidth: '600px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              padding: '2rem'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <h2 style={{
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                margin: '0',
+                color: '#111827'
+              }}>
+                Manage Members - {selectedFolder.name}
+              </h2>
+              <button
+                onClick={() => setShowMemberManagement(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#6b7280'
+                }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            {/* Add New Member */}
+            <div style={{
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                margin: '0 0 1rem 0',
+                color: '#111827'
+              }}>
+                Add New Member
+              </h3>
+              
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={newMemberEmail}
+                    onChange={(e) => setNewMemberEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem'
+                    }}
+                  />
+                </div>
+                
+                <div style={{ minWidth: '120px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Role
+                  </label>
+                  <select
+                    value={newMemberRole}
+                    onChange={(e) => setNewMemberRole(e.target.value as 'editor' | 'viewer')}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    <option value="viewer">Viewer</option>
+                    <option value="editor">Editor</option>
+                  </select>
+                </div>
+                
+                <button
+                  onClick={handleAddMember}
+                  style={{
+                    background: '#3b82f6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.75rem 1rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Add Member
+                </button>
+              </div>
+            </div>
+
+            {/* Current Members */}
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                margin: '0 0 1rem 0',
+                color: '#111827'
+              }}>
+                Current Members ({folderMembers.length})
+              </h3>
+              
+              {folderMembers.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '2rem',
+                  color: '#6b7280',
+                  background: '#f9fafb',
+                  borderRadius: '8px'
+                }}>
+                  <UserIcon style={{
+                    width: '32px',
+                    height: '32px',
+                    margin: '0 auto 0.5rem',
+                    color: '#d1d5db'
+                  }} />
+                  <p style={{ fontSize: '0.875rem', margin: '0' }}>
+                    No members yet. Add members to share this expense folder.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {folderMembers.map(member => (
+                    <div
+                      key={member.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '1rem',
+                        background: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          background: '#f3f4f6',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <UserIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                        </div>
+                        <div>
+                          <div style={{
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            color: '#111827'
+                          }}>
+                            {member.user_name || member.user_email || 'Unknown User'}
+                          </div>
+                          <div style={{
+                            fontSize: '0.75rem',
+                            color: '#6b7280'
+                          }}>
+                            {member.user_email}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {member.role !== 'owner' && (
+                          <select
+                            value={member.role}
+                            onChange={(e) => handleUpdateMemberRole(member.id, e.target.value)}
+                            style={{
+                              padding: '0.375rem 0.5rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              background: '#ffffff'
+                            }}
+                          >
+                            <option value="viewer">Viewer</option>
+                            <option value="editor">Editor</option>
+                          </select>
+                        )}
+                        
+                        <span style={{
+                          background: member.role === 'owner' ? '#fef3c7' : member.role === 'editor' ? '#dbeafe' : '#f3f4f6',
+                          color: member.role === 'owner' ? '#92400e' : member.role === 'editor' ? '#1e40af' : '#374151',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          textTransform: 'capitalize'
+                        }}>
+                          {member.role}
+                        </span>
+                        
+                        {member.role !== 'owner' && member.user_id !== user?.id && (
+                          <button
+                            onClick={() => handleRemoveMember(member.id, member.user_name || member.user_email || 'User')}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#dc2626',
+                              padding: '0.25rem'
+                            }}
+                            title="Remove member"
+                          >
+                            <TrashIcon style={{ width: '14px', height: '14px' }} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: '1.5rem'
+            }}>
+              <button
+                onClick={() => setShowMemberManagement(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  background: '#ffffff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
