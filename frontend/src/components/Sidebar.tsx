@@ -438,20 +438,19 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // Weekly Report state
-  const [showWeeklyReportForm, setShowWeeklyReportForm] = useState(false);
-  const [weeklyReportData, setWeeklyReportData] = useState({
+  // Daily Report state
+  const [showDailyReportForm, setShowDailyReportForm] = useState(false);
+  const [dailyReportData, setDailyReportData] = useState({
     projectId: 0,
-    weekNumber: 0,
-    year: new Date().getFullYear(),
-    weekStartDate: '',
-    weekEndDate: '',
-    dateRangeDisplay: '',
+    reportDate: new Date().toISOString().split('T')[0],
+    dateDisplay: '',
     keyActivities: [''],
     ongoingTasks: [''],
     challenges: [''],
     teamPerformance: [''],
-    nextWeekPriorities: [''],
+    nextDayPriorities: [''],
+    meetingMinutes: '',
+    hasMeetingMinutes: false,
     otherNotes: ''
   });
   
@@ -676,23 +675,18 @@ You will be notified once HR reviews your request.`);
     return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
   };
 
-  const handleWeeklyReport = () => {
-    setShowWeeklyReportForm(true);
+  const handleDailyReport = () => {
+    setShowDailyReportForm(true);
     closeDropdown();
     
-    // Calculate current week details
+    // Calculate current date details
     const now = new Date();
-    const weekNumber = getWeekNumber(now);
-    const { start: weekStart, end: weekEnd } = getWeekDateRange(now);
-    const dateRangeDisplay = formatWeekDisplay(weekNumber, weekStart, weekEnd, now.getFullYear());
+    const dateDisplay = formatDateDisplay(now);
     
-    setWeeklyReportData(prev => ({
+    setDailyReportData(prev => ({
       ...prev,
-      weekNumber,
-      year: now.getFullYear(),
-      weekStartDate: weekStart.toISOString().split('T')[0],
-      weekEndDate: weekEnd.toISOString().split('T')[0],
-      dateRangeDisplay
+      reportDate: now.toISOString().split('T')[0],
+      dateDisplay
     }));
   };
 
@@ -714,17 +708,21 @@ You will be notified once HR reviews your request.`);
     return { start, end };
   };
 
-  const formatWeekDisplay = (weekNumber: number, startDate: Date, endDate: Date, year: number) => {
-    const startFormatted = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-    const endFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-    return `Week ${weekNumber} – ${startFormatted} to ${endFormatted}, ${year}`;
+  const formatDateDisplay = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return date.toLocaleDateString('en-US', options);
   };
 
-  const handleWeeklyReportSubmit = async (e: React.FormEvent) => {
+  const handleDailyReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const keyActivitiesText = weeklyReportData.keyActivities.filter(item => item.trim()).join('\n• ');
-    if (!keyActivitiesText || !weeklyReportData.projectId) {
+    const keyActivitiesText = dailyReportData.keyActivities.filter(item => item.trim()).join('\n• ');
+    if (!keyActivitiesText || !dailyReportData.projectId) {
       alert('Please fill in the required fields: Key Activities and Project.');
       return;
     }
@@ -735,7 +733,7 @@ You will be notified once HR reviews your request.`);
         return;
       }
 
-      const selectedProject = projects.find(p => p.id === weeklyReportData.projectId);
+      const selectedProject = projects.find(p => p.id === dailyReportData.projectId);
       const supabase = (await import('@/lib/supabase')).supabase;
       
       // Convert arrays to formatted text
@@ -745,95 +743,92 @@ You will be notified once HR reviews your request.`);
       };
       
       const { data, error } = await supabase
-        .from('weekly_reports')
+        .from('daily_reports')
         .insert([{
           employee_id: user.id,
           employee_name: user.name || user.email?.split('@')[0] || 'Unknown',
           employee_email: user.email,
-          project_id: weeklyReportData.projectId,
+          project_id: dailyReportData.projectId,
           project_name: selectedProject?.name || null,
-          week_number: weeklyReportData.weekNumber,
-          year: weeklyReportData.year,
-          week_start_date: weeklyReportData.weekStartDate,
-          week_end_date: weeklyReportData.weekEndDate,
-          date_range_display: weeklyReportData.dateRangeDisplay,
-          key_activities: formatArrayField(weeklyReportData.keyActivities),
-          ongoing_tasks: formatArrayField(weeklyReportData.ongoingTasks),
-          challenges: formatArrayField(weeklyReportData.challenges),
-          team_performance: formatArrayField(weeklyReportData.teamPerformance),
-          next_week_priorities: formatArrayField(weeklyReportData.nextWeekPriorities),
-          other_notes: weeklyReportData.otherNotes.trim() || null
+          report_date: dailyReportData.reportDate,
+          date_display: dailyReportData.dateDisplay,
+          key_activities: formatArrayField(dailyReportData.keyActivities),
+          ongoing_tasks: formatArrayField(dailyReportData.ongoingTasks),
+          challenges: formatArrayField(dailyReportData.challenges),
+          team_performance: formatArrayField(dailyReportData.teamPerformance),
+          next_day_priorities: formatArrayField(dailyReportData.nextDayPriorities),
+          meeting_minutes: dailyReportData.meetingMinutes.trim() || null,
+          has_meeting_minutes: dailyReportData.hasMeetingMinutes,
+          other_notes: dailyReportData.otherNotes.trim() || null
         }])
         .select();
       
       if (!error) {
         // Reset form and close modal
-        setWeeklyReportData({
+        setDailyReportData({
           projectId: 0,
-          weekNumber: 0,
-          year: new Date().getFullYear(),
-          weekStartDate: '',
-          weekEndDate: '',
-          dateRangeDisplay: '',
+          reportDate: new Date().toISOString().split('T')[0],
+          dateDisplay: '',
           keyActivities: [''],
           ongoingTasks: [''],
           challenges: [''],
           teamPerformance: [''],
-          nextWeekPriorities: [''],
+          nextDayPriorities: [''],
+          meetingMinutes: '',
+          hasMeetingMinutes: false,
           otherNotes: ''
         });
-        setShowWeeklyReportForm(false);
+        setShowDailyReportForm(false);
         
-        alert(`Weekly report submitted successfully! 
+        alert(`Daily report submitted successfully! 
         
-Your report for ${weeklyReportData.dateRangeDisplay} has been saved.
+Your report for ${dailyReportData.dateDisplay} has been saved.
 
 Project: ${selectedProject?.name || 'Unknown'}
 Key Activities: ${keyActivitiesText.substring(0, 100)}${keyActivitiesText.length > 100 ? '...' : ''}
 
 Your report is now available in the system.`);
       } else {
-        console.error('Error submitting weekly report:', error);
+        console.error('Error submitting daily report:', error);
         if (error.code === '23505') {
-          alert('You have already submitted a weekly report for this week and project. Please edit the existing report or choose a different project.');
+          alert('You have already submitted a daily report for this date and project. Please edit the existing report or choose a different project.');
         } else {
-          throw new Error(error.message || 'Failed to submit weekly report');
+          throw new Error(error.message || 'Failed to submit daily report');
         }
       }
     } catch (error) {
-      console.error('Error submitting weekly report:', error);
-      alert('Failed to submit weekly report. Please try again.');
+      console.error('Error submitting daily report:', error);
+      alert('Failed to submit daily report. Please try again.');
     }
   };
 
-  const handleWeeklyReportClose = () => {
-    setShowWeeklyReportForm(false);
-    setWeeklyReportData({
+  const handleDailyReportClose = () => {
+    setShowDailyReportForm(false);
+    setDailyReportData({
       projectId: 0,
-      weekNumber: 0,
-      year: new Date().getFullYear(),
-      weekStartDate: '',
-      weekEndDate: '',
-      dateRangeDisplay: '',
+      reportDate: new Date().toISOString().split('T')[0],
+      dateDisplay: '',
       keyActivities: [''],
       ongoingTasks: [''],
       challenges: [''],
       teamPerformance: [''],
-      nextWeekPriorities: [''],
+      nextDayPriorities: [''],
+      meetingMinutes: '',
+      hasMeetingMinutes: false,
       otherNotes: ''
     });
   };
 
-  // Dynamic field management for weekly report
+  // Dynamic field management for daily report
   const addReportField = (fieldName: string) => {
-    setWeeklyReportData(prev => ({
+    setDailyReportData(prev => ({
       ...prev,
       [fieldName]: [...prev[fieldName as keyof typeof prev] as string[], '']
     }));
   };
 
   const removeReportField = (fieldName: string, index: number) => {
-    setWeeklyReportData(prev => {
+    setDailyReportData(prev => {
       const currentArray = prev[fieldName as keyof typeof prev] as string[];
       if (currentArray.length > 1) {
         const newArray = currentArray.filter((_, i) => i !== index);
@@ -847,7 +842,7 @@ Your report is now available in the system.`);
   };
 
   const updateReportField = (fieldName: string, index: number, value: string) => {
-    setWeeklyReportData(prev => {
+    setDailyReportData(prev => {
       const currentArray = [...(prev[fieldName as keyof typeof prev] as string[])];
       currentArray[index] = value;
       return {
@@ -1059,7 +1054,7 @@ Your report is now available in the system.`);
   // HR-only navigation items (will be blank pages for now)
   const hrNavItems = [
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
-    { name: 'Weekly Report', href: '/weekly-report', icon: ClipboardDocumentListIcon },
+    { name: 'Daily Reports', href: '/daily-reports', icon: ClipboardDocumentListIcon },
     { name: 'Absence Management', href: '/employee-absent', icon: CalendarDaysIcon },
   ];
 
@@ -2421,10 +2416,10 @@ Your report is now available in the system.`);
           </button>
           <button 
             onClick={(e) => {
-              console.log('🔥 DEBUG: Weekly Report button clicked!', e);
+              console.log('🔥 DEBUG: Daily Report button clicked!', e);
               e.preventDefault();
               e.stopPropagation();
-              handleWeeklyReport();
+              handleDailyReport();
               closeDropdown();
             }} 
             style={{
@@ -2458,7 +2453,7 @@ Your report is now available in the system.`);
             }}
           >
             <ClipboardDocumentListIcon style={{ width: '18px', height: '18px' }} />
-            Weekly Report Form
+            Daily Report Form
           </button>
         </div>,
         document.body
@@ -2630,39 +2625,39 @@ Your report is now available in the system.`);
         </div>
       )}
 
-      {/* Weekly Report Form Modal */}
-      {showWeeklyReportForm && (
-        <div className="weekly-report-overlay" onClick={handleWeeklyReportClose}>
-          <div className="weekly-report-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="weekly-report-header">
-              <h1 className="weekly-report-title">Weekly Report</h1>
+      {/* Daily Report Form Modal */}
+      {showDailyReportForm && (
+        <div className="daily-report-overlay" onClick={handleDailyReportClose}>
+          <div className="daily-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="daily-report-header">
+              <h1 className="daily-report-title">Daily Report</h1>
               <button
-                onClick={handleWeeklyReportClose}
-                className="weekly-close-btn"
+                onClick={handleDailyReportClose}
+                className="daily-close-btn"
                 title="Close"
               >
                 ×
               </button>
             </div>
             
-            <div className="weekly-report-body">
-              {/* Week Info Display */}
-              <div className="week-info-banner">
-                <h2 className="week-title">{weeklyReportData.dateRangeDisplay}</h2>
-                <p className="week-subtitle">Submit your weekly progress report</p>
+            <div className="daily-report-body">
+              {/* Date Info Display */}
+              <div className="date-info-banner">
+                <h2 className="date-title">{dailyReportData.dateDisplay}</h2>
+                <p className="date-subtitle">Submit your daily progress report</p>
               </div>
 
-              {/* Weekly Report Form */}
-              <form onSubmit={handleWeeklyReportSubmit} className="weekly-report-form">
+              {/* Daily Report Form */}
+              <form onSubmit={handleDailyReportSubmit} className="daily-report-form">
                 <div className="form-row">
                   <div className="form-group full-width">
-                    <label className="weekly-label">Project / Team *</label>
+                    <label className="daily-label">Project / Team *</label>
                     <select
-                      className="weekly-select"
+                      className="daily-select"
                       required
-                      value={weeklyReportData.projectId}
-                      onChange={(e) => setWeeklyReportData({
-                        ...weeklyReportData,
+                      value={dailyReportData.projectId}
+                      onChange={(e) => setDailyReportData({
+                        ...dailyReportData,
                         projectId: Number(e.target.value)
                       })}
                     >
@@ -2678,22 +2673,22 @@ Your report is now available in the system.`);
 
                 <div className="form-row">
                   <div className="form-group full-width">
-                    <label className="weekly-label">KEY ACTIVITIES COMPLETED *</label>
-                    <div className="weekly-field-container">
-                      {weeklyReportData.keyActivities.map((activity, index) => (
-                        <div key={index} className="weekly-field-row">
+                    <label className="daily-label">KEY ACTIVITIES COMPLETED *</label>
+                    <div className="daily-field-container">
+                      {dailyReportData.keyActivities.map((activity, index) => (
+                        <div key={index} className="daily-field-row">
                           <input
                             type="text"
-                            className="weekly-input"
+                            className="daily-input"
                             required={index === 0}
                             placeholder={index === 0 ? "Main task or deliverable completed..." : "Additional activity..."}
                             value={activity}
                             onChange={(e) => updateReportField('keyActivities', index, e.target.value)}
                           />
-                          {weeklyReportData.keyActivities.length > 1 && (
+                          {dailyReportData.keyActivities.length > 1 && (
                             <button
                               type="button"
-                              className="weekly-remove-btn"
+                              className="daily-remove-btn"
                               onClick={() => removeReportField('keyActivities', index)}
                               title="Remove this item"
                             >
@@ -2704,7 +2699,7 @@ Your report is now available in the system.`);
                       ))}
                       <button
                         type="button"
-                        className="weekly-add-btn"
+                        className="daily-add-btn"
                         onClick={() => addReportField('keyActivities')}
                       >
                         Add another activity
@@ -2715,21 +2710,21 @@ Your report is now available in the system.`);
 
                 <div className="form-row">
                   <div className="form-group half-width">
-                    <label className="weekly-label">ONGOING TASKS</label>
-                    <div className="weekly-field-container">
-                      {weeklyReportData.ongoingTasks.map((task, index) => (
-                        <div key={index} className="weekly-field-row">
+                    <label className="daily-label">ONGOING TASKS</label>
+                    <div className="daily-field-container">
+                      {dailyReportData.ongoingTasks.map((task, index) => (
+                        <div key={index} className="daily-field-row">
                           <input
                             type="text"
-                            className="weekly-input"
+                            className="daily-input"
                             placeholder={index === 0 ? "Task in progress..." : "Additional ongoing task..."}
                             value={task}
                             onChange={(e) => updateReportField('ongoingTasks', index, e.target.value)}
                           />
-                          {weeklyReportData.ongoingTasks.length > 1 && (
+                          {dailyReportData.ongoingTasks.length > 1 && (
                             <button
                               type="button"
-                              className="weekly-remove-btn"
+                              className="daily-remove-btn"
                               onClick={() => removeReportField('ongoingTasks', index)}
                               title="Remove this item"
                             >
@@ -2740,7 +2735,7 @@ Your report is now available in the system.`);
                       ))}
                       <button
                         type="button"
-                        className="weekly-add-btn"
+                        className="daily-add-btn"
                         onClick={() => addReportField('ongoingTasks')}
                       >
                         Add ongoing task
@@ -2749,21 +2744,21 @@ Your report is now available in the system.`);
                   </div>
 
                   <div className="form-group half-width">
-                    <label className="weekly-label">CHALLENGES / ISSUES</label>
-                    <div className="weekly-field-container">
-                      {weeklyReportData.challenges.map((challenge, index) => (
-                        <div key={index} className="weekly-field-row">
+                    <label className="daily-label">CHALLENGES / ISSUES</label>
+                    <div className="daily-field-container">
+                      {dailyReportData.challenges.map((challenge, index) => (
+                        <div key={index} className="daily-field-row">
                           <input
                             type="text"
-                            className="weekly-input"
+                            className="daily-input"
                             placeholder={index === 0 ? "Any blocker or challenge..." : "Additional challenge..."}
                             value={challenge}
                             onChange={(e) => updateReportField('challenges', index, e.target.value)}
                           />
-                          {weeklyReportData.challenges.length > 1 && (
+                          {dailyReportData.challenges.length > 1 && (
                             <button
                               type="button"
-                              className="weekly-remove-btn"
+                              className="daily-remove-btn"
                               onClick={() => removeReportField('challenges', index)}
                               title="Remove this item"
                             >
@@ -2774,7 +2769,7 @@ Your report is now available in the system.`);
                       ))}
                       <button
                         type="button"
-                        className="weekly-add-btn"
+                        className="daily-add-btn"
                         onClick={() => addReportField('challenges')}
                       >
                         Add challenge
@@ -2785,21 +2780,21 @@ Your report is now available in the system.`);
 
                 <div className="form-row">
                   <div className="form-group half-width">
-                    <label className="weekly-label">TEAM PERFORMANCE / KPIS</label>
-                    <div className="weekly-field-container">
-                      {weeklyReportData.teamPerformance.map((kpi, index) => (
-                        <div key={index} className="weekly-field-row">
+                    <label className="daily-label">TEAM PERFORMANCE / KPIS</label>
+                    <div className="daily-field-container">
+                      {dailyReportData.teamPerformance.map((kpi, index) => (
+                        <div key={index} className="daily-field-row">
                           <input
                             type="text"
-                            className="weekly-input"
+                            className="daily-input"
                             placeholder={index === 0 ? "Performance metric or KPI..." : "Additional KPI..."}
                             value={kpi}
                             onChange={(e) => updateReportField('teamPerformance', index, e.target.value)}
                           />
-                          {weeklyReportData.teamPerformance.length > 1 && (
+                          {dailyReportData.teamPerformance.length > 1 && (
                             <button
                               type="button"
-                              className="weekly-remove-btn"
+                              className="daily-remove-btn"
                               onClick={() => removeReportField('teamPerformance', index)}
                               title="Remove this item"
                             >
@@ -2810,7 +2805,7 @@ Your report is now available in the system.`);
                       ))}
                       <button
                         type="button"
-                        className="weekly-add-btn"
+                        className="daily-add-btn"
                         onClick={() => addReportField('teamPerformance')}
                       >
                         Add KPI
@@ -2819,22 +2814,22 @@ Your report is now available in the system.`);
                   </div>
 
                   <div className="form-group half-width">
-                    <label className="weekly-label">NEXT WEEK'S PRIORITIES</label>
-                    <div className="weekly-field-container">
-                      {weeklyReportData.nextWeekPriorities.map((priority, index) => (
-                        <div key={index} className="weekly-field-row">
+                    <label className="daily-label">TOMORROW'S PRIORITIES</label>
+                    <div className="daily-field-container">
+                      {dailyReportData.nextDayPriorities.map((priority, index) => (
+                        <div key={index} className="daily-field-row">
                           <input
                             type="text"
-                            className="weekly-input"
-                            placeholder={index === 0 ? "Key priority for next week..." : "Additional priority..."}
+                            className="daily-input"
+                            placeholder={index === 0 ? "Key priority for tomorrow..." : "Additional priority..."}
                             value={priority}
-                            onChange={(e) => updateReportField('nextWeekPriorities', index, e.target.value)}
+                            onChange={(e) => updateReportField('nextDayPriorities', index, e.target.value)}
                           />
-                          {weeklyReportData.nextWeekPriorities.length > 1 && (
+                          {dailyReportData.nextDayPriorities.length > 1 && (
                             <button
                               type="button"
-                              className="weekly-remove-btn"
-                              onClick={() => removeReportField('nextWeekPriorities', index)}
+                              className="daily-remove-btn"
+                              onClick={() => removeReportField('nextDayPriorities', index)}
                               title="Remove this item"
                             >
                               ×
@@ -2844,8 +2839,8 @@ Your report is now available in the system.`);
                       ))}
                       <button
                         type="button"
-                        className="weekly-add-btn"
-                        onClick={() => addReportField('nextWeekPriorities')}
+                        className="daily-add-btn"
+                        onClick={() => addReportField('nextDayPriorities')}
                       >
                         Add priority
                       </button>
@@ -2855,30 +2850,46 @@ Your report is now available in the system.`);
 
                 <div className="form-row">
                   <div className="form-group full-width">
-                    <label className="weekly-label">OTHER NOTES</label>
+                    <label className="daily-label">MEETING MINUTES</label>
                     <textarea
-                      className="weekly-textarea"
+                      className="daily-textarea"
+                      placeholder="Meeting minutes, discussions, decisions made (if any)..."
+                      value={dailyReportData.meetingMinutes}
+                      onChange={(e) => setDailyReportData({
+                        ...dailyReportData,
+                        meetingMinutes: e.target.value,
+                        hasMeetingMinutes: e.target.value.trim().length > 0
+                      })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="daily-label">OTHER NOTES</label>
+                    <textarea
+                      className="daily-textarea"
                       placeholder="Additional observations, suggestions, or miscellaneous notes..."
-                      value={weeklyReportData.otherNotes}
-                      onChange={(e) => setWeeklyReportData({
-                        ...weeklyReportData,
+                      value={dailyReportData.otherNotes}
+                      onChange={(e) => setDailyReportData({
+                        ...dailyReportData,
                         otherNotes: e.target.value
                       })}
                     />
                   </div>
                 </div>
 
-                <div className="weekly-form-buttons">
+                <div className="daily-form-buttons">
                   <button
                     type="button"
-                    onClick={handleWeeklyReportClose}
-                    className="weekly-btn-cancel"
+                    onClick={handleDailyReportClose}
+                    className="daily-btn-cancel"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="weekly-btn-submit"
+                    className="daily-btn-submit"
                   >
                     Submit Report
                   </button>
@@ -2999,9 +3010,9 @@ Your report is now available in the system.`);
         </div>
       )}
       
-      {/* Enhanced Weekly Report Form Styles */}
+      {/* Enhanced Daily Report Form Styles */}
       <style jsx>{`
-        .weekly-report-overlay {
+        .daily-report-overlay {
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.5);
@@ -3013,7 +3024,7 @@ Your report is now available in the system.`);
           backdrop-filter: blur(4px);
         }
         
-        .weekly-report-modal {
+        .daily-report-modal {
           background: #ffffff;
           border: 1px solid #e5e7eb;
           border-radius: 16px;
@@ -3026,7 +3037,7 @@ Your report is now available in the system.`);
           flex-direction: column;
         }
         
-        .weekly-report-header {
+        .daily-report-header {
           background: #ffffff;
           color: #111827;
           padding: 2rem;
@@ -3036,14 +3047,14 @@ Your report is now available in the system.`);
           border-bottom: 1px solid #e5e7eb;
         }
         
-        .weekly-report-title {
+        .daily-report-title {
           font-size: 1.75rem;
           font-weight: 700;
           margin: 0;
           letter-spacing: -0.025em;
         }
         
-        .weekly-close-btn {
+        .daily-close-btn {
           background: #ffffff;
           color: #6b7280;
           border: 1px solid #d1d5db;
@@ -3059,12 +3070,12 @@ Your report is now available in the system.`);
           transition: all 0.2s ease;
         }
         
-        .weekly-close-btn:hover {
+        .daily-close-btn:hover {
           background: #f9fafb;
           color: #374151;
         }
         
-        .weekly-report-body {
+        .daily-report-body {
           padding: 2rem 3rem 3rem 3rem;
           flex: 1;
           overflow-y: auto;
@@ -3073,7 +3084,7 @@ Your report is now available in the system.`);
           scroll-behavior: smooth;
         }
         
-        .week-info-banner {
+        .date-info-banner {
           background: #f9fafb;
           border: 1px solid #e5e7eb;
           padding: 2rem;
@@ -3082,7 +3093,7 @@ Your report is now available in the system.`);
           border-radius: 12px;
         }
         
-        .week-title {
+        .date-title {
           font-size: 1.25rem;
           font-weight: 600;
           color: #111827;
@@ -3090,13 +3101,13 @@ Your report is now available in the system.`);
           letter-spacing: -0.025em;
         }
         
-        .week-subtitle {
+        .date-subtitle {
           font-size: 0.875rem;
           color: #6b7280;
           margin: 0;
         }
         
-        .weekly-report-form {
+        .daily-report-form {
           display: flex;
           flex-direction: column;
           gap: 2rem;
@@ -3123,7 +3134,7 @@ Your report is now available in the system.`);
           flex: 1;
         }
         
-        .weekly-label {
+        .daily-label {
           font-size: 0.875rem;
           font-weight: 600;
           color: #374151;
@@ -3131,7 +3142,7 @@ Your report is now available in the system.`);
           padding-bottom: 0.25rem;
         }
         
-        .weekly-select {
+        .daily-select {
           width: 100%;
           padding: 0.875rem 1rem;
           border: 1px solid #d1d5db;
@@ -3143,13 +3154,13 @@ Your report is now available in the system.`);
           box-sizing: border-box;
         }
         
-        .weekly-select:focus {
+        .daily-select:focus {
           outline: none;
           border-color: #374151;
           box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
         }
         
-        .weekly-field-container {
+        .daily-field-container {
           background: #ffffff;
           border: 1px solid #e5e7eb;
           padding: 1.5rem;
@@ -3159,13 +3170,13 @@ Your report is now available in the system.`);
           gap: 1rem;
         }
         
-        .weekly-field-row {
+        .daily-field-row {
           display: flex;
           align-items: center;
           gap: 0.75rem;
         }
         
-        .weekly-input {
+        .daily-input {
           flex: 1;
           padding: 0.75rem 1rem;
           border: 1px solid #d1d5db;
@@ -3177,21 +3188,21 @@ Your report is now available in the system.`);
           box-sizing: border-box;
         }
         
-        .weekly-input:focus {
+        .daily-input:focus {
           outline: none;
           border-color: #374151;
           box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
         }
         
-        .weekly-input:hover {
+        .daily-input:hover {
           border-color: #9ca3af;
         }
         
-        .weekly-input::placeholder {
+        .daily-input::placeholder {
           color: #9ca3af;
         }
         
-        .weekly-remove-btn {
+        .daily-remove-btn {
           background: #ffffff;
           color: #6b7280;
           border: 1px solid #d1d5db;
@@ -3208,12 +3219,12 @@ Your report is now available in the system.`);
           flex-shrink: 0;
         }
         
-        .weekly-remove-btn:hover {
+        .daily-remove-btn:hover {
           background: #f3f4f6;
           color: #374151;
         }
         
-        .weekly-add-btn {
+        .daily-add-btn {
           background: #f9fafb;
           color: #374151;
           border: 1px solid #d1d5db;
@@ -3226,12 +3237,12 @@ Your report is now available in the system.`);
           align-self: flex-start;
         }
         
-        .weekly-add-btn:hover {
+        .daily-add-btn:hover {
           background: #f3f4f6;
           border-color: #9ca3af;
         }
         
-        .weekly-textarea {
+        .daily-textarea {
           width: 100%;
           min-height: 120px;
           padding: 0.875rem 1rem;
@@ -3247,21 +3258,21 @@ Your report is now available in the system.`);
           box-sizing: border-box;
         }
         
-        .weekly-textarea:focus {
+        .daily-textarea:focus {
           outline: none;
           border-color: #374151;
           box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
         }
         
-        .weekly-textarea:hover {
+        .daily-textarea:hover {
           border-color: #9ca3af;
         }
         
-        .weekly-textarea::placeholder {
+        .daily-textarea::placeholder {
           color: #9ca3af;
         }
         
-        .weekly-form-buttons {
+        .daily-form-buttons {
           display: flex;
           gap: 1rem;
           justify-content: flex-end;
@@ -3270,7 +3281,7 @@ Your report is now available in the system.`);
           border-top: 1px solid #e5e7eb;
         }
         
-        .weekly-btn-cancel {
+        .daily-btn-cancel {
           background: #ffffff;
           color: #374151;
           border: 1px solid #d1d5db;
@@ -3282,12 +3293,12 @@ Your report is now available in the system.`);
           transition: all 0.2s ease;
         }
         
-        .weekly-btn-cancel:hover {
+        .daily-btn-cancel:hover {
           background: #f3f4f6;
           border-color: #9ca3af;
         }
         
-        .weekly-btn-submit {
+        .daily-btn-submit {
           background: #111827;
           color: #ffffff;
           border: 1px solid #111827;
@@ -3299,7 +3310,7 @@ Your report is now available in the system.`);
           transition: all 0.2s ease;
         }
         
-        .weekly-btn-submit:hover {
+        .daily-btn-submit:hover {
           background: #1f2937;
           border-color: #1f2937;
         }
@@ -3309,20 +3320,20 @@ Your report is now available in the system.`);
             padding: 1rem;
           }
           
-          .weekly-report-modal {
+          .daily-report-modal {
             max-width: 100%;
             max-height: 98vh;
           }
           
-          .weekly-report-header {
+          .daily-report-header {
             padding: 1.5rem;
           }
           
-          .weekly-report-title {
+          .daily-report-title {
             font-size: 1.5rem;
           }
           
-          .weekly-report-body {
+          .daily-report-body {
             padding: 1.5rem;
           }
           
@@ -3331,13 +3342,13 @@ Your report is now available in the system.`);
             gap: 1.5rem;
           }
           
-          .weekly-form-buttons {
+          .daily-form-buttons {
             flex-direction: column;
             gap: 1rem;
           }
           
-          .weekly-btn-cancel,
-          .weekly-btn-submit {
+          .daily-btn-cancel,
+          .daily-btn-submit {
             width: 100%;
             text-align: center;
           }
