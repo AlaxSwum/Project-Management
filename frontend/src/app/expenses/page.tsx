@@ -111,6 +111,8 @@ export default function ExpensesPage() {
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState<'editor' | 'viewer'>('viewer');
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   
   // Form state
   const [folderForm, setFolderForm] = useState({
@@ -154,6 +156,21 @@ export default function ExpensesPage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-suggestions-container')) {
+        setShowUserSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Organize expenses by month when data changes
@@ -468,6 +485,33 @@ export default function ExpensesPage() {
     } catch (err: any) {
       console.error('Error fetching users:', err);
     }
+  };
+
+  const handleEmailInputChange = (value: string) => {
+    setNewMemberEmail(value);
+    
+    if (value.length > 0) {
+      // Filter users based on input
+      const filtered = availableUsers.filter(user => 
+        user.email.toLowerCase().includes(value.toLowerCase()) ||
+        (user.name && user.name.toLowerCase().includes(value.toLowerCase()))
+      ).filter(user => 
+        // Exclude users who are already members
+        !folderMembers.find(member => member.user_id === user.id)
+      ).slice(0, 5); // Limit to 5 suggestions
+      
+      setFilteredUsers(filtered);
+      setShowUserSuggestions(filtered.length > 0);
+    } else {
+      setShowUserSuggestions(false);
+      setFilteredUsers([]);
+    }
+  };
+
+  const selectUser = (user: any) => {
+    setNewMemberEmail(user.email);
+    setShowUserSuggestions(false);
+    setFilteredUsers([]);
   };
 
   const handleAddMember = async () => {
@@ -1821,7 +1865,7 @@ export default function ExpensesPage() {
               </h3>
               
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: '200px' }}>
+                <div className="user-suggestions-container" style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
                   <label style={{
                     display: 'block',
                     fontSize: '0.875rem',
@@ -1834,8 +1878,13 @@ export default function ExpensesPage() {
                   <input
                     type="email"
                     value={newMemberEmail}
-                    onChange={(e) => setNewMemberEmail(e.target.value)}
-                    placeholder="user@example.com"
+                    onChange={(e) => handleEmailInputChange(e.target.value)}
+                    onFocus={() => {
+                      if (filteredUsers.length > 0) {
+                        setShowUserSuggestions(true);
+                      }
+                    }}
+                    placeholder="Start typing name or email..."
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -1844,6 +1893,95 @@ export default function ExpensesPage() {
                       fontSize: '0.875rem'
                     }}
                   />
+                  
+                  {/* User Suggestions Dropdown */}
+                  {showUserSuggestions && filteredUsers.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '0',
+                      right: '0',
+                      background: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      zIndex: 1000,
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      marginTop: '2px'
+                    }}>
+                      {filteredUsers.map((user, index) => (
+                        <div
+                          key={user.id}
+                          onClick={() => selectUser(user)}
+                          style={{
+                            padding: '0.75rem',
+                            cursor: 'pointer',
+                            borderBottom: index < filteredUsers.length - 1 ? '1px solid #f3f4f6' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            transition: 'background-color 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f9fafb';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#ffffff';
+                          }}
+                        >
+                          <div style={{
+                            width: '24px',
+                            height: '24px',
+                            background: '#f3f4f6',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <UserIcon style={{ width: '12px', height: '12px', color: '#6b7280' }} />
+                          </div>
+                          <div>
+                            <div style={{
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              color: '#111827'
+                            }}>
+                              {user.name || 'Unknown User'}
+                            </div>
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#6b7280'
+                            }}>
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* No results message */}
+                  {showUserSuggestions && filteredUsers.length === 0 && newMemberEmail.length > 2 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '0',
+                      right: '0',
+                      background: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      zIndex: 1000,
+                      marginTop: '2px',
+                      padding: '0.75rem',
+                      textAlign: 'center',
+                      color: '#6b7280',
+                      fontSize: '0.875rem'
+                    }}>
+                      No users found matching "{newMemberEmail}"
+                    </div>
+                  )}
                 </div>
                 
                 <div style={{ minWidth: '120px' }}>
