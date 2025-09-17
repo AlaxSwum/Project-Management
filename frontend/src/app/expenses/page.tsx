@@ -148,6 +148,20 @@ export default function ExpensesPage() {
       setIsLoading(true);
       const supabase = (await import('@/lib/supabase')).supabase;
       
+      // Check if expense tables exist first
+      const { data: tableCheck, error: tableError } = await supabase
+        .from('expense_folders')
+        .select('id')
+        .limit(1);
+      
+      if (tableError && tableError.code === '42P01') {
+        // Table doesn't exist
+        setError('Expense system not set up yet. Please deploy the database schema first.');
+        setFolders([]);
+        setCategories([]);
+        return;
+      }
+      
       // Fetch folders where user is a member
       const { data: folderMembersData, error: membersError } = await supabase
         .from('expense_folder_members')
@@ -157,7 +171,15 @@ export default function ExpensesPage() {
         `)
         .eq('user_id', user?.id);
       
-      if (membersError) throw membersError;
+      if (membersError) {
+        console.error('Error fetching folder members:', membersError);
+        // If error is due to missing table, show helpful message
+        if (membersError.code === '42P01') {
+          setError('Expense system not set up yet. Please deploy the database schema first.');
+          return;
+        }
+        throw membersError;
+      }
       
       const accessibleFolders = folderMembersData?.map(member => ({
         ...member.expense_folders,
@@ -173,7 +195,14 @@ export default function ExpensesPage() {
         .eq('is_active', true)
         .order('name');
       
-      if (categoriesError) throw categoriesError;
+      if (categoriesError) {
+        console.error('Error fetching categories:', categoriesError);
+        if (categoriesError.code === '42P01') {
+          setError('Expense system not set up yet. Please deploy the database schema first.');
+          return;
+        }
+        throw categoriesError;
+      }
       setCategories(categoriesData || []);
       
       // If there's a selected folder, fetch its expenses
@@ -206,18 +235,18 @@ export default function ExpensesPage() {
       const { data: membersData, error: membersError } = await supabase
         .from('expense_folder_members')
         .select(`
-          *,
-          auth_user!inner(id, name, email)
+          id,
+          folder_id,
+          user_id,
+          role,
+          added_by,
+          added_at
         `)
         .eq('folder_id', folderId);
       
       if (membersError) throw membersError;
       
-      const members = membersData?.map(member => ({
-        ...member,
-        user_name: member.auth_user.name,
-        user_email: member.auth_user.email
-      })) || [];
+      const members = membersData || [];
       
       setFolderMembers(members);
       
