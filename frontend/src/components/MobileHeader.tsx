@@ -129,6 +129,12 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
                   Daily Reports
                 </button>
                 <button 
+                  onClick={() => { router.push('/expenses'); setShowMobileMenu(false); }} 
+                  style={{ padding: '16px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: '500', color: '#374151', width: '100%', minHeight: '48px' }}
+                >
+                  Expenses
+                </button>
+                <button 
                   onClick={() => { router.push('/password-manager'); setShowMobileMenu(false); }} 
                   style={{ padding: '16px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: '500', color: '#374151', width: '100%', minHeight: '48px' }}
                 >

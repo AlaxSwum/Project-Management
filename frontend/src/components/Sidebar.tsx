@@ -31,6 +31,7 @@ import {
   ShieldCheckIcon,
   KeyIcon,
   BuildingOfficeIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -1010,6 +1011,7 @@ Your report is now available in the system.`);
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'My Personal', href: '/personal', icon: CalendarDaysIcon },
+    { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
@@ -1055,6 +1057,7 @@ Your report is now available in the system.`);
   const hrNavItems = [
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
     { name: 'Daily Reports', href: '/daily-reports', icon: ClipboardDocumentListIcon },
+    { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Absence Management', href: '/employee-absent', icon: CalendarDaysIcon },
   ];
 
