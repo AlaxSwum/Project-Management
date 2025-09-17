@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface MobileHeaderProps {
   title: string;
@@ -53,13 +54,9 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
           }}
         >
           {showMobileMenu ? (
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon style={{ width: '24px', height: '24px' }} />
           ) : (
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Bars3Icon style={{ width: '24px', height: '24px' }} />
           )}
         </button>
       </div>
@@ -124,6 +121,12 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
                   style={{ padding: '16px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: '500', color: '#374151', width: '100%', minHeight: '48px' }}
                 >
                   Content Calendar
+                </button>
+                <button 
+                  onClick={() => { router.push('/daily-reports'); setShowMobileMenu(false); }} 
+                  style={{ padding: '16px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: '500', color: '#374151', width: '100%', minHeight: '48px' }}
+                >
+                  Daily Reports
                 </button>
                 <button 
                   onClick={() => { router.push('/password-manager'); setShowMobileMenu(false); }} 
