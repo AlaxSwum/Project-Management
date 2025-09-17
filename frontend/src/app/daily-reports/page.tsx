@@ -75,8 +75,9 @@ export default function DailyReportsPage() {
   const [viewMode, setViewMode] = useState<'user' | 'admin'>('user');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
-  const [calendarView, setCalendarView] = useState<'month' | 'day'>('month');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [projectReports, setProjectReports] = useState<{[key: number]: {[key: string]: DailyReport[]}}>({});
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -114,10 +115,10 @@ export default function DailyReportsPage() {
     }
   }, [viewMode]);
 
-  // Generate calendar when reports or currentDate changes
+  // Organize reports when data changes
   useEffect(() => {
-    generateCalendar();
-  }, [reports, currentDate]);
+    organizeReportsByProject();
+  }, [reports]);
 
   const fetchData = async () => {
     try {
@@ -212,39 +213,34 @@ export default function DailyReportsPage() {
     }
   };
 
-  const generateCalendar = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+  const organizeReportsByProject = () => {
+    const organized: {[key: number]: {[key: string]: DailyReport[]}} = {};
     
-    // Get first day of the month
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    // Get first day of the calendar (might be from previous month)
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
-    // Generate 42 days (6 weeks)
-    const days: CalendarDay[] = [];
-    const currentDateObj = new Date(startDate);
-    
-    for (let i = 0; i < 42; i++) {
-      const dateString = currentDateObj.toISOString().split('T')[0];
-      const dayReports = reports.filter(report => report.report_date === dateString);
-      const hasMeetingMinutes = dayReports.some(report => report.has_meeting_minutes);
+    reports.forEach(report => {
+      const projectId = report.project_id || 0;
+      const dateKey = report.report_date;
       
-      days.push({
-        date: new Date(currentDateObj),
-        dateString,
-        isCurrentMonth: currentDateObj.getMonth() === month,
-        reports: dayReports,
-        hasMeetingMinutes
+      if (!organized[projectId]) {
+        organized[projectId] = {};
+      }
+      
+      if (!organized[projectId][dateKey]) {
+        organized[projectId][dateKey] = [];
+      }
+      
+      organized[projectId][dateKey].push(report);
+    });
+    
+    // Sort reports within each day by employee name
+    Object.keys(organized).forEach(projectId => {
+      Object.keys(organized[Number(projectId)]).forEach(dateKey => {
+        organized[Number(projectId)][dateKey].sort((a, b) => 
+          a.employee_name.localeCompare(b.employee_name)
+        );
       });
-      
-      currentDateObj.setDate(currentDateObj.getDate() + 1);
-    }
+    });
     
-    setCalendarDays(days);
+    setProjectReports(organized);
   };
 
   const handleViewReport = (report: DailyReport) => {
@@ -276,50 +272,47 @@ export default function DailyReportsPage() {
     setShowEditForm(true);
   };
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
-    if (direction === 'prev') {
-      newDate.setMonth(newDate.getMonth() - 1);
-    } else {
-      newDate.setMonth(newDate.getMonth() + 1);
-    }
-    setCurrentDate(newDate);
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long' 
-    });
-  };
 
   const isToday = (date: Date) => {
     const today = new Date();
     return date.toDateString() === today.toDateString();
   };
 
-  const getReportsForDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
-    return reports.filter(report => report.report_date === dateString);
-  };
 
-  const navigateDay = (direction: 'prev' | 'next') => {
-    const newDate = new Date(selectedDate);
-    if (direction === 'prev') {
-      newDate.setDate(newDate.getDate() - 1);
+  const toggleProject = (projectId: number) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
     } else {
-      newDate.setDate(newDate.getDate() + 1);
+      newExpanded.add(projectId);
     }
-    setSelectedDate(newDate);
+    setExpandedProjects(newExpanded);
   };
 
-  const formatDayDate = (date: Date) => {
+  const toggleDay = (projectId: number, dateKey: string) => {
+    const dayKey = `${projectId}-${dateKey}`;
+    const newExpanded = new Set(expandedDays);
+    if (newExpanded.has(dayKey)) {
+      newExpanded.delete(dayKey);
+    } else {
+      newExpanded.add(dayKey);
+    }
+    setExpandedDays(newExpanded);
+  };
+
+  const formatDateKey = (dateKey: string) => {
+    const date = new Date(dateKey);
     return date.toLocaleDateString('en-US', { 
       weekday: 'long',
       year: 'numeric', 
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const getProjectName = (projectId: number) => {
+    const report = reports.find(r => r.project_id === projectId);
+    return report?.project_name || `Project ${projectId}`;
   };
 
   if (!isAuthenticated) {
@@ -366,49 +359,8 @@ export default function DailyReportsPage() {
                 Daily Reports
               </h1>
               <p style={{ fontSize: '1.1rem', color: '#6b7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-                {viewMode === 'admin' ? 'Team daily progress reports and meeting minutes' : 'Your daily progress reports and achievements'}
+                {viewMode === 'admin' ? 'Team daily progress reports organized by project and date' : 'Your daily progress reports organized by project and date'}
               </p>
-            </div>
-            
-            {/* View Toggle */}
-            <div style={{
-              display: 'flex',
-              background: '#f3f4f6',
-              borderRadius: '8px',
-              padding: '4px'
-            }}>
-              <button
-                onClick={() => setCalendarView('month')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: calendarView === 'month' ? '#ffffff' : 'transparent',
-                  color: calendarView === 'month' ? '#111827' : '#6b7280',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  boxShadow: calendarView === 'month' ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
-                }}
-              >
-                Month View
-              </button>
-              <button
-                onClick={() => setCalendarView('day')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: calendarView === 'day' ? '#ffffff' : 'transparent',
-                  color: calendarView === 'day' ? '#111827' : '#6b7280',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  boxShadow: calendarView === 'day' ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
-                }}
-              >
-                Day View
-              </button>
             </div>
           </div>
 
@@ -447,316 +399,84 @@ export default function DailyReportsPage() {
               <p style={{ color: '#6b7280', fontSize: '1rem' }}>Loading daily reports...</p>
             </div>
           ) : (
+            /* Hierarchical Project View */
             <div>
-              {calendarView === 'month' ? (
-                <>
-                  {/* Calendar Navigation */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '2rem',
-                background: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb'
-              }}>
-                <button
-                  onClick={() => navigateMonth('prev')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: '#f9fafb',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    padding: '0.75rem 1rem',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#374151'
-                  }}
-                >
-                  <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
-                  Previous
-                </button>
-                
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '600',
-                  margin: '0',
-                  color: '#111827'
-                }}>
-                  {formatDate(currentDate)}
-                </h2>
-                
-                <button
-                  onClick={() => navigateMonth('next')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: '#f9fafb',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    padding: '0.75rem 1rem',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#374151'
-                  }}
-                >
-                  Next
-                  <ChevronRightIconSolid style={{ width: '16px', height: '16px' }} />
-                </button>
-              </div>
-
-              {/* Calendar Grid */}
-              <div style={{
-                background: '#ffffff',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb',
-                overflow: 'hidden'
-              }}>
-                {/* Calendar Header */}
+              {Object.keys(projectReports).length === 0 ? (
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  background: '#f9fafb',
-                  borderBottom: '1px solid #e5e7eb'
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb',
+                  padding: '3rem',
+                  textAlign: 'center',
+                  color: '#6b7280'
                 }}>
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} style={{
-                      padding: '1rem',
-                      textAlign: 'center',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#6b7280',
-                      borderRight: '1px solid #e5e7eb'
-                    }}>
-                      {day}
-                    </div>
-                  ))}
+                  <DocumentTextIcon style={{
+                    width: '48px',
+                    height: '48px',
+                    margin: '0 auto 1rem',
+                    color: '#d1d5db'
+                  }} />
+                  <p style={{ fontSize: '1.125rem', fontWeight: '500', margin: '0 0 0.5rem 0' }}>
+                    No daily reports found
+                  </p>
+                  <p style={{ fontSize: '0.875rem', margin: '0' }}>
+                    Use the "Daily Report Form" to submit your first daily report.
+                  </p>
                 </div>
-
-                {/* Calendar Days */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  gridTemplateRows: 'repeat(6, 1fr)'
-                }}>
-                  {calendarDays.map((day, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        minHeight: '120px',
-                        padding: '0.75rem',
-                        borderRight: index % 7 !== 6 ? '1px solid #e5e7eb' : 'none',
-                        borderBottom: index < 35 ? '1px solid #e5e7eb' : 'none',
-                        background: !day.isCurrentMonth ? '#f9fafb' : 
-                                   isToday(day.date) ? '#eff6ff' : '#ffffff',
-                        position: 'relative'
-                      }}
-                    >
-                      {/* Date Number */}
-                      <div style={{
-                        fontSize: '0.875rem',
-                        fontWeight: day.isCurrentMonth ? '500' : '400',
-                        color: !day.isCurrentMonth ? '#9ca3af' : 
-                               isToday(day.date) ? '#1d4ed8' : '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {day.date.getDate()}
-                      </div>
-
-                      {/* Reports Indicators */}
-                      {day.reports.length > 0 && (
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '2px'
-                        }}>
-                          {day.reports.slice(0, 3).map((report, reportIndex) => (
-                            <div
-                              key={reportIndex}
-                              onClick={() => handleViewReport(report)}
-                              style={{
-                                fontSize: '0.75rem',
-                                padding: '2px 6px',
-                                background: '#dbeafe',
-                                color: '#1e40af',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }}
-                              title={`${report.employee_name} - ${report.project_name}`}
-                            >
-                              {viewMode === 'admin' ? report.employee_name : report.project_name}
-                            </div>
-                          ))}
-                          {day.reports.length > 3 && (
-                            <div style={{
-                              fontSize: '0.75rem',
-                              color: '#6b7280',
-                              textAlign: 'center'
-                            }}>
-                              +{day.reports.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Meeting Minutes Indicator */}
-                      {day.hasMeetingMinutes && (
-                        <div 
-                          title="Has meeting minutes"
-                          style={{
-                            position: 'absolute',
-                            top: '0.5rem',
-                            right: '0.5rem',
-                            width: '8px',
-                            height: '8px',
-                            background: '#10b981',
-                            borderRadius: '50%'
-                          }}
-                        ></div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div style={{
-                marginTop: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2rem',
-                fontSize: '0.875rem',
-                color: '#6b7280'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    background: '#dbeafe',
-                    borderRadius: '4px'
-                  }}></div>
-                  Daily Report
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    background: '#10b981',
-                    borderRadius: '50%'
-                  }}></div>
-                  Has Meeting Minutes
-                </div>
-              </div>
-                </>
               ) : (
-                /* Daily View */
-                <>
-                  {/* Daily Navigation */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '2rem',
-                    background: '#ffffff',
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    border: '1px solid #e5e7eb'
-                  }}>
-                    <button
-                      onClick={() => navigateDay('prev')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        background: '#f9fafb',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',
-                        padding: '0.75rem 1rem',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#374151'
-                      }}
-                    >
-                      <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
-                      Previous Day
-                    </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {Object.keys(projectReports).map(projectIdStr => {
+                    const projectId = Number(projectIdStr);
+                    const projectData = projectReports[projectId];
+                    const projectName = getProjectName(projectId);
+                    const isProjectExpanded = expandedProjects.has(projectId);
                     
-                    <h2 style={{
-                      fontSize: '1.5rem',
-                      fontWeight: '600',
-                      margin: '0',
-                      color: '#111827',
-                      textAlign: 'center'
-                    }}>
-                      {formatDayDate(selectedDate)}
-                      {isToday(selectedDate) && (
-                        <span style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.875rem',
-                          background: '#dbeafe',
-                          color: '#1e40af',
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          fontWeight: '500'
-                        }}>
-                          Today
-                        </span>
-                      )}
-                    </h2>
+                    // Count total reports and days for this project
+                    const totalDays = Object.keys(projectData).length;
+                    const totalReports = Object.values(projectData).reduce((sum, dayReports) => sum + dayReports.length, 0);
+                    const hasMeetingMinutes = Object.values(projectData).some(dayReports => 
+                      dayReports.some(report => report.has_meeting_minutes)
+                    );
                     
-                    <button
-                      onClick={() => navigateDay('next')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        background: '#f9fafb',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',
-                        padding: '0.75rem 1rem',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#374151'
-                      }}
-                    >
-                      Next Day
-                      <ChevronRightIconSolid style={{ width: '16px', height: '16px' }} />
-                    </button>
-                  </div>
-
-                  {/* Daily Reports List */}
-                  <div style={{
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e5e7eb',
-                    overflow: 'hidden'
-                  }}>
-                    {(() => {
-                      const dayReports = getReportsForDate(selectedDate);
-                      const hasMeetingMinutes = dayReports.some(report => report.has_meeting_minutes);
-                      
-                      return (
-                        <>
-                          {/* Day Header */}
-                          <div style={{
+                    return (
+                      <div key={projectId} style={{
+                        background: '#ffffff',
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb',
+                        overflow: 'hidden'
+                      }}>
+                        {/* Project Header */}
+                        <div
+                          onClick={() => toggleProject(projectId)}
+                          style={{
                             background: '#f9fafb',
                             padding: '1.5rem',
-                            borderBottom: '1px solid #e5e7eb',
+                            borderBottom: isProjectExpanded ? '1px solid #e5e7eb' : 'none',
+                            cursor: 'pointer',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}>
+                            alignItems: 'center',
+                            transition: 'background-color 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f3f4f6';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#f9fafb';
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{
+                              background: '#3b82f6',
+                              color: '#ffffff',
+                              borderRadius: '8px',
+                              padding: '0.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <FolderIcon style={{ width: '20px', height: '20px' }} />
+                            </div>
                             <div>
                               <h3 style={{
                                 fontSize: '1.125rem',
@@ -764,195 +484,238 @@ export default function DailyReportsPage() {
                                 margin: '0',
                                 color: '#111827'
                               }}>
-                                Daily Reports
+                                {projectName}
                               </h3>
                               <p style={{
                                 fontSize: '0.875rem',
                                 color: '#6b7280',
                                 margin: '0.25rem 0 0 0'
                               }}>
-                                {dayReports.length} report{dayReports.length !== 1 ? 's' : ''} submitted
+                                {totalReports} report{totalReports !== 1 ? 's' : ''} across {totalDays} day{totalDays !== 1 ? 's' : ''}
                               </p>
                             </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             {hasMeetingMinutes && (
                               <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem',
+                                gap: '0.25rem',
                                 background: '#f0fdf4',
                                 color: '#166534',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '8px',
-                                fontSize: '0.875rem',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
                                 fontWeight: '500'
                               }}>
                                 <div style={{
-                                  width: '8px',
-                                  height: '8px',
+                                  width: '6px',
+                                  height: '6px',
                                   background: '#10b981',
                                   borderRadius: '50%'
                                 }}></div>
-                                Meeting Minutes Available
+                                Meetings
                               </div>
                             )}
-                          </div>
-
-                          {/* Reports List */}
-                          <div style={{ padding: '1.5rem' }}>
-                            {dayReports.length === 0 ? (
-                              <div style={{
-                                textAlign: 'center',
-                                padding: '3rem',
-                                color: '#6b7280'
-                              }}>
-                                <DocumentTextIcon style={{
-                                  width: '48px',
-                                  height: '48px',
-                                  margin: '0 auto 1rem',
-                                  color: '#d1d5db'
-                                }} />
-                                <p style={{ fontSize: '1.125rem', fontWeight: '500', margin: '0 0 0.5rem 0' }}>
-                                  No reports for this date
-                                </p>
-                                <p style={{ fontSize: '0.875rem', margin: '0' }}>
-                                  Use the "Daily Report Form" to submit a report for this date.
-                                </p>
-                              </div>
+                            {isProjectExpanded ? (
+                              <ChevronDownIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />
                             ) : (
-                              <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '1rem'
-                              }}>
-                                {dayReports.map((report, index) => (
+                              <ChevronRightIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Project Content - Days */}
+                        {isProjectExpanded && (
+                          <div style={{ padding: '1rem' }}>
+                            {Object.keys(projectData).sort().reverse().map(dateKey => {
+                              const dayReports = projectData[dateKey];
+                              const dayKey = `${projectId}-${dateKey}`;
+                              const isDayExpanded = expandedDays.has(dayKey);
+                              const dayHasMeetingMinutes = dayReports.some(report => report.has_meeting_minutes);
+                              
+                              return (
+                                <div key={dateKey} style={{
+                                  border: '1px solid #e5e7eb',
+                                  borderRadius: '8px',
+                                  marginBottom: '0.75rem',
+                                  overflow: 'hidden'
+                                }}>
+                                  {/* Day Header */}
                                   <div
-                                    key={report.id}
+                                    onClick={() => toggleDay(projectId, dateKey)}
                                     style={{
-                                      border: '1px solid #e5e7eb',
-                                      borderRadius: '8px',
-                                      padding: '1.5rem',
                                       background: '#ffffff',
+                                      padding: '1rem',
+                                      borderBottom: isDayExpanded ? '1px solid #e5e7eb' : 'none',
                                       cursor: 'pointer',
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                    onClick={() => handleViewReport(report)}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.borderColor = '#3b82f6';
-                                      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.borderColor = '#e5e7eb';
-                                      e.currentTarget.style.boxShadow = 'none';
-                                    }}
-                                  >
-                                    <div style={{
                                       display: 'flex',
                                       justifyContent: 'space-between',
-                                      alignItems: 'flex-start',
-                                      marginBottom: '1rem'
-                                    }}>
+                                      alignItems: 'center',
+                                      transition: 'background-color 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = '#f9fafb';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = '#ffffff';
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                      <div style={{
+                                        background: '#dbeafe',
+                                        color: '#1e40af',
+                                        borderRadius: '6px',
+                                        padding: '0.375rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      }}>
+                                        <CalendarIcon style={{ width: '16px', height: '16px' }} />
+                                      </div>
                                       <div>
                                         <h4 style={{
                                           fontSize: '1rem',
                                           fontWeight: '600',
-                                          margin: '0 0 0.5rem 0',
+                                          margin: '0',
                                           color: '#111827'
                                         }}>
-                                          {viewMode === 'admin' ? report.employee_name : report.project_name}
+                                          {formatDateKey(dateKey)}
                                         </h4>
                                         <p style={{
-                                          fontSize: '0.875rem',
+                                          fontSize: '0.75rem',
                                           color: '#6b7280',
-                                          margin: '0'
+                                          margin: '0.125rem 0 0 0'
                                         }}>
-                                          {viewMode === 'admin' ? report.project_name : `Submitted by ${report.employee_name}`}
+                                          {dayReports.length} report{dayReports.length !== 1 ? 's' : ''} submitted
                                         </p>
-                                      </div>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        {report.has_meeting_minutes && (
-                                          <div 
-                                            title="Has meeting minutes"
-                                            style={{
-                                              width: '8px',
-                                              height: '8px',
-                                              background: '#10b981',
-                                              borderRadius: '50%'
-                                            }}
-                                          ></div>
-                                        )}
-                                        <EyeIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
                                       </div>
                                     </div>
-                                    
-                                    {/* Key Activities Preview */}
-                                    {report.key_activities && (
-                                      <div style={{ marginBottom: '0.75rem' }}>
-                                        <p style={{
-                                          fontSize: '0.75rem',
-                                          fontWeight: '600',
-                                          color: '#374151',
-                                          margin: '0 0 0.25rem 0',
-                                          textTransform: 'uppercase',
-                                          letterSpacing: '0.05em'
-                                        }}>
-                                          Key Activities
-                                        </p>
-                                        <p style={{
-                                          fontSize: '0.875rem',
-                                          color: '#6b7280',
-                                          margin: '0',
-                                          display: '-webkit-box',
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: 'vertical',
-                                          overflow: 'hidden'
-                                        }}>
-                                          {report.key_activities.replace(/^•\s*/gm, '').replace(/\n/g, ' ')}
-                                        </p>
-                                      </div>
-                                    )}
-
-                                    {/* Meeting Minutes Preview */}
-                                    {report.meeting_minutes && (
-                                      <div style={{
-                                        background: '#f0fdf4',
-                                        border: '1px solid #bbf7d0',
-                                        borderRadius: '6px',
-                                        padding: '0.75rem',
-                                        marginTop: '0.75rem'
-                                      }}>
-                                        <p style={{
-                                          fontSize: '0.75rem',
-                                          fontWeight: '600',
-                                          color: '#166534',
-                                          margin: '0 0 0.25rem 0',
-                                          textTransform: 'uppercase',
-                                          letterSpacing: '0.05em'
-                                        }}>
-                                          Meeting Minutes
-                                        </p>
-                                        <p style={{
-                                          fontSize: '0.875rem',
-                                          color: '#166534',
-                                          margin: '0',
-                                          display: '-webkit-box',
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: 'vertical',
-                                          overflow: 'hidden'
-                                        }}>
-                                          {report.meeting_minutes}
-                                        </p>
-                                      </div>
-                                    )}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      {dayHasMeetingMinutes && (
+                                        <div style={{
+                                          width: '8px',
+                                          height: '8px',
+                                          background: '#10b981',
+                                          borderRadius: '50%'
+                                        }}></div>
+                                      )}
+                                      {isDayExpanded ? (
+                                        <ChevronDownIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                                      ) : (
+                                        <ChevronRightIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                                      )}
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-                            )}
+
+                                  {/* Day Content - User Reports */}
+                                  {isDayExpanded && (
+                                    <div style={{ padding: '1rem', background: '#fafafa' }}>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {dayReports.map((report, index) => (
+                                          <div
+                                            key={report.id}
+                                            onClick={() => handleViewReport(report)}
+                                            style={{
+                                              background: '#ffffff',
+                                              border: '1px solid #e5e7eb',
+                                              borderRadius: '6px',
+                                              padding: '1rem',
+                                              cursor: 'pointer',
+                                              transition: 'all 0.2s ease'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.borderColor = '#3b82f6';
+                                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.borderColor = '#e5e7eb';
+                                              e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                          >
+                                            <div style={{
+                                              display: 'flex',
+                                              justifyContent: 'space-between',
+                                              alignItems: 'flex-start',
+                                              marginBottom: '0.75rem'
+                                            }}>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <div style={{
+                                                  background: '#f3f4f6',
+                                                  color: '#374151',
+                                                  borderRadius: '4px',
+                                                  padding: '0.25rem',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  justifyContent: 'center'
+                                                }}>
+                                                  <UserIcon style={{ width: '14px', height: '14px' }} />
+                                                </div>
+                                                <div>
+                                                  <h5 style={{
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: '600',
+                                                    margin: '0',
+                                                    color: '#111827'
+                                                  }}>
+                                                    {report.employee_name}
+                                                  </h5>
+                                                  <p style={{
+                                                    fontSize: '0.75rem',
+                                                    color: '#6b7280',
+                                                    margin: '0'
+                                                  }}>
+                                                    {report.employee_email}
+                                                  </p>
+                                                </div>
+                                              </div>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                {report.has_meeting_minutes && (
+                                                  <div 
+                                                    title="Has meeting minutes"
+                                                    style={{
+                                                      width: '6px',
+                                                      height: '6px',
+                                                      background: '#10b981',
+                                                      borderRadius: '50%'
+                                                    }}
+                                                  ></div>
+                                                )}
+                                                <EyeIcon style={{ width: '14px', height: '14px', color: '#6b7280' }} />
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Key Activities Preview */}
+                                            {report.key_activities && (
+                                              <div>
+                                                <p style={{
+                                                  fontSize: '0.75rem',
+                                                  color: '#6b7280',
+                                                  margin: '0',
+                                                  display: '-webkit-box',
+                                                  WebkitLineClamp: 2,
+                                                  WebkitBoxOrient: 'vertical',
+                                                  overflow: 'hidden',
+                                                  lineHeight: '1.4'
+                                                }}>
+                                                  {report.key_activities.replace(/^•\s*/gm, '').replace(/\n/g, ' ')}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
