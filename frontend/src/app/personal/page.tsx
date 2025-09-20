@@ -659,7 +659,7 @@ export default function PersonalTaskManager() {
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
         {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
-        {isMobile && <MobileHeader />}
+        {isMobile && <MobileHeader title="Personal Tasks" isMobile={isMobile} />}
 
         <div style={{ 
           marginLeft: isMobile ? '0' : '256px',
