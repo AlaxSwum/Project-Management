@@ -10,8 +10,8 @@ import {
   PlusIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
-import { projectService } from '@/lib/api-compatibility';
+  import Sidebar from '@/components/Sidebar';
+  import { projectService } from '@/lib/api-compatibility';
 
 interface CalendarEvent {
   id: number;
@@ -131,19 +131,19 @@ export default function PersonalCalendarPage() {
 
   const fetchUnscheduledTasks = async () => {
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      const { data, error } = await supabase
+        const supabase = (await import('@/lib/supabase')).supabase;
+        const { data, error } = await supabase
         .from('projects_meeting')
         .select('*')
         .eq('created_by_id', parseInt(user?.id?.toString() || '0'))
         .eq('event_type', 'task')
         .order('created_at', { ascending: false });
-
-      if (error) {
+        
+        if (error) {
         console.error('Supabase error:', error);
         return;
       }
-
+      
       const tasks: PersonalTask[] = (data || []).map(meeting => ({
         id: meeting.id,
         title: meeting.title,
@@ -193,7 +193,7 @@ export default function PersonalCalendarPage() {
         }])
         .select()
         .single();
-
+      
       if (error) throw error;
       
       await fetchCalendarData();
@@ -265,7 +265,7 @@ export default function PersonalCalendarPage() {
 
   const render15MinView = () => {
     const allDayEvents = events;
-    
+
     // Generate 15-minute time slots
     const fifteenMinSlots: { hour: number; minute: number }[] = [];
     for (let hour = 0; hour <= 23; hour++) {
@@ -280,7 +280,7 @@ export default function PersonalCalendarPage() {
     return (
       <div style={{ display: 'flex', gap: '1rem' }}>
         {/* Unscheduled Tasks Sidebar */}
-        <div style={{
+        <div style={{ 
           width: '300px',
           background: '#ffffff',
           border: '1px solid #e8e8e8',
@@ -317,7 +317,7 @@ export default function PersonalCalendarPage() {
                   draggable
                   onDragStart={() => handleTaskDragStart(task)}
                   onDragEnd={handleTaskDragEnd}
-                  style={{
+                style={{
                     padding: '0.75rem',
                     background: task.color || '#FFB333',
                     color: '#ffffff',
@@ -326,26 +326,26 @@ export default function PersonalCalendarPage() {
                     fontSize: '0.85rem',
                     fontWeight: '500',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease',
-                    userSelect: 'none'
-                  }}
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none'
+                }}
                 >
                   <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
                     {task.title}
-                  </div>
+                </div>
                   {task.priority && (
                     <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
                       Priority: {task.priority}
-                    </div>
-                  )}
+                  </div>
+                )}
                 </div>
               ))}
-            </div>
-          )}
+                  </div>
+                )}
         </div>
 
         {/* Calendar Grid */}
-        <div style={{
+        <div style={{ 
           background: '#ffffff',
           border: '1px solid #e8e8e8',
           borderRadius: '16px',
@@ -366,9 +366,9 @@ export default function PersonalCalendarPage() {
                 <div key={`${slot.hour}-${slot.minute}`} style={{
                   height: `${slotHeight}px`,
                   borderBottom: slot.minute === 0 ? '2px solid #d1d5db' : '1px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
                   fontSize: slot.minute === 0 ? '0.8rem' : '0.7rem',
                   color: slot.minute === 0 ? '#1e293b' : '#64748b',
                   fontWeight: slot.minute === 0 ? '700' : '600',
@@ -376,10 +376,10 @@ export default function PersonalCalendarPage() {
                 }}>
                   <div style={{ textAlign: 'center' }}>
                     {slot.minute === 0 ? `${slot.hour}:00` : `:${slot.minute.toString().padStart(2, '0')}`}
-                  </div>
-                </div>
-              ))}
             </div>
+            </div>
+              ))}
+          </div>
 
             {/* Main calendar column */}
             <div style={{ flex: 1, position: 'relative' }}>
@@ -389,37 +389,37 @@ export default function PersonalCalendarPage() {
                 </span>
               </div>
               
-              {fifteenMinSlots.map((slot, index) => {
-                const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
-                
-                return (
-                  <div 
+          {fifteenMinSlots.map((slot, index) => {
+            const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
+            
+            return (
+              <div 
                     key={`main-${slot.hour}-${slot.minute}`} 
                     onDragOver={(e) => handleSlotDragOver(e, currentDate, slot.hour, slot.minute)}
                     onDrop={(e) => handleSlotDrop(e, currentDate, slot.hour, slot.minute)}
-                    style={{
-                      height: `${slotHeight}px`,
-                      borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : '1px solid #e5e7eb',
+                style={{
+                  height: `${slotHeight}px`,
+                  borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : '1px solid #e5e7eb',
                       borderRight: '1px solid #e5e7eb',
-                      position: 'relative',
+                  position: 'relative',
                       background: dragOverSlot && 
                         dragOverSlot.date.toDateString() === currentDate.toDateString() &&
                         dragOverSlot.hour === slot.hour && 
                         dragOverSlot.minute === slot.minute 
                         ? 'rgba(88, 132, 253, 0.2)' 
                         : isWorkingHour ? 'rgba(5, 150, 105, 0.02)' : '#ffffff',
-                      transition: 'all 0.2s ease',
-                      userSelect: 'none',
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none',
                       cursor: draggedTask ? 'copy' : 'default'
                     }}
                   />
-                );
-              })}
+              );
+            })}
 
               {/* Events overlay */}
               {allDayEvents.map((event) => {
-                const eventStart = new Date(event.start_datetime);
-                const eventEnd = new Date(event.end_datetime);
+            const eventStart = new Date(event.start_datetime);
+            const eventEnd = new Date(event.end_datetime);
                 
                 if (eventStart.toDateString() !== currentDate.toDateString()) return null;
                 
@@ -429,23 +429,23 @@ export default function PersonalCalendarPage() {
                 
                 const topPosition = headerHeight + (startMinutes / 15) * slotHeight;
                 const height = (duration / 15) * slotHeight;
-                
-                return (
-                  <div
+            
+            return (
+              <div
                     key={event.id}
-                    style={{
-                      position: 'absolute',
-                      top: `${topPosition}px`,
+                style={{
+                  position: 'absolute',
+                  top: `${topPosition}px`,
                       left: '4px',
                       right: '4px',
                       height: `${height}px`,
                       background: event.color,
-                      color: '#ffffff',
+                  color: '#ffffff',
                       borderRadius: '4px',
                       padding: '4px 8px',
-                      fontSize: '0.75rem',
+              fontSize: '0.75rem',
                       fontWeight: '500',
-                      overflow: 'hidden',
+                overflow: 'hidden',
                       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
                       zIndex: 10
                     }}
@@ -453,14 +453,14 @@ export default function PersonalCalendarPage() {
                     <div style={{ fontWeight: '600' }}>{event.title}</div>
                     {event.description && (
                       <div style={{ fontSize: '0.7rem', opacity: 0.9, marginTop: '2px' }}>
-                        {event.description}
-                      </div>
-                    )}
+                  {event.description}
+                </div>
+              )}
+      </div>
+                  );
+                })}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -479,97 +479,97 @@ export default function PersonalCalendarPage() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-      <Sidebar projects={projects} onCreateProject={() => {}} />
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={projects} onCreateProject={() => {}} />
 
-      <div style={{ 
-        marginLeft: '256px',
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        minHeight: '100vh'
-      }}>
-        {/* Header */}
         <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '2rem'
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh'
         }}>
-          <div>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '300', 
-              margin: '0', 
-              color: '#1a1a1a',
-              letterSpacing: '-0.02em'
-            }}>
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '2rem'
+          }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
+                margin: '0', 
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
+              }}>
               Personal Calendar - 15 Min Timeblocking
-            </h1>
-            <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
               Drag tasks from sidebar to time slots for scheduling
-            </p>
+              </p>
+            </div>
+
+            <button
+            onClick={() => setShowTaskModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+              background: '#FFB333',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
+              }}
+            >
+              <PlusIcon style={{ width: '16px', height: '16px' }} />
+            New Task
+            </button>
           </div>
 
-          <button
-            onClick={() => setShowTaskModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              background: '#FFB333',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
-            }}
-          >
-            <PlusIcon style={{ width: '16px', height: '16px' }} />
-            New Task
-          </button>
-        </div>
-
-        {error && (
-          <div style={{ 
+          {error && (
+            <div style={{ 
             background: '#fee2e2', 
             border: '1px solid #fecaca', 
             color: '#dc2626', 
-            padding: '1rem', 
+              padding: '1rem', 
             borderRadius: '8px', 
             marginBottom: '1rem' 
-          }}>
-            {error}
-          </div>
-        )}
+            }}>
+              {error}
+            </div>
+          )}
 
-        {/* Calendar View */}
+          {/* Calendar View */}
         {render15MinView()}
 
         {/* Task Creation Modal */}
         {showTaskModal && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+          justifyContent: 'center',
             zIndex: 1000
-          }}>
-            <div style={{
-              background: '#ffffff',
+        }}>
+          <div style={{
+            background: '#ffffff',
               borderRadius: '12px',
-              padding: '2rem',
-              width: '90%',
-              maxWidth: '500px',
+            padding: '2rem',
+            width: '90%',
+            maxWidth: '500px',
               maxHeight: '90vh',
               overflow: 'auto'
             }}>
@@ -578,7 +578,7 @@ export default function PersonalCalendarPage() {
               </h2>
 
               <form onSubmit={(e) => { e.preventDefault(); createTask(); }}>
-                <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                     Task Title *
                   </label>
@@ -608,14 +608,14 @@ export default function PersonalCalendarPage() {
                       padding: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      fontSize: '1rem',
+                        fontSize: '1rem',
                       minHeight: '80px'
-                    }}
+                      }}
                     placeholder="Enter task description"
                     value={newTask.description}
                     onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  />
-                </div>
+                    />
+                  </div>
 
                 <div style={{ marginBottom: '1rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
@@ -696,10 +696,10 @@ export default function PersonalCalendarPage() {
                   </button>
                 </div>
               </form>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
   );
 }
