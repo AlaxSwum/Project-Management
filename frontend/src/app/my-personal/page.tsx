@@ -3615,8 +3615,8 @@ export default function PersonalCalendarPage() {
         </div>
       )}
 
+          </div>
         </div>
-      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
