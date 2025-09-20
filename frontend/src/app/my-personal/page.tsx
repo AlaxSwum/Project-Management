@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
   import Sidebar from '@/components/Sidebar';
   import { projectService } from '@/lib/api-compatibility';
+  import { personalCalendarService, PersonalTask, CalendarItem } from '@/lib/personal-calendar-service';
 
 interface CalendarEvent {
   id: number;
@@ -52,6 +53,7 @@ export default function PersonalCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [unscheduledTasks, setUnscheduledTasks] = useState<PersonalTask[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [settings, setSettings] = useState<CalendarSettings>({
     default_view: 'week',
@@ -80,6 +82,15 @@ export default function PersonalCalendarPage() {
   const [showMoreModal, setShowMoreModal] = useState(false);
   const [moreModalData, setMoreModalData] = useState<{ date: Date; events: CalendarEvent[] }>({ date: new Date(), events: [] });
   
+  // Task management state
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null);
+  const [isEditingTask, setIsEditingTask] = useState(false);
+  
+  // Drag and drop state for tasks
+  const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<{date: Date, hour: number, minute: number} | null>(null);
+  
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -91,6 +102,15 @@ export default function PersonalCalendarPage() {
     priority: 'medium',
     color: '#5884FD',
     project_id: 0
+  });
+
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    priority: 'medium' as 'low' | 'medium' | 'high',
+    category: '',
+    due_date: '',
+    color: '#FFB333'
   });
 
   // Location options for the dropdown
@@ -116,6 +136,7 @@ export default function PersonalCalendarPage() {
     }
     
     fetchCalendarData();
+    fetchUnscheduledTasks();
     fetchProjects();
     fetchSettings();
   }, [isAuthenticated, authLoading, router, currentDate, currentView]);
@@ -123,14 +144,17 @@ export default function PersonalCalendarPage() {
   const fetchCalendarData = async () => {
     try {
       setIsLoading(true);
-      const supabase = (await import('@/lib/supabase')).supabase;
       
       // Calculate date range based on current view
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
       
-      // Fetch ALL events where user is assigned (personal events + events from different projects)
-      const { data, error } = await supabase
+      // Fetch personal calendar data (events, tasks, meetings)
+      const calendarItems = await personalCalendarService.getCalendarOverview(startDate, endDate);
+      
+      // Also fetch meetings from projects for backward compatibility
+      const supabase = (await import('@/lib/supabase')).supabase;
+      const { data: meetingData, error: meetingError } = await supabase
         .from('projects_meeting')
         .select('*')
         .or(`created_by_id.eq.${parseInt(user?.id?.toString() || '0')},attendee_ids.cs.{${parseInt(user?.id?.toString() || '0')}}`)
@@ -139,10 +163,25 @@ export default function PersonalCalendarPage() {
         .order('date', { ascending: true })
         .order('time', { ascending: true });
       
-      if (error) throw error;
-      
-      // Transform timetable data to calendar event format
-      const transformedEvents = (data || []).map(meeting => {
+      // Transform calendar items to CalendarEvent format
+      const transformedEvents: CalendarEvent[] = calendarItems.map((item: CalendarItem) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || '',
+        start_datetime: item.start_datetime,
+        end_datetime: item.end_datetime,
+        all_day: item.all_day,
+        location: item.location || '',
+        event_type: item.event_type,
+        priority: item.priority,
+        status: (item.status as 'confirmed' | 'tentative' | 'cancelled') || 'confirmed',
+        color: item.color,
+        item_type: (item.item_type === 'meeting' ? 'event' : item.item_type) as 'event' | 'task' | 'time_block',
+        completion_percentage: item.completion_percentage
+      }));
+
+      // Transform meeting data for backward compatibility
+      const meetingEvents: CalendarEvent[] = !meetingError && meetingData ? meetingData.map(meeting => {
         const startDateTime = new Date(`${meeting.date}T${meeting.time}`);
         const endDateTime = new Date(startDateTime.getTime() + (meeting.duration * 60000));
         
@@ -161,14 +200,24 @@ export default function PersonalCalendarPage() {
           item_type: 'event' as const,
           completion_percentage: undefined
         };
-      });
+      }) : [];
       
-      setEvents(transformedEvents);
+      // Combine personal calendar items and meeting events
+      setEvents([...transformedEvents, ...meetingEvents]);
     } catch (err: any) {
       console.error('Error fetching calendar data:', err);
       setError('Failed to load calendar data');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchUnscheduledTasks = async () => {
+    try {
+      const tasks = await personalCalendarService.getUnscheduledTasks();
+      setUnscheduledTasks(tasks);
+    } catch (err: any) {
+      console.error('Error fetching unscheduled tasks:', err);
     }
   };
 
@@ -597,6 +646,91 @@ export default function PersonalCalendarPage() {
     }
   };
 
+  const createTask = async () => {
+    try {
+      if (!newTask.title.trim()) {
+        setError('Please enter a task title');
+        return;
+      }
+
+      const taskData = {
+        title: newTask.title,
+        description: newTask.description,
+        priority: newTask.priority,
+        category: newTask.category,
+        due_date: newTask.due_date || undefined,
+        color: newTask.color,
+        status: 'todo' as const
+      };
+
+      await personalCalendarService.createTask(taskData);
+      
+      // Refresh data
+      await fetchCalendarData();
+      await fetchUnscheduledTasks();
+      
+      // Reset form
+      setNewTask({
+        title: '',
+        description: '',
+        priority: 'medium',
+        category: '',
+        due_date: '',
+        color: '#FFB333'
+      });
+      
+      setShowTaskModal(false);
+      setError('');
+      
+    } catch (err: any) {
+      console.error('Error creating task:', err);
+      setError('Failed to create task: ' + err.message);
+    }
+  };
+
+  const handleTaskDragStart = (task: PersonalTask) => {
+    setDraggedTask(task);
+  };
+
+  const handleTaskDragEnd = () => {
+    setDraggedTask(null);
+    setDragOverSlot(null);
+  };
+
+  const handleSlotDragOver = (e: React.DragEvent, date: Date, hour: number, minute: number = 0) => {
+    e.preventDefault();
+    if (draggedTask) {
+      setDragOverSlot({ date, hour, minute });
+    }
+  };
+
+  const handleSlotDrop = async (e: React.DragEvent, date: Date, hour: number, minute: number = 0) => {
+    e.preventDefault();
+    if (!draggedTask) return;
+
+    try {
+      const dropTime = new Date(date);
+      dropTime.setHours(hour, minute, 0, 0);
+      
+      await personalCalendarService.scheduleTask(
+        draggedTask.id!,
+        dropTime,
+        60 // Default 1 hour duration
+      );
+      
+      // Refresh data
+      await fetchCalendarData();
+      await fetchUnscheduledTasks();
+      
+    } catch (err: any) {
+      console.error('Error scheduling task:', err);
+      setError('Failed to schedule task: ' + err.message);
+    } finally {
+      setDraggedTask(null);
+      setDragOverSlot(null);
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return '#F87239';
@@ -926,14 +1060,22 @@ export default function PersonalCalendarPage() {
             return (
               <div 
                 key={`main-${slot.hour}-${slot.minute}`} 
+                onDragOver={(e) => handleSlotDragOver(e, currentDate, slot.hour, slot.minute)}
+                onDrop={(e) => handleSlotDrop(e, currentDate, slot.hour, slot.minute)}
                 style={{
                   height: `${slotHeight}px`,
                   borderBottom: slot.minute === 0 ? '2px solid #e2e8f0' : '1px solid #e5e7eb',
                   borderRight: '1px solid #e5e7eb',
                   position: 'relative',
-                  background: isWorkingHour ? 'rgba(5, 150, 105, 0.02)' : '#ffffff',
+                  background: dragOverSlot && 
+                    dragOverSlot.date.toDateString() === currentDate.toDateString() &&
+                    dragOverSlot.hour === slot.hour && 
+                    dragOverSlot.minute === slot.minute 
+                    ? 'rgba(88, 132, 253, 0.2)' 
+                    : isWorkingHour ? 'rgba(5, 150, 105, 0.02)' : '#ffffff',
                   transition: 'all 0.2s ease',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  cursor: draggedTask ? 'copy' : 'default'
                 }}
               />
             );
@@ -2072,27 +2214,51 @@ export default function PersonalCalendarPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.75rem 1.5rem',
-                background: '#5884FD',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
-              }}
-            >
-              <PlusIcon style={{ width: '16px', height: '16px' }} />
-              New Event
-            </button>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => setShowTaskModal(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  background: '#FFB333',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
+                }}
+              >
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                New Task
+              </button>
+              
+              <button
+                onClick={() => setShowCreateModal(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  background: '#5884FD',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+                }}
+              >
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                New Event
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -2212,19 +2378,91 @@ export default function PersonalCalendarPage() {
             </div>
           </div>
 
-          {/* Calendar View */}
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #e8e8e8',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
-            position: 'relative'
-          }}>
-            {currentView === 'month' && renderMonthView()}
-            {currentView === 'week' && renderWeekView()}
-            {currentView === 'day' && renderDayView()}
-            {currentView === '15min' && render15MinView()}
+          {/* Main Container with Tasks Sidebar */}
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            {/* Unscheduled Tasks Sidebar */}
+            {currentView === '15min' && (
+              <div style={{
+                width: '300px',
+                background: '#ffffff',
+                border: '1px solid #e8e8e8',
+                borderRadius: '16px',
+                padding: '1rem',
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
+                maxHeight: '600px',
+                overflowY: 'auto'
+              }}>
+                <h3 style={{ 
+                  margin: '0 0 1rem 0', 
+                  fontSize: '1.1rem', 
+                  fontWeight: '600',
+                  color: '#1a1a1a'
+                }}>
+                  Unscheduled Tasks
+                </h3>
+                
+                {unscheduledTasks.length === 0 ? (
+                  <p style={{ 
+                    color: '#666666', 
+                    fontSize: '0.9rem',
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    margin: '2rem 0'
+                  }}>
+                    No unscheduled tasks
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {unscheduledTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        draggable
+                        onDragStart={() => handleTaskDragStart(task)}
+                        onDragEnd={handleTaskDragEnd}
+                        style={{
+                          padding: '0.75rem',
+                          background: task.color || '#FFB333',
+                          color: '#ffffff',
+                          borderRadius: '8px',
+                          cursor: 'grab',
+                          fontSize: '0.85rem',
+                          fontWeight: '500',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                          transition: 'all 0.2s ease',
+                          userSelect: 'none'
+                        }}
+                        onMouseDown={(e) => e.currentTarget.style.cursor = 'grabbing'}
+                        onMouseUp={(e) => e.currentTarget.style.cursor = 'grab'}
+                      >
+                        <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
+                          {task.title}
+                        </div>
+                        {task.priority && (
+                          <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                            Priority: {task.priority}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Calendar View */}
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
+              position: 'relative',
+              flex: 1
+            }}>
+              {currentView === 'month' && renderMonthView()}
+              {currentView === 'week' && renderWeekView()}
+              {currentView === 'day' && renderDayView()}
+              {currentView === '15min' && render15MinView()}
             
             {/* Drag Preview Tooltip */}
             {isDragging && dragPreview && (
@@ -2659,6 +2897,117 @@ export default function PersonalCalendarPage() {
                   Create Event
                 </button>
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn-secondary">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Task Modal */}
+      {showTaskModal && (
+        <div className="modal-overlay" onClick={() => setShowTaskModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div className="modal-header">
+              <h2 className="modal-title">Create New Task</h2>
+              <button
+                type="button"
+                onClick={() => setShowTaskModal(false)}
+                className="modal-close-btn"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); createTask(); }} className="modal-form">
+              <div className="form-group">
+                <label className="form-label">Task Title *</label>
+                <input
+                  type="text"
+                  required
+                  className="form-input"
+                  placeholder="Enter task title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-input"
+                  placeholder="Enter task description"
+                  rows={3}
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Priority</label>
+                <select
+                  className="form-input"
+                  value={newTask.priority}
+                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'low' | 'medium' | 'high' })}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Category</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g., Work, Personal, Health"
+                  value={newTask.category}
+                  onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Due Date</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={newTask.due_date}
+                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Color</label>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {['#FFB333', '#F87239', '#10b981', '#5884FD', '#C483D9', '#ef4444'].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewTask({ ...newTask, color })}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: color,
+                        border: newTask.color === color ? '3px solid #1a1a1a' : '2px solid #e5e7eb',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">
+                  Create Task
+                </button>
+                <button type="button" onClick={() => setShowTaskModal(false)} className="btn-secondary">
                   Cancel
                 </button>
               </div>
@@ -3265,6 +3614,9 @@ export default function PersonalCalendarPage() {
           </div>
         </div>
       )}
+
+        </div>
+      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `

@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS personal_tasks (
     priority VARCHAR(20) DEFAULT 'medium', -- low, medium, high
     status VARCHAR(20) DEFAULT 'todo', -- todo, in_progress, completed, cancelled
     category VARCHAR(100), -- work, personal, health, learning, etc.
-    project_id INTEGER REFERENCES projects_project(id) ON DELETE SET NULL, -- link to project tasks
+    project_id INTEGER, -- link to project tasks (optional foreign key)
     tags TEXT[], -- array of tags for organization
     completion_percentage INTEGER DEFAULT 0 CHECK (completion_percentage >= 0 AND completion_percentage <= 100),
     scheduled_start TIMESTAMP WITH TIME ZONE, -- when task is scheduled to start
@@ -111,6 +111,330 @@ CREATE INDEX IF NOT EXISTS idx_personal_events_recurring ON personal_events(recu
 
 CREATE INDEX IF NOT EXISTS idx_personal_tasks_user_due ON personal_tasks(user_id, due_date);
 CREATE INDEX IF NOT EXISTS idx_personal_tasks_status ON personal_tasks(status);
+-- Note: Uncomment this index after ensuring project_id column exists
+-- CREATE INDEX IF NOT EXISTS idx_personal_tasks_project ON personal_tasks(project_id) WHERE project_id IS NOT NULL;
+-- Add missing columns if they don't exist (for existing tables)
+DO $$ 
+BEGIN 
+    -- Add project_id column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'project_id') THEN
+        ALTER TABLE personal_tasks ADD COLUMN project_id INTEGER;
+    END IF;
+    
+    -- Add scheduled_start column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'scheduled_start') THEN
+        ALTER TABLE personal_tasks ADD COLUMN scheduled_start TIMESTAMP WITH TIME ZONE;
+    END IF;
+    
+    -- Add scheduled_end column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'scheduled_end') THEN
+        ALTER TABLE personal_tasks ADD COLUMN scheduled_end TIMESTAMP WITH TIME ZONE;
+    END IF;
+    
+    -- Add auto_scheduled column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'auto_scheduled') THEN
+        ALTER TABLE personal_tasks ADD COLUMN auto_scheduled BOOLEAN DEFAULT FALSE;
+    END IF;
+    
+    -- Add estimated_duration column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'estimated_duration') THEN
+        ALTER TABLE personal_tasks ADD COLUMN estimated_duration INTEGER;
+    END IF;
+    
+    -- Add color column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'color') THEN
+        ALTER TABLE personal_tasks ADD COLUMN color VARCHAR(7) DEFAULT '#FFB333';
+    END IF;
+    
+    -- Add completion_percentage column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'completion_percentage') THEN
+        ALTER TABLE personal_tasks ADD COLUMN completion_percentage INTEGER DEFAULT 0;
+        ALTER TABLE personal_tasks ADD CONSTRAINT check_completion_percentage 
+            CHECK (completion_percentage >= 0 AND completion_percentage <= 100);
+    END IF;
+    
+    -- Add completed_at column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_tasks' 
+                   AND column_name = 'completed_at') THEN
+        ALTER TABLE personal_tasks ADD COLUMN completed_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
+
+-- Handle user_id type conversion safely (for existing tables with INTEGER user_id)
+DO $$ 
+BEGIN 
+    -- For personal_tasks: if user_id is INTEGER, we need to handle this carefully
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'personal_tasks' 
+               AND column_name = 'user_id' 
+               AND data_type = 'integer') THEN
+        
+        -- Temporarily disable RLS to avoid conflicts during migration
+        ALTER TABLE personal_tasks DISABLE ROW LEVEL SECURITY;
+        
+        -- Add a new UUID column
+        ALTER TABLE personal_tasks ADD COLUMN user_id_uuid UUID;
+        
+        -- Since we can't directly convert integer IDs to UUIDs, we'll clear the data
+        -- This is safer than having invalid UUID references
+        -- Users will need to recreate their personal tasks after migration
+        TRUNCATE TABLE personal_tasks CASCADE;
+        
+        -- Drop the old column and rename the new one
+        ALTER TABLE personal_tasks DROP COLUMN user_id;
+        ALTER TABLE personal_tasks RENAME COLUMN user_id_uuid TO user_id;
+        
+        -- Add NOT NULL constraint
+        ALTER TABLE personal_tasks ALTER COLUMN user_id SET NOT NULL;
+        
+        -- Re-enable RLS (will be set up later in the script)
+        -- ALTER TABLE personal_tasks ENABLE ROW LEVEL SECURITY;
+    END IF;
+    
+    -- Similar handling for other tables
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'personal_events' 
+               AND column_name = 'user_id' 
+               AND data_type = 'integer') THEN
+        ALTER TABLE personal_events DISABLE ROW LEVEL SECURITY;
+        ALTER TABLE personal_events ADD COLUMN user_id_uuid UUID;
+        TRUNCATE TABLE personal_events CASCADE;
+        ALTER TABLE personal_events DROP COLUMN user_id;
+        ALTER TABLE personal_events RENAME COLUMN user_id_uuid TO user_id;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'personal_calendar_settings' 
+               AND column_name = 'user_id' 
+               AND data_type = 'integer') THEN
+        ALTER TABLE personal_calendar_settings DISABLE ROW LEVEL SECURITY;
+        ALTER TABLE personal_calendar_settings ADD COLUMN user_id_uuid UUID;
+        TRUNCATE TABLE personal_calendar_settings CASCADE;
+        ALTER TABLE personal_calendar_settings DROP COLUMN user_id;
+        ALTER TABLE personal_calendar_settings RENAME COLUMN user_id_uuid TO user_id;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'personal_time_blocks' 
+               AND column_name = 'user_id' 
+               AND data_type = 'integer') THEN
+        ALTER TABLE personal_time_blocks DISABLE ROW LEVEL SECURITY;
+        ALTER TABLE personal_time_blocks ADD COLUMN user_id_uuid UUID;
+        TRUNCATE TABLE personal_time_blocks CASCADE;
+        ALTER TABLE personal_time_blocks DROP COLUMN user_id;
+        ALTER TABLE personal_time_blocks RENAME COLUMN user_id_uuid TO user_id;
+    END IF;
+END $$;
+
+-- Add missing columns for personal_events table
+DO $$ 
+BEGIN 
+    -- Add missing columns for personal_events
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'start_datetime') THEN
+        ALTER TABLE personal_events ADD COLUMN start_datetime TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'end_datetime') THEN
+        ALTER TABLE personal_events ADD COLUMN end_datetime TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW() + INTERVAL '1 hour';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'all_day') THEN
+        ALTER TABLE personal_events ADD COLUMN all_day BOOLEAN DEFAULT FALSE;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'location') THEN
+        ALTER TABLE personal_events ADD COLUMN location VARCHAR(255);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'event_type') THEN
+        ALTER TABLE personal_events ADD COLUMN event_type VARCHAR(50) DEFAULT 'personal';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'priority') THEN
+        ALTER TABLE personal_events ADD COLUMN priority VARCHAR(20) DEFAULT 'medium';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'status') THEN
+        ALTER TABLE personal_events ADD COLUMN status VARCHAR(20) DEFAULT 'confirmed';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'color') THEN
+        ALTER TABLE personal_events ADD COLUMN color VARCHAR(7) DEFAULT '#5884FD';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'recurring') THEN
+        ALTER TABLE personal_events ADD COLUMN recurring BOOLEAN DEFAULT FALSE;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'recurrence_pattern') THEN
+        ALTER TABLE personal_events ADD COLUMN recurrence_pattern JSONB;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_events' 
+                   AND column_name = 'reminder_minutes') THEN
+        ALTER TABLE personal_events ADD COLUMN reminder_minutes INTEGER[];
+    END IF;
+END $$;
+
+-- Add missing columns for personal_time_blocks table
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_time_blocks' 
+                   AND column_name = 'start_datetime') THEN
+        ALTER TABLE personal_time_blocks ADD COLUMN start_datetime TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_time_blocks' 
+                   AND column_name = 'end_datetime') THEN
+        ALTER TABLE personal_time_blocks ADD COLUMN end_datetime TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW() + INTERVAL '1 hour';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_time_blocks' 
+                   AND column_name = 'block_type') THEN
+        ALTER TABLE personal_time_blocks ADD COLUMN block_type VARCHAR(50) DEFAULT 'focus';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_time_blocks' 
+                   AND column_name = 'color') THEN
+        ALTER TABLE personal_time_blocks ADD COLUMN color VARCHAR(7) DEFAULT '#C483D9';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_time_blocks' 
+                   AND column_name = 'recurring') THEN
+        ALTER TABLE personal_time_blocks ADD COLUMN recurring BOOLEAN DEFAULT FALSE;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_time_blocks' 
+                   AND column_name = 'recurrence_pattern') THEN
+        ALTER TABLE personal_time_blocks ADD COLUMN recurrence_pattern JSONB;
+    END IF;
+END $$;
+
+-- Add missing columns for personal_calendar_settings table
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'default_view') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN default_view VARCHAR(20) DEFAULT 'week';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'start_hour') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN start_hour INTEGER DEFAULT 6;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'end_hour') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN end_hour INTEGER DEFAULT 22;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'time_format') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN time_format VARCHAR(10) DEFAULT '12h';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'first_day_of_week') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN first_day_of_week INTEGER DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'timezone') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN timezone VARCHAR(50) DEFAULT 'UTC';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'auto_schedule_tasks') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN auto_schedule_tasks BOOLEAN DEFAULT TRUE;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'working_hours_start') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN working_hours_start TIME DEFAULT '09:00:00';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'working_hours_end') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN working_hours_end TIME DEFAULT '17:00:00';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'working_days') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN working_days INTEGER[] DEFAULT ARRAY[1,2,3,4,5];
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'break_duration') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN break_duration INTEGER DEFAULT 15;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'notification_settings') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN notification_settings JSONB DEFAULT '{"email": true, "browser": true, "sound": true}';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'personal_calendar_settings' 
+                   AND column_name = 'theme_color') THEN
+        ALTER TABLE personal_calendar_settings ADD COLUMN theme_color VARCHAR(7) DEFAULT '#5884FD';
+    END IF;
+END $$;
+
+-- Create indexes after ensuring all columns exist
 CREATE INDEX IF NOT EXISTS idx_personal_tasks_project ON personal_tasks(project_id) WHERE project_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_personal_tasks_scheduled ON personal_tasks(scheduled_start, scheduled_end) WHERE scheduled_start IS NOT NULL;
 
@@ -183,18 +507,33 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create triggers for automatic timestamp updates
-CREATE TRIGGER update_personal_events_updated_at BEFORE UPDATE ON personal_events
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_personal_tasks_updated_at BEFORE UPDATE ON personal_tasks
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_personal_calendar_settings_updated_at BEFORE UPDATE ON personal_calendar_settings
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_personal_time_blocks_updated_at BEFORE UPDATE ON personal_time_blocks
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Create triggers for automatic timestamp updates (with existence checks)
+DO $$ 
+BEGIN 
+    -- Create trigger for personal_events if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_personal_events_updated_at') THEN
+        CREATE TRIGGER update_personal_events_updated_at BEFORE UPDATE ON personal_events
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    -- Create trigger for personal_tasks if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_personal_tasks_updated_at') THEN
+        CREATE TRIGGER update_personal_tasks_updated_at BEFORE UPDATE ON personal_tasks
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    -- Create trigger for personal_calendar_settings if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_personal_calendar_settings_updated_at') THEN
+        CREATE TRIGGER update_personal_calendar_settings_updated_at BEFORE UPDATE ON personal_calendar_settings
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    -- Create trigger for personal_time_blocks if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_personal_time_blocks_updated_at') THEN
+        CREATE TRIGGER update_personal_time_blocks_updated_at BEFORE UPDATE ON personal_time_blocks
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 -- Create a function to automatically create default settings for new users
 CREATE OR REPLACE FUNCTION create_default_calendar_settings()
@@ -211,72 +550,91 @@ $$ language 'plpgsql';
 -- CREATE TRIGGER create_user_calendar_settings AFTER INSERT ON auth.users
 --     FOR EACH ROW EXECUTE FUNCTION create_default_calendar_settings();
 
--- Create a view for calendar overview (combines events, tasks, time blocks, and timetable meetings)
-CREATE OR REPLACE VIEW personal_calendar_overview AS
+-- Drop existing view if it exists to handle type changes
+DROP VIEW IF EXISTS personal_calendar_overview;
+
+-- Create a simplified view for calendar overview using text IDs to handle mixed types
+CREATE VIEW personal_calendar_overview AS
 SELECT 
-    'event' as item_type,
-    pe.id,
+    'event'::text as item_type,
+    pe.id::text as id,
     pe.user_id,
-    pe.title,
-    pe.description,
+    pe.title::text as title,
+    COALESCE(pe.description, '')::text as description,
     pe.start_datetime,
     pe.end_datetime,
     pe.all_day,
-    pe.color,
-    pe.priority,
-    pe.status,
-    null as completion_percentage,
-    pe.location,
-    pe.event_type as category
+    COALESCE(pe.color, '#5884FD')::text as color,
+    COALESCE(pe.priority, 'medium')::text as priority,
+    COALESCE(pe.status, 'confirmed')::text as status,
+    null::integer as completion_percentage,
+    COALESCE(pe.location, '')::text as location,
+    COALESCE(pe.event_type, 'personal')::text as category
 FROM personal_events pe
-WHERE pe.status != 'cancelled'
+WHERE COALESCE(pe.status, 'confirmed') != 'cancelled'
 
 UNION ALL
 
 SELECT 
-    'task' as item_type,
-    pt.id,
+    'task'::text as item_type,
+    pt.id::text as id,
     pt.user_id,
-    pt.title,
-    pt.description,
+    pt.title::text as title,
+    COALESCE(pt.description, '')::text as description,
     pt.scheduled_start as start_datetime,
     pt.scheduled_end as end_datetime,
     false as all_day,
-    pt.color,
-    pt.priority,
-    pt.status,
-    pt.completion_percentage,
-    null as location,
-    pt.category
+    COALESCE(pt.color, '#FFB333')::text as color,
+    COALESCE(pt.priority, 'medium')::text as priority,
+    COALESCE(pt.status, 'todo')::text as status,
+    COALESCE(pt.completion_percentage, 0)::integer as completion_percentage,
+    ''::text as location,
+    COALESCE(pt.category, 'personal')::text as category
 FROM personal_tasks pt
 WHERE pt.scheduled_start IS NOT NULL 
-    AND pt.status NOT IN ('completed', 'cancelled')
+    AND COALESCE(pt.status, 'todo') NOT IN ('completed', 'cancelled')
 
 UNION ALL
 
 SELECT 
-    'time_block' as item_type,
-    ptb.id,
+    'time_block'::text as item_type,
+    ptb.id::text as id,
     ptb.user_id,
-    ptb.title,
-    ptb.description,
+    ptb.title::text as title,
+    COALESCE(ptb.description, '')::text as description,
     ptb.start_datetime,
     ptb.end_datetime,
     false as all_day,
-    ptb.color,
-    'medium' as priority,
-    'confirmed' as status,
-    null as completion_percentage,
-    null as location,
-    ptb.block_type as category
-FROM personal_time_blocks ptb
+    COALESCE(ptb.color, '#C483D9')::text as color,
+    'medium'::text as priority,
+    'confirmed'::text as status,
+    null::integer as completion_percentage,
+    ''::text as location,
+    COALESCE(ptb.block_type, 'focus')::text as category
+FROM personal_time_blocks ptb;
+
+-- Grant appropriate permissions
+GRANT ALL ON personal_events TO authenticated;
+GRANT ALL ON personal_tasks TO authenticated;
+GRANT ALL ON personal_calendar_settings TO authenticated;
+GRANT ALL ON personal_time_blocks TO authenticated;
+GRANT SELECT ON personal_calendar_overview TO authenticated;
+
+-- Grant sequence permissions
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+-- Optional: Add meetings integration (run this after projects_meeting table exists)
+-- This creates an extended view that includes meetings from the timetable
+/*
+CREATE OR REPLACE VIEW personal_calendar_overview_with_meetings AS
+SELECT * FROM personal_calendar_overview
 
 UNION ALL
 
 SELECT 
     'meeting' as item_type,
     pm.id,
-    pm.created_by as user_id,
+    auth.uid() as user_id,
     pm.title,
     pm.description,
     (pm.date || ' ' || pm.time)::timestamp with time zone as start_datetime,
@@ -290,16 +648,7 @@ SELECT
     'meeting' as category
 FROM projects_meeting pm
 WHERE pm.created_by IS NOT NULL
-  AND (pm.created_by = auth.uid() 
-       OR auth.uid() = ANY(pm.attendee_ids)
+  AND (pm.created_by = (auth.uid()::text)::integer 
+       OR (auth.uid()::text)::integer = ANY(pm.attendee_ids)
        OR pm.attendees LIKE '%' || (SELECT email FROM auth.users WHERE id = auth.uid()) || '%');
-
--- Grant appropriate permissions
-GRANT ALL ON personal_events TO authenticated;
-GRANT ALL ON personal_tasks TO authenticated;
-GRANT ALL ON personal_calendar_settings TO authenticated;
-GRANT ALL ON personal_time_blocks TO authenticated;
-GRANT SELECT ON personal_calendar_overview TO authenticated;
-
--- Grant sequence permissions
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated; 
+*/ 
