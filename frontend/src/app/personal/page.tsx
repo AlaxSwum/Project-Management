@@ -147,13 +147,19 @@ export default function PersonalTaskManager() {
 
   const fetchUnscheduledTasks = async () => {
     try {
+      console.log('🔍 Fetching unscheduled tasks for user:', user?.id);
       const supabase = (await import('@/lib/supabase')).supabase;
+      const userId = parseInt(user?.id?.toString() || '0');
+      console.log('🔍 Using integer user ID:', userId);
+      
       const { data, error } = await supabase
         .from('projects_meeting')
         .select('*')
-        .eq('created_by_id', parseInt(user?.id?.toString() || '0'))
+        .eq('created_by_id', userId)
         .eq('event_type', 'task')
         .order('created_at', { ascending: false });
+
+      console.log('📊 Supabase response:', { data, error });
 
       if (error) {
         console.error('Supabase error:', error);
@@ -170,6 +176,7 @@ export default function PersonalTaskManager() {
         category: 'personal'
       }));
 
+      console.log('✅ Transformed tasks:', tasks);
       setUnscheduledTasks(tasks);
     } catch (err: any) {
       console.error('Error fetching unscheduled tasks:', err);
@@ -685,10 +692,10 @@ export default function PersonalTaskManager() {
                 color: '#1F2937',
                 letterSpacing: '-0.02em'
               }}>
-                Personal Task Management
-              </h1>
-              <p style={{ fontSize: '1.1rem', color: '#6B7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-                Manage your personal tasks with 15-minute timeblocking
+              Personal Task Management
+            </h1>
+            <p style={{ fontSize: '1.1rem', color: '#6B7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              Manage your personal tasks with 15-minute timeblocking - v2.0
               </p>
             </div>
 
