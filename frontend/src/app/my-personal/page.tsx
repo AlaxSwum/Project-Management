@@ -228,7 +228,7 @@ export default function PersonalPage() {
                 color: '#111827',
                 letterSpacing: '-0.02em'
               }}>
-                Personal Tasks
+                📝 Personal Tasks
               </h1>
               <p style={{ fontSize: '1.1rem', color: '#6b7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage your personal tasks and productivity
@@ -252,7 +252,7 @@ export default function PersonalPage() {
               }}
             >
               <PlusIcon style={{ width: '16px', height: '16px' }} />
-              Add Task
+              ➕ Add Task
             </button>
           </div>
 
@@ -311,7 +311,7 @@ export default function PersonalPage() {
                     margin: '0',
                     color: '#111827'
                   }}>
-                    Tasks ({tasks.length})
+                    📋 Tasks ({tasks.length})
                   </h3>
                 </div>
                 
@@ -413,7 +413,9 @@ export default function PersonalPage() {
                                 borderRadius: '4px',
                                 textTransform: 'capitalize'
                               }}>
-                                {task.priority}
+                                {task.priority === 'high' ? '🔴 High' : 
+                                 task.priority === 'medium' ? '🟡 Medium' : 
+                                 '🟢 Low'}
                               </span>
                               {task.category && (
                                 <span style={{
@@ -422,7 +424,7 @@ export default function PersonalPage() {
                                   padding: '2px 6px',
                                   borderRadius: '4px'
                                 }}>
-                                  {task.category}
+                                  📁 {task.category}
                                 </span>
                               )}
                               {task.due_date && (
@@ -432,7 +434,7 @@ export default function PersonalPage() {
                                   padding: '2px 6px',
                                   borderRadius: '4px'
                                 }}>
-                                  Due: {new Date(task.due_date).toLocaleDateString()}
+                                  📅 Due: {new Date(task.due_date).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
@@ -453,7 +455,7 @@ export default function PersonalPage() {
                                   fontSize: '0.75rem'
                                 }}
                               >
-                                {task.status === 'in_progress' ? 'In Progress' : 'Start'}
+                                {task.status === 'in_progress' ? '⚡ In Progress' : '▶️ Start'}
                               </button>
                             )}
                             <button
