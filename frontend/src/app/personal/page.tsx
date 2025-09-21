@@ -48,6 +48,8 @@ interface PersonalTask {
   due_date?: string;
   estimated_duration?: number;
   actual_duration?: number;
+  scheduled_start?: string;
+  scheduled_end?: string;
   is_recurring?: boolean;
   recurring_pattern?: any;
   created_at: string;
@@ -333,8 +335,8 @@ export default function PersonalTaskManager() {
       }
 
       const taskData = {
-        title: newTask.title,
-        description: newTask.description,
+          title: newTask.title,
+          description: newTask.description,
         status: newTask.status,
         priority: newTask.priority,
         category: newTask.category,
@@ -349,8 +351,8 @@ export default function PersonalTaskManager() {
         const result = await supabase
           .from('personal_tasks')
           .insert([taskData])
-          .select()
-          .single();
+        .select()
+        .single();
         data = result.data;
         error = result.error;
       } catch (err) {
@@ -541,7 +543,7 @@ export default function PersonalTaskManager() {
         };
         
         const result = await supabase
-          .from('projects_meeting')
+        .from('projects_meeting')
           .insert([fallbackData])
           .select()
           .single();
@@ -1940,6 +1942,8 @@ export default function PersonalTaskManager() {
                   timeBlocks={timeBlocks}
                   onTaskClick={openEditTask}
                   setTimeBlocks={setTimeBlocks}
+                  setTasks={setTasks}
+                  setAllTasks={setAllTasks}
                   onCreateTimeBlock={(startTime, endTime) => {
                     setNewTimeBlock({
                       title: '',
@@ -2327,6 +2331,8 @@ interface DayCalendarProps extends CalendarViewProps {
   handleDeleteTask: (taskId: string) => void;
   openEditTask: (task: PersonalTask) => void;
   setTimeBlocks: React.Dispatch<React.SetStateAction<PersonalTimeBlock[]>>;
+  setTasks: React.Dispatch<React.SetStateAction<PersonalTask[]>>;
+  setAllTasks: React.Dispatch<React.SetStateAction<PersonalTask[]>>;
 }
 
 const WeekCalendarView: React.FC<WeekCalendarProps> = ({ 
@@ -2896,7 +2902,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
 // Day Calendar View - Previous Design with Enhanced Functionality
 const DayCalendarView: React.FC<DayCalendarProps> = ({ 
   currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile, user,
-  handleUpdateTaskStatus, handleDeleteTask, openEditTask, setTimeBlocks
+  handleUpdateTaskStatus, handleDeleteTask, openEditTask, setTimeBlocks, setTasks, setAllTasks
 }) => {
   // Local drag state for this component
   const [isDragging, setIsDragging] = useState(false);
@@ -2906,9 +2912,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
   const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
   
   const dayTasks = tasks.filter(task => {
-    if (!task.due_date) return false;
-    const taskDate = new Date(task.due_date);
-    return taskDate.toDateString() === currentDate.toDateString();
+    // Show only unscheduled tasks (tasks without scheduled_start)
+    return !task.scheduled_start;
   });
   
   const dayTimeBlocks = timeBlocks.filter(block => {
@@ -3115,7 +3120,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                           alert('Error creating time block: ' + result.error.message);
                         } else {
                           console.log('Time block created successfully!', result.data);
-                          // Update time blocks state instead of reloading
+                          
+                          // Update time blocks state
                           const newTimeBlock: PersonalTimeBlock = {
                             id: result.data.id.toString(),
                             user_id: user?.id?.toString() || '60',
@@ -3131,8 +3137,54 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                             updated_at: new Date().toISOString()
                           };
                           setTimeBlocks(prev => [...prev, newTimeBlock]);
+                          
+                          // Update the original task with scheduled time (so it disappears from sidebar)
+                          const updatedTask = {
+                            ...draggedTask,
+                            due_date: startTime.toISOString(),
+                            scheduled_start: startTime.toISOString(),
+                            scheduled_end: endTime.toISOString()
+                          };
+                          
+                          // Update task in database with scheduled time
+                          try {
+                            const taskUpdateData = {
+                              due_date: startTime.toISOString(),
+                              scheduled_start: startTime.toISOString(),
+                              scheduled_end: endTime.toISOString()
+                            };
+                            
+                            // Try to update in personal_tasks first
+                            try {
+                              await supabase
+                                .from('personal_tasks')
+                                .update(taskUpdateData)
+                                .eq('id', draggedTask.id);
+                            } catch (err) {
+                              // Fallback to projects_meeting
+                              await supabase
+                                .from('projects_meeting')
+                                .update({
+                                  meeting_date: startTime.toISOString(),
+                                  start_time: startTime.toISOString(),
+                                  end_time: endTime.toISOString()
+                                })
+                                .eq('id', draggedTask.id);
+                            }
+                          } catch (updateError) {
+                            console.log('Could not update task in database, updating local state only');
+                          }
+                          
+                          // Update tasks state to remove from unscheduled list
+                          setTasks(prev => prev.map(task => 
+                            task.id === draggedTask.id ? updatedTask : task
+                          ));
+                          setAllTasks(prev => prev.map(task => 
+                            task.id === draggedTask.id ? updatedTask : task
+                          ));
+                          
                           setDraggedTask(null); // Clear the dragged task
-                          alert(`Time block created for "${draggedTask.title}" at ${startTime.toLocaleTimeString()}`);
+                          alert(`Task "${draggedTask.title}" scheduled for ${startTime.toLocaleTimeString()}`);
                         }
                       } catch (error) {
                         console.error('Error:', error);
