@@ -94,7 +94,6 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
     priority: task.priority,
     due_date: formatDateForInput(task.due_date),
     start_date: formatDateForInput(task.start_date),
-    estimated_hours: task.estimated_hours || '',
     assignee_ids: task.assignees ? task.assignees.map(a => a.id) : (task.assignee ? [task.assignee.id] : []),
     tags: task.tags_list.join(', '),
   });
@@ -107,7 +106,6 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
       priority: task.priority,
       due_date: formatDateForInput(task.due_date),
       start_date: formatDateForInput(task.start_date),
-      estimated_hours: task.estimated_hours || '',
       assignee_ids: task.assignees ? task.assignees.map(a => a.id) : (task.assignee ? [task.assignee.id] : []),
       tags: task.tags_list.join(', '),
     });
@@ -169,7 +167,6 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
       const taskData = {
         ...editedTask,
         tags: editedTask.tags,
-        estimated_hours: editedTask.estimated_hours ? Number(editedTask.estimated_hours) : null,
         assignee_ids: editedTask.assignee_ids && editedTask.assignee_ids.length > 0 ? editedTask.assignee_ids : [],
         // Remove assignee_id completely - only use assignee_ids for multiple assignee support
         due_date: formatDate(editedTask.due_date),
@@ -1058,18 +1055,6 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Estimated Hours</label>
-                    <input
-                      type="number"
-                      value={editedTask.estimated_hours}
-                      onChange={(e) => setEditedTask({ ...editedTask, estimated_hours: e.target.value })}
-                      className="form-input"
-                      placeholder="Duration in hours"
-                      min="0"
-                      step="0.5"
-                    />
-                  </div>
                 </div>
 
                 <div className="form-group">

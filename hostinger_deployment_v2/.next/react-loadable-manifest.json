@@ -1,0 +1,99 @@
+{
+  "../../node_modules/@supabase/auth-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
+    "id": 9494,
+    "files": []
+  },
+  "../../node_modules/@supabase/functions-js/dist/module/helper.js -> @supabase/node-fetch": {
+    "id": 9494,
+    "files": []
+  },
+  "../../node_modules/@supabase/realtime-js/dist/module/RealtimeClient.js -> @supabase/node-fetch": {
+    "id": 9494,
+    "files": []
+  },
+  "../../node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
+    "id": 9494,
+    "files": []
+  },
+  "../app/class-schedule/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/classes/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/company-outreach/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/content-calendar/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/daily-reports/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/drive-demo/page.tsx -> ../../components/GoogleDriveExplorer": {
+    "id": 7514,
+    "files": [
+      "static/chunks/vendor-c9a0eb0fedeed63b.js",
+      "static/chunks/514.0665d6cd57a1334e.js"
+    ]
+  },
+  "../app/employee-absent/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/expenses/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/inbox/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/my-personal/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/password-manager/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/password-vault/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/personal/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../app/projects/[id]/page.tsx -> @/lib/notification-service": {
+    "id": 4273,
+    "files": [
+      "static/chunks/273.bd028f46c0106835.js"
+    ]
+  },
+  "../app/weekly-report/page.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../components/MeetingDetailModal.tsx -> ../lib/api-compatibility": {
+    "id": 3152,
+    "files": []
+  },
+  "../components/Sidebar.tsx -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../lib/meetingNotesService.ts -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  },
+  "../lib/notification-service.ts -> @/lib/supabase": {
+    "id": 8411,
+    "files": []
+  }
+}
