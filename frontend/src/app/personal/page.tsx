@@ -48,7 +48,7 @@ interface PersonalTask {
   due_date?: string;
   estimated_duration?: number;
   actual_duration?: number;
-  is_recurring: boolean;
+  is_recurring?: boolean;
   recurring_pattern?: any;
   created_at: string;
   updated_at: string;
@@ -272,9 +272,7 @@ export default function PersonalTaskManager() {
         category: 'Project Work',
         tags: [`Project: ${(task.projects as any)?.name || 'Unknown'}`],
         due_date: task.due_date,
-        estimated_duration: task.estimated_hours ? task.estimated_hours * 60 : undefined,
         actual_duration: task.actual_hours ? task.actual_hours * 60 : undefined,
-        is_recurring: false,
         created_at: task.created_at,
         updated_at: task.updated_at,
         completed_at: task.status === 'done' ? task.updated_at : undefined
@@ -335,7 +333,11 @@ export default function PersonalTaskManager() {
       }
 
       const taskData = {
-        ...newTask,
+        title: newTask.title,
+        description: newTask.description,
+        status: newTask.status,
+        priority: newTask.priority,
+        category: newTask.category,
         user_id: user?.id,
         tags: newTask.tags.length > 0 ? newTask.tags : null,
         due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null
@@ -591,8 +593,6 @@ export default function PersonalTaskManager() {
       category: 'Work',
       tags: null,
       due_date: startTime.toISOString(),
-      estimated_duration: selectedHours.length * 60,
-      is_recurring: false,
       user_id: user?.id
     };
 
@@ -680,8 +680,8 @@ export default function PersonalTaskManager() {
       category: task.category || '',
       tags: task.tags || [],
       due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
-      estimated_duration: task.estimated_duration || 0,
-      is_recurring: task.is_recurring
+      estimated_duration: 60,
+      is_recurring: false
     });
     setIsEditingTask(true);
     setShowTaskModal(true);
