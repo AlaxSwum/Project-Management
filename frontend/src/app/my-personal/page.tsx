@@ -87,40 +87,65 @@ export default function PersonalCalendarPage() {
       startDate.setDate(currentDate.getDate() - 7);
       const endDate = new Date(currentDate);
       endDate.setDate(currentDate.getDate() + 7);
-      
-      const { data, error } = await supabase
-        .from('projects_meeting')
-        .select('*')
-        .or(`created_by_id.eq.${parseInt(user?.id?.toString() || '0')},attendee_ids.cs.{${parseInt(user?.id?.toString() || '0')}}`)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0])
-        .order('date', { ascending: true })
-        .order('time', { ascending: true });
-      
-      if (error) throw error;
-      
-      const transformedEvents = (data || []).map(meeting => {
-        const startDateTime = new Date(`${meeting.date}T${meeting.time}`);
-        const endDateTime = new Date(startDateTime.getTime() + (meeting.duration * 60000));
+
+      // Get personal events and scheduled tasks
+      const [eventsResult, tasksResult] = await Promise.all([
+        supabase
+          .from('personal_events')
+          .select('*')
+          .eq('user_id', parseInt(user?.id?.toString() || '0'))
+          .gte('start_datetime', startDate.toISOString())
+          .lte('start_datetime', endDate.toISOString())
+          .order('start_datetime', { ascending: true }),
         
-        return {
-          id: meeting.id,
-          title: meeting.title,
-          description: meeting.description || '',
-          start_datetime: startDateTime.toISOString(),
-          end_datetime: endDateTime.toISOString(),
-          all_day: meeting.all_day || false,
-          location: meeting.location || '',
-          event_type: meeting.event_type || 'meeting',
-          priority: 'medium' as const,
-          status: 'confirmed' as const,
-          color: meeting.color || '#5884FD',
-          item_type: (meeting.event_type === 'task' ? 'task' : 'event') as 'event' | 'task' | 'time_block',
-          completion_percentage: undefined
-        };
-      });
+        supabase
+          .from('personal_tasks')
+          .select('*')
+          .eq('user_id', parseInt(user?.id?.toString() || '0'))
+          .not('scheduled_start', 'is', null)
+          .gte('scheduled_start', startDate.toISOString())
+          .lte('scheduled_start', endDate.toISOString())
+          .order('scheduled_start', { ascending: true })
+      ]);
+
+      if (eventsResult.error) throw eventsResult.error;
+      if (tasksResult.error) throw tasksResult.error;
       
-      setEvents(transformedEvents);
+      // Transform events
+      const transformedEvents = (eventsResult.data || []).map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description || '',
+        start_datetime: event.start_datetime,
+        end_datetime: event.end_datetime,
+        all_day: event.all_day || false,
+        location: event.location || '',
+        event_type: event.event_type || 'personal',
+        priority: event.priority || 'medium',
+        status: event.status || 'confirmed',
+        color: event.color || '#5884FD',
+        item_type: 'event' as const,
+        completion_percentage: undefined
+      }));
+
+      // Transform scheduled tasks
+      const transformedTasks = (tasksResult.data || []).map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description || '',
+        start_datetime: task.scheduled_start,
+        end_datetime: task.scheduled_end,
+        all_day: false,
+        location: '',
+        event_type: 'task',
+        priority: task.priority || 'medium',
+        status: task.status || 'todo',
+        color: task.color || '#FFB333',
+        item_type: 'task' as const,
+        completion_percentage: task.completion_percentage || 0
+      }));
+      
+      setEvents([...transformedEvents, ...transformedTasks]);
     } catch (err: any) {
       console.error('Error fetching calendar data:', err);
       setError('Failed to load calendar data');
@@ -133,10 +158,10 @@ export default function PersonalCalendarPage() {
     try {
         const supabase = (await import('@/lib/supabase')).supabase;
         const { data, error } = await supabase
-        .from('projects_meeting')
+        .from('personal_tasks')
         .select('*')
-        .eq('created_by_id', parseInt(user?.id?.toString() || '0'))
-        .eq('event_type', 'task')
+        .eq('user_id', parseInt(user?.id?.toString() || '0'))
+        .is('scheduled_start', null)
         .order('created_at', { ascending: false });
         
         if (error) {
@@ -144,17 +169,7 @@ export default function PersonalCalendarPage() {
         return;
       }
       
-      const tasks: PersonalTask[] = (data || []).map(meeting => ({
-        id: meeting.id,
-        title: meeting.title,
-        description: meeting.description || '',
-        priority: 'medium' as const,
-        status: 'todo' as const,
-        color: meeting.color || '#FFB333',
-        category: 'personal'
-      }));
-
-      setUnscheduledTasks(tasks);
+      setUnscheduledTasks(data || []);
     } catch (err: any) {
       console.error('Error fetching unscheduled tasks:', err);
     }
@@ -176,20 +191,20 @@ export default function PersonalCalendarPage() {
         setError('Please enter a task title');
         return;
       }
-
+      
       const supabase = (await import('@/lib/supabase')).supabase;
       const { data, error } = await supabase
-        .from('projects_meeting')
+        .from('personal_tasks')
         .insert([{
+          user_id: parseInt(user?.id?.toString() || '0'),
           title: newTask.title,
-          description: newTask.description,
-          date: new Date().toISOString().split('T')[0],
-          time: '09:00',
-          duration: 60,
-          event_type: 'task',
+          description: newTask.description || '',
+          priority: newTask.priority,
+          status: 'todo',
+          category: newTask.category || 'personal',
           color: newTask.color,
-          created_by_id: parseInt(user?.id?.toString() || '0'),
-          attendee_ids: [parseInt(user?.id?.toString() || '0')]
+          tags: [],
+          completion_percentage: 0
         }])
         .select()
         .single();
@@ -241,15 +256,16 @@ export default function PersonalCalendarPage() {
       dropTime.setHours(hour, minute, 0, 0);
       
       const supabase = (await import('@/lib/supabase')).supabase;
+      const endTime = new Date(dropTime.getTime() + 60 * 60 * 1000); // Default 1 hour duration
       await supabase
-        .from('projects_meeting')
+        .from('personal_tasks')
         .update({
-          date: dropTime.toISOString().split('T')[0],
-          time: dropTime.toISOString().split('T')[1].substring(0, 5),
-          duration: 60
+          scheduled_start: dropTime.toISOString(),
+          scheduled_end: endTime.toISOString(),
+          auto_scheduled: false
         })
         .eq('id', draggedTask.id)
-        .eq('created_by_id', parseInt(user?.id?.toString() || '0'));
+        .eq('user_id', parseInt(user?.id?.toString() || '0'));
       
       await fetchCalendarData();
       await fetchUnscheduledTasks();
