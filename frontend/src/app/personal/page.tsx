@@ -1939,6 +1939,7 @@ export default function PersonalTaskManager() {
                   tasks={filteredTasks}
                   timeBlocks={timeBlocks}
                   onTaskClick={openEditTask}
+                  setTimeBlocks={setTimeBlocks}
                   onCreateTimeBlock={(startTime, endTime) => {
                     setNewTimeBlock({
                       title: '',
@@ -2325,6 +2326,7 @@ interface DayCalendarProps extends CalendarViewProps {
   handleUpdateTaskStatus: (taskId: string, status: PersonalTask['status']) => void;
   handleDeleteTask: (taskId: string) => void;
   openEditTask: (task: PersonalTask) => void;
+  setTimeBlocks: React.Dispatch<React.SetStateAction<PersonalTimeBlock[]>>;
 }
 
 const WeekCalendarView: React.FC<WeekCalendarProps> = ({ 
@@ -2894,7 +2896,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
 // Day Calendar View - Previous Design with Enhanced Functionality
 const DayCalendarView: React.FC<DayCalendarProps> = ({ 
   currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile, user,
-  handleUpdateTaskStatus, handleDeleteTask, openEditTask
+  handleUpdateTaskStatus, handleDeleteTask, openEditTask, setTimeBlocks
 }) => {
   // Local drag state for this component
   const [isDragging, setIsDragging] = useState(false);
@@ -3067,7 +3069,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       const startTime = new Date(currentDate);
                       startTime.setHours(hour, minute, 0, 0);
                       const endTime = new Date(startTime);
-                      endTime.setMinutes(endTime.getMinutes() + (draggedTask.estimated_duration || 60));
+                      endTime.setMinutes(endTime.getMinutes() + 60); // Default 1 hour duration
                       
                       const timeBlockData = {
                         title: draggedTask.title,
@@ -3113,8 +3115,24 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                           alert('Error creating time block: ' + result.error.message);
                         } else {
                           console.log('Time block created successfully!', result.data);
+                          // Update time blocks state instead of reloading
+                          const newTimeBlock: PersonalTimeBlock = {
+                            id: result.data.id.toString(),
+                            user_id: user?.id?.toString() || '60',
+                            title: draggedTask.title,
+                            description: draggedTask.description || '',
+                            start_time: startTime.toISOString(),
+                            end_time: endTime.toISOString(),
+                            color: getPriorityColor(draggedTask.priority),
+                            block_type: 'task',
+                            is_completed: false,
+                            notes: `Scheduled from task: ${draggedTask.title}`,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                          };
+                          setTimeBlocks(prev => [...prev, newTimeBlock]);
+                          setDraggedTask(null); // Clear the dragged task
                           alert(`Time block created for "${draggedTask.title}" at ${startTime.toLocaleTimeString()}`);
-                          window.location.reload();
                         }
                       } catch (error) {
                         console.error('Error:', error);
@@ -3244,7 +3262,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                 tomorrow.setHours(9, 0, 0, 0);
                 
                 const endTime = new Date(tomorrow);
-                endTime.setMinutes(endTime.getMinutes() + (task.estimated_duration || 60));
+                endTime.setMinutes(endTime.getMinutes() + 60); // Default 1 hour duration
                 
                 const timeBlockData = {
                   title: task.title,
@@ -3290,8 +3308,23 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                     alert('Error: ' + result.error.message);
                   } else {
                     console.log('Time block created successfully!', result.data);
+                    // Update time blocks state instead of reloading
+                    const newTimeBlock: PersonalTimeBlock = {
+                      id: result.data.id.toString(),
+                      user_id: user?.id?.toString() || '60',
+                      title: task.title,
+                      description: task.description || '',
+                      start_time: tomorrow.toISOString(),
+                      end_time: endTime.toISOString(),
+                      color: getPriorityColor(task.priority),
+                      block_type: 'task',
+                      is_completed: false,
+                      notes: `Scheduled from task: ${task.title}`,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString()
+                    };
+                    setTimeBlocks(prev => [...prev, newTimeBlock]);
                     alert(`Task "${task.title}" scheduled for ${tomorrow.toLocaleString()}`);
-                    window.location.reload();
                   }
                 } catch (error) {
                   console.error('Error:', error);
