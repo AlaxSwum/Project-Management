@@ -695,7 +695,7 @@ export default function PersonalTaskManager() {
               Personal Task Management
             </h1>
             <p style={{ fontSize: '1.1rem', color: '#6B7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-              Manage your personal tasks with 15-minute timeblocking - v2.0
+              Manage your personal tasks with 15-minute timeblocking - Build 2024
               </p>
             </div>
 
