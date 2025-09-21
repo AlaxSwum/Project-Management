@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, taskService } from '@/lib/api-compatibility';
@@ -76,6 +76,9 @@ export default function CalendarPage() {
   
   // Calendar view state
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day' | '15min'>('month');
+  const [timeBlocks, setTimeBlocks] = useState<any[]>([]);
+  const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([]);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   // Mobile detection
   useEffect(() => {
@@ -324,6 +327,35 @@ export default function CalendarPage() {
   const today = new Date();
   const daysInMonth = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
   const firstDay = useMemo(() => getFirstDayOfMonth(currentDate), [currentDate]);
+
+  // Drag and drop handler
+  const handleTimeDrop = async (e: React.DragEvent, date: Date, hour: number, minute: number = 0) => {
+    e.preventDefault();
+    if (!draggedTask) return;
+    
+    try {
+      // Create the scheduled time
+      const scheduledTime = new Date(date);
+      scheduledTime.setHours(hour, minute, 0, 0);
+      
+      // Update task with scheduled time
+      const updatedTask = {
+        ...draggedTask,
+        start_date: scheduledTime.toISOString(),
+        due_date: draggedTask.due_date || scheduledTime.toISOString()
+      };
+      
+      await taskService.updateTask(draggedTask.id, updatedTask);
+      
+      // Refresh tasks
+      await fetchTasks();
+      
+      console.log(`Task "${draggedTask.name}" scheduled for ${scheduledTime.toLocaleString()}`);
+      setDraggedTask(null);
+    } catch (error) {
+      console.error('Failed to schedule task:', error);
+    }
+  };
 
   // Show loading state while auth is initializing
   if (authLoading) {
@@ -2380,7 +2412,9 @@ export default function CalendarPage() {
           </header>
 
           <main className="calendar-content">
-            <div className="calendar-grid">
+            {calendarView === 'month' ? (
+              /* MONTH VIEW */
+              <div className="calendar-grid">
               <div className="calendar-header">
                 {daysOfWeek.map((day) => (
                   <div key={day} className="calendar-header-cell">
@@ -2611,6 +2645,370 @@ export default function CalendarPage() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            ) : calendarView === 'week' ? (
+              /* WEEK VIEW */
+              <div style={{
+                background: '#ffffff',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                overflow: 'hidden',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '80px repeat(7, 1fr)',
+                  gap: '1px',
+                  background: '#e5e7eb'
+                }}>
+                  {/* Time column header */}
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    textAlign: 'center'
+                  }}>
+                    Time
+                  </div>
+                  
+                  {/* Day headers */}
+                  {(() => {
+                    const startOfWeek = new Date(currentDate);
+                    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+                    
+                    return Array.from({ length: 7 }, (_, i) => {
+                      const day = new Date(startOfWeek);
+                      day.setDate(startOfWeek.getDate() + i);
+                      const isToday = day.toDateString() === new Date().toDateString();
+                      
+                      return (
+                        <div key={i} style={{
+                          background: isToday ? '#3b82f6' : '#f9fafb',
+                          color: isToday ? '#ffffff' : '#374151',
+                          padding: '1rem',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: '600'
+                        }}>
+                          <div>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                          <div style={{ fontSize: '1.25rem', marginTop: '0.25rem' }}>
+                            {day.getDate()}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  
+                  {/* Time slots */}
+                  {Array.from({ length: 24 }, (_, hour) => (
+                    <React.Fragment key={hour}>
+                      {/* Time label */}
+                      <div style={{
+                        background: '#f9fafb',
+                        padding: '0.75rem 0.5rem',
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        textAlign: 'center',
+                        borderBottom: '1px solid #e5e7eb',
+                        fontWeight: '500'
+                      }}>
+                        {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                      </div>
+                      
+                      {/* Day columns */}
+                      {Array.from({ length: 7 }, (_, dayIndex) => {
+                        const startOfWeek = new Date(currentDate);
+                        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+                        const dayDate = new Date(startOfWeek);
+                        dayDate.setDate(startOfWeek.getDate() + dayIndex);
+                        
+                        return (
+                          <div key={dayIndex} style={{
+                            background: '#ffffff',
+                            minHeight: '60px',
+                            borderBottom: '1px solid #e5e7eb',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}
+                          onDrop={(e) => handleTimeDrop(e, dayDate, hour)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                          >
+                            {/* Tasks for this hour would be rendered here */}
+                          </div>
+                        );
+                      })}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            ) : calendarView === 'day' ? (
+              /* DAY VIEW WITH SIDEBAR */
+              <div style={{ display: 'flex', gap: '1rem', height: '600px' }}>
+                {/* Unscheduled Tasks Sidebar */}
+                <div style={{
+                  width: '300px',
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    borderBottom: '1px solid #e5e7eb'
+                  }}>
+                    <h3 style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      margin: '0',
+                      color: '#111827'
+                    }}>
+                      Tasks to Schedule
+                    </h3>
+                  </div>
+                  
+                  <div style={{
+                    padding: '1rem',
+                    maxHeight: '500px',
+                    overflowY: 'auto'
+                  }}>
+                    {tasks.filter(task => !task.start_date || new Date(task.start_date).toDateString() !== currentDate.toDateString()).map(task => (
+                      <div
+                        key={task.id}
+                        draggable
+                        onDragStart={() => setDraggedTask(task)}
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '0.75rem',
+                          marginBottom: '0.5rem',
+                          cursor: 'grab',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f1f5f9';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#f8fafc';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      >
+                        <div style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: '#111827',
+                          marginBottom: '0.25rem'
+                        }}>
+                          {task.name}
+                        </div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: '#6b7280'
+                        }}>
+                          {task.project_name} • {task.priority}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Day Schedule */}
+                <div style={{
+                  flex: 1,
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '1rem',
+                    borderBottom: '1px solid #e5e7eb',
+                    textAlign: 'center'
+                  }}>
+                    <h3 style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '600',
+                      margin: '0',
+                      color: '#111827'
+                    }}>
+                      {currentDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </h3>
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '100px 1fr',
+                    gap: '1px',
+                    background: '#e5e7eb',
+                    maxHeight: '500px',
+                    overflowY: 'auto'
+                  }}>
+                    {Array.from({ length: 24 * 4 }, (_, index) => {
+                      const hour = Math.floor(index / 4);
+                      const minute = (index % 4) * 15;
+                      const timeLabel = `${hour === 0 ? '12' : hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour < 12 ? 'AM' : 'PM'}`;
+                      
+                      return (
+                        <React.Fragment key={index}>
+                          {/* Time label */}
+                          <div style={{
+                            background: '#f9fafb',
+                            padding: '0.5rem',
+                            fontSize: '0.75rem',
+                            color: '#6b7280',
+                            textAlign: 'center',
+                            borderBottom: minute === 0 ? '2px solid #d1d5db' : '1px solid #f3f4f6',
+                            fontWeight: minute === 0 ? '600' : '400'
+                          }}>
+                            {minute === 0 ? timeLabel : ''}
+                          </div>
+                          
+                          {/* 15-minute slot */}
+                          <div style={{
+                            background: '#ffffff',
+                            minHeight: '45px',
+                            borderBottom: minute === 45 ? '2px solid #d1d5db' : '1px solid #f3f4f6',
+                            position: 'relative',
+                            padding: '0.25rem',
+                            cursor: 'pointer'
+                          }}
+                          onDrop={(e) => handleTimeDrop(e, currentDate, hour, minute)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f9fafb';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#ffffff';
+                          }}
+                          >
+                            {/* Scheduled tasks would be rendered here */}
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* 15-MINUTE FOCUSED VIEW */
+              <div style={{
+                background: '#ffffff',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                overflow: 'hidden',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}>
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1rem',
+                  borderBottom: '1px solid #e5e7eb',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    margin: '0',
+                    color: '#111827'
+                  }}>
+                    15-Minute Time Blocks - {currentDate.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h3>
+                  <button
+                    onClick={() => console.log('Add time block')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      background: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '0.5rem 1rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add Time Block
+                  </button>
+                </div>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '120px 1fr',
+                  gap: '1px',
+                  background: '#e5e7eb',
+                  maxHeight: '600px',
+                  overflow: 'auto'
+                }}>
+                  {Array.from({ length: 24 * 4 }, (_, index) => {
+                    const hour = Math.floor(index / 4);
+                    const minute = (index % 4) * 15;
+                    const timeLabel = `${hour === 0 ? '12' : hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour < 12 ? 'AM' : 'PM'}`;
+                    
+                    return (
+                      <React.Fragment key={index}>
+                        {/* Time label */}
+                        <div style={{
+                          background: '#f9fafb',
+                          padding: '0.75rem',
+                          fontSize: '0.875rem',
+                          color: '#374151',
+                          textAlign: 'center',
+                          borderBottom: minute === 0 ? '3px solid #d1d5db' : '1px solid #f3f4f6',
+                          fontWeight: minute === 0 ? '700' : '500'
+                        }}>
+                          {minute === 0 ? timeLabel : ''}
+                        </div>
+                        
+                        {/* 15-minute slot */}
+                        <div style={{
+                          background: '#ffffff',
+                          minHeight: '50px',
+                          borderBottom: minute === 45 ? '3px solid #d1d5db' : '1px solid #f3f4f6',
+                          position: 'relative',
+                          padding: '0.5rem',
+                          cursor: 'pointer'
+                        }}
+                        onDrop={(e) => handleTimeDrop(e, currentDate, hour, minute)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f0f9ff';
+                          e.currentTarget.style.borderLeft = '4px solid #3b82f6';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff';
+                          e.currentTarget.style.borderLeft = 'none';
+                        }}
+                        >
+                          {/* Time blocks and tasks would be rendered here */}
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               </div>
             )}
