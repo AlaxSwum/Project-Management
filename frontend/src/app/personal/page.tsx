@@ -41,7 +41,7 @@ interface PersonalTask {
   user_id: string;
   title: string;
   description?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   category?: string;
   tags?: string[];
@@ -119,7 +119,7 @@ export default function PersonalTaskManager() {
     return {
     title: '',
     description: '',
-      status: 'pending' as PersonalTask['status'],
+      status: 'todo' as PersonalTask['status'],
       priority: 'medium' as PersonalTask['priority'],
     category: '',
       tags: [] as string[],
@@ -200,7 +200,7 @@ export default function PersonalTaskManager() {
               id: item.id,
               title: item.name,
               description: item.description,
-              status: item.status || 'pending',
+              status: item.status || 'todo',
               priority: item.priority || 'medium',
               category: 'Personal',
               tags: [],
@@ -265,9 +265,9 @@ export default function PersonalTaskManager() {
         user_id: user?.id?.toString() || '60',
         title: `[${(task.projects as any)?.name || 'Project'}] ${task.name}`,
         description: task.description,
-        status: task.status === 'todo' ? 'pending' : 
+        status: task.status === 'todo' ? 'todo' : 
                 task.status === 'in_progress' ? 'in_progress' :
-                task.status === 'done' ? 'completed' : 'pending',
+                task.status === 'done' ? 'completed' : 'todo',
         priority: task.priority as PersonalTask['priority'],
         category: 'Project Work',
         tags: [`Project: ${(task.projects as any)?.name || 'Unknown'}`],
@@ -588,7 +588,7 @@ export default function PersonalTaskManager() {
     const taskData = {
       title: `Task for ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}`,
       description: `Created from ${selectedHours.length} hour selection in week view`,
-      status: 'pending' as PersonalTask['status'],
+      status: 'todo' as PersonalTask['status'],
       priority: 'medium' as PersonalTask['priority'],
       category: 'Work',
       tags: null,
@@ -760,7 +760,7 @@ export default function PersonalTaskManager() {
   console.log('Current filters:', { statusFilter, priorityFilter });
 
   const tasksByStatus = {
-    pending: filteredTasks.filter(task => task.status === 'pending'),
+    todo: filteredTasks.filter(task => task.status === 'todo'),
     in_progress: filteredTasks.filter(task => task.status === 'in_progress'),
     completed: filteredTasks.filter(task => task.status === 'completed'),
     cancelled: filteredTasks.filter(task => task.status === 'cancelled')
@@ -1360,8 +1360,8 @@ export default function PersonalTaskManager() {
             {/* Stats Cards */}
             <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
               <div className="stats-card">
-                <div className="stats-number" style={{ color: '#F59E0B' }}>{tasksByStatus.pending.length}</div>
-                <div className="stats-label">Pending</div>
+                <div className="stats-number" style={{ color: '#F59E0B' }}>{tasksByStatus.todo.length}</div>
+                <div className="stats-label">Todo</div>
               </div>
               <div className="stats-card">
                 <div className="stats-number" style={{ color: '#3B82F6' }}>{tasksByStatus.in_progress.length}</div>
@@ -1660,7 +1660,7 @@ export default function PersonalTaskManager() {
                         
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: '12px' }}>
                           <button
-                            onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed')}
+                            onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed')}
                             style={{ 
                               background: 'none', 
                               border: 'none', 
@@ -1668,7 +1668,7 @@ export default function PersonalTaskManager() {
                               color: task.status === 'completed' ? '#10B981' : '#6B7280',
                               padding: '4px'
                             }}
-                            title={task.status === 'completed' ? 'Mark as pending' : 'Mark as completed'}
+                            title={task.status === 'completed' ? 'Mark as todo' : 'Mark as completed'}
                           >
                             {task.status === 'completed' ? (
                               <CheckCircleIconSolid style={{ width: '20px', height: '20px' }} />
@@ -1809,7 +1809,7 @@ export default function PersonalTaskManager() {
                       
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
-                          onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed')}
+                          onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed')}
                           style={{ 
                             background: 'none', 
                             border: 'none', 
@@ -1817,7 +1817,7 @@ export default function PersonalTaskManager() {
                             color: task.status === 'completed' ? '#10B981' : '#6B7280',
                             padding: '4px'
                           }}
-                          title={task.status === 'completed' ? 'Mark as pending' : 'Mark as completed'}
+                          title={task.status === 'completed' ? 'Mark as todo' : 'Mark as completed'}
                         >
                           {task.status === 'completed' ? (
                             <CheckCircleIconSolid style={{ width: '20px', height: '20px' }} />
@@ -3314,7 +3314,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'pending' : 'completed');
+                      handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed');
                     }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: task.status === 'completed' ? '#10B981' : '#6B7280' }}
                   >
