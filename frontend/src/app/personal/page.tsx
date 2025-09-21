@@ -513,17 +513,60 @@ export default function PersonalCalendarPage() {
             marginBottom: '2rem'
           }}>
             <div>
-              <h1 style={{ 
-                fontSize: '2.5rem', 
-                fontWeight: '300', 
-                margin: '0', 
-                color: '#1a1a1a',
-                letterSpacing: '-0.02em'
-              }}>
-              Personal Calendar - 15 Min Timeblocking
-              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+                <h1 style={{ 
+                  fontSize: '2.5rem', 
+                  fontWeight: '300', 
+                  margin: '0', 
+                  color: '#1a1a1a',
+                  letterSpacing: '-0.02em'
+                }}>
+                Personal Calendar
+                </h1>
+                
+                {/* View Toggle Buttons */}
+                <div style={{
+                  display: 'flex',
+                  background: '#ffffff',
+                  borderRadius: '8px',
+                  padding: '4px',
+                  border: '2px solid #e5e7eb',
+                  gap: '2px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                  {[
+                    { key: 'month', label: 'Month' },
+                    { key: 'week', label: 'Week' },
+                    { key: 'day', label: 'Day' },
+                    { key: '15min', label: '15 Min' }
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setCurrentView(key as ViewType)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: currentView === key ? '#3b82f6' : 'transparent',
+                        color: currentView === key ? '#ffffff' : '#6b7280',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        minWidth: '70px'
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
               <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-              Drag tasks from sidebar to time slots for scheduling
+                {currentView === '15min' ? 'Drag tasks from sidebar to time slots for scheduling' : 
+                 currentView === 'day' ? 'Daily view with hourly time slots' :
+                 currentView === 'week' ? 'Weekly overview with 7-day layout' :
+                 'Monthly calendar view'}
               </p>
             </div>
 
@@ -564,7 +607,57 @@ export default function PersonalCalendarPage() {
           )}
 
           {/* Calendar View */}
-        {render15MinView()}
+          {currentView === '15min' ? render15MinView() : (
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              padding: '3rem',
+              textAlign: 'center',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              minHeight: '500px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <CalendarIcon style={{ 
+                width: '80px', 
+                height: '80px', 
+                color: '#3b82f6', 
+                marginBottom: '2rem' 
+              }} />
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: '600',
+                color: '#111827',
+                marginBottom: '1rem'
+              }}>
+                {currentView.toUpperCase()} VIEW
+              </h2>
+              <p style={{
+                color: '#6b7280',
+                fontSize: '1.125rem',
+                marginBottom: '2rem',
+                maxWidth: '500px'
+              }}>
+                {currentView === 'month' && 'Monthly overview of your scheduled tasks and events'}
+                {currentView === 'week' && 'Weekly schedule with 7-day layout and hourly slots'}
+                {currentView === 'day' && 'Daily schedule with hourly time slots for detailed planning'}
+              </p>
+              
+              <div style={{
+                background: '#f0f9ff',
+                border: '1px solid #3b82f6',
+                borderRadius: '8px',
+                padding: '1rem',
+                fontSize: '0.875rem',
+                color: '#1e40af'
+              }}>
+                ✨ {currentView} view is coming soon! For now, use the <strong>15 Min</strong> view for detailed time blocking.
+              </div>
+            </div>
+          )}
 
         {/* Task Creation Modal */}
         {showTaskModal && (
