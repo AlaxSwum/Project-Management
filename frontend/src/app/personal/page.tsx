@@ -2912,8 +2912,14 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
   const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
   
   const dayTasks = tasks.filter(task => {
-    // Show only unscheduled tasks (tasks without scheduled_start)
-    return !task.scheduled_start;
+    // Show only unscheduled tasks that are due today or have no due date
+    if (task.scheduled_start) return false; // Hide already scheduled tasks
+    
+    if (!task.due_date) return true; // Show tasks with no due date
+    
+    const taskDate = new Date(task.due_date);
+    const today = new Date(currentDate);
+    return taskDate.toDateString() === today.toDateString(); // Show tasks due today
   });
   
   const dayTimeBlocks = timeBlocks.filter(block => {
