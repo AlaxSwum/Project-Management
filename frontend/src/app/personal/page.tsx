@@ -3069,7 +3069,12 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                     console.log('DROP EVENT FIRED!', { draggedTask, hour, minute, blocks: blocks.length });
                     
                     if (draggedTask && blocks.length === 0) {
-                      console.log('Valid drop - processing...');
+                      console.log('Valid drop - processing...', {
+                        taskId: draggedTask.id,
+                        taskTitle: draggedTask.title,
+                        dropTime: `${hour}:${minute}`,
+                        currentDate: currentDate.toDateString()
+                      });
                       // Create time block directly here
                       const startTime = new Date(currentDate);
                       startTime.setHours(hour, minute, 0, 0);
@@ -3147,44 +3152,40 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                           };
                           
                           // Update task in database with scheduled time
-                          try {
-                            const taskUpdateData = {
-                              due_date: startTime.toISOString(),
-                              scheduled_start: startTime.toISOString(),
-                              scheduled_end: endTime.toISOString()
-                            };
-                            
-                            // Try to update in personal_tasks first
-                            try {
-                              await supabase
-                                .from('personal_tasks')
-                                .update(taskUpdateData)
-                                .eq('id', draggedTask.id);
-                            } catch (err) {
-                              // Fallback to projects_meeting
-                              await supabase
-                                .from('projects_meeting')
-                                .update({
-                                  meeting_date: startTime.toISOString(),
-                                  start_time: startTime.toISOString(),
-                                  end_time: endTime.toISOString()
-                                })
-                                .eq('id', draggedTask.id);
-                            }
-                          } catch (updateError) {
-                            console.log('Could not update task in database, updating local state only');
-                          }
+                          console.log('Updating task with scheduled time:', draggedTask.id);
+                          // For now, just update local state - database update can be added later
                           
                           // Update tasks state to remove from unscheduled list
-                          setTasks(prev => prev.map(task => 
-                            task.id === draggedTask.id ? updatedTask : task
-                          ));
-                          setAllTasks(prev => prev.map(task => 
-                            task.id === draggedTask.id ? updatedTask : task
-                          ));
+                          console.log('Updating task states - before:', {
+                            taskId: draggedTask.id,
+                            taskTitle: draggedTask.title,
+                            hasScheduledStart: !!draggedTask.scheduled_start
+                          });
+                          
+                          setTasks(prev => {
+                            const updated = prev.map(task => 
+                              task.id === draggedTask.id ? updatedTask : task
+                            );
+                            console.log('Tasks updated:', updated.length);
+                            return updated;
+                          });
+                          setAllTasks(prev => {
+                            const updated = prev.map(task => 
+                              task.id === draggedTask.id ? updatedTask : task
+                            );
+                            console.log('AllTasks updated:', updated.length);
+                            return updated;
+                          });
+                          
+                          console.log('Task scheduled successfully:', {
+                            taskId: updatedTask.id,
+                            scheduledStart: updatedTask.scheduled_start,
+                            timeBlockId: newTimeBlock.id
+                          });
                           
                           setDraggedTask(null); // Clear the dragged task
-                          alert(`Task "${draggedTask.title}" scheduled for ${startTime.toLocaleTimeString()}`);
+                          // Remove alert for now to see console logs clearly
+                          console.log(`SUCCESS: Task "${draggedTask.title}" scheduled for ${startTime.toLocaleTimeString()}`);
                         }
                       } catch (error) {
                         console.error('Error:', error);
