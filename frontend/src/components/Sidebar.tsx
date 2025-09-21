@@ -127,10 +127,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .single();
 
-      console.log('📋 Class Schedule member check:', { memberData, memberError });
+      console.log('Class Schedule member check:', { memberData, memberError });
 
       if (memberData && !memberError) {
-        console.log('✅ Class Schedule access granted: User is a member');
+        console.log('SUCCESS: Class Schedule access granted: User is a member');
         setHasClassScheduleAccess(true);
         return;
       }
@@ -142,10 +142,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('id', user.id)
         .single();
 
-      console.log('👤 User data check:', userData);
+      console.log('USER: User data check:', userData);
 
       if (userError) {
-        console.log('❌ Class Schedule access denied: User data error');
+        console.log('ERROR: Class Schedule access denied: User data error');
         setHasClassScheduleAccess(false);
         return;
       }
@@ -184,10 +184,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .single();
 
-      console.log('📋 Content Calendar member check:', { memberData, memberError });
+      console.log('INFO: Content Calendar member check:', { memberData, memberError });
 
       if (memberData && !memberError) {
-        console.log('✅ Content Calendar access granted: User is a member');
+        console.log('SUCCESS: Content Calendar access granted: User is a member');
         setHasContentCalendarAccess(true);
         return;
       }
@@ -199,10 +199,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .limit(1);
 
-      console.log('📁 Folder member check:', { folderMemberData, folderMemberError });
+      console.log('FOLDER: Folder member check:', { folderMemberData, folderMemberError });
 
       if (folderMemberData && folderMemberData.length > 0 && !folderMemberError) {
-        console.log('✅ Content Calendar access granted: User is a folder member');
+        console.log('SUCCESS: Content Calendar access granted: User is a folder member');
         setHasContentCalendarAccess(true);
         return;
       }
@@ -214,10 +214,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('id', user.id)
         .single();
 
-      console.log('👤 User data check:', userData);
+      console.log('USER: User data check:', userData);
 
       if (userError) {
-        console.log('❌ Content Calendar access denied: User data error');
+        console.log('ERROR: Content Calendar access denied: User data error');
         setHasContentCalendarAccess(false);
         return;
       }
@@ -231,10 +231,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       });
       
       if (hasPermission) {
-        console.log('✅ Content Calendar access granted: User is admin/HR');
+        console.log('SUCCESS: Content Calendar access granted: User is admin/HR');
         setHasContentCalendarAccess(true);
       } else {
-        console.log('❌ Content Calendar access denied: No access found');
+        console.log('ERROR: Content Calendar access denied: No access found');
         setHasContentCalendarAccess(false);
       }
     } catch (err) {
@@ -262,10 +262,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .single();
 
-      console.log('📋 Classes member check:', { memberData, memberError });
+      console.log('INFO: Classes member check:', { memberData, memberError });
 
       if (memberData && !memberError) {
-        console.log('✅ Classes access granted: User is a member');
+        console.log('SUCCESS: Classes access granted: User is a member');
         setHasClassesAccess(true);
         return;
       }
@@ -277,10 +277,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('id', user.id)
         .single();
 
-      console.log('👤 Classes user data check:', userData);
+      console.log('USER: Classes user data check:', userData);
 
       if (userError) {
-        console.log('❌ Classes access denied: User data error');
+        console.log('ERROR: Classes access denied: User data error');
         setHasClassesAccess(false);
         return;
       }
@@ -315,7 +315,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       // First check user role - instructors should NOT have access to company outreach
       const contextRole = user.role || (user as any)?.user_metadata?.role;
       if (contextRole === 'instructor') {
-        console.log('❌ Company Outreach access denied: User is instructor (restricted)');
+        console.log('ERROR: Company Outreach access denied: User is instructor (restricted)');
         setHasCompanyOutreachAccess(false);
         return;
       }
@@ -327,10 +327,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('user_id', user.id)
         .single();
 
-      console.log('📋 Company Outreach member check:', { memberData, memberError });
+      console.log('INFO: Company Outreach member check:', { memberData, memberError });
 
       if (memberData && !memberError) {
-        console.log('✅ Company Outreach access granted: User is a member');
+        console.log('SUCCESS: Company Outreach access granted: User is a member');
         setHasCompanyOutreachAccess(true);
         return;
       }
@@ -346,7 +346,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       });
 
       if (isAdmin) {
-        console.log('✅ Company Outreach access granted: Admin from context');
+        console.log('SUCCESS: Company Outreach access granted: Admin from context');
         setHasCompanyOutreachAccess(true);
         return;
       }
@@ -358,12 +358,12 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         .eq('id', user.id)
         .single();
 
-      console.log('👤 Company Outreach database user check:', userData, userError);
+      console.log('USER: Company Outreach database user check:', userData, userError);
 
       if (!userError && userData) {
         // Double-check role in database - no access for instructors
         if (userData.role === 'instructor') {
-          console.log('❌ Company Outreach access denied: Database role is instructor');
+          console.log('ERROR: Company Outreach access denied: Database role is instructor');
           setHasCompanyOutreachAccess(false);
           return;
         }
@@ -377,14 +377,14 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         });
         
         if (hasAdminPermission) {
-          console.log('✅ Company Outreach access granted: Admin from database');
+          console.log('SUCCESS: Company Outreach access granted: Admin from database');
           setHasCompanyOutreachAccess(true);
           return;
         }
       }
 
       // If we get here, user doesn't have access
-      console.log('❌ Company Outreach access denied: User not in member table and not admin');
+      console.log('ERROR: Company Outreach access denied: User not in member table and not admin');
       setHasCompanyOutreachAccess(false);
       
     } catch (err) {
@@ -480,9 +480,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   };
 
   const toggleDropdown = () => {
-    console.log('🔥 DEBUG: Toggle dropdown clicked! Current state:', isDropdownOpen);
+    console.log('DEBUG: Toggle dropdown clicked! Current state:', isDropdownOpen);
     setIsDropdownOpen(!isDropdownOpen);
-    console.log('🔥 DEBUG: Setting dropdown state to:', !isDropdownOpen);
+    console.log('DEBUG: Setting dropdown state to:', !isDropdownOpen);
   };
 
   const closeDropdown = () => {
@@ -506,15 +506,15 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   };
 
   const handleAbsenceForm = async () => {
-    console.log('🔥 DEBUG: handleAbsenceForm called');
-    console.log('🔥 DEBUG: Setting showAbsenceForm to true');
+    console.log('DEBUG: handleAbsenceForm called');
+    console.log('DEBUG: Setting showAbsenceForm to true');
     setShowAbsenceForm(true);
     closeDropdown();
     
-    console.log('🔥 DEBUG: Fetching leave balance...');
+    console.log('DEBUG: Fetching leave balance...');
     // Refresh leave balance to get latest data
     await fetchLeaveBalance();
-    console.log('🔥 DEBUG: Leave balance fetched, modal should be visible');
+    console.log('DEBUG: Leave balance fetched, modal should be visible');
   };
 
   const handleAbsenceFormSubmit = async (e: React.FormEvent) => {
@@ -991,7 +991,7 @@ Your report is now available in the system.`);
       const isOutsideDropdownPortal = !target.closest || !target.closest('[data-dropdown-portal]');
       
       if (isOutsideDropdownButton && isOutsideDropdownPortal) {
-        console.log('🔥 DEBUG: Closing dropdown due to outside click');
+        console.log('DEBUG: Closing dropdown due to outside click');
         setIsDropdownOpen(false);
       }
     };
@@ -2113,7 +2113,7 @@ Your report is now available in the system.`);
               <div className="sidebar-add-container" ref={dropdownRef}>
                 <button
                   onClick={(e) => {
-                    console.log('🔥 DEBUG: Plus (+) button clicked!', e);
+                    console.log('DEBUG: Plus (+) button clicked!', e);
                     e.preventDefault();
                     e.stopPropagation();
                     toggleDropdown();
@@ -2352,7 +2352,7 @@ Your report is now available in the system.`);
 
       {/* Dropdown Portal - Render outside sidebar */}
       {isDropdownOpen && (() => {
-        console.log('🔥 DEBUG: Rendering dropdown portal, isDropdownOpen =', isDropdownOpen);
+        console.log('DEBUG: Rendering dropdown portal, isDropdownOpen =', isDropdownOpen);
         return true;
       })() && typeof window !== 'undefined' && createPortal(
         <div 
@@ -2372,13 +2372,13 @@ Your report is now available in the system.`);
             pointerEvents: 'auto',
           }}
           onClick={(e) => {
-            console.log('🔥 DEBUG: Dropdown container clicked!', e);
+            console.log('DEBUG: Dropdown container clicked!', e);
             e.stopPropagation();
           }}
         >
           <button 
             onClick={(e) => {
-              console.log('🔥 DEBUG: Absence Form button clicked!', e);
+              console.log('DEBUG: Absence Form button clicked!', e);
               e.preventDefault();
               e.stopPropagation();
               handleAbsenceForm();
@@ -2419,7 +2419,7 @@ Your report is now available in the system.`);
           </button>
           <button 
             onClick={(e) => {
-              console.log('🔥 DEBUG: Daily Report button clicked!', e);
+              console.log('DEBUG: Daily Report button clicked!', e);
               e.preventDefault();
               e.stopPropagation();
               handleDailyReport();
@@ -2464,7 +2464,7 @@ Your report is now available in the system.`);
 
       {/* Absence Form Modal */}
       {showAbsenceForm && (() => {
-        console.log('🔥 DEBUG: Rendering Absence Form Modal, showAbsenceForm =', showAbsenceForm);
+        console.log('DEBUG: Rendering Absence Form Modal, showAbsenceForm =', showAbsenceForm);
         return true;
       })() && (
         <div className="modal-overlay" onClick={handleAbsenceFormClose}>
