@@ -172,23 +172,54 @@ export default function PersonalTaskManager() {
       // Get date range based on current view
       const { startDate, endDate } = getDateRange();
 
-      // Load tasks
-      let taskQuery = supabase
-        .from('personal_tasks')
+      // Load tasks with fallback
+      let tasksData = [];
+      try {
+      const { data, error } = await supabase
+          .from('personal_tasks')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.log('personal_tasks table not available, using projects_meeting as fallback');
+          // Fallback to projects_meeting table
+          const { data: fallbackData, error: fallbackError } = await supabase
+        .from('projects_meeting')
         .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      // Don't apply date filters - show all user tasks so they appear in all views
-      console.log('Loading all tasks for user:', user?.id);
-
-      const { data: tasksData, error: tasksError } = await taskQuery;
-
-      if (tasksError) {
-        console.error('Error loading tasks:', tasksError);
-        setError('Failed to load tasks');
-        return;
+            .eq('user_id', parseInt(user?.id?.toString() || '0'))
+            .eq('type', 'personal_task')
+            .order('created_at', { ascending: false });
+          
+          if (fallbackError) {
+            console.error('Error loading tasks from fallback:', fallbackError);
+            tasksData = [];
+          } else {
+            // Transform projects_meeting data to personal task format
+            tasksData = (fallbackData || []).map(item => ({
+              id: item.id,
+              title: item.name,
+              description: item.description,
+              status: item.status || 'pending',
+              priority: item.priority || 'medium',
+              category: 'Personal',
+              tags: [],
+              due_date: item.meeting_date,
+              is_recurring: false,
+              created_at: item.created_at,
+              updated_at: item.updated_at,
+              user_id: item.user_id.toString()
+            }));
+          }
+        } else {
+          tasksData = data || [];
+        }
+      } catch (err) {
+        console.log('Error loading tasks, using empty array');
+        tasksData = [];
       }
+
+      console.log('Loaded tasks:', tasksData.length);
 
       // Load time blocks with error handling
       let timeBlocksData = [];
@@ -307,15 +338,42 @@ export default function PersonalTaskManager() {
         ...newTask,
         user_id: user?.id,
         tags: newTask.tags.length > 0 ? newTask.tags : null,
-        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
-        estimated_duration: newTask.estimated_duration || null
+        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null
       };
 
-      const { data, error } = await supabase
-        .from('personal_tasks')
-        .insert([taskData])
-        .select()
-        .single();
+      // Try personal_tasks first, fallback to projects_meeting
+      let data, error;
+      try {
+        const result = await supabase
+          .from('personal_tasks')
+          .insert([taskData])
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      } catch (err) {
+        console.log('personal_tasks table not available, using projects_meeting as fallback');
+        // Fallback to projects_meeting table
+        const fallbackData = {
+          name: taskData.title,
+          description: taskData.description,
+          meeting_date: taskData.due_date || new Date().toISOString(),
+          start_time: taskData.due_date || new Date().toISOString(),
+          end_time: taskData.due_date || new Date().toISOString(),
+          user_id: parseInt(user?.id?.toString() || '0'),
+          type: 'personal_task',
+          priority: taskData.priority,
+          status: taskData.status
+        };
+        
+        const result = await supabase
+          .from('projects_meeting')
+          .insert([fallbackData])
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('Error creating task:', error);
@@ -346,7 +404,6 @@ export default function PersonalTaskManager() {
         ...newTask,
         tags: newTask.tags.length > 0 ? newTask.tags : null,
         due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
-        estimated_duration: newTask.estimated_duration || null
       };
 
       const { data, error } = await supabase
@@ -540,17 +597,45 @@ export default function PersonalTaskManager() {
     };
 
     try {
-      const { data, error } = await supabase
+    // Try personal_tasks first, fallback to projects_meeting
+    let data, error;
+    try {
+      const result = await supabase
         .from('personal_tasks')
         .insert([taskData])
         .select()
         .single();
+      data = result.data;
+      error = result.error;
+    } catch (err) {
+      console.log('personal_tasks table not available, using projects_meeting as fallback');
+      // Fallback to projects_meeting table
+      const fallbackData = {
+        name: taskData.title,
+        description: taskData.description,
+        meeting_date: taskData.due_date || new Date().toISOString(),
+        start_time: taskData.due_date || new Date().toISOString(),
+        end_time: taskData.due_date || new Date().toISOString(),
+        user_id: parseInt(user?.id?.toString() || '0'),
+        type: 'personal_task',
+        priority: taskData.priority,
+        status: taskData.status
+      };
+      
+      const result = await supabase
+        .from('projects_meeting')
+        .insert([fallbackData])
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
-      if (error) {
-        console.error('Error creating task from selection:', error);
-        setError('Failed to create task from selection');
-        return;
-      }
+    if (error) {
+      console.error('Error creating task from selection:', error);
+      setError('Failed to create task from selection');
+      return;
+    }
 
       setTasks(prev => [data, ...prev]);
       setAllTasks(prev => [data, ...prev]); // Also update allTasks
@@ -2176,7 +2261,7 @@ export default function PersonalTaskManager() {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = '#6B7280';
                   e.currentTarget.style.transform = 'translateY(0)';
-                }}
+                      }}
                     >
                       Cancel
                     </button>
