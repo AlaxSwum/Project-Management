@@ -1,0 +1,22 @@
+HOSTINGER UPLOAD INSTRUCTIONS:
+=============================
+
+1. Compress the deployment_package folder:
+   zip -r personal_tasks_fix.zip deployment_package/
+
+2. Upload via Hostinger File Manager:
+   - Login to your Hostinger control panel
+   - Go to File Manager
+   - Navigate to your website directory
+   - Upload personal_tasks_fix.zip
+   - Extract the zip file
+   - Replace existing files
+
+3. Alternative - FTP Upload:
+   - Use your FTP client
+   - Upload contents of deployment_package/
+   - Overwrite existing files
+
+4. Test at: https://srv875725.hstgr.cloud/personal
+
+The personal tasks and time blocks should now work correctly!
