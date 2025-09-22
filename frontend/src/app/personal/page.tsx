@@ -63,8 +63,8 @@ interface PersonalTimeBlock {
   task_id?: string;
   title: string;
   description?: string;
-  start_datetime: string;
-  end_datetime: string;
+  start_time: string;
+  end_time: string;
   block_type: 'task' | 'break' | 'meeting' | 'focus' | 'personal' | 'other';
   color: string;
   is_completed: boolean;
@@ -136,8 +136,8 @@ export default function PersonalTaskManager() {
   const [newTimeBlock, setNewTimeBlock] = useState({
     title: '',
     description: '',
-    start_datetime: '',
-    end_datetime: '',
+    start_time: '',
+    end_time: '',
     block_type: 'task' as PersonalTimeBlock['block_type'],
     color: '#3B82F6',
     notes: ''
@@ -230,9 +230,9 @@ export default function PersonalTaskManager() {
           .from('personal_time_blocks')
         .select('*')
           .eq('user_id', user?.id)
-          .gte('start_datetime', startDate.toISOString())
-          .lte('end_datetime', endDate.toISOString())
-          .order('start_datetime', { ascending: true });
+          .gte('start_time', startDate.toISOString())
+          .lte('end_time', endDate.toISOString())
+          .order('start_time', { ascending: true });
 
       if (error) {
           console.log('Time blocks table not available, continuing without time blocks');
@@ -499,13 +499,13 @@ export default function PersonalTaskManager() {
 
   const handleCreateTimeBlock = async () => {
     try {
-      if (!newTimeBlock.title.trim() || !newTimeBlock.start_datetime || !newTimeBlock.end_datetime) {
+      if (!newTimeBlock.title.trim() || !newTimeBlock.start_time || !newTimeBlock.end_time) {
         setError('Title, start time, and end time are required');
         return;
       }
 
-      const startTime = new Date(newTimeBlock.start_datetime);
-      const endTime = new Date(newTimeBlock.end_datetime);
+      const startTime = new Date(newTimeBlock.start_time);
+      const endTime = new Date(newTimeBlock.end_time);
 
       if (endTime <= startTime) {
         setError('End time must be after start time');
@@ -515,8 +515,8 @@ export default function PersonalTaskManager() {
       const timeBlockData = {
         ...newTimeBlock,
         user_id: user?.id,
-        start_datetime: startTime.toISOString(),
-        end_datetime: endTime.toISOString()
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString()
       };
 
       // Try to create time block with fallback
@@ -535,9 +535,9 @@ export default function PersonalTaskManager() {
         const fallbackData = {
           name: timeBlockData.title,
           description: timeBlockData.description,
-          meeting_date: timeBlockData.start_datetime,
-          start_time: timeBlockData.start_datetime,
-          end_time: timeBlockData.end_datetime,
+          meeting_date: timeBlockData.start_time,
+          start_time: timeBlockData.start_time,
+          end_time: timeBlockData.end_time,
           user_id: parseInt(user?.id?.toString() || '0'),
           type: 'time_block'
         };
@@ -662,8 +662,8 @@ export default function PersonalTaskManager() {
     setNewTimeBlock({
       title: '',
       description: '',
-      start_datetime: '',
-      end_datetime: '',
+      start_time: '',
+      end_time: '',
       block_type: 'task' as PersonalTimeBlock['block_type'],
       color: '#3B82F6',
       notes: ''
@@ -1948,8 +1948,8 @@ export default function PersonalTaskManager() {
                     setNewTimeBlock({
                       title: '',
                       description: '',
-                      start_datetime: startTime.toISOString().slice(0, 16),
-                      end_datetime: endTime.toISOString().slice(0, 16),
+                      start_time: startTime.toISOString().slice(0, 16),
+                      end_time: endTime.toISOString().slice(0, 16),
                       block_type: 'task',
                       color: '#3B82F6',
                       notes: ''
@@ -2361,7 +2361,7 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
   
   const getDayTimeBlocks = (day: Date) => {
     return timeBlocks.filter(block => {
-      const blockDate = new Date(block.start_datetime);
+      const blockDate = new Date(block.start_time);
       return blockDate.toDateString() === day.toDateString();
     });
   };
@@ -2710,13 +2710,13 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                       marginTop: '4px'
                     }}>
                       <div style={{ marginBottom: '2px' }}>
-                        {new Date(block.start_datetime).toLocaleString('en-US', { 
+                        {new Date(block.start_time).toLocaleString('en-US', { 
                           month: 'short',
                           day: 'numeric',
                           hour: 'numeric',
                           minute: '2-digit',
                           hour12: true 
-                        })} - {new Date(block.end_datetime).toLocaleString('en-US', { 
+                        })} - {new Date(block.end_time).toLocaleString('en-US', { 
                           hour: 'numeric',
                           minute: '2-digit',
                           hour12: true 
@@ -2912,18 +2912,12 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
   const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
   
   const dayTasks = tasks.filter(task => {
-    // Show only unscheduled tasks that are due today or have no due date
-    if (task.scheduled_start) return false; // Hide already scheduled tasks
-    
-    if (!task.due_date) return true; // Show tasks with no due date
-    
-    const taskDate = new Date(task.due_date);
-    const today = new Date(currentDate);
-    return taskDate.toDateString() === today.toDateString(); // Show tasks due today
+    // Show only unscheduled tasks (tasks without scheduled_start)
+    return !task.scheduled_start;
   });
   
   const dayTimeBlocks = timeBlocks.filter(block => {
-    const blockDate = new Date(block.start_datetime);
+    const blockDate = new Date(block.start_time);
     return blockDate.toDateString() === currentDate.toDateString();
   });
   
@@ -2937,7 +2931,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
   
   const getBlocksForSlot = (hour: number, minute: number) => {
     return dayTimeBlocks.filter(block => {
-      const blockStart = new Date(block.start_datetime);
+      const blockStart = new Date(block.start_time);
       return blockStart.getHours() === hour && 
              Math.floor(blockStart.getMinutes() / 15) * 15 === minute;
     });
@@ -3095,8 +3089,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                         block_type: 'task',
                         color: getPriorityColor(draggedTask.priority),
                         notes: `Scheduled from task: ${draggedTask.title}`,
-                        user_id: user?.id || 60,
-                        is_completed: false
+                        user_id: user?.id || 60
                       };
 
                       try {
@@ -3138,8 +3131,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                             user_id: user?.id?.toString() || '60',
                             title: draggedTask.title,
                             description: draggedTask.description || '',
-                            start_datetime: startTime.toISOString(),
-                            end_datetime: endTime.toISOString(),
+                            start_time: startTime.toISOString(),
+                            end_time: endTime.toISOString(),
                             color: getPriorityColor(draggedTask.priority),
                             block_type: 'task',
                             is_completed: false,
@@ -3246,11 +3239,11 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       >
                         <div>{block.title}</div>
                         <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                          {new Date(block.start_datetime).toLocaleTimeString('en-US', { 
+                          {new Date(block.start_time).toLocaleTimeString('en-US', { 
                             hour: 'numeric', 
                             minute: '2-digit',
                             hour12: true 
-                          })} - {new Date(block.end_datetime).toLocaleTimeString('en-US', { 
+                          })} - {new Date(block.end_time).toLocaleTimeString('en-US', { 
                             hour: 'numeric', 
                             minute: '2-digit',
                             hour12: true 
@@ -3373,8 +3366,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       user_id: user?.id?.toString() || '60',
                       title: task.title,
                       description: task.description || '',
-                      start_datetime: tomorrow.toISOString(),
-                      end_datetime: endTime.toISOString(),
+                      start_time: tomorrow.toISOString(),
+                      end_time: endTime.toISOString(),
                       color: getPriorityColor(task.priority),
                       block_type: 'task',
                       is_completed: false,
