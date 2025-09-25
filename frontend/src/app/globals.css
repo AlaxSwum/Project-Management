@@ -1404,6 +1404,102 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   }
 }
 
+/* HOME PAGE SPECIFIC BUTTON STYLES */
+.btn-ghost {
+  @apply px-4 py-2 font-medium transition-all;
+  background: transparent !important;
+  color: var(--primary) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 179, 51, 0.1) !important;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* HOME PAGE CARD HOVER EFFECTS */
+.card-hover {
+  @apply bg-white rounded-2xl shadow-lg transition-all duration-300 ease-in-out;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.card-hover:hover {
+  @apply transform -translate-y-2 shadow-xl;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* ADDITIONAL MOBILE BREAKPOINTS */
+@media screen and (max-width: 480px) {
+  /* Extra small mobile devices */
+  html {
+    font-size: 13px !important;
+  }
+  
+  .btn-primary, .btn-outline {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.95rem !important;
+  }
+  
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.1 !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  h3 {
+    font-size: 1.125rem !important;
+  }
+  
+  p {
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+  
+  .card-hover {
+    padding: 1.25rem !important;
+  }
+  
+  nav {
+    padding: 0.75rem 1rem !important;
+  }
+  
+  footer {
+    padding: 1.5rem 1rem !important;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  /* Very small mobile devices */
+  html {
+    font-size: 12px !important;
+  }
+  
+  .btn-primary, .btn-outline {
+    padding: 0.875rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .card-hover {
+    padding: 1rem !important;
+  }
+}
+
 /* Google Drive Integration Styles */
 .files-section {
   padding: 1rem;
