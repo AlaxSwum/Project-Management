@@ -471,7 +471,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   };
 
   const toggleMobileMenu = () => {
+    console.log('DEBUG: Toggle mobile menu clicked! Current state:', isMobileMenuOpen);
     setIsMobileMenuOpen(!isMobileMenuOpen);
+    console.log('DEBUG: Setting mobile menu state to:', !isMobileMenuOpen);
   };
 
   const closeMobileMenu = () => {
@@ -1811,7 +1813,7 @@ Your report is now available in the system.`);
             position: fixed;
             top: 1.5rem;
             left: 1.5rem;
-            z-index: 60;
+            z-index: 1100;
             background: linear-gradient(135deg, #FFB333, #F87239);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 16px;
@@ -1821,6 +1823,10 @@ Your report is now available in the system.`);
             box-shadow: 0 4px 16px rgba(255, 179, 51, 0.3);
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             color: #FFFFFF;
+            min-width: 48px;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
           }
           
           .mobile-menu-button:hover {
@@ -1836,7 +1842,7 @@ Your report is now available in the system.`);
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.6);
-            z-index: 40;
+            z-index: 999;
             display: none;
             backdrop-filter: blur(4px);
           }
@@ -2004,12 +2010,13 @@ Your report is now available in the system.`);
           }
           
           /* Responsive Design */
-          @media (max-width: 768px) {
+          @media (max-width: 1024px) {
             .sidebar {
               transform: translateX(-100%);
               transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-              z-index: 50;
-              width: 300px;
+              z-index: 1000;
+              width: 320px;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             }
             
             .sidebar.open {
@@ -2021,7 +2028,7 @@ Your report is now available in the system.`);
             }
             
             .mobile-menu-button {
-              display: block;
+              display: block !important;
             }
             
             .mobile-overlay.show {
@@ -2030,6 +2037,27 @@ Your report is now available in the system.`);
             
             .sidebar ~ * {
               margin-left: 0 !important;
+            }
+          }
+          
+          /* Tablet specific adjustments */
+          @media (max-width: 768px) and (min-width: 481px) {
+            .sidebar {
+              width: 320px;
+            }
+            
+            .mobile-menu-button {
+              top: 1.25rem;
+              left: 1.25rem;
+              padding: 1rem;
+              min-width: 52px;
+              min-height: 52px;
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .sidebar {
+              width: 300px;
             }
             
             .modal-content {
