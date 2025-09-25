@@ -23,11 +23,12 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
         top: 0,
         left: 0,
         right: 0,
-        background: 'white',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
         zIndex: 1000,
         padding: '12px 16px',
-        borderBottom: '1px solid #E5E7EB',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        borderBottom: '1px solid rgba(255, 179, 51, 0.2)',
+        boxShadow: '0 2px 8px rgba(255, 179, 51, 0.1)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
@@ -41,16 +42,19 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
             setShowMobileMenu(!showMobileMenu);
           }}
           style={{
-            background: 'none',
-            border: 'none',
+            background: showMobileMenu ? 'linear-gradient(135deg, #FFB333, #FFD480)' : 'rgba(255, 179, 51, 0.1)',
+            border: '1px solid rgba(255, 179, 51, 0.2)',
+            borderRadius: '12px',
             cursor: 'pointer',
-            color: '#1F2937',
-            padding: '8px',
-            minWidth: '40px',
-            minHeight: '40px',
+            color: showMobileMenu ? '#FFFFFF' : '#FFB333',
+            padding: '10px',
+            minWidth: '44px',
+            minHeight: '44px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+            boxShadow: showMobileMenu ? '0 4px 14px rgba(255, 179, 51, 0.4)' : '0 2px 8px rgba(255, 179, 51, 0.2)'
           }}
         >
           {showMobileMenu ? (
@@ -162,7 +166,19 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
             </div>
             <button 
               onClick={() => setShowMobileMenu(false)}
-              style={{ width: '100%', padding: '12px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+              style={{ 
+                width: '100%', 
+                padding: '16px', 
+                background: 'linear-gradient(135deg, #FFB333, #FFD480)', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '12px', 
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '16px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 14px rgba(255, 179, 51, 0.3)'
+              }}
             >
               Close Menu
             </button>
