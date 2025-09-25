@@ -42,16 +42,16 @@ export default function WelcomePage() {
             <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#FFB333]"
+                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:text-[#FFB333] hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-[#FFB333] transition-all duration-200"
               >
                 <span className="sr-only">Open main menu</span>
                 {!isMobileMenuOpen ? (
-                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 ) : (
-                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 )}
               </button>
@@ -60,15 +60,38 @@ export default function WelcomePage() {
 
           {/* Mobile menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-                <a href="#features" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Features</a>
-                <a href="#pricing" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Pricing</a>
-                <a href="#about" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">About</a>
-                <div className="pt-2 border-t border-gray-200">
-                  <Link href="/login" className="block w-full text-center bg-gradient-to-r from-[#FFB333] to-[#FFD480] text-white px-4 py-2 rounded-lg font-medium hover:from-[#F29F0A] hover:to-[#FFB333] transition-all">
-                    Sign In
-                  </Link>
+            <div className="md:hidden absolute top-full left-0 right-0 z-50">
+              <div className="bg-white shadow-lg border-t border-gray-200 rounded-b-lg mx-4">
+                <div className="px-4 py-3 space-y-2">
+                  <a 
+                    href="#features" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-[#FFB333] hover:bg-orange-50 rounded-lg transition-all duration-200"
+                  >
+                    Features
+                  </a>
+                  <a 
+                    href="#pricing" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-[#FFB333] hover:bg-orange-50 rounded-lg transition-all duration-200"
+                  >
+                    Pricing
+                  </a>
+                  <a 
+                    href="#about" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-[#FFB333] hover:bg-orange-50 rounded-lg transition-all duration-200"
+                  >
+                    About
+                  </a>
+                  <div className="pt-3 border-t border-gray-100">
+                    <Link 
+                      href="/login" 
+                      className="block w-full text-center bg-gradient-to-r from-[#FFB333] to-[#FFD480] text-white px-4 py-3 rounded-lg font-semibold hover:from-[#F29F0A] hover:to-[#FFB333] transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                      Sign In
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -77,23 +100,30 @@ export default function WelcomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
+            <div className="mb-6 sm:mb-8">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-[#FFB333] to-[#FFD480] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+            </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
               Professional Project
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFB333] to-[#F87239] block sm:inline">
                 {" "}Management
               </span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-8 sm:mb-10 max-w-3xl mx-auto px-2 sm:px-0 leading-relaxed">
               Streamline workflows, collaborate seamlessly, and deliver exceptional results with our comprehensive project management platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
-              <Link href="/login" className="btn-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto text-center">
-                Sign In
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-center max-w-sm sm:max-w-none mx-auto">
+              <Link href="/login" className="bg-gradient-to-r from-[#FFB333] to-[#FFD480] text-white px-8 py-4 rounded-xl font-semibold text-base sm:text-lg hover:from-[#F29F0A] hover:to-[#FFB333] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto text-center">
+                Get Started
               </Link>
-              <Link href="/login" className="btn-outline px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto text-center">
+              <Link href="/login" className="border-2 border-[#FFB333] text-[#FFB333] px-8 py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-[#FFB333] hover:text-white transition-all duration-200 w-full sm:w-auto text-center">
                 View Demo
               </Link>
             </div>
@@ -102,13 +132,13 @@ export default function WelcomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-12 sm:py-16 lg:py-20 bg-white">
+      <section id="features" className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
               Everything you need to manage projects
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-2 sm:px-0 leading-relaxed">
               Powerful features designed for modern teams to collaborate, track progress, and deliver results.
             </p>
           </div>
@@ -184,39 +214,39 @@ export default function WelcomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-r from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
-            <div className="p-4">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#FFB333] mb-1 sm:mb-2">10K+</div>
-              <div className="text-sm sm:text-base text-gray-600">Active Projects</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 text-center">
+            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#FFB333] mb-2 sm:mb-3">10K+</div>
+              <div className="text-base sm:text-lg text-gray-600 font-medium">Active Projects</div>
             </div>
-            <div className="p-4">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#5884FD] mb-1 sm:mb-2">50K+</div>
-              <div className="text-sm sm:text-base text-gray-600">Happy Users</div>
+            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#5884FD] mb-2 sm:mb-3">50K+</div>
+              <div className="text-base sm:text-lg text-gray-600 font-medium">Happy Users</div>
             </div>
-            <div className="p-4">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#C483D9] mb-1 sm:mb-2">99.9%</div>
-              <div className="text-sm sm:text-base text-gray-600">Uptime</div>
+            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#C483D9] mb-2 sm:mb-3">99.9%</div>
+              <div className="text-base sm:text-lg text-gray-600 font-medium">Uptime</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-gray-900 to-gray-800">
+      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6">
             Ready to streamline your projects?
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 px-4 sm:px-0">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-8 sm:mb-10 px-2 sm:px-0 leading-relaxed">
             Join thousands of teams who have transformed their project management workflow.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
-            <Link href="/login" className="btn-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto text-center">
-              Sign In
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center max-w-sm sm:max-w-none mx-auto">
+            <Link href="/login" className="bg-gradient-to-r from-[#FFB333] to-[#FFD480] text-white px-8 py-4 rounded-xl font-semibold text-base sm:text-lg hover:from-[#F29F0A] hover:to-[#FFB333] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto text-center">
+              Get Started Free
             </Link>
-            <Link href="/login" className="btn-outline px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto text-center">
+            <Link href="/login" className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:text-gray-900 transition-all duration-200 w-full sm:w-auto text-center">
               View Demo
             </Link>
           </div>
