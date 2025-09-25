@@ -1474,7 +1474,8 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
   }
 }
 
-  /* HOME PAGE RESPONSIVE IMPROVEMENTS */
+/* HOME PAGE RESPONSIVE IMPROVEMENTS */
+@media screen and (max-width: 768px) {
   /* Navigation */
   nav {
     position: sticky !important;
