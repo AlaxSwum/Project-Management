@@ -2564,8 +2564,8 @@ export default function ContentCalendarPage() {
             </div>
           )}
 
-          {/* Calendar View - Only show when inside a folder and in calendar view */}
-          {currentFolder && currentView === 'calendar' && (
+          {/* Calendar View - Show when in calendar view mode */}
+          {currentView === 'calendar' && (
             <div style={{
               background: '#ffffff',
               border: '1px solid #e8e8e8',
@@ -2583,7 +2583,7 @@ export default function ContentCalendarPage() {
                 background: '#f8f9fa'
               }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: '#1a1a1a' }}>
-                  {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - {currentFolder.name}
+                  {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} {currentFolder ? `- ${currentFolder.name}` : ''}
                 </h2>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
@@ -2657,9 +2657,12 @@ export default function ContentCalendarPage() {
                   return days.map((day, index) => {
                     const isCurrentMonth = day.getMonth() === month;
                     const isToday = day.toDateString() === new Date().toDateString();
-                    const dayItems = filteredItems.filter(item => 
-                      new Date(item.date).toDateString() === day.toDateString()
-                    );
+                    // Filter items by date and current folder (if any)
+                    const dayItems = filteredItems.filter(item => {
+                      const matchesDate = new Date(item.date).toDateString() === day.toDateString();
+                      const matchesFolder = currentFolder ? item.folder_id === currentFolder.id : true;
+                      return matchesDate && matchesFolder;
+                    });
 
                     return (
                       <div
