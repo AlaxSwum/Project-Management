@@ -1517,51 +1517,49 @@ export default function ContentCalendarPage() {
                 )}
               </h3>
 
-              {/* View Tabs - Right side of heading */}
-              {currentFolder && (
-                <div style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  background: '#f8f9fa',
-                  padding: '0.5rem',
-                  borderRadius: '8px',
-                  border: '2px solid #5884FD',
-                  boxShadow: '0 2px 8px rgba(88, 132, 253, 0.2)'
-                }}>
-                  <button
-                    onClick={() => setCurrentView('sheet')}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
-                      color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    📊 Sheet
-                  </button>
-                  <button
-                    onClick={() => setCurrentView('calendar')}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
-                      color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    📅 Calendar
-                  </button>
-                </div>
-              )}
+              {/* View Tabs - Right side of heading - ALWAYS VISIBLE */}
+              <div style={{
+                display: 'flex',
+                gap: '0.5rem',
+                background: '#FFB333',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                border: '3px solid #FF0000',
+                boxShadow: '0 4px 16px rgba(255, 0, 0, 0.4)'
+              }}>
+                <button
+                  onClick={() => setCurrentView('sheet')}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
+                    color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  📊 SHEET
+                </button>
+                <button
+                  onClick={() => setCurrentView('calendar')}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
+                    color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  📅 CALENDAR
+                </button>
+              </div>
             </div>
             
             <div style={{ marginBottom: '1.5rem' }}>
