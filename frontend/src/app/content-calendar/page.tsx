@@ -1280,15 +1280,18 @@ export default function ContentCalendarPage() {
           minHeight: '100vh'
         }}>
           {/* PROMINENT VIEW TABS - ALWAYS VISIBLE */}
+          {console.log('🔴 RENDERING TABS! currentView:', currentView)}
           <div style={{
-            display: 'flex',
+            display: 'flex !important',
             justifyContent: 'center',
             marginBottom: '2rem',
             padding: '1rem',
             background: '#ffffff',
             borderRadius: '16px',
             border: '3px solid #FF0000',
-            boxShadow: '0 8px 24px rgba(255, 0, 0, 0.3)'
+            boxShadow: '0 8px 24px rgba(255, 0, 0, 0.3)',
+            zIndex: 9999,
+            position: 'relative'
           }}>
             <div style={{
               display: 'flex',
