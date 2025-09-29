@@ -1495,12 +1495,17 @@ export default function ContentCalendarPage() {
               </div>
             </div>
 
-            {/* Current Folder Contents */}
-            <div style={{ marginBottom: '1rem' }}>
+            {/* Current Folder Contents with View Tabs */}
+            <div style={{ 
+              marginBottom: '1rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
               <h3 style={{ 
                 fontSize: '1.2rem', 
-                fontWeight: '500', 
-                marginBottom: '1.5rem',
+                fontWeight: '500',
+                margin: 0,
                 color: '#1a1a1a',
                 letterSpacing: '-0.01em'
               }}>
@@ -1511,6 +1516,55 @@ export default function ContentCalendarPage() {
                   </span>
                 )}
               </h3>
+
+              {/* View Tabs - Right side of heading */}
+              {currentFolder && (
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  background: '#f8f9fa',
+                  padding: '0.5rem',
+                  borderRadius: '8px',
+                  border: '2px solid #5884FD',
+                  boxShadow: '0 2px 8px rgba(88, 132, 253, 0.2)'
+                }}>
+                  <button
+                    onClick={() => setCurrentView('sheet')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
+                      color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    📊 Sheet
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('calendar')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
+                      color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    📅 Calendar
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
               
               {getCurrentFolderContents().length === 0 && folders.length === 0 ? (
                 <div style={{
@@ -1645,65 +1699,7 @@ export default function ContentCalendarPage() {
 
           </div>
 
-          {/* View Tabs - Show when in a folder */}
-          {currentFolder && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              marginBottom: '1rem'
-            }}>
-              <div style={{
-                display: 'flex',
-                gap: '0.5rem',
-                background: '#f8f9fa',
-                padding: '0.5rem',
-                borderRadius: '8px',
-                border: '2px solid #5884FD',
-                boxShadow: '0 2px 8px rgba(88, 132, 253, 0.2)'
-              }}>
-                <button
-                  onClick={() => setCurrentView('sheet')}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
-                    color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  📊 Sheet
-                </button>
-                <button
-                  onClick={() => setCurrentView('calendar')}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
-                    color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  📅 Calendar
-                </button>
-              </div>
-            </div>
-          )}
-
-                    {/* Content Table - Only show when inside a folder and in sheet view */}
+          {/* Content Table - Only show when inside a folder and in sheet view */}
           {currentFolder && currentView === 'sheet' && (
             <div className="content-table" style={{
               background: '#ffffff',
