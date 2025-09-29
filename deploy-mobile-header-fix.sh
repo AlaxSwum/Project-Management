@@ -149,3 +149,4 @@ else
     echo "2. Check: systemctl status nextjs-pm"
     echo "3. Rebuild: cd /var/www/project_management/frontend && npm run build"
 fi
+

@@ -60,6 +60,7 @@ export default function ContentCalendarPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const [currentView, setCurrentView] = useState<'sheet' | 'calendar'>('sheet')
 
   // Mobile detection
   useEffect(() => {
@@ -1042,6 +1043,7 @@ export default function ContentCalendarPage() {
     }
   }
 
+
   if (authLoading || isLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -1298,6 +1300,48 @@ export default function ContentCalendarPage() {
               <p className="content-calendar-subtitle" style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage your social media content planning and scheduling
               </p>
+              
+              {/* View Tabs */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                <button
+                  onClick={() => setCurrentView('sheet')}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: currentView === 'sheet' ? '#5884FD' : 'transparent',
+                    color: currentView === 'sheet' ? '#ffffff' : '#666666',
+                    border: currentView === 'sheet' ? 'none' : '1px solid #e0e4e7',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                >
+                  📊 Sheet View
+                </button>
+                <button
+                  onClick={() => setCurrentView('calendar')}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: currentView === 'calendar' ? '#5884FD' : 'transparent',
+                    color: currentView === 'calendar' ? '#ffffff' : '#666666',
+                    border: currentView === 'calendar' ? 'none' : '1px solid #e0e4e7',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                >
+                  📅 Calendar View
+                </button>
+              </div>
             </div>
             
             <div className="content-calendar-actions" style={{ display: 'flex', gap: '0.75rem' }}>
@@ -1636,8 +1680,8 @@ export default function ContentCalendarPage() {
 
           </div>
 
-                    {/* Content Table - Only show when inside a folder */}
-          {currentFolder && (
+                    {/* Content Table - Only show when inside a folder and in sheet view */}
+          {currentFolder && currentView === 'sheet' && (
             <div className="content-table" style={{
               background: '#ffffff',
               border: '1px solid #e8e8e8',
@@ -2500,6 +2544,187 @@ export default function ContentCalendarPage() {
                   </div>
                 ))
               )}
+            </div>
+          )}
+
+          {/* Calendar View - Only show when inside a folder and in calendar view */}
+          {currentFolder && currentView === 'calendar' && (
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+            }}>
+              {/* Calendar Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1.5rem',
+                borderBottom: '1px solid #e8e8e8',
+                background: '#f8f9fa'
+              }}>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: '#1a1a1a' }}>
+                  {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - {currentFolder.name}
+                </h2>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        folder_id: currentFolder?.id || null,
+                        date: new Date().toISOString().split('T')[0]
+                      });
+                      setShowModal(true);
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#5884FD',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add Content
+                  </button>
+                </div>
+              </div>
+
+              {/* Calendar Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '1px',
+                background: '#e8e8e8'
+              }}>
+                {/* Day Headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} style={{
+                    padding: '1rem',
+                    background: '#f8f9fa',
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    color: '#666666'
+                  }}>
+                    {day}
+                  </div>
+                ))}
+
+                {/* Calendar Days */}
+                {(() => {
+                  const today = new Date();
+                  const year = today.getFullYear();
+                  const month = today.getMonth();
+                  const firstDay = new Date(year, month, 1);
+                  const lastDay = new Date(year, month + 1, 0);
+                  const startDate = new Date(firstDay);
+                  startDate.setDate(startDate.getDate() - firstDay.getDay());
+                  
+                  const days = [];
+                  const current = new Date(startDate);
+                  
+                  for (let i = 0; i < 42; i++) {
+                    days.push(new Date(current));
+                    current.setDate(current.getDate() + 1);
+                  }
+                  
+                  return days.map((day, index) => {
+                    const isCurrentMonth = day.getMonth() === month;
+                    const isToday = day.toDateString() === new Date().toDateString();
+                    const dayItems = filteredItems.filter(item => 
+                      new Date(item.date).toDateString() === day.toDateString()
+                    );
+
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          background: '#ffffff',
+                          minHeight: '120px',
+                          padding: '0.5rem',
+                          opacity: isCurrentMonth ? 1 : 0.3,
+                          border: isToday ? '2px solid #5884FD' : 'none',
+                          position: 'relative',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            folder_id: currentFolder?.id || null,
+                            date: day.toISOString().split('T')[0]
+                          });
+                          setShowModal(true);
+                        }}
+                      >
+                        <div style={{
+                          fontSize: '0.875rem',
+                          fontWeight: isToday ? '600' : '400',
+                          color: isToday ? '#5884FD' : isCurrentMonth ? '#1a1a1a' : '#999999',
+                          marginBottom: '0.5rem'
+                        }}>
+                          {day.getDate()}
+                        </div>
+
+                        {/* Content Items for this day */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          {dayItems.slice(0, 3).map(item => (
+                            <div
+                              key={item.id}
+                              style={{
+                                background: (() => {
+                                  switch (item.status) {
+                                    case 'planning': return '#6B7280';
+                                    case 'in_progress': return '#F59E0B';
+                                    case 'review': return '#8B5CF6';
+                                    case 'completed': return '#10B981';
+                                    default: return '#6B7280';
+                                  }
+                                })(),
+                                color: '#ffffff',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: '500',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                cursor: 'pointer'
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedItem(item);
+                                setShowEditModal(true);
+                              }}
+                              title={`${item.content_title} - ${item.content_type} (${item.status})`}
+                            >
+                              {item.content_title}
+                            </div>
+                          ))}
+                          {dayItems.length > 3 && (
+                            <div style={{
+                              fontSize: '0.6rem',
+                              color: '#666666',
+                              textAlign: 'center',
+                              marginTop: '2px'
+                            }}>
+                              +{dayItems.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
             </div>
           )}
 

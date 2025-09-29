@@ -1755,6 +1755,10 @@ export const supabaseDb = {
   // Create password folder
   createPasswordFolder: async (folderData) => {
     try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      const userId = user?.id || 1; // Fallback to 1 if no user
+
       const response = await fetch(`${supabaseUrl}/rest/v1/password_vault_folders`, {
         method: 'POST',
         headers: {
@@ -1765,7 +1769,8 @@ export const supabaseDb = {
         },
         body: JSON.stringify({
           ...folderData,
-          created_by: 60 // Replace with actual user ID
+          created_by: userId, // Use actual user ID
+          created_by_id: userId // Set both columns to avoid constraint issues
         })
       });
 
