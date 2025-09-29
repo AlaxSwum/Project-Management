@@ -2576,7 +2576,7 @@ export default function ContentCalendarPage() {
                         folder_id: currentFolder?.id || null,
                         date: new Date().toISOString().split('T')[0]
                       });
-                      setShowModal(true);
+                      setShowAddForm(true);
                     }}
                     style={{
                       padding: '0.5rem 1rem',
@@ -2662,7 +2662,7 @@ export default function ContentCalendarPage() {
                             folder_id: currentFolder?.id || null,
                             date: day.toISOString().split('T')[0]
                           });
-                          setShowModal(true);
+                          setShowAddForm(true);
                         }}
                       >
                         <div style={{
@@ -2701,8 +2701,7 @@ export default function ContentCalendarPage() {
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedItem(item);
-                                setShowEditModal(true);
+                                startEdit(item);
                               }}
                               title={`${item.content_title} - ${item.content_type} (${item.status})`}
                             >
