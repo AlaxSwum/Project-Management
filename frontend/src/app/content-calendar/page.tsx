@@ -1279,6 +1279,72 @@ export default function ContentCalendarPage() {
           flex: 1,
           minHeight: '100vh'
         }}>
+          {/* PROMINENT VIEW TABS - ALWAYS VISIBLE */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '2rem',
+            padding: '1rem',
+            background: '#ffffff',
+            borderRadius: '16px',
+            border: '3px solid #FF0000',
+            boxShadow: '0 8px 24px rgba(255, 0, 0, 0.3)'
+          }}>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              background: '#f8f9fa',
+              padding: '1rem',
+              borderRadius: '12px',
+              border: '2px solid #5884FD'
+            }}>
+              <button
+                onClick={() => setCurrentView('sheet')}
+                style={{
+                  padding: '1rem 2rem',
+                  background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
+                  color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1.2rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)',
+                  minWidth: '180px',
+                  justifyContent: 'center'
+                }}
+              >
+                📊 SHEET VIEW
+              </button>
+              <button
+                onClick={() => setCurrentView('calendar')}
+                style={{
+                  padding: '1rem 2rem',
+                  background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
+                  color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1.2rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)',
+                  minWidth: '180px',
+                  justifyContent: 'center'
+                }}
+              >
+                📅 CALENDAR VIEW
+              </button>
+            </div>
+          </div>
+
           {/* Header */}
           <div className="content-calendar-header" style={{ 
             display: 'flex', 
