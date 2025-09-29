@@ -1430,70 +1430,6 @@ export default function ContentCalendarPage() {
             </div>
           )}
 
-          {/* View Tabs - Always Visible and Prominent */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center',
-            marginBottom: '2rem'
-          }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '0.5rem', 
-              background: '#f8f9fa',
-              padding: '0.75rem',
-              borderRadius: '16px',
-              border: '3px solid #5884FD',
-              boxShadow: '0 8px 24px rgba(88, 132, 253, 0.2)'
-            }}>
-              <button
-                onClick={() => setCurrentView('sheet')}
-                style={{
-                  padding: '1rem 2rem',
-                  background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
-                  color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '1.1rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  boxShadow: currentView === 'sheet' ? '0 4px 12px rgba(88, 132, 253, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
-                  minWidth: '160px',
-                  justifyContent: 'center',
-                  transform: currentView === 'sheet' ? 'translateY(-2px)' : 'none'
-                }}
-              >
-                📊 Sheet View
-              </button>
-              <button
-                onClick={() => setCurrentView('calendar')}
-                style={{
-                  padding: '1rem 2rem',
-                  background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
-                  color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '1.1rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  boxShadow: currentView === 'calendar' ? '0 4px 12px rgba(88, 132, 253, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
-                  minWidth: '160px',
-                  justifyContent: 'center',
-                  transform: currentView === 'calendar' ? 'translateY(-2px)' : 'none'
-                }}
-              >
-                📅 Calendar View
-              </button>
-            </div>
-          </div>
-
           {/* Hierarchical Folder Navigation */}
           <div style={{
             background: '#ffffff',
@@ -1503,15 +1439,21 @@ export default function ContentCalendarPage() {
             marginBottom: '2rem',
             boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
           }}>
-            {/* Breadcrumb Navigation */}
+            {/* Breadcrumb Navigation with View Tabs */}
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: '0.5rem',
+              justifyContent: 'space-between',
               marginBottom: '1.5rem',
               fontSize: '0.9rem',
               color: '#666666'
             }}>
+              {/* Left side - Breadcrumb */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem'
+              }}>
               <button
                 onClick={() => goToFolder(null)}
                 style={{
@@ -1550,6 +1492,65 @@ export default function ContentCalendarPage() {
                   </button>
                 </span>
               ))}
+              </div>
+
+              {/* Right side - View Tabs (only show when in a folder with content) */}
+              {currentFolder && (
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '0.5rem', 
+                  background: '#f8f9fa',
+                  padding: '0.5rem',
+                  borderRadius: '12px',
+                  border: '2px solid #5884FD',
+                  boxShadow: '0 4px 12px rgba(88, 132, 253, 0.15)'
+                }}>
+                  <button
+                    onClick={() => setCurrentView('sheet')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
+                      color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      boxShadow: currentView === 'sheet' ? '0 2px 8px rgba(88, 132, 253, 0.3)' : 'none',
+                      minWidth: '120px',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    📊 Sheet
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('calendar')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
+                      color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      boxShadow: currentView === 'calendar' ? '0 2px 8px rgba(88, 132, 253, 0.3)' : 'none',
+                      minWidth: '120px',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    📅 Calendar
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Current Folder Contents */}
