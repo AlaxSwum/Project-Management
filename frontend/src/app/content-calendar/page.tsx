@@ -1300,58 +1300,6 @@ export default function ContentCalendarPage() {
               <p className="content-calendar-subtitle" style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage your social media content planning and scheduling
               </p>
-              
-              {/* View Tabs - UPDATED */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '0.5rem', 
-                marginTop: '1rem',
-                background: '#f8f9fa',
-                padding: '0.5rem',
-                borderRadius: '12px',
-                border: '1px solid #e0e4e7'
-              }}>
-                <button
-                  onClick={() => setCurrentView('sheet')}
-                  style={{
-                    padding: '0.75rem 1.25rem',
-                    background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
-                    color: currentView === 'sheet' ? '#ffffff' : '#666666',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: currentView === 'sheet' ? '0 2px 4px rgba(88, 132, 253, 0.2)' : 'none'
-                  }}
-                >
-                  📊 Sheet View
-                </button>
-                <button
-                  onClick={() => setCurrentView('calendar')}
-                  style={{
-                    padding: '0.75rem 1.25rem',
-                    background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
-                    color: currentView === 'calendar' ? '#ffffff' : '#666666',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: currentView === 'calendar' ? '0 2px 4px rgba(88, 132, 253, 0.2)' : 'none'
-                  }}
-                >
-                  📅 Calendar View
-                </button>
-              </div>
             </div>
             
             <div className="content-calendar-actions" style={{ display: 'flex', gap: '0.75rem' }}>
@@ -1481,6 +1429,70 @@ export default function ContentCalendarPage() {
               {error}
             </div>
           )}
+
+          {/* View Tabs - Always Visible and Prominent */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            marginBottom: '2rem'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '0.5rem', 
+              background: '#f8f9fa',
+              padding: '0.75rem',
+              borderRadius: '16px',
+              border: '3px solid #5884FD',
+              boxShadow: '0 8px 24px rgba(88, 132, 253, 0.2)'
+            }}>
+              <button
+                onClick={() => setCurrentView('sheet')}
+                style={{
+                  padding: '1rem 2rem',
+                  background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
+                  color: currentView === 'sheet' ? '#ffffff' : '#1a1a1a',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  boxShadow: currentView === 'sheet' ? '0 4px 12px rgba(88, 132, 253, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
+                  minWidth: '160px',
+                  justifyContent: 'center',
+                  transform: currentView === 'sheet' ? 'translateY(-2px)' : 'none'
+                }}
+              >
+                📊 Sheet View
+              </button>
+              <button
+                onClick={() => setCurrentView('calendar')}
+                style={{
+                  padding: '1rem 2rem',
+                  background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
+                  color: currentView === 'calendar' ? '#ffffff' : '#1a1a1a',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  boxShadow: currentView === 'calendar' ? '0 4px 12px rgba(88, 132, 253, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
+                  minWidth: '160px',
+                  justifyContent: 'center',
+                  transform: currentView === 'calendar' ? 'translateY(-2px)' : 'none'
+                }}
+              >
+                📅 Calendar View
+              </button>
+            </div>
+          </div>
 
           {/* Hierarchical Folder Navigation */}
           <div style={{
