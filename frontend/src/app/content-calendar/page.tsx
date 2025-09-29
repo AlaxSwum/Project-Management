@@ -1301,23 +1301,32 @@ export default function ContentCalendarPage() {
                 Manage your social media content planning and scheduling
               </p>
               
-              {/* View Tabs */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              {/* View Tabs - UPDATED */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem', 
+                marginTop: '1rem',
+                background: '#f8f9fa',
+                padding: '0.5rem',
+                borderRadius: '12px',
+                border: '1px solid #e0e4e7'
+              }}>
                 <button
                   onClick={() => setCurrentView('sheet')}
                   style={{
-                    padding: '0.5rem 1rem',
-                    background: currentView === 'sheet' ? '#5884FD' : 'transparent',
+                    padding: '0.75rem 1.25rem',
+                    background: currentView === 'sheet' ? '#5884FD' : '#ffffff',
                     color: currentView === 'sheet' ? '#ffffff' : '#666666',
-                    border: currentView === 'sheet' ? 'none' : '1px solid #e0e4e7',
+                    border: 'none',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.25rem'
+                    gap: '0.5rem',
+                    boxShadow: currentView === 'sheet' ? '0 2px 4px rgba(88, 132, 253, 0.2)' : 'none'
                   }}
                 >
                   📊 Sheet View
@@ -1325,18 +1334,19 @@ export default function ContentCalendarPage() {
                 <button
                   onClick={() => setCurrentView('calendar')}
                   style={{
-                    padding: '0.5rem 1rem',
-                    background: currentView === 'calendar' ? '#5884FD' : 'transparent',
+                    padding: '0.75rem 1.25rem',
+                    background: currentView === 'calendar' ? '#5884FD' : '#ffffff',
                     color: currentView === 'calendar' ? '#ffffff' : '#666666',
-                    border: currentView === 'calendar' ? 'none' : '1px solid #e0e4e7',
+                    border: 'none',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.25rem'
+                    gap: '0.5rem',
+                    boxShadow: currentView === 'calendar' ? '0 2px 4px rgba(88, 132, 253, 0.2)' : 'none'
                   }}
                 >
                   📅 Calendar View
