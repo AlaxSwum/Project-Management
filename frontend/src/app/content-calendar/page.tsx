@@ -1295,7 +1295,7 @@ export default function ContentCalendarPage() {
                 color: '#1a1a1a',
                 letterSpacing: '-0.02em'
               }}>
-                Content Calendar
+                Content Calendar v2.1
               </h1>
               <p className="content-calendar-subtitle" style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Manage your social media content planning and scheduling
