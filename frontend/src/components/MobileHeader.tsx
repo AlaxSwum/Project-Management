@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import WorldClock from './WorldClock';
 
 interface MobileHeaderProps {
   title: string;
@@ -29,40 +30,40 @@ export default function MobileHeader({ title, isMobile }: MobileHeaderProps) {
         padding: '12px 16px',
         borderBottom: '1px solid rgba(255, 179, 51, 0.2)',
         boxShadow: '0 2px 8px rgba(255, 179, 51, 0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
       }}>
-        <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1F2937' }}>
-          {title}
-        </h1>
-        <button
-          onClick={() => {
-            console.log('Mobile menu clicked, current state:', showMobileMenu);
-            setShowMobileMenu(!showMobileMenu);
-          }}
-          style={{
-            background: showMobileMenu ? 'linear-gradient(135deg, #FFB333, #FFD480)' : 'rgba(255, 179, 51, 0.1)',
-            border: '1px solid rgba(255, 179, 51, 0.2)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            color: showMobileMenu ? '#FFFFFF' : '#FFB333',
-            padding: '10px',
-            minWidth: '44px',
-            minHeight: '44px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s ease',
-            boxShadow: showMobileMenu ? '0 4px 14px rgba(255, 179, 51, 0.4)' : '0 2px 8px rgba(255, 179, 51, 0.2)'
-          }}
-        >
-          {showMobileMenu ? (
-            <XMarkIcon style={{ width: '24px', height: '24px' }} />
-          ) : (
-            <Bars3Icon style={{ width: '24px', height: '24px' }} />
-          )}
-        </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1F2937' }}>
+            {title}
+          </h1>
+          <button
+            onClick={() => {
+              console.log('Mobile menu clicked, current state:', showMobileMenu);
+              setShowMobileMenu(!showMobileMenu);
+            }}
+            style={{
+              background: showMobileMenu ? 'linear-gradient(135deg, #FFB333, #FFD480)' : 'rgba(255, 179, 51, 0.1)',
+              border: '1px solid rgba(255, 179, 51, 0.2)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              color: showMobileMenu ? '#FFFFFF' : '#FFB333',
+              padding: '10px',
+              minWidth: '44px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: showMobileMenu ? '0 4px 14px rgba(255, 179, 51, 0.4)' : '0 2px 8px rgba(255, 179, 51, 0.2)'
+            }}
+          >
+            {showMobileMenu ? (
+              <XMarkIcon style={{ width: '24px', height: '24px' }} />
+            ) : (
+              <Bars3Icon style={{ width: '24px', height: '24px' }} />
+            )}
+          </button>
+        </div>
+        <WorldClock isMobile={true} />
       </div>
 
       {/* Mobile Menu Overlay */}

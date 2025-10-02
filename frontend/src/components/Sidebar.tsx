@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
+import WorldClock from './WorldClock';
 import {
   HomeIcon,
   FolderIcon,
@@ -2155,7 +2156,7 @@ Your report is now available in the system.`);
             </div>
           </div>
 
-
+          <WorldClock isCollapsed={isCollapsed} />
         </div>
 
         {/* Navigation */}
