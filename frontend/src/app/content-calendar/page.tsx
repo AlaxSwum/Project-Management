@@ -151,26 +151,8 @@ export default function ContentCalendarPage() {
           setHasAccess(true)
           setUserRole(folderMemberData[0].role || 'member')
         } else {
-          // Check if user is admin/HR
-          const { data: userData, error: userError } = await supabase
-            .from('auth_user')
-            .select('id, name, email, role, is_superuser, is_staff')
-            .eq('id', user.id)
-            .single()
-
-          if (userError) {
-            setHasAccess(false)
-            return
-          }
-
-          const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr'
-          
-          if (hasPermission) {
-            setHasAccess(true)
-            setUserRole('admin')
-          } else {
-            setHasAccess(false)
-          }
+          // Only assigned members can access
+          setHasAccess(false)
         }
       }
     } catch (err) {

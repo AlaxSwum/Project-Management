@@ -208,36 +208,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         return;
       }
 
-      // Check if user is admin/HR
-      const { data: userData, error: userError } = await supabase
-        .from('auth_user')
-        .select('id, name, email, role, is_superuser, is_staff')
-        .eq('id', user.id)
-        .single();
-
-      console.log('USER: User data check:', userData);
-
-      if (userError) {
-        console.log('ERROR: Content Calendar access denied: User data error');
-        setHasContentCalendarAccess(false);
-        return;
-      }
-
-      const hasPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
-      console.log('🔐 Content Calendar admin/HR check:', {
-        is_superuser: userData.is_superuser,
-        is_staff: userData.is_staff,
-        role: userData.role,
-        hasPermission
-      });
-      
-      if (hasPermission) {
-        console.log('SUCCESS: Content Calendar access granted: User is admin/HR');
-        setHasContentCalendarAccess(true);
-      } else {
-        console.log('ERROR: Content Calendar access denied: No access found');
-        setHasContentCalendarAccess(false);
-      }
+      // Only assigned members can access Content Calendar
+      console.log('INFO: Content Calendar access denied: User is not an assigned member');
+      setHasContentCalendarAccess(false);
     } catch (err) {
       console.error('Error checking content calendar access:', err);
       setHasContentCalendarAccess(false);
