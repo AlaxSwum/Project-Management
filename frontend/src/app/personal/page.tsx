@@ -2958,21 +2958,49 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
   
   // Get unscheduled tasks for sidebar (tasks not yet scheduled in time blocks)
   const unscheduledDayTasks = tasks.filter(task => {
-    // Show only unscheduled tasks that are due today or have no due date
-    if (task.scheduled_start) return false; // Hide already scheduled tasks
+    // Hide tasks with scheduled_start
+    if (task.scheduled_start) return false;
     
-    if (!task.due_date) return true; // Show tasks with no due date (always available)
+    // Hide tasks with due_date that has a specific time (those are considered scheduled)
+    if (task.due_date) {
+      const dueDate = new Date(task.due_date);
+      const hasSpecificTime = dueDate.getHours() !== 0 || dueDate.getMinutes() !== 0;
+      
+      // If it has a specific time and is today, it's scheduled - hide it
+      if (hasSpecificTime && dueDate.toDateString() === currentDate.toDateString()) {
+        return false;
+      }
+      
+      // If it's due today with no specific time (midnight), show it as unscheduled
+      if (dueDate.toDateString() === currentDate.toDateString() && !hasSpecificTime) {
+        return true;
+      }
+    }
     
-    const taskDate = new Date(task.due_date);
-    const today = new Date(currentDate);
-    return taskDate.toDateString() === today.toDateString(); // Show only tasks due today
+    // Show tasks with no due date (always available)
+    if (!task.due_date) return true;
+    
+    return false;
   });
   
-  // Get scheduled tasks for today (tasks with scheduled_start time for the day)
+  // Get scheduled tasks for today (tasks with scheduled_start OR due_date with specific time)
   const scheduledDayTasks = tasks.filter(task => {
-    if (!task.scheduled_start) return false;
-    const taskDate = new Date(task.scheduled_start);
-    return taskDate.toDateString() === currentDate.toDateString();
+    // Check scheduled_start first
+    if (task.scheduled_start) {
+      const taskDate = new Date(task.scheduled_start);
+      return taskDate.toDateString() === currentDate.toDateString();
+    }
+    
+    // Also check due_date if it has a specific time set (not just midnight)
+    if (task.due_date) {
+      const dueDate = new Date(task.due_date);
+      const isSameDay = dueDate.toDateString() === currentDate.toDateString();
+      // Check if the time is not midnight (meaning a specific time was set)
+      const hasSpecificTime = dueDate.getHours() !== 0 || dueDate.getMinutes() !== 0;
+      return isSameDay && hasSpecificTime;
+    }
+    
+    return false;
   });
   
   // Combine unscheduled and scheduled tasks for sidebar
@@ -2999,13 +3027,24 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     });
   };
   
-  // Get scheduled tasks for a specific time slot
+  // Get scheduled tasks for a specific time slot (check both scheduled_start and due_date)
   const getScheduledTasksForSlot = (hour: number, minute: number) => {
     return scheduledDayTasks.filter(task => {
-      if (!task.scheduled_start) return false;
-      const taskStart = new Date(task.scheduled_start);
-      return taskStart.getHours() === hour && 
-             Math.floor(taskStart.getMinutes() / 15) * 15 === minute;
+      // Try scheduled_start first
+      if (task.scheduled_start) {
+        const taskStart = new Date(task.scheduled_start);
+        return taskStart.getHours() === hour && 
+               Math.floor(taskStart.getMinutes() / 15) * 15 === minute;
+      }
+      
+      // Fall back to due_date if no scheduled_start
+      if (task.due_date) {
+        const dueDate = new Date(task.due_date);
+        return dueDate.getHours() === hour && 
+               Math.floor(dueDate.getMinutes() / 15) * 15 === minute;
+      }
+      
+      return false;
     });
   };
   
@@ -3342,41 +3381,47 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                           </div>
                         </div>
                       ))}
-                      {scheduledTasks.map(task => (
-                        <div
-                          key={task.id}
-                          style={{
-                            background: getPriorityColor(task.priority),
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            marginBottom: '4px',
-                            fontWeight: '500',
-                            fontSize: '13px',
-                            textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                          }}
-                          onClick={() => onTaskClick(task)}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span>📋</span>
-                            <span>{task.title}</span>
-                          </div>
-                          {task.scheduled_start && task.scheduled_end && (
-                            <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                              {new Date(task.scheduled_start).toLocaleTimeString('en-US', { 
-                                hour: 'numeric', 
-                                minute: '2-digit',
-                                hour12: true 
-                              })} - {new Date(task.scheduled_end).toLocaleTimeString('en-US', { 
-                                hour: 'numeric', 
-                                minute: '2-digit',
-                                hour12: true 
-                              })}
+                      {scheduledTasks.map(task => {
+                        // Determine start and end times from scheduled_start or due_date
+                        const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
+                        const endTime = task.scheduled_end ? new Date(task.scheduled_end) : (startTime ? new Date(startTime.getTime() + 60 * 60 * 1000) : null); // Default 1 hour if no end time
+                        
+                        return (
+                          <div
+                            key={task.id}
+                            style={{
+                              background: getPriorityColor(task.priority),
+                              color: 'white',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              marginBottom: '4px',
+                              fontWeight: '500',
+                              fontSize: '13px',
+                              textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                            }}
+                            onClick={() => onTaskClick(task)}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span>📋</span>
+                              <span>{task.title}</span>
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            {startTime && endTime && (
+                              <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                                {startTime.toLocaleTimeString('en-US', { 
+                                  hour: 'numeric', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })} - {endTime.toLocaleTimeString('en-US', { 
+                                  hour: 'numeric', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </>
                   )}
                 </div>
