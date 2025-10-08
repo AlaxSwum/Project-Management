@@ -3402,9 +3402,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                             }}
                             onClick={() => onTaskClick(task)}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span>📋</span>
-                              <span>{task.title}</span>
+                            <div style={{ fontWeight: '600' }}>
+                              {task.title}
                             </div>
                             {startTime && endTime && (
                               <div style={{ fontSize: '11px', opacity: 0.9 }}>
