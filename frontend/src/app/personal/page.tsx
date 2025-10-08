@@ -3390,34 +3390,57 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                           <div
                             key={task.id}
                             style={{
-                              background: getPriorityColor(task.priority),
+                              background: task.status === 'completed' ? '#10B981' : '#F97316',
                               color: 'white',
                               padding: '8px 12px',
                               borderRadius: '6px',
-                              cursor: 'pointer',
                               marginBottom: '4px',
                               fontWeight: '500',
                               fontSize: '13px',
-                              textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '8px'
                             }}
-                            onClick={() => onTaskClick(task)}
                           >
-                            <div style={{ fontWeight: '600' }}>
-                              {task.title}
-                            </div>
-                            {startTime && endTime && (
-                              <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                                {startTime.toLocaleTimeString('en-US', { 
-                                  hour: 'numeric', 
-                                  minute: '2-digit',
-                                  hour12: true 
-                                })} - {endTime.toLocaleTimeString('en-US', { 
-                                  hour: 'numeric', 
-                                  minute: '2-digit',
-                                  hour12: true 
-                                })}
+                            <input
+                              type="checkbox"
+                              checked={task.status === 'completed'}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed');
+                              }}
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                marginTop: '2px',
+                                cursor: 'pointer',
+                                flexShrink: 0
+                              }}
+                            />
+                            <div 
+                              style={{ flex: 1, cursor: 'pointer' }}
+                              onClick={() => onTaskClick(task)}
+                            >
+                              <div style={{ 
+                                fontWeight: '600',
+                                textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                              }}>
+                                {task.title}
                               </div>
-                            )}
+                              {startTime && endTime && (
+                                <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                                  {startTime.toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })} - {endTime.toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
