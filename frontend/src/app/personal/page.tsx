@@ -2956,7 +2956,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
   const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
   const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
   
-  const dayTasks = tasks.filter(task => {
+  // Get unscheduled tasks for sidebar (tasks not yet scheduled in time blocks)
+  const unscheduledDayTasks = tasks.filter(task => {
     // Show only unscheduled tasks that are due today or have no due date
     if (task.scheduled_start) return false; // Hide already scheduled tasks
     
@@ -2966,6 +2967,16 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     const today = new Date(currentDate);
     return taskDate.toDateString() === today.toDateString(); // Show only tasks due today
   });
+  
+  // Get scheduled tasks for today (tasks with scheduled_start time for the day)
+  const scheduledDayTasks = tasks.filter(task => {
+    if (!task.scheduled_start) return false;
+    const taskDate = new Date(task.scheduled_start);
+    return taskDate.toDateString() === currentDate.toDateString();
+  });
+  
+  // Combine unscheduled and scheduled tasks for sidebar
+  const dayTasks = [...unscheduledDayTasks, ...scheduledDayTasks];
   
   const dayTimeBlocks = timeBlocks.filter(block => {
     const blockDate = new Date(block.start_datetime);
@@ -2985,6 +2996,16 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
       const blockStart = new Date(block.start_datetime);
       return blockStart.getHours() === hour && 
              Math.floor(blockStart.getMinutes() / 15) * 15 === minute;
+    });
+  };
+  
+  // Get scheduled tasks for a specific time slot
+  const getScheduledTasksForSlot = (hour: number, minute: number) => {
+    return scheduledDayTasks.filter(task => {
+      if (!task.scheduled_start) return false;
+      const taskStart = new Date(task.scheduled_start);
+      return taskStart.getHours() === hour && 
+             Math.floor(taskStart.getMinutes() / 15) * 15 === minute;
     });
   };
   
@@ -3056,6 +3077,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
         <div style={{ maxHeight: '700px', overflowY: 'auto' }}>
           {timeSlots.map(({ hour, minute }) => {
             const blocks = getBlocksForSlot(hour, minute);
+            const scheduledTasks = getScheduledTasksForSlot(hour, minute);
+            const hasContent = blocks.length > 0 || scheduledTasks.length > 0;
             const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             const displayTime = hour === 0 ? '12:00 AM' : 
                                hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
@@ -3084,24 +3107,24 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                 <div 
                   style={{ 
                     minHeight: '32px',
-                    background: blocks.length > 0 ? 'transparent' : 
+                    background: hasContent ? 'transparent' : 
                                (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '#3B82F6' : '#FAFBFC',
                     borderRadius: '4px',
                     padding: '4px',
-                    cursor: blocks.length === 0 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                    cursor: hasContent ? 'default' : (isDragging ? 'grabbing' : 'grab'),
                     border: '1px dashed transparent',
                     transition: 'all 0.2s ease',
                     position: 'relative',
                     userSelect: 'none'
                   }}
-                  onClick={() => blocks.length === 0 && !isDragging && handleSlotClick(hour, minute)}
-                  onMouseDown={() => blocks.length === 0 && handleMouseDown(hour, minute)}
+                  onClick={() => !hasContent && !isDragging && handleSlotClick(hour, minute)}
+                  onMouseDown={() => !hasContent && handleMouseDown(hour, minute)}
                   onMouseMove={() => handleMouseMove(hour, minute)}
                   onMouseUp={handleMouseUp}
                   onDragOver={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (draggedTask && blocks.length === 0) {
+                    if (draggedTask && !hasContent) {
                       e.currentTarget.style.background = '#EFF6FF';
                       e.currentTarget.style.border = '2px dashed #3B82F6';
                       e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px; font-size: 12px;">DROP HERE<br/>${draggedTask.title}</div>`;
@@ -3117,9 +3140,9 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                   onDrop={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('DROP EVENT FIRED!', { draggedTask, hour, minute, blocks: blocks.length });
+                    console.log('DROP EVENT FIRED!', { draggedTask, hour, minute, hasContent });
                     
-                    if (draggedTask && blocks.length === 0) {
+                    if (draggedTask && !hasContent) {
                       console.log('Valid drop - processing...', {
                         taskId: draggedTask.id,
                         taskTitle: draggedTask.title,
@@ -3247,19 +3270,19 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                     e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
                   }}
                   onMouseEnter={(e) => {
-                    if (blocks.length === 0 && !isDragging) {
+                    if (!hasContent && !isDragging) {
                       e.currentTarget.style.border = '1px dashed #3B82F6';
                       e.currentTarget.style.background = '#EFF6FF';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (blocks.length === 0 && !isDragging) {
+                    if (!hasContent && !isDragging) {
                       e.currentTarget.style.border = '1px dashed transparent';
                       e.currentTarget.style.background = '#FAFBFC';
                     }
                   }}
                 >
-                  {blocks.length === 0 ? (
+                  {!hasContent ? (
                     <div style={{ 
                       color: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 'white' : '#9CA3AF', 
                       fontSize: '11px',
@@ -3273,34 +3296,71 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       }
                     </div>
                   ) : (
-                    blocks.map(block => (
-                      <div
-                        key={block.id}
-                        style={{
-                          background: block.color,
-                          color: 'white',
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          marginBottom: '4px',
-                          fontWeight: '500',
-                          fontSize: '13px'
-                        }}
-                      >
-                        <div>{block.title}</div>
-                        <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                          {new Date(block.start_datetime).toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
-                            minute: '2-digit',
-                            hour12: true 
-                          })} - {new Date(block.end_datetime).toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
-                            minute: '2-digit',
-                            hour12: true 
-                          })}
+                    <>
+                      {blocks.map(block => (
+                        <div
+                          key={block.id}
+                          style={{
+                            background: block.color,
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            marginBottom: '4px',
+                            fontWeight: '500',
+                            fontSize: '13px'
+                          }}
+                        >
+                          <div>{block.title}</div>
+                          <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                            {new Date(block.start_datetime).toLocaleTimeString('en-US', { 
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })} - {new Date(block.end_datetime).toLocaleTimeString('en-US', { 
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                      {scheduledTasks.map(task => (
+                        <div
+                          key={task.id}
+                          style={{
+                            background: getPriorityColor(task.priority),
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            marginBottom: '4px',
+                            fontWeight: '500',
+                            fontSize: '13px',
+                            textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                          }}
+                          onClick={() => onTaskClick(task)}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span>📋</span>
+                            <span>{task.title}</span>
+                          </div>
+                          {task.scheduled_start && task.scheduled_end && (
+                            <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                              {new Date(task.scheduled_start).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })} - {new Date(task.scheduled_end).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
