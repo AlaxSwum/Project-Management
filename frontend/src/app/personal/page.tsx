@@ -3225,7 +3225,24 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                           
                           // Update task in database with scheduled time
                           console.log('Updating task with scheduled time:', draggedTask.id);
-                          // For now, just update local state - database update can be added later
+                          try {
+                            const { error: updateError } = await supabase
+                              .from('personal_tasks')
+                              .update({
+                                scheduled_start: startTime.toISOString(),
+                                scheduled_end: endTime.toISOString(),
+                                due_date: startTime.toISOString()
+                              })
+                              .eq('id', draggedTask.id);
+                            
+                            if (updateError) {
+                              console.error('Error updating task schedule:', updateError);
+                            } else {
+                              console.log('Task schedule updated successfully in database');
+                            }
+                          } catch (updateErr) {
+                            console.error('Failed to update task schedule:', updateErr);
+                          }
                           
                           // Update tasks state to remove from unscheduled list
                           console.log('Updating task states - before:', {
@@ -3470,6 +3487,27 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                     alert('Error: ' + result.error.message);
                   } else {
                     console.log('Time block created successfully!', result.data);
+                    
+                    // Update task in database with scheduled time
+                    try {
+                      const { error: updateError } = await supabase
+                        .from('personal_tasks')
+                        .update({
+                          scheduled_start: tomorrow.toISOString(),
+                          scheduled_end: endTime.toISOString(),
+                          due_date: tomorrow.toISOString()
+                        })
+                        .eq('id', task.id);
+                      
+                      if (updateError) {
+                        console.error('Error updating task schedule:', updateError);
+                      } else {
+                        console.log('Task schedule updated successfully in database');
+                      }
+                    } catch (updateErr) {
+                      console.error('Failed to update task schedule:', updateErr);
+                    }
+                    
                     // Update time blocks state instead of reloading
                     const newTimeBlock: PersonalTimeBlock = {
                       id: result.data.id.toString(),
@@ -3485,6 +3523,17 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       updated_at: new Date().toISOString()
                     };
                     setTimeBlocks(prev => [...prev, newTimeBlock]);
+                    
+                    // Update local task state
+                    const updatedTask = {
+                      ...task,
+                      scheduled_start: tomorrow.toISOString(),
+                      scheduled_end: endTime.toISOString(),
+                      due_date: tomorrow.toISOString()
+                    };
+                    setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
+                    setAllTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
+                    
                     alert(`Task "${task.title}" scheduled for ${tomorrow.toLocaleString()}`);
                   }
                 } catch (error) {
