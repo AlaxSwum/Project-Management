@@ -2585,7 +2585,8 @@ const WeekCalendarView: React.FC<WeekCalendarProps> = ({
                       e.stopPropagation();
                       if (confirm(`Delete task "${task.title}"?`)) {
                         // Call the delete function from parent component
-                        if (task.id.startsWith('project_')) {
+                        const taskIdStr = String(task.id);
+                        if (taskIdStr.startsWith('project_')) {
                           // Handle project tasks differently if needed
                           alert('Project tasks cannot be deleted from here');
                         } else {
