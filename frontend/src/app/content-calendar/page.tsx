@@ -28,6 +28,7 @@ interface ContentCalendarItem {
   allowed_users?: number[]
   can_view?: boolean
   can_edit?: boolean
+  is_completed?: boolean
 }
 
 interface User {
@@ -903,6 +904,25 @@ export default function ContentCalendarPage() {
     }
   }
 
+  const handleToggleCompletion = async (itemId: number, newCompletionStatus: boolean) => {
+    try {
+      const { supabaseDb } = await import('@/lib/supabase')
+      
+      // Update in database
+      await supabaseDb.updateContentCalendarItem(itemId, { is_completed: newCompletionStatus })
+      
+      // Update local state
+      const updatedItems = contentItems.map(item => 
+        item.id === itemId ? { ...item, is_completed: newCompletionStatus } : item
+      )
+      setContentItems(updatedItems)
+      filterItemsByFolder(updatedItems, selectedFolder)
+    } catch (err) {
+      console.error('Error toggling completion status:', err)
+      setError('Failed to update completion status')
+    }
+  }
+
   const renderSortIcon = (columnKey: string) => {
     if (sortConfig.key !== columnKey) {
       return <ChevronUpIcon style={{ width: '12px', height: '12px', opacity: 0.3 }} />
@@ -1716,7 +1736,7 @@ export default function ContentCalendarPage() {
               {/* Sticky Header */}
               <div className="content-table-header" style={{
                 display: 'grid',
-                gridTemplateColumns: '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
+                gridTemplateColumns: '60px 140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
                 gap: '0',
                 background: '#fafafa',
                 borderBottom: '2px solid #e8e8e8',
@@ -1728,6 +1748,19 @@ export default function ContentCalendarPage() {
                 top: '0',
                 zIndex: 10
               }}>
+                {/* Done Checkbox Column */}
+                <div style={{ 
+                  padding: '1.25rem 1rem', 
+                  borderRight: '1px solid #e0e0e0',
+                  textAlign: 'center',
+                  background: '#ffffff',
+                  position: 'sticky',
+                  left: '0',
+                  zIndex: 20,
+                  borderBottom: '2px solid #e8e8e8'
+                }}>
+                  DONE
+                </div>
                 <div 
                   onClick={() => handleSort('date')}
                   style={{ 
@@ -1739,7 +1772,7 @@ export default function ContentCalendarPage() {
                     justifyContent: 'space-between',
                     background: '#ffffff',
                     position: 'sticky',
-                    left: '0',
+                    left: '60px',
                     zIndex: 20,
                     borderBottom: '2px solid #e8e8e8',
                     transition: 'background-color 0.2s ease'
@@ -1828,7 +1861,7 @@ export default function ContentCalendarPage() {
                     justifyContent: 'space-between',
                     background: '#ffffff',
                     position: 'sticky',
-                    left: '140px',
+                    left: '200px',
                     zIndex: 20,
                     borderBottom: '2px solid #e8e8e8',
                     transition: 'background-color 0.2s ease'
@@ -1986,23 +2019,23 @@ export default function ContentCalendarPage() {
                     onDrop={!isMobile ? (e) => handleDrop(e, index) : undefined}
                     style={{
                       display: isMobile ? 'block' : 'grid',
-                      gridTemplateColumns: isMobile ? 'none' : '140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
+                      gridTemplateColumns: isMobile ? 'none' : '60px 140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
                       gap: '0',
                       borderBottom: '1px solid #f0f0f0',
                       fontSize: '0.85rem',
                       transition: 'all 0.2s ease',
                       cursor: isMobile ? 'default' : 'grab',
-                      backgroundColor: dragOverIndex === index ? '#f0f9ff' : '#ffffff',
+                      backgroundColor: item.is_completed ? '#d1fae5' : (dragOverIndex === index ? '#f0f9ff' : '#ffffff'),
                       borderTop: dragOverIndex === index ? '2px solid #3b82f6' : 'none'
                     }}
                     onMouseEnter={(e) => {
                       if (!draggedItem) {
-                        e.currentTarget.style.backgroundColor = '#f8f9fa'
+                        e.currentTarget.style.backgroundColor = item.is_completed ? '#a7f3d0' : '#f8f9fa'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!draggedItem) {
-                        e.currentTarget.style.backgroundColor = '#ffffff'
+                        e.currentTarget.style.backgroundColor = item.is_completed ? '#d1fae5' : '#ffffff'
                       }
                     }}
                   >
@@ -2117,6 +2150,31 @@ export default function ContentCalendarPage() {
                     ) : (
                       /* Desktop Grid Layout */
                       <>
+                    {/* Done Checkbox */}
+                    <div style={{ 
+                      padding: '1rem', 
+                      borderRight: '1px solid #f0f0f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#ffffff',
+                      position: 'sticky',
+                      left: '0',
+                      zIndex: 5
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={item.is_completed || false}
+                        onChange={() => handleToggleCompletion(item.id, !item.is_completed)}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          cursor: 'pointer',
+                          accentColor: '#10b981'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
                     {/* Published Date - Frozen */}
                     <div 
                       onDoubleClick={() => handleCellDoubleClick(item.id, 'date', item.date)}
@@ -2126,7 +2184,7 @@ export default function ContentCalendarPage() {
                         color: '#666666',
                         background: '#ffffff',
                         position: 'sticky',
-                        left: '0',
+                        left: '60px',
                         zIndex: 5,
                         cursor: 'pointer'
                       }}
@@ -2261,7 +2319,7 @@ export default function ContentCalendarPage() {
                         borderRight: '1px solid #f0f0f0',
                         background: '#ffffff',
                         position: 'sticky',
-                        left: '140px',
+                        left: '200px',
                         zIndex: 5,
                         cursor: 'pointer'
                       }}
