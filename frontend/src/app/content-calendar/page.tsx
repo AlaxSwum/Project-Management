@@ -1331,25 +1331,23 @@ export default function ContentCalendarPage() {
                 Create Folder
               </button>
               
-              {userRole === 'admin' && (
-                <button
-                  onClick={() => setShowMemberModal(true)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#FFB333',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '0.9rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
-                  }}
-                >
-                  Manage Members
-                </button>
-              )}
+              <button
+                onClick={() => setShowMemberModal(true)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#FFB333',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
+                }}
+              >
+                Manage Members
+              </button>
               
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <button
@@ -1617,36 +1615,38 @@ export default function ContentCalendarPage() {
                         </div>
                       </div>
                       
-                      {/* Folder Actions */}
+                      {/* Folder Actions - Only show if user has access */}
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleManageFolderPermissions(folder);
-                          }}
-                          style={{
-                            background: '#f3f4f6',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            padding: '0.5rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#e5e7eb';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                          }}
-                          title="Manage Folder Permissions"
-                        >
-                          <UserGroupIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
-                        </button>
+                        {(folder.created_by_id === user?.id || userRole === 'admin' || userRole === 'manager') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleManageFolderPermissions(folder);
+                            }}
+                            style={{
+                              background: '#f3f4f6',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              padding: '0.5rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#e5e7eb';
+                              e.currentTarget.style.borderColor = '#9ca3af';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#f3f4f6';
+                              e.currentTarget.style.borderColor = '#d1d5db';
+                            }}
+                            title="Manage Folder Permissions"
+                          >
+                            <UserGroupIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
