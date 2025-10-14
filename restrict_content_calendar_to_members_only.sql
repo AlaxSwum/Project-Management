@@ -151,3 +151,4 @@ SELECT '✅ Content Calendar now restricted to assigned members only!' as status
 SELECT 'ℹ️  Admin/HR/Superuser bypass has been removed' as note;
 SELECT '🔒 Only users in content_calendar_members or content_calendar_folder_members can access' as enforcement;
 
+

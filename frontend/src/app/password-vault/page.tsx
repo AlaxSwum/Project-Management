@@ -186,6 +186,8 @@ export default function PasswordVaultPage() {
   const fetchFolders = async () => {
     const { supabaseDb, supabase } = await import('@/lib/supabase');
     
+    if (!user?.id) return;
+    
     // Use the new service function
     const { data, error } = await supabaseDb.getPasswordFolders();
     
@@ -194,14 +196,20 @@ export default function PasswordVaultPage() {
     // Count passwords per folder and try to get access data separately
     const foldersWithCounts = await Promise.all(
       (data || []).map(async (folder: any) => {
-        const { count } = await supabase
+        // Count passwords user has access to in this folder
+        const { data: folderPasswords } = await supabase
           .from('password_vault')
-          .select('*', { count: 'exact' })
+          .select('id')
           .eq('folder_id', folder.id)
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .or(`created_by_id.eq.${user.id}`);
+        
+        const accessiblePasswordCount = folderPasswords?.length || 0;
         
         // Try to get access data, but don't fail if table doesn't exist
         let members: FolderMember[] = [];
+        let hasAccess = false;
+        
         try {
           const { data: accessData } = await supabase
             .from('password_vault_folder_access')
@@ -218,20 +226,37 @@ export default function PasswordVaultPage() {
             .eq('folder_id', folder.id);
           
           members = accessData || [];
+          
+          // Check if current user has access to this folder
+          hasAccess = members.some(m => m.user_id === user.id && m.can_view);
         } catch (accessError) {
           console.warn('password_vault_folder_access table not found, using empty members array');
           members = [];
         }
         
+        // User has access if:
+        // 1. They created the folder, OR
+        // 2. They have folder-level access, OR
+        // 3. They have at least one accessible password in the folder
+        const userHasAccess = 
+          folder.created_by_id === user.id || 
+          hasAccess || 
+          accessiblePasswordCount > 0;
+        
         return {
           ...folder,
-          password_count: count || 0,
-          members: members
+          password_count: accessiblePasswordCount,
+          members: members,
+          userHasAccess: userHasAccess
         };
       })
     );
     
-    setFolders(foldersWithCounts);
+    // Filter to only show folders user has access to
+    const accessibleFolders = foldersWithCounts.filter(folder => folder.userHasAccess);
+    
+    console.log(`Password Vault: Showing ${accessibleFolders.length} of ${foldersWithCounts.length} folders`);
+    setFolders(accessibleFolders);
   };
 
   const createFolder = async () => {
