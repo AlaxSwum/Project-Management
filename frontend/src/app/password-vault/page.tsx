@@ -228,7 +228,7 @@ export default function PasswordVaultPage() {
           members = accessData || [];
           
           // Check if current user has access to this folder
-          hasAccess = members.some(m => m.user_id === user.id && m.can_view);
+          hasAccess = members.some(m => Number(m.user_id) === Number(user.id) && m.can_view);
         } catch (accessError) {
           console.warn('password_vault_folder_access table not found, using empty members array');
           members = [];
