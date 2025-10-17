@@ -77,6 +77,34 @@ interface InstructorUser {
   role: string;
 }
 
+interface EmployeeLeaveAllocation {
+  id: number;
+  employee_id: number;
+  employee_name: string;
+  employee_email: string;
+  annual_leave_total: number;
+  annual_leave_used: number;
+  annual_leave_remaining: number;
+  annual_leave_max_per_request: number;
+  sick_leave_total: number;
+  sick_leave_used: number;
+  sick_leave_remaining: number;
+  sick_leave_max_per_month: number;
+  casual_leave_total: number;
+  casual_leave_used: number;
+  casual_leave_remaining: number;
+  casual_leave_max_per_month: number;
+  year: number;
+}
+
+interface ImportantDate {
+  id: number;
+  date: string;
+  title: string;
+  description: string;
+  type: string;
+}
+
 export default function AdminDashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -113,6 +141,30 @@ export default function AdminDashboardPage() {
   const [classInstructors, setClassInstructors] = useState<Record<number, InstructorUser[]>>({});
   const [backfillLoading, setBackfillLoading] = useState(false);
   const [backfillMessage, setBackfillMessage] = useState('');
+
+  // Absence Management state
+  const [employees, setEmployees] = useState<UserSearchResult[]>([]);
+  const [leaveAllocations, setLeaveAllocations] = useState<EmployeeLeaveAllocation[]>([]);
+  const [importantDates, setImportantDates] = useState<ImportantDate[]>([]);
+  const [absenceLoading, setAbsenceLoading] = useState(false);
+  const [absenceMessage, setAbsenceMessage] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<UserSearchResult | null>(null);
+  const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const [showImportantDateModal, setShowImportantDateModal] = useState(false);
+  const [newAllocation, setNewAllocation] = useState({
+    annual_leave_total: 10,
+    annual_leave_max_per_request: 3,
+    sick_leave_total: 24,
+    sick_leave_max_per_month: 7,
+    casual_leave_total: 6,
+    casual_leave_max_per_month: 2,
+  });
+  const [newImportantDate, setNewImportantDate] = useState({
+    date: '',
+    title: '',
+    description: '',
+    type: 'company_event'
+  });
 
   useEffect(() => {
     if (isLoading) return;
@@ -586,11 +638,170 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Absence Management Functions
+  const fetchEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role')
+        .order('name');
+      
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (err: any) {
+      console.error('Error fetching employees:', err);
+    }
+  };
+
+  const fetchLeaveAllocations = async () => {
+    try {
+      setAbsenceLoading(true);
+      const currentYear = new Date().getFullYear();
+      const { data, error } = await supabase
+        .from('employee_leave_allocations')
+        .select('*')
+        .eq('year', currentYear)
+        .order('employee_name');
+      
+      if (error) throw error;
+      setLeaveAllocations(data || []);
+    } catch (err: any) {
+      console.error('Error fetching leave allocations:', err);
+      setAbsenceMessage('Error loading leave allocations: ' + err.message);
+    } finally {
+      setAbsenceLoading(false);
+    }
+  };
+
+  const fetchImportantDates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('important_dates')
+        .select('*')
+        .order('date');
+      
+      if (error) throw error;
+      setImportantDates(data || []);
+    } catch (err: any) {
+      console.error('Error fetching important dates:', err);
+    }
+  };
+
+  const createOrUpdateAllocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEmployee) {
+      setAbsenceMessage('Please select an employee');
+      return;
+    }
+
+    try {
+      setAbsenceLoading(true);
+      setAbsenceMessage('');
+      const currentYear = new Date().getFullYear();
+
+      const allocationData = {
+        employee_id: selectedEmployee.id,
+        employee_name: selectedEmployee.name || '',
+        employee_email: selectedEmployee.email,
+        year: currentYear,
+        ...newAllocation,
+        created_by: user?.id
+      };
+
+      const { error } = await supabase
+        .from('employee_leave_allocations')
+        .upsert(allocationData, {
+          onConflict: 'employee_id,year'
+        });
+
+      if (error) throw error;
+
+      setAbsenceMessage('Leave allocation saved successfully!');
+      setShowAllocationModal(false);
+      setSelectedEmployee(null);
+      setNewAllocation({
+        annual_leave_total: 10,
+        annual_leave_max_per_request: 3,
+        sick_leave_total: 24,
+        sick_leave_max_per_month: 7,
+        casual_leave_total: 6,
+        casual_leave_max_per_month: 2,
+      });
+      await fetchLeaveAllocations();
+    } catch (err: any) {
+      console.error('Error saving allocation:', err);
+      setAbsenceMessage('Error: ' + err.message);
+    } finally {
+      setAbsenceLoading(false);
+    }
+  };
+
+  const createImportantDate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newImportantDate.date || !newImportantDate.title) {
+      setAbsenceMessage('Please fill in date and title');
+      return;
+    }
+
+    try {
+      setAbsenceLoading(true);
+      setAbsenceMessage('');
+
+      const { error } = await supabase
+        .from('important_dates')
+        .insert({
+          ...newImportantDate,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAbsenceMessage('Important date added successfully!');
+      setShowImportantDateModal(false);
+      setNewImportantDate({
+        date: '',
+        title: '',
+        description: '',
+        type: 'company_event'
+      });
+      await fetchImportantDates();
+    } catch (err: any) {
+      console.error('Error adding important date:', err);
+      setAbsenceMessage('Error: ' + err.message);
+    } finally {
+      setAbsenceLoading(false);
+    }
+  };
+
+  const deleteImportantDate = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this important date?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('important_dates')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setAbsenceMessage('Important date deleted successfully!');
+      await fetchImportantDates();
+    } catch (err: any) {
+      console.error('Error deleting important date:', err);
+      setAbsenceMessage('Error: ' + err.message);
+    }
+  };
+
   // Load classes and instructors when tab becomes active
   useEffect(() => {
     if (activeTab === 'classes') {
       fetchClasses();
       fetchInstructors();
+    } else if (activeTab === 'absence') {
+      fetchEmployees();
+      fetchLeaveAllocations();
+      fetchImportantDates();
     }
   }, [activeTab]);
 
@@ -700,6 +911,20 @@ export default function AdminDashboardPage() {
             }}
           >
             My Projects
+          </button>
+          <button
+            onClick={() => setActiveTab('absence')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'absence' ? '2px solid #3b82f6' : '2px solid transparent',
+              color: activeTab === 'absence' ? '#3b82f6' : '#6b7280',
+              fontWeight: activeTab === 'absence' ? '600' : '400',
+              cursor: 'pointer'
+            }}
+          >
+            Absence Management
           </button>
         </nav>
       </div>
@@ -1226,6 +1451,641 @@ export default function AdminDashboardPage() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Absence Management Tab */}
+      {activeTab === 'absence' && (
+        <div>
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1F2937' }}>
+              Employee Leave Management
+            </h2>
+
+            {absenceMessage && (
+              <div style={{
+                marginBottom: '1rem',
+                padding: '1rem',
+                borderRadius: '8px',
+                backgroundColor: absenceMessage.includes('Error') || absenceMessage.includes('error') ? '#FEE2E2' : '#D1FAE5',
+                color: absenceMessage.includes('Error') || absenceMessage.includes('error') ? '#991B1B' : '#065F46',
+                border: `1px solid ${absenceMessage.includes('Error') || absenceMessage.includes('error') ? '#EF4444' : '#10B981'}`
+              }}>
+                {absenceMessage}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+              <button
+                onClick={() => setShowAllocationModal(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #FFB333, #FFD480)',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(255, 179, 51, 0.2)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                + Set Employee Leave Allocation
+              </button>
+              
+              <button
+                onClick={() => setShowImportantDateModal(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #5884FD, #8BA4FE)',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(88, 132, 253, 0.2)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                + Add Important Date
+              </button>
+            </div>
+
+            {/* Employee Leave Allocations Table */}
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+              marginBottom: '2rem'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>
+                Employee Leave Balances ({new Date().getFullYear()})
+              </h3>
+              
+              {absenceLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>Loading...</div>
+              ) : leaveAllocations.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>
+                  No leave allocations set. Click "Set Employee Leave Allocation" to add one.
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #E5E7EB' }}>
+                        <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Employee</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151' }}>Annual Leave</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151' }}>Sick Leave</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151' }}>Casual Leave</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveAllocations.map((allocation) => (
+                        <tr key={allocation.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                          <td style={{ padding: '1rem' }}>
+                            <div style={{ fontWeight: '500', color: '#1F2937' }}>{allocation.employee_name}</div>
+                            <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>{allocation.employee_email}</div>
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ marginBottom: '0.25rem' }}>
+                              <span style={{ fontWeight: '600', color: '#10B981', fontSize: '1.125rem' }}>
+                                {allocation.annual_leave_remaining}
+                              </span>
+                              <span style={{ color: '#6B7280', fontSize: '0.875rem' }}> / {allocation.annual_leave_total} days</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
+                              Max {allocation.annual_leave_max_per_request} days/request
+                            </div>
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ marginBottom: '0.25rem' }}>
+                              <span style={{ fontWeight: '600', color: '#3B82F6', fontSize: '1.125rem' }}>
+                                {allocation.sick_leave_remaining}
+                              </span>
+                              <span style={{ color: '#6B7280', fontSize: '0.875rem' }}> / {allocation.sick_leave_total} days</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
+                              Max {allocation.sick_leave_max_per_month} days/month
+                            </div>
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ marginBottom: '0.25rem' }}>
+                              <span style={{ fontWeight: '600', color: '#F59E0B', fontSize: '1.125rem' }}>
+                                {allocation.casual_leave_remaining}
+                              </span>
+                              <span style={{ color: '#6B7280', fontSize: '0.875rem' }}> / {allocation.casual_leave_total} days</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
+                              Max {allocation.casual_leave_max_per_month} days/month
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Important Dates */}
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#1F2937' }}>
+                Important Dates (No Leave Allowed)
+              </h3>
+              
+              {importantDates.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>
+                  No important dates set. Click "Add Important Date" to add one.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                  {importantDates.map((date) => (
+                    <div
+                      key={date.id}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        border: '1px solid #E5E7EB',
+                        background: '#F9FAFB',
+                        position: 'relative'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '600', color: '#1F2937', marginBottom: '0.25rem' }}>
+                            {date.title}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '0.25rem' }}>
+                            {new Date(date.date).toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </div>
+                          {date.description && (
+                            <div style={{ fontSize: '0.875rem', color: '#9CA3AF', marginTop: '0.5rem' }}>
+                              {date.description}
+                            </div>
+                          )}
+                          <div style={{
+                            display: 'inline-block',
+                            marginTop: '0.5rem',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            background: date.type === 'holiday' ? '#DBEAFE' : '#FEF3C7',
+                            color: date.type === 'holiday' ? '#1E40AF' : '#92400E'
+                          }}>
+                            {date.type.replace('_', ' ').toUpperCase()}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => deleteImportantDate(date.id)}
+                          style={{
+                            background: '#EF4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '0.4rem 0.6rem',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            marginLeft: '0.5rem'
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set Leave Allocation Modal */}
+      {showAllocationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 25px rgba(0, 0, 0, 0.15)'
+          }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1F2937' }}>
+              Set Employee Leave Allocation
+            </h3>
+            
+            <form onSubmit={createOrUpdateAllocation}>
+              {/* Employee Selection */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                  Select Employee *
+                </label>
+                <select
+                  required
+                  value={selectedEmployee?.id || ''}
+                  onChange={(e) => {
+                    const emp = employees.find(emp => emp.id === parseInt(e.target.value));
+                    setSelectedEmployee(emp || null);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <option value="">-- Select Employee --</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name || emp.email} ({emp.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Annual Leave */}
+              <div style={{
+                background: '#F9FAFB',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                border: '1px solid #E5E7EB'
+              }}>
+                <h4 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#10B981', marginBottom: '1rem' }}>
+                  Annual Leave
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                      Total Days
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={newAllocation.annual_leave_total}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, annual_leave_total: parseInt(e.target.value) })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                      Max Days Per Request
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={newAllocation.annual_leave_max_per_request}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, annual_leave_max_per_request: parseInt(e.target.value) })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sick Leave */}
+              <div style={{
+                background: '#F9FAFB',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                border: '1px solid #E5E7EB'
+              }}>
+                <h4 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#3B82F6', marginBottom: '1rem' }}>
+                  Sick Leave
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                      Total Days
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={newAllocation.sick_leave_total}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, sick_leave_total: parseInt(e.target.value) })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                      Max Days Per Month
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={newAllocation.sick_leave_max_per_month}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, sick_leave_max_per_month: parseInt(e.target.value) })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Casual Leave */}
+              <div style={{
+                background: '#F9FAFB',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                border: '1px solid #E5E7EB'
+              }}>
+                <h4 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#F59E0B', marginBottom: '1rem' }}>
+                  Casual Leave
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                      Total Days
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={newAllocation.casual_leave_total}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, casual_leave_total: parseInt(e.target.value) })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                      Max Days Per Month
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={newAllocation.casual_leave_max_per_month}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, casual_leave_max_per_month: parseInt(e.target.value) })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAllocationModal(false);
+                    setSelectedEmployee(null);
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#F3F4F6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={absenceLoading}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: absenceLoading ? '#9CA3AF' : 'linear-gradient(135deg, #FFB333, #FFD480)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: absenceLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {absenceLoading ? 'Saving...' : 'Save Allocation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Important Date Modal */}
+      {showImportantDateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 25px rgba(0, 0, 0, 0.15)'
+          }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1F2937' }}>
+              Add Important Date
+            </h3>
+            
+            <form onSubmit={createImportantDate}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                  Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={newImportantDate.date}
+                  onChange={(e) => setNewImportantDate({ ...newImportantDate, date: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newImportantDate.title}
+                  onChange={(e) => setNewImportantDate({ ...newImportantDate, title: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                  placeholder="e.g., Company Meeting"
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                  Description
+                </label>
+                <textarea
+                  value={newImportantDate.description}
+                  onChange={(e) => setNewImportantDate({ ...newImportantDate, description: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Optional description"
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                  Type
+                </label>
+                <select
+                  value={newImportantDate.type}
+                  onChange={(e) => setNewImportantDate({ ...newImportantDate, type: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <option value="company_event">Company Event</option>
+                  <option value="holiday">Holiday</option>
+                  <option value="meeting">Meeting</option>
+                  <option value="deadline">Deadline</option>
+                </select>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowImportantDateModal(false);
+                    setNewImportantDate({
+                      date: '',
+                      title: '',
+                      description: '',
+                      type: 'company_event'
+                    });
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#F3F4F6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={absenceLoading}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: absenceLoading ? '#9CA3AF' : 'linear-gradient(135deg, #5884FD, #8BA4FE)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: absenceLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {absenceLoading ? 'Adding...' : 'Add Date'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
