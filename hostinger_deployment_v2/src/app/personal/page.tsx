@@ -14,6 +14,13 @@ import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
 import { projectService } from '@/lib/api-compatibility';
 
+interface ChecklistItem {
+  id?: number;
+  item_text: string;
+  is_completed: boolean;
+  item_order: number;
+}
+
 interface PersonalTask {
   id: number;
   title: string;
@@ -22,6 +29,7 @@ interface PersonalTask {
   status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
   color: string;
   category?: string;
+  checklist_items?: ChecklistItem[];
 }
 
 interface CalendarEvent {
@@ -69,6 +77,10 @@ export default function PersonalTaskManager() {
     category: '',
     color: '#3B82F6'
   });
+
+  // Checklist state
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState('');
 
   // Mobile detection
   useEffect(() => {
@@ -219,6 +231,25 @@ export default function PersonalTaskManager() {
 
       if (error) throw error;
       
+      // Save checklist items if any
+      if (checklistItems.length > 0 && data) {
+        const checklistInserts = checklistItems.map((item, index) => ({
+          task_id: data.id,
+          user_id: parseInt(user?.id?.toString() || '0'),
+          item_text: item.item_text,
+          is_completed: item.is_completed,
+          item_order: index
+        }));
+
+        const { error: checklistError } = await supabase
+          .from('task_checklist_items')
+          .insert(checklistInserts);
+
+        if (checklistError) {
+          console.error('Error saving checklist items:', checklistError);
+        }
+      }
+      
       await fetchCalendarData();
       await fetchUnscheduledTasks();
       
@@ -229,6 +260,8 @@ export default function PersonalTaskManager() {
         category: '',
         color: '#3B82F6'
       });
+      setChecklistItems([]);
+      setNewChecklistItem('');
       
       setShowTaskModal(false);
       setSuccessMessage('Task created successfully!');
@@ -241,6 +274,31 @@ export default function PersonalTaskManager() {
       console.error('Error creating task:', err);
       setError('Failed to create task: ' + err.message);
     }
+  };
+
+  // Checklist functions
+  const addChecklistItem = () => {
+    if (newChecklistItem.trim()) {
+      setChecklistItems([
+        ...checklistItems,
+        {
+          item_text: newChecklistItem.trim(),
+          is_completed: false,
+          item_order: checklistItems.length
+        }
+      ]);
+      setNewChecklistItem('');
+    }
+  };
+
+  const removeChecklistItem = (index: number) => {
+    setChecklistItems(checklistItems.filter((_, i) => i !== index));
+  };
+
+  const toggleChecklistItem = (index: number) => {
+    setChecklistItems(checklistItems.map((item, i) => 
+      i === index ? { ...item, is_completed: !item.is_completed } : item
+    ));
   };
 
   const handleTaskDragStart = (task: PersonalTask) => {
@@ -911,6 +969,112 @@ export default function PersonalTaskManager() {
                         />
                       ))}
                     </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      To-Do List (Optional)
+                    </label>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={newChecklistItem}
+                          onChange={(e) => setNewChecklistItem(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addChecklistItem();
+                            }
+                          }}
+                          placeholder="Add a checklist item..."
+                          style={{
+                            flex: 1,
+                            padding: '0.5rem',
+                            border: '2px solid #E5E7EB',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={addChecklistItem}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background: '#10B981',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                    {checklistItems.length > 0 && (
+                      <div style={{
+                        background: '#F9FAFB',
+                        borderRadius: '8px',
+                        padding: '0.75rem',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}>
+                        {checklistItems.map((item, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              padding: '0.5rem',
+                              background: '#ffffff',
+                              borderRadius: '6px',
+                              marginBottom: index < checklistItems.length - 1 ? '0.5rem' : '0',
+                              border: '1px solid #E5E7EB'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={item.is_completed}
+                              onChange={() => toggleChecklistItem(index)}
+                              style={{
+                                width: '16px',
+                                height: '16px',
+                                cursor: 'pointer'
+                              }}
+                            />
+                            <span style={{
+                              flex: 1,
+                              fontSize: '0.875rem',
+                              color: item.is_completed ? '#9CA3AF' : '#1F2937',
+                              textDecoration: item.is_completed ? 'line-through' : 'none'
+                            }}>
+                              {item.item_text}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeChecklistItem(index)}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                background: '#FEE2E2',
+                                color: '#DC2626',
+                                border: 'none',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer',
+                                fontWeight: '500'
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
