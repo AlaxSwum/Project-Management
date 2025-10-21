@@ -712,17 +712,37 @@ export default function ContentCalendarPage() {
       console.log('Folder members data:', folderMembersData)
       console.log('Folder members error:', error)
       
+      if (!folderMembersData || folderMembersData.length === 0) {
+        console.log('No folder members found, showing all users from allUsers list')
+        // If no specific folder members, show all users
+        return allUsers.map(u => ({
+          user_id: u.id,
+          role: 'member',
+          user: u
+        }))
+      }
+      
       // Transform folder members to match the expected format
-      const folderMembers = (folderMembersData || []).map((member: any) => ({
-        user_id: member.user_id,
-        role: member.role,
-        user: member.auth_user || {
-          id: member.user_id,
-          name: 'Unknown User',
-          email: '',
-          role: 'member'
+      // If auth_user join failed, look up user from allUsers
+      const folderMembers = (folderMembersData || []).map((member: any) => {
+        let user = member.auth_user
+        
+        // If join didn't work, find user in allUsers
+        if (!user) {
+          user = allUsers.find(u => u.id === member.user_id)
         }
-      }))
+        
+        return {
+          user_id: member.user_id,
+          role: member.role,
+          user: user || {
+            id: member.user_id,
+            name: `User ${member.user_id}`,
+            email: '',
+            role: 'member'
+          }
+        }
+      })
       
       // Also include the folder creator if not already in members
       if (currentFolder.created_by_id && !folderMembers.some((m: any) => m.user_id === currentFolder.created_by_id)) {
@@ -737,7 +757,7 @@ export default function ContentCalendarPage() {
         }
       }
       
-      console.log('Final assignable users for folder:', folderMembers.map((m: any) => m.user.name))
+      console.log('Final assignable users for folder:', folderMembers.map((m: any) => m.user.name || m.user.email))
       return folderMembers
     } catch (err) {
       console.error('Error getting assignable users:', err)
