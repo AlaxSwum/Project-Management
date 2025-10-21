@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://bayyefskgflbyyuwrlgm.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM'
@@ -1573,7 +1573,32 @@ export const supabaseDb = {
       if (checkResponse.ok) {
         const existingMembers = await checkResponse.json();
         if (existingMembers && existingMembers.length > 0) {
-          return { data: null, error: new Error('User is already a member of this folder') };
+          // User already exists - update their permissions instead
+          const memberData = {
+            role: permissions.role || 'viewer',
+            can_create: permissions.can_create || false,
+            can_edit: permissions.can_edit || false,
+            can_delete: permissions.can_delete || false,
+            can_manage_members: permissions.can_manage_members || false
+          };
+
+          const updateResponse = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}&user_id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(memberData)
+          });
+
+          if (!updateResponse.ok) {
+            throw new Error(`Failed to update member permissions`);
+          }
+
+          const updatedData = await updateResponse.json();
+          return { data: updatedData?.[0], error: null, updated: true };
         }
       }
 
