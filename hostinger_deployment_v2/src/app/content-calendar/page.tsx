@@ -866,12 +866,24 @@ export default function ContentCalendarPage() {
     setEditingItem(item)
     
     // Update assignable users for the item's folder
+    console.log('Opening Edit modal for item:', item.id, 'in folder:', item.folder_id)
     if (item.folder_id) {
       const folder = folders.find(f => f.id === item.folder_id)
       if (folder) {
         setCurrentFolder(folder)
-        const users = await getAssignableUsers()
-        setAssignableUsers(users)
+        try {
+          const users = await getAssignableUsers()
+          console.log('Assignable users for editing:', users.length, 'users')
+          setAssignableUsers(users)
+        } catch (err) {
+          console.error('Error fetching assignable users for edit:', err)
+          // Fallback to all users
+          setAssignableUsers(allUsers.map(u => ({
+            user_id: u.id,
+            role: 'member',
+            user: u
+          })))
+        }
       }
     } else {
       setAssignableUsers(members)
@@ -1391,9 +1403,21 @@ export default function ContentCalendarPage() {
                       folder_id: currentFolder?.id || null
                     })
                     
-                    // Update assignable users for current folder
-                    const users = await getAssignableUsers()
-                    setAssignableUsers(users)
+                    // Force refresh assignable users for current folder
+                    console.log('Opening Add Content modal, fetching assignable users...')
+                    try {
+                      const users = await getAssignableUsers()
+                      console.log('Assignable users fetched:', users.length, 'users')
+                      setAssignableUsers(users)
+                    } catch (err) {
+                      console.error('Error fetching assignable users:', err)
+                      // Fallback to all users if fetch fails
+                      setAssignableUsers(allUsers.map(u => ({
+                        user_id: u.id,
+                        role: 'member',
+                        user: u
+                      })))
+                    }
                     
                     setShowAddForm(true)
                   }}
