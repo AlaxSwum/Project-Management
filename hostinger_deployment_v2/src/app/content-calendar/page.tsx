@@ -504,8 +504,41 @@ export default function ContentCalendarPage() {
     
     try {
       const { supabaseDb } = await import('@/lib/supabase')
-      const { data: members } = await supabaseDb.getContentCalendarFolderMembers(folder.id)
-      setFolderMembers(members || [])
+      const { data: membersData, error } = await supabaseDb.getContentCalendarFolderMembers(folder.id)
+      
+      console.log('Raw folder members data:', membersData)
+      console.log('Folder members error:', error)
+      
+      if (!membersData || membersData.length === 0) {
+        console.log('No folder members found in database for folder:', folder.id)
+        setFolderMembers([])
+        setShowFolderPermissions(true)
+        return
+      }
+      
+      // Transform members and ensure user data is populated
+      const transformedMembers = membersData.map((member: any) => {
+        let userData = member.auth_user
+        
+        // If join failed, look up user from allUsers
+        if (!userData) {
+          console.log('auth_user join failed for user_id:', member.user_id, 'looking up in allUsers')
+          userData = allUsers.find(u => u.id === member.user_id)
+        }
+        
+        return {
+          ...member,
+          auth_user: userData || {
+            id: member.user_id,
+            name: `User ${member.user_id}`,
+            email: 'unknown@email.com',
+            role: 'member'
+          }
+        }
+      })
+      
+      console.log('Transformed folder members:', transformedMembers)
+      setFolderMembers(transformedMembers)
       setShowFolderPermissions(true)
     } catch (err) {
       console.error('Error fetching folder members:', err)
