@@ -121,6 +121,7 @@ export default function ContentCalendarPage() {
   const [memberRole, setMemberRole] = useState('member')
   const [editingCell, setEditingCell] = useState<{ itemId: number; field: string } | null>(null)
   const [cellValues, setCellValues] = useState<{ [key: string]: any }>({})
+  const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const checkAccess = async () => {
     if (!user?.id) return
@@ -692,6 +693,41 @@ export default function ContentCalendarPage() {
         console.log(`Access granted to ${itemId}: unknown security level, defaulting to allow`)
         return true
     }
+  }
+
+  // Month navigation
+  const goToPreviousMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const newMonth = new Date(prevMonth)
+      newMonth.setMonth(newMonth.getMonth() - 1)
+      return newMonth
+    })
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const newMonth = new Date(prevMonth)
+      newMonth.setMonth(newMonth.getMonth() + 1)
+      return newMonth
+    })
+  }
+
+  const goToCurrentMonth = () => {
+    setCurrentMonth(new Date())
+  }
+
+  const formatMonthYear = (date: Date) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    return `${months[date.getMonth()]} ${date.getFullYear()}`
+  }
+
+  // Filter items by current month
+  const filterByMonth = (items: ContentCalendarItem[]) => {
+    return items.filter(item => {
+      const itemDate = new Date(item.date)
+      return itemDate.getMonth() === currentMonth.getMonth() && 
+             itemDate.getFullYear() === currentMonth.getFullYear()
+    })
   }
 
   // Get assignable users for current folder
@@ -1607,6 +1643,114 @@ export default function ContentCalendarPage() {
 
           </div>
 
+          {/* Month Navigation */}
+          {currentFolder && (
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid #e8e8e8',
+              borderRadius: '16px',
+              padding: '1.5rem 2rem',
+              marginBottom: '1.5rem',
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <button
+                onClick={goToPreviousMonth}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e5e7eb'
+                  e.currentTarget.style.borderColor = '#9ca3af'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f3f4f6'
+                  e.currentTarget.style.borderColor = '#d1d5db'
+                }}
+              >
+                ← Previous Month
+              </button>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  margin: '0',
+                  color: '#1a1a1a'
+                }}>
+                  {formatMonthYear(currentMonth)}
+                </h2>
+                <button
+                  onClick={goToCurrentMonth}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#5884FD',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#4070fd'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#5884FD'
+                  }}
+                >
+                  Today
+                </button>
+              </div>
+
+              <button
+                onClick={goToNextMonth}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e5e7eb'
+                  e.currentTarget.style.borderColor = '#9ca3af'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f3f4f6'
+                  e.currentTarget.style.borderColor = '#d1d5db'
+                }}
+              >
+                Next Month →
+              </button>
+            </div>
+          )}
+
                     {/* Content Table - Only show when inside a folder */}
           {currentFolder && (
             <div className="content-table" style={{
@@ -1855,7 +1999,7 @@ export default function ContentCalendarPage() {
                 <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
               </div>
 
-              {filteredItems.length === 0 ? (
+              {filterByMonth(filteredItems).length === 0 ? (
                 <div style={{ 
                   padding: '4rem', 
                   textAlign: 'center', 
@@ -1874,11 +2018,11 @@ export default function ContentCalendarPage() {
                   }}>
                     <CalendarIcon style={{ width: '24px', height: '24px', color: '#999999' }} />
                   </div>
-                  <p style={{ margin: '0', fontWeight: '500' }}>No content items in {currentFolder.name}</p>
-                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666666' }}>Click "Add Content" to create one.</p>
+                  <p style={{ margin: '0', fontWeight: '500' }}>No content items in {formatMonthYear(currentMonth)}</p>
+                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666666' }}>Click "Add Content" to create one or navigate to a different month.</p>
                 </div>
               ) : (
-                filteredItems.map((item, index) => (
+                filterByMonth(filteredItems).map((item, index) => (
                   <div 
                     key={item.id}
                     className={isMobile ? "content-item-mobile" : "content-item-row"}
