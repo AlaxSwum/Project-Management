@@ -62,7 +62,12 @@ export default function PersonalCalendarPage() {
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
     category: '',
-    color: '#FFB333'
+    color: '#FFB333',
+    estimated_duration: 30, // Default 30 minutes
+    start_date: new Date().toISOString().split('T')[0], // Today's date
+    start_time: '09:00', // Default start time
+    due_date: new Date().toISOString().split('T')[0], // Today's date
+    due_time: '10:00' // Default due time
   });
 
   useEffect(() => {
@@ -193,6 +198,11 @@ export default function PersonalCalendarPage() {
       }
       
       const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Combine date and time for scheduled_start and scheduled_end
+      const scheduledStart = `${newTask.start_date}T${newTask.start_time}:00`;
+      const scheduledEnd = `${newTask.due_date}T${newTask.due_time}:00`;
+      
       const { data, error } = await supabase
         .from('personal_tasks')
         .insert([{
@@ -204,7 +214,11 @@ export default function PersonalCalendarPage() {
           category: newTask.category || 'personal',
           color: newTask.color,
           tags: [],
-          completion_percentage: 0
+          completion_percentage: 0,
+          estimated_duration: newTask.estimated_duration, // Add duration
+          scheduled_start: scheduledStart, // When task starts
+          scheduled_end: scheduledEnd, // When task ends
+          due_date: scheduledEnd // Also set as due date
         }])
         .select()
         .single();
@@ -219,7 +233,12 @@ export default function PersonalCalendarPage() {
         description: '',
         priority: 'medium',
         category: '',
-        color: '#FFB333'
+        color: '#FFB333',
+        estimated_duration: 30,
+        start_date: new Date().toISOString().split('T')[0],
+        start_time: '09:00',
+        due_date: new Date().toISOString().split('T')[0],
+        due_time: '10:00'
       });
       
       setShowTaskModal(false);
@@ -652,6 +671,90 @@ export default function PersonalCalendarPage() {
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Start Date & Time
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
+                    <input
+                      type="date"
+                      style={{
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '1rem'
+                      }}
+                      value={newTask.start_date}
+                      onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
+                    />
+                    <input
+                      type="time"
+                      style={{
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '1rem'
+                      }}
+                      value={newTask.start_time}
+                      onChange={(e) => setNewTask({ ...newTask, start_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Due Date & Time
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
+                    <input
+                      type="date"
+                      style={{
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '1rem'
+                      }}
+                      value={newTask.due_date}
+                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                    />
+                    <input
+                      type="time"
+                      style={{
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '1rem'
+                      }}
+                      value={newTask.due_time}
+                      onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    min="5"
+                    step="5"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem'
+                    }}
+                    placeholder="30"
+                    value={newTask.estimated_duration}
+                    onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) || 30 })}
+                  />
+                  <small style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                    Estimated time to complete this task
+                  </small>
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>

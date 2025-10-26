@@ -115,7 +115,8 @@ export default function ProjectDetailPage() {
     priority: 'medium',
     start_date: '',
     due_date: '',
-    tags: ''
+    tags: '',
+    duration: 30  // Duration in minutes
   });
 
   // Mobile detection
@@ -207,6 +208,11 @@ export default function ProjectDetailPage() {
       if (newTask.tags && newTask.tags.trim() !== '') {
         taskData.tags = newTask.tags.trim();
       }
+
+      // Add duration if provided
+      if (newTask.duration) {
+        taskData.duration = newTask.duration;
+      }
       
       const createdTask = await taskService.createTask(Number(params?.id), taskData);
       setTasks([...tasks, createdTask]);
@@ -237,7 +243,8 @@ export default function ProjectDetailPage() {
         priority: 'medium',
         start_date: '',
         due_date: '',
-        tags: ''
+        tags: '',
+        duration: 30
       });
       setShowCreateTask(false);
       setError('');
@@ -5885,6 +5892,22 @@ export default function ProjectDetailPage() {
                   value={newTask.due_date}
                         onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
                       />
+              </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Duration (minutes)</label>
+                      <input
+                        type="number"
+                        min="5"
+                        step="5"
+                        className="form-input"
+                        placeholder="30"
+                        value={newTask.duration}
+                        onChange={(e) => setNewTask({ ...newTask, duration: parseInt(e.target.value) || 30 })}
+                      />
+                      <small style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                        Estimated time to complete this task
+                      </small>
               </div>
 
                     <div className="form-group">
