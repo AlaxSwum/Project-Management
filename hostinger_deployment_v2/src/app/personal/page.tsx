@@ -959,74 +959,44 @@ export default function PersonalTaskManager() {
 
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Start Date & Time
+                      Due Date
                     </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
-                      <input
-                        type="date"
-                        style={{
-                          padding: '0.75rem',
-                          border: '2px solid #E5E7EB',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          transition: 'border-color 0.2s ease'
-                        }}
-                        value={newTask.start_date}
-                        onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
-                        onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                        onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                      />
-                      <input
-                        type="time"
-                        style={{
-                          padding: '0.75rem',
-                          border: '2px solid #E5E7EB',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          transition: 'border-color 0.2s ease'
-                        }}
-                        value={newTask.start_time}
-                        onChange={(e) => setNewTask({ ...newTask, start_time: e.target.value })}
-                        onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                        onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                      />
-                    </div>
+                    <input
+                      type="date"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.due_date}
+                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Due Date & Time
+                      Due Time
                     </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
-                      <input
-                        type="date"
-                        style={{
-                          padding: '0.75rem',
-                          border: '2px solid #E5E7EB',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          transition: 'border-color 0.2s ease'
-                        }}
-                        value={newTask.due_date}
-                        onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                        onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                        onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                      />
-                      <input
-                        type="time"
-                        style={{
-                          padding: '0.75rem',
-                          border: '2px solid #E5E7EB',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          transition: 'border-color 0.2s ease'
-                        }}
-                        value={newTask.due_time}
-                        onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
-                        onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                        onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                      />
-                    </div>
+                    <input
+                      type="time"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.due_time}
+                      onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>
@@ -1051,9 +1021,6 @@ export default function PersonalTaskManager() {
                       onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
                       onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
-                    <small style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
-                      Estimated time to complete this task
-                    </small>
                   </div>
 
                   <div style={{ marginBottom: '1.5rem' }}>
