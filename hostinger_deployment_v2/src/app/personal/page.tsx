@@ -76,8 +76,8 @@ export default function PersonalTaskManager() {
     priority: 'medium' as 'low' | 'medium' | 'high',
     category: '',
     color: '#3B82F6',
-    start_date: new Date().toISOString().split('T')[0],
-    start_time: '09:00'
+    date: new Date().toISOString().split('T')[0],
+    time: '09:00'
   });
 
   // Checklist state
@@ -215,13 +215,13 @@ export default function PersonalTaskManager() {
       }
 
       const supabase = (await import('@/lib/supabase')).supabase;
-      const { data, error} = await supabase
+      const { data, error } = await supabase
         .from('projects_meeting')
         .insert([{
           title: newTask.title,
           description: newTask.description,
-          date: newTask.start_date,
-          time: newTask.start_time,
+          date: newTask.date,
+          time: newTask.time,
           duration: 60,
           event_type: 'task',
           color: newTask.color,
@@ -261,8 +261,8 @@ export default function PersonalTaskManager() {
         priority: 'medium',
         category: '',
         color: '#3B82F6',
-        start_date: new Date().toISOString().split('T')[0],
-        start_time: '09:00'
+        date: new Date().toISOString().split('T')[0],
+        time: '09:00'
       });
       setChecklistItems([]);
       setNewChecklistItem('');
@@ -473,7 +473,7 @@ export default function PersonalTaskManager() {
             fontWeight: '600',
             color: '#1F2937'
           }}>
-            Unscheduled Tasks
+            📋 Unscheduled Tasks
           </h3>
           
           {unscheduledTasks.length === 0 ? (
@@ -765,9 +765,10 @@ export default function PersonalTaskManager() {
               {/* Layout Type Selector */}
               <div style={{ display: 'flex', background: '#ffffff', borderRadius: '12px', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                 {[
-                  { type: 'list', label: 'List' },
-                  { type: 'calendar', label: 'Calendar' }
-                ].map(({ type, label }) => (
+                  { type: 'list', icon: '📋', label: 'List' },
+                  { type: 'calendar', icon: '📅', label: 'Calendar' },
+                  { type: '15min', icon: '⏰', label: '15 Min' }
+                ].map(({ type, icon, label }) => (
                   <button
                     key={type}
                     onClick={() => setLayoutType(type as any)}
@@ -786,7 +787,8 @@ export default function PersonalTaskManager() {
                       gap: '0.25rem'
                     }}
                   >
-                    <span>{label}</span>
+                    <span>{icon}</span>
+                    {!isMobile && <span>{label}</span>}
                   </button>
                 ))}
               </div>
@@ -949,48 +951,6 @@ export default function PersonalTaskManager() {
                     </select>
                   </div>
 
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        transition: 'border-color 0.2s ease'
-                      }}
-                      value={newTask.start_date}
-                      onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #E5E7EB',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        transition: 'border-color 0.2s ease'
-                      }}
-                      value={newTask.start_time}
-                      onChange={(e) => setNewTask({ ...newTask, start_time: e.target.value })}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
-                    />
-                  </div>
-
                   <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
                       Color
@@ -1013,6 +973,48 @@ export default function PersonalTaskManager() {
                         />
                       ))}
                     </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.date}
+                      onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.time}
+                      onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
                   </div>
 
                   <div style={{ marginBottom: '1.5rem' }}>
