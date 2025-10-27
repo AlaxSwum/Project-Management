@@ -218,6 +218,16 @@ export default function PersonalTaskManager() {
       }
 
       const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Calculate duration from start and due time if both are provided
+      let calculatedDuration = newTask.duration;
+      if (newTask.start_time && newTask.due_time) {
+        const startMinutes = parseInt(newTask.start_time.split(':')[0]) * 60 + parseInt(newTask.start_time.split(':')[1]);
+        const dueMinutes = parseInt(newTask.due_time.split(':')[0]) * 60 + parseInt(newTask.due_time.split(':')[1]);
+        calculatedDuration = dueMinutes - startMinutes;
+        if (calculatedDuration < 0) calculatedDuration += 1440; // Handle overnight tasks
+      }
+      
       const { data, error } = await supabase
         .from('projects_meeting')
         .insert([{
@@ -225,7 +235,7 @@ export default function PersonalTaskManager() {
           description: newTask.description,
           date: newTask.start_date, // Use selected start date
           time: newTask.start_time, // Use selected start time
-          duration: newTask.duration, // Use dynamic duration
+          duration: calculatedDuration, // Use calculated or manual duration
           event_type: 'task',
           color: newTask.color,
           created_by_id: parseInt(user?.id?.toString() || '0'),
