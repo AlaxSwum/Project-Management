@@ -76,8 +76,10 @@ export default function PersonalTaskManager() {
     priority: 'medium' as 'low' | 'medium' | 'high',
     category: '',
     color: '#3B82F6',
-    date: new Date().toISOString().split('T')[0],
-    time: '09:00'
+    start_date: new Date().toISOString().split('T')[0],
+    start_time: '09:00',
+    end_date: new Date().toISOString().split('T')[0],
+    end_time: '10:00'
   });
 
   // Checklist state
@@ -215,14 +217,21 @@ export default function PersonalTaskManager() {
       }
 
       const supabase = (await import('@/lib/supabase')).supabase;
+      
+      // Calculate duration from start and end time
+      const startMinutes = parseInt(newTask.start_time.split(':')[0]) * 60 + parseInt(newTask.start_time.split(':')[1]);
+      const endMinutes = parseInt(newTask.end_time.split(':')[0]) * 60 + parseInt(newTask.end_time.split(':')[1]);
+      let duration = endMinutes - startMinutes;
+      if (duration < 0) duration += 1440; // Handle overnight tasks
+      
       const { data, error } = await supabase
         .from('projects_meeting')
         .insert([{
           title: newTask.title,
           description: newTask.description,
-          date: newTask.date,
-          time: newTask.time,
-          duration: 60,
+          date: newTask.start_date,
+          time: newTask.start_time,
+          duration: duration,
           event_type: 'task',
           color: newTask.color,
           created_by_id: parseInt(user?.id?.toString() || '0'),
@@ -261,8 +270,10 @@ export default function PersonalTaskManager() {
         priority: 'medium',
         category: '',
         color: '#3B82F6',
-        date: new Date().toISOString().split('T')[0],
-        time: '09:00'
+        start_date: new Date().toISOString().split('T')[0],
+        start_time: '09:00',
+        end_date: new Date().toISOString().split('T')[0],
+        end_time: '10:00'
       });
       setChecklistItems([]);
       setNewChecklistItem('');
@@ -977,7 +988,7 @@ export default function PersonalTaskManager() {
 
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Date
+                      Start Date
                     </label>
                     <input
                       type="date"
@@ -989,8 +1000,8 @@ export default function PersonalTaskManager() {
                         fontSize: '1rem',
                         transition: 'border-color 0.2s ease'
                       }}
-                      value={newTask.date}
-                      onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
+                      value={newTask.start_date}
+                      onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
                       onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
                       onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
@@ -998,7 +1009,7 @@ export default function PersonalTaskManager() {
 
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
-                      Time
+                      Start Time
                     </label>
                     <input
                       type="time"
@@ -1010,8 +1021,50 @@ export default function PersonalTaskManager() {
                         fontSize: '1rem',
                         transition: 'border-color 0.2s ease'
                       }}
-                      value={newTask.time}
-                      onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                      value={newTask.start_time}
+                      onChange={(e) => setNewTask({ ...newTask, start_time: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.end_date}
+                      onChange={(e) => setNewTask({ ...newTask, end_date: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.end_time}
+                      onChange={(e) => setNewTask({ ...newTask, end_time: e.target.value })}
                       onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
                       onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
