@@ -64,7 +64,7 @@ export default function PersonalTaskManager() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   
   // Layout and view options
-  const [layoutType, setLayoutType] = useState<'list' | 'calendar' | '15min'>('15min');
+  const [layoutType, setLayoutType] = useState<'list' | 'calendar' | '15min'>('list');
   
   // Drag and drop state for 15-minute timeblocking
   const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
@@ -782,8 +782,7 @@ export default function PersonalTaskManager() {
               <div style={{ display: 'flex', background: '#ffffff', borderRadius: '12px', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                 {[
                   { type: 'list', icon: '📋', label: 'List' },
-                  { type: 'calendar', icon: '📅', label: 'Calendar' },
-                  { type: '15min', icon: '⏰', label: '15 Min' }
+                  { type: 'calendar', icon: '📅', label: 'Calendar' }
                 ].map(({ type, icon, label }) => (
                   <button
                     key={type}
