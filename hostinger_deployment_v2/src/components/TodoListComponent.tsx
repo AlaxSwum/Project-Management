@@ -133,7 +133,10 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       setNewTodo({
         title: '',
         description: '',
-        due_date: ''
+        start_date: new Date().toISOString().split('T')[0],
+        start_time: '09:00',
+        due_date: new Date().toISOString().split('T')[0],
+        due_time: '10:00'
       });
       setShowQuickAdd(false);
       setError('');
@@ -175,7 +178,10 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     setNewTodo({
       title: todo.title,
       description: todo.description || '',
-      due_date: todo.due_date || ''
+      start_date: todo.due_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+      start_time: '09:00',
+      due_date: todo.due_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+      due_time: '10:00'
     });
     setShowQuickAdd(true);
   };
@@ -199,7 +205,10 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       setNewTodo({
         title: '',
         description: '',
-        due_date: ''
+        start_date: new Date().toISOString().split('T')[0],
+        start_time: '09:00',
+        due_date: new Date().toISOString().split('T')[0],
+        due_time: '10:00'
       });
       setShowQuickAdd(false);
       setError('');
