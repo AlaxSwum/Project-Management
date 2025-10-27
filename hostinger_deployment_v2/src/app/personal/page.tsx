@@ -473,7 +473,7 @@ export default function PersonalTaskManager() {
             fontWeight: '600',
             color: '#1F2937'
           }}>
-            📋 Unscheduled Tasks
+            Unscheduled Tasks
           </h3>
           
           {unscheduledTasks.length === 0 ? (
@@ -765,10 +765,9 @@ export default function PersonalTaskManager() {
               {/* Layout Type Selector */}
               <div style={{ display: 'flex', background: '#ffffff', borderRadius: '12px', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                 {[
-                  { type: 'list', icon: '📋', label: 'List' },
-                  { type: 'calendar', icon: '📅', label: 'Calendar' },
-                  { type: '15min', icon: '⏰', label: '15 Min' }
-                ].map(({ type, icon, label }) => (
+                  { type: 'list', label: 'List' },
+                  { type: 'calendar', label: 'Calendar' }
+                ].map(({ type, label }) => (
                   <button
                     key={type}
                     onClick={() => setLayoutType(type as any)}
@@ -787,8 +786,7 @@ export default function PersonalTaskManager() {
                       gap: '0.25rem'
                     }}
                   >
-                    <span>{icon}</span>
-                    {!isMobile && <span>{label}</span>}
+                    <span>{label}</span>
                   </button>
                 ))}
               </div>
