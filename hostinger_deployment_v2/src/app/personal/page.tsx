@@ -968,6 +968,48 @@ export default function PersonalTaskManager() {
 
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.start_date}
+                      onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      value={newTask.start_time}
+                      onChange={(e) => setNewTask({ ...newTask, start_time: e.target.value })}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
                       Due Date
                     </label>
                     <input
