@@ -867,6 +867,15 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
                   autoFocus
                 />
               </div>
+              <div className="form-group">
+                <label className="form-label">Due Date</label>
+                <input
+                  type="date"
+                  value={newTodo.due_date}
+                  onChange={(e) => setNewTodo({ ...newTodo, due_date: e.target.value })}
+                  className="form-input"
+                />
+              </div>
             </div>
 
             <div className="form-row">
@@ -883,38 +892,22 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Start Date & Time</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
-                  <input
-                    type="date"
-                    value={newTodo.start_date}
-                    onChange={(e) => setNewTodo({ ...newTodo, start_date: e.target.value })}
-                    className="form-input"
-                  />
-                  <input
-                    type="time"
-                    value={newTodo.start_time}
-                    onChange={(e) => setNewTodo({ ...newTodo, start_time: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
+                <label className="form-label">Start Time</label>
+                <input
+                  type="time"
+                  value={newTodo.start_time}
+                  onChange={(e) => setNewTodo({ ...newTodo, start_time: e.target.value })}
+                  className="form-input"
+                />
               </div>
               <div className="form-group">
-                <label className="form-label">Due Date & Time</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
-                  <input
-                    type="date"
-                    value={newTodo.due_date}
-                    onChange={(e) => setNewTodo({ ...newTodo, due_date: e.target.value })}
-                    className="form-input"
-                  />
-                  <input
-                    type="time"
-                    value={newTodo.due_time}
-                    onChange={(e) => setNewTodo({ ...newTodo, due_time: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
+                <label className="form-label">Due Time</label>
+                <input
+                  type="time"
+                  value={newTodo.due_time}
+                  onChange={(e) => setNewTodo({ ...newTodo, due_time: e.target.value })}
+                  className="form-input"
+                />
               </div>
             </div>
 
