@@ -669,6 +669,9 @@ export default function PersonalTaskManager() {
     setNewTask(getDefaultTaskForm());
     setSelectedTask(null);
     setIsEditingTask(false);
+    setChecklistItems([]);
+    setNewChecklistItem('');
+    setLoadedChecklistItems([]);
   };
 
   const resetTimeBlockForm = () => {
