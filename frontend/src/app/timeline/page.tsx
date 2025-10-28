@@ -228,10 +228,29 @@ export default function TimelineRoadmapPage() {
   }, [selectedFolder]);
 
   const fetchAvailableTeamMembers = async () => {
+    if (!selectedFolder) return;
+    
     try {
+      // Get only folder members (team members assigned to this project)
+      const { data: memberData, error: memberError } = await supabase
+        .from('timeline_folder_members')
+        .select('user_id')
+        .eq('folder_id', selectedFolder.id);
+      
+      if (memberError) throw memberError;
+      
+      const memberIds = memberData?.map(m => m.user_id) || [];
+      
+      if (memberIds.length === 0) {
+        setAvailableTeamMembers([]);
+        return;
+      }
+      
+      // Get user details for folder members only
       const { data, error } = await supabase
         .from('auth_user')
         .select('id, name, email')
+        .in('id', memberIds)
         .eq('is_active', true)
         .order('name', { ascending: true });
       
@@ -1143,11 +1162,12 @@ export default function TimelineRoadmapPage() {
                                   cursor: 'pointer',
                                   opacity: isCompleted ? 0.7 : 1
                                 }}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   loadTimelineItemDetails(item);
                                 }}
                                 >
-                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('ken_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
+                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('timeline_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
                                   <div style={{ flex: 1 }}>
                                     <div style={{ fontWeight: '600', marginBottom: '4px', textDecoration: isCompleted ? 'line-through' : 'none' }}>{item.title}</div>
                                     <div style={{ fontSize: '11px', color: '#64748B' }}>
