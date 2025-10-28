@@ -336,23 +336,30 @@ export default function TimelineRoadmapPage() {
     try {
       const { data, error } = await supabase
         .from('timeline_folder_members')
-        .select(`
-          *,
-          auth_user (id, name, email)
-        `)
+        .select('*')
         .eq('folder_id', selectedFolder.id);
 
       if (error) throw error;
 
-      const members = (data || []).map(m => ({
-        ...m,
-        user_name: m.auth_user?.name || 'Unknown',
-        user_email: m.auth_user?.email || ''
+      // Get user details separately for each member
+      const membersWithUsers = await Promise.all((data || []).map(async (m) => {
+        const { data: userData } = await supabase
+          .from('auth_user')
+          .select('id, name, email')
+          .eq('id', m.user_id)
+          .single();
+        
+        return {
+          ...m,
+          user_name: userData?.name || 'Unknown',
+          user_email: userData?.email || ''
+        };
       }));
 
-      setFolderMembers(members);
+      setFolderMembers(membersWithUsers);
     } catch (error) {
       console.error('Error fetching folder members:', error);
+      setFolderMembers([]); // Set empty array on error
     }
   };
 
