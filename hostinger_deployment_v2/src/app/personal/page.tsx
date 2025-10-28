@@ -222,7 +222,7 @@ export default function PersonalTaskManager() {
       const startMinutes = parseInt(newTask.start_time.split(':')[0]) * 60 + parseInt(newTask.start_time.split(':')[1]);
       const endMinutes = parseInt(newTask.end_time.split(':')[0]) * 60 + parseInt(newTask.end_time.split(':')[1]);
       let duration = endMinutes - startMinutes;
-      if (duration < 0) duration += 1440; // Handle overnight tasks
+      if (duration < 0) duration += 1440;
       
       const { data, error } = await supabase
         .from('projects_meeting')
@@ -484,7 +484,7 @@ export default function PersonalTaskManager() {
             fontWeight: '600',
             color: '#1F2937'
           }}>
-            📋 Unscheduled Tasks
+            Unscheduled Tasks
           </h3>
           
           {unscheduledTasks.length === 0 ? (
@@ -776,9 +776,9 @@ export default function PersonalTaskManager() {
               {/* Layout Type Selector */}
               <div style={{ display: 'flex', background: '#ffffff', borderRadius: '12px', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                 {[
-                  { type: 'list', icon: '📋', label: 'List' },
-                  { type: 'calendar', icon: '📅', label: 'Calendar' },
-                  { type: '15min', icon: '⏰', label: '15 Min' }
+                  { type: 'list', icon: '', label: 'List' },
+                  { type: 'calendar', icon: '', label: 'Calendar' },
+                  { type: '15min', icon: '', label: '15 Min' }
                 ].map(({ type, icon, label }) => (
                   <button
                     key={type}
@@ -997,13 +997,10 @@ export default function PersonalTaskManager() {
                         padding: '0.75rem',
                         border: '2px solid #E5E7EB',
                         borderRadius: '8px',
-                        fontSize: '1rem',
-                        transition: 'border-color 0.2s ease'
+                        fontSize: '1rem'
                       }}
                       value={newTask.start_date}
                       onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
                   </div>
 
@@ -1018,13 +1015,10 @@ export default function PersonalTaskManager() {
                         padding: '0.75rem',
                         border: '2px solid #E5E7EB',
                         borderRadius: '8px',
-                        fontSize: '1rem',
-                        transition: 'border-color 0.2s ease'
+                        fontSize: '1rem'
                       }}
                       value={newTask.start_time}
                       onChange={(e) => setNewTask({ ...newTask, start_time: e.target.value })}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
                   </div>
 
@@ -1039,13 +1033,10 @@ export default function PersonalTaskManager() {
                         padding: '0.75rem',
                         border: '2px solid #E5E7EB',
                         borderRadius: '8px',
-                        fontSize: '1rem',
-                        transition: 'border-color 0.2s ease'
+                        fontSize: '1rem'
                       }}
                       value={newTask.end_date}
                       onChange={(e) => setNewTask({ ...newTask, end_date: e.target.value })}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
                   </div>
 
@@ -1060,13 +1051,10 @@ export default function PersonalTaskManager() {
                         padding: '0.75rem',
                         border: '2px solid #E5E7EB',
                         borderRadius: '8px',
-                        fontSize: '1rem',
-                        transition: 'border-color 0.2s ease'
+                        fontSize: '1rem'
                       }}
                       value={newTask.end_time}
                       onChange={(e) => setNewTask({ ...newTask, end_time: e.target.value })}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
                     />
                   </div>
 
