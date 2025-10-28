@@ -1,0 +1,49 @@
+=============================================
+COPY THESE COMMANDS TO HOSTINGER TERMINAL
+=============================================
+
+ONE COMMAND DEPLOYMENT (Copy everything below):
+
+cd domains/focus-project.co.uk/public_html && git pull origin main && npm install && npm run build && pm2 restart focus-project && echo "✅ DEPLOYMENT COMPLETE!"
+
+=============================================
+
+OR RUN STEP BY STEP:
+
+1. Navigate to project:
+cd domains/focus-project.co.uk/public_html
+
+2. Pull latest code:
+git pull origin main
+
+3. Install dependencies:
+npm install
+
+4. Build application:
+npm run build
+
+5. Restart server:
+pm2 restart focus-project
+
+6. Check status:
+pm2 list
+
+=============================================
+
+VERIFY DEPLOYMENT:
+
+pm2 logs focus-project --lines 20
+
+=============================================
+
+Visit: https://focus-project.co.uk/personal
+Click: "+ New Task"
+Look for: "To-Do List (Optional)" section
+
+✅ FEATURE DEPLOYED!
+
+
+
+
+
+

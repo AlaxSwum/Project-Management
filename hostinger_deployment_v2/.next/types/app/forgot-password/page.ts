@@ -1,4 +1,4 @@
-// File: /Users/swumpyaesone/Documents/project_management/frontend/src/app/forgot-password/page.tsx
+// File: /Users/swumpyaesone/Documents/project_management/hostinger_deployment_v2/src/app/forgot-password/page.tsx
 import * as entry from '../../../../src/app/forgot-password/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
