@@ -881,6 +881,27 @@ export default function TimelineRoadmapPage() {
                   </button>
                 </div>
 
+                {selectedFolder && (
+                  <button
+                    onClick={() => setShowMembersModal(true)}
+                    style={{
+                      padding: '12px 20px',
+                      background: 'white',
+                      color: '#374151',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <UserGroupIcon style={{ width: '18px', height: '18px' }} />
+                    Team ({folderMembers.length})
+                  </button>
+                )}
+                
                 <button
                   onClick={() => setShowReportsModal(true)}
                   style={{
@@ -1196,9 +1217,27 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{marginBottom: '20px'}}>
+              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Parent Category (Optional)</label>
+              <select value={newCategory.parent_category_id || ''} onChange={(e) => setNewCategory({...newCategory, parent_category_id: e.target.value ? parseInt(e.target.value) : null})} style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}>
+                <option value="">None (Main Category)</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>↳ {cat.name}</option>
+                ))}
+              </select>
+              <div style={{fontSize: '12px', color: '#64748B', marginTop: '4px'}}>
+                Select a parent to create a subcategory
+              </div>
+            </div>
+            
+            <div style={{marginBottom: '20px'}}>
+              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Description</label>
+              <textarea value={newCategory.description} onChange={(e) => setNewCategory({...newCategory, description: e.target.value})} rows={2} placeholder="Optional description..." style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}} />
+            </div>
+            
+            <div style={{marginBottom: '20px'}}>
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Color</label>
               <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
-                {['#F59E0B', '#8B5CF6', '#10B981', '#3B82F6', '#EF4444', '#EC4899'].map(color => (
+                {['#F59E0B', '#8B5CF6', '#10B981', '#3B82F6', '#EF4444', '#EC4899', '#F97316', '#14B8A6'].map(color => (
                   <button key={color} onClick={() => setNewCategory({...newCategory, color})} style={{width: '40px', height: '40px', borderRadius: '8px', background: color, border: newCategory.color === color ? '3px solid #1F2937' : 'none', cursor: 'pointer'}} />
                 ))}
               </div>
@@ -1296,6 +1335,184 @@ export default function TimelineRoadmapPage() {
             <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
               <button onClick={() => {setShowItemModal(false); resetItemForm();}} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Cancel</button>
               <button onClick={handleCreateTimelineItem} style={{padding: '12px 24px', background: '#F59E0B', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Create Item</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MANAGE FOLDER MEMBERS MODAL */}
+      {showMembersModal && selectedFolder && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'}} onClick={() => setShowMembersModal(false)}>
+          <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Manage Team Members</h3>
+            
+            <div style={{marginBottom: '24px'}}>
+              <div style={{display: 'flex', gap: '8px', marginBottom: '16px'}}>
+                <input 
+                  type="email" 
+                  placeholder="Enter team member email..."
+                  id="memberEmail"
+                  style={{flex: 1, padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}
+                />
+                <select id="memberRole" style={{padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}>
+                  <option value="viewer">Viewer</option>
+                  <option value="editor">Editor</option>
+                  <option value="manager">Manager</option>
+                </select>
+                <button 
+                  onClick={async () => {
+                    const email = (document.getElementById('memberEmail') as HTMLInputElement).value;
+                    const role = (document.getElementById('memberRole') as HTMLSelectElement).value;
+                    if (email.trim()) {
+                      try {
+                        const { data: userData } = await supabase.from('auth_user').select('id').eq('email', email).single();
+                        if (userData) {
+                          await supabase.from('timeline_folder_members').insert([{
+                            folder_id: selectedFolder.id,
+                            user_id: userData.id,
+                            role,
+                            can_edit: role !== 'viewer',
+                            can_delete: role === 'manager',
+                            can_manage_members: role === 'manager',
+                            can_manage_budget: role === 'manager'
+                          }]);
+                          fetchFolderMembers();
+                          setSuccessMessage('Member added successfully!');
+                          (document.getElementById('memberEmail') as HTMLInputElement).value = '';
+                        }
+                      } catch (err) {
+                        setError('Failed to add member');
+                      }
+                    }
+                  }}
+                  style={{padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>Current Members</h4>
+              {folderMembers.map(member => (
+                <div key={member.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#F9FAFB', borderRadius: '8px', marginBottom: '8px'}}>
+                  <div>
+                    <div style={{fontWeight: '600', fontSize: '14px'}}>{member.user_name}</div>
+                    <div style={{fontSize: '12px', color: '#64748B'}}>{member.user_email}</div>
+                  </div>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                    <span style={{padding: '4px 12px', background: member.role === 'owner' ? '#3B82F6' : member.role === 'manager' ? '#10B981' : '#6B7280', color: 'white', borderRadius: '12px', fontSize: '12px', fontWeight: '600'}}>
+                      {member.role}
+                    </span>
+                    {member.role !== 'owner' && (
+                      <button onClick={async () => {
+                        if (confirm('Remove this member?')) {
+                          await supabase.from('timeline_folder_members').delete().eq('id', member.id);
+                          fetchFolderMembers();
+                        }
+                      }} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'}}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{marginTop: '24px', display: 'flex', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowMembersModal(false)} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VISUAL REPORTS MODAL */}
+      {showReportsModal && selectedFolder && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'}} onClick={() => setShowReportsModal(false)}>
+          <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '900px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Visual Reports & Analytics</h3>
+            
+            {/* Overall Progress */}
+            <div style={{marginBottom: '32px'}}>
+              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Overall Project Completion</h4>
+              <div style={{background: '#F1F5F9', borderRadius: '12px', padding: '20px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                  <span style={{fontWeight: '600'}}>Total Progress</span>
+                  <span style={{fontWeight: '700', color: '#3B82F6'}}>{Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%</span>
+                </div>
+                <div style={{width: '100%', height: '24px', background: '#E5E7EB', borderRadius: '12px', overflow: 'hidden'}}>
+                  <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)', transition: 'width 0.3s ease'}} />
+                </div>
+              </div>
+            </div>
+
+            {/* Budget Overview */}
+            <div style={{marginBottom: '32px'}}>
+              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Budget Analysis</h4>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
+                <div style={{background: '#EFF6FF', padding: '16px', borderRadius: '8px'}}>
+                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Planned Budget</div>
+                  <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>
+                    ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{background: '#ECFDF5', padding: '16px', borderRadius: '8px'}}>
+                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Actual Spending</div>
+                  <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>
+                    ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{background: '#FEF3C7', padding: '16px', borderRadius: '8px'}}>
+                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Variance</div>
+                  <div style={{fontSize: '24px', fontWeight: '700', color: '#F59E0B'}}>
+                    ${Math.abs(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) - timelineItems.reduce((sum, item) => sum + item.planned_budget, 0)).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Breakdown */}
+            <div style={{marginBottom: '32px'}}>
+              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Progress by Category</h4>
+              {categories.map(category => {
+                const categoryItems = timelineItems.filter(item => item.category_id === category.id);
+                const avgCompletion = categoryItems.length > 0 ? Math.round(categoryItems.reduce((sum, item) => sum + item.completion_percentage, 0) / categoryItems.length) : 0;
+                
+                return (
+                  <div key={category.id} style={{marginBottom: '16px'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                      <span style={{fontWeight: '600', color: category.color}}>{category.name}</span>
+                      <span style={{fontWeight: '600'}}>{avgCompletion}%</span>
+                    </div>
+                    <div style={{width: '100%', height: '16px', background: '#E5E7EB', borderRadius: '8px', overflow: 'hidden'}}>
+                      <div style={{width: `${avgCompletion}%`, height: '100%', background: category.color, transition: 'width 0.3s ease'}} />
+                    </div>
+                    <div style={{fontSize: '12px', color: '#64748B', marginTop: '4px'}}>
+                      {categoryItems.filter(i => i.status === 'completed').length} of {categoryItems.length} items completed
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Status Distribution */}
+            <div style={{marginBottom: '32px'}}>
+              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Status Distribution</h4>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px'}}>
+                {['not_started', 'in_progress', 'completed', 'on_hold', 'delayed'].map(status => {
+                  const count = timelineItems.filter(i => i.status === status).length;
+                  return (
+                    <div key={status} style={{padding: '12px', background: getStatusColor(status as TimelineItem['status']) + '20', borderRadius: '8px', textAlign: 'center'}}>
+                      <div style={{fontSize: '24px', fontWeight: '700', color: getStatusColor(status as TimelineItem['status'])}}>{count}</div>
+                      <div style={{fontSize: '11px', color: '#64748B', marginTop: '4px', textTransform: 'capitalize'}}>{status.replace('_', ' ')}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowReportsModal(false)} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
             </div>
           </div>
         </div>
