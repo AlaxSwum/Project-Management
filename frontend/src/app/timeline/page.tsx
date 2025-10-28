@@ -190,6 +190,7 @@ export default function TimelineRoadmapPage() {
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [selectedItem, setSelectedItem] = useState<TimelineItem | null>(null);
   const [isEditingItem, setIsEditingItem] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   // Phases (user can customize these per project)
   const defaultPhases = ['Planning', 'Design', 'Development', 'Testing', 'Launch', 'Maintenance'];
@@ -1048,7 +1049,7 @@ export default function TimelineRoadmapPage() {
                             {/* Category Row */}
                             <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', background: '#F1F5F9' }}>
                               <div style={{ 
-                                background: category.color + '20', 
+                                background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
                                 padding: '16px', 
                                 paddingLeft: `${16 + indentPadding}px`,
                                 fontWeight: '700', 
@@ -1056,14 +1057,22 @@ export default function TimelineRoadmapPage() {
                                 borderLeft: `4px solid ${category.color}`,
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'space-between'
-                              }}>
+                                justifyContent: 'space-between',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onClick={() => setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)}
+                              >
                                 <span>{level > 0 ? '└ ' : ''}{category.name}</span>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                   <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
                                     {categoryItems.length}
                                   </span>
-                                  <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete category "${category.name}"?`)) {await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); fetchCategories(); setSuccessMessage('Category deleted');}}} style={{ padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Delete</button>
+                                  {selectedCategoryId === category.id && (
+                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete category "${category.name}"?`)) {await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); fetchCategories(); setSelectedCategoryId(null); setSuccessMessage(`"${category.name}" deleted`);}}} style={{ padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      Delete "{category.name}"
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                               {timeColumns.map((_, idx) => (
