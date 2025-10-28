@@ -475,7 +475,7 @@ export default function TimelineRoadmapPage() {
       // Build description with checklist
       let fullDescription = newItem.description || '';
       if (checklistItems.length > 0) {
-        const checklistText = '\n\n📋 Checklist:\n' + 
+        const checklistText = '\n\nChecklist:\n' + 
           checklistItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
         fullDescription += checklistText;
       }
@@ -777,7 +777,7 @@ export default function TimelineRoadmapPage() {
                 >
                   {folders.map(folder => (
                     <option key={folder.id} value={folder.id}>
-                      📁 {folder.name}
+                      {folder.name}
                     </option>
                   ))}
                 </select>
