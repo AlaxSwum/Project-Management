@@ -1427,22 +1427,32 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{marginBottom: '20px'}}>
-              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Assign Team Members</label>
-              <select 
-                multiple 
-                value={newItem.team_member_ids.map(id => id.toString())}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions).map(opt => parseInt(opt.value));
-                  setNewItem({...newItem, team_member_ids: selected});
-                }}
-                style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px', minHeight: '100px'}}
-              >
-                {availableTeamMembers.map(member => (
-                  <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
-                ))}
-              </select>
-              <div style={{fontSize: '12px', color: '#64748B', marginTop: '4px'}}>
-                Hold Cmd/Ctrl to select multiple members
+              <label style={{display: 'block', marginBottom: '12px', fontWeight: '600'}}>Assign Team Members</label>
+              <div style={{border: '2px solid #E5E7EB', borderRadius: '8px', padding: '16px', background: '#F9FAFB', maxHeight: '200px', overflowY: 'auto'}}>
+                {availableTeamMembers.length > 0 ? availableTeamMembers.map(member => (
+                  <label key={member.id} style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', background: 'white', borderRadius: '6px', marginBottom: '8px', cursor: 'pointer', border: newItem.team_member_ids.includes(member.id) ? '2px solid #3B82F6' : '2px solid transparent'}}>
+                    <input
+                      type="checkbox"
+                      checked={newItem.team_member_ids.includes(member.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setNewItem({...newItem, team_member_ids: [...newItem.team_member_ids, member.id]});
+                        } else {
+                          setNewItem({...newItem, team_member_ids: newItem.team_member_ids.filter(id => id !== member.id)});
+                        }
+                      }}
+                      style={{width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3B82F6'}}
+                    />
+                    <div style={{flex: 1}}>
+                      <div style={{fontWeight: '600', fontSize: '14px', color: '#374151'}}>{member.name}</div>
+                      <div style={{fontSize: '12px', color: '#64748B'}}>{member.email}</div>
+                    </div>
+                  </label>
+                )) : (
+                  <p style={{textAlign: 'center', color: '#9CA3AF', fontSize: '14px', padding: '20px'}}>
+                    No team members. Add members in Team settings.
+                  </p>
+                )}
               </div>
             </div>
             
