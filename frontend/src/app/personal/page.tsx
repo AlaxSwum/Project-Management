@@ -140,6 +140,10 @@ export default function PersonalTaskManager() {
   
   const [newTask, setNewTask] = useState(getDefaultTaskForm());
   
+  // Checklist state
+  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState('');
+  
   const [newTimeBlock, setNewTimeBlock] = useState({
     title: '',
     description: '',
@@ -341,16 +345,36 @@ export default function PersonalTaskManager() {
         return;
       }
 
+      // Build description with checklist items
+      let fullDescription = newTask.description || '';
+      if (checklistItems.length > 0) {
+        const checklistText = '\n\n📋 Discussion Points / Checklist:\n' + 
+          checklistItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
+        fullDescription += checklistText;
+      }
+
+      // Calculate estimated_duration from start and due dates
+      let estimatedDuration = 60; // default 60 minutes
+      if (newTask.scheduled_start && newTask.due_date) {
+        const start = new Date(newTask.scheduled_start);
+        const end = new Date(newTask.due_date);
+        const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+        if (diffMinutes > 0) {
+          estimatedDuration = diffMinutes;
+        }
+      }
+
       const taskData = {
           title: newTask.title,
-          description: newTask.description,
+          description: fullDescription,
         status: newTask.status,
         priority: newTask.priority,
         category: newTask.category,
         user_id: user?.id,
         tags: newTask.tags.length > 0 ? newTask.tags : null,
         scheduled_start: newTask.scheduled_start ? new Date(newTask.scheduled_start).toISOString() : null,
-        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null
+        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
+        estimated_duration: estimatedDuration
       };
 
       // Try personal_tasks first, fallback to projects_meeting
@@ -664,6 +688,8 @@ export default function PersonalTaskManager() {
     setNewTask(getDefaultTaskForm());
     setSelectedTask(null);
     setIsEditingTask(false);
+    setChecklistItems([]);
+    setNewChecklistItem('');
   };
 
   const resetTimeBlockForm = () => {
@@ -1343,46 +1369,6 @@ export default function PersonalTaskManager() {
               </div>
               
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {/* Duration Selector for Time Blocking */}
-          <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  background: '#ffffff', 
-                  padding: '8px 12px', 
-                  borderRadius: '8px', 
-                  border: '2px solid #e5e7eb',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                }}>
-                  <label style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: '600', 
-                    color: '#374151', 
-                    whiteSpace: 'nowrap' 
-                  }}>
-                    Duration:
-                  </label>
-                  <select
-                    value={selectedDuration}
-                    onChange={(e) => setSelectedDuration(parseInt(e.target.value))}
-                    style={{
-                      padding: '6px 10px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: '#ffffff',
-                      color: '#374151',
-                      minWidth: '80px'
-                    }}
-                  >
-                    {durationOptions.map(duration => (
-                      <option key={duration} value={duration}>
-                        {duration} min
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <button
                   onClick={() => {
                     setNewTask(getDefaultTaskForm());
@@ -2270,22 +2256,22 @@ export default function PersonalTaskManager() {
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '12px', 
-                  fontWeight: '600', 
-                  color: '#374151', 
-                  fontSize: '16px' 
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '12px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '16px' 
                 }}>Start Date & Time</label>
-                <input
-                  type="datetime-local"
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    border: '2px solid #E2E8F0',
-                    borderRadius: '12px',
-                    fontSize: '15px',
-                    background: '#FAFBFC',
+              <input
+                type="datetime-local"
+                style={{
+                  width: '100%',
+                  padding: '16px 20px',
+                  border: '2px solid #E2E8F0',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  background: '#FAFBFC',
                     boxSizing: 'border-box',
                     transition: 'all 0.2s ease'
                   }}
@@ -2323,9 +2309,9 @@ export default function PersonalTaskManager() {
                     background: '#FAFBFC',
                     boxSizing: 'border-box',
                     transition: 'all 0.2s ease'
-                  }}
-                  value={newTask.due_date}
-                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                }}
+                value={newTask.due_date}
+                onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
                   onFocus={(e) => {
                     e.target.style.borderColor = '#3B82F6';
                     e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
@@ -2337,6 +2323,142 @@ export default function PersonalTaskManager() {
                     e.target.style.background = '#FAFBFC';
                   }}
                 />
+              </div>
+            </div>
+
+            {/* Checklist / Discussion Points Section */}
+            <div style={{ marginBottom: '32px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '12px', 
+                fontWeight: '600', 
+                color: '#374151', 
+                fontSize: '16px' 
+              }}>Discussion Points / Checklist</label>
+              
+              <div style={{ 
+                border: '2px solid #E2E8F0', 
+                borderRadius: '12px', 
+                padding: '16px',
+                background: '#FAFBFC'
+              }}>
+                {/* Add New Item Input */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="Add a checklist item or discussion point..."
+                    value={newChecklistItem}
+                    onChange={(e) => setNewChecklistItem(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newChecklistItem.trim()) {
+                          setChecklistItems([...checklistItems, newChecklistItem.trim()]);
+                          setNewChecklistItem('');
+                        }
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      border: '1px solid #D1D5DB',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      background: 'white'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newChecklistItem.trim()) {
+                        setChecklistItems([...checklistItems, newChecklistItem.trim()]);
+                        setNewChecklistItem('');
+                      }
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      background: '#3B82F6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {/* Checklist Items List */}
+                {checklistItems.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {checklistItems.map((item, index) => (
+                      <div 
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px',
+                          background: 'white',
+                          borderRadius: '8px',
+                          border: '1px solid #E5E7EB'
+                        }}
+                      >
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: '#3B82F6',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          flexShrink: 0
+                        }}>
+                          {index + 1}
+                        </div>
+                        <span style={{ flex: 1, fontSize: '14px', color: '#374151' }}>
+                          {item}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setChecklistItems(checklistItems.filter((_, i) => i !== index));
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#DC2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {checklistItems.length === 0 && (
+                  <p style={{ 
+                    textAlign: 'center', 
+                    color: '#9CA3AF', 
+                    fontSize: '14px', 
+                    margin: 0,
+                    padding: '20px',
+                    fontStyle: 'italic'
+                  }}>
+                    No checklist items added yet. Add items above to create a task checklist.
+                  </p>
+                )}
               </div>
             </div>
             
@@ -3439,7 +3561,9 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       {scheduledTasks.map(task => {
                         // Determine start and end times from scheduled_start or due_date
                         const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
-                        const endTime = task.scheduled_end ? new Date(task.scheduled_end) : (startTime ? new Date(startTime.getTime() + 60 * 60 * 1000) : null); // Default 1 hour if no end time
+                        // Use actual estimated_duration from task, default to 60 minutes if not set
+                        const durationMs = (task.estimated_duration || 60) * 60 * 1000;
+                        const endTime = task.scheduled_end ? new Date(task.scheduled_end) : (startTime ? new Date(startTime.getTime() + durationMs) : null);
                         
                         return (
                           <div
