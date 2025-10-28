@@ -121,6 +121,9 @@ export default function PersonalTaskManager() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(9, 0, 0, 0);
     
+    const today = new Date();
+    today.setHours(9, 0, 0, 0);
+    
     return {
     title: '',
     description: '',
@@ -128,6 +131,7 @@ export default function PersonalTaskManager() {
       priority: 'medium' as PersonalTask['priority'],
     category: '',
       tags: [] as string[],
+      scheduled_start: today.toISOString().slice(0, 16),
       due_date: tomorrow.toISOString().slice(0, 16),
       estimated_duration: 60,
       is_recurring: false
@@ -345,6 +349,7 @@ export default function PersonalTaskManager() {
         category: newTask.category,
         user_id: user?.id,
         tags: newTask.tags.length > 0 ? newTask.tags : null,
+        scheduled_start: newTask.scheduled_start ? new Date(newTask.scheduled_start).toISOString() : null,
         due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null
       };
 
@@ -684,6 +689,7 @@ export default function PersonalTaskManager() {
       priority: task.priority,
       category: task.category || '',
       tags: task.tags || [],
+      scheduled_start: task.scheduled_start ? new Date(task.scheduled_start).toISOString().slice(0, 16) : '',
       due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
       estimated_duration: 60,
       is_recurring: false
@@ -2262,28 +2268,76 @@ export default function PersonalTaskManager() {
               {/* Duration field removed as requested */}
                   </div>
 
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '12px', 
-                fontWeight: '600', 
-                color: '#374151', 
-                fontSize: '16px' 
-              }}>Due Date</label>
-              <input
-                type="datetime-local"
-                style={{
-                  width: '100%',
-                  padding: '16px 20px',
-                  border: '2px solid #E2E8F0',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                  background: '#FAFBFC',
-                  boxSizing: 'border-box'
-                }}
-                value={newTask.due_date}
-                onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '12px', 
+                  fontWeight: '600', 
+                  color: '#374151', 
+                  fontSize: '16px' 
+                }}>Start Date & Time</label>
+                <input
+                  type="datetime-local"
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    border: '2px solid #E2E8F0',
+                    borderRadius: '12px',
+                    fontSize: '15px',
+                    background: '#FAFBFC',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.2s ease'
+                  }}
+                  value={newTask.scheduled_start}
+                  onChange={(e) => setNewTask({ ...newTask, scheduled_start: e.target.value })}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    e.target.style.background = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E2E8F0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.background = '#FAFBFC';
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '12px', 
+                  fontWeight: '600', 
+                  color: '#374151', 
+                  fontSize: '16px' 
+                }}>Due Date & Time</label>
+                <input
+                  type="datetime-local"
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    border: '2px solid #E2E8F0',
+                    borderRadius: '12px',
+                    fontSize: '15px',
+                    background: '#FAFBFC',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.2s ease'
+                  }}
+                  value={newTask.due_date}
+                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3B82F6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    e.target.style.background = 'white';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E2E8F0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.background = '#FAFBFC';
+                  }}
+                />
+              </div>
             </div>
             
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', marginTop: '40px', flexWrap: 'wrap' }}>
