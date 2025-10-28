@@ -36,6 +36,15 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+interface ChecklistItem {
+  id?: number;
+  task_id: number;
+  user_id: number;
+  item_text: string;
+  is_completed: boolean;
+  item_order: number;
+}
+
 interface PersonalTask {
   id: string;
   user_id: string;
@@ -55,6 +64,7 @@ interface PersonalTask {
   created_at: string;
   updated_at: string;
   completed_at?: string;
+  checklist_items?: ChecklistItem[];
 }
 
 interface PersonalTimeBlock {
@@ -143,6 +153,7 @@ export default function PersonalTaskManager() {
   // Checklist state
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [loadedChecklistItems, setLoadedChecklistItems] = useState<ChecklistItem[]>([]); // For viewing task checklist
   
   const [newTimeBlock, setNewTimeBlock] = useState({
     title: '',
@@ -419,6 +430,30 @@ export default function PersonalTaskManager() {
 
       setTasks(prev => [data, ...prev]);
       setAllTasks(prev => [data, ...prev]); // Also update allTasks
+      
+      // Save checklist items to database if any
+      if (checklistItems.length > 0 && data?.id) {
+        try {
+          const checklistData = checklistItems.map((item, index) => ({
+            task_id: parseInt(data.id.toString()),
+            user_id: parseInt(user?.id?.toString() || '0'),
+            item_text: item,
+            is_completed: false,
+            item_order: index
+          }));
+          
+          const { error: checklistError } = await supabase
+            .from('personal_task_checklist')
+            .insert(checklistData);
+            
+          if (checklistError) {
+            console.error('Error saving checklist items:', checklistError);
+          }
+        } catch (checklistError) {
+          console.error('Error saving checklist items:', checklistError);
+        }
+      }
+      
       setShowTaskModal(false);
       resetTaskForm();
       setSuccessMessage('Task created successfully!');
@@ -436,10 +471,32 @@ export default function PersonalTaskManager() {
         return;
       }
 
+      // Build description with checklist items
+      let fullDescription = newTask.description || '';
+      if (checklistItems.length > 0) {
+        const checklistText = '\n\n📋 Discussion Points / Checklist:\n' + 
+          checklistItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
+        fullDescription += checklistText;
+      }
+
+      // Calculate estimated_duration from start and due dates
+      let estimatedDuration = 60;
+      if (newTask.scheduled_start && newTask.due_date) {
+        const start = new Date(newTask.scheduled_start);
+        const end = new Date(newTask.due_date);
+        const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+        if (diffMinutes > 0) {
+          estimatedDuration = diffMinutes;
+        }
+      }
+
       const updateData = {
         ...newTask,
+        description: fullDescription,
         tags: newTask.tags.length > 0 ? newTask.tags : null,
+        scheduled_start: newTask.scheduled_start ? new Date(newTask.scheduled_start).toISOString() : null,
         due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
+        estimated_duration: estimatedDuration
       };
 
       const { data, error } = await supabase
@@ -453,6 +510,32 @@ export default function PersonalTaskManager() {
         console.error('Error updating task:', error);
         setError('Failed to update task');
         return;
+      }
+
+      // Update checklist items in database
+      try {
+        // Delete existing checklist items
+        await supabase
+          .from('personal_task_checklist')
+          .delete()
+          .eq('task_id', parseInt(selectedTask.id));
+        
+        // Insert new checklist items
+        if (checklistItems.length > 0) {
+          const checklistData = checklistItems.map((item, index) => ({
+            task_id: parseInt(selectedTask.id),
+            user_id: parseInt(user?.id?.toString() || '0'),
+            item_text: item,
+            is_completed: false,
+            item_order: index
+          }));
+          
+          await supabase
+            .from('personal_task_checklist')
+            .insert(checklistData);
+        }
+      } catch (checklistError) {
+        console.error('Error updating checklist items:', checklistError);
       }
 
       setTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task));
@@ -690,6 +773,7 @@ export default function PersonalTaskManager() {
     setIsEditingTask(false);
     setChecklistItems([]);
     setNewChecklistItem('');
+    setLoadedChecklistItems([]);
   };
 
   const resetTimeBlockForm = () => {
@@ -706,7 +790,7 @@ export default function PersonalTaskManager() {
     setIsEditingTimeBlock(false);
   };
 
-  const openEditTask = (task: PersonalTask) => {
+  const openEditTask = async (task: PersonalTask) => {
     setSelectedTask(task);
     setNewTask({
       title: task.title,
@@ -720,6 +804,28 @@ export default function PersonalTaskManager() {
       estimated_duration: 60,
       is_recurring: false
     });
+    
+    // Load checklist items for this task
+    try {
+      const { data: checklistData, error } = await supabase
+        .from('personal_task_checklist')
+        .select('*')
+        .eq('task_id', parseInt(task.id))
+        .order('item_order', { ascending: true });
+        
+      if (!error && checklistData) {
+        setChecklistItems(checklistData.map(item => item.item_text));
+        setLoadedChecklistItems(checklistData);
+      } else {
+        setChecklistItems([]);
+        setLoadedChecklistItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading checklist items:', error);
+      setChecklistItems([]);
+      setLoadedChecklistItems([]);
+    }
+    
     setIsEditingTask(true);
     setShowTaskModal(true);
   };
@@ -2393,57 +2499,110 @@ export default function PersonalTaskManager() {
                 {/* Checklist Items List */}
                 {checklistItems.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {checklistItems.map((item, index) => (
-                      <div 
-                        key={index}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '12px',
-                          background: 'white',
-                          borderRadius: '8px',
-                          border: '1px solid #E5E7EB'
-                        }}
-                      >
-                        <div style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          background: '#3B82F6',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          flexShrink: 0
-                        }}>
-                          {index + 1}
-                        </div>
-                        <span style={{ flex: 1, fontSize: '14px', color: '#374151' }}>
-                          {item}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setChecklistItems(checklistItems.filter((_, i) => i !== index));
-                          }}
+                    {checklistItems.map((item, index) => {
+                      const loadedItem = loadedChecklistItems.find(li => li.item_text === item);
+                      const isCompleted = loadedItem?.is_completed || false;
+                      
+                      return (
+                        <div 
+                          key={index}
                           style={{
-                            padding: '6px 12px',
-                            background: '#DC2626',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                            fontWeight: '600'
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px',
+                            background: 'white',
+                            borderRadius: '8px',
+                            border: '1px solid #E5E7EB'
                           }}
                         >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
+                          {/* Checkbox for marking completion when viewing existing task */}
+                          {isEditingTask && loadedItem?.id && (
+                            <input
+                              type="checkbox"
+                              checked={isCompleted}
+                              onChange={async (e) => {
+                                const checked = e.target.checked;
+                                try {
+                                  await supabase
+                                    .from('personal_task_checklist')
+                                    .update({ is_completed: checked })
+                                    .eq('id', loadedItem.id);
+                                  
+                                  setLoadedChecklistItems(prev => 
+                                    prev.map(item => 
+                                      item.id === loadedItem.id 
+                                        ? { ...item, is_completed: checked }
+                                        : item
+                                    )
+                                  );
+                                } catch (error) {
+                                  console.error('Error updating checklist item:', error);
+                                }
+                              }}
+                              style={{
+                                width: '20px',
+                                height: '20px',
+                                cursor: 'pointer',
+                                accentColor: '#10B981',
+                                flexShrink: 0
+                              }}
+                            />
+                          )}
+                          
+                          {/* Number indicator for new items */}
+                          {!isEditingTask || !loadedItem?.id && (
+                            <div style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: '#3B82F6',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              flexShrink: 0
+                            }}>
+                              {index + 1}
+                            </div>
+                          )}
+                          
+                          <span style={{ 
+                            flex: 1, 
+                            fontSize: '14px', 
+                            color: '#374151',
+                            textDecoration: isCompleted ? 'line-through' : 'none',
+                            opacity: isCompleted ? 0.6 : 1
+                          }}>
+                            {item}
+                          </span>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setChecklistItems(checklistItems.filter((_, i) => i !== index));
+                              if (loadedItem?.id) {
+                                setLoadedChecklistItems(prev => prev.filter(li => li.id !== loadedItem.id));
+                              }
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              background: '#DC2626',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              fontWeight: '600'
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
