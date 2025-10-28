@@ -987,6 +987,7 @@ Your report is now available in the system.`);
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'My Personal', href: '/personal', icon: CalendarDaysIcon },
+    { name: 'Timeline & Roadmap', href: '/timeline', icon: ChartBarIcon },
     { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
