@@ -1059,9 +1059,12 @@ export default function TimelineRoadmapPage() {
                                 justifyContent: 'space-between'
                               }}>
                                 <span>{level > 0 ? '└ ' : ''}{category.name}</span>
-                                <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
-                                  {categoryItems.length}
-                                </span>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
+                                    {categoryItems.length}
+                                  </span>
+                                  <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete category "${category.name}"?`)) {await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); fetchCategories(); setSuccessMessage('Category deleted');}}} style={{ padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Delete</button>
+                                </div>
                               </div>
                               {timeColumns.map((_, idx) => (
                                 <div key={idx} style={{ background: 'white', minHeight: '20px' }} />
@@ -1071,41 +1074,46 @@ export default function TimelineRoadmapPage() {
                             {/* Timeline Items for this Category */}
                             {categoryItems.map(item => {
                             const { startCol, spanCols } = calculateItemPosition(item, timeColumns);
+                            const isCompleted = item.status === 'completed';
                             
                             return (
                               <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
                                 <div style={{ 
-                                  background: 'white', 
+                                  background: isCompleted ? '#F3F4F6' : 'white', 
                                   padding: '12px 16px', 
                                   fontSize: '14px',
-                                  color: '#374151',
+                                  color: isCompleted ? '#9CA3AF' : '#374151',
                                   borderLeft: `3px solid ${getPriorityColor(item.priority)}`,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
-                                  cursor: 'pointer'
+                                  cursor: 'pointer',
+                                  opacity: isCompleted ? 0.7 : 1
                                 }}
                                 onClick={() => {
                                   setSelectedItem(item);
                                   setIsEditingItem(true);
-                                  // Load item details for editing
                                 }}
                                 >
+                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('ken_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>{item.title}</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px', textDecoration: isCompleted ? 'line-through' : 'none' }}>{item.title}</div>
                                     <div style={{ fontSize: '11px', color: '#64748B' }}>
                                       {item.completion_percentage}% • ${item.actual_spending.toLocaleString()}/${item.planned_budget.toLocaleString()}
                                     </div>
                                   </div>
-                                  <div style={{
-                                    padding: '4px 8px',
-                                    background: getStatusColor(item.status) + '20',
-                                    color: getStatusColor(item.status),
-                                    borderRadius: '12px',
-                                    fontSize: '11px',
-                                    fontWeight: '600'
-                                  }}>
-                                    {item.status.replace('_', ' ')}
+                                  <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                                    <div style={{
+                                      padding: '4px 8px',
+                                      background: getStatusColor(item.status) + '20',
+                                      color: getStatusColor(item.status),
+                                      borderRadius: '12px',
+                                      fontSize: '11px',
+                                      fontWeight: '600'
+                                    }}>
+                                      {item.status.replace('_', ' ')}
+                                    </div>
+                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete timeline item "${item.title}"?`)) {await supabase.from('timeline_items').delete().eq('id', item.id); fetchTimelineItems(); setSuccessMessage('Item deleted');}}} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '600'}}>Delete</button>
                                   </div>
                                 </div>
 
@@ -1284,10 +1292,24 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{marginBottom: '20px'}}>
-              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Category</label>
+              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Category & Subcategories</label>
               <select value={newItem.category_id} onChange={(e) => setNewItem({...newItem, category_id: parseInt(e.target.value)})} style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}>
                 <option value={0}>Select category...</option>
-                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                {(() => {
+                  const flattenCats = (cats: Category[], level: number = 0): JSX.Element[] => {
+                    let items: JSX.Element[] = [];
+                    cats.forEach(cat => {
+                      const indent = '  '.repeat(level);
+                      const prefix = level > 0 ? indent + '└ ' : '';
+                      items.push(<option key={cat.id} value={cat.id}>{prefix}{cat.name}</option>);
+                      if (cat.subcategories && cat.subcategories.length > 0) {
+                        items = items.concat(flattenCats(cat.subcategories, level + 1));
+                      }
+                    });
+                    return items;
+                  };
+                  return flattenCats(categories);
+                })()}
               </select>
             </div>
             
