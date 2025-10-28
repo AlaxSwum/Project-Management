@@ -1037,36 +1037,39 @@ export default function TimelineRoadmapPage() {
                       ))}
                     </div>
 
-                    {/* Categories & Timeline Items */}
-                    {categories.map(category => {
-                      const categoryItems = timelineItems.filter(item => item.category_id === category.id);
-                      
-                      return (
-                        <div key={category.id} style={{ marginBottom: '2px' }}>
-                          {/* Category Row */}
-                          <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', background: '#F1F5F9' }}>
-                            <div style={{ 
-                              background: category.color + '20', 
-                              padding: '16px', 
-                              fontWeight: '700', 
-                              color: category.color,
-                              borderLeft: `4px solid ${category.color}`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between'
-                            }}>
-                              <span>{category.name}</span>
-                              <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
-                                {categoryItems.length}
-                              </span>
+                    {/* Categories & Timeline Items - Recursive Rendering */}
+                    {(() => {
+                      const renderCategory = (category: Category, level: number = 0) => {
+                        const categoryItems = timelineItems.filter(item => item.category_id === category.id);
+                        const indentPadding = level * 20;
+                        
+                        return (
+                          <div key={category.id} style={{ marginBottom: '2px' }}>
+                            {/* Category Row */}
+                            <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', background: '#F1F5F9' }}>
+                              <div style={{ 
+                                background: category.color + '20', 
+                                padding: '16px', 
+                                paddingLeft: `${16 + indentPadding}px`,
+                                fontWeight: '700', 
+                                color: category.color,
+                                borderLeft: `4px solid ${category.color}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between'
+                              }}>
+                                <span>{level > 0 ? '└ ' : ''}{category.name}</span>
+                                <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
+                                  {categoryItems.length}
+                                </span>
+                              </div>
+                              {timeColumns.map((_, idx) => (
+                                <div key={idx} style={{ background: 'white', minHeight: '20px' }} />
+                              ))}
                             </div>
-                            {timeColumns.map((_, idx) => (
-                              <div key={idx} style={{ background: 'white', minHeight: '20px' }} />
-                            ))}
-                          </div>
 
-                          {/* Timeline Items for this Category */}
-                          {categoryItems.map(item => {
+                            {/* Timeline Items for this Category */}
+                            {categoryItems.map(item => {
                             const { startCol, spanCols } = calculateItemPosition(item, timeColumns);
                             
                             return (
@@ -1143,9 +1146,20 @@ export default function TimelineRoadmapPage() {
                               </div>
                             );
                           })}
+                          
+                          {/* Render Subcategories Recursively */}
+                          {category.subcategories && category.subcategories.length > 0 && (
+                            <>
+                              {category.subcategories.map(subcat => renderCategory(subcat, level + 1))}
+                            </>
+                          )}
                         </div>
                       );
-                    })}
+                    };
+                    
+                    // Render all root categories
+                    return categories.map(cat => renderCategory(cat, 0));
+                  })()}
 
                     {categories.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9CA3AF' }}>
@@ -1354,12 +1368,12 @@ export default function TimelineRoadmapPage() {
             <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Manage Team Members</h3>
             
             <div style={{marginBottom: '24px'}}>
-              <div style={{display: 'flex', gap: '8px', marginBottom: '16px'}}>
+              <div style={{display: 'flex', gap: '8px', marginBottom: '16px', flexDirection: isMobile ? 'column' : 'row'}}>
                 <input 
                   type="email" 
                   placeholder="Enter team member email..."
                   id="memberEmail"
-                  style={{flex: 1, padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}
+                  style={{flex: 1, padding: '14px 16px', border: '2px solid #E5E7EB', borderRadius: '8px', fontSize: '15px', minWidth: isMobile ? '100%' : '300px'}}
                 />
                 <select id="memberRole" style={{padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}>
                   <option value="viewer">Viewer</option>
