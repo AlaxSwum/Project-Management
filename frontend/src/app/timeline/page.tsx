@@ -191,6 +191,9 @@ export default function TimelineRoadmapPage() {
   const [selectedItem, setSelectedItem] = useState<TimelineItem | null>(null);
   const [isEditingItem, setIsEditingItem] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [loadedChecklistItems, setLoadedChecklistItems] = useState<ChecklistItem[]>([]);
+  const [availableTeamMembers, setAvailableTeamMembers] = useState<{id: number; name: string; email: string}[]>([]);
+  const [showItemDetailsModal, setShowItemDetailsModal] = useState(false);
 
   // Phases (user can customize these per project)
   const defaultPhases = ['Planning', 'Design', 'Development', 'Testing', 'Launch', 'Maintenance'];
@@ -220,8 +223,49 @@ export default function TimelineRoadmapPage() {
       fetchCategories();
       fetchTimelineItems();
       fetchFolderMembers();
+      fetchAvailableTeamMembers();
     }
   }, [selectedFolder]);
+
+  const fetchAvailableTeamMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+      
+      if (!error && data) {
+        setAvailableTeamMembers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  };
+
+  const loadTimelineItemDetails = async (item: TimelineItem) => {
+    setSelectedItem(item);
+    
+    // Load checklist items for this timeline item
+    try {
+      const { data, error } = await supabase
+        .from('timeline_item_checklist')
+        .select('*')
+        .eq('timeline_item_id', item.id)
+        .order('item_order', { ascending: true });
+      
+      if (!error && data) {
+        setLoadedChecklistItems(data);
+      } else {
+        setLoadedChecklistItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading checklist:', error);
+      setLoadedChecklistItems([]);
+    }
+    
+    setShowItemDetailsModal(true);
+  };
 
   // =============================================
   // FETCH FUNCTIONS
@@ -1100,8 +1144,7 @@ export default function TimelineRoadmapPage() {
                                   opacity: isCompleted ? 0.7 : 1
                                 }}
                                 onClick={() => {
-                                  setSelectedItem(item);
-                                  setIsEditingItem(true);
+                                  loadTimelineItemDetails(item);
                                 }}
                                 >
                                   <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('ken_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
@@ -1364,6 +1407,26 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{marginBottom: '20px'}}>
+              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Assign Team Members</label>
+              <select 
+                multiple 
+                value={newItem.team_member_ids.map(id => id.toString())}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map(opt => parseInt(opt.value));
+                  setNewItem({...newItem, team_member_ids: selected});
+                }}
+                style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px', minHeight: '100px'}}
+              >
+                {availableTeamMembers.map(member => (
+                  <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
+                ))}
+              </select>
+              <div style={{fontSize: '12px', color: '#64748B', marginTop: '4px'}}>
+                Hold Cmd/Ctrl to select multiple members
+              </div>
+            </div>
+            
+            <div style={{marginBottom: '20px'}}>
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Completion % (0-100)</label>
               <input type="number" min="0" max="100" value={newItem.completion_percentage} onChange={(e) => setNewItem({...newItem, completion_percentage: parseInt(e.target.value) || 0})} style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}} />
             </div>
@@ -1565,6 +1628,112 @@ export default function TimelineRoadmapPage() {
             
             <div style={{display: 'flex', justifyContent: 'flex-end'}}>
               <button onClick={() => setShowReportsModal(false)} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TIMELINE ITEM DETAILS MODAL (View & Check Checklist) */}
+      {showItemDetailsModal && selectedItem && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'}} onClick={() => setShowItemDetailsModal(false)}>
+          <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px', color: '#1F2937'}}>{selectedItem.title}</h3>
+            
+            {/* Item Details */}
+            <div style={{marginBottom: '24px', padding: '16px', background: '#F9FAFB', borderRadius: '8px'}}>
+              <div style={{marginBottom: '12px'}}>
+                <span style={{fontWeight: '600', color: '#64748B', fontSize: '14px'}}>Status: </span>
+                <span style={{padding: '4px 12px', background: getStatusColor(selectedItem.status) + '20', color: getStatusColor(selectedItem.status), borderRadius: '12px', fontSize: '13px', fontWeight: '600'}}>
+                  {selectedItem.status.replace('_', ' ')}
+                </span>
+              </div>
+              <div style={{marginBottom: '12px'}}>
+                <span style={{fontWeight: '600', color: '#64748B', fontSize: '14px'}}>Timeline: </span>
+                <span style={{fontSize: '14px'}}>{new Date(selectedItem.start_date).toLocaleDateString()} - {new Date(selectedItem.end_date).toLocaleDateString()}</span>
+              </div>
+              <div style={{marginBottom: '12px'}}>
+                <span style={{fontWeight: '600', color: '#64748B', fontSize: '14px'}}>Budget: </span>
+                <span style={{fontSize: '14px'}}>${selectedItem.actual_spending.toLocaleString()} / ${selectedItem.planned_budget.toLocaleString()}</span>
+              </div>
+              <div>
+                <span style={{fontWeight: '600', color: '#64748B', fontSize: '14px'}}>Completion: </span>
+                <span style={{fontSize: '14px', fontWeight: '700', color: '#3B82F6'}}>{selectedItem.completion_percentage}%</span>
+              </div>
+            </div>
+
+            {/* Team Members */}
+            {selectedItem.team_member_ids && selectedItem.team_member_ids.length > 0 && (
+              <div style={{marginBottom: '24px'}}>
+                <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>Assigned Team Members</h4>
+                <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                  {selectedItem.team_member_ids.map(memberId => {
+                    const member = availableTeamMembers.find(m => m.id === memberId);
+                    return member ? (
+                      <div key={memberId} style={{padding: '6px 12px', background: '#EFF6FF', color: '#3B82F6', borderRadius: '16px', fontSize: '13px', fontWeight: '500'}}>
+                        {member.name}
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Checklist with Checkboxes */}
+            <div style={{marginBottom: '24px'}}>
+              <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>Checklist ({loadedChecklistItems.filter(i => i.is_completed).length}/{loadedChecklistItems.length} completed)</h4>
+              {loadedChecklistItems.length > 0 ? (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                  {loadedChecklistItems.map((item, idx) => (
+                    <div key={item.id || idx} style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: item.is_completed ? '#F3F4F6' : 'white', border: '2px solid #E5E7EB', borderRadius: '8px'}}>
+                      <input
+                        type="checkbox"
+                        checked={item.is_completed}
+                        onChange={async (e) => {
+                          const checked = e.target.checked;
+                          try {
+                            await supabase
+                              .from('timeline_item_checklist')
+                              .update({ 
+                                is_completed: checked,
+                                completed_at: checked ? new Date().toISOString() : null,
+                                completed_by_id: checked ? parseInt(user?.id?.toString() || '0') : null
+                              })
+                              .eq('id', item.id);
+                            
+                            // Update local state
+                            setLoadedChecklistItems(prev => 
+                              prev.map(i => i.id === item.id ? {...i, is_completed: checked} : i)
+                            );
+                            
+                            // Refresh timeline items to update completion percentage
+                            fetchTimelineItems();
+                          } catch (error) {
+                            console.error('Error updating checklist item:', error);
+                          }
+                        }}
+                        style={{width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0, accentColor: '#10B981'}}
+                      />
+                      <span style={{flex: 1, fontSize: '14px', color: item.is_completed ? '#9CA3AF' : '#374151', textDecoration: item.is_completed ? 'line-through' : 'none', fontWeight: item.is_completed ? '400' : '500'}}>
+                        {idx + 1}. {item.item_text}
+                      </span>
+                      {item.is_completed && item.completed_at && (
+                        <span style={{fontSize: '11px', color: '#10B981', fontWeight: '600'}}>
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{textAlign: 'center', color: '#9CA3AF', fontSize: '14px', padding: '20px', fontStyle: 'italic'}}>
+                  No checklist items for this timeline item
+                </p>
+              )}
+            </div>
+            
+            <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowItemDetailsModal(false)} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
+              <button onClick={() => {setShowItemDetailsModal(false); setShowItemModal(true); setIsEditingItem(true);}} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Edit Item</button>
             </div>
           </div>
         </div>
