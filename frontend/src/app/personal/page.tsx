@@ -127,12 +127,11 @@ export default function PersonalTaskManager() {
   
   // Form states
   const getDefaultTaskForm = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(9, 0, 0, 0);
-    
     const today = new Date();
-    today.setHours(9, 0, 0, 0);
+    today.setHours(9, 0, 0, 0); // 9:00 AM start time
+    
+    const todayDue = new Date();
+    todayDue.setHours(10, 0, 0, 0); // 10:00 AM due time (same day, 1 hour later)
     
     return {
     title: '',
@@ -142,7 +141,7 @@ export default function PersonalTaskManager() {
     category: '',
       tags: [] as string[],
       scheduled_start: today.toISOString().slice(0, 16),
-      due_date: tomorrow.toISOString().slice(0, 16),
+      due_date: todayDue.toISOString().slice(0, 16),
       estimated_duration: 60,
       is_recurring: false
     };
