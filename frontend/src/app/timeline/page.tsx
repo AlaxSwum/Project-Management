@@ -17,7 +17,9 @@ import {
   TrashIcon,
   PencilIcon,
   CheckIcon,
-  FunnelIcon
+  FunnelIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
 } from '@heroicons/react/24/outline';
 
 const supabase = createClient(
@@ -194,6 +196,7 @@ export default function TimelineRoadmapPage() {
   const [loadedChecklistItems, setLoadedChecklistItems] = useState<ChecklistItem[]>([]);
   const [availableTeamMembers, setAvailableTeamMembers] = useState<{id: number; name: string; email: string}[]>([]);
   const [showItemDetailsModal, setShowItemDetailsModal] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set()); // Track which categories are expanded
 
   // Phases (user can customize these per project)
   const defaultPhases = ['Planning', 'Design', 'Development', 'Testing', 'Launch', 'Maintenance'];
@@ -362,6 +365,12 @@ export default function TimelineRoadmapPage() {
       });
 
       setCategories(rootCategories);
+      
+      // Auto-expand all categories on first load
+      if (data && data.length > 0 && expandedCategories.size === 0) {
+        const allCategoryIds = new Set(data.map(cat => cat.id));
+        setExpandedCategories(allCategoryIds);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -1126,7 +1135,28 @@ export default function TimelineRoadmapPage() {
                               }}
                               onClick={() => setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)}
                               >
-                                <span>{level > 0 ? '└ ' : ''}{category.name}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newExpanded = new Set(expandedCategories);
+                                      if (newExpanded.has(category.id)) {
+                                        newExpanded.delete(category.id);
+                                      } else {
+                                        newExpanded.add(category.id);
+                                      }
+                                      setExpandedCategories(newExpanded);
+                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                  >
+                                    {expandedCategories.has(category.id) ? (
+                                      <ChevronDownIcon style={{ width: '20px', height: '20px', color: category.color }} />
+                                    ) : (
+                                      <ChevronRightIcon style={{ width: '20px', height: '20px', color: category.color }} />
+                                    )}
+                                  </button>
+                                  <span>{level > 0 ? '└ ' : ''}{category.name}</span>
+                                </div>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                   <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
                                     {categoryItems.length}
@@ -1143,8 +1173,8 @@ export default function TimelineRoadmapPage() {
                               ))}
                             </div>
 
-                            {/* Timeline Items for this Category */}
-                            {categoryItems.map(item => {
+                            {/* Timeline Items for this Category - Show only if expanded */}
+                            {expandedCategories.has(category.id) && categoryItems.map(item => {
                             const { startCol, spanCols } = calculateItemPosition(item, timeColumns);
                             const isCompleted = item.status === 'completed';
                             
