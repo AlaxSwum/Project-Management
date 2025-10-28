@@ -140,6 +140,11 @@ export default function PersonalTaskManager() {
   
   const [newTask, setNewTask] = useState(getDefaultTaskForm());
   
+  // Checklist state for personal tasks
+  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [loadedChecklistItems, setLoadedChecklistItems] = useState<any[]>([]);
+  
   const [newTimeBlock, setNewTimeBlock] = useState({
     title: '',
     description: '',
@@ -2337,6 +2342,29 @@ export default function PersonalTaskManager() {
                     e.target.style.background = '#FAFBFC';
                   }}
                 />
+              </div>
+            </div>
+
+            {/* Checklist / Discussion Points */}
+            <div style={{ marginBottom: '32px' }}>
+              <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#374151', fontSize: '16px' }}>Discussion Points / Checklist</label>
+              <div style={{ border: '2px solid #E2E8F0', borderRadius: '12px', padding: '16px', background: '#FAFBFC' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input type="text" placeholder="Add checklist item..." value={newChecklistItem} onChange={(e) => setNewChecklistItem(e.target.value)} onKeyPress={(e) => {if (e.key === 'Enter') {e.preventDefault(); if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem.trim()]); setNewChecklistItem('');}}}} style={{ flex: 1, padding: '12px 16px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px' }} />
+                  <button type="button" onClick={() => {if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem.trim()]); setNewChecklistItem('');}}} style={{ padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Add</button>
+                </div>
+                {checklistItems.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {checklistItems.map((item, index) => (
+                      <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#3B82F6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '600', flexShrink: 0 }}>{index + 1}</div>
+                        <span style={{ flex: 1, fontSize: '14px', color: '#374151' }}>{item}</span>
+                        <button type="button" onClick={() => setChecklistItems(checklistItems.filter((_, i) => i !== index))} style={{ padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>Remove</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {checklistItems.length === 0 && (<p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '14px', margin: 0, padding: '20px', fontStyle: 'italic' }}>No checklist items yet.</p>)}
               </div>
             </div>
             
