@@ -513,17 +513,30 @@ export default function ContentCalendarPage() {
       
       if (result.error) {
         console.error('Database error adding folder member:', result.error)
-        setError(`Failed to add folder member: ${String(result.error)}`)
+        const errorMsg = String(result.error);
+        // If user is already a member, just refresh the list
+        if (errorMsg.includes('already a member')) {
+          console.log('User already a member, refreshing list...');
+          const { data: members } = await supabaseDb.getContentCalendarFolderMembers(selectedFolderForPermissions.id)
+          setFolderMembers(members || [])
+          setError('Member already has access to this folder')
+          setTimeout(() => setError(''), 2000);
+          return;
+        }
+        setError(`Failed to add folder member: ${errorMsg}`)
         return
       }
       
       // Refresh folder members
       const { data: members } = await supabaseDb.getContentCalendarFolderMembers(selectedFolderForPermissions.id)
       setFolderMembers(members || [])
+      console.log('Fetched folder members:', members)
       
       // Refresh the main folder list to update visibility
       await fetchData()
       
+      setError('Member added successfully!')
+      setTimeout(() => setError(''), 2000);
       console.log('Folder member added successfully')
     } catch (err) {
       console.error('Error adding folder member:', err)
