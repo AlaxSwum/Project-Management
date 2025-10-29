@@ -1537,7 +1537,8 @@ export const supabaseDb = {
   // Folder Member Management
   getContentCalendarFolderMembers: async (folderId) => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}&select=*,auth_user(id,name,email,role)`, {
+      // Fetch folder members without join to avoid 400 error
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1547,11 +1548,47 @@ export const supabaseDb = {
       });
 
       if (!response.ok) {
+        console.error('Folder members query failed:', response.status);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return { data: data || [], error: null };
+      const members = await response.json();
+      console.log('Raw folder members:', members);
+      
+      // Fetch user details separately for each member
+      const membersWithUsers = await Promise.all(members.map(async (member) => {
+        try {
+          const userResponse = await fetch(`${supabaseUrl}/rest/v1/auth_user?id=eq.${member.user_id}`, {
+            method: 'GET',
+            headers: {
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            return {
+              ...member,
+              auth_user: userData[0] || { name: 'Unknown', email: '', id: member.user_id }
+            };
+          }
+          return {
+            ...member,
+            auth_user: { name: 'Unknown', email: '', id: member.user_id }
+          };
+        } catch (err) {
+          console.error('Error fetching user for member:', err);
+          return {
+            ...member,
+            auth_user: { name: 'Unknown', email: '', id: member.user_id }
+          };
+        }
+      }));
+      
+      console.log('Members with user details:', membersWithUsers);
+      return { data: membersWithUsers, error: null };
     } catch (error) {
       console.error('Error in getContentCalendarFolderMembers:', error);
       return { data: [], error };
