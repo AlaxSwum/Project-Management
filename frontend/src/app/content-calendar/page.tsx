@@ -1333,35 +1333,6 @@ export default function ContentCalendarPage() {
               
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <button
-                  onClick={() => setShowMemberManagementModal(true)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#ffffff',
-                    color: '#374151',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '12px',
-                    fontSize: '0.9rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f9fafb'
-                    e.currentTarget.style.borderColor = '#9ca3af'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#ffffff'
-                    e.currentTarget.style.borderColor = '#d1d5db'
-                  }}
-                >
-                  <UserGroupIcon style={{ width: '16px', height: '16px' }} />
-                  Manage Members
-                </button>
-                
-                <button
                   onClick={async () => {
                     setFormData({
                       ...formData,
