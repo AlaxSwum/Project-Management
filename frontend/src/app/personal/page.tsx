@@ -400,6 +400,26 @@ export default function PersonalTaskManager() {
 
       setTasks(prev => [data, ...prev]);
       setAllTasks(prev => [data, ...prev]); // Also update allTasks
+      
+      // Save checklist items if any
+      if (checklistItems.length > 0 && data?.id) {
+        try {
+          const checklistData = checklistItems.map((item, index) => ({
+            task_id: parseInt(data.id.toString()),
+            user_id: parseInt(user?.id?.toString() || '0'),
+            item_text: item,
+            is_completed: false,
+            item_order: index
+          }));
+          
+          await supabase
+            .from('personal_task_checklist')
+            .insert(checklistData);
+        } catch (checklistError) {
+          console.error('Error saving checklist items:', checklistError);
+        }
+      }
+      
       setShowTaskModal(false);
       resetTaskForm();
       setSuccessMessage('Task created successfully!');
@@ -688,7 +708,7 @@ export default function PersonalTaskManager() {
     setIsEditingTimeBlock(false);
   };
 
-  const openEditTask = (task: PersonalTask) => {
+  const openEditTask = async (task: PersonalTask) => {
     setSelectedTask(task);
     setNewTask({
       title: task.title,
@@ -702,6 +722,28 @@ export default function PersonalTaskManager() {
       estimated_duration: 60,
       is_recurring: false
     });
+    
+    // Load checklist items for this task
+    try {
+      const { data: checklistData, error } = await supabase
+        .from('personal_task_checklist')
+        .select('*')
+        .eq('task_id', parseInt(task.id))
+        .order('item_order', { ascending: true });
+      
+      if (!error && checklistData) {
+        setChecklistItems(checklistData.map(item => item.item_text));
+        setLoadedChecklistItems(checklistData);
+      } else {
+        setChecklistItems([]);
+        setLoadedChecklistItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading checklist items:', error);
+      setChecklistItems([]);
+      setLoadedChecklistItems([]);
+    }
+    
     setIsEditingTask(true);
     setShowTaskModal(true);
   };
