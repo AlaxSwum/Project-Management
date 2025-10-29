@@ -1331,24 +1331,6 @@ export default function ContentCalendarPage() {
                 Create Folder
               </button>
               
-              <button
-                onClick={() => setShowMemberModal(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: '#FFB333',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '0.9rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(255, 179, 51, 0.3)'
-                }}
-              >
-                Manage Members
-              </button>
-              
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <button
                   onClick={() => setShowMemberManagementModal(true)}
