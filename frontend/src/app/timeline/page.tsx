@@ -652,8 +652,10 @@ export default function TimelineRoadmapPage() {
       for (let i = 0; i < 12; i++) {
         const weekDate = new Date(weekStart);
         weekDate.setDate(weekStart.getDate() + (i * 7));
+        const weekEnd = new Date(weekDate);
+        weekEnd.setDate(weekDate.getDate() + 6);
         columns.push({
-          label: `Week ${i + 1}`,
+          label: `${weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
           date: weekDate
         });
       }
@@ -1793,7 +1795,29 @@ export default function TimelineRoadmapPage() {
             
             <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
               <button onClick={() => setShowItemDetailsModal(false)} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
-              <button onClick={() => {setShowItemDetailsModal(false); setShowItemModal(true); setIsEditingItem(true);}} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Edit Item</button>
+              <button onClick={() => {
+                // Load existing item data into form
+                setNewItem({
+                  title: selectedItem.title,
+                  description: selectedItem.description || '',
+                  category_id: selectedItem.category_id || 0,
+                  start_date: selectedItem.start_date,
+                  end_date: selectedItem.end_date,
+                  phase: selectedItem.phase || 'Planning',
+                  status: selectedItem.status,
+                  planned_budget: selectedItem.planned_budget,
+                  actual_spending: selectedItem.actual_spending,
+                  completion_percentage: selectedItem.completion_percentage,
+                  priority: selectedItem.priority,
+                  team_leader_id: selectedItem.team_leader_id || 0,
+                  team_member_ids: selectedItem.team_member_ids || [],
+                  color: selectedItem.color
+                });
+                setChecklistItems(loadedChecklistItems.map(item => item.item_text));
+                setIsEditingItem(true);
+                setShowItemDetailsModal(false);
+                setShowItemModal(true);
+              }} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Edit Item</button>
             </div>
           </div>
         </div>
