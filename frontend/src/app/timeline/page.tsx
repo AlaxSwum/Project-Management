@@ -696,8 +696,41 @@ export default function TimelineRoadmapPage() {
       if (startCol !== -1 && endCol !== -1) {
         spanCols = endCol - startCol + 1;
       }
+    } else if (viewMode === 'week') {
+      // For week view: find which week the item starts and ends in
+      startCol = columns.findIndex(col => {
+        const weekEnd = new Date(col.date);
+        weekEnd.setDate(col.date.getDate() + 6);
+        return itemStart >= col.date && itemStart <= weekEnd;
+      });
+      
+      const endCol = columns.findIndex(col => {
+        const weekEnd = new Date(col.date);
+        weekEnd.setDate(col.date.getDate() + 6);
+        return itemEnd >= col.date && itemEnd <= weekEnd;
+      });
+      
+      if (startCol !== -1 && endCol !== -1) {
+        spanCols = endCol - startCol + 1;
+      }
+    } else if (viewMode === 'quarter') {
+      // For quarter view: find which quarter the item is in
+      startCol = columns.findIndex(col => {
+        const startQuarter = Math.floor(itemStart.getMonth() / 3);
+        const colQuarter = Math.floor(col.date.getMonth() / 3);
+        return itemStart.getFullYear() === col.date.getFullYear() && startQuarter === colQuarter;
+      });
+      
+      const endCol = columns.findIndex(col => {
+        const endQuarter = Math.floor(itemEnd.getMonth() / 3);
+        const colQuarter = Math.floor(col.date.getMonth() / 3);
+        return itemEnd.getFullYear() === col.date.getFullYear() && endQuarter === colQuarter;
+      });
+      
+      if (startCol !== -1 && endCol !== -1) {
+        spanCols = endCol - startCol + 1;
+      }
     }
-    // Similar logic for week and quarter...
 
     return { startCol: Math.max(0, startCol), spanCols: Math.max(1, spanCols) };
   };
