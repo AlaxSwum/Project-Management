@@ -488,6 +488,8 @@ export default function ContentCalendarPage() {
     try {
       const { supabaseDb } = await import('@/lib/supabase')
       const { data: members } = await supabaseDb.getContentCalendarFolderMembers(folder.id)
+      console.log('Loaded folder members:', members)
+      console.log('Folder members count:', members?.length || 0)
       setFolderMembers(members || [])
       setShowFolderPermissions(true)
     } catch (err) {
