@@ -101,9 +101,6 @@ export default function PersonalTaskManager() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showTimeBlockModal, setShowTimeBlockModal] = useState(false);
   
-  // Duration options for time blocking
-  const [selectedDuration, setSelectedDuration] = useState(60);
-  const durationOptions = [15, 30, 45, 60, 90, 120]; // minutes
   const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null);
   const [selectedTimeBlock, setSelectedTimeBlock] = useState<PersonalTimeBlock | null>(null);
   const [isEditingTask, setIsEditingTask] = useState(false);
@@ -1393,46 +1390,6 @@ export default function PersonalTaskManager() {
               </div>
               
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {/* Duration Selector for Time Blocking */}
-          <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  background: '#ffffff', 
-                  padding: '8px 12px', 
-                  borderRadius: '8px', 
-                  border: '2px solid #e5e7eb',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                }}>
-                  <label style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: '600', 
-                    color: '#374151', 
-                    whiteSpace: 'nowrap' 
-                  }}>
-                    Duration:
-                  </label>
-                  <select
-                    value={selectedDuration}
-                    onChange={(e) => setSelectedDuration(parseInt(e.target.value))}
-                    style={{
-                      padding: '6px 10px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: '#ffffff',
-                      color: '#374151',
-                      minWidth: '80px'
-                    }}
-                  >
-                    {durationOptions.map(duration => (
-                      <option key={duration} value={duration}>
-                        {duration} min
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <button
                   onClick={() => {
                     setNewTask(getDefaultTaskForm());
@@ -2043,7 +2000,6 @@ export default function PersonalTaskManager() {
                   setTimeBlocks={setTimeBlocks}
                   setTasks={setTasks}
                   setAllTasks={setAllTasks}
-                  selectedDuration={selectedDuration}
                   onCreateTimeBlock={(startTime, endTime) => {
                     setNewTimeBlock({
                       title: '',
@@ -2517,7 +2473,6 @@ interface DayCalendarProps extends CalendarViewProps {
   handleUpdateTaskStatus: (taskId: string, status: PersonalTask['status']) => void;
   handleDeleteTask: (taskId: string) => void;
   openEditTask: (task: PersonalTask) => void;
-  selectedDuration: number;
   setTimeBlocks: React.Dispatch<React.SetStateAction<PersonalTimeBlock[]>>;
   setTasks: React.Dispatch<React.SetStateAction<PersonalTask[]>>;
   setAllTasks: React.Dispatch<React.SetStateAction<PersonalTask[]>>;
@@ -3091,7 +3046,7 @@ const MonthCalendarView: React.FC<CalendarViewProps> = ({
 // Day Calendar View - Previous Design with Enhanced Functionality
 const DayCalendarView: React.FC<DayCalendarProps> = ({ 
   currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile, user,
-  handleUpdateTaskStatus, handleDeleteTask, openEditTask, setTimeBlocks, setTasks, setAllTasks, selectedDuration
+  handleUpdateTaskStatus, handleDeleteTask, openEditTask, setTimeBlocks, setTasks, setAllTasks
 }) => {
   // Local drag state for this component
   const [isDragging, setIsDragging] = useState(false);
@@ -3335,7 +3290,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       const startTime = new Date(currentDate);
                       startTime.setHours(hour, minute, 0, 0);
                       const endTime = new Date(startTime);
-                      endTime.setMinutes(endTime.getMinutes() + selectedDuration); // Use selected duration
+                      endTime.setHours(endTime.getHours() + 1); // Default 1-hour block
                       
                       const timeBlockData = {
                         title: draggedTask.title,
