@@ -3131,7 +3131,16 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
       // Try scheduled_start first
       if (task.scheduled_start) {
         const taskStart = new Date(task.scheduled_start);
-        const taskEnd = task.scheduled_end ? new Date(task.scheduled_end) : new Date(taskStart.getTime() + 60 * 60 * 1000);
+        let taskEnd;
+        if (task.scheduled_end) {
+          taskEnd = new Date(task.scheduled_end);
+        } else if (task.estimated_duration) {
+          // Use task's estimated duration
+          taskEnd = new Date(taskStart.getTime() + task.estimated_duration * 60 * 1000);
+        } else {
+          // Default to 60 minutes if no duration specified
+          taskEnd = new Date(taskStart.getTime() + 60 * 60 * 1000);
+        }
         // Show task if it starts or overlaps with this hour
         return taskStart.getHours() <= hour && taskEnd.getHours() > hour;
       }
@@ -3290,7 +3299,9 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       const startTime = new Date(currentDate);
                       startTime.setHours(hour, minute, 0, 0);
                       const endTime = new Date(startTime);
-                      endTime.setHours(endTime.getHours() + 1); // Default 1-hour block
+                      // Use task's estimated_duration if available, otherwise default to 60 minutes
+                      const taskDuration = draggedTask.estimated_duration || 60;
+                      endTime.setMinutes(endTime.getMinutes() + taskDuration);
                       
                       const timeBlockData = {
                         title: draggedTask.title,
@@ -3482,7 +3493,18 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                       {scheduledTasks.map(task => {
                         // Determine start and end times from scheduled_start or due_date
                         const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
-                        const endTime = task.scheduled_end ? new Date(task.scheduled_end) : (startTime ? new Date(startTime.getTime() + 60 * 60 * 1000) : null); // Default 1 hour if no end time
+                        let endTime;
+                        if (task.scheduled_end) {
+                          endTime = new Date(task.scheduled_end);
+                        } else if (startTime && task.estimated_duration) {
+                          // Use task's estimated duration
+                          endTime = new Date(startTime.getTime() + task.estimated_duration * 60 * 1000);
+                        } else if (startTime) {
+                          // Default to 60 minutes if no duration specified
+                          endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+                        } else {
+                          endTime = null;
+                        }
                         
                         return (
                           <div
