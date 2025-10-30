@@ -3147,17 +3147,45 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     return blockDate.toDateString() === currentDate.toDateString();
   });
   
-  // Generate 1-hour slots
-  const timeSlots: { hour: number; minute: number }[] = [];
+  // Generate time slots - collect all unique start times from tasks and blocks
+  const allStartTimes = new Set<string>();
+  
+  // Add scheduled task start times
+  scheduledDayTasks.forEach(task => {
+    const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
+    if (startTime) {
+      const hour = startTime.getHours();
+      const minute = startTime.getMinutes();
+      allStartTimes.add(`${hour}:${minute}`);
+    }
+  });
+  
+  // Add time block start times
+  dayTimeBlocks.forEach(block => {
+    const blockStart = new Date(block.start_datetime);
+    const hour = blockStart.getHours();
+    const minute = blockStart.getMinutes();
+    allStartTimes.add(`${hour}:${minute}`);
+  });
+  
+  // Add regular hour slots for empty time (every hour on the hour)
   for (let hour = 0; hour < 24; hour++) {
-    timeSlots.push({ hour, minute: 0 });
+    allStartTimes.add(`${hour}:0`);
   }
+  
+  // Convert to sorted array
+  const timeSlots = Array.from(allStartTimes)
+    .map(time => {
+      const [hour, minute] = time.split(':').map(Number);
+      return { hour, minute };
+    })
+    .sort((a, b) => a.hour * 60 + a.minute - (b.hour * 60 + b.minute));
   
   const getBlocksForSlot = (hour: number, minute: number) => {
     return dayTimeBlocks.filter(block => {
       const blockStart = new Date(block.start_datetime);
-      // Only show block in the hour it STARTS (not every hour it spans)
-      return blockStart.getHours() === hour;
+      // Only show block at its exact start time
+      return blockStart.getHours() === hour && blockStart.getMinutes() === minute;
     });
   };
   
@@ -3176,14 +3204,14 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
       // Try scheduled_start first
       if (task.scheduled_start) {
         const taskStart = new Date(task.scheduled_start);
-        // Only show task in the hour it STARTS
-        return taskStart.getHours() === hour;
+        // Only show task at its exact start time
+        return taskStart.getHours() === hour && taskStart.getMinutes() === minute;
       }
       
       // Fall back to due_date if no scheduled_start
       if (task.due_date) {
         const dueDate = new Date(task.due_date);
-        return dueDate.getHours() === hour;
+        return dueDate.getHours() === hour && dueDate.getMinutes() === minute;
       }
       
       return false;
@@ -3280,10 +3308,19 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
             const scheduledTasks = getScheduledTasksForSlot(hour, minute);
             const hasContent = blocks.length > 0 || scheduledTasks.length > 0;
             const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const displayTime = hour === 0 ? '12 AM' : 
-                               hour < 12 ? `${hour} AM` :
-                               hour === 12 ? '12 PM' :
-                               `${hour - 12} PM`;
+            // Show time with minutes only if not on the hour
+            let displayTime;
+            if (minute === 0) {
+              displayTime = hour === 0 ? '12 AM' : 
+                           hour < 12 ? `${hour} AM` :
+                           hour === 12 ? '12 PM' :
+                           `${hour - 12} PM`;
+            } else {
+              displayTime = hour === 0 ? `12:${minute.toString().padStart(2, '0')} AM` :
+                           hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
+                           hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM` :
+                           `${hour - 12}:${minute.toString().padStart(2, '0')} PM`;
+            }
             
             return (
               <div key={timeString} style={{ 
