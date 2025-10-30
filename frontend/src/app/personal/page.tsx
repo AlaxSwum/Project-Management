@@ -453,6 +453,33 @@ export default function PersonalTaskManager() {
         return;
       }
 
+      // Update checklist items in database
+      try {
+        // First, delete all existing checklist items for this task
+        await supabase
+          .from('personal_task_checklist')
+          .delete()
+          .eq('task_id', parseInt(selectedTask.id));
+        
+        // Then insert the updated checklist items (if any)
+        if (checklistItems.length > 0) {
+          const checklistData = checklistItems.map((item, index) => ({
+            task_id: parseInt(selectedTask.id),
+            user_id: parseInt(user?.id?.toString() || '0'),
+            item_text: typeof item === 'string' ? item : item.text,
+            is_completed: typeof item === 'string' ? false : item.completed,
+            item_order: index
+          }));
+          
+          await supabase
+            .from('personal_task_checklist')
+            .insert(checklistData);
+        }
+      } catch (checklistError) {
+        console.error('Error updating checklist:', checklistError);
+        // Don't fail the whole update if checklist fails
+      }
+
       setTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task));
       setAllTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task)); // Also update allTasks
       setShowTaskModal(false);
