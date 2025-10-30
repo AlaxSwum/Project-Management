@@ -435,9 +435,16 @@ export default function PersonalTaskManager() {
       }
 
       const updateData = {
-        ...newTask,
-        tags: newTask.tags.length > 0 ? newTask.tags : null,
+        title: newTask.title,
+        description: newTask.description,
+        status: newTask.status,
+        priority: newTask.priority,
+        category: newTask.category,
+        tags: newTask.tags && newTask.tags.length > 0 ? newTask.tags : null,
         due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
+        scheduled_start: newTask.scheduled_start ? new Date(newTask.scheduled_start).toISOString() : null,
+        estimated_duration: newTask.estimated_duration || 60,
+        updated_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
