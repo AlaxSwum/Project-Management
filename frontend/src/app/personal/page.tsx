@@ -141,7 +141,7 @@ export default function PersonalTaskManager() {
   const [newTask, setNewTask] = useState(getDefaultTaskForm());
   
   // Checklist state
-  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [checklistItems, setChecklistItems] = useState<{text: string, completed: boolean}[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [loadedChecklistItems, setLoadedChecklistItems] = useState<any[]>([]);
   
@@ -2395,15 +2395,30 @@ export default function PersonalTaskManager() {
               <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#374151', fontSize: '16px' }}>Discussion Points / Checklist</label>
               <div style={{ border: '2px solid #E2E8F0', borderRadius: '12px', padding: '16px', background: '#FAFBFC' }}>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                  <input type="text" placeholder="Add checklist item..." value={newChecklistItem} onChange={(e) => setNewChecklistItem(e.target.value)} onKeyPress={(e) => {if (e.key === 'Enter') {e.preventDefault(); if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem.trim()]); setNewChecklistItem('');}}}} style={{ flex: 1, padding: '12px 16px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px' }} />
-                  <button type="button" onClick={() => {if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem.trim()]); setNewChecklistItem('');}}} style={{ padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Add</button>
+                  <input type="text" placeholder="Add checklist item..." value={newChecklistItem} onChange={(e) => setNewChecklistItem(e.target.value)} onKeyPress={(e) => {if (e.key === 'Enter') {e.preventDefault(); if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, { text: newChecklistItem.trim(), completed: false }]); setNewChecklistItem('');}}}} style={{ flex: 1, padding: '12px 16px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px' }} />
+                  <button type="button" onClick={() => {if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, { text: newChecklistItem.trim(), completed: false }]); setNewChecklistItem('');}}} style={{ padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Add</button>
                 </div>
                 {checklistItems.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {checklistItems.map((item, index) => (
                       <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#3B82F6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '600', flexShrink: 0 }}>{index + 1}</div>
-                        <span style={{ flex: 1, fontSize: '14px', color: '#374151' }}>{item}</span>
+                        <input 
+                          type="checkbox" 
+                          checked={item.completed}
+                          onChange={() => {
+                            const updated = [...checklistItems];
+                            updated[index] = { ...updated[index], completed: !updated[index].completed };
+                            setChecklistItems(updated);
+                          }}
+                          style={{ 
+                            width: '20px', 
+                            height: '20px', 
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            accentColor: '#3B82F6'
+                          }}
+                        />
+                        <span style={{ flex: 1, fontSize: '14px', color: '#374151', textDecoration: item.completed ? 'line-through' : 'none', opacity: item.completed ? 0.6 : 1 }}>{item.text}</span>
                         <button type="button" onClick={() => setChecklistItems(checklistItems.filter((_, i) => i !== index))} style={{ padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>Remove</button>
                       </div>
                     ))}
@@ -3140,19 +3155,18 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     return blockDate.toDateString() === currentDate.toDateString();
   });
   
-  // Generate 15-minute slots
+  // Generate 1-hour slots
   const timeSlots: { hour: number; minute: number }[] = [];
   for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      timeSlots.push({ hour, minute });
-    }
+    timeSlots.push({ hour, minute: 0 });
   }
   
   const getBlocksForSlot = (hour: number, minute: number) => {
     return dayTimeBlocks.filter(block => {
       const blockStart = new Date(block.start_datetime);
-      return blockStart.getHours() === hour && 
-             Math.floor(blockStart.getMinutes() / 15) * 15 === minute;
+      const blockEnd = new Date(block.end_datetime);
+      // Show block if it starts or overlaps with this hour
+      return blockStart.getHours() <= hour && blockEnd.getHours() > hour;
     });
   };
   
@@ -3162,15 +3176,15 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
       // Try scheduled_start first
       if (task.scheduled_start) {
         const taskStart = new Date(task.scheduled_start);
-        return taskStart.getHours() === hour && 
-               Math.floor(taskStart.getMinutes() / 15) * 15 === minute;
+        const taskEnd = task.scheduled_end ? new Date(task.scheduled_end) : new Date(taskStart.getTime() + 60 * 60 * 1000);
+        // Show task if it starts or overlaps with this hour
+        return taskStart.getHours() <= hour && taskEnd.getHours() > hour;
       }
       
       // Fall back to due_date if no scheduled_start
       if (task.due_date) {
         const dueDate = new Date(task.due_date);
-        return dueDate.getHours() === hour && 
-               Math.floor(dueDate.getMinutes() / 15) * 15 === minute;
+        return dueDate.getHours() === hour;
       }
       
       return false;
@@ -3181,7 +3195,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     const startTime = new Date(currentDate);
     startTime.setHours(hour, minute, 0, 0);
     const endTime = new Date(startTime);
-    endTime.setMinutes(endTime.getMinutes() + 15);
+    endTime.setHours(endTime.getHours() + 1); // 1 hour blocks
     
     onCreateTimeBlock(startTime, endTime);
   };
@@ -3201,7 +3215,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
       
       const start = dragStartTime < currentTime ? dragStartTime : currentTime;
       const end = dragStartTime < currentTime ? currentTime : dragStartTime;
-      end.setMinutes(end.getMinutes() + 15);
+      end.setHours(end.getHours() + 1); // 1 hour blocks
       
       setDragPreview({ start, end });
     }
@@ -3211,7 +3225,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     if (isDragging && dragStartTime && dragEndTime) {
       const start = dragStartTime < dragEndTime ? dragStartTime : dragEndTime;
       const end = dragStartTime < dragEndTime ? dragEndTime : dragStartTime;
-      end.setMinutes(end.getMinutes() + 15);
+      end.setHours(end.getHours() + 1); // 1 hour blocks
       
       onCreateTimeBlock(start, end);
     }
@@ -3258,8 +3272,8 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                 display: 'grid', 
                 gridTemplateColumns: '80px 1fr', 
                 gap: '12px',
-                minHeight: '40px',
-                borderBottom: minute === 0 ? '2px solid #E2E8F0' : '1px solid #F1F5F9',
+                minHeight: '60px',
+                borderBottom: '2px solid #E2E8F0',
                 padding: '8px 0'
               }}>
                 <div style={{ 
@@ -3269,18 +3283,18 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                   textAlign: 'right',
                   paddingTop: '4px'
                 }}>
-                  {minute === 0 ? displayTime : ''}
+                  {displayTime}
                 </div>
                 
                 <div 
                   style={{ 
-                    minHeight: '32px',
+                    minHeight: '52px',
                     background: hasContent ? 'transparent' : 
                                (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '#3B82F6' : '#FAFBFC',
-                    borderRadius: '4px',
-                    padding: '4px',
+                    borderRadius: '8px',
+                    padding: '8px',
                     cursor: hasContent ? 'default' : (isDragging ? 'grabbing' : 'grab'),
-                    border: '1px dashed transparent',
+                    border: '2px solid #E5E7EB',
                     transition: 'all 0.2s ease',
                     position: 'relative',
                     userSelect: 'none'
