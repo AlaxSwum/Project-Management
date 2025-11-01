@@ -3224,6 +3224,26 @@ export default function ContentCalendarPage() {
                           ))}
                         </select>
                       </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600', fontSize: '1rem', color: '#374151', letterSpacing: '-0.01em' }}>Boost Amount ($)</label>
+                        <input
+                          type="number"
+                          value={formData.boost_amount}
+                          onChange={(e) => setFormData({ ...formData, boost_amount: parseFloat(e.target.value) || 0 })}
+                          placeholder="0"
+                          min="0"
+                          step="0.01"
+                          style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        />
+                      </div>
                     </div>
 
                     <div style={{ marginBottom: '2rem' }}>
