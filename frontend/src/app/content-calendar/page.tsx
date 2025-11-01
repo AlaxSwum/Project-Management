@@ -29,6 +29,7 @@ interface ContentCalendarItem {
   can_view?: boolean
   can_edit?: boolean
   is_completed?: boolean
+  boost_amount?: number | null
 }
 
 interface User {
@@ -107,7 +108,8 @@ export default function ContentCalendarPage() {
     description: '',
     folder_id: null as number | null,
     security_level: 'public' as 'public' | 'restricted' | 'confidential' | 'secret',
-    allowed_users: [] as number[]
+    allowed_users: [] as number[],
+    boost_amount: 0
   })
   const [folderFormData, setFolderFormData] = useState({
     name: '',
@@ -1704,7 +1706,7 @@ export default function ContentCalendarPage() {
               {/* Sticky Header */}
               <div className="content-table-header" style={{
                 display: 'grid',
-                gridTemplateColumns: '60px 140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
+                gridTemplateColumns: '60px 140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px 120px',
                 gap: '0',
                 background: '#fafafa',
                 borderBottom: '2px solid #e8e8e8',
@@ -1949,6 +1951,27 @@ export default function ContentCalendarPage() {
                   SECURITY
                   {renderSortIcon('security_level')}
                 </div>
+                <div 
+                  onClick={() => handleSort('boost_amount')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    borderRight: '1px solid #e0e0e0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  BOOST
+                  {renderSortIcon('boost_amount')}
+                </div>
                 <div style={{ padding: '1.25rem 1rem' }}>ACTIONS</div>
               </div>
 
@@ -1987,7 +2010,7 @@ export default function ContentCalendarPage() {
                     onDrop={!isMobile ? (e) => handleDrop(e, index) : undefined}
                     style={{
                       display: isMobile ? 'block' : 'grid',
-                      gridTemplateColumns: isMobile ? 'none' : '60px 140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px',
+                      gridTemplateColumns: isMobile ? 'none' : '60px 140px 120px 130px 130px 1fr 140px 140px 140px 120px 100px 120px 120px',
                       gap: '0',
                       borderBottom: '1px solid #f0f0f0',
                       fontSize: '0.85rem',
@@ -2514,6 +2537,48 @@ export default function ContentCalendarPage() {
                             <UserGroupIcon style={{ width: '14px', height: '14px', color: '#6b7280' }} />
                           </button>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Boost Amount */}
+                    <div 
+                      onDoubleClick={() => handleCellDoubleClick(item.id, 'boost_amount', item.boost_amount?.toString() || '')}
+                      style={{ 
+                        padding: '1rem', 
+                        borderRight: '1px solid #f0f0f0',
+                        cursor: 'pointer',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {editingCell?.itemId === item.id && editingCell?.field === 'boost_amount' ? (
+                        <input
+                          type="number"
+                          value={cellValues[`${item.id}-boost_amount`] !== undefined ? cellValues[`${item.id}-boost_amount`] : (item.boost_amount || '')}
+                          onChange={(e) => setCellValues({ ...cellValues, [`${item.id}-boost_amount`]: e.target.value })}
+                          onKeyDown={(e) => handleCellKeyDown(e, item.id, 'boost_amount')}
+                          onBlur={() => handleCellEdit(item.id, 'boost_amount', cellValues[`${item.id}-boost_amount`])}
+                          autoFocus
+                          placeholder="$0"
+                          style={{
+                            width: '100%',
+                            border: '2px solid #5884FD',
+                            borderRadius: '4px',
+                            padding: '0.25rem',
+                            fontSize: '0.85rem',
+                            textAlign: 'center'
+                          }}
+                        />
+                      ) : (
+                        <span style={{
+                          padding: '0.375rem 0.75rem',
+                          background: item.boost_amount && item.boost_amount > 0 ? '#10B981' : '#E5E7EB',
+                          color: item.boost_amount && item.boost_amount > 0 ? '#ffffff' : '#6B7280',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500'
+                        }}>
+                          {item.boost_amount ? `$${item.boost_amount}` : '$0'}
+                        </span>
                       )}
                     </div>
 
