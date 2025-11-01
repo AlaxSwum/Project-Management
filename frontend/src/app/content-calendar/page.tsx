@@ -786,7 +786,8 @@ export default function ContentCalendarPage() {
       description: '',
       folder_id: currentFolder?.id || null,
       security_level: 'public',
-      allowed_users: []
+      allowed_users: [],
+      boost_amount: 0
     })
     setEditingItem(null)
     setShowAddForm(false)
@@ -806,7 +807,8 @@ export default function ContentCalendarPage() {
       description: item.description || '',
       folder_id: item.folder_id || null,
       security_level: item.security_level || 'public',
-      allowed_users: item.allowed_users || []
+      allowed_users: item.allowed_users || [],
+      boost_amount: item.boost_amount || 0
     })
     setEditingItem(item)
     
