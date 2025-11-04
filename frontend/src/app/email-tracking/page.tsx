@@ -357,13 +357,14 @@ export default function EmailTrackingPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={projects} onCreateProject={() => {}} />
         <div style={{ 
-          marginLeft: '280px',
+          marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          minHeight: '100vh'
         }}>
           <div style={{ 
             width: '32px', 
@@ -597,8 +598,9 @@ export default function EmailTrackingPage() {
           </div>
         )}
 
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
