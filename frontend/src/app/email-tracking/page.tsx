@@ -6,13 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface EmailEntry {
   id: string;
@@ -115,7 +108,8 @@ export default function EmailTrackingPage() {
   // Fetch folders
   const fetchFolders = async () => {
     try {
-      const { data, error } = await supabase
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
+      const { data, error } = await supabaseDb
         .from('email_tracking_folders')
         .select('*')
         .order('year', { ascending: false })
@@ -132,7 +126,8 @@ export default function EmailTrackingPage() {
   // Fetch entries for folder
   const fetchEntries = async (folderId: string) => {
     try {
-      const { data, error } = await supabase
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
+      const { data, error } = await supabaseDb
         .from('email_tracking_entries')
         .select('*')
         .eq('folder_id', folderId)
@@ -148,7 +143,8 @@ export default function EmailTrackingPage() {
   // Fetch email accounts
   const fetchEmailAccounts = async () => {
     try {
-      const { data, error } = await supabase
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
+      const { data, error } = await supabaseDb
         .from('email_accounts')
         .select('*')
         .eq('is_active', true)
@@ -164,7 +160,8 @@ export default function EmailTrackingPage() {
   // Fetch folder members
   const fetchFolderMembers = async (folderId: string) => {
     try {
-      const { data, error } = await supabase
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
+      const { data, error } = await supabaseDb
         .from('email_tracking_folder_access')
         .select('*')
         .eq('folder_id', folderId);
@@ -235,18 +232,14 @@ export default function EmailTrackingPage() {
     if (!user || !folderFormData.name) return;
     
     try {
-      // Get the actual user UUID from Supabase auth
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) {
-        alert('Please log in to create folders');
-        return;
-      }
+      // Use the supabase instance from lib to get proper session
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
       
       const folderData: any = {
         folder_name: folderFormData.name,
         folder_type: folderFormData.folder_type,
         parent_folder_id: currentFolder?.id || null,
-        created_by: authUser.id, // Use UUID from auth
+        created_by: user.id, // Use user.id from auth context (this is the UUID)
         year: new Date().getFullYear(),
         is_archived: false
       };
@@ -261,7 +254,7 @@ export default function EmailTrackingPage() {
         folderData.week_number = Math.ceil(new Date().getDate() / 7);
       }
       
-      const { error } = await supabase
+      const { error } = await supabaseDb
         .from('email_tracking_folders')
         .insert([folderData]);
       
@@ -282,19 +275,14 @@ export default function EmailTrackingPage() {
     if (!user || !currentFolder) return;
     
     try {
-      // Get the actual user UUID from Supabase auth
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) {
-        alert('Please log in to add entries');
-        return;
-      }
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
       
-      const { error } = await supabase
+      const { error } = await supabaseDb
         .from('email_tracking_entries')
         .insert([{
           ...entryFormData,
           folder_id: currentFolder.id,
-          created_by: authUser.id // Use UUID from auth
+          created_by: user.id // Use user.id from auth context
         }]);
       
       if (error) throw error;
@@ -323,7 +311,8 @@ export default function EmailTrackingPage() {
   // Update entry
   const updateEntry = async (entry: EmailEntry, field: string, value: any) => {
     try {
-      const { error } = await supabase
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
+      const { error } = await supabaseDb
         .from('email_tracking_entries')
         .update({ [field]: value, updated_at: new Date().toISOString() })
         .eq('id', entry.id);
@@ -331,6 +320,7 @@ export default function EmailTrackingPage() {
       if (error) throw error;
       await fetchEntries(currentFolder!.id);
     } catch (error: any) {
+      console.error('Error updating entry:', error);
       alert('Error: ' + error.message);
     }
   };
@@ -340,14 +330,17 @@ export default function EmailTrackingPage() {
     if (!confirm('Delete this entry?')) return;
     
     try {
-      const { error } = await supabase
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
+      const { error } = await supabaseDb
         .from('email_tracking_entries')
         .delete()
         .eq('id', entryId);
       
       if (error) throw error;
       await fetchEntries(currentFolder!.id);
+      alert('Entry deleted successfully!');
     } catch (error: any) {
+      console.error('Error deleting entry:', error);
       alert('Error: ' + error.message);
     }
   };
@@ -357,20 +350,15 @@ export default function EmailTrackingPage() {
     if (!currentFolder || !user) return;
     
     try {
-      // Get the actual user UUID from Supabase auth
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) {
-        alert('Please log in to manage members');
-        return;
-      }
+      const { supabase: supabaseDb } = await import('@/lib/supabase');
       
-      const { error } = await supabase
+      const { error } = await supabaseDb
         .from('email_tracking_folder_access')
         .insert([{
           folder_id: currentFolder.id,
           user_id: userId,
           access_level: accessLevel,
-          granted_by: authUser.id // Use UUID from auth
+          granted_by: user.id // Use user.id from auth context
         }]);
       
       if (error) throw error;
