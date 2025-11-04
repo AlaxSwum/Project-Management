@@ -365,20 +365,34 @@ export default function EmailTrackingPage() {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading Email Tracking System...</p>
-          </div>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-      <Sidebar projects={projects} onCreateProject={() => {}} />
-      <MobileHeader title="Email Tracking" isMobile={isMobile} />
-      <div style={{ marginLeft: isMobile ? '0' : '280px', padding: '2rem', background: '#F5F5ED', flex: 1, overflow: 'auto' }}>
+    <>
+      {isMobile && <MobileHeader title="Email Tracking" isMobile={isMobile} />}
+      
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={projects} onCreateProject={() => {}} />
+        
+        <div className="email-tracking-main" style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '80px' : '2rem',
+          background: 'transparent', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
         
         {/* Header */}
         <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6 mb-6">
