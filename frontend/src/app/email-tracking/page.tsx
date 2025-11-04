@@ -361,12 +361,12 @@ export default function EmailTrackingPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#F5F5ED', 
+          background: '#f8fafc', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -414,13 +414,16 @@ export default function EmailTrackingPage() {
           <div className="email-tracking-header" style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '3rem',
-            paddingBottom: '1.5rem'
+            alignItems: isMobile ? 'flex-start' : 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '1rem' : '0',
+            marginBottom: '2rem',
+            paddingBottom: '1.5rem',
+            borderBottom: '1px solid #e0e0e0'
           }}>
             <div>
               <h1 style={{ 
-                fontSize: '2.5rem', 
+                fontSize: isMobile ? '1.75rem' : '2.5rem', 
                 fontWeight: '300', 
                 margin: '0', 
                 color: '#1a1a1a',
@@ -428,7 +431,7 @@ export default function EmailTrackingPage() {
               }}>
                 Email Tracking System
               </h1>
-              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              <p style={{ fontSize: isMobile ? '0.95rem' : '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Rother Care Pharmacy - Communication Management
               </p>
             </div>
@@ -663,26 +666,26 @@ export default function EmailTrackingPage() {
               
               <div style={{ 
                 background: '#ffffff',
-                borderRadius: '12px',
-                border: '1px solid #e0e0e0',
+                borderRadius: '16px',
+                border: '1px solid #e5e7eb',
                 overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
               }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e0e0e0' }}>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Date</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>From</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Subject</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Remark</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>To Do</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Final Remark</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Folder Placed</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Response</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Email Account</th>
-                        <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Confirmed</th>
-                        <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Actions</th>
+                      <tr style={{ background: 'linear-gradient(to bottom, #f9fafb, #f3f4f6)', borderBottom: '2px solid #e5e7eb' }}>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>From</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Remark</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Do</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Final Remark</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Folder Placed</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Response</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Account</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'center', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Confirmed</th>
+                        <th style={{ padding: '1rem 1.5rem', textAlign: 'center', fontWeight: '600', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -694,29 +697,52 @@ export default function EmailTrackingPage() {
                         </tr>
                       ) : (
                         entries.map(entry => (
-                          <tr key={entry.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#1a1a1a' }}>
-                              {new Date(entry.entry_date).toLocaleDateString()}
+                          <tr 
+                            key={entry.id} 
+                            style={{ 
+                              borderBottom: '1px solid #f3f4f6',
+                              transition: 'background-color 0.15s ease',
+                              background: '#ffffff'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                          >
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#111827', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                              {new Date(entry.entry_date).toLocaleDateString('en-GB')}
                             </td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#1a1a1a' }}>{entry.from_sender}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#1a1a1a' }}>{entry.subject}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.remark}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.to_do}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.final_remark}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.folder_placed}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.response}</td>
-                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>
-                              {emailAccounts.find(a => a.id === entry.email_account_id)?.account_name || 'N/A'}
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#111827' }}>{entry.from_sender}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#111827', fontWeight: '500' }}>{entry.subject}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{entry.remark || '-'}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{entry.to_do || '-'}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{entry.final_remark || '-'}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{entry.folder_placed || '-'}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{entry.response || '-'}</td>
+                            <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: '#111827' }}>
+                              <span style={{
+                                padding: '0.25rem 0.75rem',
+                                background: '#eff6ff',
+                                color: '#1e40af',
+                                borderRadius: '9999px',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                              }}>
+                                {emailAccounts.find(a => a.id === entry.email_account_id)?.account_name || 'N/A'}
+                              </span>
                             </td>
-                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
                               <input
                                 type="checkbox"
                                 checked={entry.confirmed}
                                 onChange={(e) => updateEntry(entry, 'confirmed', e.target.checked)}
-                                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                style={{ 
+                                  width: '18px', 
+                                  height: '18px', 
+                                  cursor: 'pointer',
+                                  accentColor: '#10b981'
+                                }}
                               />
                             </td>
-                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
                               <button
                                 onClick={() => deleteEntry(entry.id)}
                                 style={{
@@ -724,8 +750,19 @@ export default function EmailTrackingPage() {
                                   background: 'transparent',
                                   border: 'none',
                                   cursor: 'pointer',
-                                  color: '#ef4444'
+                                  color: '#ef4444',
+                                  borderRadius: '6px',
+                                  transition: 'all 0.15s ease'
                                 }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#fef2f2';
+                                  e.currentTarget.style.color = '#dc2626';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.color = '#ef4444';
+                                }}
+                                title="Delete entry"
                               >
                                 <TrashIcon style={{ width: '16px', height: '16px' }} />
                               </button>
