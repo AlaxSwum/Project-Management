@@ -372,12 +372,12 @@ export default function EmailTrackingPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
-          background: '#f8fafc', 
+          background: '#F5F5ED', 
           flex: 1,
           display: 'flex',
           alignItems: 'center',
@@ -410,14 +410,14 @@ export default function EmailTrackingPage() {
         `
       }} />
       
-      <div className="email-tracking-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+      <div className="email-tracking-container" style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div className="email-tracking-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '80px' : '2rem',
-          background: 'transparent', 
+          background: '#F5F5ED', 
           flex: 1,
           minHeight: '100vh'
         }}>
