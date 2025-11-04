@@ -404,8 +404,8 @@ export default function PersonalTaskManager() {
           const checklistData = checklistItems.map((item, index) => ({
             task_id: parseInt(data.id.toString()),
             user_id: parseInt(user?.id?.toString() || '0'),
-            item_text: typeof item === 'string' ? item : item.text,
-            is_completed: typeof item === 'string' ? false : item.completed,
+            item_text: item,
+            is_completed: false,
             item_order: index
           }));
           
@@ -435,16 +435,9 @@ export default function PersonalTaskManager() {
       }
 
       const updateData = {
-        title: newTask.title,
-        description: newTask.description,
-        status: newTask.status,
-        priority: newTask.priority,
-        category: newTask.category,
-        tags: newTask.tags && newTask.tags.length > 0 ? newTask.tags : null,
+        ...newTask,
+        tags: newTask.tags.length > 0 ? newTask.tags : null,
         due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
-        scheduled_start: newTask.scheduled_start ? new Date(newTask.scheduled_start).toISOString() : null,
-        estimated_duration: newTask.estimated_duration || 60,
-        updated_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
@@ -458,33 +451,6 @@ export default function PersonalTaskManager() {
         console.error('Error updating task:', error);
         setError('Failed to update task');
         return;
-      }
-
-      // Update checklist items in database
-      try {
-        // First, delete all existing checklist items for this task
-        await supabase
-          .from('personal_task_checklist')
-          .delete()
-          .eq('task_id', parseInt(selectedTask.id));
-        
-        // Then insert the updated checklist items (if any)
-        if (checklistItems.length > 0) {
-          const checklistData = checklistItems.map((item, index) => ({
-            task_id: parseInt(selectedTask.id),
-            user_id: parseInt(user?.id?.toString() || '0'),
-            item_text: typeof item === 'string' ? item : item.text,
-            is_completed: typeof item === 'string' ? false : item.completed,
-            item_order: index
-          }));
-          
-          await supabase
-            .from('personal_task_checklist')
-            .insert(checklistData);
-        }
-      } catch (checklistError) {
-        console.error('Error updating checklist:', checklistError);
-        // Don't fail the whole update if checklist fails
       }
 
       setTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task));
@@ -763,10 +729,7 @@ export default function PersonalTaskManager() {
         .order('item_order', { ascending: true });
       
       if (!error && checklistData) {
-        setChecklistItems(checklistData.map(item => ({
-          text: item.item_text,
-          completed: item.is_completed || false
-        })));
+        setChecklistItems(checklistData.map(item => item.item_text));
         setLoadedChecklistItems(checklistData);
       } else {
         setChecklistItems([]);
@@ -3147,55 +3110,19 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
     return blockDate.toDateString() === currentDate.toDateString();
   });
   
-  // Generate time slots - collect all unique start times from tasks and blocks
-  const allStartTimes = new Set<string>();
-  
-  // Add scheduled task start times
-  scheduledDayTasks.forEach(task => {
-    const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
-    if (startTime) {
-      const hour = startTime.getHours();
-      const minute = startTime.getMinutes();
-      allStartTimes.add(`${hour}:${minute}`);
-    }
-  });
-  
-  // Add time block start times
-  dayTimeBlocks.forEach(block => {
-    const blockStart = new Date(block.start_datetime);
-    const hour = blockStart.getHours();
-    const minute = blockStart.getMinutes();
-    allStartTimes.add(`${hour}:${minute}`);
-  });
-  
-  // Add regular hour slots for empty time (every hour on the hour)
+  // Generate 1-hour slots
+  const timeSlots: { hour: number; minute: number }[] = [];
   for (let hour = 0; hour < 24; hour++) {
-    allStartTimes.add(`${hour}:0`);
+    timeSlots.push({ hour, minute: 0 });
   }
-  
-  // Convert to sorted array
-  const timeSlots = Array.from(allStartTimes)
-    .map(time => {
-      const [hour, minute] = time.split(':').map(Number);
-      return { hour, minute };
-    })
-    .sort((a, b) => a.hour * 60 + a.minute - (b.hour * 60 + b.minute));
   
   const getBlocksForSlot = (hour: number, minute: number) => {
     return dayTimeBlocks.filter(block => {
       const blockStart = new Date(block.start_datetime);
-      // Only show block at its exact start time
-      return blockStart.getHours() === hour && blockStart.getMinutes() === minute;
+      const blockEnd = new Date(block.end_datetime);
+      // Show block if it starts or overlaps with this hour
+      return blockStart.getHours() <= hour && blockEnd.getHours() > hour;
     });
-  };
-  
-  // Calculate how many hours a block spans
-  const getBlockSpan = (block: PersonalTimeBlock) => {
-    const blockStart = new Date(block.start_datetime);
-    const blockEnd = new Date(block.end_datetime);
-    const durationMinutes = (blockEnd.getTime() - blockStart.getTime()) / (1000 * 60);
-    const durationHours = durationMinutes / 60;
-    return Math.max(1, Math.ceil(durationHours)); // At least 1 hour
   };
   
   // Get scheduled tasks for a specific time slot (check both scheduled_start and due_date)
@@ -3204,37 +3131,28 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
       // Try scheduled_start first
       if (task.scheduled_start) {
         const taskStart = new Date(task.scheduled_start);
-        // Only show task at its exact start time
-        return taskStart.getHours() === hour && taskStart.getMinutes() === minute;
+        let taskEnd;
+        if (task.scheduled_end) {
+          taskEnd = new Date(task.scheduled_end);
+        } else if (task.estimated_duration) {
+          // Use task's estimated duration
+          taskEnd = new Date(taskStart.getTime() + task.estimated_duration * 60 * 1000);
+        } else {
+          // Default to 60 minutes if no duration specified
+          taskEnd = new Date(taskStart.getTime() + 60 * 60 * 1000);
+        }
+        // Show task if it starts or overlaps with this hour
+        return taskStart.getHours() <= hour && taskEnd.getHours() > hour;
       }
       
       // Fall back to due_date if no scheduled_start
       if (task.due_date) {
         const dueDate = new Date(task.due_date);
-        return dueDate.getHours() === hour && dueDate.getMinutes() === minute;
+        return dueDate.getHours() === hour;
       }
       
       return false;
     });
-  };
-  
-  // Calculate how many hours a task spans
-  const getTaskSpan = (task: PersonalTask) => {
-    const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
-    let endTime;
-    if (task.scheduled_end) {
-      endTime = new Date(task.scheduled_end);
-    } else if (startTime && task.estimated_duration) {
-      endTime = new Date(startTime.getTime() + task.estimated_duration * 60 * 1000);
-    } else if (startTime) {
-      endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
-    }
-    
-    if (!startTime || !endTime) return 1;
-    
-    const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-    const durationHours = durationMinutes / 60;
-    return Math.max(1, durationHours);
   };
   
   const handleSlotClick = (hour: number, minute: number) => {
@@ -3308,19 +3226,10 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
             const scheduledTasks = getScheduledTasksForSlot(hour, minute);
             const hasContent = blocks.length > 0 || scheduledTasks.length > 0;
             const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            // Show time with minutes only if not on the hour
-            let displayTime;
-            if (minute === 0) {
-              displayTime = hour === 0 ? '12 AM' : 
-                           hour < 12 ? `${hour} AM` :
-                           hour === 12 ? '12 PM' :
-                           `${hour - 12} PM`;
-            } else {
-              displayTime = hour === 0 ? `12:${minute.toString().padStart(2, '0')} AM` :
-                           hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
-                           hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM` :
-                           `${hour - 12}:${minute.toString().padStart(2, '0')} PM`;
-            }
+            const displayTime = hour === 0 ? '12:00 AM' : 
+                               hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
+                               hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM` :
+                               `${hour - 12}:${minute.toString().padStart(2, '0')} PM`;
             
             return (
               <div key={timeString} style={{ 
@@ -3587,9 +3496,6 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                         let endTime;
                         if (task.scheduled_end) {
                           endTime = new Date(task.scheduled_end);
-                        } else if (task.due_date) {
-                          // Use due_date as the end time
-                          endTime = new Date(task.due_date);
                         } else if (startTime && task.estimated_duration) {
                           // Use task's estimated duration
                           endTime = new Date(startTime.getTime() + task.estimated_duration * 60 * 1000);
@@ -3599,10 +3505,6 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                         } else {
                           endTime = null;
                         }
-                        
-                        // Calculate how many 60px rows this task should span
-                        const taskSpanHours = getTaskSpan(task);
-                        const minHeight = taskSpanHours * 60; // 60px per hour
                         
                         return (
                           <div
@@ -3617,8 +3519,7 @@ const DayCalendarView: React.FC<DayCalendarProps> = ({
                               fontSize: '13px',
                               display: 'flex',
                               alignItems: 'flex-start',
-                              gap: '8px',
-                              minHeight: `${minHeight}px`
+                              gap: '8px'
                             }}
                           >
                             <input

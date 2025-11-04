@@ -1,4 +1,4 @@
--- =============================================
+z-- =============================================
 -- TIMELINE & ROADMAP SYSTEM WITH GANTT CHART
 -- Complete KPI Tracking, Budget Management, Team Performance
 -- =============================================
@@ -142,6 +142,7 @@ CREATE TABLE timeline_item_checklist (
     item_text TEXT NOT NULL,
     is_completed BOOLEAN DEFAULT FALSE,
     item_order INTEGER DEFAULT 0,
+    assigned_user_id INTEGER, -- Team member assigned to this checklist item
     completed_by_id INTEGER,
     completed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
