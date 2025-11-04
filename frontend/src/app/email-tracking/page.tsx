@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
+import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
 
 // Supabase client
 const supabase = createClient(
@@ -59,6 +61,8 @@ interface FolderAccess {
 
 export default function EmailTrackingPage() {
   const { user } = useAuth();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   
   // State for folders
   const [yearFolders, setYearFolders] = useState<Folder[]>([]);
@@ -225,6 +229,16 @@ export default function EmailTrackingPage() {
       console.error('Error fetching folder access:', error);
     }
   };
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize data
   useEffect(() => {
@@ -619,17 +633,30 @@ export default function EmailTrackingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading Email Tracking System...</p>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar projects={projects} onCreateProject={() => {}} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <MobileHeader title="Email Tracking" isMobile={isMobile} />
+          <div className="flex-1 overflow-auto">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading Email Tracking System...</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar projects={projects} onCreateProject={() => {}} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <MobileHeader title="Email Tracking" isMobile={isMobile} />
+        <div className="flex-1 overflow-auto">
+          <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -1583,6 +1610,9 @@ export default function EmailTrackingPage() {
           </div>
         </div>
       )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
