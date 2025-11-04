@@ -86,7 +86,8 @@ export default function EmailTrackingPage() {
   const [folderFormData, setFolderFormData] = useState({
     name: '',
     description: '',
-    folder_type: 'YEAR' as 'YEAR' | 'MONTH' | 'WEEK'
+    folder_type: 'YEAR' as 'YEAR' | 'MONTH' | 'WEEK',
+    year: new Date().getFullYear()
   });
   
   const [entryFormData, setEntryFormData] = useState({
@@ -232,40 +233,32 @@ export default function EmailTrackingPage() {
 
   // Create folder
   const createFolder = async () => {
-    if (!user || !folderFormData.name) return;
+    if (!user) return;
     
     try {
-      const folderData: any = {
-        folder_name: folderFormData.name,
-        folder_type: folderFormData.folder_type,
-        parent_folder_id: currentFolder?.id || null,
-        created_by: user.id,
-        year: new Date().getFullYear(),
-        is_archived: false
-      };
-      
-      // Set month if parent is a year folder
-      if (currentFolder?.folder_type === 'YEAR') {
-        folderData.month = new Date().getMonth() + 1;
+      if (folderFormData.folder_type === 'YEAR') {
+        const { error } = await supabase.rpc('create_year_folder', {
+          year_val: folderFormData.year,
+          creator_id: user.id
+        });
+        if (error) throw error;
+      } else if (folderFormData.folder_type === 'MONTH' && currentFolder && currentFolder.folder_type === 'YEAR') {
+        const month = parseInt(prompt('Enter month number (1-12):') || '0');
+        if (month < 1 || month > 12) return;
+        
+        const { error } = await supabase.rpc('create_month_folder', {
+          parent_id: currentFolder.id,
+          year_val: currentFolder.year,
+          month_val: month,
+          creator_id: user.id
+        });
+        if (error) throw error;
       }
-      
-      // Set week if parent is a month folder
-      if (currentFolder?.folder_type === 'MONTH') {
-        folderData.week_number = Math.ceil(new Date().getDate() / 7);
-      }
-      
-      const { error } = await supabase
-        .from('email_tracking_folders')
-        .insert([folderData]);
-      
-      if (error) throw error;
       
       setShowFolderForm(false);
-      setFolderFormData({ name: '', description: '', folder_type: 'YEAR' });
       await fetchFolders();
-      alert('Folder created successfully!');
+      alert('Folder created successfully');
     } catch (error: any) {
-      console.error('Error creating folder:', error);
       alert('Error: ' + error.message);
     }
   };
@@ -439,7 +432,8 @@ export default function EmailTrackingPage() {
                   setFolderFormData({
                     name: '',
                     description: '',
-                    folder_type: currentFolder?.folder_type === 'YEAR' ? 'MONTH' : currentFolder?.folder_type === 'MONTH' ? 'WEEK' : 'YEAR'
+                    folder_type: currentFolder?.folder_type === 'YEAR' ? 'MONTH' : 'YEAR',
+                    year: new Date().getFullYear()
                   });
                   setShowFolderForm(true);
                 }}
@@ -770,46 +764,6 @@ export default function EmailTrackingPage() {
             
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
-                Folder Name *
-              </label>
-              <input
-                type="text"
-                value={folderFormData.name}
-                onChange={(e) => setFolderFormData({...folderFormData, name: e.target.value})}
-                placeholder="e.g., 2025, January 2025, Finance Emails"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '0.9rem'
-                }}
-                required
-              />
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
-                Description (Optional)
-              </label>
-              <textarea
-                value={folderFormData.description}
-                onChange={(e) => setFolderFormData({...folderFormData, description: e.target.value})}
-                placeholder="Brief description of this folder"
-                rows={2}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '0.9rem',
-                  fontFamily: 'inherit'
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
                 Folder Type
               </label>
               <select
@@ -824,10 +778,30 @@ export default function EmailTrackingPage() {
                 }}
               >
                 <option value="YEAR">Year Folder</option>
-                <option value="MONTH">Month Folder</option>
-                <option value="WEEK">Week Folder</option>
+                {currentFolder?.folder_type === 'YEAR' && <option value="MONTH">Month Folder</option>}
+                {currentFolder?.folder_type === 'MONTH' && <option value="WEEK">Week Folder</option>}
               </select>
             </div>
+
+            {folderFormData.folder_type === 'YEAR' && (
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Year
+                </label>
+                <input
+                  type="number"
+                  value={folderFormData.year}
+                  onChange={(e) => setFolderFormData({...folderFormData, year: parseInt(e.target.value)})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
               <button
@@ -845,15 +819,13 @@ export default function EmailTrackingPage() {
               </button>
               <button
                 onClick={createFolder}
-                disabled={!folderFormData.name}
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: '#5884FD',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: 'pointer',
-                  opacity: !folderFormData.name ? 0.5 : 1
+                  cursor: 'pointer'
                 }}
               >
                 Create Folder
