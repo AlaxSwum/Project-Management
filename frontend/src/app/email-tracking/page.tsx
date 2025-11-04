@@ -1,16 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
+import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+interface EmailEntry {
+  id: string;
+  folder_id: string;
+  entry_date: string;
+  from_sender: string;
+  subject: string;
+  remark: string;
+  to_do: string;
+  final_remark: string;
+  folder_placed: string;
+  response: string;
+  email_account_id: string;
+  confirmed: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface EmailAccount {
   id: string;
@@ -34,67 +54,43 @@ interface Folder {
   is_archived: boolean;
 }
 
-interface EmailEntry {
-  id: string;
-  folder_id: string;
-  entry_date: string;
-  from_sender: string;
-  subject: string;
-  remark: string;
-  to_do: string;
-  final_remark: string;
-  folder_placed: string;
-  response: string;
-  email_account_id: string;
-  confirmed: boolean;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface FolderAccess {
+interface FolderMember {
   id: string;
   folder_id: string;
   user_id: string;
   access_level: 'VIEWER' | 'EDITOR' | 'ADMIN';
+  user_email?: string;
 }
 
 export default function EmailTrackingPage() {
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<any[]>([]);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   
-  // State for folders
-  const [yearFolders, setYearFolders] = useState<Folder[]>([]);
-  const [selectedYear, setSelectedYear] = useState<Folder | null>(null);
-  const [monthFolders, setMonthFolders] = useState<Folder[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<Folder | null>(null);
-  const [weekFolders, setWeekFolders] = useState<Folder[]>([]);
-  const [selectedWeek, setSelectedWeek] = useState<Folder | null>(null);
-  
-  // State for entries
+  // State
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [folderPath, setFolderPath] = useState<Folder[]>([]);
   const [entries, setEntries] = useState<EmailEntry[]>([]);
-  const [filteredEntries, setFilteredEntries] = useState<EmailEntry[]>([]);
-  
-  // State for email accounts
   const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);
+  const [folderMembers, setFolderMembers] = useState<FolderMember[]>([]);
   
-  // State for filters
-  const [dateFilter, setDateFilter] = useState('');
-  const [fromFilter, setFromFilter] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
-  const [emailAccountFilter, setEmailAccountFilter] = useState('');
-  const [confirmedFilter, setConfirmedFilter] = useState<string>('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  
-  // State for UI
-  const [showNewEntryForm, setShowNewEntryForm] = useState(false);
-  const [showNewAccountForm, setShowNewAccountForm] = useState(false);
+  // UI States
+  const [showFolderForm, setShowFolderForm] = useState(false);
+  const [showEntryForm, setShowEntryForm] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<EmailEntry | null>(null);
   
-  // Form state for new entry
-  const [newEntry, setNewEntry] = useState({
+  // Form Data
+  const [folderFormData, setFolderFormData] = useState({
+    name: '',
+    description: '',
+    folder_type: 'YEAR' as 'YEAR' | 'MONTH' | 'WEEK',
+    year: new Date().getFullYear()
+  });
+  
+  const [entryFormData, setEntryFormData] = useState({
     entry_date: new Date().toISOString().split('T')[0],
     from_sender: '',
     subject: '',
@@ -106,19 +102,8 @@ export default function EmailTrackingPage() {
     email_account_id: '',
     confirmed: false
   });
-  
-  // Form state for new email account
-  const [newAccount, setNewAccount] = useState({
-    account_name: '',
-    full_email: '',
-    description: ''
-  });
-  
-  // Loading states
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
-  // Detect mobile
+  // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -128,19 +113,36 @@ export default function EmailTrackingPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch year folders
-  const fetchYearFolders = async () => {
+  // Fetch folders
+  const fetchFolders = async () => {
     try {
       const { data, error } = await supabase
         .from('email_tracking_folders')
         .select('*')
-        .eq('folder_type', 'YEAR')
-        .order('year', { ascending: false });
+        .order('year', { ascending: false })
+        .order('month', { ascending: true })
+        .order('week_number', { ascending: true });
       
       if (error) throw error;
-      setYearFolders(data || []);
+      setFolders(data || []);
     } catch (error) {
-      console.error('Error fetching year folders:', error);
+      console.error('Error fetching folders:', error);
+    }
+  };
+
+  // Fetch entries for folder
+  const fetchEntries = async (folderId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('email_tracking_entries')
+        .select('*')
+        .eq('folder_id', folderId)
+        .order('entry_date', { ascending: false });
+      
+      if (error) throw error;
+      setEntries(data || []);
+    } catch (error) {
+      console.error('Error fetching entries:', error);
     }
   };
 
@@ -160,120 +162,123 @@ export default function EmailTrackingPage() {
     }
   };
 
-  // Fetch entries for selected folder
-  const fetchEntries = async (folderId: string) => {
+  // Fetch folder members
+  const fetchFolderMembers = async (folderId: string) => {
     try {
       const { data, error } = await supabase
-        .from('email_tracking_entries')
+        .from('email_tracking_folder_access')
         .select('*')
-        .eq('folder_id', folderId)
-        .order('entry_date', { ascending: false });
+        .eq('folder_id', folderId);
       
       if (error) throw error;
-      setEntries(data || []);
-      setFilteredEntries(data || []);
+      setFolderMembers(data || []);
     } catch (error) {
-      console.error('Error fetching entries:', error);
+      console.error('Error fetching folder members:', error);
     }
   };
 
-  // Initialize data
+  // Initialize
   useEffect(() => {
-    const initData = async () => {
-      setLoading(true);
-      await fetchYearFolders();
-      await fetchEmailAccounts();
-      setLoading(false);
-    };
-    initData();
-  }, []);
+    if (!authLoading && isAuthenticated) {
+      fetchFolders();
+      fetchEmailAccounts();
+      setIsLoading(false);
+    }
+  }, [authLoading, isAuthenticated]);
 
-  // Filter entries based on filters
-  useEffect(() => {
-    let filtered = [...entries];
-    
-    if (dateFilter) {
-      filtered = filtered.filter(entry => entry.entry_date === dateFilter);
-    }
-    
-    if (startDate && endDate) {
-      filtered = filtered.filter(entry => {
-        const entryDate = new Date(entry.entry_date);
-        return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
-      });
-    }
-    
-    if (fromFilter) {
-      filtered = filtered.filter(entry => 
-        entry.from_sender.toLowerCase().includes(fromFilter.toLowerCase())
+  // Get current folder contents (subfolders)
+  const getCurrentFolderContents = () => {
+    if (!currentFolder) {
+      // Root level - show year folders
+      return folders.filter(f => f.folder_type === 'YEAR');
+    } else if (currentFolder.folder_type === 'YEAR') {
+      // Show month folders
+      return folders.filter(f => 
+        f.folder_type === 'MONTH' && 
+        f.parent_folder_id === currentFolder.id
+      );
+    } else if (currentFolder.folder_type === 'MONTH') {
+      // Show week folders
+      return folders.filter(f => 
+        f.folder_type === 'WEEK' && 
+        f.parent_folder_id === currentFolder.id
       );
     }
-    
-    if (subjectFilter) {
-      filtered = filtered.filter(entry => 
-        entry.subject.toLowerCase().includes(subjectFilter.toLowerCase())
-      );
-    }
-    
-    if (emailAccountFilter && emailAccountFilter !== 'all') {
-      filtered = filtered.filter(entry => entry.email_account_id === emailAccountFilter);
-    }
-    
-    if (confirmedFilter !== 'all') {
-      const isConfirmed = confirmedFilter === 'true';
-      filtered = filtered.filter(entry => entry.confirmed === isConfirmed);
-    }
-    
-    setFilteredEntries(filtered);
-  }, [entries, dateFilter, fromFilter, subjectFilter, emailAccountFilter, confirmedFilter, startDate, endDate]);
-
-  // Get active folder ID
-  const getActiveFolderId = (): string | null => {
-    if (selectedWeek) return selectedWeek.id;
-    if (selectedMonth) return selectedMonth.id;
-    if (selectedYear) return selectedYear.id;
-    return null;
+    return [];
   };
 
-  // Create new year folder
-  const createYearFolder = async (year: number) => {
+  // Enter folder
+  const enterFolder = (folder: Folder) => {
+    setCurrentFolder(folder);
+    const newPath = [...folderPath, folder];
+    setFolderPath(newPath);
+    fetchEntries(folder.id);
+    fetchFolderMembers(folder.id);
+  };
+
+  // Go back
+  const goBack = () => {
+    if (folderPath.length > 0) {
+      const newPath = folderPath.slice(0, -1);
+      setFolderPath(newPath);
+      const newCurrent = newPath[newPath.length - 1] || null;
+      setCurrentFolder(newCurrent);
+      if (newCurrent) {
+        fetchEntries(newCurrent.id);
+      } else {
+        setEntries([]);
+      }
+    }
+  };
+
+  // Create folder
+  const createFolder = async () => {
     if (!user) return;
     
     try {
-      setSaving(true);
-      const { data, error } = await supabase.rpc('create_year_folder', {
-        year_val: year,
-        creator_id: user.id
-      });
+      if (folderFormData.folder_type === 'YEAR') {
+        const { error } = await supabase.rpc('create_year_folder', {
+          year_val: folderFormData.year,
+          creator_id: user.id
+        });
+        if (error) throw error;
+      } else if (folderFormData.folder_type === 'MONTH' && currentFolder && currentFolder.folder_type === 'YEAR') {
+        const month = parseInt(prompt('Enter month number (1-12):') || '0');
+        if (month < 1 || month > 12) return;
+        
+        const { error } = await supabase.rpc('create_month_folder', {
+          parent_id: currentFolder.id,
+          year_val: currentFolder.year,
+          month_val: month,
+          creator_id: user.id
+        });
+        if (error) throw error;
+      }
       
-      if (error) throw error;
-      await fetchYearFolders();
-      alert(`Year ${year} folder created successfully`);
+      setShowFolderForm(false);
+      await fetchFolders();
+      alert('Folder created successfully');
     } catch (error: any) {
-      console.error('Error creating year folder:', error);
-      alert('Error creating year folder: ' + error.message);
-    } finally {
-      setSaving(false);
+      alert('Error: ' + error.message);
     }
   };
 
-  // Add new entry
+  // Add entry
   const addEntry = async () => {
-    if (!user || !getActiveFolderId()) return;
+    if (!user || !currentFolder) return;
     
     try {
-      setSaving(true);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('email_tracking_entries')
         .insert([{
-          ...newEntry,
-          folder_id: getActiveFolderId(),
+          ...entryFormData,
+          folder_id: currentFolder.id,
           created_by: user.id
         }]);
       
       if (error) throw error;
       
-      setNewEntry({
+      setEntryFormData({
         entry_date: new Date().toISOString().split('T')[0],
         from_sender: '',
         subject: '',
@@ -285,77 +290,72 @@ export default function EmailTrackingPage() {
         email_account_id: '',
         confirmed: false
       });
-      setShowNewEntryForm(false);
-      await fetchEntries(getActiveFolderId()!);
+      setShowEntryForm(false);
+      await fetchEntries(currentFolder.id);
       alert('Entry added successfully');
     } catch (error: any) {
-      console.error('Error adding entry:', error);
-      alert('Error adding entry: ' + error.message);
-    } finally {
-      setSaving(false);
+      alert('Error: ' + error.message);
     }
   };
 
   // Update entry
-  const updateEntry = async (entry: EmailEntry) => {
+  const updateEntry = async (entry: EmailEntry, field: string, value: any) => {
     try {
-      setSaving(true);
       const { error } = await supabase
         .from('email_tracking_entries')
-        .update({
-          entry_date: entry.entry_date,
-          from_sender: entry.from_sender,
-          subject: entry.subject,
-          remark: entry.remark,
-          to_do: entry.to_do,
-          final_remark: entry.final_remark,
-          folder_placed: entry.folder_placed,
-          response: entry.response,
-          email_account_id: entry.email_account_id,
-          confirmed: entry.confirmed,
-          updated_by: user?.id,
-          updated_at: new Date().toISOString()
-        })
+        .update({ [field]: value, updated_at: new Date().toISOString() })
         .eq('id', entry.id);
       
       if (error) throw error;
-      
-      setEditingEntry(null);
-      await fetchEntries(getActiveFolderId()!);
+      await fetchEntries(currentFolder!.id);
     } catch (error: any) {
-      console.error('Error updating entry:', error);
-      alert('Error updating entry: ' + error.message);
-    } finally {
-      setSaving(false);
+      alert('Error: ' + error.message);
     }
   };
 
   // Delete entry
   const deleteEntry = async (entryId: string) => {
-    if (!confirm('Are you sure you want to delete this entry?')) return;
+    if (!confirm('Delete this entry?')) return;
     
     try {
-      setSaving(true);
       const { error } = await supabase
         .from('email_tracking_entries')
         .delete()
         .eq('id', entryId);
       
       if (error) throw error;
-      await fetchEntries(getActiveFolderId()!);
-      alert('Entry deleted successfully');
+      await fetchEntries(currentFolder!.id);
     } catch (error: any) {
-      console.error('Error deleting entry:', error);
-      alert('Error deleting entry: ' + error.message);
-    } finally {
-      setSaving(false);
+      alert('Error: ' + error.message);
     }
   };
 
-  if (loading) {
+  // Add folder member
+  const addFolderMember = async (userId: string, accessLevel: string) => {
+    if (!currentFolder) return;
+    
+    try {
+      const { error } = await supabase
+        .from('email_tracking_folder_access')
+        .insert([{
+          folder_id: currentFolder.id,
+          user_id: userId,
+          access_level: accessLevel,
+          granted_by: user?.id
+        }]);
+      
+      if (error) throw error;
+      await fetchFolderMembers(currentFolder.id);
+      alert('Access granted');
+    } catch (error: any) {
+      alert('Error: ' + error.message);
+    }
+  };
+
+  if (authLoading || isLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={projects} onCreateProject={() => {}} />
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
           marginLeft: '256px',
           padding: '2rem', 
@@ -383,8 +383,17 @@ export default function EmailTrackingPage() {
     <>
       {isMobile && <MobileHeader title="Email Tracking" isMobile={isMobile} />}
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={projects} onCreateProject={() => {}} />
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `
+      }} />
+      
+      <div className="email-tracking-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div className="email-tracking-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
@@ -394,212 +403,841 @@ export default function EmailTrackingPage() {
           flex: 1,
           minHeight: '100vh'
         }}>
-        
-        {/* Header */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="flex justify-between items-center">
+          {/* Header */}
+          <div className="email-tracking-header" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '3rem',
+            paddingBottom: '1.5rem'
+          }}>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Email Tracking System</h1>
-              <p className="mt-1 text-sm text-gray-600">Rother Care Pharmacy - Communication Management</p>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '300', 
+                margin: '0', 
+                color: '#1a1a1a',
+                letterSpacing: '-0.02em'
+              }}>
+                Email Tracking System
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+                Rother Care Pharmacy - Communication Management
+              </p>
             </div>
-            <div className="flex gap-3">
+            
+            <div className="email-tracking-actions" style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={() => {
-                  const year = prompt('Enter year (e.g., 2025):');
-                  if (year && !isNaN(parseInt(year))) {
-                    createYearFolder(parseInt(year));
-                  }
+                  setFolderFormData({
+                    name: '',
+                    description: '',
+                    folder_type: currentFolder?.folder_type === 'YEAR' ? 'MONTH' : 'YEAR',
+                    year: new Date().getFullYear()
+                  });
+                  setShowFolderForm(true);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#ffffff',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}
               >
-                New Year Folder
+                Create Folder
               </button>
+              
+              {currentFolder && (
+                <>
+                  <button
+                    onClick={() => setShowEntryForm(true)}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#5884FD',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add New Entry
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      fetchFolderMembers(currentFolder.id);
+                      setShowMembersModal(true);
+                    }}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#ffffff',
+                      color: '#666666',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '12px',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <UserGroupIcon style={{ width: '16px', height: '16px' }} />
+                    Members
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Folder Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Folder Navigation</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Year
-              </label>
-              <select
-                value={selectedYear?.id || ''}
-                onChange={async (e) => {
-                  const year = yearFolders.find(f => f.id === e.target.value);
-                  setSelectedYear(year || null);
-                  setEntries([]);
-                  if (year) {
-                    await fetchEntries(year.id);
-                  }
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">-- Select Year --</option>
-                {yearFolders.map(folder => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.folder_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Entries Table */}
-        {getActiveFolderId() && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Email Entries</h2>
+          {/* Breadcrumb Navigation */}
+          {folderPath.length > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              marginBottom: '1.5rem',
+              fontSize: '0.9rem',
+              color: '#666666'
+            }}>
               <button
-                onClick={() => setShowNewEntryForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onClick={() => {
+                  setCurrentFolder(null);
+                  setFolderPath([]);
+                  setEntries([]);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#5884FD',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
               >
-                Add New Entry
+                Home
               </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email Account</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confirmed</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredEntries.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                        No entries found. Add your first entry to get started.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredEntries.map(entry => (
-                      <tr key={entry.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {new Date(entry.entry_date).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{entry.from_sender}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{entry.subject}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          {emailAccounts.find(a => a.id === entry.email_account_id)?.account_name || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={entry.confirmed}
-                            onChange={async (e) => {
-                              const updated = {...entry, confirmed: e.target.checked};
-                              await updateEntry(updated);
-                            }}
-                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <button
-                            onClick={() => deleteEntry(entry.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* No Folder Selected */}
-        {!getActiveFolderId() && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <h3 className="text-lg font-medium text-gray-900">No Folder Selected</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Please select a year folder from the navigation above to view and manage email tracking entries.
-            </p>
-          </div>
-        )}
-
-        {/* New Entry Modal */}
-        {showNewEntryForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
-              <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Add New Entry</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">From (Sender)</label>
-                    <input
-                      type="text"
-                      value={newEntry.from_sender}
-                      onChange={(e) => setNewEntry({...newEntry, from_sender: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                    <input
-                      type="text"
-                      value={newEntry.subject}
-                      onChange={(e) => setNewEntry({...newEntry, subject: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Account</label>
-                    <select
-                      value={newEntry.email_account_id}
-                      onChange={(e) => setNewEntry({...newEntry, email_account_id: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Email Account --</option>
-                      {emailAccounts.map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.account_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              {folderPath.map((folder, index) => (
+                <div key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ChevronRightIcon style={{ width: '12px', height: '12px', color: '#999999' }} />
+                  <button
+                    onClick={() => {
+                      const newPath = folderPath.slice(0, index + 1);
+                      setFolderPath(newPath);
+                      setCurrentFolder(folder);
+                      fetchEntries(folder.id);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: index === folderPath.length - 1 ? '#1a1a1a' : '#5884FD',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      fontWeight: index === folderPath.length - 1 ? '500' : '400'
+                    }}
+                  >
+                    {folder.folder_name}
+                  </button>
                 </div>
+              ))}
+            </div>
+          )}
 
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    onClick={() => setShowNewEntryForm(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+          {/* Folders View */}
+          {!currentFolder || (currentFolder && getCurrentFolderContents().length > 0) ? (
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: '500', 
+                color: '#1a1a1a', 
+                marginBottom: '1rem' 
+              }}>
+                {currentFolder ? 'Subfolders' : 'Year Folders'}
+              </h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                {getCurrentFolderContents().map(folder => (
+                  <div
+                    key={folder.id}
+                    style={{
+                      padding: '1.5rem',
+                      background: '#ffffff',
+                      borderRadius: '12px',
+                      border: '1px solid #e0e0e0',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
                   >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={addEntry}
-                    disabled={saving || !newEntry.from_sender || !newEntry.subject}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-                  >
-                    {saving ? 'Adding...' : 'Add Entry'}
-                  </button>
+                    <div 
+                      onClick={() => enterFolder(folder)}
+                      style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        flex: 1
+                      }}
+                    >
+                      <div style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        background: '#f0f0f0',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <FolderIcon style={{ width: '20px', height: '20px', color: '#999999' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '500', color: '#1a1a1a', fontSize: '1rem' }}>
+                          {folder.folder_name}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#666666', marginTop: '0.25rem' }}>
+                          {folder.folder_type}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentFolder(folder);
+                          fetchFolderMembers(folder.id);
+                          setShowMembersModal(true);
+                        }}
+                        style={{
+                          padding: '0.5rem',
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#666666'
+                        }}
+                        title="Manage Members"
+                      >
+                        <UserGroupIcon style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Entries Table - Excel-like Sheet */}
+          {currentFolder && (
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: '500', 
+                color: '#1a1a1a', 
+                marginBottom: '1rem' 
+              }}>
+                Email Tracking Entries
+              </h2>
+              
+              <div style={{ 
+                background: '#ffffff',
+                borderRadius: '12px',
+                border: '1px solid #e0e0e0',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+              }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e0e0e0' }}>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Date</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>From</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Subject</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Remark</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>To Do</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Final Remark</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Folder Placed</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Response</th>
+                        <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Email Account</th>
+                        <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Confirmed</th>
+                        <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '500', fontSize: '0.85rem', color: '#666666' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entries.length === 0 ? (
+                        <tr>
+                          <td colSpan={11} style={{ padding: '3rem', textAlign: 'center', color: '#999999' }}>
+                            No entries yet. Click "Add New Entry" to get started.
+                          </td>
+                        </tr>
+                      ) : (
+                        entries.map(entry => (
+                          <tr key={entry.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#1a1a1a' }}>
+                              {new Date(entry.entry_date).toLocaleDateString()}
+                            </td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#1a1a1a' }}>{entry.from_sender}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#1a1a1a' }}>{entry.subject}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.remark}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.to_do}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.final_remark}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.folder_placed}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>{entry.response}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.9rem', color: '#666666' }}>
+                              {emailAccounts.find(a => a.id === entry.email_account_id)?.account_name || 'N/A'}
+                            </td>
+                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={entry.confirmed}
+                                onChange={(e) => updateEntry(entry, 'confirmed', e.target.checked)}
+                                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                              />
+                            </td>
+                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                              <button
+                                onClick={() => deleteEntry(entry.id)}
+                                style={{
+                                  padding: '0.5rem',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: '#ef4444'
+                                }}
+                              >
+                                <TrashIcon style={{ width: '16px', height: '16px' }} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
+          )}
         </div>
       </div>
+
+      {/* Create Folder Modal */}
+      {showFolderForm && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '500', marginBottom: '1.5rem', color: '#1a1a1a' }}>
+              Create New Folder
+            </h2>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                Folder Type
+              </label>
+              <select
+                value={folderFormData.folder_type}
+                onChange={(e) => setFolderFormData({...folderFormData, folder_type: e.target.value as any})}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value="YEAR">Year Folder</option>
+                {currentFolder?.folder_type === 'YEAR' && <option value="MONTH">Month Folder</option>}
+                {currentFolder?.folder_type === 'MONTH' && <option value="WEEK">Week Folder</option>}
+              </select>
+            </div>
+
+            {folderFormData.folder_type === 'YEAR' && (
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Year
+                </label>
+                <input
+                  type="number"
+                  value={folderFormData.year}
+                  onChange={(e) => setFolderFormData({...folderFormData, year: parseInt(e.target.value)})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button
+                onClick={() => setShowFolderForm(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#ffffff',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createFolder}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#5884FD',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Create Folder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Entry Modal */}
+      {showEntryForm && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '500', marginBottom: '1.5rem', color: '#1a1a1a' }}>
+              Add New Entry
+            </h2>
+            
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={entryFormData.entry_date}
+                  onChange={(e) => setEntryFormData({...entryFormData, entry_date: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  From (Sender) *
+                </label>
+                <input
+                  type="text"
+                  value={entryFormData.from_sender}
+                  onChange={(e) => setEntryFormData({...entryFormData, from_sender: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Subject *
+                </label>
+                <input
+                  type="text"
+                  value={entryFormData.subject}
+                  onChange={(e) => setEntryFormData({...entryFormData, subject: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Remark
+                </label>
+                <textarea
+                  value={entryFormData.remark}
+                  onChange={(e) => setEntryFormData({...entryFormData, remark: e.target.value})}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  To Do
+                </label>
+                <textarea
+                  value={entryFormData.to_do}
+                  onChange={(e) => setEntryFormData({...entryFormData, to_do: e.target.value})}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Final Remark
+                </label>
+                <textarea
+                  value={entryFormData.final_remark}
+                  onChange={(e) => setEntryFormData({...entryFormData, final_remark: e.target.value})}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Folder Placed
+                </label>
+                <input
+                  type="text"
+                  value={entryFormData.folder_placed}
+                  onChange={(e) => setEntryFormData({...entryFormData, folder_placed: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Response
+                </label>
+                <textarea
+                  value={entryFormData.response}
+                  onChange={(e) => setEntryFormData({...entryFormData, response: e.target.value})}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666666' }}>
+                  Email Account
+                </label>
+                <select
+                  value={entryFormData.email_account_id}
+                  onChange={(e) => setEntryFormData({...entryFormData, email_account_id: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="">-- Select Email Account --</option>
+                  {emailAccounts.map(account => (
+                    <option key={account.id} value={account.id}>
+                      {account.account_name} ({account.full_email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={entryFormData.confirmed}
+                  onChange={(e) => setEntryFormData({...entryFormData, confirmed: e.target.checked})}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label style={{ fontSize: '0.9rem', color: '#666666' }}>
+                  Mark as Confirmed
+                </label>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button
+                onClick={() => setShowEntryForm(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#ffffff',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addEntry}
+                disabled={!entryFormData.from_sender || !entryFormData.subject}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#5884FD',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  opacity: (!entryFormData.from_sender || !entryFormData.subject) ? 0.5 : 1
+                }}
+              >
+                Add Entry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Members Modal */}
+      {showMembersModal && currentFolder && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '500', marginBottom: '0.5rem', color: '#1a1a1a' }}>
+              Folder Members
+            </h2>
+            <p style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '1.5rem' }}>
+              {currentFolder.folder_name}
+            </p>
+            
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '500', marginBottom: '1rem', color: '#1a1a1a' }}>
+                Current Members
+              </h3>
+              {folderMembers.length === 0 ? (
+                <p style={{ fontSize: '0.9rem', color: '#999999' }}>No members yet</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {folderMembers.map(member => (
+                    <div key={member.id} style={{
+                      padding: '0.75rem',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.9rem', color: '#1a1a1a' }}>
+                          User ID: {member.user_id.substring(0, 8)}...
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#666666' }}>
+                          {member.access_level}
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (confirm('Remove this member?')) {
+                            await supabase
+                              .from('email_tracking_folder_access')
+                              .delete()
+                              .eq('id', member.id);
+                            fetchFolderMembers(currentFolder.id);
+                          }
+                        }}
+                        style={{
+                          padding: '0.5rem',
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#ef4444'
+                        }}
+                      >
+                        <TrashIcon style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '500', marginBottom: '1rem', color: '#1a1a1a' }}>
+                Add Member
+              </h3>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <input
+                  id="memberUserId"
+                  type="text"
+                  placeholder="User ID (UUID)"
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                />
+                <select
+                  id="memberAccessLevel"
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="VIEWER">Viewer</option>
+                  <option value="EDITOR">Editor</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+                <button
+                  onClick={() => {
+                    const userId = (document.getElementById('memberUserId') as HTMLInputElement).value;
+                    const accessLevel = (document.getElementById('memberAccessLevel') as HTMLSelectElement).value;
+                    if (userId) {
+                      addFolderMember(userId, accessLevel);
+                      (document.getElementById('memberUserId') as HTMLInputElement).value = '';
+                    }
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#5884FD',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowMembersModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#ffffff',
+                  color: '#666666',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
