@@ -33,6 +33,7 @@ import {
   KeyIcon,
   BuildingOfficeIcon,
   CurrencyDollarIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -990,6 +991,7 @@ Your report is now available in the system.`);
     { name: 'Timeline & Roadmap', href: '/timeline', icon: ChartBarIcon },
     { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
+    { name: 'Email Tracking', href: '/email-tracking', icon: EnvelopeIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
   ];
