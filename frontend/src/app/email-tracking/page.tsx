@@ -235,11 +235,18 @@ export default function EmailTrackingPage() {
     if (!user || !folderFormData.name) return;
     
     try {
+      // Get the actual user UUID from Supabase auth
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        alert('Please log in to create folders');
+        return;
+      }
+      
       const folderData: any = {
         folder_name: folderFormData.name,
         folder_type: folderFormData.folder_type,
         parent_folder_id: currentFolder?.id || null,
-        created_by: user.id,
+        created_by: authUser.id, // Use UUID from auth
         year: new Date().getFullYear(),
         is_archived: false
       };
@@ -275,12 +282,19 @@ export default function EmailTrackingPage() {
     if (!user || !currentFolder) return;
     
     try {
+      // Get the actual user UUID from Supabase auth
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        alert('Please log in to add entries');
+        return;
+      }
+      
       const { error } = await supabase
         .from('email_tracking_entries')
         .insert([{
           ...entryFormData,
           folder_id: currentFolder.id,
-          created_by: user.id
+          created_by: authUser.id // Use UUID from auth
         }]);
       
       if (error) throw error;
@@ -299,8 +313,9 @@ export default function EmailTrackingPage() {
       });
       setShowEntryForm(false);
       await fetchEntries(currentFolder.id);
-      alert('Entry added successfully');
+      alert('Entry added successfully!');
     } catch (error: any) {
+      console.error('Error adding entry:', error);
       alert('Error: ' + error.message);
     }
   };
@@ -339,22 +354,30 @@ export default function EmailTrackingPage() {
 
   // Add folder member
   const addFolderMember = async (userId: string, accessLevel: string) => {
-    if (!currentFolder) return;
+    if (!currentFolder || !user) return;
     
     try {
+      // Get the actual user UUID from Supabase auth
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        alert('Please log in to manage members');
+        return;
+      }
+      
       const { error } = await supabase
         .from('email_tracking_folder_access')
         .insert([{
           folder_id: currentFolder.id,
           user_id: userId,
           access_level: accessLevel,
-          granted_by: user?.id
+          granted_by: authUser.id // Use UUID from auth
         }]);
       
       if (error) throw error;
       await fetchFolderMembers(currentFolder.id);
-      alert('Access granted');
+      alert('Access granted successfully!');
     } catch (error: any) {
+      console.error('Error granting access:', error);
       alert('Error: ' + error.message);
     }
   };
