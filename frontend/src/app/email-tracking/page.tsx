@@ -1220,7 +1220,8 @@ export default function EmailTrackingPage() {
                       <button
                         onClick={async () => {
                           if (confirm('Remove this member?')) {
-                            await supabase
+                            const { supabase: supabaseDb } = await import('@/lib/supabase');
+                            await supabaseDb
                               .from('email_tracking_folder_access')
                               .delete()
                               .eq('id', member.id);
