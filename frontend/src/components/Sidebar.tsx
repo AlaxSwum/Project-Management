@@ -34,7 +34,6 @@ import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
   EnvelopeIcon,
-  ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -993,7 +992,6 @@ Your report is now available in the system.`);
     { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
     { name: 'Email Tracking', href: '/email-tracking', icon: EnvelopeIcon },
-    { name: 'Pharmacy Sales', href: '/pharmacy-sales', icon: ShoppingBagIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
   ];
