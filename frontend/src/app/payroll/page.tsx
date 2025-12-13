@@ -425,141 +425,69 @@ export default function PayrollPage() {
     <>
       <style dangerouslySetInnerHTML={{
         __html: `
-          .payroll-container {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          .payroll-page-wrapper * {
+            box-sizing: border-box !important;
           }
-          .payroll-content {
-            margin-left: 280px;
-            padding: 2rem;
-            min-height: 100vh;
+          .payroll-page-wrapper input,
+          .payroll-page-wrapper select,
+          .payroll-page-wrapper textarea {
+            width: 100% !important;
+            padding: 0.75rem 1rem !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            font-size: 0.95rem !important;
+            transition: all 0.2s ease !important;
+            background-color: #fafafa !important;
+            box-sizing: border-box !important;
+            font-family: inherit !important;
           }
-          .payroll-content.mobile {
-            margin-left: 0;
-            padding-top: 70px;
-            padding: 12px;
+          .payroll-page-wrapper input:focus,
+          .payroll-page-wrapper select:focus,
+          .payroll-page-wrapper textarea:focus {
+            outline: none !important;
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+            background-color: white !important;
           }
-          .payroll-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-          }
-          .payroll-input, input[type="text"], input[type="email"], input[type="number"], input[type="date"], select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            background-color: #fafafa;
-            box-sizing: border-box;
-          }
-          .payroll-input:focus, input:focus, select:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-            background-color: white;
-          }
-          .payroll-label, label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.5rem;
-          }
-          .payroll-section {
-            border-top: 1px solid #e5e7eb;
-            padding-top: 1.5rem;
-            margin-top: 1.5rem;
-          }
-          .payroll-grid {
-            display: grid;
-            gap: 1rem;
-          }
-          .payroll-grid-2 {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .payroll-grid-3 {
-            grid-template-columns: repeat(3, 1fr);
-          }
-          .payroll-grid-4 {
-            grid-template-columns: repeat(4, 1fr);
-          }
-          @media (max-width: 768px) {
-            .payroll-grid-2, .payroll-grid-3, .payroll-grid-4 {
-              grid-template-columns: 1fr;
-            }
-          }
-          input[readonly], input[readonly]:focus {
+          .payroll-page-wrapper input[readonly],
+          .payroll-page-wrapper input[readonly]:focus {
             background-color: #f9fafb !important;
-            cursor: not-allowed;
+            cursor: not-allowed !important;
           }
-          input[readonly].font-semibold {
-            font-weight: 600;
+          .payroll-page-wrapper label {
+            display: block !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            color: #374151 !important;
+            margin-bottom: 0.5rem !important;
           }
-          .payroll-button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .payroll-button-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-          }
-          .payroll-button-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-          }
-          .payroll-button-primary:disabled {
-            background: #d1d5db;
-            cursor: not-allowed;
-            transform: none;
-          }
-          .payroll-button-success {
-            background: #10b981;
-            color: white;
-          }
-          .payroll-button-success:hover {
-            background: #059669;
-          }
-          .payroll-grid {
-            display: grid;
-            gap: 1rem;
-          }
-          .payroll-grid-2 {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .payroll-grid-3 {
-            grid-template-columns: repeat(3, 1fr);
-          }
-          .payroll-grid-4 {
-            grid-template-columns: repeat(4, 1fr);
-          }
-          @media (max-width: 768px) {
-            .payroll-grid-2,
-            .payroll-grid-3,
-            .payroll-grid-4 {
-              grid-template-columns: 1fr;
-            }
+          .payroll-page-wrapper button {
+            font-family: inherit !important;
           }
         `
       }} />
-      <div className="payroll-container">
+      <div className="payroll-page-wrapper" style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%)',
+        fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      }}>
         {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
         
-        <div className={`payroll-content ${isMobile ? 'mobile' : ''}`}>
+        <div style={{ 
+          marginLeft: isMobile ? '0' : '280px',
+          padding: isMobile ? '12px' : '2rem',
+          paddingTop: isMobile ? '70px' : '2rem',
+          minHeight: '100vh'
+        }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Header */}
-          <div className="payroll-card">
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+            padding: '1.5rem',
+            marginBottom: '1.5rem'
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0' }}>
@@ -573,9 +501,19 @@ export default function PayrollPage() {
           </div>
 
           {/* Payroll Type Selection */}
-          <div className="payroll-card">
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Select Payroll Type</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+            padding: '1.5rem',
+            marginBottom: '1.5rem'
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Select Payroll Type</h2>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', 
+              gap: '1rem' 
+            }}>
               <button
                 onClick={() => setPayrollType('uk')}
                 style={{
@@ -645,46 +583,57 @@ export default function PayrollPage() {
           </div>
 
           {/* Form Section */}
-          <div className="payroll-card">
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>Employee Information</h2>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+            padding: '1.5rem',
+            marginBottom: '1.5rem'
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem', margin: '0 0 1.5rem 0' }}>Employee Information</h2>
             
             {payrollType === 'uk' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {/* Basic Info */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+                  gap: '1rem' 
+                }}>
                   <div>
-                    <label className="payroll-label">Employee Name *</label>
+                    <label>Employee Name *</label>
                     <input
                       type="text"
                       value={ukPayrollData.employeeName}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeName: e.target.value })}
-                      className="payroll-input"
                       placeholder="John Doe"
                     />
                   </div>
                   <div>
-                    <label className="payroll-label">Employee ID *</label>
+                    <label>Employee ID *</label>
                     <input
                       type="text"
                       value={ukPayrollData.employeeId}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeId: e.target.value })}
-                      className="payroll-input"
                       placeholder="EMP001"
                     />
                   </div>
                   <div>
-                    <label className="payroll-label">Email *</label>
+                    <label>Email *</label>
                     <input
                       type="email"
                       value={ukPayrollData.email}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, email: e.target.value })}
-                      className="payroll-input"
                       placeholder="john@example.com"
                     />
                   </div>
                 </div>
 
-                <div className="payroll-grid payroll-grid-4">
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
+                  gap: '1rem' 
+                }}>
                   <div>
                     <label>Month Ending *</label>
                     <input
@@ -725,9 +674,17 @@ export default function PayrollPage() {
                 </div>
 
                 {/* Payments Section */}
-                <div className="payroll-section">
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Payments</h3>
-                  <div className="payroll-grid payroll-grid-4">
+                <div style={{ 
+                  borderTop: '1px solid #e5e7eb', 
+                  paddingTop: '1.5rem', 
+                  marginTop: '1.5rem' 
+                }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Payments</h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
+                    gap: '1rem' 
+                  }}>
                     <div>
                       <label>Hours</label>
                       <input
@@ -770,9 +727,17 @@ export default function PayrollPage() {
                 </div>
 
                 {/* Deductions Section */}
-                <div className="payroll-section">
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Deductions</h3>
-                  <div className="payroll-grid payroll-grid-4">
+                <div style={{ 
+                  borderTop: '1px solid #e5e7eb', 
+                  paddingTop: '1.5rem', 
+                  marginTop: '1.5rem' 
+                }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Deductions</h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
+                    gap: '1rem' 
+                  }}>
                     <div>
                       <label>Tax (£)</label>
                       <input
@@ -815,9 +780,17 @@ export default function PayrollPage() {
                 </div>
 
                 {/* Year to Date Section */}
-                <div className="payroll-section">
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Year to Date</h3>
-                  <div className="payroll-grid payroll-grid-4">
+                <div style={{ 
+                  borderTop: '1px solid #e5e7eb', 
+                  paddingTop: '1.5rem', 
+                  marginTop: '1.5rem' 
+                }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Year to Date</h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
+                    gap: '1rem' 
+                  }}>
                     <div>
                       <label>Taxable Gross Pay YTD (£)</label>
                       <input
@@ -862,9 +835,17 @@ export default function PayrollPage() {
                 </div>
 
                 {/* This Month Section */}
-                <div className="payroll-section">
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>This Month</h3>
-                  <div className="payroll-grid payroll-grid-3">
+                <div style={{ 
+                  borderTop: '1px solid #e5e7eb', 
+                  paddingTop: '1.5rem', 
+                  marginTop: '1.5rem' 
+                }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>This Month</h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+                    gap: '1rem' 
+                  }}>
                     <div>
                       <label>Taxable Gross Pay (£)</label>
                       <input
@@ -896,9 +877,17 @@ export default function PayrollPage() {
                 </div>
 
                 {/* Payment Details */}
-                <div className="payroll-section">
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Payment Details</h3>
-                  <div className="payroll-grid payroll-grid-3">
+                <div style={{ 
+                  borderTop: '1px solid #e5e7eb', 
+                  paddingTop: '1.5rem', 
+                  marginTop: '1.5rem' 
+                }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Payment Details</h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+                    gap: '1rem' 
+                  }}>
                     <div>
                       <label>Net Amount Paid (£)</label>
                       <input
@@ -930,7 +919,11 @@ export default function PayrollPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div className="payroll-grid payroll-grid-2">
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', 
+                  gap: '1rem' 
+                }}>
                   <div>
                     <label>Employee ID *</label>
                     <input
@@ -950,7 +943,11 @@ export default function PayrollPage() {
                     />
                   </div>
                 </div>
-                <div className="payroll-grid payroll-grid-2">
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', 
+                  gap: '1rem' 
+                }}>
                   <div>
                     <label>Email *</label>
                     <input
@@ -986,8 +983,14 @@ export default function PayrollPage() {
           {/* Preview Section */}
           {(payrollType === 'uk' && ukPayrollData.employeeName && ukPayrollData.monthEnding) ||
            (payrollType === 'myanmar' && myanmarPayrollData.employeeName && myanmarPayrollData.monthEnding) ? (
-            <div className="payroll-card">
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Preview</h2>
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+              padding: '1.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Preview</h2>
               <div id="payroll-preview" style={{ background: 'white', padding: '2rem', border: '2px solid #e5e7eb', borderRadius: '8px' }}>
                 {payrollType === 'uk' ? (
                   <UKPayrollPreview data={ukPayrollData} />
@@ -999,15 +1002,44 @@ export default function PayrollPage() {
           ) : null}
 
           {/* Action Buttons */}
-          <div className="payroll-card">
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+            padding: '1.5rem',
+            marginBottom: '1.5rem'
+          }}>
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
               <button
                 onClick={generatePDF}
                 disabled={!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
                   (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))}
-                className="payroll-button payroll-button-primary"
-                style={{ opacity: (!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
-                  (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) ? 0.5 : 1 }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: (!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
+                    (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) ? 'not-allowed' : 'pointer',
+                  border: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: (!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
+                    (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) ? '#d1d5db' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  color: 'white',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!(!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
+                    (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding))))) {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
                 <ArrowDownTrayIcon style={{ width: '20px', height: '20px' }} />
                 Generate PDF
@@ -1016,7 +1048,25 @@ export default function PayrollPage() {
               {pdfGenerated && (
                 <button
                   onClick={() => setShowEmailModal(true)}
-                  className="payroll-button payroll-button-success"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    border: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: '#10b981',
+                    color: 'white',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#059669';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#10b981';
+                  }}
                 >
                   <PaperAirplaneIcon style={{ width: '20px', height: '20px' }} />
                   Send Email
@@ -1035,6 +1085,7 @@ export default function PayrollPage() {
                 {message}
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
