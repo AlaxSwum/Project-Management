@@ -550,31 +550,63 @@ export default function PayrollPage() {
 
   if (isLoading || authLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div style={{ fontSize: '1.125rem' }}>Loading...</div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <MobileHeader title="Payroll Generation" isMobile={isMobile} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <div style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <div style={{ fontSize: '1.125rem', color: '#666' }}>Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div style={{ fontSize: '1.125rem', color: '#dc2626' }}>Access Denied. Admin or Payroll Member access required.</div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <MobileHeader title="Payroll Generation" isMobile={isMobile} />
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <div style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <div style={{ fontSize: '1.125rem', color: '#dc2626' }}>Access Denied. Admin or Payroll Member access required.</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={formStyles.container}>
-      {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
+    <>
+      <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
-      <div style={{ 
-        marginLeft: isMobile ? '0' : '280px',
-        ...(isMobile ? formStyles.contentMobile : formStyles.content)
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          {/* Header */}
-          <div style={formStyles.card}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
+        
+        <div style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh',
+          overflow: 'hidden'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            {/* Header */}
+            <div style={formStyles.card}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0' }}>
@@ -1238,7 +1270,7 @@ export default function PayrollPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
