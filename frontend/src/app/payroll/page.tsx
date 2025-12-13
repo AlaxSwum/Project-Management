@@ -8,6 +8,7 @@ import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import '@/app/globals.css';
 import {
   DocumentTextIcon,
   EnvelopeIcon,
@@ -421,63 +422,191 @@ export default function PayrollPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
-      
-      <div className={`min-h-screen ${isMobile ? 'pt-16' : 'ml-72'}`}>
-        <div className="max-w-7xl mx-auto p-6">
+    <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .payroll-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          }
+          .payroll-content {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+          }
+          .payroll-content.mobile {
+            margin-left: 0;
+            padding-top: 70px;
+            padding: 12px;
+          }
+          .payroll-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+          }
+          .payroll-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background-color: #fafafa;
+          }
+          .payroll-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            background-color: white;
+          }
+          .payroll-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+          }
+          .payroll-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+          .payroll-button-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+          }
+          .payroll-button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+          }
+          .payroll-button-primary:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+          }
+          .payroll-button-success {
+            background: #10b981;
+            color: white;
+          }
+          .payroll-button-success:hover {
+            background: #059669;
+          }
+          .payroll-grid {
+            display: grid;
+            gap: 1rem;
+          }
+          .payroll-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .payroll-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+          }
+          .payroll-grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+          }
+          @media (max-width: 768px) {
+            .payroll-grid-2,
+            .payroll-grid-3,
+            .payroll-grid-4 {
+              grid-template-columns: 1fr;
+            }
+          }
+        `
+      }} />
+      <div className="payroll-container">
+        {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
+        
+        <div className={`payroll-content ${isMobile ? 'mobile' : ''}`}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div className="flex items-center justify-between">
+          <div className="payroll-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                  <DocumentTextIcon className="h-8 w-8 text-indigo-600" />
+                <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0' }}>
+                  <DocumentTextIcon style={{ width: '32px', height: '32px', color: '#6366f1' }} />
                   Payroll Generation
                 </h1>
-                <p className="text-gray-600 mt-2">Generate and send payroll statements</p>
+                <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0' }}>Generate and send payroll statements</p>
               </div>
-              <BuildingOfficeIcon className="h-12 w-12 text-indigo-600" />
+              <BuildingOfficeIcon style={{ width: '48px', height: '48px', color: '#6366f1' }} />
             </div>
           </div>
 
           {/* Payroll Type Selection */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Payroll Type</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="payroll-card">
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Select Payroll Type</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
               <button
                 onClick={() => setPayrollType('uk')}
-                className={`p-6 rounded-lg border-2 transition-all ${
-                  payrollType === 'uk'
-                    ? 'border-indigo-600 bg-indigo-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                style={{
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  border: `2px solid ${payrollType === 'uk' ? '#6366f1' : '#e5e7eb'}`,
+                  background: payrollType === 'uk' ? '#eef2ff' : 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'left'
+                }}
+                onMouseEnter={(e) => {
+                  if (payrollType !== 'uk') {
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (payrollType !== 'uk') {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                  }
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <GlobeAltIcon className={`h-6 w-6 ${payrollType === 'uk' ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <div className="text-left">
-                    <div className={`font-semibold ${payrollType === 'uk' ? 'text-indigo-600' : 'text-gray-700'}`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <GlobeAltIcon style={{ width: '24px', height: '24px', color: payrollType === 'uk' ? '#6366f1' : '#9ca3af' }} />
+                  <div>
+                    <div style={{ fontWeight: '600', color: payrollType === 'uk' ? '#6366f1' : '#374151' }}>
                       UK Payroll
                     </div>
-                    <div className="text-sm text-gray-500">Full UK payroll with tax and NI</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Full UK payroll with tax and NI</div>
                   </div>
                 </div>
               </button>
               
               <button
                 onClick={() => setPayrollType('myanmar')}
-                className={`p-6 rounded-lg border-2 transition-all ${
-                  payrollType === 'myanmar'
-                    ? 'border-indigo-600 bg-indigo-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                style={{
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  border: `2px solid ${payrollType === 'myanmar' ? '#6366f1' : '#e5e7eb'}`,
+                  background: payrollType === 'myanmar' ? '#eef2ff' : 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'left'
+                }}
+                onMouseEnter={(e) => {
+                  if (payrollType !== 'myanmar') {
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (payrollType !== 'myanmar') {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                  }
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <GlobeAltIcon className={`h-6 w-6 ${payrollType === 'myanmar' ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <div className="text-left">
-                    <div className={`font-semibold ${payrollType === 'myanmar' ? 'text-indigo-600' : 'text-gray-700'}`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <GlobeAltIcon style={{ width: '24px', height: '24px', color: payrollType === 'myanmar' ? '#6366f1' : '#9ca3af' }} />
+                  <div>
+                    <div style={{ fontWeight: '600', color: payrollType === 'myanmar' ? '#6366f1' : '#374151' }}>
                       Myanmar Payroll
                     </div>
-                    <div className="text-sm text-gray-500">Simplified payroll format</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Simplified payroll format</div>
                   </div>
                 </div>
               </button>
@@ -485,40 +614,40 @@ export default function PayrollPage() {
           </div>
 
           {/* Form Section */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Employee Information</h2>
+          <div className="payroll-card">
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem' }}>Employee Information</h2>
             
             {payrollType === 'uk' ? (
-              <div className="space-y-6">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {/* Basic Info */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Employee Name *</label>
+                    <label className="payroll-label">Employee Name *</label>
                     <input
                       type="text"
                       value={ukPayrollData.employeeName}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="payroll-input"
                       placeholder="John Doe"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID *</label>
+                    <label className="payroll-label">Employee ID *</label>
                     <input
                       type="text"
                       value={ukPayrollData.employeeId}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeId: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="payroll-input"
                       placeholder="EMP001"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                    <label className="payroll-label">Email *</label>
                     <input
                       type="email"
                       value={ukPayrollData.email}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="payroll-input"
                       placeholder="john@example.com"
                     />
                   </div>
