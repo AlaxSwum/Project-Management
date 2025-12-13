@@ -618,7 +618,7 @@ export default function PayrollPage() {
   }
 
   return (
-    <Fragment>
+    <div style={{ minHeight: '100vh' }}>
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -1323,7 +1323,7 @@ export default function PayrollPage() {
           </div>
         </div>
       )}
-    </Fragment>
+    </div>
   );
 }
 
