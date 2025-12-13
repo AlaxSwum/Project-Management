@@ -429,7 +429,7 @@ export default function PayrollPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {isMobile ? <MobileHeader /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
+      {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
       
       <div className={`min-h-screen ${isMobile ? 'pt-16' : 'ml-72'}`}>
         <div className="max-w-7xl mx-auto p-6">
