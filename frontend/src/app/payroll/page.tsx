@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
@@ -439,7 +439,8 @@ export default function PayrollPage() {
     if (payrollType === 'uk') {
       calculateUKTotals();
     }
-  }, [ukPayrollData.hours, ukPayrollData.rate, ukPayrollData.holidayPay, ukPayrollData.tax, ukPayrollData.nationalInsurance, ukPayrollData.holidayRepayment]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payrollType, ukPayrollData.hours, ukPayrollData.rate, ukPayrollData.holidayPay, ukPayrollData.tax, ukPayrollData.nationalInsurance, ukPayrollData.holidayRepayment]);
 
   const generatePDF = async () => {
     try {
@@ -1221,6 +1222,7 @@ export default function PayrollPage() {
                 {message}
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
