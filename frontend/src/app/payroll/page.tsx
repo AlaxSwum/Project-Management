@@ -34,13 +34,14 @@ const formStyles = {
     padding: '0.75rem 1rem',
     border: '2px solid #e5e7eb',
     borderRadius: '8px',
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
     backgroundColor: '#ffffff',
     transition: 'all 0.2s ease',
     outline: 'none',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     color: '#111827',
     boxSizing: 'border-box' as const,
+    lineHeight: '1.5',
   },
   inputFocus: {
     borderColor: '#6366f1',
@@ -55,7 +56,7 @@ const formStyles = {
     padding: '0.75rem 1rem',
     border: '2px solid #e5e7eb',
     borderRadius: '8px',
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
     backgroundColor: '#f9fafb',
     transition: 'all 0.2s ease',
     outline: 'none',
@@ -64,13 +65,14 @@ const formStyles = {
     boxSizing: 'border-box' as const,
     cursor: 'not-allowed',
     fontWeight: '600',
+    lineHeight: '1.5',
   },
   select: {
     width: '100%',
     padding: '0.75rem 1rem',
     border: '2px solid #e5e7eb',
     borderRadius: '8px',
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
     backgroundColor: '#ffffff',
     transition: 'all 0.2s ease',
     outline: 'none',
@@ -78,6 +80,7 @@ const formStyles = {
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     color: '#111827',
     boxSizing: 'border-box' as const,
+    lineHeight: '1.5',
   },
   selectFocus: {
     borderColor: '#6366f1',
@@ -90,24 +93,26 @@ const formStyles = {
     display: 'block',
     marginBottom: '0.5rem',
     fontWeight: '600',
-    fontSize: '0.875rem',
+    fontSize: '0.8125rem',
     color: '#374151',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    lineHeight: '1.4',
   },
   card: {
     background: 'white',
     borderRadius: '12px',
     boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-    padding: '1.5rem',
-    marginBottom: '1.5rem',
+    padding: '1.25rem',
+    marginBottom: '1.25rem',
   },
   sectionTitle: {
-    fontSize: '1.125rem',
+    fontSize: '1rem',
     fontWeight: '600',
     color: '#111827',
     marginBottom: '1rem',
     marginTop: '0',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    lineHeight: '1.4',
   },
   sectionDivider: {
     borderTop: '1px solid #e5e7eb',
@@ -115,7 +120,7 @@ const formStyles = {
     marginTop: '1.5rem',
   },
   buttonPrimary: {
-    padding: '0.75rem 1.5rem',
+    padding: '0.625rem 1.25rem',
     borderRadius: '8px',
     fontWeight: '600',
     cursor: 'pointer',
@@ -127,7 +132,8 @@ const formStyles = {
     color: 'white',
     transition: 'all 0.2s ease',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
+    lineHeight: '1.4',
   },
   buttonPrimaryHover: {
     background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
@@ -135,7 +141,7 @@ const formStyles = {
     boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
   },
   buttonSuccess: {
-    padding: '0.75rem 1.5rem',
+    padding: '0.625rem 1.25rem',
     borderRadius: '8px',
     fontWeight: '600',
     cursor: 'pointer',
@@ -147,7 +153,8 @@ const formStyles = {
     color: 'white',
     transition: 'all 0.2s ease',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
+    lineHeight: '1.4',
   },
   buttonSuccessHover: {
     background: '#059669',
@@ -155,7 +162,7 @@ const formStyles = {
     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
   },
   buttonDisabled: {
-    padding: '0.75rem 1.5rem',
+    padding: '0.625rem 1.25rem',
     borderRadius: '8px',
     fontWeight: '600',
     cursor: 'not-allowed',
@@ -166,7 +173,8 @@ const formStyles = {
     background: '#d1d5db',
     color: 'white',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
+    lineHeight: '1.4',
   },
   buttonSecondary: {
     padding: '0.5rem 1rem',
@@ -178,7 +186,8 @@ const formStyles = {
     color: '#374151',
     transition: 'all 0.2s ease',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontSize: '0.95rem',
+    fontSize: '0.875rem',
+    lineHeight: '1.4',
   },
   buttonSecondaryHover: {
     background: '#d1d5db',
@@ -637,17 +646,17 @@ export default function PayrollPage() {
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             {/* Header */}
             <div style={formStyles.card}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0' }}>
-                  <DocumentTextIcon style={{ width: '32px', height: '32px', color: '#6366f1' }} />
-                  Payroll Generation
-                </h1>
-                <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0' }}>Generate and send payroll statements</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0', lineHeight: '1.3' }}>
+                    <DocumentTextIcon style={{ width: '28px', height: '28px', color: '#6366f1' }} />
+                    Payroll Generation
+                  </h1>
+                  <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0', fontSize: '0.875rem', lineHeight: '1.4' }}>Generate and send payroll statements</p>
+                </div>
+                <BuildingOfficeIcon style={{ width: '40px', height: '40px', color: '#6366f1' }} />
               </div>
-              <BuildingOfficeIcon style={{ width: '48px', height: '48px', color: '#6366f1' }} />
             </div>
-          </div>
 
           {/* Payroll Type Selection */}
           <div style={formStyles.card}>
@@ -660,7 +669,7 @@ export default function PayrollPage() {
               <button
                 onClick={() => setPayrollType('uk')}
                 style={{
-                  padding: '1.5rem',
+                  padding: '1rem',
                   borderRadius: '8px',
                   border: `2px solid ${payrollType === 'uk' ? '#6366f1' : '#e5e7eb'}`,
                   background: payrollType === 'uk' ? '#eef2ff' : 'white',
@@ -680,12 +689,12 @@ export default function PayrollPage() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <GlobeAltIcon style={{ width: '24px', height: '24px', color: payrollType === 'uk' ? '#6366f1' : '#9ca3af' }} />
+                  <GlobeAltIcon style={{ width: '20px', height: '20px', color: payrollType === 'uk' ? '#6366f1' : '#9ca3af' }} />
                   <div>
-                    <div style={{ fontWeight: '600', color: payrollType === 'uk' ? '#6366f1' : '#374151' }}>
+                    <div style={{ fontWeight: '600', color: payrollType === 'uk' ? '#6366f1' : '#374151', fontSize: '0.875rem', lineHeight: '1.4' }}>
                       UK Payroll
                     </div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Full UK payroll with tax and NI</div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: '1.4' }}>Full UK payroll with tax and NI</div>
                   </div>
                 </div>
               </button>
@@ -693,7 +702,7 @@ export default function PayrollPage() {
               <button
                 onClick={() => setPayrollType('myanmar')}
                 style={{
-                  padding: '1.5rem',
+                  padding: '1rem',
                   borderRadius: '8px',
                   border: `2px solid ${payrollType === 'myanmar' ? '#6366f1' : '#e5e7eb'}`,
                   background: payrollType === 'myanmar' ? '#eef2ff' : 'white',
@@ -713,12 +722,12 @@ export default function PayrollPage() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <GlobeAltIcon style={{ width: '24px', height: '24px', color: payrollType === 'myanmar' ? '#6366f1' : '#9ca3af' }} />
+                  <GlobeAltIcon style={{ width: '20px', height: '20px', color: payrollType === 'myanmar' ? '#6366f1' : '#9ca3af' }} />
                   <div>
-                    <div style={{ fontWeight: '600', color: payrollType === 'myanmar' ? '#6366f1' : '#374151' }}>
+                    <div style={{ fontWeight: '600', color: payrollType === 'myanmar' ? '#6366f1' : '#374151', fontSize: '0.875rem', lineHeight: '1.4' }}>
                       Myanmar Payroll
                     </div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Simplified payroll format</div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', lineHeight: '1.4' }}>Simplified payroll format</div>
                   </div>
                 </div>
               </button>
@@ -827,7 +836,7 @@ export default function PayrollPage() {
                   paddingTop: '1.5rem', 
                   marginTop: '1.5rem' 
                 }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Payments</h3>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', margin: '0 0 0.75rem 0', lineHeight: '1.4' }}>Payments</h3>
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
@@ -884,7 +893,7 @@ export default function PayrollPage() {
                   paddingTop: '1.5rem', 
                   marginTop: '1.5rem' 
                 }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Deductions</h3>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', margin: '0 0 0.75rem 0', lineHeight: '1.4' }}>Deductions</h3>
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
@@ -941,7 +950,7 @@ export default function PayrollPage() {
                   paddingTop: '1.5rem', 
                   marginTop: '1.5rem' 
                 }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Year to Date</h3>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', margin: '0 0 0.75rem 0', lineHeight: '1.4' }}>Year to Date</h3>
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
@@ -1000,7 +1009,7 @@ export default function PayrollPage() {
                   paddingTop: '1.5rem', 
                   marginTop: '1.5rem' 
                 }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>This Month</h3>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', margin: '0 0 0.75rem 0', lineHeight: '1.4' }}>This Month</h3>
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
@@ -1044,7 +1053,7 @@ export default function PayrollPage() {
                   paddingTop: '1.5rem', 
                   marginTop: '1.5rem' 
                 }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Payment Details</h3>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', margin: '0 0 0.75rem 0', lineHeight: '1.4' }}>Payment Details</h3>
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
@@ -1188,7 +1197,7 @@ export default function PayrollPage() {
                   }
                 }}
               >
-                <ArrowDownTrayIcon style={{ width: '20px', height: '20px' }} />
+                <ArrowDownTrayIcon style={{ width: '18px', height: '18px' }} />
                 Generate PDF
               </button>
               
@@ -1205,7 +1214,7 @@ export default function PayrollPage() {
                     e.currentTarget.style.boxShadow = '';
                   }}
                 >
-                  <PaperAirplaneIcon style={{ width: '20px', height: '20px' }} />
+                  <PaperAirplaneIcon style={{ width: '18px', height: '18px' }} />
                   Send Email
                 </button>
               )}
