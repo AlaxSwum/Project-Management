@@ -34,6 +34,7 @@ import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
   EnvelopeIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -99,6 +100,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [hasContentCalendarAccess, setHasContentCalendarAccess] = useState(false);
   const [hasClassesAccess, setHasClassesAccess] = useState(false);
   const [hasCompanyOutreachAccess, setHasCompanyOutreachAccess] = useState(false);
+  const [hasPayrollAccess, setHasPayrollAccess] = useState(false);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',
@@ -368,6 +370,70 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     }
   };
 
+  // Check Payroll access
+  const checkPayrollAccess = async () => {
+    if (!user?.id) {
+      setHasPayrollAccess(false);
+      return;
+    }
+
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      console.log('🔍 Checking Payroll access for user:', user.id, user.email);
+      
+      // First check if user is a payroll member
+      const { data: memberData, error: memberError } = await supabase
+        .from('payroll_members')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('INFO: Payroll member check:', { memberData, memberError });
+
+      if (memberData && !memberError) {
+        console.log('SUCCESS: Payroll access granted: User is a member');
+        setHasPayrollAccess(true);
+        return;
+      }
+
+      // Check user properties from auth context
+      const contextRole = user.role || (user as any)?.user_metadata?.role;
+      const isAdmin = contextRole === 'admin' || contextRole === 'hr' || contextRole === 'superuser';
+      
+      if (isAdmin) {
+        console.log('SUCCESS: Payroll access granted: Admin from context');
+        setHasPayrollAccess(true);
+        return;
+      }
+
+      // Check auth_user table for admin privileges
+      const { data: userData, error: userError } = await supabase
+        .from('auth_user')
+        .select('id, name, email, role, is_superuser, is_staff')
+        .eq('id', user.id)
+        .single();
+
+      if (!userError && userData) {
+        const hasAdminPermission = userData.is_superuser || userData.is_staff || userData.role === 'admin' || userData.role === 'hr';
+        
+        if (hasAdminPermission) {
+          console.log('SUCCESS: Payroll access granted: Admin from database');
+          setHasPayrollAccess(true);
+          return;
+        }
+      }
+
+      // If we get here, user doesn't have access
+      console.log('ERROR: Payroll access denied: User not in member table and not admin');
+      setHasPayrollAccess(false);
+      
+    } catch (err) {
+      console.error('Error checking payroll access:', err);
+      setHasPayrollAccess(false);
+    }
+  };
+
   // Fetch leave balance on component mount and user change
   const fetchLeaveBalance = async () => {
     if (!user?.id) return;
@@ -405,11 +471,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       checkContentCalendarAccess();
       checkClassesAccess();
       checkCompanyOutreachAccess();
+      checkPayrollAccess();
     } else {
       setHasClassScheduleAccess(false);
       setHasContentCalendarAccess(false);
       setHasClassesAccess(false);
       setHasCompanyOutreachAccess(false);
+      setHasPayrollAccess(false);
     }
   }, [user?.id]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -1007,7 +1075,8 @@ Your report is now available in the system.`);
 
   // Idea Lounge navigation items (access-controlled)
   const ideaLoungeNavItems = [
-    ...(hasCompanyOutreachAccess ? [{ name: 'Company Outreach', href: '/company-outreach', icon: BuildingOfficeIcon }] : [])
+    ...(hasCompanyOutreachAccess ? [{ name: 'Company Outreach', href: '/company-outreach', icon: BuildingOfficeIcon }] : []),
+    ...(hasPayrollAccess ? [{ name: 'Payroll', href: '/payroll', icon: DocumentTextIcon }] : [])
   ];
 
   // Admin-only navigation
