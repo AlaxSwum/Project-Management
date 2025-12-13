@@ -407,16 +407,16 @@ export default function PayrollPage() {
 
   if (isLoading || authLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ fontSize: '1.125rem' }}>Loading...</div>
       </div>
     );
   }
 
   if (!hasAccess) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg text-red-600">Access Denied. Admin or Payroll Member access required.</div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ fontSize: '1.125rem', color: '#dc2626' }}>Access Denied. Admin or Payroll Member access required.</div>
       </div>
     );
   }
@@ -447,7 +447,7 @@ export default function PayrollPage() {
             padding: 1.5rem;
             margin-bottom: 1.5rem;
           }
-          .payroll-input {
+          .payroll-input, input[type="text"], input[type="email"], input[type="number"], input[type="date"], select {
             width: 100%;
             padding: 0.75rem 1rem;
             border: 2px solid #e5e7eb;
@@ -455,19 +455,50 @@ export default function PayrollPage() {
             font-size: 0.95rem;
             transition: all 0.2s ease;
             background-color: #fafafa;
+            box-sizing: border-box;
           }
-          .payroll-input:focus {
+          .payroll-input:focus, input:focus, select:focus {
             outline: none;
             border-color: #6366f1;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
             background-color: white;
           }
-          .payroll-label {
+          .payroll-label, label {
             display: block;
             font-size: 0.875rem;
             font-weight: 600;
             color: #374151;
             margin-bottom: 0.5rem;
+          }
+          .payroll-section {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1.5rem;
+            margin-top: 1.5rem;
+          }
+          .payroll-grid {
+            display: grid;
+            gap: 1rem;
+          }
+          .payroll-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .payroll-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+          }
+          .payroll-grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+          }
+          @media (max-width: 768px) {
+            .payroll-grid-2, .payroll-grid-3, .payroll-grid-4 {
+              grid-template-columns: 1fr;
+            }
+          }
+          input[readonly], input[readonly]:focus {
+            background-color: #f9fafb !important;
+            cursor: not-allowed;
+          }
+          input[readonly].font-semibold {
+            font-weight: 600;
           }
           .payroll-button {
             padding: 0.75rem 1.5rem;
@@ -653,42 +684,38 @@ export default function PayrollPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="payroll-grid payroll-grid-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Month Ending *</label>
+                    <label>Month Ending *</label>
                     <input
                       type="date"
                       value={ukPayrollData.monthEnding}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, monthEnding: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tax Code</label>
+                    <label>Tax Code</label>
                     <input
                       type="text"
                       value={ukPayrollData.taxCode}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, taxCode: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="1257L"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">NI Number</label>
+                    <label>NI Number</label>
                     <input
                       type="text"
                       value={ukPayrollData.nationalInsuranceNumber}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsuranceNumber: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="AB123456C"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">NI Table</label>
+                    <label>NI Table</label>
                     <select
                       value={ukPayrollData.nationalInsuranceTable}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsuranceTable: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
                       <option value="A">A</option>
                       <option value="B">B</option>
@@ -698,148 +725,136 @@ export default function PayrollPage() {
                 </div>
 
                 {/* Payments Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payments</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="payroll-section">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Payments</h3>
+                  <div className="payroll-grid payroll-grid-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Hours</label>
+                      <label>Hours</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.hours}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, hours: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="167.25"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rate (£)</label>
+                      <label>Rate (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.rate}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, rate: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="12.25"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Holiday Pay (£)</label>
+                      <label>Holiday Pay (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.holidayPay}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayPay: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="196.00"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Gross Pay (£)</label>
+                      <label>Gross Pay (£)</label>
                       <input
                         type="text"
                         value={ukPayrollData.grossPay}
                         readOnly
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Deductions Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Deductions</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="payroll-section">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Deductions</h3>
+                  <div className="payroll-grid payroll-grid-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tax (£)</label>
+                      <label>Tax (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.tax}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, tax: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="44.80"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">National Insurance (£)</label>
+                      <label>National Insurance (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.nationalInsurance}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsurance: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="17.97"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Holiday Repayment (£)</label>
+                      <label>Holiday Repayment (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.holidayRepayment}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayRepayment: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="972.16"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Total Deductions (£)</label>
+                      <label>Total Deductions (£)</label>
                       <input
                         type="text"
                         value={ukPayrollData.totalDeductions}
                         readOnly
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Year to Date Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Year to Date</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="payroll-section">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Year to Date</h3>
+                  <div className="payroll-grid payroll-grid-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Taxable Gross Pay YTD (£)</label>
+                      <label>Taxable Gross Pay YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.taxableGrossPayYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, taxableGrossPayYTD: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="5219.61"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tax YTD (£)</label>
+                      <label>Tax YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.taxYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, taxYTD: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="414.80"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Employee NI YTD (£)</label>
+                      <label>Employee NI YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.employeeNationalInsuranceYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeNationalInsuranceYTD: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="166.04"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Employer NI YTD (£)</label>
+                      <label>Employer NI YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.employerNationalInsuranceYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employerNationalInsuranceYTD: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="595.29"
                       />
                     </div>
@@ -847,70 +862,66 @@ export default function PayrollPage() {
                 </div>
 
                 {/* This Month Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">This Month</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="payroll-section">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>This Month</h3>
+                  <div className="payroll-grid payroll-grid-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Taxable Gross Pay (£)</label>
+                      <label>Taxable Gross Pay (£)</label>
                       <input
                         type="text"
                         value={ukPayrollData.taxableGrossPay}
                         readOnly
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Employer National Insurance (£)</label>
+                      <label>Employer National Insurance (£)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={ukPayrollData.employerNationalInsurance}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employerNationalInsurance: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="128.35"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Net Pay (£)</label>
+                      <label>Net Pay (£)</label>
                       <input
                         type="text"
                         value={ukPayrollData.netPay}
                         readOnly
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold"
+                        className="font-semibold"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Payment Details */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="payroll-section">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Payment Details</h3>
+                  <div className="payroll-grid payroll-grid-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Net Amount Paid (£)</label>
+                      <label>Net Amount Paid (£)</label>
                       <input
                         type="text"
                         value={ukPayrollData.netAmountPaid}
                         readOnly
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold"
+                        className="font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Paid Date</label>
+                      <label>Paid Date</label>
                       <input
                         type="date"
                         value={ukPayrollData.paidDate}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, paidDate: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Employer PAYE Reference</label>
+                      <label>Employer PAYE Reference</label>
                       <input
                         type="text"
                         value={ukPayrollData.employerPAYEReference}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employerPAYEReference: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="120/WE94437"
                       />
                     </div>
@@ -918,59 +929,54 @@ export default function PayrollPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="payroll-grid payroll-grid-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID *</label>
+                    <label>Employee ID *</label>
                     <input
                       type="text"
                       value={myanmarPayrollData.employeeId}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, employeeId: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="EMP001"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Employee Name *</label>
+                    <label>Employee Name *</label>
                     <input
                       type="text"
                       value={myanmarPayrollData.employeeName}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, employeeName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="John Doe"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="payroll-grid payroll-grid-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                    <label>Email *</label>
                     <input
                       type="email"
                       value={myanmarPayrollData.email}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="john@example.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Payroll Amount (MMK) *</label>
+                    <label>Payroll Amount (MMK) *</label>
                     <input
                       type="number"
                       step="0.01"
                       value={myanmarPayrollData.payrollAmount}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, payrollAmount: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="1000000"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Month Ending *</label>
+                  <label>Month Ending *</label>
                   <input
                     type="date"
                     value={myanmarPayrollData.monthEnding}
                     onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, monthEnding: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -980,9 +986,9 @@ export default function PayrollPage() {
           {/* Preview Section */}
           {(payrollType === 'uk' && ukPayrollData.employeeName && ukPayrollData.monthEnding) ||
            (payrollType === 'myanmar' && myanmarPayrollData.employeeName && myanmarPayrollData.monthEnding) ? (
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Preview</h2>
-              <div id="payroll-preview" className="bg-white p-8 border-2 border-gray-200 rounded-lg">
+            <div className="payroll-card">
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>Preview</h2>
+              <div id="payroll-preview" style={{ background: 'white', padding: '2rem', border: '2px solid #e5e7eb', borderRadius: '8px' }}>
                 {payrollType === 'uk' ? (
                   <UKPayrollPreview data={ukPayrollData} />
                 ) : (
@@ -993,33 +999,39 @@ export default function PayrollPage() {
           ) : null}
 
           {/* Action Buttons */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <div className="payroll-card">
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
               <button
                 onClick={generatePDF}
                 disabled={!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
                   (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="payroll-button payroll-button-primary"
+                style={{ opacity: (!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
+                  (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) ? 0.5 : 1 }}
               >
-                <ArrowDownTrayIcon className="h-5 w-5" />
+                <ArrowDownTrayIcon style={{ width: '20px', height: '20px' }} />
                 Generate PDF
               </button>
               
               {pdfGenerated && (
                 <button
                   onClick={() => setShowEmailModal(true)}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="payroll-button payroll-button-success"
                 >
-                  <PaperAirplaneIcon className="h-5 w-5" />
+                  <PaperAirplaneIcon style={{ width: '20px', height: '20px' }} />
                   Send Email
                 </button>
               )}
             </div>
             
             {message && (
-              <div className={`mt-4 p-3 rounded-lg ${
-                message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
-              }`}>
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                backgroundColor: message.includes('Error') ? '#fef2f2' : '#f0fdf4',
+                color: message.includes('Error') ? '#991b1b' : '#166534'
+              }}>
                 {message}
               </div>
             )}
@@ -1029,35 +1041,56 @@ export default function PayrollPage() {
 
       {/* Email Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Send Payroll Email</h3>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            padding: '1.5rem',
+            maxWidth: '28rem',
+            width: '100%',
+            margin: '0 1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827' }}>Send Payroll Email</h3>
               <button
                 onClick={() => {
                   setShowEmailModal(false);
                   setEmailAddress('');
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                style={{ color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#4b5563'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
               >
-                <XMarkIcon className="h-6 w-6" />
+                <XMarkIcon style={{ width: '24px', height: '24px' }} />
               </button>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="payroll-label">Email Address</label>
               <input
                 type="email"
                 value={emailAddress}
                 onChange={(e) => setEmailAddress(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="employee@example.com"
               />
             </div>
-            <div className="flex gap-3">
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={handleSendEmail}
                 disabled={sendingEmail || !emailAddress}
-                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="payroll-button payroll-button-primary"
+                style={{ flex: 1, opacity: (sendingEmail || !emailAddress) ? 0.5 : 1 }}
               >
                 {sendingEmail ? 'Sending...' : 'Send'}
               </button>
@@ -1066,7 +1099,17 @@ export default function PayrollPage() {
                   setShowEmailModal(false);
                   setEmailAddress('');
                 }}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#d1d5db'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#e5e7eb'}
               >
                 Cancel
               </button>
