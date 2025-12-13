@@ -425,12 +425,12 @@ export default function PayrollPage() {
     <>
       <style dangerouslySetInnerHTML={{
         __html: `
-          .payroll-page-wrapper * {
+          #payroll-page-container * {
             box-sizing: border-box !important;
           }
-          .payroll-page-wrapper input,
-          .payroll-page-wrapper select,
-          .payroll-page-wrapper textarea {
+          #payroll-page-container input,
+          #payroll-page-container select,
+          #payroll-page-container textarea {
             width: 100% !important;
             padding: 0.75rem 1rem !important;
             border: 2px solid #e5e7eb !important;
@@ -440,33 +440,43 @@ export default function PayrollPage() {
             background-color: #fafafa !important;
             box-sizing: border-box !important;
             font-family: inherit !important;
+            color: #111827 !important;
           }
-          .payroll-page-wrapper input:focus,
-          .payroll-page-wrapper select:focus,
-          .payroll-page-wrapper textarea:focus {
+          #payroll-page-container input:focus,
+          #payroll-page-container select:focus,
+          #payroll-page-container textarea:focus {
             outline: none !important;
             border-color: #6366f1 !important;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
             background-color: white !important;
           }
-          .payroll-page-wrapper input[readonly],
-          .payroll-page-wrapper input[readonly]:focus {
+          #payroll-page-container input[readonly],
+          #payroll-page-container input[readonly]:focus {
             background-color: #f9fafb !important;
             cursor: not-allowed !important;
           }
-          .payroll-page-wrapper label {
+          #payroll-page-container label {
             display: block !important;
             font-size: 0.875rem !important;
             font-weight: 600 !important;
             color: #374151 !important;
             margin-bottom: 0.5rem !important;
           }
-          .payroll-page-wrapper button {
+          #payroll-page-container button {
             font-family: inherit !important;
+          }
+          #payroll-page-container h1,
+          #payroll-page-container h2,
+          #payroll-page-container h3 {
+            color: #111827 !important;
+            font-weight: 600 !important;
+          }
+          #payroll-page-container p {
+            color: #6b7280 !important;
           }
         `
       }} />
-      <div className="payroll-page-wrapper" style={{ 
+      <div id="payroll-page-container" style={{ 
         minHeight: '100vh', 
         background: 'linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%)',
         fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
