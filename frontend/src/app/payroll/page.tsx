@@ -629,7 +629,7 @@ export default function PayrollPage() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{__html: `
+      <style>{`
         input[type="text"]:hover:not(:focus),
         input[type="email"]:hover:not(:focus),
         input[type="number"]:hover:not(:focus),
@@ -648,7 +648,7 @@ export default function PayrollPage() {
         button:not(:disabled):hover {
           opacity: 0.9;
         }
-      `}} />
+      `}</style>
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
