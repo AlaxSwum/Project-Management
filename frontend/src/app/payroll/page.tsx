@@ -617,18 +617,8 @@ export default function PayrollPage() {
     );
   }
 
-  // Helper function to get input styles with focus state
-  const getInputStyle = (inputId: string) => ({
-    ...formStyles.input,
-    ...(focusedInput === inputId ? formStyles.inputFocus : {}),
-  });
-
-  // Helper function to handle input focus
-  const handleInputFocus = (inputId: string) => setFocusedInput(inputId);
-  const handleInputBlur = () => setFocusedInput(null);
-
   return (
-    <>
+    <div>
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -1333,7 +1323,7 @@ export default function PayrollPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
