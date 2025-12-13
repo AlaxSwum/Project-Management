@@ -423,10 +423,15 @@ export default function PayrollPage() {
 
   useEffect(() => {
     // Inject styles into document head to ensure they load
+    if (typeof window === 'undefined') return;
+    
     const styleId = 'payroll-page-styles';
-    if (!document.getElementById(styleId)) {
+    let existingStyle = document.getElementById(styleId);
+    
+    if (!existingStyle) {
       const style = document.createElement('style');
       style.id = styleId;
+      style.setAttribute('data-payroll-styles', 'true');
       style.innerHTML = `
         #payroll-page-container,
         #payroll-page-container *,
@@ -450,6 +455,7 @@ export default function PayrollPage() {
           appearance: none !important;
           -webkit-appearance: none !important;
           -moz-appearance: none !important;
+          display: block !important;
         }
         #payroll-page-container input:focus,
         #payroll-page-container select:focus,
@@ -495,6 +501,11 @@ export default function PayrollPage() {
       `;
       document.head.appendChild(style);
     }
+    
+    return () => {
+      // Cleanup: remove style on unmount if needed
+      // But we'll keep it for now to avoid flickering
+    };
   }, []);
 
   return (
