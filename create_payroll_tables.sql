@@ -103,7 +103,8 @@ ALTER TABLE payroll_records DISABLE ROW LEVEL SECURITY;
 
 GRANT ALL ON payroll_members TO authenticated, anon;
 GRANT ALL ON payroll_records TO authenticated, anon;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO payroll_members_id_seq, payroll_records_id_seq TO authenticated, anon;
+GRANT USAGE, SELECT ON SEQUENCE payroll_members_id_seq TO authenticated, anon;
+GRANT USAGE, SELECT ON SEQUENCE payroll_records_id_seq TO authenticated, anon;
 
 -- =====================================================
 -- 4. ADD UPDATED_AT TRIGGER

@@ -21,7 +21,6 @@ import {
   ArrowDownTrayIcon,
   PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
-import { brevoService } from '@/lib/brevo-service';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -368,32 +367,26 @@ export default function PayrollPage() {
         reader.readAsDataURL(pdfBlob);
       });
 
-      // Send email with PDF attachment
+      // Send email with PDF attachment using Resend API
       const employeeName = payrollType === 'uk' ? ukPayrollData.employeeName : myanmarPayrollData.employeeName;
       const monthEnding = payrollType === 'uk' ? ukPayrollData.monthEnding : myanmarPayrollData.monthEnding;
+      const employeeEmail = payrollType === 'uk' ? ukPayrollData.email : myanmarPayrollData.email;
       
-      const emailSubject = `Payroll Statement - ${employeeName} - ${monthEnding}`;
-      const emailBody = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <h2 style="color: #3B82F6;">Payroll Statement</h2>
-          <p>Dear ${employeeName},</p>
-          <p>Please find attached your payroll statement for the month ending ${monthEnding}.</p>
-          <p>If you have any questions, please contact the HR department.</p>
-          <p>Best regards,<br>Hush Healthcare Ltd<br>HR Department</p>
-        </div>
-      `;
-
-      // Note: Brevo API doesn't support attachments directly in the current implementation
-      // We'll send the email with a link to download or include the PDF in the email body
-      const result = await brevoService.sendEmail({
-        to: [emailAddress],
-        subject: emailSubject,
-        htmlContent: emailBody + `
-          <p style="margin-top: 20px; padding: 15px; background-color: #F3F4F6; border-radius: 5px;">
-            <strong>Note:</strong> Your payroll PDF has been generated. Please download it from the payroll system or contact HR for assistance.
-          </p>
-        `,
+      const response = await fetch('/api/send-payroll-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          employeeName,
+          employeeEmail: emailAddress || employeeEmail,
+          monthEnding,
+          payrollType,
+          pdfBase64: pdfBase64,
+        }),
       });
+
+      const result = await response.json();
 
       if (result.success) {
         setMessage('Email sent successfully!');
