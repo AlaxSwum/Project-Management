@@ -629,30 +629,6 @@ export default function PayrollPage() {
 
   return (
     <>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            input[type="text"]:hover:not(:focus),
-            input[type="email"]:hover:not(:focus),
-            input[type="number"]:hover:not(:focus),
-            input[type="date"]:hover:not(:focus),
-            select:hover:not(:focus) {
-              border-color: #cbd5e1 !important;
-            }
-            input[type="text"]:focus,
-            input[type="email"]:focus,
-            input[type="number"]:focus,
-            input[type="date"]:focus,
-            select:focus {
-              border-color: #6366f1 !important;
-              box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
-            }
-            button:not(:disabled):hover {
-              opacity: 0.9;
-            }
-          `,
-        }}
-      />
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
