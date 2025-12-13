@@ -35,12 +35,20 @@ const formStyles = {
     border: '2px solid #e5e7eb',
     borderRadius: '8px',
     fontSize: '0.95rem',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#ffffff',
     transition: 'all 0.2s ease',
     outline: 'none',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     color: '#111827',
     boxSizing: 'border-box' as const,
+  },
+  inputFocus: {
+    borderColor: '#6366f1',
+    boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+    backgroundColor: '#ffffff',
+  },
+  inputHover: {
+    borderColor: '#cbd5e1',
   },
   inputReadonly: {
     width: '100%',
@@ -63,13 +71,20 @@ const formStyles = {
     border: '2px solid #e5e7eb',
     borderRadius: '8px',
     fontSize: '0.95rem',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#ffffff',
     transition: 'all 0.2s ease',
     outline: 'none',
     cursor: 'pointer',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     color: '#111827',
     boxSizing: 'border-box' as const,
+  },
+  selectFocus: {
+    borderColor: '#6366f1',
+    boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
+  },
+  selectHover: {
+    borderColor: '#cbd5e1',
   },
   label: {
     display: 'block',
@@ -114,6 +129,11 @@ const formStyles = {
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     fontSize: '0.95rem',
   },
+  buttonPrimaryHover: {
+    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+  },
   buttonSuccess: {
     padding: '0.75rem 1.5rem',
     borderRadius: '8px',
@@ -128,6 +148,11 @@ const formStyles = {
     transition: 'all 0.2s ease',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     fontSize: '0.95rem',
+  },
+  buttonSuccessHover: {
+    background: '#059669',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
   },
   buttonDisabled: {
     padding: '0.75rem 1.5rem',
@@ -154,6 +179,9 @@ const formStyles = {
     transition: 'all 0.2s ease',
     fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     fontSize: '0.95rem',
+  },
+  buttonSecondaryHover: {
+    background: '#d1d5db',
   },
   container: {
     minHeight: '100vh',
@@ -236,6 +264,7 @@ export default function PayrollPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [message, setMessage] = useState('');
   const [pdfGenerated, setPdfGenerated] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   
   // UK Payroll Form Data
   const [ukPayrollData, setUkPayrollData] = useState<UKPayrollData>({
@@ -588,8 +617,38 @@ export default function PayrollPage() {
     );
   }
 
+  // Helper function to get input styles with focus state
+  const getInputStyle = (inputId: string) => ({
+    ...formStyles.input,
+    ...(focusedInput === inputId ? formStyles.inputFocus : {}),
+  });
+
+  // Helper function to handle input focus
+  const handleInputFocus = (inputId: string) => setFocusedInput(inputId);
+  const handleInputBlur = () => setFocusedInput(null);
+
   return (
     <>
+      <style dangerouslySetInnerHTML={{__html: `
+        input[type="text"]:hover:not(:focus),
+        input[type="email"]:hover:not(:focus),
+        input[type="number"]:hover:not(:focus),
+        input[type="date"]:hover:not(:focus),
+        select:hover:not(:focus) {
+          border-color: #cbd5e1 !important;
+        }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+          border-color: #6366f1 !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        }
+        button:not(:disabled):hover {
+          opacity: 0.9;
+        }
+      `}} />
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -711,6 +770,7 @@ export default function PayrollPage() {
                     <label style={formStyles.label}>Employee Name *</label>
                     <input
                       type="text"
+                      className="payroll-input"
                       style={formStyles.input}
                       value={ukPayrollData.employeeName}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeName: e.target.value })}
@@ -721,6 +781,7 @@ export default function PayrollPage() {
                     <label style={formStyles.label}>Employee ID *</label>
                     <input
                       type="text"
+                      className="payroll-input"
                       style={formStyles.input}
                       value={ukPayrollData.employeeId}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeId: e.target.value })}
@@ -731,6 +792,7 @@ export default function PayrollPage() {
                     <label style={formStyles.label}>Email *</label>
                     <input
                       type="email"
+                      className="payroll-input"
                       style={formStyles.input}
                       value={ukPayrollData.email}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, email: e.target.value })}
@@ -776,6 +838,7 @@ export default function PayrollPage() {
                   <div>
                     <label style={formStyles.label}>NI Table</label>
                     <select
+                      className="payroll-select"
                       style={formStyles.select}
                       value={ukPayrollData.nationalInsuranceTable}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsuranceTable: e.target.value })}
@@ -1141,6 +1204,18 @@ export default function PayrollPage() {
                   (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) 
                   ? formStyles.buttonDisabled 
                   : formStyles.buttonPrimary}
+                onMouseEnter={(e) => {
+                  if (!e.currentTarget.disabled) {
+                    Object.assign(e.currentTarget.style, formStyles.buttonPrimaryHover);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+                    e.currentTarget.style.transform = '';
+                    e.currentTarget.style.boxShadow = '';
+                  }
+                }}
               >
                 <ArrowDownTrayIcon style={{ width: '20px', height: '20px' }} />
                 Generate PDF
@@ -1150,6 +1225,14 @@ export default function PayrollPage() {
                 <button
                   onClick={() => setShowEmailModal(true)}
                   style={formStyles.buttonSuccess}
+                  onMouseEnter={(e) => {
+                    Object.assign(e.currentTarget.style, formStyles.buttonSuccessHover);
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#10b981';
+                    e.currentTarget.style.transform = '';
+                    e.currentTarget.style.boxShadow = '';
+                  }}
                 >
                   <PaperAirplaneIcon style={{ width: '20px', height: '20px' }} />
                   Send Email
