@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
   DocumentTextIcon,
