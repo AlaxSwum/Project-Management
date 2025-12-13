@@ -421,11 +421,90 @@ export default function PayrollPage() {
     );
   }
 
+  useEffect(() => {
+    // Inject styles into document head to ensure they load
+    const styleId = 'payroll-page-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        #payroll-page-container,
+        #payroll-page-container *,
+        #payroll-page-container *::before,
+        #payroll-page-container *::after {
+          box-sizing: border-box !important;
+        }
+        #payroll-page-container input,
+        #payroll-page-container select,
+        #payroll-page-container textarea {
+          width: 100% !important;
+          padding: 0.75rem 1rem !important;
+          border: 2px solid #e5e7eb !important;
+          border-radius: 8px !important;
+          font-size: 0.95rem !important;
+          transition: all 0.2s ease !important;
+          background-color: #fafafa !important;
+          box-sizing: border-box !important;
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          color: #111827 !important;
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+        }
+        #payroll-page-container input:focus,
+        #payroll-page-container select:focus,
+        #payroll-page-container textarea:focus {
+          outline: none !important;
+          border-color: #6366f1 !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+          background-color: white !important;
+        }
+        #payroll-page-container input[readonly],
+        #payroll-page-container input[readonly]:focus {
+          background-color: #f9fafb !important;
+          cursor: not-allowed !important;
+        }
+        #payroll-page-container label {
+          display: block !important;
+          font-size: 0.875rem !important;
+          font-weight: 600 !important;
+          color: #374151 !important;
+          margin-bottom: 0.5rem !important;
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+        #payroll-page-container button {
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+        #payroll-page-container h1,
+        #payroll-page-container h2,
+        #payroll-page-container h3,
+        #payroll-page-container h4,
+        #payroll-page-container h5,
+        #payroll-page-container h6 {
+          color: #111827 !important;
+          font-weight: 600 !important;
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+        #payroll-page-container p {
+          color: #6b7280 !important;
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+        #payroll-page-container div {
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <>
       <style dangerouslySetInnerHTML={{
         __html: `
-          #payroll-page-container * {
+          #payroll-page-container,
+          #payroll-page-container *,
+          #payroll-page-container *::before,
+          #payroll-page-container *::after {
             box-sizing: border-box !important;
           }
           #payroll-page-container input,
@@ -439,8 +518,11 @@ export default function PayrollPage() {
             transition: all 0.2s ease !important;
             background-color: #fafafa !important;
             box-sizing: border-box !important;
-            font-family: inherit !important;
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
             color: #111827 !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
           }
           #payroll-page-container input:focus,
           #payroll-page-container select:focus,
@@ -461,18 +543,27 @@ export default function PayrollPage() {
             font-weight: 600 !important;
             color: #374151 !important;
             margin-bottom: 0.5rem !important;
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
           }
           #payroll-page-container button {
-            font-family: inherit !important;
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
           }
           #payroll-page-container h1,
           #payroll-page-container h2,
-          #payroll-page-container h3 {
+          #payroll-page-container h3,
+          #payroll-page-container h4,
+          #payroll-page-container h5,
+          #payroll-page-container h6 {
             color: #111827 !important;
             font-weight: 600 !important;
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
           }
           #payroll-page-container p {
             color: #6b7280 !important;
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          }
+          #payroll-page-container div {
+            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
           }
         `
       }} />
