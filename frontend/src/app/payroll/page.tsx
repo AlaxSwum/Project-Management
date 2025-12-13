@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
@@ -618,7 +618,7 @@ export default function PayrollPage() {
   }
 
   return (
-    <div>
+    <Fragment>
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
@@ -1323,7 +1323,7 @@ export default function PayrollPage() {
           </div>
         </div>
       )}
-    </div>
+    </Fragment>
   );
 }
 
