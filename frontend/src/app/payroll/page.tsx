@@ -629,9 +629,46 @@ export default function PayrollPage() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        .payroll-page input[type="text"],
+        .payroll-page input[type="email"],
+        .payroll-page input[type="number"],
+        .payroll-page input[type="date"],
+        .payroll-page select {
+          width: 100% !important;
+          padding: 0.75rem 1rem !important;
+          border: 2px solid #e5e7eb !important;
+          border-radius: 8px !important;
+          font-size: 0.875rem !important;
+          background-color: #ffffff !important;
+          color: #111827 !important;
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          line-height: 1.5 !important;
+          box-sizing: border-box !important;
+        }
+        .payroll-page .payroll-card {
+          background: white !important;
+          border-radius: 12px !important;
+          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06) !important;
+          padding: 1.25rem !important;
+          margin-bottom: 1.25rem !important;
+        }
+        .payroll-page label {
+          display: block !important;
+          margin-bottom: 0.5rem !important;
+          font-weight: 600 !important;
+          font-size: 0.8125rem !important;
+          color: #374151 !important;
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          line-height: 1.4 !important;
+        }
+        .payroll-page button {
+          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+      `}} />
       <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+      <div className="payroll-page" style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
         
         <div style={{ 
@@ -645,7 +682,7 @@ export default function PayrollPage() {
         }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             {/* Header */}
-            <div style={formStyles.card}>
+            <div className="payroll-card" style={formStyles.card}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0', lineHeight: '1.3' }}>
@@ -659,7 +696,7 @@ export default function PayrollPage() {
             </div>
 
           {/* Payroll Type Selection */}
-          <div style={formStyles.card}>
+          <div className="payroll-card" style={formStyles.card}>
             <h2 style={formStyles.sectionTitle}>Select Payroll Type</h2>
             <div style={{ 
               display: 'grid', 
@@ -735,7 +772,7 @@ export default function PayrollPage() {
           </div>
 
           {/* Form Section */}
-          <div style={formStyles.card}>
+          <div className="payroll-card" style={formStyles.card}>
             <h2 style={formStyles.sectionTitle}>Employee Information</h2>
             
             {payrollType === 'uk' ? (
@@ -1161,7 +1198,7 @@ export default function PayrollPage() {
           {/* Preview Section */}
           {(payrollType === 'uk' && ukPayrollData.employeeName && ukPayrollData.monthEnding) ||
            (payrollType === 'myanmar' && myanmarPayrollData.employeeName && myanmarPayrollData.monthEnding) ? (
-            <div style={formStyles.card}>
+            <div className="payroll-card" style={formStyles.card}>
               <h2 style={formStyles.sectionTitle}>Preview</h2>
               <div id="payroll-preview" style={{ background: 'white', padding: '2rem', border: '2px solid #e5e7eb', borderRadius: '8px' }}>
                 {payrollType === 'uk' ? (
@@ -1174,7 +1211,7 @@ export default function PayrollPage() {
           ) : null}
 
           {/* Action Buttons */}
-          <div style={formStyles.card}>
+          <div className="payroll-card" style={formStyles.card}>
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
               <button
                 onClick={generatePDF}
