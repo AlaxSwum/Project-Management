@@ -870,7 +870,7 @@ export default function PayrollPage() {
                         type="text"
                         value={ukPayrollData.netPay}
                         readOnly
-                        className="font-semibold"
+                        style={{ fontWeight: '600' }}
                       />
                     </div>
                   </div>
@@ -894,7 +894,7 @@ export default function PayrollPage() {
                         type="text"
                         value={ukPayrollData.netAmountPaid}
                         readOnly
-                        className="font-semibold"
+                        style={{ fontWeight: '600' }}
                       />
                     </div>
                     <div>
@@ -1086,7 +1086,6 @@ export default function PayrollPage() {
               </div>
             )}
           </div>
-          </div>
         </div>
       </div>
 
@@ -1128,7 +1127,7 @@ export default function PayrollPage() {
               </button>
             </div>
             <div style={{ marginBottom: '1rem' }}>
-              <label className="payroll-label">Email Address</label>
+              <label>Email Address</label>
               <input
                 type="email"
                 value={emailAddress}
@@ -1140,8 +1139,27 @@ export default function PayrollPage() {
               <button
                 onClick={handleSendEmail}
                 disabled={sendingEmail || !emailAddress}
-                className="payroll-button payroll-button-primary"
-                style={{ flex: 1, opacity: (sendingEmail || !emailAddress) ? 0.5 : 1 }}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem 1rem',
+                  background: (sendingEmail || !emailAddress) ? '#d1d5db' : '#6366f1',
+                  color: 'white',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: (sendingEmail || !emailAddress) ? 'not-allowed' : 'pointer',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!sendingEmail && emailAddress) {
+                    e.currentTarget.style.background = '#4f46e5';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!sendingEmail && emailAddress) {
+                    e.currentTarget.style.background = '#6366f1';
+                  }
+                }}
               >
                 {sendingEmail ? 'Sending...' : 'Send'}
               </button>
@@ -1175,7 +1193,7 @@ export default function PayrollPage() {
 // UK Payroll Preview Component
 function UKPayrollPreview({ data }: { data: UKPayrollData }) {
   return (
-    <div className="payroll-preview" style={{ fontFamily: 'Arial, sans-serif', color: '#333' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333' }}>
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>Hush Healthcare Ltd</h1>
         <h2 style={{ fontSize: '18px', color: '#666' }}>Payslip</h2>
@@ -1284,7 +1302,7 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
 // Myanmar Payroll Preview Component
 function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
   return (
-    <div className="payroll-preview" style={{ fontFamily: 'Arial, sans-serif', color: '#333' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333' }}>
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>Hush Healthcare Ltd</h1>
         <h2 style={{ fontSize: '18px', color: '#666' }}>Payroll Statement</h2>
