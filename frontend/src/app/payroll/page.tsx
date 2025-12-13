@@ -8,7 +8,6 @@ import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import '@/app/globals.css';
 import {
   DocumentTextIcon,
   EnvelopeIcon,
@@ -27,6 +26,150 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+// Reusable form styles to match theme (same pattern as company-outreach)
+const formStyles = {
+  input: {
+    width: '100%',
+    padding: '0.75rem 1rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    backgroundColor: '#fafafa',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    color: '#111827',
+    boxSizing: 'border-box' as const,
+  },
+  inputReadonly: {
+    width: '100%',
+    padding: '0.75rem 1rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    backgroundColor: '#f9fafb',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    color: '#111827',
+    boxSizing: 'border-box' as const,
+    cursor: 'not-allowed',
+    fontWeight: '600',
+  },
+  select: {
+    width: '100%',
+    padding: '0.75rem 1rem',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    backgroundColor: '#fafafa',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    cursor: 'pointer',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    color: '#111827',
+    boxSizing: 'border-box' as const,
+  },
+  label: {
+    display: 'block',
+    marginBottom: '0.5rem',
+    fontWeight: '600',
+    fontSize: '0.875rem',
+    color: '#374151',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
+  card: {
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+    padding: '1.5rem',
+    marginBottom: '1.5rem',
+  },
+  sectionTitle: {
+    fontSize: '1.125rem',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: '1rem',
+    marginTop: '0',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
+  sectionDivider: {
+    borderTop: '1px solid #e5e7eb',
+    paddingTop: '1.5rem',
+    marginTop: '1.5rem',
+  },
+  buttonPrimary: {
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    border: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    color: 'white',
+    transition: 'all 0.2s ease',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: '0.95rem',
+  },
+  buttonSuccess: {
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    border: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    background: '#10b981',
+    color: 'white',
+    transition: 'all 0.2s ease',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: '0.95rem',
+  },
+  buttonDisabled: {
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'not-allowed',
+    border: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    background: '#d1d5db',
+    color: 'white',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: '0.95rem',
+  },
+  buttonSecondary: {
+    padding: '0.5rem 1rem',
+    borderRadius: '8px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    border: 'none',
+    background: '#e5e7eb',
+    color: '#374151',
+    transition: 'all 0.2s ease',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: '0.95rem',
+  },
+  container: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%)',
+    fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
+  content: {
+    padding: '2rem',
+    minHeight: '100vh',
+  },
+  contentMobile: {
+    padding: '12px',
+    paddingTop: '70px',
+    minHeight: '100vh',
+  },
+};
 
 type PayrollType = 'myanmar' | 'uk';
 
@@ -421,185 +564,17 @@ export default function PayrollPage() {
     );
   }
 
-  useEffect(() => {
-    // Inject styles into document head to ensure they load
-    if (typeof window === 'undefined') return;
-    
-    const styleId = 'payroll-page-styles';
-    let existingStyle = document.getElementById(styleId);
-    
-    if (!existingStyle) {
-      const style = document.createElement('style');
-      style.id = styleId;
-      style.setAttribute('data-payroll-styles', 'true');
-      style.innerHTML = `
-        #payroll-page-container,
-        #payroll-page-container *,
-        #payroll-page-container *::before,
-        #payroll-page-container *::after {
-          box-sizing: border-box !important;
-        }
-        #payroll-page-container input,
-        #payroll-page-container select,
-        #payroll-page-container textarea {
-          width: 100% !important;
-          padding: 0.75rem 1rem !important;
-          border: 2px solid #e5e7eb !important;
-          border-radius: 8px !important;
-          font-size: 0.95rem !important;
-          transition: all 0.2s ease !important;
-          background-color: #fafafa !important;
-          box-sizing: border-box !important;
-          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-          color: #111827 !important;
-          appearance: none !important;
-          -webkit-appearance: none !important;
-          -moz-appearance: none !important;
-          display: block !important;
-        }
-        #payroll-page-container input:focus,
-        #payroll-page-container select:focus,
-        #payroll-page-container textarea:focus {
-          outline: none !important;
-          border-color: #6366f1 !important;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
-          background-color: white !important;
-        }
-        #payroll-page-container input[readonly],
-        #payroll-page-container input[readonly]:focus {
-          background-color: #f9fafb !important;
-          cursor: not-allowed !important;
-        }
-        #payroll-page-container label {
-          display: block !important;
-          font-size: 0.875rem !important;
-          font-weight: 600 !important;
-          color: #374151 !important;
-          margin-bottom: 0.5rem !important;
-          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        }
-        #payroll-page-container button {
-          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        }
-        #payroll-page-container h1,
-        #payroll-page-container h2,
-        #payroll-page-container h3,
-        #payroll-page-container h4,
-        #payroll-page-container h5,
-        #payroll-page-container h6 {
-          color: #111827 !important;
-          font-weight: 600 !important;
-          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        }
-        #payroll-page-container p {
-          color: #6b7280 !important;
-          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        }
-        #payroll-page-container div {
-          font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    return () => {
-      // Cleanup: remove style on unmount if needed
-      // But we'll keep it for now to avoid flickering
-    };
-  }, []);
-
   return (
-    <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          #payroll-page-container,
-          #payroll-page-container *,
-          #payroll-page-container *::before,
-          #payroll-page-container *::after {
-            box-sizing: border-box !important;
-          }
-          #payroll-page-container input,
-          #payroll-page-container select,
-          #payroll-page-container textarea {
-            width: 100% !important;
-            padding: 0.75rem 1rem !important;
-            border: 2px solid #e5e7eb !important;
-            border-radius: 8px !important;
-            font-size: 0.95rem !important;
-            transition: all 0.2s ease !important;
-            background-color: #fafafa !important;
-            box-sizing: border-box !important;
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-            color: #111827 !important;
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-          }
-          #payroll-page-container input:focus,
-          #payroll-page-container select:focus,
-          #payroll-page-container textarea:focus {
-            outline: none !important;
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
-            background-color: white !important;
-          }
-          #payroll-page-container input[readonly],
-          #payroll-page-container input[readonly]:focus {
-            background-color: #f9fafb !important;
-            cursor: not-allowed !important;
-          }
-          #payroll-page-container label {
-            display: block !important;
-            font-size: 0.875rem !important;
-            font-weight: 600 !important;
-            color: #374151 !important;
-            margin-bottom: 0.5rem !important;
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-          }
-          #payroll-page-container button {
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-          }
-          #payroll-page-container h1,
-          #payroll-page-container h2,
-          #payroll-page-container h3,
-          #payroll-page-container h4,
-          #payroll-page-container h5,
-          #payroll-page-container h6 {
-            color: #111827 !important;
-            font-weight: 600 !important;
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-          }
-          #payroll-page-container p {
-            color: #6b7280 !important;
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-          }
-          #payroll-page-container div {
-            font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-          }
-        `
-      }} />
-      <div id="payroll-page-container" style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%)',
-        fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    <div style={formStyles.container}>
+      {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
+      
+      <div style={{ 
+        marginLeft: isMobile ? '0' : '280px',
+        ...(isMobile ? formStyles.contentMobile : formStyles.content)
       }}>
-        {isMobile ? <MobileHeader title="Payroll Generation" isMobile={isMobile} /> : <Sidebar projects={projects} onCreateProject={() => {}} />}
-        
-        <div style={{ 
-          marginLeft: isMobile ? '0' : '280px',
-          padding: isMobile ? '12px' : '2rem',
-          paddingTop: isMobile ? '70px' : '2rem',
-          minHeight: '100vh'
-        }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Header */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-            padding: '1.5rem',
-            marginBottom: '1.5rem'
-          }}>
+          <div style={formStyles.card}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0' }}>
@@ -613,14 +588,8 @@ export default function PayrollPage() {
           </div>
 
           {/* Payroll Type Selection */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-            padding: '1.5rem',
-            marginBottom: '1.5rem'
-          }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Select Payroll Type</h2>
+          <div style={formStyles.card}>
+            <h2 style={formStyles.sectionTitle}>Select Payroll Type</h2>
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', 
@@ -695,14 +664,8 @@ export default function PayrollPage() {
           </div>
 
           {/* Form Section */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-            padding: '1.5rem',
-            marginBottom: '1.5rem'
-          }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1.5rem', margin: '0 0 1.5rem 0' }}>Employee Information</h2>
+          <div style={formStyles.card}>
+            <h2 style={formStyles.sectionTitle}>Employee Information</h2>
             
             {payrollType === 'uk' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -713,27 +676,30 @@ export default function PayrollPage() {
                   gap: '1rem' 
                 }}>
                   <div>
-                    <label>Employee Name *</label>
+                    <label style={formStyles.label}>Employee Name *</label>
                     <input
                       type="text"
+                      style={formStyles.input}
                       value={ukPayrollData.employeeName}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeName: e.target.value })}
                       placeholder="John Doe"
                     />
                   </div>
                   <div>
-                    <label>Employee ID *</label>
+                    <label style={formStyles.label}>Employee ID *</label>
                     <input
                       type="text"
+                      style={formStyles.input}
                       value={ukPayrollData.employeeId}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeId: e.target.value })}
                       placeholder="EMP001"
                     />
                   </div>
                   <div>
-                    <label>Email *</label>
+                    <label style={formStyles.label}>Email *</label>
                     <input
                       type="email"
+                      style={formStyles.input}
                       value={ukPayrollData.email}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, email: e.target.value })}
                       placeholder="john@example.com"
@@ -747,34 +713,38 @@ export default function PayrollPage() {
                   gap: '1rem' 
                 }}>
                   <div>
-                    <label>Month Ending *</label>
+                    <label style={formStyles.label}>Month Ending *</label>
                     <input
                       type="date"
+                      style={formStyles.input}
                       value={ukPayrollData.monthEnding}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, monthEnding: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label>Tax Code</label>
+                    <label style={formStyles.label}>Tax Code</label>
                     <input
                       type="text"
+                      style={formStyles.input}
                       value={ukPayrollData.taxCode}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, taxCode: e.target.value })}
                       placeholder="1257L"
                     />
                   </div>
                   <div>
-                    <label>NI Number</label>
+                    <label style={formStyles.label}>NI Number</label>
                     <input
                       type="text"
+                      style={formStyles.input}
                       value={ukPayrollData.nationalInsuranceNumber}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsuranceNumber: e.target.value })}
                       placeholder="AB123456C"
                     />
                   </div>
                   <div>
-                    <label>NI Table</label>
+                    <label style={formStyles.label}>NI Table</label>
                     <select
+                      style={formStyles.select}
                       value={ukPayrollData.nationalInsuranceTable}
                       onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsuranceTable: e.target.value })}
                     >
@@ -798,39 +768,43 @@ export default function PayrollPage() {
                     gap: '1rem' 
                   }}>
                     <div>
-                      <label>Hours</label>
+                      <label style={formStyles.label}>Hours</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.hours}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, hours: e.target.value })}
                         placeholder="167.25"
                       />
                     </div>
                     <div>
-                      <label>Rate (£)</label>
+                      <label style={formStyles.label}>Rate (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.rate}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, rate: e.target.value })}
                         placeholder="12.25"
                       />
                     </div>
                     <div>
-                      <label>Holiday Pay (£)</label>
+                      <label style={formStyles.label}>Holiday Pay (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.holidayPay}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayPay: e.target.value })}
                         placeholder="196.00"
                       />
                     </div>
                     <div>
-                      <label>Gross Pay (£)</label>
+                      <label style={formStyles.label}>Gross Pay (£)</label>
                       <input
                         type="text"
+                        style={formStyles.inputReadonly}
                         value={ukPayrollData.grossPay}
                         readOnly
                       />
@@ -851,39 +825,43 @@ export default function PayrollPage() {
                     gap: '1rem' 
                   }}>
                     <div>
-                      <label>Tax (£)</label>
+                      <label style={formStyles.label}>Tax (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.tax}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, tax: e.target.value })}
                         placeholder="44.80"
                       />
                     </div>
                     <div>
-                      <label>National Insurance (£)</label>
+                      <label style={formStyles.label}>National Insurance (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.nationalInsurance}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, nationalInsurance: e.target.value })}
                         placeholder="17.97"
                       />
                     </div>
                     <div>
-                      <label>Holiday Repayment (£)</label>
+                      <label style={formStyles.label}>Holiday Repayment (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.holidayRepayment}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayRepayment: e.target.value })}
                         placeholder="972.16"
                       />
                     </div>
                     <div>
-                      <label>Total Deductions (£)</label>
+                      <label style={formStyles.label}>Total Deductions (£)</label>
                       <input
                         type="text"
+                        style={formStyles.inputReadonly}
                         value={ukPayrollData.totalDeductions}
                         readOnly
                       />
@@ -904,40 +882,44 @@ export default function PayrollPage() {
                     gap: '1rem' 
                   }}>
                     <div>
-                      <label>Taxable Gross Pay YTD (£)</label>
+                      <label style={formStyles.label}>Taxable Gross Pay YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.taxableGrossPayYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, taxableGrossPayYTD: e.target.value })}
                         placeholder="5219.61"
                       />
                     </div>
                     <div>
-                      <label>Tax YTD (£)</label>
+                      <label style={formStyles.label}>Tax YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.taxYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, taxYTD: e.target.value })}
                         placeholder="414.80"
                       />
                     </div>
                     <div>
-                      <label>Employee NI YTD (£)</label>
+                      <label style={formStyles.label}>Employee NI YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.employeeNationalInsuranceYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employeeNationalInsuranceYTD: e.target.value })}
                         placeholder="166.04"
                       />
                     </div>
                     <div>
-                      <label>Employer NI YTD (£)</label>
+                      <label style={formStyles.label}>Employer NI YTD (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.employerNationalInsuranceYTD}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employerNationalInsuranceYTD: e.target.value })}
                         placeholder="595.29"
@@ -959,30 +941,32 @@ export default function PayrollPage() {
                     gap: '1rem' 
                   }}>
                     <div>
-                      <label>Taxable Gross Pay (£)</label>
+                      <label style={formStyles.label}>Taxable Gross Pay (£)</label>
                       <input
                         type="text"
+                        style={formStyles.inputReadonly}
                         value={ukPayrollData.taxableGrossPay}
                         readOnly
                       />
                     </div>
                     <div>
-                      <label>Employer National Insurance (£)</label>
+                      <label style={formStyles.label}>Employer National Insurance (£)</label>
                       <input
                         type="number"
                         step="0.01"
+                        style={formStyles.input}
                         value={ukPayrollData.employerNationalInsurance}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employerNationalInsurance: e.target.value })}
                         placeholder="128.35"
                       />
                     </div>
                     <div>
-                      <label>Net Pay (£)</label>
+                      <label style={formStyles.label}>Net Pay (£)</label>
                       <input
                         type="text"
+                        style={formStyles.inputReadonly}
                         value={ukPayrollData.netPay}
                         readOnly
-                        style={{ fontWeight: '600' }}
                       />
                     </div>
                   </div>
@@ -1001,26 +985,28 @@ export default function PayrollPage() {
                     gap: '1rem' 
                   }}>
                     <div>
-                      <label>Net Amount Paid (£)</label>
+                      <label style={formStyles.label}>Net Amount Paid (£)</label>
                       <input
                         type="text"
+                        style={formStyles.inputReadonly}
                         value={ukPayrollData.netAmountPaid}
                         readOnly
-                        style={{ fontWeight: '600' }}
                       />
                     </div>
                     <div>
-                      <label>Paid Date</label>
+                      <label style={formStyles.label}>Paid Date</label>
                       <input
                         type="date"
+                        style={formStyles.input}
                         value={ukPayrollData.paidDate}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, paidDate: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label>Employer PAYE Reference</label>
+                      <label style={formStyles.label}>Employer PAYE Reference</label>
                       <input
                         type="text"
+                        style={formStyles.input}
                         value={ukPayrollData.employerPAYEReference}
                         onChange={(e) => setUkPayrollData({ ...ukPayrollData, employerPAYEReference: e.target.value })}
                         placeholder="120/WE94437"
@@ -1037,18 +1023,20 @@ export default function PayrollPage() {
                   gap: '1rem' 
                 }}>
                   <div>
-                    <label>Employee ID *</label>
+                    <label style={formStyles.label}>Employee ID *</label>
                     <input
                       type="text"
+                      style={formStyles.input}
                       value={myanmarPayrollData.employeeId}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, employeeId: e.target.value })}
                       placeholder="EMP001"
                     />
                   </div>
                   <div>
-                    <label>Employee Name *</label>
+                    <label style={formStyles.label}>Employee Name *</label>
                     <input
                       type="text"
+                      style={formStyles.input}
                       value={myanmarPayrollData.employeeName}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, employeeName: e.target.value })}
                       placeholder="John Doe"
@@ -1061,19 +1049,21 @@ export default function PayrollPage() {
                   gap: '1rem' 
                 }}>
                   <div>
-                    <label>Email *</label>
+                    <label style={formStyles.label}>Email *</label>
                     <input
                       type="email"
+                      style={formStyles.input}
                       value={myanmarPayrollData.email}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, email: e.target.value })}
                       placeholder="john@example.com"
                     />
                   </div>
                   <div>
-                    <label>Payroll Amount (MMK) *</label>
+                    <label style={formStyles.label}>Payroll Amount (MMK) *</label>
                     <input
                       type="number"
                       step="0.01"
+                      style={formStyles.input}
                       value={myanmarPayrollData.payrollAmount}
                       onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, payrollAmount: e.target.value })}
                       placeholder="1000000"
@@ -1081,9 +1071,10 @@ export default function PayrollPage() {
                   </div>
                 </div>
                 <div>
-                  <label>Month Ending *</label>
+                  <label style={formStyles.label}>Month Ending *</label>
                   <input
                     type="date"
+                    style={formStyles.input}
                     value={myanmarPayrollData.monthEnding}
                     onChange={(e) => setMyanmarPayrollData({ ...myanmarPayrollData, monthEnding: e.target.value })}
                   />
@@ -1095,14 +1086,8 @@ export default function PayrollPage() {
           {/* Preview Section */}
           {(payrollType === 'uk' && ukPayrollData.employeeName && ukPayrollData.monthEnding) ||
            (payrollType === 'myanmar' && myanmarPayrollData.employeeName && myanmarPayrollData.monthEnding) ? (
-            <div style={{
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-              padding: '1.5rem',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '1rem', margin: '0 0 1rem 0' }}>Preview</h2>
+            <div style={formStyles.card}>
+              <h2 style={formStyles.sectionTitle}>Preview</h2>
               <div id="payroll-preview" style={{ background: 'white', padding: '2rem', border: '2px solid #e5e7eb', borderRadius: '8px' }}>
                 {payrollType === 'uk' ? (
                   <UKPayrollPreview data={ukPayrollData} />
@@ -1114,44 +1099,16 @@ export default function PayrollPage() {
           ) : null}
 
           {/* Action Buttons */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-            padding: '1.5rem',
-            marginBottom: '1.5rem'
-          }}>
+          <div style={formStyles.card}>
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
               <button
                 onClick={generatePDF}
                 disabled={!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
                   (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  cursor: (!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
-                    (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) ? 'not-allowed' : 'pointer',
-                  border: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: (!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
-                    (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) ? '#d1d5db' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  color: 'white',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (!(!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
-                    (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding))))) {
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                style={(!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
+                  (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) 
+                  ? formStyles.buttonDisabled 
+                  : formStyles.buttonPrimary}
               >
                 <ArrowDownTrayIcon style={{ width: '20px', height: '20px' }} />
                 Generate PDF
@@ -1160,25 +1117,7 @@ export default function PayrollPage() {
               {pdfGenerated && (
                 <button
                   onClick={() => setShowEmailModal(true)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    border: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: '#10b981',
-                    color: 'white',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#059669';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#10b981';
-                  }}
+                  style={formStyles.buttonSuccess}
                 >
                   <PaperAirplaneIcon style={{ width: '20px', height: '20px' }} />
                   Send Email
@@ -1239,9 +1178,10 @@ export default function PayrollPage() {
               </button>
             </div>
             <div style={{ marginBottom: '1rem' }}>
-              <label>Email Address</label>
+              <label style={formStyles.label}>Email Address</label>
               <input
                 type="email"
+                style={formStyles.input}
                 value={emailAddress}
                 onChange={(e) => setEmailAddress(e.target.value)}
                 placeholder="employee@example.com"
