@@ -270,7 +270,7 @@ ${new Date().getFullYear()} Hush Healthcare Ltd. All rights reserved.
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Hush Healthcare Payroll <onboarding@resend.dev>',
+          from: 'Hush Healthcare Payroll <support@rothercarepharmacy.co.uk>',
           to: [employeeEmail],
           subject: `Payslip - ${formattedDate} | Hush Healthcare Ltd`,
           html,
