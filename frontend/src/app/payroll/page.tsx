@@ -496,7 +496,7 @@ export default function PayrollPage() {
           can_edit: selectedRole === 'admin' || selectedRole === 'editor',
           can_delete: selectedRole === 'admin',
           can_generate_pdf: true,
-          added_by: user?.id ? parseInt(user.id) : null,
+          added_by: user?.id || null,
         });
 
       if (error) throw error;
