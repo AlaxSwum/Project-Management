@@ -1683,154 +1683,193 @@ export default function PayrollPage() {
   );
 }
 
-// UK Payroll Preview Component - Clean Black & White Design
+// UK Payroll Preview Component - Professional Template Design
 function UKPayrollPreview({ data }: { data: UKPayrollData }) {
   const formatCurrency = (value: string | number) => {
     const num = typeof value === 'string' ? parseFloat(value) : value;
     return isNaN(num) ? '0.00' : num.toFixed(2);
   };
+  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB');
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const teal = '#4DA6A9';
+  const lightTeal = '#DCF2F3';
 
   return (
-    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: '#333', maxWidth: '700px', margin: '0 auto', border: '1px solid #ccc' }}>
+    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: '#333', maxWidth: '700px', margin: '0 auto', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       {/* Header */}
-      <div style={{ background: '#333', color: 'white', padding: '20px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '1px' }}>HUSH HEALTHCARE LTD</h1>
-            <p style={{ fontSize: '11px', margin: '0', letterSpacing: '1px' }}>PAYSLIP</p>
+      <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0', color: '#333', letterSpacing: '-0.5px' }}>PAYSLIP</h1>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '18px', fontWeight: '600', color: teal }}>Hush Healthcare</div>
+          <div style={{ fontSize: '11px', color: '#666' }}>Ltd</div>
+        </div>
+      </div>
+
+      {/* Company Info Bar */}
+      <div style={{ background: teal, color: 'white', padding: '8px 24px', fontSize: '11px', fontWeight: '600' }}>
+        Hush Healthcare Ltd
+      </div>
+      <div style={{ padding: '8px 24px', fontSize: '10px', color: '#666', borderBottom: '1px solid #ddd' }}>
+        <div>Healthcare Services</div>
+        <div>PAYE Ref: {data.employerPAYEReference || '120/WE94437'}</div>
+      </div>
+
+      {/* Employee & Payment Details */}
+      <div style={{ padding: '16px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        {/* Employee Details */}
+        <div>
+          <div style={{ background: teal, color: 'white', padding: '6px 12px', fontSize: '10px', fontWeight: '600' }}>
+            Employee Details
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', marginBottom: '2px' }}>Pay Period Ending</div>
-            <div style={{ fontSize: '14px', fontWeight: '600' }}>{data.monthEnding || '-'}</div>
+          <div style={{ background: lightTeal, padding: '12px' }}>
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '9px', fontWeight: '600', color: '#555' }}>Employee Name</div>
+              <div style={{ fontSize: '12px' }}>{data.employeeName || '-'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '9px', fontWeight: '600', color: '#555' }}>Employee ID</div>
+              <div style={{ fontSize: '12px' }}>{data.employeeId || '-'}</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Payment Details */}
+        <div>
+          <div style={{ background: teal, color: 'white', padding: '6px 12px', fontSize: '10px', fontWeight: '600' }}>
+            Payment Details
+          </div>
+          <div style={{ background: lightTeal, padding: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '10px' }}>
+              <div><span style={{ fontWeight: '600' }}>Tax Code:</span> {data.taxCode || '-'}</div>
+              <div><span style={{ fontWeight: '600' }}>NI Number:</span> {data.nationalInsuranceNumber || '-'}</div>
+              <div><span style={{ fontWeight: '600' }}>NI Table:</span> {data.nationalInsuranceTable || 'A'}</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Employee Info */}
-      <div style={{ padding: '12px 24px', borderBottom: '1px solid #ddd', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-        <div>
-          <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', marginBottom: '2px' }}>Employee Name</div>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#000' }}>{data.employeeName || '-'}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', marginBottom: '2px' }}>Employee ID</div>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#000' }}>{data.employeeId || '-'}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', marginBottom: '2px' }}>Tax Code</div>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#000' }}>{data.taxCode || '-'}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', marginBottom: '2px' }}>NI Number</div>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#000' }}>{data.nationalInsuranceNumber || '-'}</div>
-        </div>
+      {/* Period Row */}
+      <div style={{ padding: '8px 24px', borderTop: '1px solid #ddd', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+        <div><span style={{ fontWeight: '600' }}>Period End:</span> {formatDate(data.monthEnding)}</div>
+        <div><span style={{ fontWeight: '600' }}>Payment Date:</span> {formatDate(data.paidDate)}</div>
       </div>
 
-      {/* Payments & Deductions */}
-      <div style={{ padding: '16px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {/* Payments */}
-        <div>
-          <div style={{ background: '#f5f5f5', padding: '8px 12px', fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px', marginBottom: '0' }}>
-            PAYMENTS
-          </div>
-          <div style={{ border: '1px solid #ddd', borderTop: 'none', padding: '12px', fontSize: '11px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span>{data.hours || '0'} hrs @ £{data.rate || '0'}/hr</span>
-              <span style={{ fontWeight: '600' }}>£{formatCurrency(data.grossPay)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span>Holiday Pay</span>
-              <span style={{ fontWeight: '600' }}>£{formatCurrency(data.holidayPay)}</span>
-            </div>
-            <div style={{ borderTop: '1px solid #ddd', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: '700' }}>
-              <span>Total Payments</span>
-              <span>£{formatCurrency(data.totalPayments)}</span>
-            </div>
-          </div>
-        </div>
+      {/* Payments Table */}
+      <div style={{ padding: '16px 24px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <thead>
+            <tr style={{ background: teal, color: 'white' }}>
+              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Payments</th>
+              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Type</th>
+              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600' }}>Rate</th>
+              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600' }}>Hours</th>
+              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 12px' }}>Basic Pay</td>
+              <td style={{ padding: '8px 12px' }}>Hourly</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.rate)}</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>{data.hours || '0'}</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.grossPay)}</td>
+            </tr>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 12px' }}>Holiday Pay</td>
+              <td style={{ padding: '8px 12px' }}>Allowance</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>-</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>-</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.holidayPay)}</td>
+            </tr>
+            <tr style={{ fontWeight: '700', borderTop: '2px solid #ddd' }}>
+              <td colSpan={4} style={{ padding: '8px 12px' }}>Total Gross Pay</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.totalPayments)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        {/* Deductions */}
-        <div>
-          <div style={{ background: '#f5f5f5', padding: '8px 12px', fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px', marginBottom: '0' }}>
-            DEDUCTIONS
-          </div>
-          <div style={{ border: '1px solid #ddd', borderTop: 'none', padding: '12px', fontSize: '11px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span>PAYE Tax</span>
-              <span style={{ fontWeight: '600' }}>£{formatCurrency(data.tax)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span>National Insurance</span>
-              <span style={{ fontWeight: '600' }}>£{formatCurrency(data.nationalInsurance)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span>Holiday Repayment</span>
-              <span style={{ fontWeight: '600' }}>£{formatCurrency(data.holidayRepayment)}</span>
-            </div>
-            <div style={{ borderTop: '1px solid #ddd', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: '700' }}>
-              <span>Total Deductions</span>
-              <span>£{formatCurrency(data.totalDeductions)}</span>
-            </div>
-          </div>
-        </div>
+      {/* Deductions Table */}
+      <div style={{ padding: '0 24px 16px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <thead>
+            <tr style={{ background: teal, color: 'white' }}>
+              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Deductions</th>
+              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 12px' }}>PAYE Tax</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.tax)}</td>
+            </tr>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 12px' }}>National Insurance</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.nationalInsurance)}</td>
+            </tr>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 12px' }}>Holiday Repayment</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.holidayRepayment)}</td>
+            </tr>
+            <tr style={{ fontWeight: '700', borderTop: '2px solid #ddd' }}>
+              <td style={{ padding: '8px 12px' }}>Total Deductions</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right' }}>£{formatCurrency(data.totalDeductions)}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Net Pay Box */}
-      <div style={{ margin: '0 24px 16px', background: '#333', padding: '16px', textAlign: 'center' }}>
-        <div style={{ fontSize: '10px', color: '#ccc', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Net Pay This Period</div>
-        <div style={{ fontSize: '28px', fontWeight: '700', color: 'white' }}>£{formatCurrency(data.netPay)}</div>
+      <div style={{ margin: '0 24px 16px', background: teal, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: 'white' }}>NET PAY</div>
+        <div style={{ fontSize: '20px', fontWeight: '700', color: 'white' }}>£{formatCurrency(data.netPay)}</div>
       </div>
 
       {/* Year to Date */}
       <div style={{ margin: '0 24px 16px' }}>
-        <div style={{ background: '#f5f5f5', padding: '8px 12px', fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>
-          YEAR TO DATE
+        <div style={{ background: teal, color: 'white', padding: '6px 12px', fontSize: '10px', fontWeight: '600' }}>
+          Year to Date Summary
         </div>
-        <div style={{ border: '1px solid #ddd', borderTop: 'none', padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '10px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: '#666', marginBottom: '2px' }}>Taxable Gross</div>
-            <div style={{ fontWeight: '600', color: '#000' }}>£{formatCurrency(data.taxableGrossPayYTD)}</div>
+        <div style={{ background: lightTeal, padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '10px' }}>
+          <div>
+            <div style={{ color: '#555', marginBottom: '2px' }}>Taxable Gross</div>
+            <div style={{ fontWeight: '600' }}>£{formatCurrency(data.taxableGrossPayYTD)}</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: '#666', marginBottom: '2px' }}>Tax Paid</div>
-            <div style={{ fontWeight: '600', color: '#000' }}>£{formatCurrency(data.taxYTD)}</div>
+          <div>
+            <div style={{ color: '#555', marginBottom: '2px' }}>Tax Paid</div>
+            <div style={{ fontWeight: '600' }}>£{formatCurrency(data.taxYTD)}</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: '#666', marginBottom: '2px' }}>Employee NI</div>
-            <div style={{ fontWeight: '600', color: '#000' }}>£{formatCurrency(data.employeeNationalInsuranceYTD)}</div>
+          <div>
+            <div style={{ color: '#555', marginBottom: '2px' }}>Employee NI</div>
+            <div style={{ fontWeight: '600' }}>£{formatCurrency(data.employeeNationalInsuranceYTD)}</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: '#666', marginBottom: '2px' }}>Employer NI</div>
-            <div style={{ fontWeight: '600', color: '#000' }}>£{formatCurrency(data.employerNationalInsuranceYTD)}</div>
+          <div>
+            <div style={{ color: '#555', marginBottom: '2px' }}>Employer NI</div>
+            <div style={{ fontWeight: '600' }}>£{formatCurrency(data.employerNationalInsuranceYTD)}</div>
           </div>
-        </div>
-      </div>
-
-      {/* Payment Details */}
-      <div style={{ margin: '0 24px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '10px' }}>
-        <div style={{ border: '1px solid #ddd', padding: '10px', textAlign: 'center' }}>
-          <div style={{ color: '#666', marginBottom: '2px' }}>Payment Date</div>
-          <div style={{ fontWeight: '600', color: '#000' }}>{data.paidDate || '-'}</div>
-        </div>
-        <div style={{ border: '1px solid #ddd', padding: '10px', textAlign: 'center' }}>
-          <div style={{ color: '#666', marginBottom: '2px' }}>PAYE Reference</div>
-          <div style={{ fontWeight: '600', color: '#000' }}>{data.employerPAYEReference || '-'}</div>
-        </div>
-        <div style={{ border: '1px solid #ddd', padding: '10px', textAlign: 'center' }}>
-          <div style={{ color: '#666', marginBottom: '2px' }}>Leave Remaining</div>
-          <div style={{ fontWeight: '600', color: '#000' }}>{data.annualLeaveRemaining || '0'} days</div>
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ background: '#333', color: '#999', padding: '10px 24px', fontSize: '8px', textAlign: 'center' }}>
-        <div>This is a computer-generated document. Please retain for your records. | Hush Healthcare Ltd | Confidential</div>
+      <div style={{ padding: '12px 24px', borderTop: '1px solid #ddd', fontSize: '8px', color: '#666', textAlign: 'center' }}>
+        This is a computer-generated payslip. Please retain for your records. | Hush Healthcare Ltd | Confidential
       </div>
     </div>
   );
 }
 
-// Myanmar Payroll Preview Component - Clean Professional Design (matches PDF)
+// Myanmar Payroll Preview Component - Professional Template Design
 function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
   const formatAmount = (value: string | number) => {
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -1841,90 +1880,98 @@ function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
     if (!dateStr) return '-';
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+      return date.toLocaleDateString('en-GB');
     } catch {
       return dateStr;
     }
   };
 
+  const teal = '#4DA6A9';
+  const lightTeal = '#DCF2F3';
+
   return (
-    <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", color: '#333', maxWidth: '600px', margin: '0 auto', border: '1px solid #ccc' }}>
+    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: '#333', maxWidth: '600px', margin: '0 auto', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       {/* Header */}
-      <div style={{ background: '#333', color: 'white', padding: '20px 24px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '1px' }}>
-          HUSH HEALTHCARE LTD
-        </h1>
-        <p style={{ fontSize: '11px', margin: '0', letterSpacing: '2px' }}>PAYROLL STATEMENT</p>
-        <p style={{ fontSize: '10px', margin: '4px 0 0 0', opacity: '0.8' }}>Myanmar Division</p>
-      </div>
-
-      {/* Document Info */}
-      <div style={{ padding: '12px 24px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+      <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <span style={{ color: '#666' }}>Document No: </span>
-          <span style={{ fontWeight: '600' }}>PAY-{data.employeeId || 'XXX'}-{new Date().getFullYear()}</span>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0', color: '#333', letterSpacing: '-0.5px' }}>PAYSLIP</h1>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '18px', fontWeight: '600', color: teal }}>Hush Healthcare</div>
+          <div style={{ fontSize: '11px', color: '#666' }}>Myanmar Division</div>
+        </div>
+      </div>
+
+      {/* Company Info Bar */}
+      <div style={{ background: teal, color: 'white', padding: '8px 24px', fontSize: '11px', fontWeight: '600' }}>
+        Hush Healthcare Ltd - Myanmar Division
+      </div>
+      <div style={{ padding: '8px 24px', fontSize: '10px', color: '#666', borderBottom: '1px solid #ddd' }}>
+        Healthcare Services
+      </div>
+
+      {/* Employee Details */}
+      <div style={{ padding: '16px 24px' }}>
+        <div style={{ background: teal, color: 'white', padding: '6px 12px', fontSize: '10px', fontWeight: '600' }}>
+          Employee Details
+        </div>
+        <div style={{ background: lightTeal, padding: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '10px', fontSize: '11px' }}>
+            <div style={{ fontWeight: '600', color: '#555' }}>Employee ID</div>
+            <div style={{ fontSize: '13px' }}>{data.employeeId || '-'}</div>
+            <div style={{ fontWeight: '600', color: '#555' }}>Employee Name</div>
+            <div style={{ fontSize: '13px' }}>{data.employeeName || '-'}</div>
+            <div style={{ fontWeight: '600', color: '#555' }}>Email</div>
+            <div style={{ fontSize: '13px' }}>{data.email || '-'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Period Row */}
+      <div style={{ padding: '8px 24px', borderTop: '1px solid #ddd', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+        <div><span style={{ fontWeight: '600' }}>Period End:</span> {formatDate(data.monthEnding)}</div>
+        <div><span style={{ fontWeight: '600' }}>Issue Date:</span> {new Date().toLocaleDateString('en-GB')}</div>
+      </div>
+
+      {/* Payment Table */}
+      <div style={{ padding: '16px 24px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+          <thead>
+            <tr style={{ background: teal, color: 'white' }}>
+              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Payment</th>
+              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: '8px 12px' }}>Net Salary</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600' }}>MMK {formatAmount(data.payrollAmount)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Net Pay Box */}
+      <div style={{ margin: '0 24px 16px', background: teal, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: 'white' }}>NET PAY</div>
+        <div style={{ fontSize: '20px', fontWeight: '700', color: 'white' }}>MMK {formatAmount(data.payrollAmount)}</div>
+      </div>
+
+      {/* Payment Info */}
+      <div style={{ margin: '0 24px 16px', background: lightTeal, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+        <div>
+          <div style={{ fontWeight: '600', color: '#555' }}>Payment Method</div>
+          <div>Bank Transfer</div>
         </div>
         <div>
-          <span style={{ color: '#666' }}>Pay Period: </span>
-          <span style={{ fontWeight: '600' }}>{formatDate(data.monthEnding)}</span>
-        </div>
-      </div>
-
-      {/* Employee Details Section */}
-      <div style={{ padding: '0 24px' }}>
-        <div style={{ background: '#f5f5f5', padding: '8px 12px', marginTop: '16px', fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>
-          EMPLOYEE DETAILS
-        </div>
-        <div style={{ border: '1px solid #ddd', borderTop: 'none', padding: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', fontSize: '12px' }}>
-            <div style={{ color: '#666' }}>Employee ID:</div>
-            <div style={{ fontWeight: '600', fontSize: '14px' }}>{data.employeeId || '-'}</div>
-            <div style={{ color: '#666' }}>Full Name:</div>
-            <div style={{ fontWeight: '600', fontSize: '14px' }}>{data.employeeName || '-'}</div>
-            <div style={{ color: '#666' }}>Email:</div>
-            <div>{data.email || '-'}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Payment Summary Section */}
-      <div style={{ padding: '0 24px' }}>
-        <div style={{ background: '#f5f5f5', padding: '8px 12px', marginTop: '16px', fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>
-          PAYMENT SUMMARY
-        </div>
-        <div style={{ border: '1px solid #ddd', borderTop: 'none', padding: '24px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>Net Payroll Amount</div>
-          <div style={{ fontSize: '36px', fontWeight: '700', color: '#000' }}>{formatAmount(data.payrollAmount)}</div>
-          <div style={{ fontSize: '14px', color: '#333', marginTop: '4px' }}>MMK</div>
-          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>Myanmar Kyat</div>
-        </div>
-      </div>
-
-      {/* Payment Information Section */}
-      <div style={{ padding: '0 24px' }}>
-        <div style={{ background: '#f5f5f5', padding: '8px 12px', marginTop: '16px', fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>
-          PAYMENT INFORMATION
-        </div>
-        <div style={{ border: '1px solid #ddd', borderTop: 'none', padding: '12px 16px', display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: '10px', color: '#666' }}>Payment Method</div>
-            <div style={{ fontSize: '12px', fontWeight: '600' }}>Bank Transfer</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '10px', color: '#666' }}>Status</div>
-            <div style={{ fontSize: '12px', fontWeight: '600' }}>Processed</div>
-          </div>
+          <div style={{ fontWeight: '600', color: '#555' }}>Status</div>
+          <div>Processed</div>
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ padding: '20px 24px', marginTop: '20px', borderTop: '1px solid #ddd', textAlign: 'center' }}>
-        <div style={{ fontSize: '9px', color: '#666' }}>
-          This is a computer-generated document. Please retain this payslip for your records.
-        </div>
-        <div style={{ fontSize: '8px', color: '#999', marginTop: '4px' }}>
-          Hush Healthcare Ltd | Myanmar Division | Generated: {new Date().toLocaleDateString('en-GB')} | Confidential
-        </div>
+      <div style={{ padding: '12px 24px', borderTop: '1px solid #ddd', fontSize: '8px', color: '#666', textAlign: 'center' }}>
+        This is a computer-generated payslip. Please retain for your records. | Hush Healthcare Ltd | Myanmar Division | Confidential
       </div>
     </div>
   );

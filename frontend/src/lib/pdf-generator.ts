@@ -1,5 +1,5 @@
 // Professional PDF Generator for Payroll System
-// Clean, formal payslip documents - Black & White only
+// Clean payslip design inspired by professional templates
 
 import { jsPDF } from 'jspdf';
 
@@ -41,6 +41,13 @@ interface MyanmarPayrollData {
   monthEnding: string;
 }
 
+// Theme colors
+const teal = { r: 77, g: 166, b: 169 };
+const lightTeal = { r: 220, g: 242, b: 243 };
+const darkText = { r: 51, g: 51, b: 51 };
+const grayText = { r: 102, g: 102, b: 102 };
+const lineGray = { r: 200, g: 200, b: 200 };
+
 // Format currency
 const formatCurrency = (value: string | number, symbol = '£'): string => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -53,13 +60,13 @@ const formatDate = (dateStr: string): string => {
   if (!dateStr) return '-';
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return dateStr;
   }
 };
 
-// Generate UK Payroll PDF - Professional Clean Design
+// Generate UK Payroll PDF
 export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -69,160 +76,222 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   
   let y = margin;
   
-  // ===== COMPANY HEADER =====
-  pdf.setFillColor(40, 40, 40);
-  pdf.rect(0, 0, pageWidth, 28, 'F');
+  // ===== HEADER =====
+  pdf.setFontSize(28);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.text('PAYSLIP', margin, y + 12);
   
-  pdf.setTextColor(255, 255, 255);
+  // Company name on right
   pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('HUSH HEALTHCARE LTD', margin, 12);
-  
+  pdf.setTextColor(teal.r, teal.g, teal.b);
+  pdf.text('Hush Healthcare', pageWidth - margin, y + 10, { align: 'right' });
   pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('PAYSLIP', margin, 20);
-  
-  // Period on right
-  pdf.setFontSize(9);
-  pdf.text('Pay Period Ending:', pageWidth - margin - 45, 12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(formatDate(data.monthEnding), pageWidth - margin - 45, 20);
-  
-  y = 38;
-  
-  // ===== EMPLOYEE DETAILS =====
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, y, contentWidth, 8, 'F');
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('EMPLOYEE DETAILS', margin + 3, y + 5.5);
-  
-  y += 8;
-  pdf.setDrawColor(180, 180, 180);
-  pdf.setLineWidth(0.3);
-  pdf.rect(margin, y, contentWidth, 22);
-  
-  // Row 1
-  const col1 = margin + 3;
-  const col2 = margin + 50;
-  const col3 = pageWidth / 2 + 3;
-  const col4 = pageWidth / 2 + 50;
-  
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text('Employee Name:', col1, y + 6);
-  pdf.text('Employee ID:', col3, y + 6);
-  
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(data.employeeName || '-', col2, y + 6);
-  pdf.text(data.employeeId || '-', col4, y + 6);
-  
-  // Row 2
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text('Tax Code:', col1, y + 14);
-  pdf.text('NI Number:', col3, y + 14);
-  
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(data.taxCode || '-', col2, y + 14);
-  pdf.text(data.nationalInsuranceNumber || '-', col4, y + 14);
+  pdf.setTextColor(grayText.r, grayText.g, grayText.b);
+  pdf.text('Ltd', pageWidth - margin, y + 16, { align: 'right' });
   
   y += 28;
   
-  // ===== PAYMENTS & DEDUCTIONS =====
-  const halfWidth = (contentWidth - 6) / 2;
-  
-  // Payments Header
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, y, halfWidth, 8, 'F');
-  pdf.setTextColor(0, 0, 0);
+  // ===== COMPANY INFO BAR =====
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9);
-  pdf.text('PAYMENTS', margin + 3, y + 5.5);
+  pdf.text('Hush Healthcare Ltd', margin + 4, y + 5.5);
   
-  // Deductions Header
-  pdf.rect(margin + halfWidth + 6, y, halfWidth, 8, 'F');
-  pdf.text('DEDUCTIONS', margin + halfWidth + 9, y + 5.5);
+  y += 8;
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Healthcare Services', margin + 4, y + 6);
+  pdf.text('PAYE Ref: ' + (data.employerPAYEReference || '120/WE94437'), margin + 4, y + 12);
+  
+  y += 18;
+  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
+  pdf.line(margin, y, pageWidth - margin, y);
   
   y += 8;
   
-  // Payments Box
-  pdf.rect(margin, y, halfWidth, 40);
+  // ===== EMPLOYEE DETAILS & PAYMENT INFO =====
+  const halfWidth = (contentWidth - 10) / 2;
   
+  // Employee Details Header
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, halfWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Employee Details', margin + 4, y + 5.5);
+  
+  // Payment Details Header
+  pdf.rect(margin + halfWidth + 10, y, halfWidth, 8, 'F');
+  pdf.text('Payment Details', margin + halfWidth + 14, y + 5.5);
+  
+  y += 8;
+  
+  // Employee Details Content
+  pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
+  pdf.rect(margin, y, halfWidth, 32, 'F');
+  
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  let py = y + 8;
-  
-  pdf.text(`Basic Pay (${data.hours || '0'} hrs x £${data.rate || '0'})`, margin + 3, py);
-  pdf.text(formatCurrency(data.grossPay), margin + halfWidth - 3, py, { align: 'right' });
-  
-  py += 8;
-  pdf.text('Holiday Pay', margin + 3, py);
-  pdf.text(formatCurrency(data.holidayPay), margin + halfWidth - 3, py, { align: 'right' });
-  
-  // Total line
-  py += 12;
-  pdf.setDrawColor(180, 180, 180);
-  pdf.line(margin + 3, py - 4, margin + halfWidth - 3, py - 4);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Total Payments', margin + 3, py);
-  pdf.text(formatCurrency(data.totalPayments), margin + halfWidth - 3, py, { align: 'right' });
-  
-  // Deductions Box
-  const dedX = margin + halfWidth + 6;
-  pdf.rect(dedX, y, halfWidth, 40);
-  
+  pdf.text('Employee Name', margin + 4, y + 8);
   pdf.setFont('helvetica', 'normal');
-  let dy = y + 8;
+  pdf.text(data.employeeName || '-', margin + 4, y + 14);
   
-  pdf.text('PAYE Tax', dedX + 3, dy);
-  pdf.text(formatCurrency(data.tax), dedX + halfWidth - 3, dy, { align: 'right' });
-  
-  dy += 8;
-  pdf.text('National Insurance', dedX + 3, dy);
-  pdf.text(formatCurrency(data.nationalInsurance), dedX + halfWidth - 3, dy, { align: 'right' });
-  
-  dy += 8;
-  pdf.text('Holiday Repayment', dedX + 3, dy);
-  pdf.text(formatCurrency(data.holidayRepayment), dedX + halfWidth - 3, dy, { align: 'right' });
-  
-  // Total line
-  dy += 8;
-  pdf.line(dedX + 3, dy - 4, dedX + halfWidth - 3, dy - 4);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Total Deductions', dedX + 3, dy);
-  pdf.text(formatCurrency(data.totalDeductions), dedX + halfWidth - 3, dy, { align: 'right' });
+  pdf.text('Employee ID', margin + 4, y + 22);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.employeeId || '-', margin + 4, y + 28);
   
-  y += 48;
+  // Payment Details Content
+  pdf.rect(margin + halfWidth + 10, y, halfWidth, 32, 'F');
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Tax Code', margin + halfWidth + 14, y + 8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.taxCode || '-', margin + halfWidth + 50, y + 8);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('NI Number', margin + halfWidth + 14, y + 16);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.nationalInsuranceNumber || '-', margin + halfWidth + 50, y + 16);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('NI Table', margin + halfWidth + 14, y + 24);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.nationalInsuranceTable || 'A', margin + halfWidth + 50, y + 24);
+  
+  y += 40;
+  
+  // Period and Tax Code Row
+  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
+  pdf.line(margin, y, pageWidth - margin, y);
+  y += 2;
+  
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Period End', margin + 4, y + 6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(formatDate(data.monthEnding), margin + 40, y + 6);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Payment Date', margin + halfWidth + 14, y + 6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(formatDate(data.paidDate), margin + halfWidth + 50, y + 6);
+  
+  y += 14;
+  pdf.line(margin, y, pageWidth - margin, y);
+  
+  y += 8;
+  
+  // ===== PAYMENTS TABLE =====
+  // Header
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  
+  const cols = [margin + 4, margin + 70, margin + 100, margin + 130, margin + 160];
+  pdf.text('Payments', cols[0], y + 5.5);
+  pdf.text('Type', cols[1], y + 5.5);
+  pdf.text('Rate', cols[2], y + 5.5);
+  pdf.text('Hours', cols[3], y + 5.5);
+  pdf.text('Amount', cols[4], y + 5.5);
+  
+  y += 8;
+  
+  // Payment rows
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFont('helvetica', 'normal');
+  
+  // Basic Pay
+  pdf.text('Basic Pay', cols[0], y + 6);
+  pdf.text('Hourly', cols[1], y + 6);
+  pdf.text(formatCurrency(data.rate), cols[2], y + 6);
+  pdf.text(data.hours || '0', cols[3], y + 6);
+  pdf.text(formatCurrency(data.grossPay), cols[4], y + 6);
+  
+  y += 8;
+  
+  // Holiday Pay
+  pdf.text('Holiday Pay', cols[0], y + 6);
+  pdf.text('Allowance', cols[1], y + 6);
+  pdf.text('-', cols[2], y + 6);
+  pdf.text('-', cols[3], y + 6);
+  pdf.text(formatCurrency(data.holidayPay), cols[4], y + 6);
+  
+  y += 10;
+  pdf.line(margin, y, pageWidth - margin, y);
+  
+  // Total Payments
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Total Gross Pay', cols[0], y + 6);
+  pdf.text(formatCurrency(data.totalPayments), cols[4], y + 6);
+  
+  y += 14;
+  
+  // ===== DEDUCTIONS TABLE =====
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(8);
+  pdf.text('Deductions', cols[0], y + 5.5);
+  pdf.text('Amount', cols[4], y + 5.5);
+  
+  y += 8;
+  
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFont('helvetica', 'normal');
+  
+  // PAYE Tax
+  pdf.text('PAYE Tax', cols[0], y + 6);
+  pdf.text(formatCurrency(data.tax), cols[4], y + 6);
+  y += 8;
+  
+  // National Insurance
+  pdf.text('National Insurance', cols[0], y + 6);
+  pdf.text(formatCurrency(data.nationalInsurance), cols[4], y + 6);
+  y += 8;
+  
+  // Holiday Repayment
+  pdf.text('Holiday Repayment', cols[0], y + 6);
+  pdf.text(formatCurrency(data.holidayRepayment), cols[4], y + 6);
+  y += 10;
+  
+  pdf.line(margin, y, pageWidth - margin, y);
+  
+  // Total Deductions
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Total Deductions', cols[0], y + 6);
+  pdf.text(formatCurrency(data.totalDeductions), cols[4], y + 6);
+  
+  y += 16;
   
   // ===== NET PAY BOX =====
-  pdf.setFillColor(40, 40, 40);
-  pdf.rect(margin, y, contentWidth, 16, 'F');
-  
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 14, 'F');
   pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(11);
+  pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('NET PAY', margin + 5, y + 10);
+  pdf.text('NET PAY', margin + 4, y + 9);
+  pdf.setFontSize(14);
+  pdf.text(formatCurrency(data.netPay), pageWidth - margin - 4, y + 9, { align: 'right' });
   
-  pdf.setFontSize(16);
-  pdf.text(formatCurrency(data.netPay), pageWidth - margin - 5, y + 11, { align: 'right' });
-  
-  y += 24;
+  y += 22;
   
   // ===== YEAR TO DATE =====
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFillColor(240, 240, 240);
+  pdf.setFillColor(teal.r, teal.g, teal.b);
   pdf.rect(margin, y, contentWidth, 8, 'F');
-  pdf.setFontSize(9);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(8);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('YEAR TO DATE', margin + 3, y + 5.5);
+  pdf.text('Year to Date Summary', margin + 4, y + 5.5);
   
   y += 8;
-  pdf.rect(margin, y, contentWidth, 18);
   
   const ytdColWidth = contentWidth / 4;
   const ytdItems = [
@@ -232,65 +301,34 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
     { label: 'Employer NI', value: formatCurrency(data.employerNationalInsuranceYTD) },
   ];
   
+  pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
+  pdf.rect(margin, y, contentWidth, 14, 'F');
+  
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFontSize(7);
   ytdItems.forEach((item, i) => {
-    const x = margin + 5 + (i * ytdColWidth);
+    const x = margin + 4 + (i * ytdColWidth);
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(item.label, x, y + 6);
-    pdf.setTextColor(0, 0, 0);
+    pdf.text(item.label, x, y + 5);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(item.value, x, y + 13);
-  });
-  
-  y += 24;
-  
-  // ===== PAYMENT DETAILS =====
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, y, contentWidth, 8, 'F');
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('PAYMENT DETAILS', margin + 3, y + 5.5);
-  
-  y += 8;
-  pdf.rect(margin, y, contentWidth, 18);
-  
-  const detailItems = [
-    { label: 'Payment Date', value: formatDate(data.paidDate) },
-    { label: 'PAYE Reference', value: data.employerPAYEReference || '-' },
-    { label: 'NI Table', value: data.nationalInsuranceTable || '-' },
-    { label: 'Leave Remaining', value: `${data.annualLeaveRemaining || '0'} days` },
-  ];
-  
-  pdf.setFontSize(7);
-  detailItems.forEach((item, i) => {
-    const x = margin + 5 + (i * ytdColWidth);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(item.label, x, y + 6);
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(item.value, x, y + 13);
+    pdf.text(item.value, x, y + 11);
   });
   
   // ===== FOOTER =====
-  const footerY = pageHeight - 18;
-  pdf.setDrawColor(180, 180, 180);
+  const footerY = pageHeight - 15;
+  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
   pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
   
-  pdf.setTextColor(120, 120, 120);
+  pdf.setTextColor(grayText.r, grayText.g, grayText.b);
   pdf.setFontSize(7);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('This is a computer-generated document. Please retain for your records.', margin, footerY);
-  pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - margin, footerY, { align: 'right' });
-  
-  pdf.setFontSize(6);
-  pdf.text('Hush Healthcare Ltd | Confidential', margin, footerY + 5);
+  pdf.text('This is a computer-generated payslip. Please retain for your records.', margin, footerY);
+  pdf.text('Hush Healthcare Ltd | Confidential', pageWidth - margin, footerY, { align: 'right' });
   
   return pdf;
 }
 
-// Generate Myanmar Payroll PDF - Professional Clean Design
+// Generate Myanmar Payroll PDF
 export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -301,152 +339,169 @@ export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   let y = margin;
   
   // ===== HEADER =====
-  pdf.setFillColor(40, 40, 40);
-  pdf.rect(0, 0, pageWidth, 35, 'F');
-  
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('HUSH HEALTHCARE LTD', pageWidth / 2, 15, { align: 'center' });
-  
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('PAYROLL STATEMENT', pageWidth / 2, 24, { align: 'center' });
-  
-  pdf.setFontSize(8);
-  pdf.text('Myanmar Division', pageWidth / 2, 31, { align: 'center' });
-  
-  y = 48;
-  
-  // ===== DOCUMENT INFO =====
-  pdf.setTextColor(0, 0, 0);
-  pdf.setDrawColor(180, 180, 180);
-  pdf.setLineWidth(0.3);
-  pdf.rect(margin, y, contentWidth, 16);
-  
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text('Document No:', margin + 5, y + 6);
-  pdf.text('Pay Period:', pageWidth / 2, y + 6);
-  pdf.text('Issue Date:', margin + 5, y + 13);
-  
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`PAY-${data.employeeId || 'XXX'}-${new Date().getFullYear()}`, margin + 35, y + 6);
-  pdf.text(formatDate(data.monthEnding), pageWidth / 2 + 25, y + 6);
-  pdf.text(new Date().toLocaleDateString('en-GB'), margin + 35, y + 13);
-  
-  y += 24;
-  
-  // ===== EMPLOYEE DETAILS =====
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, y, contentWidth, 8, 'F');
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('EMPLOYEE DETAILS', margin + 5, y + 5.5);
-  
-  y += 8;
-  pdf.rect(margin, y, contentWidth, 28);
-  
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text('Employee ID:', margin + 8, y + 8);
-  pdf.text('Full Name:', margin + 8, y + 16);
-  pdf.text('Email:', margin + 8, y + 24);
-  
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(10);
-  pdf.text(data.employeeId || '-', margin + 45, y + 8);
-  pdf.text(data.employeeName || '-', margin + 45, y + 16);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(9);
-  pdf.text(data.email || '-', margin + 45, y + 24);
-  
-  y += 38;
-  
-  // ===== PAYMENT SUMMARY =====
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, y, contentWidth, 8, 'F');
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(0, 0, 0);
-  pdf.text('PAYMENT SUMMARY', margin + 5, y + 5.5);
-  
-  y += 8;
-  pdf.rect(margin, y, contentWidth, 40);
-  
-  // Amount
-  const amount = parseFloat(data.payrollAmount || '0').toLocaleString('en-US');
-  
-  pdf.setTextColor(100, 100, 100);
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Net Payroll Amount', pageWidth / 2, y + 10, { align: 'center' });
-  
-  pdf.setTextColor(0, 0, 0);
   pdf.setFontSize(28);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(amount, pageWidth / 2, y + 25, { align: 'center' });
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.text('PAYSLIP', margin, y + 12);
   
-  pdf.setFontSize(12);
-  pdf.text('MMK', pageWidth / 2, y + 34, { align: 'center' });
+  // Company name on right
+  pdf.setFontSize(18);
+  pdf.setTextColor(teal.r, teal.g, teal.b);
+  pdf.text('Hush Healthcare', pageWidth - margin, y + 10, { align: 'right' });
+  pdf.setFontSize(10);
+  pdf.setTextColor(grayText.r, grayText.g, grayText.b);
+  pdf.text('Myanmar Division', pageWidth - margin, y + 16, { align: 'right' });
   
-  y += 50;
+  y += 28;
   
-  // ===== PAYMENT METHOD =====
-  pdf.setFillColor(240, 240, 240);
+  // ===== COMPANY INFO BAR =====
+  pdf.setFillColor(teal.r, teal.g, teal.b);
   pdf.rect(margin, y, contentWidth, 8, 'F');
-  pdf.setFontSize(9);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('PAYMENT INFORMATION', margin + 5, y + 5.5);
+  pdf.text('Hush Healthcare Ltd - Myanmar Division', margin + 4, y + 5.5);
   
   y += 8;
-  pdf.rect(margin, y, contentWidth, 16);
-  
-  const halfWidth = contentWidth / 2;
-  
-  pdf.setFontSize(8);
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFontSize(9);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text('Payment Method:', margin + 8, y + 6);
-  pdf.text('Status:', margin + halfWidth + 8, y + 6);
+  pdf.text('Healthcare Services', margin + 4, y + 6);
   
-  pdf.setTextColor(0, 0, 0);
+  y += 12;
+  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
+  pdf.line(margin, y, pageWidth - margin, y);
+  
+  y += 8;
+  
+  // ===== EMPLOYEE DETAILS =====
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(9);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Bank Transfer', margin + 8, y + 13);
-  pdf.text('Processed', margin + halfWidth + 8, y + 13);
+  pdf.text('Employee Details', margin + 4, y + 5.5);
+  
+  y += 8;
+  
+  pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
+  pdf.rect(margin, y, contentWidth, 28, 'F');
+  
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFontSize(8);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Employee ID', margin + 4, y + 8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.employeeId || '-', margin + 50, y + 8);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Employee Name', margin + 4, y + 16);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.employeeName || '-', margin + 50, y + 16);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Email', margin + 4, y + 24);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.email || '-', margin + 50, y + 24);
+  
+  y += 36;
+  
+  // Period Row
+  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
+  pdf.line(margin, y, pageWidth - margin, y);
+  y += 2;
+  
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Period End', margin + 4, y + 6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(formatDate(data.monthEnding), margin + 40, y + 6);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Issue Date', margin + contentWidth / 2, y + 6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(new Date().toLocaleDateString('en-GB'), margin + contentWidth / 2 + 30, y + 6);
+  
+  y += 14;
+  pdf.line(margin, y, pageWidth - margin, y);
+  
+  y += 10;
+  
+  // ===== PAYMENT TABLE =====
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Payment', margin + 4, y + 5.5);
+  pdf.text('Amount', pageWidth - margin - 4, y + 5.5, { align: 'right' });
+  
+  y += 8;
+  
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Net Salary', margin + 4, y + 8);
+  
+  const amount = parseFloat(data.payrollAmount || '0').toLocaleString('en-US');
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(`MMK ${amount}`, pageWidth - margin - 4, y + 8, { align: 'right' });
+  
+  y += 14;
+  pdf.line(margin, y, pageWidth - margin, y);
+  
+  y += 6;
+  
+  // ===== NET PAY BOX =====
+  pdf.setFillColor(teal.r, teal.g, teal.b);
+  pdf.rect(margin, y, contentWidth, 16, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('NET PAY', margin + 4, y + 10);
+  pdf.setFontSize(16);
+  pdf.text(`MMK ${amount}`, pageWidth - margin - 4, y + 11, { align: 'right' });
+  
+  y += 26;
+  
+  // Payment Info
+  pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
+  pdf.rect(margin, y, contentWidth, 16, 'F');
+  
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Payment Method', margin + 4, y + 6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Bank Transfer', margin + 4, y + 12);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Status', margin + contentWidth / 2, y + 6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Processed', margin + contentWidth / 2, y + 12);
   
   // ===== FOOTER =====
-  const footerY = pageHeight - 30;
+  const footerY = pageHeight - 20;
   
   // Signature lines
-  pdf.setDrawColor(180, 180, 180);
-  pdf.line(margin, footerY - 12, margin + 55, footerY - 12);
-  pdf.line(pageWidth - margin - 55, footerY - 12, pageWidth - margin, footerY - 12);
+  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
+  pdf.line(margin, footerY - 15, margin + 50, footerY - 15);
+  pdf.line(pageWidth - margin - 50, footerY - 15, pageWidth - margin, footerY - 15);
   
-  pdf.setTextColor(100, 100, 100);
+  pdf.setTextColor(grayText.r, grayText.g, grayText.b);
   pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Authorized Signature', margin, footerY - 8);
-  pdf.text('Employee Signature', pageWidth - margin - 55, footerY - 8);
+  pdf.text('Authorized Signature', margin, footerY - 10);
+  pdf.text('Employee Signature', pageWidth - margin - 50, footerY - 10);
   
-  // Footer line
   pdf.line(margin, footerY, pageWidth - margin, footerY);
   
-  pdf.setFontSize(7);
-  pdf.text('This is a computer-generated document. Please retain this payslip for your records.', pageWidth / 2, footerY + 6, { align: 'center' });
-  
-  pdf.setFontSize(6);
-  pdf.setTextColor(150, 150, 150);
-  pdf.text(`Hush Healthcare Ltd | Myanmar Division | Generated: ${new Date().toLocaleDateString('en-GB')} | Confidential`, pageWidth / 2, footerY + 12, { align: 'center' });
+  pdf.text('This is a computer-generated payslip. Please retain for your records.', pageWidth / 2, footerY + 6, { align: 'center' });
+  pdf.text('Hush Healthcare Ltd | Myanmar Division | Confidential', pageWidth / 2, footerY + 12, { align: 'center' });
   
   return pdf;
 }
 
-// Export PDF as base64 (for email attachment)
+// Export PDF as base64
 export function getPDFBase64(pdf: jsPDF): string {
   const pdfOutput = pdf.output('datauristring');
   return pdfOutput.split(',')[1];
