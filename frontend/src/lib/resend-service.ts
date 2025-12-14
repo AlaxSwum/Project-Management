@@ -333,7 +333,7 @@ CONFIDENTIALITY NOTICE: This email and any attachments are confidential and inte
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Hush Healthcare Payroll <onboarding@resend.dev>',
+          from: 'Hush Healthcare Payroll <support@rothercarepharmacy.co.uk>',
           to: [employeeEmail],
           subject: `📋 Your Payslip - ${formattedDate} | Hush Healthcare Ltd`,
           html,
