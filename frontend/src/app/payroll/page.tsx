@@ -17,12 +17,15 @@ import {
   GlobeAltIcon,
   BuildingOfficeIcon,
   UserIcon,
+  UsersIcon,
   CurrencyDollarIcon,
   CalendarIcon,
   CheckCircleIcon,
   XMarkIcon,
   ArrowDownTrayIcon,
   PaperAirplaneIcon,
+  TrashIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 
 const supabase = createClient(
@@ -278,6 +281,15 @@ export default function PayrollPage() {
   const [pdfGenerated, setPdfGenerated] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   
+  // Members management
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedRole, setSelectedRole] = useState('viewer');
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
   // UK Payroll Form Data
   const [ukPayrollData, setUkPayrollData] = useState<UKPayrollData>({
     employeeName: '',
@@ -414,13 +426,133 @@ export default function PayrollPage() {
         .from('projects')
         .select('id, name')
         .order('name');
-      
+
       if (error) throw error;
       setProjects(data || []);
     } catch (err) {
       console.error('Error fetching projects:', err);
     }
   };
+
+  // Fetch payroll members
+  const fetchMembers = async () => {
+    setLoadingMembers(true);
+    try {
+      const { data, error } = await supabase
+        .from('payroll_members')
+        .select(`
+          id,
+          user_id,
+          role,
+          can_view,
+          can_create,
+          can_edit,
+          can_delete,
+          can_generate_pdf,
+          added_at,
+          auth_user:user_id (id, name, email)
+        `)
+        .order('added_at', { ascending: false });
+
+      if (error) throw error;
+      setMembers(data || []);
+    } catch (err) {
+      console.error('Error fetching members:', err);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // Fetch all users for adding members
+  const fetchAllUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email')
+        .order('name');
+
+      if (error) throw error;
+      setAllUsers(data || []);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  };
+
+  // Add member
+  const addMember = async () => {
+    if (!selectedUserId) {
+      setMessage('Please select a user');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('payroll_members')
+        .insert({
+          user_id: parseInt(selectedUserId),
+          role: selectedRole,
+          can_view: true,
+          can_create: selectedRole === 'admin' || selectedRole === 'editor',
+          can_edit: selectedRole === 'admin' || selectedRole === 'editor',
+          can_delete: selectedRole === 'admin',
+          can_generate_pdf: true,
+          added_by: user?.id ? parseInt(user.id) : null,
+        });
+
+      if (error) throw error;
+      
+      setMessage('Member added successfully!');
+      setSelectedUserId('');
+      setSelectedRole('viewer');
+      fetchMembers();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err: any) {
+      console.error('Error adding member:', err);
+      setMessage('Error: ' + (err.message || 'Failed to add member'));
+    }
+  };
+
+  // Remove member
+  const removeMember = async (memberId: number) => {
+    if (!confirm('Are you sure you want to remove this member?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('payroll_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+      
+      setMessage('Member removed successfully!');
+      fetchMembers();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err: any) {
+      console.error('Error removing member:', err);
+      setMessage('Error: ' + (err.message || 'Failed to remove member'));
+    }
+  };
+
+  // Check if current user is admin
+  useEffect(() => {
+    if (hasAccess && user?.id) {
+      const checkAdminStatus = async () => {
+        try {
+          const { data } = await supabase
+            .from('payroll_members')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+          
+          setIsAdmin(data?.role === 'admin' || user.role === 'admin');
+        } catch {
+          // Check if user is a system admin
+          setIsAdmin(user.role === 'admin' || (user as any)?.is_superuser);
+        }
+      };
+      checkAdminStatus();
+    }
+  }, [hasAccess, user]);
 
   const calculateUKTotals = () => {
     const hours = parseFloat(ukPayrollData.hours) || 0;
@@ -657,7 +789,34 @@ export default function PayrollPage() {
                   </h1>
                   <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0', fontSize: '0.875rem', lineHeight: '1.4' }}>Generate and send payroll statements</p>
                 </div>
-                <BuildingOfficeIcon style={{ width: '40px', height: '40px', color: '#6366f1' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        setShowMembersModal(true);
+                        fetchMembers();
+                        fetchAllUsers();
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 16px',
+                        background: '#333',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <UsersIcon style={{ width: '18px', height: '18px' }} />
+                      Members
+                    </button>
+                  )}
+                  <BuildingOfficeIcon style={{ width: '40px', height: '40px', color: '#6366f1' }} />
+                </div>
               </div>
             </div>
 
@@ -1332,6 +1491,189 @@ export default function PayrollPage() {
                 onMouseLeave={(e) => e.currentTarget.style.background = '#e5e7eb'}
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Members Modal */}
+      {showMembersModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            padding: '1.5rem',
+            maxWidth: '500px',
+            width: '100%',
+            margin: '0 1rem',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UsersIcon style={{ width: '24px', height: '24px' }} />
+                Manage Members
+              </h3>
+              <button
+                onClick={() => setShowMembersModal(false)}
+                style={{ color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}
+              >
+                <XMarkIcon style={{ width: '24px', height: '24px' }} />
+              </button>
+            </div>
+
+            {/* Add Member Form */}
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '8px' }}>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#374151' }}>Add New Member</h4>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  style={{
+                    flex: '2',
+                    minWidth: '150px',
+                    padding: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <option value="">Select User...</option>
+                  {allUsers
+                    .filter(u => !members.find(m => m.user_id === u.id))
+                    .map(u => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                    ))
+                  }
+                </select>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  style={{
+                    flex: '1',
+                    minWidth: '100px',
+                    padding: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <option value="viewer">Viewer</option>
+                  <option value="editor">Editor</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button
+                  onClick={addMember}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#333',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <PlusIcon style={{ width: '16px', height: '16px' }} />
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {/* Members List */}
+            <div>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#374151' }}>
+                Current Members ({members.length})
+              </h4>
+              {loadingMembers ? (
+                <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>Loading...</div>
+              ) : members.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>No members yet</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {members.map((member) => (
+                    <div
+                      key={member.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem',
+                        background: '#f9fafb',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#111827' }}>
+                          {member.auth_user?.name || 'Unknown User'}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          {member.auth_user?.email || '-'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          background: member.role === 'admin' ? '#333' : member.role === 'editor' ? '#6b7280' : '#d1d5db',
+                          color: member.role === 'viewer' ? '#374151' : 'white',
+                          borderRadius: '4px',
+                          fontSize: '0.7rem',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                        }}>
+                          {member.role}
+                        </span>
+                        <button
+                          onClick={() => removeMember(member.id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#ef4444',
+                            padding: '4px',
+                          }}
+                        >
+                          <TrashIcon style={{ width: '18px', height: '18px' }} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+              <button
+                onClick={() => setShowMembersModal(false)}
+                style={{
+                  padding: '0.5rem 1.5rem',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                }}
+              >
+                Close
               </button>
             </div>
           </div>
