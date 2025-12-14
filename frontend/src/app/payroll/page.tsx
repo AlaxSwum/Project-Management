@@ -10,8 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateUKPayrollPDF, generateMyanmarPayrollPDF, getPDFBase64 } from '@/lib/pdf-generator';
 import {
   DocumentTextIcon,
   EnvelopeIcon,
@@ -458,101 +457,55 @@ export default function PayrollPage() {
   const generatePDF = async () => {
     try {
       setMessage('Generating PDF...');
-      const element = document.getElementById('payroll-preview');
-      if (!element) {
-        setMessage('Error: Preview element not found');
-        return;
+      
+      let pdf;
+      let fileName;
+      
+      if (payrollType === 'uk') {
+        pdf = generateUKPayrollPDF(ukPayrollData);
+        fileName = `Payslip_UK_${ukPayrollData.employeeName.replace(/\s/g, '_')}_${ukPayrollData.monthEnding}.pdf`;
+      } else {
+        pdf = generateMyanmarPayrollPDF(myanmarPayrollData);
+        fileName = `Payslip_Myanmar_${myanmarPayrollData.employeeName.replace(/\s/g, '_')}_${myanmarPayrollData.monthEnding}.pdf`;
       }
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const fileName = payrollType === 'uk' 
-        ? `Payroll_UK_${ukPayrollData.employeeName}_${ukPayrollData.monthEnding}.pdf`
-        : `Payroll_Myanmar_${myanmarPayrollData.employeeName}_${myanmarPayrollData.monthEnding}.pdf`;
       
       pdf.save(fileName);
       setPdfGenerated(true);
-      setMessage('PDF generated successfully!');
+      setMessage('✅ PDF generated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      setMessage('Error generating PDF');
+      setMessage('❌ Error generating PDF. Please try again.');
     }
   };
 
   const handleSendEmail = async () => {
     if (!emailAddress || !emailAddress.includes('@')) {
-      setMessage('Please enter a valid email address');
+      setMessage('⚠️ Please enter a valid email address');
       return;
     }
 
     try {
       setSendingEmail(true);
-      setMessage('Sending email...');
+      setMessage('📧 Generating payslip and sending email...');
 
-      // Generate PDF as blob first
-      const element = document.getElementById('payroll-preview');
-      if (!element) {
-        setMessage('Error: Preview element not found');
-        return;
+      // Generate PDF using the new professional generator
+      let pdf;
+      let netPay;
+      let currency;
+      
+      if (payrollType === 'uk') {
+        pdf = generateUKPayrollPDF(ukPayrollData);
+        netPay = ukPayrollData.netPay;
+        currency = '£';
+      } else {
+        pdf = generateMyanmarPayrollPDF(myanmarPayrollData);
+        netPay = myanmarPayrollData.payrollAmount;
+        currency = 'MMK ';
       }
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const pdfBlob = pdf.output('blob');
-      const pdfBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1];
-          resolve(base64);
-        };
-        reader.readAsDataURL(pdfBlob);
-      });
+      
+      // Get base64 directly from PDF (much smaller than image-based)
+      const pdfBase64 = getPDFBase64(pdf);
 
       // Send email with PDF attachment using Resend API
       const employeeName = payrollType === 'uk' ? ukPayrollData.employeeName : myanmarPayrollData.employeeName;
@@ -569,23 +522,32 @@ export default function PayrollPage() {
           employeeEmail: emailAddress || employeeEmail,
           monthEnding,
           payrollType,
-          pdfBase64: pdfBase64,
+          pdfBase64,
+          netPay,
+          currency,
         }),
       });
+
+      // Handle non-JSON responses (like 413 error pages)
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      }
 
       const result = await response.json();
 
       if (result.success) {
-        setMessage('Email sent successfully!');
+        setMessage('✅ Email sent successfully!');
         setShowEmailModal(false);
         setEmailAddress('');
         setTimeout(() => setMessage(''), 3000);
       } else {
-        setMessage('Error sending email: ' + (result.error || 'Unknown error'));
+        setMessage('❌ Error: ' + (result.error || 'Failed to send email'));
       }
     } catch (error) {
       console.error('Error sending email:', error);
-      setMessage('Error sending email');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setMessage('❌ Error sending email: ' + errorMessage);
     } finally {
       setSendingEmail(false);
     }
@@ -1379,159 +1341,208 @@ export default function PayrollPage() {
   );
 }
 
-// UK Payroll Preview Component
+// UK Payroll Preview Component - Professional Design
 function UKPayrollPreview({ data }: { data: UKPayrollData }) {
+  const formatCurrency = (value: string | number) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return isNaN(num) ? '0.00' : num.toFixed(2);
+  };
+
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333' }}>
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>Hush Healthcare Ltd</h1>
-        <h2 style={{ fontSize: '18px', color: '#666' }}>Payslip</h2>
-      </div>
-
-      <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #333' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+    <div style={{ fontFamily: "'Segoe UI', Arial, sans-serif", color: '#1f2937', maxWidth: '800px', margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)', color: 'white', padding: '24px', borderRadius: '12px 12px 0 0', marginBottom: '0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <strong>Employee Name:</strong> {data.employeeName}
+            <h1 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Hush Healthcare Ltd</h1>
+            <p style={{ fontSize: '13px', margin: '0', opacity: '0.85' }}>UK Payroll Statement</p>
           </div>
-          <div>
-            <strong>Month Ending:</strong> {data.monthEnding}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '11px', opacity: '0.75', marginBottom: '2px' }}>Pay Period Ending</div>
+            <div style={{ fontSize: '16px', fontWeight: '600' }}>{data.monthEnding || '-'}</div>
           </div>
-        </div>
-        <div style={{ fontSize: '14px', color: '#666' }}>
-          <strong>Company:</strong> Hush Healthcare Ltd
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-        <div>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
-            Employee Details
-          </h3>
-          <div style={{ fontSize: '12px', lineHeight: '1.8' }}>
-            <div><strong>Tax code:</strong> {data.taxCode}</div>
-            <div><strong>National Insurance number:</strong> {data.nationalInsuranceNumber}</div>
-            <div><strong>National Insurance table:</strong> {data.nationalInsuranceTable}</div>
-            <div><strong>Annual leave remaining:</strong> {data.annualLeaveRemaining} days</div>
+      {/* Employee Info Bar */}
+      <div style={{ background: '#f8fafc', padding: '16px 24px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          <div>
+            <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '2px' }}>Employee Name</div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e3a5f' }}>{data.employeeName || '-'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '2px' }}>Employee ID</div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e3a5f' }}>{data.employeeId || '-'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '2px' }}>Tax Code</div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e3a5f' }}>{data.taxCode || '-'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '2px' }}>NI Number</div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e3a5f' }}>{data.nationalInsuranceNumber || '-'}</div>
           </div>
         </div>
+      </div>
 
-        <div>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
-            Payments
-          </h3>
-          <div style={{ fontSize: '12px', lineHeight: '1.8' }}>
-            <div>{data.hours} hours @ £{data.rate}: £{data.grossPay}</div>
-            <div>Holiday pay: £{data.holidayPay}</div>
-            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ccc' }}>
-              <strong>Total Payments:</strong> £{data.totalPayments}
+      {/* Main Content */}
+      <div style={{ padding: '24px', background: 'white' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+          {/* Payments */}
+          <div style={{ background: '#f0fdf4', borderRadius: '10px', padding: '16px', border: '1px solid #bbf7d0' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#15803d', textTransform: 'uppercase', margin: '0 0 12px 0', letterSpacing: '0.5px' }}>
+              💰 Payments
+            </h3>
+            <div style={{ fontSize: '12px', lineHeight: '1.8', color: '#166534' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>{data.hours || '0'} hrs @ £{data.rate || '0'}/hr</span>
+                <span style={{ fontWeight: '600' }}>£{formatCurrency(data.grossPay)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Holiday Pay</span>
+                <span style={{ fontWeight: '600' }}>£{formatCurrency(data.holidayPay)}</span>
+              </div>
+              <div style={{ borderTop: '1px solid #86efac', marginTop: '8px', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: '700' }}>
+                <span>Total Payments</span>
+                <span>£{formatCurrency(data.totalPayments)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Deductions */}
+          <div style={{ background: '#fef2f2', borderRadius: '10px', padding: '16px', border: '1px solid #fecaca' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#b91c1c', textTransform: 'uppercase', margin: '0 0 12px 0', letterSpacing: '0.5px' }}>
+              📉 Deductions
+            </h3>
+            <div style={{ fontSize: '12px', lineHeight: '1.8', color: '#991b1b' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>PAYE Tax</span>
+                <span style={{ fontWeight: '600' }}>£{formatCurrency(data.tax)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>National Insurance</span>
+                <span style={{ fontWeight: '600' }}>£{formatCurrency(data.nationalInsurance)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Holiday Repayment</span>
+                <span style={{ fontWeight: '600' }}>£{formatCurrency(data.holidayRepayment)}</span>
+              </div>
+              <div style={{ borderTop: '1px solid #fca5a5', marginTop: '8px', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: '700' }}>
+                <span>Total Deductions</span>
+                <span>£{formatCurrency(data.totalDeductions)}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
-            Deductions
+        {/* Net Pay Box */}
+        <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '12px', padding: '20px', marginBottom: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Net Pay This Period</div>
+          <div style={{ fontSize: '32px', fontWeight: '700', color: 'white' }}>£{formatCurrency(data.netPay)}</div>
+        </div>
+
+        {/* Year to Date */}
+        <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#1e3a5f', textTransform: 'uppercase', margin: '0 0 12px 0', letterSpacing: '0.5px' }}>
+            📊 Year to Date Summary
           </h3>
-          <div style={{ fontSize: '12px', lineHeight: '1.8' }}>
-            <div>Tax: £{data.tax}</div>
-            <div>National Insurance: £{data.nationalInsurance}</div>
-            <div>Holiday repayment: £{data.holidayRepayment}</div>
-            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ccc' }}>
-              <strong>Total Deductions:</strong> £{data.totalDeductions}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '11px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#6b7280', marginBottom: '2px' }}>Taxable Gross</div>
+              <div style={{ fontWeight: '600', color: '#1e3a5f' }}>£{formatCurrency(data.taxableGrossPayYTD)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#6b7280', marginBottom: '2px' }}>Tax Paid</div>
+              <div style={{ fontWeight: '600', color: '#1e3a5f' }}>£{formatCurrency(data.taxYTD)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#6b7280', marginBottom: '2px' }}>Employee NI</div>
+              <div style={{ fontWeight: '600', color: '#1e3a5f' }}>£{formatCurrency(data.employeeNationalInsuranceYTD)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#6b7280', marginBottom: '2px' }}>Employer NI</div>
+              <div style={{ fontWeight: '600', color: '#1e3a5f' }}>£{formatCurrency(data.employerNationalInsuranceYTD)}</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-        <div>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
-            This Month
-          </h3>
-          <div style={{ fontSize: '12px', lineHeight: '1.8' }}>
-            <div>Taxable gross pay: £{data.taxableGrossPay}</div>
-            <div>Employer National Insurance: £{data.employerNationalInsurance}</div>
-            <div style={{ marginTop: '10px', fontWeight: 'bold' }}>Net pay: £{data.netPay}</div>
+        {/* Payment Details */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '11px' }}>
+          <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+            <div style={{ color: '#64748b', marginBottom: '2px' }}>Payment Date</div>
+            <div style={{ fontWeight: '600', color: '#1e293b' }}>{data.paidDate || '-'}</div>
           </div>
-        </div>
-
-        <div>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
-            Year to Date
-          </h3>
-          <div style={{ fontSize: '12px', lineHeight: '1.8' }}>
-            <div>Taxable gross pay: £{data.taxableGrossPayYTD}</div>
-            <div>Tax: £{data.taxYTD}</div>
-            <div>Employee National Insurance: £{data.employeeNationalInsuranceYTD}</div>
-            <div>Employer National Insurance: £{data.employerNationalInsuranceYTD}</div>
+          <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+            <div style={{ color: '#64748b', marginBottom: '2px' }}>PAYE Reference</div>
+            <div style={{ fontWeight: '600', color: '#1e293b' }}>{data.employerPAYEReference || '-'}</div>
+          </div>
+          <div style={{ background: '#f1f5f9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+            <div style={{ color: '#64748b', marginBottom: '2px' }}>Leave Remaining</div>
+            <div style={{ fontWeight: '600', color: '#1e293b' }}>{data.annualLeaveRemaining || '0'} days</div>
           </div>
         </div>
       </div>
 
-      <div style={{ marginTop: '30px', paddingTop: '15px', borderTop: '2px solid #333' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <div>
-            <strong>Payment</strong>
-          </div>
-        </div>
-        <div style={{ fontSize: '12px', lineHeight: '1.8' }}>
-          <div>Net amount paid: £{data.netAmountPaid}</div>
-          <div>Paid date: {data.paidDate}</div>
-        </div>
-      </div>
-
-      <div style={{ marginTop: '30px', paddingTop: '15px', borderTop: '1px solid #ccc', fontSize: '10px', color: '#666', textAlign: 'center' }}>
-        <div>Employer PAYE Reference: {data.employerPAYEReference}</div>
-        <div style={{ marginTop: '5px' }}>Created with Hush Healthcare Ltd Payroll System</div>
+      {/* Footer */}
+      <div style={{ background: '#1f2937', color: '#9ca3af', padding: '12px 24px', borderRadius: '0 0 12px 12px', fontSize: '9px', textAlign: 'center' }}>
+        <div>This is a computer-generated document. No signature required. • Hush Healthcare Ltd • Confidential</div>
       </div>
     </div>
   );
 }
 
-// Myanmar Payroll Preview Component
+// Myanmar Payroll Preview Component - Professional Design
 function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
+  const formatAmount = (value: string | number) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return isNaN(num) ? '0' : num.toLocaleString('en-US');
+  };
+
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333' }}>
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>Hush Healthcare Ltd</h1>
-        <h2 style={{ fontSize: '18px', color: '#666' }}>Payroll Statement</h2>
+    <div style={{ fontFamily: "'Segoe UI', Arial, sans-serif", color: '#1f2937', maxWidth: '600px', margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)', color: 'white', padding: '24px', borderRadius: '12px 12px 0 0', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Hush Healthcare Ltd</h1>
+        <p style={{ fontSize: '13px', margin: '0', opacity: '0.85' }}>Myanmar Payroll Statement</p>
       </div>
 
-      <div style={{ marginBottom: '30px', paddingBottom: '15px', borderBottom: '2px solid #333' }}>
-        <div style={{ fontSize: '14px', color: '#666', textAlign: 'center' }}>
-          <strong>Company:</strong> Hush Healthcare Ltd
+      {/* Period */}
+      <div style={{ background: '#2563eb', color: 'white', padding: '12px 24px', textAlign: 'center' }}>
+        <span style={{ fontSize: '11px', opacity: '0.85' }}>Pay Period Ending: </span>
+        <span style={{ fontSize: '13px', fontWeight: '600' }}>{data.monthEnding || '-'}</span>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ padding: '24px', background: 'white' }}>
+        {/* Employee Details */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px' }}>
+              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Employee ID</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e3a5f' }}>{data.employeeId || '-'}</div>
+            </div>
+            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px' }}>
+              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Employee Name</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e3a5f' }}>{data.employeeName || '-'}</div>
+            </div>
+          </div>
+          <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
+            <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Email Address</div>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e3a5f' }}>{data.email || '-'}</div>
+          </div>
+        </div>
+
+        {/* Amount Box */}
+        <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '16px', padding: '32px', textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>Payroll Amount</div>
+          <div style={{ fontSize: '36px', fontWeight: '700', color: 'white' }}>{formatAmount(data.payrollAmount)} <span style={{ fontSize: '18px' }}>MMK</span></div>
         </div>
       </div>
 
-      <div style={{ marginBottom: '30px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr style={{ borderBottom: '1px solid #ccc' }}>
-              <td style={{ padding: '12px', fontWeight: 'bold', width: '40%' }}>Employee ID:</td>
-              <td style={{ padding: '12px' }}>{data.employeeId}</td>
-            </tr>
-            <tr style={{ borderBottom: '1px solid #ccc' }}>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Employee Name:</td>
-              <td style={{ padding: '12px' }}>{data.employeeName}</td>
-            </tr>
-            <tr style={{ borderBottom: '1px solid #ccc' }}>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Email:</td>
-              <td style={{ padding: '12px' }}>{data.email}</td>
-            </tr>
-            <tr style={{ borderBottom: '1px solid #ccc' }}>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>Month Ending:</td>
-              <td style={{ padding: '12px' }}>{data.monthEnding}</td>
-            </tr>
-            <tr style={{ borderBottom: '2px solid #333', backgroundColor: '#f5f5f5' }}>
-              <td style={{ padding: '12px', fontWeight: 'bold', fontSize: '16px' }}>Payroll Amount:</td>
-              <td style={{ padding: '12px', fontSize: '18px', fontWeight: 'bold' }}>{parseFloat(data.payrollAmount || '0').toLocaleString('en-US')} MMK</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div style={{ marginTop: '30px', paddingTop: '15px', borderTop: '1px solid #ccc', fontSize: '10px', color: '#666', textAlign: 'center' }}>
-        <div>Created with Hush Healthcare Ltd Payroll System</div>
+      {/* Footer */}
+      <div style={{ background: '#1f2937', color: '#9ca3af', padding: '12px 24px', borderRadius: '0 0 12px 12px', fontSize: '9px', textAlign: 'center' }}>
+        <div>This is a computer-generated document. No signature required. • Hush Healthcare Ltd • Confidential</div>
       </div>
     </div>
   );
