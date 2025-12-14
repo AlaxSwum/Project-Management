@@ -48,6 +48,12 @@ class ResendService {
     const currencySymbol = currency || (payrollType === 'uk' ? '£' : 'MMK ');
     const payAmount = netPay ? `${currencySymbol}${parseFloat(netPay).toLocaleString()}` : null;
     
+    // Theme colors matching payslip design
+    const teal = '#4DA6A9';
+    const lightTeal = '#DCF2F3';
+    const darkText = '#333333';
+    const grayText = '#666666';
+    
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -62,33 +68,24 @@ class ResendService {
     <tr>
       <td align="center" style="padding: 40px 20px;">
         
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #cccccc;">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           
           <!-- Header -->
           <tr>
-            <td style="background-color: #333333; padding: 25px 30px; text-align: center;">
-              <h1 style="margin: 0 0 5px; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: 1px;">
-                HUSH HEALTHCARE LTD
-              </h1>
-              <p style="margin: 0; font-size: 12px; color: #cccccc; letter-spacing: 2px;">
-                PAYROLL DEPARTMENT
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Document Type -->
-          <tr>
-            <td style="background-color: #666666; padding: 10px 30px;">
+            <td style="padding: 25px 30px;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <p style="margin: 0; font-size: 12px; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 1px;">
-                      ${payType} Payslip
-                    </p>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: ${darkText}; letter-spacing: -0.5px;">
+                      PAYSLIP
+                    </h1>
                   </td>
                   <td align="right">
-                    <p style="margin: 0; font-size: 12px; color: #ffffff;">
-                      Period: ${formattedDate}
+                    <p style="margin: 0; font-size: 18px; font-weight: 600; color: ${teal};">
+                      Hush Healthcare
+                    </p>
+                    <p style="margin: 0; font-size: 11px; color: ${grayText};">
+                      Ltd
                     </p>
                   </td>
                 </tr>
@@ -96,40 +93,118 @@ class ResendService {
             </td>
           </tr>
           
-          <!-- Main Content -->
+          <!-- Company Bar -->
           <tr>
-            <td style="padding: 30px;">
-              
-              <p style="margin: 0 0 20px; font-size: 16px; color: #333333;">
-                Dear ${employeeName},
+            <td style="background-color: ${teal}; padding: 10px 30px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #ffffff;">
+                Hush Healthcare Ltd${payrollType === 'myanmar' ? ' - Myanmar Division' : ''}
               </p>
-              
-              <p style="margin: 0 0 20px; font-size: 14px; color: #555555; line-height: 1.6;">
-                Please find attached your payslip for the period ending <strong>${formattedDate}</strong>.
-              </p>
-              
-              ${payAmount ? `
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 25px;">
+            </td>
+          </tr>
+          
+          <tr>
+            <td style="padding: 8px 30px; border-bottom: 1px solid #dddddd;">
+              <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background-color: #f5f5f5; border: 1px solid #dddddd; padding: 20px; text-align: center;">
-                    <p style="margin: 0 0 5px; font-size: 11px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">
-                      Net Pay This Period
+                  <td>
+                    <p style="margin: 0; font-size: 10px; color: ${grayText};">Healthcare Services</p>
+                  </td>
+                  <td align="right">
+                    <p style="margin: 0; font-size: 10px; color: ${grayText};">${payType} Payroll</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Employee Section -->
+          <tr>
+            <td style="padding: 20px 30px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background-color: ${teal}; padding: 8px 15px;">
+                    <p style="margin: 0; font-size: 11px; font-weight: 600; color: #ffffff;">
+                      Employee Details
                     </p>
-                    <p style="margin: 0; font-size: 28px; color: #333333; font-weight: 700;">
-                      ${payAmount}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: ${lightTeal}; padding: 15px;">
+                    <p style="margin: 0 0 5px; font-size: 10px; font-weight: 600; color: #555555;">Employee Name</p>
+                    <p style="margin: 0; font-size: 14px; color: ${darkText};">${employeeName}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Period Row -->
+          <tr>
+            <td style="padding: 15px 30px; border-bottom: 1px solid #dddddd;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <p style="margin: 0; font-size: 11px; color: ${darkText};">
+                      <strong>Period End:</strong> ${formattedDate}
+                    </p>
+                  </td>
+                  <td align="right">
+                    <p style="margin: 0; font-size: 11px; color: ${darkText};">
+                      <strong>Issue Date:</strong> ${new Date().toLocaleDateString('en-GB')}
                     </p>
                   </td>
                 </tr>
               </table>
-              ` : ''}
-              
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 25px;">
+            </td>
+          </tr>
+          
+          <!-- Net Pay Box -->
+          ${payAmount ? `
+          <tr>
+            <td style="padding: 20px 30px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background-color: #f9f9f9; border-left: 3px solid #333333; padding: 15px 20px;">
-                    <p style="margin: 0 0 10px; font-size: 13px; color: #333333; font-weight: 600;">
+                  <td style="background-color: ${teal}; padding: 20px; text-align: center;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td>
+                          <p style="margin: 0; font-size: 14px; font-weight: 700; color: #ffffff;">NET PAY</p>
+                        </td>
+                        <td align="right">
+                          <p style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff;">${payAmount}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ` : ''}
+          
+          <!-- Message Content -->
+          <tr>
+            <td style="padding: 20px 30px;">
+              <p style="margin: 0 0 20px; font-size: 14px; color: ${darkText}; line-height: 1.6;">
+                Dear ${employeeName},
+              </p>
+              
+              <p style="margin: 0 0 20px; font-size: 13px; color: #555555; line-height: 1.6;">
+                Please find attached your payslip for the period ending <strong>${formattedDate}</strong>.
+              </p>
+              
+              <!-- Important Info Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td style="background-color: ${teal}; padding: 8px 15px;">
+                    <p style="margin: 0; font-size: 11px; font-weight: 600; color: #ffffff;">
                       Important Information
                     </p>
-                    <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #555555; line-height: 1.8;">
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: ${lightTeal}; padding: 15px;">
+                    <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #555555; line-height: 1.8;">
                       <li>Please review your payslip carefully for accuracy</li>
                       <li>Keep this document for your personal records</li>
                       <li>Contact HR within 5 working days if you notice any discrepancies</li>
@@ -138,6 +213,7 @@ class ResendService {
                 </tr>
               </table>
               
+              <!-- Attachment Box -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
                 <tr>
                   <td style="background-color: #f5f5f5; border: 1px solid #dddddd; padding: 12px 15px;">
@@ -148,23 +224,22 @@ class ResendService {
                 </tr>
               </table>
               
-              <p style="margin: 0; font-size: 13px; color: #555555;">
+              <p style="margin: 0; font-size: 12px; color: #555555;">
                 If you have any questions regarding your payslip, please contact the HR department.
               </p>
-              
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td style="background-color: #f5f5f5; padding: 20px 30px; border-top: 1px solid #dddddd;">
+            <td style="background-color: ${lightTeal}; padding: 20px 30px; border-top: 1px solid #dddddd;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <p style="margin: 0 0 3px; font-size: 13px; color: #333333; font-weight: 600;">
+                    <p style="margin: 0 0 3px; font-size: 13px; color: ${darkText}; font-weight: 600;">
                       Hush Healthcare Ltd
                     </p>
-                    <p style="margin: 0; font-size: 11px; color: #666666;">
+                    <p style="margin: 0; font-size: 11px; color: ${grayText};">
                       Payroll Department
                     </p>
                   </td>
@@ -181,8 +256,8 @@ class ResendService {
           
           <!-- Legal Footer -->
           <tr>
-            <td style="padding: 15px 30px; background-color: #333333;">
-              <p style="margin: 0; font-size: 9px; color: #999999; text-align: center; line-height: 1.5;">
+            <td style="padding: 15px 30px; background-color: ${teal};">
+              <p style="margin: 0; font-size: 9px; color: rgba(255,255,255,0.8); text-align: center; line-height: 1.5;">
                 This email and any attachments are confidential and intended solely for the use of the individual to whom it is addressed. 
                 If you have received this email in error, please notify the sender immediately and delete it from your system.
               </p>
