@@ -1499,50 +1499,109 @@ function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
     return isNaN(num) ? '0' : num.toLocaleString('en-US');
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
-    <div style={{ fontFamily: "'Segoe UI', Arial, sans-serif", color: '#1f2937', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif", color: '#1f2937', maxWidth: '650px', margin: '0 auto', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', borderRadius: '16px', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)', color: 'white', padding: '24px', borderRadius: '12px 12px 0 0', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>Hush Healthcare Ltd</h1>
-        <p style={{ fontSize: '13px', margin: '0', opacity: '0.85' }}>Myanmar Payroll Statement</p>
+      <div style={{ background: 'linear-gradient(145deg, #0f172a 0%, #1e3a8a 50%, #1d4ed8 100%)', color: 'white', padding: '32px 28px', textAlign: 'center' }}>
+        <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.15)', padding: '8px 20px', borderRadius: '50px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '2px', textTransform: 'uppercase' }}>PAYROLL STATEMENT</span>
+        </div>
+        <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 8px 0', letterSpacing: '-0.5px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+          HUSH HEALTHCARE LTD
+        </h1>
+        <p style={{ fontSize: '14px', margin: '0', opacity: '0.9', fontWeight: '500' }}>Myanmar Division</p>
       </div>
 
-      {/* Period */}
-      <div style={{ background: '#2563eb', color: 'white', padding: '12px 24px', textAlign: 'center' }}>
-        <span style={{ fontSize: '11px', opacity: '0.85' }}>Pay Period Ending: </span>
-        <span style={{ fontSize: '13px', fontWeight: '600' }}>{data.monthEnding || '-'}</span>
+      {/* Period Banner */}
+      <div style={{ background: 'linear-gradient(90deg, #059669 0%, #10b981 100%)', color: 'white', padding: '14px 28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span style={{ fontSize: '15px', fontWeight: '600' }}>Pay Period: {formatDate(data.monthEnding)}</span>
       </div>
 
       {/* Main Content */}
-      <div style={{ padding: '24px', background: 'white' }}>
-        {/* Employee Details */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px' }}>
-              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Employee ID</div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e3a5f' }}>{data.employeeId || '-'}</div>
+      <div style={{ padding: '28px', background: '#ffffff' }}>
+        {/* Employee Card */}
+        <div style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderRadius: '14px', padding: '24px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
-            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px' }}>
-              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Employee Name</div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e3a5f' }}>{data.employeeName || '-'}</div>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Employee Details</span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600', letterSpacing: '0.5px' }}>Employee ID</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{data.employeeId || '-'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600', letterSpacing: '0.5px' }}>Full Name</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{data.employeeName || '-'}</div>
             </div>
           </div>
-          <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
-            <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Email Address</div>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e3a5f' }}>{data.email || '-'}</div>
+          
+          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600', letterSpacing: '0.5px' }}>Email Address</div>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a' }}>{data.email || '-'}</div>
           </div>
         </div>
 
         {/* Amount Box */}
-        <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '16px', padding: '32px', textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>Payroll Amount</div>
-          <div style={{ fontSize: '36px', fontWeight: '700', color: 'white' }}>{formatAmount(data.payrollAmount)} <span style={{ fontSize: '18px' }}>MMK</span></div>
+        <div style={{ background: 'linear-gradient(145deg, #059669 0%, #10b981 50%, #34d399 100%)', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)' }}>
+          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.2)', padding: '6px 16px', borderRadius: '50px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: 'white', textTransform: 'uppercase', letterSpacing: '1.5px' }}>NET PAYROLL AMOUNT</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '48px', fontWeight: '800', color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.15)', letterSpacing: '-1px' }}>
+              {formatAmount(data.payrollAmount)}
+            </span>
+            <span style={{ fontSize: '22px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>MMK</span>
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>
+            Myanmar Kyat
+          </div>
+        </div>
+
+        {/* Payment Info */}
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '32px', padding: '16px', background: '#f8fafc', borderRadius: '10px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>Status</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#059669', marginTop: '4px' }}>✓ Processed</div>
+          </div>
+          <div style={{ width: '1px', background: '#e2e8f0' }}></div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.5px' }}>Payment Type</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', marginTop: '4px' }}>Bank Transfer</div>
+          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ background: '#1f2937', color: '#9ca3af', padding: '12px 24px', borderRadius: '0 0 12px 12px', fontSize: '9px', textAlign: 'center' }}>
-        <div>This is a computer-generated document. No signature required. • Hush Healthcare Ltd • Confidential</div>
+      <div style={{ background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 100%)', color: '#94a3b8', padding: '16px 28px', textAlign: 'center' }}>
+        <div style={{ fontSize: '11px', marginBottom: '4px', fontWeight: '500' }}>
+          This is a computer-generated document. No signature required.
+        </div>
+        <div style={{ fontSize: '10px', color: '#64748b' }}>
+          © {new Date().getFullYear()} Hush Healthcare Ltd • Confidential
+        </div>
       </div>
     </div>
   );

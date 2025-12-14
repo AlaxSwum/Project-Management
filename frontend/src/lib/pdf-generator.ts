@@ -354,106 +354,177 @@ export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   const contentWidth = pageWidth - (margin * 2);
   
   // ===== HEADER =====
-  pdf.setFillColor(colors.primary.r, colors.primary.g, colors.primary.b);
-  pdf.rect(0, 0, pageWidth, 55, 'F');
+  // Dark blue gradient header
+  pdf.setFillColor(15, 23, 42); // Slate 900
+  pdf.rect(0, 0, pageWidth, 52, 'F');
+  
+  // Subtle decorative element
+  pdf.setFillColor(30, 58, 138); // Blue 800
+  pdf.rect(0, 48, pageWidth, 4, 'F');
+  
+  // Payroll Statement badge
+  pdf.setFillColor(255, 255, 255, 0.15);
+  drawRoundedRect(pdf, (pageWidth - 50) / 2, 10, 50, 8, 4);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('PAYROLL STATEMENT', pageWidth / 2, 15.5, { align: 'center' });
   
   // Company name
   pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(26);
+  pdf.setFontSize(24);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('HUSH HEALTHCARE LTD', pageWidth / 2, 25, { align: 'center' });
+  pdf.text('HUSH HEALTHCARE LTD', pageWidth / 2, 32, { align: 'center' });
   
-  // Document type
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Payroll Statement', pageWidth / 2, 38, { align: 'center' });
-  
-  // Pay period badge
-  pdf.setFillColor(colors.accent.r, colors.accent.g, colors.accent.b);
-  drawRoundedRect(pdf, (pageWidth - 80) / 2, 44, 80, 10, 3);
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Period: ${formatDate(data.monthEnding)}`, pageWidth / 2, 51, { align: 'center' });
-  
-  let y = 75;
-  
-  // ===== EMPLOYEE CARD =====
-  pdf.setFillColor(colors.white.r, colors.white.g, colors.white.b);
-  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
-  pdf.setLineWidth(0.5);
-  drawRoundedRect(pdf, margin, y, contentWidth, 50, 6, true, true);
-  
-  // Employee details grid
-  const detailsY = y + 15;
-  const halfContent = contentWidth / 2;
-  
-  const employeeDetails = [
-    { label: 'EMPLOYEE ID', value: data.employeeId || '-', x: margin + 15 },
-    { label: 'EMPLOYEE NAME', value: data.employeeName || '-', x: margin + halfContent + 5 },
-  ];
-  
-  employeeDetails.forEach(item => {
-    pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(item.label, item.x, detailsY);
-    
-    pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(item.value, item.x, detailsY + 10);
-  });
-  
-  // Email
-  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('EMAIL ADDRESS', margin + 15, detailsY + 22);
-  
-  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+  // Division
   pdf.setFontSize(11);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(data.email || '-', margin + 15, detailsY + 30);
+  pdf.text('Myanmar Division', pageWidth / 2, 42, { align: 'center' });
   
-  y += 65;
-  
-  // ===== AMOUNT BOX =====
-  pdf.setFillColor(colors.accent.r, colors.accent.g, colors.accent.b);
-  drawRoundedRect(pdf, margin, y, contentWidth, 55, 8);
+  // Period banner (emerald green)
+  pdf.setFillColor(5, 150, 105); // Emerald 600
+  pdf.rect(0, 52, pageWidth, 14, 'F');
   
   pdf.setTextColor(255, 255, 255);
   pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('PAYROLL AMOUNT', pageWidth / 2, y + 18, { align: 'center' });
-  
-  // Amount
-  const amount = parseFloat(data.payrollAmount || '0').toLocaleString('en-US');
-  pdf.setFontSize(36);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(`${amount}`, pageWidth / 2, y + 40, { align: 'center' });
+  pdf.text(`Pay Period: ${formatDate(data.monthEnding)}`, pageWidth / 2, 61, { align: 'center' });
   
-  pdf.setFontSize(14);
+  let y = 80;
+  
+  // ===== EMPLOYEE DETAILS CARD =====
+  // Card background
+  pdf.setFillColor(248, 250, 252); // Slate 50
+  pdf.setDrawColor(226, 232, 240); // Slate 200
+  pdf.setLineWidth(0.5);
+  drawRoundedRect(pdf, margin, y, contentWidth, 55, 6, true, true);
+  
+  // Section header with icon
+  pdf.setFillColor(30, 58, 138); // Blue 800
+  drawRoundedRect(pdf, margin + 12, y + 8, 8, 8, 2);
+  
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('EMPLOYEE DETAILS', margin + 26, y + 14);
+  
+  // Employee ID and Name row
+  const detailsY = y + 28;
+  const halfContent = contentWidth / 2;
+  
+  // Employee ID
+  pdf.setTextColor(100, 116, 139); // Slate 500
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('EMPLOYEE ID', margin + 12, detailsY);
+  
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(data.employeeId || '-', margin + 12, detailsY + 10);
+  
+  // Employee Name
+  pdf.setTextColor(100, 116, 139);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('FULL NAME', margin + halfContent, detailsY);
+  
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(data.employeeName || '-', margin + halfContent, detailsY + 10);
+  
+  // Email (full width)
+  pdf.setTextColor(100, 116, 139);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('EMAIL ADDRESS', margin + 12, y + 48);
+  
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('MMK', pageWidth / 2, y + 50, { align: 'center' });
+  pdf.text(data.email || '-', margin + 45, y + 48);
+  
+  y += 70;
+  
+  // ===== AMOUNT BOX =====
+  // Green gradient box
+  pdf.setFillColor(5, 150, 105); // Emerald 600
+  drawRoundedRect(pdf, margin, y, contentWidth, 65, 8);
+  
+  // Decorative lighter stripe
+  pdf.setFillColor(16, 185, 129); // Emerald 500
+  drawRoundedRect(pdf, margin + 4, y + 4, contentWidth - 8, 57, 6);
+  
+  // Amount label badge
+  pdf.setFillColor(255, 255, 255, 0.2);
+  drawRoundedRect(pdf, (pageWidth - 60) / 2, y + 12, 60, 8, 4);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('NET PAYROLL AMOUNT', pageWidth / 2, y + 17.5, { align: 'center' });
+  
+  // Amount value
+  const amount = parseFloat(data.payrollAmount || '0').toLocaleString('en-US');
+  pdf.setFontSize(42);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(amount, pageWidth / 2, y + 42, { align: 'center' });
+  
+  // Currency
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('MMK', pageWidth / 2, y + 54, { align: 'center' });
+  
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Myanmar Kyat', pageWidth / 2, y + 61, { align: 'center' });
+  
+  y += 80;
+  
+  // ===== STATUS INFO =====
+  pdf.setFillColor(248, 250, 252);
+  pdf.setDrawColor(226, 232, 240);
+  drawRoundedRect(pdf, margin, y, contentWidth, 18, 4, true, true);
+  
+  // Status
+  pdf.setTextColor(100, 116, 139);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('STATUS', margin + 20, y + 8);
+  pdf.setTextColor(5, 150, 105);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Processed', margin + 20, y + 14);
+  
+  // Divider
+  pdf.setDrawColor(226, 232, 240);
+  pdf.line(pageWidth / 2, y + 4, pageWidth / 2, y + 14);
+  
+  // Payment Type
+  pdf.setTextColor(100, 116, 139);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('PAYMENT TYPE', pageWidth / 2 + 20, y + 8);
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Bank Transfer', pageWidth / 2 + 20, y + 14);
   
   // ===== FOOTER =====
-  const footerY = pageHeight - 25;
+  const footerY = pageHeight - 22;
   
-  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
-  pdf.setLineWidth(0.3);
-  pdf.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
+  // Footer background
+  pdf.setFillColor(15, 23, 42);
+  pdf.rect(0, footerY - 8, pageWidth, 30, 'F');
   
-  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+  pdf.setTextColor(148, 163, 184); // Slate 400
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('This is a computer-generated document. No signature required.', pageWidth / 2, footerY, { align: 'center' });
+  
+  pdf.setTextColor(100, 116, 139);
   pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('This is a computer-generated document and requires no signature.', pageWidth / 2, footerY - 3, { align: 'center' });
-  
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('HUSH HEALTHCARE LTD', pageWidth / 2, footerY + 5, { align: 'center' });
-  
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(7);
-  pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth / 2, footerY + 12, { align: 'center' });
+  pdf.text(`© ${new Date().getFullYear()} Hush Healthcare Ltd • Confidential`, pageWidth / 2, footerY + 8, { align: 'center' });
   
   return pdf;
 }
