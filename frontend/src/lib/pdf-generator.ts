@@ -1,5 +1,5 @@
 // Professional PDF Generator for Payroll System
-// Uses jsPDF with direct text/shape rendering for small file sizes
+// Creates elegant, professional payslip documents
 
 import { jsPDF } from 'jspdf';
 
@@ -41,225 +41,306 @@ interface MyanmarPayrollData {
   monthEnding: string;
 }
 
-// Color scheme
+// Professional color palette
 const colors = {
-  primary: '#1e3a5f',      // Dark navy blue
-  secondary: '#2563eb',    // Blue
-  accent: '#10b981',       // Green
-  text: '#1f2937',         // Dark gray
-  textLight: '#6b7280',    // Light gray
-  border: '#e5e7eb',       // Light border
-  background: '#f8fafc',   // Light background
-  white: '#ffffff',
+  primary: { r: 15, g: 23, b: 42 },       // Slate 900
+  secondary: { r: 30, g: 64, b: 175 },    // Blue 800
+  accent: { r: 16, g: 185, b: 129 },      // Emerald 500
+  success: { r: 34, g: 197, b: 94 },      // Green 500
+  danger: { r: 239, g: 68, b: 68 },       // Red 500
+  text: { r: 15, g: 23, b: 42 },          // Slate 900
+  textLight: { r: 100, g: 116, b: 139 },  // Slate 500
+  border: { r: 226, g: 232, b: 240 },     // Slate 200
+  background: { r: 248, g: 250, b: 252 }, // Slate 50
+  white: { r: 255, g: 255, b: 255 },
 };
 
-// Helper function to add header
-function addHeader(pdf: jsPDF, companyName: string, documentTitle: string) {
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  
-  // Header background
-  pdf.setFillColor(30, 58, 95); // Dark navy
-  pdf.rect(0, 0, pageWidth, 45, 'F');
-  
-  // Company name
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(22);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(companyName, pageWidth / 2, 20, { align: 'center' });
-  
-  // Document title
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(documentTitle, pageWidth / 2, 32, { align: 'center' });
-  
-  // Decorative line
-  pdf.setDrawColor(37, 99, 235); // Blue
-  pdf.setLineWidth(0.5);
-  pdf.line(20, 42, pageWidth - 20, 42);
-}
+// Format currency
+const formatCurrency = (value: string | number, symbol = '£'): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return `${symbol}0.00`;
+  return `${symbol}${num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
-// Helper function to add section title
-function addSectionTitle(pdf: jsPDF, title: string, y: number): number {
-  pdf.setFillColor(248, 250, 252); // Light background
-  pdf.rect(15, y - 4, pdf.internal.pageSize.getWidth() - 30, 10, 'F');
-  
-  pdf.setTextColor(30, 58, 95); // Dark navy
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(title, 20, y + 3);
-  
-  return y + 15;
-}
-
-// Helper function to add a row
-function addRow(pdf: jsPDF, label: string, value: string, y: number, highlight = false): number {
-  if (highlight) {
-    pdf.setFillColor(240, 253, 244); // Light green
-    pdf.rect(15, y - 4, pdf.internal.pageSize.getWidth() - 30, 8, 'F');
+// Format date
+const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '-';
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  } catch {
+    return dateStr;
   }
-  
-  pdf.setTextColor(107, 114, 128); // Light gray for label
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(label, 20, y);
-  
-  pdf.setTextColor(31, 41, 55); // Dark gray for value
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(value, pdf.internal.pageSize.getWidth() - 20, y, { align: 'right' });
-  
-  return y + 8;
-}
+};
 
-// Helper function to add footer
-function addFooter(pdf: jsPDF, pageNum: number, totalPages: number) {
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  
-  // Footer line
-  pdf.setDrawColor(229, 231, 235);
-  pdf.setLineWidth(0.3);
-  pdf.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
-  
-  // Footer text
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  
-  pdf.text('This is a computer-generated document. No signature required.', 20, pageHeight - 18);
-  pdf.text('Hush Healthcare Ltd - Confidential', 20, pageHeight - 12);
-  pdf.text(`Page ${pageNum} of ${totalPages}`, pageWidth - 20, pageHeight - 12, { align: 'right' });
-  pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`, pageWidth - 20, pageHeight - 18, { align: 'right' });
-}
+// Draw rounded rectangle
+const drawRoundedRect = (
+  pdf: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  fill: boolean = true,
+  stroke: boolean = false
+) => {
+  pdf.roundedRect(x, y, width, height, radius, radius, fill ? 'F' : stroke ? 'S' : 'FD');
+};
 
 // Generate UK Payroll PDF
 export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
   
-  // Add header
-  addHeader(pdf, 'Hush Healthcare Ltd', 'PAYSLIP');
+  // ===== HEADER SECTION =====
+  // Dark header background
+  pdf.setFillColor(colors.primary.r, colors.primary.g, colors.primary.b);
+  pdf.rect(0, 0, pageWidth, 50, 'F');
   
-  let y = 55;
-  
-  // Employee Information Box
-  pdf.setFillColor(255, 255, 255);
-  pdf.setDrawColor(229, 231, 235);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(15, y, pageWidth - 30, 35, 3, 3, 'FD');
-  
-  y += 8;
-  
-  // Two column layout for employee info
-  const col1X = 20;
-  const col2X = pageWidth / 2 + 5;
-  
-  pdf.setFontSize(9);
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFont('helvetica', 'normal');
-  
-  pdf.text('Employee Name', col1X, y);
-  pdf.text('Employee ID', col2X, y);
-  y += 5;
-  
-  pdf.setTextColor(31, 41, 55);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(11);
-  pdf.text(data.employeeName || '-', col1X, y);
-  pdf.text(data.employeeId || '-', col2X, y);
-  y += 8;
-  
-  pdf.setFontSize(9);
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Pay Period Ending', col1X, y);
-  pdf.text('Tax Code', col2X, y);
-  y += 5;
-  
-  pdf.setTextColor(31, 41, 55);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(11);
-  pdf.text(data.monthEnding || '-', col1X, y);
-  pdf.text(data.taxCode || '-', col2X, y);
-  
-  y += 18;
-  
-  // NI Details
-  y = addSectionTitle(pdf, 'NATIONAL INSURANCE DETAILS', y);
-  y = addRow(pdf, 'NI Number', data.nationalInsuranceNumber || '-', y);
-  y = addRow(pdf, 'NI Table', data.nationalInsuranceTable || '-', y);
-  
-  y += 5;
-  
-  // Payments Section
-  y = addSectionTitle(pdf, 'PAYMENTS', y);
-  y = addRow(pdf, `Hours Worked (${data.hours || '0'} hrs @ £${data.rate || '0'}/hr)`, `£${parseFloat(data.grossPay || '0').toFixed(2)}`, y);
-  y = addRow(pdf, 'Holiday Pay', `£${parseFloat(data.holidayPay || '0').toFixed(2)}`, y);
-  
-  // Total Payments
-  y += 2;
-  pdf.setDrawColor(16, 185, 129);
-  pdf.setLineWidth(0.5);
-  pdf.line(20, y, pageWidth - 20, y);
-  y += 6;
-  y = addRow(pdf, 'TOTAL PAYMENTS', `£${parseFloat(data.totalPayments || '0').toFixed(2)}`, y, true);
-  
-  y += 5;
-  
-  // Deductions Section
-  y = addSectionTitle(pdf, 'DEDUCTIONS', y);
-  y = addRow(pdf, 'PAYE Tax', `£${parseFloat(data.tax || '0').toFixed(2)}`, y);
-  y = addRow(pdf, 'National Insurance', `£${parseFloat(data.nationalInsurance || '0').toFixed(2)}`, y);
-  y = addRow(pdf, 'Holiday Repayment', `£${parseFloat(data.holidayRepayment || '0').toFixed(2)}`, y);
-  
-  // Total Deductions
-  y += 2;
-  pdf.setDrawColor(239, 68, 68);
-  pdf.setLineWidth(0.5);
-  pdf.line(20, y, pageWidth - 20, y);
-  y += 6;
-  
-  pdf.setFillColor(254, 242, 242); // Light red
-  pdf.rect(15, y - 4, pageWidth - 30, 8, 'F');
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('TOTAL DEDUCTIONS', 20, y);
-  pdf.setTextColor(185, 28, 28);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`£${parseFloat(data.totalDeductions || '0').toFixed(2)}`, pageWidth - 20, y, { align: 'right' });
-  y += 10;
-  
-  // NET PAY - Highlighted
-  pdf.setFillColor(16, 185, 129); // Green
-  pdf.roundedRect(15, y, pageWidth - 30, 15, 3, 3, 'F');
-  y += 10;
-  
+  // Company name
   pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(24);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('HUSH HEALTHCARE LTD', margin, 22);
+  
+  // Document type badge
+  pdf.setFillColor(colors.accent.r, colors.accent.g, colors.accent.b);
+  drawRoundedRect(pdf, pageWidth - margin - 40, 12, 40, 12, 3);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('PAYSLIP', pageWidth - margin - 20, 20, { align: 'center' });
+  
+  // Pay period
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Pay Period: ${formatDate(data.monthEnding)}`, margin, 38);
+  
+  // Reference number
+  pdf.setFontSize(9);
+  pdf.setTextColor(200, 200, 200);
+  pdf.text(`Ref: ${data.employerPAYEReference || 'N/A'}`, pageWidth - margin, 38, { align: 'right' });
+  
+  let y = 60;
+  
+  // ===== EMPLOYEE DETAILS CARD =====
+  pdf.setFillColor(colors.white.r, colors.white.g, colors.white.b);
+  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
+  pdf.setLineWidth(0.3);
+  drawRoundedRect(pdf, margin, y, contentWidth, 32, 4, true, true);
+  
+  // Left side - Employee info
+  const col1 = margin + 8;
+  const col2 = pageWidth / 2 + 10;
+  
+  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('EMPLOYEE NAME', col1, y + 10);
+  pdf.text('EMPLOYEE ID', col2, y + 10);
+  
+  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('NET PAY', 25, y);
-  pdf.setFontSize(16);
-  pdf.text(`£${parseFloat(data.netPay || '0').toFixed(2)}`, pageWidth - 25, y, { align: 'right' });
+  pdf.text(data.employeeName || '-', col1, y + 18);
+  pdf.text(data.employeeId || '-', col2, y + 18);
   
-  y += 15;
+  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('TAX CODE', col1, y + 26);
+  pdf.text('NI NUMBER', col2, y + 26);
   
-  // Year to Date Summary
-  y = addSectionTitle(pdf, 'YEAR TO DATE SUMMARY', y);
-  y = addRow(pdf, 'Taxable Gross Pay YTD', `£${parseFloat(data.taxableGrossPayYTD || '0').toFixed(2)}`, y);
-  y = addRow(pdf, 'Tax Paid YTD', `£${parseFloat(data.taxYTD || '0').toFixed(2)}`, y);
-  y = addRow(pdf, 'Employee NI YTD', `£${parseFloat(data.employeeNationalInsuranceYTD || '0').toFixed(2)}`, y);
-  y = addRow(pdf, 'Employer NI YTD', `£${parseFloat(data.employerNationalInsuranceYTD || '0').toFixed(2)}`, y);
+  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(data.taxCode || '-', col1 + 25, y + 26);
+  pdf.text(data.nationalInsuranceNumber || '-', col2 + 28, y + 26);
   
-  y += 5;
+  y += 42;
   
-  // Payment Information
-  y = addSectionTitle(pdf, 'PAYMENT INFORMATION', y);
-  y = addRow(pdf, 'Payment Date', data.paidDate || '-', y);
-  y = addRow(pdf, 'Employer PAYE Reference', data.employerPAYEReference || '-', y);
-  y = addRow(pdf, 'Annual Leave Remaining', `${data.annualLeaveRemaining || '0'} days`, y);
+  // ===== NET PAY HIGHLIGHT BOX =====
+  pdf.setFillColor(colors.accent.r, colors.accent.g, colors.accent.b);
+  drawRoundedRect(pdf, margin, y, contentWidth, 28, 4);
   
-  // Footer
-  addFooter(pdf, 1, 1);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('NET PAY THIS PERIOD', margin + 10, y + 11);
+  
+  pdf.setFontSize(22);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(formatCurrency(data.netPay), pageWidth - margin - 10, y + 19, { align: 'right' });
+  
+  y += 38;
+  
+  // ===== PAYMENTS & DEDUCTIONS SECTION =====
+  const halfWidth = (contentWidth - 8) / 2;
+  
+  // Payments box
+  pdf.setFillColor(240, 253, 244); // Light green
+  pdf.setDrawColor(187, 247, 208); // Green border
+  drawRoundedRect(pdf, margin, y, halfWidth, 58, 4, true, true);
+  
+  pdf.setFillColor(34, 197, 94); // Green header
+  drawRoundedRect(pdf, margin, y, halfWidth, 12, 4);
+  pdf.rect(margin, y + 8, halfWidth, 4, 'F'); // Square bottom corners
+  
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('PAYMENTS', margin + 6, y + 8);
+  
+  // Payments content
+  let py = y + 20;
+  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  
+  const paymentItems = [
+    { label: `Basic Pay (${data.hours || '0'} hrs × £${data.rate || '0'})`, value: formatCurrency(data.grossPay) },
+    { label: 'Holiday Pay', value: formatCurrency(data.holidayPay) },
+  ];
+  
+  paymentItems.forEach(item => {
+    pdf.text(item.label, margin + 6, py);
+    pdf.text(item.value, margin + halfWidth - 6, py, { align: 'right' });
+    py += 7;
+  });
+  
+  // Total payments
+  pdf.setDrawColor(187, 247, 208);
+  pdf.line(margin + 6, py, margin + halfWidth - 6, py);
+  py += 6;
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(22, 163, 74); // Green text
+  pdf.text('Total Payments', margin + 6, py);
+  pdf.text(formatCurrency(data.totalPayments), margin + halfWidth - 6, py, { align: 'right' });
+  
+  // Deductions box
+  const deductX = margin + halfWidth + 8;
+  pdf.setFillColor(254, 242, 242); // Light red
+  pdf.setDrawColor(254, 202, 202); // Red border
+  drawRoundedRect(pdf, deductX, y, halfWidth, 58, 4, true, true);
+  
+  pdf.setFillColor(239, 68, 68); // Red header
+  drawRoundedRect(pdf, deductX, y, halfWidth, 12, 4);
+  pdf.rect(deductX, y + 8, halfWidth, 4, 'F');
+  
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('DEDUCTIONS', deductX + 6, y + 8);
+  
+  // Deductions content
+  let dy = y + 20;
+  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  
+  const deductionItems = [
+    { label: 'PAYE Tax', value: formatCurrency(data.tax) },
+    { label: 'National Insurance', value: formatCurrency(data.nationalInsurance) },
+    { label: 'Holiday Repayment', value: formatCurrency(data.holidayRepayment) },
+  ];
+  
+  deductionItems.forEach(item => {
+    pdf.text(item.label, deductX + 6, dy);
+    pdf.text(item.value, deductX + halfWidth - 6, dy, { align: 'right' });
+    dy += 7;
+  });
+  
+  // Total deductions
+  pdf.setDrawColor(254, 202, 202);
+  pdf.line(deductX + 6, dy, deductX + halfWidth - 6, dy);
+  dy += 6;
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(185, 28, 28); // Red text
+  pdf.text('Total Deductions', deductX + 6, dy);
+  pdf.text(formatCurrency(data.totalDeductions), deductX + halfWidth - 6, dy, { align: 'right' });
+  
+  y += 68;
+  
+  // ===== YEAR TO DATE SECTION =====
+  pdf.setFillColor(colors.background.r, colors.background.g, colors.background.b);
+  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
+  drawRoundedRect(pdf, margin, y, contentWidth, 36, 4, true, true);
+  
+  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('YEAR TO DATE SUMMARY', margin + 8, y + 10);
+  
+  // YTD grid
+  const ytdY = y + 18;
+  const colWidth = contentWidth / 4;
+  
+  const ytdItems = [
+    { label: 'Taxable Gross', value: formatCurrency(data.taxableGrossPayYTD) },
+    { label: 'Tax Paid', value: formatCurrency(data.taxYTD) },
+    { label: 'Employee NI', value: formatCurrency(data.employeeNationalInsuranceYTD) },
+    { label: 'Employer NI', value: formatCurrency(data.employerNationalInsuranceYTD) },
+  ];
+  
+  ytdItems.forEach((item, i) => {
+    const x = margin + 8 + (i * colWidth);
+    pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(item.label.toUpperCase(), x, ytdY);
+    
+    pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(item.value, x, ytdY + 8);
+  });
+  
+  y += 46;
+  
+  // ===== PAYMENT INFORMATION =====
+  pdf.setFillColor(colors.white.r, colors.white.g, colors.white.b);
+  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
+  drawRoundedRect(pdf, margin, y, contentWidth, 24, 4, true, true);
+  
+  const payInfoItems = [
+    { label: 'Payment Date', value: formatDate(data.paidDate) },
+    { label: 'PAYE Reference', value: data.employerPAYEReference || '-' },
+    { label: 'NI Table', value: data.nationalInsuranceTable || '-' },
+    { label: 'Leave Remaining', value: `${data.annualLeaveRemaining || '0'} days` },
+  ];
+  
+  payInfoItems.forEach((item, i) => {
+    const x = margin + 8 + (i * colWidth);
+    pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(item.label.toUpperCase(), x, y + 9);
+    
+    pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(item.value, x, y + 17);
+  });
+  
+  // ===== FOOTER =====
+  const footerY = pageHeight - 20;
+  
+  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
+  pdf.setLineWidth(0.3);
+  pdf.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
+  
+  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('This is a computer-generated document and requires no signature.', margin, footerY - 2);
+  pdf.text('Please retain this payslip for your records.', margin, footerY + 3);
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('HUSH HEALTHCARE LTD', pageWidth - margin, footerY - 2, { align: 'right' });
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - margin, footerY + 3, { align: 'right' });
   
   return pdf;
 }
@@ -268,47 +349,111 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
 export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2);
   
-  // Add header
-  addHeader(pdf, 'Hush Healthcare Ltd', 'PAYROLL STATEMENT');
+  // ===== HEADER =====
+  pdf.setFillColor(colors.primary.r, colors.primary.g, colors.primary.b);
+  pdf.rect(0, 0, pageWidth, 55, 'F');
   
-  let y = 60;
-  
-  // Statement Box
-  pdf.setFillColor(255, 255, 255);
-  pdf.setDrawColor(229, 231, 235);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(15, y, pageWidth - 30, 80, 3, 3, 'FD');
-  
-  y += 15;
-  
-  // Employee Information
-  y = addSectionTitle(pdf, 'EMPLOYEE DETAILS', y);
-  y = addRow(pdf, 'Employee ID', data.employeeId || '-', y);
-  y = addRow(pdf, 'Employee Name', data.employeeName || '-', y);
-  y = addRow(pdf, 'Email Address', data.email || '-', y);
-  y = addRow(pdf, 'Pay Period Ending', data.monthEnding || '-', y);
-  
-  y += 20;
-  
-  // Amount Box
-  pdf.setFillColor(16, 185, 129); // Green
-  pdf.roundedRect(25, y, pageWidth - 50, 30, 5, 5, 'F');
-  
-  y += 12;
+  // Company name
   pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('PAYROLL AMOUNT', pageWidth / 2, y, { align: 'center' });
-  
-  y += 12;
-  pdf.setFontSize(24);
+  pdf.setFontSize(26);
   pdf.setFont('helvetica', 'bold');
-  const amount = parseFloat(data.payrollAmount || '0').toLocaleString('en-US');
-  pdf.text(`${amount} MMK`, pageWidth / 2, y, { align: 'center' });
+  pdf.text('HUSH HEALTHCARE LTD', pageWidth / 2, 25, { align: 'center' });
   
-  // Footer
-  addFooter(pdf, 1, 1);
+  // Document type
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Payroll Statement', pageWidth / 2, 38, { align: 'center' });
+  
+  // Pay period badge
+  pdf.setFillColor(colors.accent.r, colors.accent.g, colors.accent.b);
+  drawRoundedRect(pdf, (pageWidth - 80) / 2, 44, 80, 10, 3);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(`Period: ${formatDate(data.monthEnding)}`, pageWidth / 2, 51, { align: 'center' });
+  
+  let y = 75;
+  
+  // ===== EMPLOYEE CARD =====
+  pdf.setFillColor(colors.white.r, colors.white.g, colors.white.b);
+  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
+  pdf.setLineWidth(0.5);
+  drawRoundedRect(pdf, margin, y, contentWidth, 50, 6, true, true);
+  
+  // Employee details grid
+  const detailsY = y + 15;
+  const halfContent = contentWidth / 2;
+  
+  const employeeDetails = [
+    { label: 'EMPLOYEE ID', value: data.employeeId || '-', x: margin + 15 },
+    { label: 'EMPLOYEE NAME', value: data.employeeName || '-', x: margin + halfContent + 5 },
+  ];
+  
+  employeeDetails.forEach(item => {
+    pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(item.label, item.x, detailsY);
+    
+    pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(item.value, item.x, detailsY + 10);
+  });
+  
+  // Email
+  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('EMAIL ADDRESS', margin + 15, detailsY + 22);
+  
+  pdf.setTextColor(colors.text.r, colors.text.g, colors.text.b);
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.email || '-', margin + 15, detailsY + 30);
+  
+  y += 65;
+  
+  // ===== AMOUNT BOX =====
+  pdf.setFillColor(colors.accent.r, colors.accent.g, colors.accent.b);
+  drawRoundedRect(pdf, margin, y, contentWidth, 55, 8);
+  
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('PAYROLL AMOUNT', pageWidth / 2, y + 18, { align: 'center' });
+  
+  // Amount
+  const amount = parseFloat(data.payrollAmount || '0').toLocaleString('en-US');
+  pdf.setFontSize(36);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(`${amount}`, pageWidth / 2, y + 40, { align: 'center' });
+  
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('MMK', pageWidth / 2, y + 50, { align: 'center' });
+  
+  // ===== FOOTER =====
+  const footerY = pageHeight - 25;
+  
+  pdf.setDrawColor(colors.border.r, colors.border.g, colors.border.b);
+  pdf.setLineWidth(0.3);
+  pdf.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
+  
+  pdf.setTextColor(colors.textLight.r, colors.textLight.g, colors.textLight.b);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('This is a computer-generated document and requires no signature.', pageWidth / 2, footerY - 3, { align: 'center' });
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('HUSH HEALTHCARE LTD', pageWidth / 2, footerY + 5, { align: 'center' });
+  
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7);
+  pdf.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth / 2, footerY + 12, { align: 'center' });
   
   return pdf;
 }
