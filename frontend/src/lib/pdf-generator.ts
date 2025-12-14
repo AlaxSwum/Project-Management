@@ -70,7 +70,6 @@ const formatDate = (dateStr: string): string => {
 export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 15;
   const contentWidth = pageWidth - (margin * 2);
   
@@ -125,15 +124,22 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   pdf.text('Employee Details', margin + 4, y + 5.5);
   
   // Payment Details Header
+  pdf.setFillColor(teal.r, teal.g, teal.b);
   pdf.rect(margin + halfWidth + 10, y, halfWidth, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
   pdf.text('Payment Details', margin + halfWidth + 14, y + 5.5);
   
   y += 8;
   
-  // Employee Details Content
+  // Employee Details Content Box
   pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
   pdf.rect(margin, y, halfWidth, 32, 'F');
   
+  // Payment Details Content Box
+  pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
+  pdf.rect(margin + halfWidth + 10, y, halfWidth, 32, 'F');
+  
+  // Employee Details Text
   pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFontSize(8);
   pdf.setFont('helvetica', 'bold');
@@ -146,9 +152,8 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   pdf.setFont('helvetica', 'normal');
   pdf.text(data.employeeId || '-', margin + 4, y + 28);
   
-  // Payment Details Content
-  pdf.rect(margin + halfWidth + 10, y, halfWidth, 32, 'F');
-  
+  // Payment Details Text
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Tax Code', margin + halfWidth + 14, y + 8);
   pdf.setFont('helvetica', 'normal');
@@ -171,6 +176,7 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   pdf.line(margin, y, pageWidth - margin, y);
   y += 2;
   
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFontSize(9);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Period End', margin + 4, y + 6);
@@ -239,6 +245,7 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   pdf.rect(margin, y, contentWidth, 8, 'F');
   pdf.setTextColor(255, 255, 255);
   pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
   pdf.text('Deductions', cols[0], y + 5.5);
   pdf.text('Amount', cols[4], y + 5.5);
   
@@ -302,28 +309,17 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
   ];
   
   pdf.setFillColor(lightTeal.r, lightTeal.g, lightTeal.b);
-  pdf.rect(margin, y, contentWidth, 14, 'F');
+  pdf.rect(margin, y, contentWidth, 16, 'F');
   
   pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFontSize(7);
   ytdItems.forEach((item, i) => {
     const x = margin + 4 + (i * ytdColWidth);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(item.label, x, y + 5);
+    pdf.text(item.label, x, y + 6);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(item.value, x, y + 11);
+    pdf.text(item.value, x, y + 12);
   });
-  
-  // ===== FOOTER =====
-  const footerY = pageHeight - 15;
-  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
-  pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
-  
-  pdf.setTextColor(grayText.r, grayText.g, grayText.b);
-  pdf.setFontSize(7);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('This is a computer-generated payslip. Please retain for your records.', margin, footerY);
-  pdf.text('Hush Healthcare Ltd | Confidential', pageWidth - margin, footerY, { align: 'right' });
   
   return pdf;
 }
@@ -332,7 +328,6 @@ export function generateUKPayrollPDF(data: UKPayrollData): jsPDF {
 export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - (margin * 2);
   
@@ -412,6 +407,7 @@ export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   pdf.line(margin, y, pageWidth - margin, y);
   y += 2;
   
+  pdf.setTextColor(darkText.r, darkText.g, darkText.b);
   pdf.setFontSize(9);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Period End', margin + 4, y + 6);
@@ -479,24 +475,6 @@ export function generateMyanmarPayrollPDF(data: MyanmarPayrollData): jsPDF {
   pdf.text('Status', margin + contentWidth / 2, y + 6);
   pdf.setFont('helvetica', 'normal');
   pdf.text('Processed', margin + contentWidth / 2, y + 12);
-  
-  // ===== FOOTER =====
-  const footerY = pageHeight - 20;
-  
-  // Signature lines
-  pdf.setDrawColor(lineGray.r, lineGray.g, lineGray.b);
-  pdf.line(margin, footerY - 15, margin + 50, footerY - 15);
-  pdf.line(pageWidth - margin - 50, footerY - 15, pageWidth - margin, footerY - 15);
-  
-  pdf.setTextColor(grayText.r, grayText.g, grayText.b);
-  pdf.setFontSize(7);
-  pdf.text('Authorized Signature', margin, footerY - 10);
-  pdf.text('Employee Signature', pageWidth - margin - 50, footerY - 10);
-  
-  pdf.line(margin, footerY, pageWidth - margin, footerY);
-  
-  pdf.text('This is a computer-generated payslip. Please retain for your records.', pageWidth / 2, footerY + 6, { align: 'center' });
-  pdf.text('Hush Healthcare Ltd | Myanmar Division | Confidential', pageWidth / 2, footerY + 12, { align: 'center' });
   
   return pdf;
 }

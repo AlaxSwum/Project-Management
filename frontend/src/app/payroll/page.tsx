@@ -1861,10 +1861,6 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
         </div>
       </div>
 
-      {/* Footer */}
-      <div style={{ padding: '12px 24px', borderTop: '1px solid #ddd', fontSize: '8px', color: '#666', textAlign: 'center' }}>
-        This is a computer-generated payslip. Please retain for your records. | Hush Healthcare Ltd | Confidential
-      </div>
     </div>
   );
 }
@@ -1969,10 +1965,6 @@ function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
         </div>
       </div>
 
-      {/* Footer */}
-      <div style={{ padding: '12px 24px', borderTop: '1px solid #ddd', fontSize: '8px', color: '#666', textAlign: 'center' }}>
-        This is a computer-generated payslip. Please retain for your records. | Hush Healthcare Ltd | Myanmar Division | Confidential
-      </div>
     </div>
   );
 }
