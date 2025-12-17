@@ -331,7 +331,7 @@ export function usePostMutations(businessId: number | undefined, onSuccess?: () 
       }
 
       // Create checklist items if provided
-      if (input.checklist_items?.length > 0) {
+      if (input.checklist_items && input.checklist_items.length > 0) {
         const checklistItems = input.checklist_items.map((item, index) => ({
           post_id: post.id,
           item_text: item,
