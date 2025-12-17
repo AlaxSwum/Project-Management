@@ -197,6 +197,7 @@ export default function TimelineRoadmapPage() {
   const [availableTeamMembers, setAvailableTeamMembers] = useState<{id: number; name: string; email: string}[]>([]);
   const [showItemDetailsModal, setShowItemDetailsModal] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set()); // Track which categories are expanded
+  const [reportTab, setReportTab] = useState<'overview' | 'team' | 'phase' | 'monthly' | 'weekly'>('overview');
 
   // Phases (user can customize these per project)
   const defaultPhases = ['Planning', 'Design', 'Development', 'Testing', 'Launch', 'Maintenance'];
@@ -793,6 +794,125 @@ export default function TimelineRoadmapPage() {
       urgent: '#EF4444'
     };
     return colors[priority as keyof typeof colors] || '#3B82F6';
+  };
+
+  // Calculate completion percentage from checklist
+  const calculateCompletionFromChecklist = (checklistCount: number, completedCount: number): number => {
+    if (checklistCount === 0) return 0;
+    return Math.round((completedCount / checklistCount) * 100);
+  };
+
+  // Get week number from date
+  const getWeekNumber = (date: Date): number => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  };
+
+  // Get month name from date
+  const getMonthName = (date: Date): string => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  // Group items by team member
+  const getItemsByTeamMember = () => {
+    const memberMap = new Map<number, { member: {id: number; name: string; email: string}, items: TimelineItem[] }>();
+    
+    timelineItems.forEach(item => {
+      if (item.team_member_ids && item.team_member_ids.length > 0) {
+        item.team_member_ids.forEach(memberId => {
+          const member = availableTeamMembers.find(m => m.id === memberId);
+          if (member) {
+            if (!memberMap.has(memberId)) {
+              memberMap.set(memberId, { member, items: [] });
+            }
+            memberMap.get(memberId)!.items.push(item);
+          }
+        });
+      }
+    });
+    
+    return Array.from(memberMap.values());
+  };
+
+  // Group items by phase
+  const getItemsByPhase = () => {
+    const phaseMap = new Map<string, TimelineItem[]>();
+    
+    timelineItems.forEach(item => {
+      const phase = item.phase || 'Unassigned';
+      if (!phaseMap.has(phase)) {
+        phaseMap.set(phase, []);
+      }
+      phaseMap.get(phase)!.push(item);
+    });
+    
+    return phaseMap;
+  };
+
+  // Group items by month
+  const getItemsByMonth = () => {
+    const monthMap = new Map<string, TimelineItem[]>();
+    
+    timelineItems.forEach(item => {
+      const startDate = new Date(item.start_date);
+      const monthKey = getMonthName(startDate);
+      if (!monthMap.has(monthKey)) {
+        monthMap.set(monthKey, []);
+      }
+      monthMap.get(monthKey)!.push(item);
+    });
+    
+    // Sort by date
+    return new Map([...monthMap.entries()].sort((a, b) => {
+      const dateA = new Date(timelineItems.find(i => getMonthName(new Date(i.start_date)) === a[0])?.start_date || '');
+      const dateB = new Date(timelineItems.find(i => getMonthName(new Date(i.start_date)) === b[0])?.start_date || '');
+      return dateA.getTime() - dateB.getTime();
+    }));
+  };
+
+  // Group items by week
+  const getItemsByWeek = () => {
+    const weekMap = new Map<string, TimelineItem[]>();
+    
+    timelineItems.forEach(item => {
+      const startDate = new Date(item.start_date);
+      const weekNum = getWeekNumber(startDate);
+      const year = startDate.getFullYear();
+      const weekKey = `Week ${weekNum}, ${year}`;
+      if (!weekMap.has(weekKey)) {
+        weekMap.set(weekKey, []);
+      }
+      weekMap.get(weekKey)!.push(item);
+    });
+    
+    return weekMap;
+  };
+
+  // Calculate KPIs for a set of items
+  const calculateKPIs = (items: TimelineItem[]) => {
+    const totalItems = items.length;
+    const completedItems = items.filter(i => i.status === 'completed').length;
+    const inProgressItems = items.filter(i => i.status === 'in_progress').length;
+    const overdueItems = items.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length;
+    const totalBudget = items.reduce((sum, i) => sum + i.planned_budget, 0);
+    const actualSpending = items.reduce((sum, i) => sum + i.actual_spending, 0);
+    const avgCompletion = totalItems > 0 ? Math.round(items.reduce((sum, i) => sum + i.completion_percentage, 0) / totalItems) : 0;
+    
+    return {
+      totalItems,
+      completedItems,
+      inProgressItems,
+      overdueItems,
+      totalBudget,
+      actualSpending,
+      budgetVariance: totalBudget - actualSpending,
+      avgCompletion,
+      completionRate: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
+      onTrackRate: totalItems > 0 ? Math.round(((totalItems - overdueItems) / totalItems) * 100) : 100
+    };
   };
 
   // =============================================
@@ -1577,12 +1697,10 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{marginBottom: '20px'}}>
-              <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Completion % (0-100)</label>
-              <input type="number" min="0" max="100" value={newItem.completion_percentage} onChange={(e) => setNewItem({...newItem, completion_percentage: parseInt(e.target.value) || 0})} style={{width: '100%', padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}} />
-            </div>
-            
-            <div style={{marginBottom: '20px'}}>
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Checklist Items</label>
+              <p style={{fontSize: '12px', color: '#64748B', marginBottom: '12px'}}>
+                💡 Completion % is automatically calculated based on checklist items completed
+              </p>
               <div style={{border: '2px solid #E5E7EB', borderRadius: '8px', padding: '16px', background: '#F9FAFB'}}>
                 <div style={{display: 'flex', gap: '8px', marginBottom: '12px'}}>
                   <input type="text" value={newChecklistItem} onChange={(e) => setNewChecklistItem(e.target.value)} onKeyPress={(e) => {if (e.key === 'Enter') {e.preventDefault(); if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem]); setNewChecklistItem('');}}}} placeholder="Add checklist item..." style={{flex: 1, padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px'}} />
@@ -1691,92 +1809,377 @@ export default function TimelineRoadmapPage() {
         </div>
       )}
 
-      {/* VISUAL REPORTS MODAL */}
+      {/* ENHANCED VISUAL REPORTS MODAL */}
       {showReportsModal && selectedFolder && (
         <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'}} onClick={() => setShowReportsModal(false)}>
-          <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '900px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Visual Reports & Analytics</h3>
+          <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '1100px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>📊 Reports & KPI Analytics</h3>
             
-            {/* Overall Progress */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Overall Project Completion</h4>
-              <div style={{background: '#F1F5F9', borderRadius: '12px', padding: '20px'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                  <span style={{fontWeight: '600'}}>Total Progress</span>
-                  <span style={{fontWeight: '700', color: '#3B82F6'}}>{Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%</span>
-                </div>
-                <div style={{width: '100%', height: '24px', background: '#E5E7EB', borderRadius: '12px', overflow: 'hidden'}}>
-                  <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)', transition: 'width 0.3s ease'}} />
-                </div>
-              </div>
+            {/* Report Tabs */}
+            <div style={{display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', borderBottom: '2px solid #E5E7EB', paddingBottom: '16px'}}>
+              {[
+                { id: 'overview', label: '📈 Overview', color: '#3B82F6' },
+                { id: 'team', label: '👥 Team Workload', color: '#8B5CF6' },
+                { id: 'phase', label: '🎯 Phase Analysis', color: '#10B981' },
+                { id: 'monthly', label: '📅 Monthly', color: '#F59E0B' },
+                { id: 'weekly', label: '📆 Weekly', color: '#EC4899' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setReportTab(tab.id as any)}
+                  style={{
+                    padding: '10px 20px',
+                    background: reportTab === tab.id ? tab.color : 'transparent',
+                    color: reportTab === tab.id ? 'white' : '#64748B',
+                    border: reportTab === tab.id ? 'none' : '2px solid #E5E7EB',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {/* Budget Overview */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Budget Analysis</h4>
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
-                <div style={{background: '#EFF6FF', padding: '16px', borderRadius: '8px'}}>
-                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Planned Budget</div>
-                  <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>
-                    ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
-                  </div>
+            {/* OVERVIEW TAB */}
+            {reportTab === 'overview' && (
+              <>
+                {/* KPI Summary Cards */}
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '32px'}}>
+                  {(() => {
+                    const kpis = calculateKPIs(timelineItems);
+                    return (
+                      <>
+                        <div style={{background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', padding: '20px', borderRadius: '12px', color: 'white'}}>
+                          <div style={{fontSize: '12px', opacity: 0.9, marginBottom: '4px'}}>Total Tasks</div>
+                          <div style={{fontSize: '32px', fontWeight: '800'}}>{kpis.totalItems}</div>
+                        </div>
+                        <div style={{background: 'linear-gradient(135deg, #10B981, #047857)', padding: '20px', borderRadius: '12px', color: 'white'}}>
+                          <div style={{fontSize: '12px', opacity: 0.9, marginBottom: '4px'}}>Completed</div>
+                          <div style={{fontSize: '32px', fontWeight: '800'}}>{kpis.completedItems}</div>
+                          <div style={{fontSize: '11px', opacity: 0.8}}>{kpis.completionRate}% rate</div>
+                        </div>
+                        <div style={{background: 'linear-gradient(135deg, #F59E0B, #D97706)', padding: '20px', borderRadius: '12px', color: 'white'}}>
+                          <div style={{fontSize: '12px', opacity: 0.9, marginBottom: '4px'}}>In Progress</div>
+                          <div style={{fontSize: '32px', fontWeight: '800'}}>{kpis.inProgressItems}</div>
+                        </div>
+                        <div style={{background: 'linear-gradient(135deg, #EF4444, #DC2626)', padding: '20px', borderRadius: '12px', color: 'white'}}>
+                          <div style={{fontSize: '12px', opacity: 0.9, marginBottom: '4px'}}>Overdue</div>
+                          <div style={{fontSize: '32px', fontWeight: '800'}}>{kpis.overdueItems}</div>
+                        </div>
+                        <div style={{background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', padding: '20px', borderRadius: '12px', color: 'white'}}>
+                          <div style={{fontSize: '12px', opacity: 0.9, marginBottom: '4px'}}>On Track Rate</div>
+                          <div style={{fontSize: '32px', fontWeight: '800'}}>{kpis.onTrackRate}%</div>
+                        </div>
+                        <div style={{background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '20px', borderRadius: '12px', color: 'white'}}>
+                          <div style={{fontSize: '12px', opacity: 0.9, marginBottom: '4px'}}>Avg Completion</div>
+                          <div style={{fontSize: '32px', fontWeight: '800'}}>{kpis.avgCompletion}%</div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-                <div style={{background: '#ECFDF5', padding: '16px', borderRadius: '8px'}}>
-                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Actual Spending</div>
-                  <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>
-                    ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
-                  </div>
-                </div>
-                <div style={{background: '#FEF3C7', padding: '16px', borderRadius: '8px'}}>
-                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Variance</div>
-                  <div style={{fontSize: '24px', fontWeight: '700', color: '#F59E0B'}}>
-                    ${Math.abs(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) - timelineItems.reduce((sum, item) => sum + item.planned_budget, 0)).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Category Breakdown */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Progress by Category</h4>
-              {categories.map(category => {
-                const categoryItems = timelineItems.filter(item => item.category_id === category.id);
-                const avgCompletion = categoryItems.length > 0 ? Math.round(categoryItems.reduce((sum, item) => sum + item.completion_percentage, 0) / categoryItems.length) : 0;
-                
-                return (
-                  <div key={category.id} style={{marginBottom: '16px'}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                      <span style={{fontWeight: '600', color: category.color}}>{category.name}</span>
-                      <span style={{fontWeight: '600'}}>{avgCompletion}%</span>
-                    </div>
-                    <div style={{width: '100%', height: '16px', background: '#E5E7EB', borderRadius: '8px', overflow: 'hidden'}}>
-                      <div style={{width: `${avgCompletion}%`, height: '100%', background: category.color, transition: 'width 0.3s ease'}} />
-                    </div>
-                    <div style={{fontSize: '12px', color: '#64748B', marginTop: '4px'}}>
-                      {categoryItems.filter(i => i.status === 'completed').length} of {categoryItems.length} items completed
+                {/* Progress Bar */}
+                <div style={{background: '#F1F5F9', borderRadius: '12px', padding: '20px', marginBottom: '24px'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                    <span style={{fontWeight: '600'}}>Overall Progress</span>
+                    <span style={{fontWeight: '700', color: '#3B82F6'}}>{Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%</span>
+                  </div>
+                  <div style={{width: '100%', height: '24px', background: '#E5E7EB', borderRadius: '12px', overflow: 'hidden'}}>
+                    <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)', transition: 'width 0.3s ease'}} />
+                  </div>
+                </div>
+
+                {/* Budget Overview */}
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px'}}>
+                  <div style={{background: '#EFF6FF', padding: '16px', borderRadius: '8px'}}>
+                    <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>💰 Planned Budget</div>
+                    <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>
+                      ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Status Distribution */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Status Distribution</h4>
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px'}}>
-                {['not_started', 'in_progress', 'completed', 'on_hold', 'delayed'].map(status => {
-                  const count = timelineItems.filter(i => i.status === status).length;
-                  return (
-                    <div key={status} style={{padding: '12px', background: getStatusColor(status as TimelineItem['status']) + '20', borderRadius: '8px', textAlign: 'center'}}>
-                      <div style={{fontSize: '24px', fontWeight: '700', color: getStatusColor(status as TimelineItem['status'])}}>{count}</div>
-                      <div style={{fontSize: '11px', color: '#64748B', marginTop: '4px', textTransform: 'capitalize'}}>{status.replace('_', ' ')}</div>
+                  <div style={{background: '#ECFDF5', padding: '16px', borderRadius: '8px'}}>
+                    <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>💸 Actual Spending</div>
+                    <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>
+                      ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  </div>
+                  <div style={{background: '#FEF3C7', padding: '16px', borderRadius: '8px'}}>
+                    <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>📊 Variance</div>
+                    <div style={{fontSize: '24px', fontWeight: '700', color: '#F59E0B'}}>
+                      ${Math.abs(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) - timelineItems.reduce((sum, item) => sum + item.planned_budget, 0)).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Distribution */}
+                <div>
+                  <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>Status Distribution</h4>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px'}}>
+                    {['not_started', 'in_progress', 'completed', 'on_hold', 'delayed'].map(status => {
+                      const count = timelineItems.filter(i => i.status === status).length;
+                      const percentage = timelineItems.length > 0 ? Math.round((count / timelineItems.length) * 100) : 0;
+                      return (
+                        <div key={status} style={{padding: '12px', background: getStatusColor(status as TimelineItem['status']) + '20', borderRadius: '8px', textAlign: 'center'}}>
+                          <div style={{fontSize: '24px', fontWeight: '700', color: getStatusColor(status as TimelineItem['status'])}}>{count}</div>
+                          <div style={{fontSize: '11px', color: '#64748B', marginTop: '4px', textTransform: 'capitalize'}}>{status.replace('_', ' ')}</div>
+                          <div style={{fontSize: '10px', color: getStatusColor(status as TimelineItem['status']), fontWeight: '600'}}>{percentage}%</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* TEAM WORKLOAD TAB */}
+            {reportTab === 'team' && (
+              <>
+                <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>👥 Team Member Task Assignments</h4>
+                {getItemsByTeamMember().length > 0 ? (
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                    {getItemsByTeamMember().map(({ member, items }) => {
+                      const kpis = calculateKPIs(items);
+                      return (
+                        <div key={member.id} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
+                          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                              <div style={{width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '18px'}}>
+                                {member.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{fontWeight: '700', fontSize: '16px', color: '#1F2937'}}>{member.name}</div>
+                                <div style={{fontSize: '12px', color: '#64748B'}}>{member.email}</div>
+                              </div>
+                            </div>
+                            <div style={{display: 'flex', gap: '12px'}}>
+                              <div style={{textAlign: 'center', padding: '8px 16px', background: '#EFF6FF', borderRadius: '8px'}}>
+                                <div style={{fontSize: '20px', fontWeight: '700', color: '#3B82F6'}}>{items.length}</div>
+                                <div style={{fontSize: '10px', color: '#64748B'}}>Tasks</div>
+                              </div>
+                              <div style={{textAlign: 'center', padding: '8px 16px', background: '#ECFDF5', borderRadius: '8px'}}>
+                                <div style={{fontSize: '20px', fontWeight: '700', color: '#10B981'}}>{kpis.avgCompletion}%</div>
+                                <div style={{fontSize: '10px', color: '#64748B'}}>Avg Done</div>
+                              </div>
+                              <div style={{textAlign: 'center', padding: '8px 16px', background: kpis.overdueItems > 0 ? '#FEE2E2' : '#ECFDF5', borderRadius: '8px'}}>
+                                <div style={{fontSize: '20px', fontWeight: '700', color: kpis.overdueItems > 0 ? '#DC2626' : '#10B981'}}>{kpis.overdueItems}</div>
+                                <div style={{fontSize: '10px', color: '#64748B'}}>Overdue</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Task List */}
+                          <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                            {items.map(item => (
+                              <div key={item.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '8px', borderLeft: `4px solid ${item.color}`}}>
+                                <div style={{flex: 1}}>
+                                  <div style={{fontWeight: '600', fontSize: '14px', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</div>
+                                  <div style={{fontSize: '11px', color: '#64748B', marginTop: '2px'}}>
+                                    {item.phase} • {new Date(item.start_date).toLocaleDateString()} - {new Date(item.end_date).toLocaleDateString()}
+                                  </div>
+                                </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                                  <div style={{width: '80px'}}>
+                                    <div style={{width: '100%', height: '6px', background: '#E5E7EB', borderRadius: '3px', overflow: 'hidden'}}>
+                                      <div style={{width: `${item.completion_percentage}%`, height: '100%', background: item.completion_percentage === 100 ? '#10B981' : '#3B82F6'}} />
+                                    </div>
+                                    <div style={{fontSize: '10px', color: '#64748B', textAlign: 'center', marginTop: '2px'}}>{item.completion_percentage}%</div>
+                                  </div>
+                                  <span style={{padding: '4px 8px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '6px', fontSize: '10px', fontWeight: '600'}}>
+                                    {item.status.replace('_', ' ')}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{textAlign: 'center', padding: '40px', background: '#F9FAFB', borderRadius: '12px'}}>
+                    <p style={{color: '#64748B'}}>No team members assigned to tasks yet</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* PHASE ANALYSIS TAB */}
+            {reportTab === 'phase' && (
+              <>
+                <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>🎯 Phase-Based KPI Analysis</h4>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                  {Array.from(getItemsByPhase().entries()).map(([phase, items]) => {
+                    const kpis = calculateKPIs(items);
+                    return (
+                      <div key={phase} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                          <h5 style={{fontSize: '18px', fontWeight: '700', color: '#1F2937', margin: 0}}>📌 {phase}</h5>
+                          <span style={{padding: '6px 12px', background: '#3B82F6', color: 'white', borderRadius: '16px', fontSize: '12px', fontWeight: '600'}}>{items.length} tasks</span>
+                        </div>
+                        
+                        {/* Phase KPIs */}
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px', marginBottom: '16px'}}>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '20px', fontWeight: '700', color: '#10B981'}}>{kpis.completionRate}%</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Completion Rate</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '20px', fontWeight: '700', color: '#3B82F6'}}>{kpis.avgCompletion}%</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Avg Progress</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '20px', fontWeight: '700', color: kpis.overdueItems > 0 ? '#DC2626' : '#10B981'}}>{kpis.overdueItems}</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Overdue</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '20px', fontWeight: '700', color: '#8B5CF6'}}>{kpis.onTrackRate}%</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>On Track</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '16px', fontWeight: '700', color: '#F59E0B'}}>${kpis.actualSpending.toLocaleString()}</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Spent</div>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div style={{width: '100%', height: '8px', background: '#E5E7EB', borderRadius: '4px', overflow: 'hidden'}}>
+                          <div style={{width: `${kpis.avgCompletion}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)'}} />
+                        </div>
+                        
+                        {/* Task List */}
+                        <div style={{marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                          {items.map(item => (
+                            <span key={item.id} style={{padding: '4px 10px', background: item.status === 'completed' ? '#D1FAE5' : item.status === 'in_progress' ? '#DBEAFE' : '#F3F4F6', color: item.status === 'completed' ? '#059669' : item.status === 'in_progress' ? '#1D4ED8' : '#6B7280', borderRadius: '12px', fontSize: '11px', fontWeight: '500'}}>
+                              {item.title} ({item.completion_percentage}%)
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* MONTHLY TAB */}
+            {reportTab === 'monthly' && (
+              <>
+                <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>📅 Monthly Task Breakdown</h4>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                  {Array.from(getItemsByMonth().entries()).map(([month, items]) => {
+                    const kpis = calculateKPIs(items);
+                    return (
+                      <div key={month} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                          <h5 style={{fontSize: '18px', fontWeight: '700', color: '#1F2937', margin: 0}}>📆 {month}</h5>
+                          <div style={{display: 'flex', gap: '8px'}}>
+                            <span style={{padding: '4px 10px', background: '#10B981', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.completedItems} done</span>
+                            <span style={{padding: '4px 10px', background: '#3B82F6', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.inProgressItems} active</span>
+                            {kpis.overdueItems > 0 && <span style={{padding: '4px 10px', background: '#DC2626', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.overdueItems} overdue</span>}
+                          </div>
+                        </div>
+                        
+                        {/* Monthly KPIs */}
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px'}}>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>{items.length}</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Total Tasks</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>{kpis.completionRate}%</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Completion Rate</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '24px', fontWeight: '700', color: '#8B5CF6'}}>{kpis.onTrackRate}%</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>On Track</div>
+                          </div>
+                          <div style={{background: 'white', padding: '12px', borderRadius: '8px', textAlign: 'center'}}>
+                            <div style={{fontSize: '18px', fontWeight: '700', color: '#F59E0B'}}>${kpis.actualSpending.toLocaleString()}</div>
+                            <div style={{fontSize: '10px', color: '#64748B'}}>Budget Used</div>
+                          </div>
+                        </div>
+
+                        {/* Task List */}
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                          {items.map(item => {
+                            const assignedMembers = item.team_member_ids?.map(id => availableTeamMembers.find(m => m.id === id)?.name).filter(Boolean) || [];
+                            return (
+                              <div key={item.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'white', borderRadius: '8px', borderLeft: `4px solid ${getStatusColor(item.status)}`}}>
+                                <div style={{flex: 1}}>
+                                  <div style={{fontWeight: '600', fontSize: '13px', color: '#374151'}}>{item.title}</div>
+                                  <div style={{fontSize: '10px', color: '#64748B', marginTop: '2px'}}>
+                                    {item.phase} {assignedMembers.length > 0 && `• 👤 ${assignedMembers.join(', ')}`}
+                                  </div>
+                                </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                  <span style={{fontSize: '12px', fontWeight: '600', color: '#3B82F6'}}>{item.completion_percentage}%</span>
+                                  <span style={{padding: '3px 8px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '6px', fontSize: '10px', fontWeight: '600'}}>
+                                    {item.status.replace('_', ' ')}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* WEEKLY TAB */}
+            {reportTab === 'weekly' && (
+              <>
+                <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>📆 Weekly Task Breakdown</h4>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                  {Array.from(getItemsByWeek().entries()).slice(0, 12).map(([week, items]) => {
+                    const kpis = calculateKPIs(items);
+                    return (
+                      <div key={week} style={{background: '#F9FAFB', borderRadius: '12px', padding: '16px', border: '1px solid #E5E7EB'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                          <h5 style={{fontSize: '16px', fontWeight: '700', color: '#1F2937', margin: 0}}>{week}</h5>
+                          <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                            <span style={{fontSize: '12px', color: '#64748B'}}>{items.length} tasks</span>
+                            <span style={{padding: '4px 10px', background: kpis.completionRate === 100 ? '#10B981' : '#3B82F6', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.completionRate}% done</span>
+                          </div>
+                        </div>
+                        
+                        {/* Compact KPIs */}
+                        <div style={{display: 'flex', gap: '16px', marginBottom: '12px', flexWrap: 'wrap'}}>
+                          <span style={{fontSize: '12px'}}><strong style={{color: '#10B981'}}>{kpis.completedItems}</strong> completed</span>
+                          <span style={{fontSize: '12px'}}><strong style={{color: '#3B82F6'}}>{kpis.inProgressItems}</strong> in progress</span>
+                          {kpis.overdueItems > 0 && <span style={{fontSize: '12px'}}><strong style={{color: '#DC2626'}}>{kpis.overdueItems}</strong> overdue</span>}
+                          <span style={{fontSize: '12px'}}><strong style={{color: '#F59E0B'}}>${kpis.actualSpending.toLocaleString()}</strong> spent</span>
+                        </div>
+
+                        {/* Tasks in week */}
+                        <div style={{display: 'flex', flexWrap: 'wrap', gap: '6px'}}>
+                          {items.map(item => {
+                            const assignedMembers = item.team_member_ids?.map(id => availableTeamMembers.find(m => m.id === id)?.name?.split(' ')[0]).filter(Boolean) || [];
+                            return (
+                              <div key={item.id} style={{padding: '6px 10px', background: 'white', borderRadius: '6px', borderLeft: `3px solid ${getStatusColor(item.status)}`, fontSize: '11px'}}>
+                                <span style={{fontWeight: '600', color: '#374151'}}>{item.title}</span>
+                                <span style={{color: '#64748B'}}> • {item.phase}</span>
+                                {assignedMembers.length > 0 && <span style={{color: '#8B5CF6'}}> • {assignedMembers.join(', ')}</span>}
+                                <span style={{color: '#3B82F6', fontWeight: '600'}}> ({item.completion_percentage}%)</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
             
-            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+            <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '24px'}}>
               <button onClick={() => setShowReportsModal(false)} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
             </div>
           </div>
@@ -1851,11 +2254,26 @@ export default function TimelineRoadmapPage() {
                               .eq('id', item.id);
                             
                             // Update local state
-                            setLoadedChecklistItems(prev => 
-                              prev.map(i => i.id === item.id ? {...i, is_completed: checked} : i)
+                            const updatedChecklist = loadedChecklistItems.map(i => 
+                              i.id === item.id ? {...i, is_completed: checked} : i
                             );
+                            setLoadedChecklistItems(updatedChecklist);
                             
-                            // Refresh timeline items to update completion percentage
+                            // Calculate new completion percentage
+                            const completedCount = updatedChecklist.filter(i => i.is_completed).length;
+                            const totalCount = updatedChecklist.length;
+                            const newCompletionPercentage = calculateCompletionFromChecklist(totalCount, completedCount);
+                            
+                            // Update timeline item completion percentage
+                            await supabase
+                              .from('timeline_items')
+                              .update({ 
+                                completion_percentage: newCompletionPercentage,
+                                status: newCompletionPercentage === 100 ? 'completed' : (newCompletionPercentage > 0 ? 'in_progress' : selectedItem?.status)
+                              })
+                              .eq('id', selectedItem?.id);
+                            
+                            // Refresh timeline items
                             fetchTimelineItems();
                           } catch (error) {
                             console.error('Error updating checklist item:', error);
