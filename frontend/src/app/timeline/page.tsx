@@ -632,6 +632,14 @@ export default function TimelineRoadmapPage() {
       fetchTimelineItems();
       setShowItemModal(false);
       resetItemForm();
+      
+      // Reopen reports modal if we came from there
+      if (reopenReportsAfterCreate) {
+        setReopenReportsAfterCreate(false);
+        setReportTab(savedReportTab);
+        setShowReportsModal(true);
+      }
+      
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error saving timeline item:', error);
@@ -991,21 +999,83 @@ export default function TimelineRoadmapPage() {
     return Array.from(memberMap.values());
   };
 
+  // State to track if we should reopen reports after creating task
+  const [reopenReportsAfterCreate, setReopenReportsAfterCreate] = useState(false);
+  const [savedReportTab, setSavedReportTab] = useState<'overview' | 'team' | 'phase' | 'monthly' | 'weekly'>('overview');
+
+  // Parse week label to get date (e.g., "December Week 1, 2024" -> first day of that week)
+  const parseWeekLabelToDate = (weekLabel: string): Date => {
+    // Format: "December Week 1, 2024"
+    const match = weekLabel.match(/(\w+) Week (\d+), (\d+)/);
+    if (match) {
+      const monthName = match[1];
+      const weekNum = parseInt(match[2]);
+      const year = parseInt(match[3]);
+      
+      // Get month index
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthIndex = months.indexOf(monthName);
+      
+      if (monthIndex !== -1) {
+        // Calculate approximate start date of that week in the month
+        const firstOfMonth = new Date(year, monthIndex, 1);
+        const firstDayOfWeek = firstOfMonth.getDay(); // 0 = Sunday
+        // Week 1 starts from day 1, Week 2 from around day 8, etc.
+        const dayOfMonth = Math.max(1, (weekNum - 1) * 7 - firstDayOfWeek + 1);
+        return new Date(year, monthIndex, Math.min(dayOfMonth, 28)); // Cap at 28 to be safe
+      }
+    }
+    return new Date();
+  };
+
+  // Parse month label to get date (e.g., "December 2024" -> first day of month)
+  const parseMonthLabelToDate = (monthLabel: string): Date => {
+    // Format: "December 2024"
+    const parts = monthLabel.split(' ');
+    if (parts.length === 2) {
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthIndex = months.indexOf(parts[0]);
+      const year = parseInt(parts[1]);
+      if (monthIndex !== -1 && !isNaN(year)) {
+        return new Date(year, monthIndex, 1);
+      }
+    }
+    return new Date();
+  };
+
   // Open new task modal with prefilled phase/month/week
   const openNewTaskForContext = (context: { phase?: string; month?: string; week?: string }) => {
     resetItemForm();
-    if (context.phase) {
-      setNewItem(prev => ({ ...prev, phase: context.phase! }));
+    
+    let startDate = new Date();
+    let endDate = new Date();
+    endDate.setDate(endDate.getDate() + 7);
+    
+    if (context.week) {
+      // Parse the week label to get the actual date
+      startDate = parseWeekLabelToDate(context.week);
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 6); // End of the week
+    } else if (context.month) {
+      // Parse the month label to get the actual date
+      startDate = parseMonthLabelToDate(context.month);
+      endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+      endDate.setDate(endDate.getDate() - 1); // Last day of month
     }
-    if (context.month || context.week) {
-      // Set start date to first day of the month/week
-      const now = new Date();
-      setNewItem(prev => ({ 
-        ...prev, 
-        start_date: now.toISOString().split('T')[0],
-        end_date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      }));
-    }
+    
+    setNewItem(prev => ({ 
+      ...prev, 
+      phase: context.phase || prev.phase,
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0]
+    }));
+    
+    // Save state to reopen reports after creating
+    setReopenReportsAfterCreate(true);
+    setSavedReportTab(reportTab);
     setShowReportsModal(false);
     setShowItemModal(true);
   };
@@ -1713,7 +1783,16 @@ export default function TimelineRoadmapPage() {
 
       {/* CREATE/EDIT TIMELINE ITEM MODAL */}
       {showItemModal && (
-        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px', overflowY: 'auto'}} onClick={() => {setShowItemModal(false); resetItemForm();}}>
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px', overflowY: 'auto'}} onClick={() => {
+          setShowItemModal(false); 
+          resetItemForm();
+          // Go back to reports if we came from there
+          if (reopenReportsAfterCreate) {
+            setReopenReportsAfterCreate(false);
+            setReportTab(savedReportTab);
+            setShowReportsModal(true);
+          }
+        }}>
           <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
             <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>{isEditingItem ? 'Edit Timeline Item' : 'Create Timeline Item'}</h3>
             
@@ -1835,7 +1914,16 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
-              <button onClick={() => {setShowItemModal(false); resetItemForm();}} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Cancel</button>
+              <button onClick={() => {
+                setShowItemModal(false); 
+                resetItemForm();
+                // Go back to reports if we came from there
+                if (reopenReportsAfterCreate) {
+                  setReopenReportsAfterCreate(false);
+                  setReportTab(savedReportTab);
+                  setShowReportsModal(true);
+                }
+              }} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>{reopenReportsAfterCreate ? 'Back to Reports' : 'Cancel'}</button>
               <button onClick={handleCreateTimelineItem} style={{padding: '12px 24px', background: isEditingItem ? '#3B82F6' : '#F59E0B', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>{isEditingItem ? 'Update Item' : 'Create Item'}</button>
             </div>
           </div>
