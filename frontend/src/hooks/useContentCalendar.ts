@@ -501,7 +501,7 @@ export function useCalendarPosts(businessId: number | undefined, month: Date) {
 
         if (error) throw error;
 
-        const posts: CalendarPost[] = (data || []).map(post => ({
+        const posts: CalendarPost[] = (data || []).map((post: any) => ({
           post_id: post.id,
           title: post.title,
           content_type: post.content_type,
