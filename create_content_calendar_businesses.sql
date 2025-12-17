@@ -26,14 +26,15 @@ CREATE TABLE content_posts (
   status VARCHAR(50) NOT NULL DEFAULT 'draft',
   scheduled_date DATE NOT NULL,
   published_date TIMESTAMP WITH TIME ZONE,
-  assigned_to TEXT,
+  assigned_to_content TEXT,
+  assigned_to_graphic TEXT,
   media_buying_budget DECIMAL(10,2) DEFAULT 0,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create per-platform metrics table (each post can have multiple platforms with individual metrics)
+-- Create per-platform metrics table
 CREATE TABLE content_post_platforms (
   id SERIAL PRIMARY KEY,
   post_id INTEGER NOT NULL REFERENCES content_posts(id) ON DELETE CASCADE,
@@ -60,7 +61,8 @@ CREATE INDEX idx_content_businesses_created_by ON content_businesses(created_by)
 CREATE INDEX idx_content_posts_business_id ON content_posts(business_id);
 CREATE INDEX idx_content_posts_scheduled_date ON content_posts(scheduled_date);
 CREATE INDEX idx_content_posts_status ON content_posts(status);
-CREATE INDEX idx_content_posts_assigned_to ON content_posts(assigned_to);
+CREATE INDEX idx_content_posts_assigned_content ON content_posts(assigned_to_content);
+CREATE INDEX idx_content_posts_assigned_graphic ON content_posts(assigned_to_graphic);
 CREATE INDEX idx_content_post_platforms_post_id ON content_post_platforms(post_id);
 CREATE INDEX idx_content_post_platforms_platform ON content_post_platforms(platform);
 
