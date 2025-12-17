@@ -571,13 +571,13 @@ export default function ContentCalendarPage() {
                 onClick={() => setViewMode('calendar')}
                 style={styles.toggleBtn(viewMode === 'calendar')}
               >
-                📅 Calendar
+                Calendar
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 style={styles.toggleBtn(viewMode === 'list')}
               >
-                📋 List
+                List
               </button>
             </div>
 
@@ -661,7 +661,7 @@ export default function ContentCalendarPage() {
             <div style={styles.card}>
               {filteredItems.length === 0 ? (
                 <div style={styles.emptyState}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
+                  <div style={{ fontSize: '48px', marginBottom: '16px', color: '#9ca3af' }}>--</div>
                   <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: '0 0 8px 0' }}>No content yet</h3>
                   <p style={{ color: '#6b7280', margin: 0 }}>Click "Add Content" to create your first item</p>
                 </div>
@@ -688,8 +688,8 @@ export default function ContentCalendarPage() {
                           <span style={styles.statusBadge(item.status)}>{item.status.replace('_', ' ')}</span>
                         </td>
                         <td style={styles.td}>
-                          <button style={styles.actionBtn} onClick={(e) => { e.stopPropagation(); handleEdit(item); }}>✏️</button>
-                          <button style={styles.actionBtn} onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}>🗑️</button>
+                          <button style={{ ...styles.actionBtn, color: '#4f46e5' }} onClick={(e) => { e.stopPropagation(); handleEdit(item); }}>Edit</button>
+                          <button style={{ ...styles.actionBtn, color: '#dc2626' }} onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}>Delete</button>
                         </td>
                       </tr>
                     ))}
