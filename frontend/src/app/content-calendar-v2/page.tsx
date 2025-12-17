@@ -198,7 +198,7 @@ export default function ContentCalendarV2Page() {
   if (authLoading || businessesLoading) {
     return (
       <div className="flex min-h-screen">
-        <Sidebar />
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         <main className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
         </main>
@@ -208,7 +208,7 @@ export default function ContentCalendarV2Page() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar projects={[]} onCreateProject={() => {}} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
