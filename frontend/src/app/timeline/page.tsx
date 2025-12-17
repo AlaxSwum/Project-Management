@@ -923,22 +923,91 @@ export default function TimelineRoadmapPage() {
     }));
   };
 
-  // Group items by week
+  // Get week of month (1-5)
+  const getWeekOfMonth = (date: Date): number => {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const firstDayOfWeek = firstDay.getDay();
+    return Math.ceil((date.getDate() + firstDayOfWeek) / 7);
+  };
+
+  // Get friendly week label like "December Week 1"
+  const getWeekLabel = (date: Date): string => {
+    const monthName = date.toLocaleDateString('en-US', { month: 'long' });
+    const weekOfMonth = getWeekOfMonth(date);
+    const year = date.getFullYear();
+    return `${monthName} Week ${weekOfMonth}, ${year}`;
+  };
+
+  // Group items by week with friendly labels
   const getItemsByWeek = () => {
-    const weekMap = new Map<string, TimelineItem[]>();
+    const weekMap = new Map<string, { items: TimelineItem[], date: Date }>();
     
     timelineItems.forEach(item => {
       const startDate = new Date(item.start_date);
-      const weekNum = getWeekNumber(startDate);
-      const year = startDate.getFullYear();
-      const weekKey = `Week ${weekNum}, ${year}`;
+      const weekKey = getWeekLabel(startDate);
       if (!weekMap.has(weekKey)) {
-        weekMap.set(weekKey, []);
+        weekMap.set(weekKey, { items: [], date: startDate });
       }
-      weekMap.get(weekKey)!.push(item);
+      weekMap.get(weekKey)!.items.push(item);
     });
     
-    return weekMap;
+    // Sort by date
+    const sortedEntries = [...weekMap.entries()].sort((a, b) => 
+      a[1].date.getTime() - b[1].date.getTime()
+    );
+    
+    return new Map(sortedEntries.map(([key, value]) => [key, value.items]));
+  };
+
+  // Group tasks by team member for a given list of items
+  const groupItemsByTeamMember = (items: TimelineItem[]) => {
+    const memberMap = new Map<string, { member: {id: number; name: string; email: string} | null, items: TimelineItem[] }>();
+    
+    // Add "Unassigned" category first
+    memberMap.set('unassigned', { member: null, items: [] });
+    
+    items.forEach(item => {
+      if (!item.team_member_ids || item.team_member_ids.length === 0) {
+        memberMap.get('unassigned')!.items.push(item);
+      } else {
+        item.team_member_ids.forEach(memberId => {
+          const member = availableTeamMembers.find(m => m.id === memberId);
+          if (member) {
+            const key = `member_${memberId}`;
+            if (!memberMap.has(key)) {
+              memberMap.set(key, { member, items: [] });
+            }
+            memberMap.get(key)!.items.push(item);
+          }
+        });
+      }
+    });
+    
+    // Remove unassigned if empty
+    if (memberMap.get('unassigned')!.items.length === 0) {
+      memberMap.delete('unassigned');
+    }
+    
+    return Array.from(memberMap.values());
+  };
+
+  // Open new task modal with prefilled phase/month/week
+  const openNewTaskForContext = (context: { phase?: string; month?: string; week?: string }) => {
+    resetItemForm();
+    if (context.phase) {
+      setNewItem(prev => ({ ...prev, phase: context.phase! }));
+    }
+    if (context.month || context.week) {
+      // Set start date to first day of the month/week
+      const now = new Date();
+      setNewItem(prev => ({ 
+        ...prev, 
+        start_date: now.toISOString().split('T')[0],
+        end_date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      }));
+    }
+    setShowReportsModal(false);
+    setShowItemModal(true);
   };
 
   // Calculate KPIs for a set of items
@@ -2070,14 +2139,23 @@ export default function TimelineRoadmapPage() {
             {reportTab === 'phase' && (
               <>
                 <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Phase-Based KPI Analysis</h4>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
                   {Array.from(getItemsByPhase().entries()).map(([phase, items]) => {
                     const kpis = calculateKPIs(items);
+                    const memberGroups = groupItemsByTeamMember(items);
                     return (
                       <div key={phase} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
                           <h5 style={{fontSize: '18px', fontWeight: '700', color: '#1F2937', margin: 0}}>{phase}</h5>
-                          <span style={{padding: '6px 12px', background: '#3B82F6', color: 'white', borderRadius: '16px', fontSize: '12px', fontWeight: '600'}}>{items.length} tasks</span>
+                          <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                            <span style={{padding: '6px 12px', background: '#3B82F6', color: 'white', borderRadius: '16px', fontSize: '12px', fontWeight: '600'}}>{items.length} tasks</span>
+                            <button
+                              onClick={() => openNewTaskForContext({ phase })}
+                              style={{padding: '6px 14px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'}}
+                            >
+                              + New Task
+                            </button>
+                          </div>
                         </div>
                         
                         {/* Phase KPIs */}
@@ -2105,40 +2183,63 @@ export default function TimelineRoadmapPage() {
                         </div>
 
                         {/* Progress Bar */}
-                        <div style={{width: '100%', height: '8px', background: '#E5E7EB', borderRadius: '4px', overflow: 'hidden', marginBottom: '12px'}}>
+                        <div style={{width: '100%', height: '8px', background: '#E5E7EB', borderRadius: '4px', overflow: 'hidden', marginBottom: '16px'}}>
                           <div style={{width: `${kpis.avgCompletion}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)'}} />
                         </div>
                         
-                        {/* Detailed Task List with Team Members */}
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                          {items.map(item => {
-                            const assignedMembers = item.team_member_ids?.map(id => availableTeamMembers.find(m => m.id === id)?.name).filter(Boolean) || [];
-                            return (
-                              <div key={item.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'white', borderRadius: '8px', borderLeft: `4px solid ${getStatusColor(item.status)}`}}>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: 1}}>
-                                  <input 
-                                    type="checkbox" 
-                                    checked={item.status === 'completed'} 
-                                    onChange={() => toggleTaskCompletion(item)}
-                                    style={{width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981', flexShrink: 0}}
-                                  />
-                                  <div style={{flex: 1}}>
-                                    <div style={{fontWeight: '600', fontSize: '13px', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</div>
-                                    <div style={{fontSize: '10px', color: '#64748B', marginTop: '2px'}}>
-                                      {new Date(item.start_date).toLocaleDateString()} - {new Date(item.end_date).toLocaleDateString()}
-                                      {assignedMembers.length > 0 && <span style={{color: '#8B5CF6', fontWeight: '500'}}> | Assigned: {assignedMembers.join(', ')}</span>}
-                                    </div>
-                                  </div>
+                        {/* Tasks by Team Member - Horizontal Scroll */}
+                        <div style={{overflowX: 'auto', paddingBottom: '8px'}}>
+                          <div style={{display: 'flex', gap: '16px', minWidth: 'max-content'}}>
+                            {memberGroups.map(({ member, items: memberItems }) => (
+                              <div key={member?.id || 'unassigned'} style={{minWidth: '280px', maxWidth: '320px', background: 'white', borderRadius: '10px', padding: '14px', border: '1px solid #E5E7EB'}}>
+                                {/* Member Header */}
+                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #E5E7EB'}}>
+                                  {member ? (
+                                    <>
+                                      <div style={{width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px'}}>
+                                        {member.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <div style={{fontWeight: '600', fontSize: '14px', color: '#1F2937'}}>{member.name}</div>
+                                        <div style={{fontSize: '10px', color: '#64748B'}}>{memberItems.length} tasks</div>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div style={{width: '36px', height: '36px', borderRadius: '50%', background: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px'}}>?</div>
+                                      <div>
+                                        <div style={{fontWeight: '600', fontSize: '14px', color: '#6B7280'}}>Unassigned</div>
+                                        <div style={{fontSize: '10px', color: '#64748B'}}>{memberItems.length} tasks</div>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                  <span style={{fontSize: '12px', fontWeight: '600', color: '#3B82F6'}}>{item.completion_percentage}%</span>
-                                  <span style={{padding: '3px 8px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '6px', fontSize: '10px', fontWeight: '600'}}>
-                                    {item.status.replace('_', ' ')}
-                                  </span>
+                                {/* Tasks */}
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                  {memberItems.map(item => (
+                                    <div key={item.id} style={{display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px', background: '#F9FAFB', borderRadius: '6px', borderLeft: `3px solid ${getStatusColor(item.status)}`}}>
+                                      <input 
+                                        type="checkbox" 
+                                        checked={item.status === 'completed'} 
+                                        onChange={() => toggleTaskCompletion(item)}
+                                        style={{width: '14px', height: '14px', cursor: 'pointer', accentColor: '#10B981', marginTop: '2px'}}
+                                      />
+                                      <div style={{flex: 1}}>
+                                        <div style={{fontWeight: '600', fontSize: '12px', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</div>
+                                        <div style={{fontSize: '10px', color: '#64748B', marginTop: '2px'}}>{new Date(item.start_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</div>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px'}}>
+                                          <span style={{fontSize: '10px', fontWeight: '600', color: '#3B82F6'}}>{item.completion_percentage}%</span>
+                                          <span style={{padding: '2px 6px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '4px', fontSize: '9px', fontWeight: '600'}}>
+                                            {item.status.replace('_', ' ')}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     );
@@ -2151,17 +2252,24 @@ export default function TimelineRoadmapPage() {
             {reportTab === 'monthly' && (
               <>
                 <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Monthly Task Breakdown</h4>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
                   {Array.from(getItemsByMonth().entries()).map(([month, items]) => {
                     const kpis = calculateKPIs(items);
+                    const memberGroups = groupItemsByTeamMember(items);
                     return (
                       <div key={month} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
                           <h5 style={{fontSize: '18px', fontWeight: '700', color: '#1F2937', margin: 0}}>{month}</h5>
-                          <div style={{display: 'flex', gap: '8px'}}>
+                          <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
                             <span style={{padding: '4px 10px', background: '#10B981', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.completedItems} done</span>
                             <span style={{padding: '4px 10px', background: '#3B82F6', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.inProgressItems} active</span>
                             {kpis.overdueItems > 0 && <span style={{padding: '4px 10px', background: '#DC2626', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.overdueItems} overdue</span>}
+                            <button
+                              onClick={() => openNewTaskForContext({ month })}
+                              style={{padding: '6px 14px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'}}
+                            >
+                              + New Task
+                            </button>
                           </div>
                         </div>
                         
@@ -2185,35 +2293,59 @@ export default function TimelineRoadmapPage() {
                           </div>
                         </div>
 
-                        {/* Task List with Checkboxes */}
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                          {items.map(item => {
-                            const assignedMembers = item.team_member_ids?.map(id => availableTeamMembers.find(m => m.id === id)?.name).filter(Boolean) || [];
-                            return (
-                              <div key={item.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'white', borderRadius: '8px', borderLeft: `4px solid ${getStatusColor(item.status)}`}}>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: 1}}>
-                                  <input 
-                                    type="checkbox" 
-                                    checked={item.status === 'completed'} 
-                                    onChange={() => toggleTaskCompletion(item)}
-                                    style={{width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981', flexShrink: 0}}
-                                  />
-                                  <div style={{flex: 1}}>
-                                    <div style={{fontWeight: '600', fontSize: '13px', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</div>
-                                    <div style={{fontSize: '10px', color: '#64748B', marginTop: '2px'}}>
-                                      {item.phase} {assignedMembers.length > 0 && <span style={{color: '#8B5CF6', fontWeight: '500'}}>| Assigned: {assignedMembers.join(', ')}</span>}
-                                    </div>
-                                  </div>
+                        {/* Tasks by Team Member - Horizontal Scroll */}
+                        <div style={{overflowX: 'auto', paddingBottom: '8px'}}>
+                          <div style={{display: 'flex', gap: '16px', minWidth: 'max-content'}}>
+                            {memberGroups.map(({ member, items: memberItems }) => (
+                              <div key={member?.id || 'unassigned'} style={{minWidth: '280px', maxWidth: '320px', background: 'white', borderRadius: '10px', padding: '14px', border: '1px solid #E5E7EB'}}>
+                                {/* Member Header */}
+                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #E5E7EB'}}>
+                                  {member ? (
+                                    <>
+                                      <div style={{width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B, #EA580C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px'}}>
+                                        {member.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <div style={{fontWeight: '600', fontSize: '14px', color: '#1F2937'}}>{member.name}</div>
+                                        <div style={{fontSize: '10px', color: '#64748B'}}>{memberItems.length} tasks</div>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div style={{width: '36px', height: '36px', borderRadius: '50%', background: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px'}}>?</div>
+                                      <div>
+                                        <div style={{fontWeight: '600', fontSize: '14px', color: '#6B7280'}}>Unassigned</div>
+                                        <div style={{fontSize: '10px', color: '#64748B'}}>{memberItems.length} tasks</div>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                  <span style={{fontSize: '12px', fontWeight: '600', color: '#3B82F6'}}>{item.completion_percentage}%</span>
-                                  <span style={{padding: '3px 8px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '6px', fontSize: '10px', fontWeight: '600'}}>
-                                    {item.status.replace('_', ' ')}
-                                  </span>
+                                {/* Tasks */}
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                  {memberItems.map(item => (
+                                    <div key={item.id} style={{display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px', background: '#F9FAFB', borderRadius: '6px', borderLeft: `3px solid ${getStatusColor(item.status)}`}}>
+                                      <input 
+                                        type="checkbox" 
+                                        checked={item.status === 'completed'} 
+                                        onChange={() => toggleTaskCompletion(item)}
+                                        style={{width: '14px', height: '14px', cursor: 'pointer', accentColor: '#10B981', marginTop: '2px'}}
+                                      />
+                                      <div style={{flex: 1}}>
+                                        <div style={{fontWeight: '600', fontSize: '12px', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</div>
+                                        <div style={{fontSize: '10px', color: '#64748B', marginTop: '2px'}}>{item.phase} | {new Date(item.start_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</div>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px'}}>
+                                          <span style={{fontSize: '10px', fontWeight: '600', color: '#3B82F6'}}>{item.completion_percentage}%</span>
+                                          <span style={{padding: '2px 6px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '4px', fontSize: '9px', fontWeight: '600'}}>
+                                            {item.status.replace('_', ' ')}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     );
@@ -2226,55 +2358,88 @@ export default function TimelineRoadmapPage() {
             {reportTab === 'weekly' && (
               <>
                 <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Weekly Task Breakdown</h4>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
                   {Array.from(getItemsByWeek().entries()).slice(0, 12).map(([week, items]) => {
                     const kpis = calculateKPIs(items);
+                    const memberGroups = groupItemsByTeamMember(items);
                     return (
-                      <div key={week} style={{background: '#F9FAFB', borderRadius: '12px', padding: '16px', border: '1px solid #E5E7EB'}}>
-                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                      <div key={week} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
                           <h5 style={{fontSize: '16px', fontWeight: '700', color: '#1F2937', margin: 0}}>{week}</h5>
                           <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
                             <span style={{fontSize: '12px', color: '#64748B'}}>{items.length} tasks</span>
                             <span style={{padding: '4px 10px', background: kpis.completionRate === 100 ? '#10B981' : '#3B82F6', color: 'white', borderRadius: '12px', fontSize: '11px', fontWeight: '600'}}>{kpis.completionRate}% done</span>
+                            <button
+                              onClick={() => openNewTaskForContext({ week })}
+                              style={{padding: '6px 14px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'}}
+                            >
+                              + New Task
+                            </button>
                           </div>
                         </div>
                         
                         {/* Compact KPIs */}
-                        <div style={{display: 'flex', gap: '16px', marginBottom: '12px', flexWrap: 'wrap'}}>
+                        <div style={{display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap', padding: '10px', background: 'white', borderRadius: '8px'}}>
                           <span style={{fontSize: '12px'}}><strong style={{color: '#10B981'}}>{kpis.completedItems}</strong> completed</span>
                           <span style={{fontSize: '12px'}}><strong style={{color: '#3B82F6'}}>{kpis.inProgressItems}</strong> in progress</span>
                           {kpis.overdueItems > 0 && <span style={{fontSize: '12px'}}><strong style={{color: '#DC2626'}}>{kpis.overdueItems}</strong> overdue</span>}
                           <span style={{fontSize: '12px'}}><strong style={{color: '#F59E0B'}}>${kpis.actualSpending.toLocaleString()}</strong> spent</span>
+                          <span style={{fontSize: '12px'}}><strong style={{color: '#8B5CF6'}}>{kpis.avgCompletion}%</strong> avg progress</span>
                         </div>
 
-                        {/* Tasks in week with Checkboxes */}
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '6px'}}>
-                          {items.map(item => {
-                            const assignedMembers = item.team_member_ids?.map(id => availableTeamMembers.find(m => m.id === id)?.name).filter(Boolean) || [];
-                            return (
-                              <div key={item.id} style={{display: 'flex', alignItems: 'center', padding: '8px 10px', background: 'white', borderRadius: '6px', borderLeft: `3px solid ${getStatusColor(item.status)}`}}>
-                                <input 
-                                  type="checkbox" 
-                                  checked={item.status === 'completed'} 
-                                  onChange={() => toggleTaskCompletion(item)}
-                                  style={{width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981', flexShrink: 0, marginRight: '10px'}}
-                                />
-                                <div style={{flex: 1}}>
-                                  <div style={{fontSize: '12px'}}>
-                                    <span style={{fontWeight: '600', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</span>
-                                    <span style={{color: '#64748B'}}> | {item.phase}</span>
-                                    {assignedMembers.length > 0 && <span style={{color: '#8B5CF6'}}> | {assignedMembers.join(', ')}</span>}
-                                  </div>
+                        {/* Tasks by Team Member - Horizontal Scroll */}
+                        <div style={{overflowX: 'auto', paddingBottom: '8px'}}>
+                          <div style={{display: 'flex', gap: '16px', minWidth: 'max-content'}}>
+                            {memberGroups.map(({ member, items: memberItems }) => (
+                              <div key={member?.id || 'unassigned'} style={{minWidth: '260px', maxWidth: '300px', background: 'white', borderRadius: '10px', padding: '14px', border: '1px solid #E5E7EB'}}>
+                                {/* Member Header */}
+                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #E5E7EB'}}>
+                                  {member ? (
+                                    <>
+                                      <div style={{width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '12px'}}>
+                                        {member.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <div style={{fontWeight: '600', fontSize: '13px', color: '#1F2937'}}>{member.name}</div>
+                                        <div style={{fontSize: '10px', color: '#64748B'}}>{memberItems.length} tasks</div>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div style={{width: '32px', height: '32px', borderRadius: '50%', background: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '12px'}}>?</div>
+                                      <div>
+                                        <div style={{fontWeight: '600', fontSize: '13px', color: '#6B7280'}}>Unassigned</div>
+                                        <div style={{fontSize: '10px', color: '#64748B'}}>{memberItems.length} tasks</div>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                  <span style={{color: '#3B82F6', fontWeight: '600', fontSize: '11px'}}>{item.completion_percentage}%</span>
-                                  <span style={{padding: '2px 6px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '4px', fontSize: '9px', fontWeight: '600'}}>
-                                    {item.status.replace('_', ' ')}
-                                  </span>
+                                {/* Tasks */}
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                                  {memberItems.map(item => (
+                                    <div key={item.id} style={{display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px', background: '#F9FAFB', borderRadius: '6px', borderLeft: `3px solid ${getStatusColor(item.status)}`}}>
+                                      <input 
+                                        type="checkbox" 
+                                        checked={item.status === 'completed'} 
+                                        onChange={() => toggleTaskCompletion(item)}
+                                        style={{width: '14px', height: '14px', cursor: 'pointer', accentColor: '#10B981', marginTop: '2px'}}
+                                      />
+                                      <div style={{flex: 1}}>
+                                        <div style={{fontWeight: '600', fontSize: '11px', color: item.status === 'completed' ? '#9CA3AF' : '#374151', textDecoration: item.status === 'completed' ? 'line-through' : 'none'}}>{item.title}</div>
+                                        <div style={{fontSize: '9px', color: '#64748B', marginTop: '2px'}}>{item.phase}</div>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px'}}>
+                                          <span style={{fontSize: '9px', fontWeight: '600', color: '#3B82F6'}}>{item.completion_percentage}%</span>
+                                          <span style={{padding: '1px 4px', background: getStatusColor(item.status) + '20', color: getStatusColor(item.status), borderRadius: '3px', fontSize: '8px', fontWeight: '600'}}>
+                                            {item.status.replace('_', ' ')}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     );
