@@ -1,5 +1,6 @@
-/* Project Management App Styles - Enhanced Modern Professional Theme with Mabry Pro */
-@import url('../font/mabry-pro/mabry-pro-optimized.css');
+/* Project Management App Styles - Enhanced Modern Professional Theme */
+/* Note: Custom Mabry Pro font disabled due to loading issues - using Inter instead */
+/* @import url('../font/mabry-pro/mabry-pro-optimized.css'); */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
@@ -109,7 +110,7 @@
 html, body {
   background: var(--background) !important;
   color: var(--text-primary) !important;
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
   font-feature-settings: 'cv11', 'ss01';
   font-variation-settings: 'opsz' 32;
 }
@@ -119,7 +120,7 @@ body {
   @apply antialiased;
   background: var(--background) !important;
   color: var(--text-primary) !important;
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
   font-weight: 400;
   line-height: 1.6;
   letter-spacing: -0.01em;
@@ -130,7 +131,7 @@ body {
 
 /* Professional heading styles with Mabry Pro */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Mabry Pro', 'Inter', sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.025em;
@@ -199,7 +200,7 @@ input[type="email"], input[type="password"], input[type="text"], input[type="tel
   border: 2px solid var(--border) !important;
   border-radius: var(--radius-lg) !important;
   font-size: 0.875rem !important;
-  font-family: 'Mabry Pro', 'Inter', sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   transition: all var(--transition-normal) !important;
   background: var(--surface) !important;
   color: var(--text-primary) !important;
@@ -351,7 +352,7 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
     border-radius: var(--radius-lg) !important;
     color: var(--text-primary) !important;
     font-size: 0.875rem !important;
-    font-family: 'Mabry Pro', 'Inter', sans-serif !important;
+    font-family: 'Inter', sans-serif !important;
     transition: all var(--transition-normal) !important;
     box-shadow: var(--shadow-sm) !important;
   }
@@ -2109,7 +2110,7 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
 
 /* Instructor Dashboard Override - Force Tailwind styles to work */
 .instructor-dashboard * {
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
 }
 
 .instructor-dashboard .bg-gradient-to-br {
@@ -2119,7 +2120,7 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
 /* PAYROLL PAGE STYLES - HIGHEST SPECIFICITY TO OVERRIDE ALL RESETS */
 html body .payroll-page,
 html body div.payroll-page {
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
 
 html body .payroll-page input[type="text"],
@@ -2138,7 +2139,7 @@ html body .payroll-page .payroll-input {
   font-size: 0.875rem !important;
   background-color: #ffffff !important;
   color: #111827 !important;
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   line-height: 1.5 !important;
   box-sizing: border-box !important;
   margin: 0 !important;
@@ -2190,13 +2191,13 @@ html body div.payroll-page label {
   font-weight: 600 !important;
   font-size: 0.8125rem !important;
   color: #374151 !important;
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   line-height: 1.4 !important;
 }
 
 html body .payroll-page button,
 html body div.payroll-page button {
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   font-size: 0.875rem !important;
   line-height: 1.4 !important;
   cursor: pointer !important;
@@ -2206,7 +2207,7 @@ html body div.payroll-page button {
 html body .payroll-page h1,
 html body .payroll-page h2,
 html body .payroll-page h3 {
-  font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   color: #111827 !important;
 }
 
