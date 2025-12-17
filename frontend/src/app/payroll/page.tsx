@@ -426,7 +426,7 @@ export default function PayrollPage() {
         .from('projects')
         .select('id, name')
         .order('name');
-
+      
       if (error) throw error;
       setProjects(data || []);
     } catch (err) {
@@ -635,7 +635,7 @@ export default function PayrollPage() {
         netPay = myanmarPayrollData.payrollAmount;
         currency = 'MMK ';
       }
-      
+
       // Get base64 directly from PDF (much smaller than image-based)
       const pdfBase64 = getPDFBase64(pdf);
 
@@ -781,14 +781,14 @@ export default function PayrollPage() {
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             {/* Header */}
             <div className="payroll-card" style={formStyles.card}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
                   <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 0.5rem 0', lineHeight: '1.3' }}>
                     <DocumentTextIcon style={{ width: '28px', height: '28px', color: '#6366f1' }} />
-                    Payroll Generation
-                  </h1>
+                  Payroll Generation
+                </h1>
                   <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0', fontSize: '0.875rem', lineHeight: '1.4' }}>Generate and send payroll statements</p>
-                </div>
+              </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   {isAdmin && (
                     <button
@@ -817,8 +817,8 @@ export default function PayrollPage() {
                   )}
                   <BuildingOfficeIcon style={{ width: '40px', height: '40px', color: '#6366f1' }} />
                 </div>
-              </div>
             </div>
+          </div>
 
           {/* Payroll Type Selection */}
           <div className="payroll-card" style={formStyles.card}>
@@ -1707,19 +1707,19 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
     <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: '#333', maxWidth: '700px', margin: '0 auto', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       {/* Header */}
       <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
+          <div>
           <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0', color: '#333', letterSpacing: '-0.5px' }}>PAYSLIP</h1>
-        </div>
+          </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '18px', fontWeight: '600', color: teal }}>Hush Healthcare</div>
           <div style={{ fontSize: '11px', color: '#666' }}>Ltd</div>
+          </div>
         </div>
-      </div>
 
       {/* Company Info Bar */}
       <div style={{ background: teal, color: 'white', padding: '8px 24px', fontSize: '11px', fontWeight: '600' }}>
         Hush Healthcare Ltd
-      </div>
+        </div>
       <div style={{ padding: '8px 24px', fontSize: '10px', color: '#666', borderBottom: '1px solid #ddd' }}>
         <div>Healthcare Services</div>
         <div>PAYE Ref: {data.employerPAYEReference || '120/WE94437'}</div>
@@ -1736,14 +1736,14 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
             <div style={{ marginBottom: '8px' }}>
               <div style={{ fontSize: '9px', fontWeight: '600', color: '#555' }}>Employee Name</div>
               <div style={{ fontSize: '12px' }}>{data.employeeName || '-'}</div>
-            </div>
-            <div>
+        </div>
+        <div>
               <div style={{ fontSize: '9px', fontWeight: '600', color: '#555' }}>Employee ID</div>
               <div style={{ fontSize: '12px' }}>{data.employeeId || '-'}</div>
             </div>
           </div>
         </div>
-        
+
         {/* Payment Details */}
         <div>
           <div style={{ background: teal, color: 'white', padding: '6px 12px', fontSize: '10px', fontWeight: '600' }}>
@@ -1763,7 +1763,7 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
       <div style={{ padding: '8px 24px', borderTop: '1px solid #ddd', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
         <div><span style={{ fontWeight: '600' }}>Period End:</span> {formatDate(data.monthEnding)}</div>
         <div><span style={{ fontWeight: '600' }}>Payment Date:</span> {formatDate(data.paidDate)}</div>
-      </div>
+          </div>
 
       {/* Payments Table */}
       <div style={{ padding: '16px 24px' }}>
@@ -1798,7 +1798,7 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
             </tr>
           </tbody>
         </table>
-      </div>
+        </div>
 
       {/* Deductions Table */}
       <div style={{ padding: '0 24px 16px' }}>
@@ -1828,7 +1828,7 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
             </tr>
           </tbody>
         </table>
-      </div>
+          </div>
 
       {/* Net Pay Box */}
       <div style={{ margin: '0 24px 16px', background: teal, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1849,16 +1849,16 @@ function UKPayrollPreview({ data }: { data: UKPayrollData }) {
           <div>
             <div style={{ color: '#555', marginBottom: '2px' }}>Tax Paid</div>
             <div style={{ fontWeight: '600' }}>£{formatCurrency(data.taxYTD)}</div>
-          </div>
+        </div>
           <div>
             <div style={{ color: '#555', marginBottom: '2px' }}>Employee NI</div>
             <div style={{ fontWeight: '600' }}>£{formatCurrency(data.employeeNationalInsuranceYTD)}</div>
-          </div>
+        </div>
           <div>
             <div style={{ color: '#555', marginBottom: '2px' }}>Employer NI</div>
             <div style={{ fontWeight: '600' }}>£{formatCurrency(data.employerNationalInsuranceYTD)}</div>
-          </div>
-        </div>
+      </div>
+      </div>
       </div>
 
     </div>
@@ -1901,7 +1901,7 @@ function MyanmarPayrollPreview({ data }: { data: MyanmarPayrollData }) {
       {/* Company Info Bar */}
       <div style={{ background: teal, color: 'white', padding: '8px 24px', fontSize: '11px', fontWeight: '600' }}>
         Hush Healthcare Ltd - Myanmar Division
-      </div>
+        </div>
       <div style={{ padding: '8px 24px', fontSize: '10px', color: '#666', borderBottom: '1px solid #ddd' }}>
         Healthcare Services
       </div>

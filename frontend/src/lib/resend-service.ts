@@ -22,7 +22,7 @@ class ResendService {
 
   constructor() {
     this.apiKey = process.env.RESEND_API_KEY || '';
-    
+
     if (!this.apiKey) {
       console.warn('RESEND_API_KEY not found in environment variables');
     }
@@ -163,7 +163,7 @@ class ResendService {
           <tr>
             <td style="padding: 20px 30px;">
               <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
+          <tr>
                   <td style="background-color: ${teal}; padding: 20px; text-align: center;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
