@@ -501,7 +501,7 @@ export default function ReportsPage() {
                               <td style={{ padding: '10px 12px', fontWeight: 500, color: '#111827' }}>{target.post.title}</td>
                               <td style={{ padding: '10px 12px', color: '#374151' }}>{new Date(target.post.planned_date).toLocaleDateString()}</td>
                               <td style={{ padding: '10px 12px' }}>
-                                <span style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 500, borderRadius: '20px', background: PLATFORM_STATUS_COLORS[target.platform_status]?.bg, color: PLATFORM_STATUS_COLORS[target.platform_status]?.text }}>{target.platform_status}</span>
+                                <span style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 500, borderRadius: '20px', background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f3f4f6', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#6b7280' }}>{target.platform_status}</span>
                               </td>
                               <td style={{ padding: '10px 12px' }}>
                                 {target.permalink ? (
