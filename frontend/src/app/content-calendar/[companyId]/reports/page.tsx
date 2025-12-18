@@ -98,45 +98,16 @@ export default function ReportsPage() {
     const monthStart = getMonthStart(selectedMonth)
     try {
       const { supabase } = await import('@/lib/supabase')
-      
-      const kpiData = {
-        start_followers: kpiForm.start_followers || 0,
-        end_followers: kpiForm.end_followers || 0,
-        net_growth: kpiForm.net_growth || 0,
-        total_posts: kpiForm.total_posts || 0,
-        total_reach: kpiForm.total_reach || 0,
-        total_impressions_views: kpiForm.total_impressions_views || 0,
-        total_engagement_interactions: kpiForm.total_engagement_interactions || 0,
-        notes: kpiForm.notes || null
-      }
-      
-      if (currentKPI) {
-        const { error } = await supabase.from('company_kpi_overview').update(kpiData).eq('id', currentKPI.id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('company_kpi_overview').insert({ 
-          company_id: companyId, 
-          report_month: monthStart, 
-          platform: selectedPlatform, 
-          ...kpiData 
-        })
-        if (error) throw error
-      }
-      setShowKPIModal(false)
-      fetchKPI()
-    } catch (err: any) { 
-      console.error('Save KPI error:', err)
-      alert('Error saving KPI: ' + err.message) 
-    }
+      if (currentKPI) await supabase.from('company_kpi_overview').update({ ...kpiForm }).eq('id', currentKPI.id)
+      else await supabase.from('company_kpi_overview').insert({ company_id: companyId, report_month: monthStart, platform: selectedPlatform, ...kpiForm })
+      setShowKPIModal(false); fetchKPI()
+    } catch (err: any) { alert('Error: ' + err.message) }
   }
 
   const handleSaveMetrics = async () => {
     if (!selectedTarget) return
     try {
       const { supabase } = await import('@/lib/supabase')
-      const existingMetrics = (selectedTarget as any).metrics?.find((m: any) => m.metric_scope === metricsForm.metric_scope)
-      
-      // Prepare data - convert empty strings to null for date fields
       const metricsData = {
         metric_scope: metricsForm.metric_scope,
         range_start: metricsForm.range_start || null,
@@ -152,7 +123,7 @@ export default function ReportsPage() {
         views: metricsForm.views || 0,
         clicks: metricsForm.clicks || 0
       }
-      
+      const existingMetrics = (selectedTarget as any).metrics?.find((m: any) => m.metric_scope === metricsForm.metric_scope)
       if (existingMetrics) {
         const { error } = await supabase.from('content_post_metrics').update(metricsData).eq('id', existingMetrics.id)
         if (error) throw error
@@ -162,10 +133,8 @@ export default function ReportsPage() {
       }
       setShowMetricsModal(false)
       fetchPosts()
-    } catch (err: any) { 
-      console.error('Save metrics error:', err)
-      alert('Error saving metrics: ' + err.message) 
-    }
+      alert('Metrics saved successfully!')
+    } catch (err: any) { alert('Error saving metrics: ' + err.message) }
   }
 
   const openKPIModal = () => {

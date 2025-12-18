@@ -604,26 +604,26 @@ export default function TimelineRoadmapPage() {
         setSuccessMessage('Timeline item updated successfully!');
       } else {
         // CREATE new item
-        const { data, error } = await supabase
-          .from('timeline_items')
+      const { data, error } = await supabase
+        .from('timeline_items')
           .insert([{ ...itemData, created_by_id: parseInt(user?.id?.toString() || '0') }])
-          .select()
-          .single();
+        .select()
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Save checklist items
-        if (checklistItems.length > 0) {
-          const checklistData = checklistItems.map((item, index) => ({
-            timeline_item_id: data.id,
-            item_text: item,
-            is_completed: false,
-            item_order: index
-          }));
+      // Save checklist items
+      if (checklistItems.length > 0) {
+        const checklistData = checklistItems.map((item, index) => ({
+          timeline_item_id: data.id,
+          item_text: item,
+          is_completed: false,
+          item_order: index
+        }));
 
-          await supabase
-            .from('timeline_item_checklist')
-            .insert(checklistData);
+        await supabase
+          .from('timeline_item_checklist')
+          .insert(checklistData);
         }
 
         setSuccessMessage('Timeline item created successfully!');
@@ -2092,36 +2092,36 @@ export default function TimelineRoadmapPage() {
 
                 {/* Progress Bar */}
                 <div style={{background: '#F1F5F9', borderRadius: '12px', padding: '20px', marginBottom: '24px'}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
                     <span style={{fontWeight: '600'}}>Overall Progress</span>
-                    <span style={{fontWeight: '700', color: '#3B82F6'}}>{Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%</span>
-                  </div>
-                  <div style={{width: '100%', height: '24px', background: '#E5E7EB', borderRadius: '12px', overflow: 'hidden'}}>
-                    <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)', transition: 'width 0.3s ease'}} />
-                  </div>
+                  <span style={{fontWeight: '700', color: '#3B82F6'}}>{Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%</span>
                 </div>
+                <div style={{width: '100%', height: '24px', background: '#E5E7EB', borderRadius: '12px', overflow: 'hidden'}}>
+                  <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)', transition: 'width 0.3s ease'}} />
+              </div>
+            </div>
 
-                {/* Budget Overview */}
+            {/* Budget Overview */}
                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px'}}>
-                  <div style={{background: '#EFF6FF', padding: '16px', borderRadius: '8px'}}>
-                    <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Planned Budget</div>
-                    <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>
-                      ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
-                    </div>
-                  </div>
-                  <div style={{background: '#ECFDF5', padding: '16px', borderRadius: '8px'}}>
-                    <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Actual Spending</div>
-                    <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>
-                      ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
-                    </div>
-                  </div>
-                  <div style={{background: '#FEF3C7', padding: '16px', borderRadius: '8px'}}>
-                    <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Variance</div>
-                    <div style={{fontSize: '24px', fontWeight: '700', color: '#F59E0B'}}>
-                      ${Math.abs(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) - timelineItems.reduce((sum, item) => sum + item.planned_budget, 0)).toLocaleString()}
-                    </div>
+                <div style={{background: '#EFF6FF', padding: '16px', borderRadius: '8px'}}>
+                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Planned Budget</div>
+                  <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>
+                    ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
                   </div>
                 </div>
+                <div style={{background: '#ECFDF5', padding: '16px', borderRadius: '8px'}}>
+                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Actual Spending</div>
+                  <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>
+                    ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{background: '#FEF3C7', padding: '16px', borderRadius: '8px'}}>
+                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Variance</div>
+                  <div style={{fontSize: '24px', fontWeight: '700', color: '#F59E0B'}}>
+                    ${Math.abs(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) - timelineItems.reduce((sum, item) => sum + item.planned_budget, 0)).toLocaleString()}
+                  </div>
+                </div>
+              </div>
 
                 {/* Status Distribution */}
                 <div>
@@ -2135,7 +2135,7 @@ export default function TimelineRoadmapPage() {
                           <div style={{fontSize: '24px', fontWeight: '700', color: getStatusColor(status as TimelineItem['status'])}}>{count}</div>
                           <div style={{fontSize: '11px', color: '#64748B', marginTop: '4px', textTransform: 'capitalize'}}>{status.replace('_', ' ')}</div>
                           <div style={{fontSize: '10px', color: getStatusColor(status as TimelineItem['status']), fontWeight: '600'}}>{percentage}%</div>
-                        </div>
+            </div>
                       );
                     })}
                   </div>
@@ -2231,7 +2231,7 @@ export default function TimelineRoadmapPage() {
                   {Array.from(getItemsByPhase().entries()).map(([phase, items]) => {
                     const kpis = calculateKPIs(items);
                     const memberGroups = groupItemsByTeamMember(items);
-                    return (
+                return (
                       <div key={phase} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
                           <h5 style={{fontSize: '18px', fontWeight: '700', color: '#1F2937', margin: 0}}>{phase}</h5>
@@ -2243,8 +2243,8 @@ export default function TimelineRoadmapPage() {
                             >
                               + New Task
                             </button>
-                          </div>
-                        </div>
+                    </div>
+                    </div>
                         
                         {/* Phase KPIs */}
                         <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px', marginBottom: '16px'}}>
@@ -2328,11 +2328,11 @@ export default function TimelineRoadmapPage() {
                               </div>
                             ))}
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
               </>
             )}
 
@@ -2344,7 +2344,7 @@ export default function TimelineRoadmapPage() {
                   {Array.from(getItemsByMonth().entries()).map(([month, items]) => {
                     const kpis = calculateKPIs(items);
                     const memberGroups = groupItemsByTeamMember(items);
-                    return (
+                  return (
                       <div key={month} style={{background: '#F9FAFB', borderRadius: '12px', padding: '20px', border: '2px solid #E5E7EB'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
                           <h5 style={{fontSize: '18px', fontWeight: '700', color: '#1F2937', margin: 0}}>{month}</h5>
@@ -2435,9 +2435,9 @@ export default function TimelineRoadmapPage() {
                             ))}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
                 </div>
               </>
             )}
@@ -2463,9 +2463,9 @@ export default function TimelineRoadmapPage() {
                             >
                               + New Task
                             </button>
-                          </div>
-                        </div>
-                        
+              </div>
+            </div>
+            
                         {/* Compact KPIs */}
                         <div style={{display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap', padding: '10px', background: 'white', borderRadius: '8px'}}>
                           <span style={{fontSize: '12px'}}><strong style={{color: '#10B981'}}>{kpis.completedItems}</strong> completed</span>

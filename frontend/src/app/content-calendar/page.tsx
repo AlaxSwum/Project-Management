@@ -42,11 +42,7 @@ export default function ContentCalendarPage() {
     setIsLoading(true)
     try {
       const { supabase } = await import('@/lib/supabase')
-      const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('is_active', true)
-        .order('name')
+      const { data, error } = await supabase.from('companies').select('*').eq('is_active', true).order('name')
       if (error) throw error
       setCompanies(data || [])
     } catch (err) {
@@ -70,11 +66,7 @@ export default function ContentCalendarPage() {
   const fetchMembers = useCallback(async (companyId: string) => {
     try {
       const { supabase } = await import('@/lib/supabase')
-      const { data, error } = await supabase
-        .from('company_members')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('created_at')
+      const { data, error } = await supabase.from('company_members').select('*').eq('company_id', companyId).order('created_at')
       if (error) throw error
       setMembers(data || [])
     } catch (err) {
@@ -97,26 +89,9 @@ export default function ContentCalendarPage() {
     }
     try {
       const { supabase } = await import('@/lib/supabase')
-      const { data, error } = await supabase
-        .from('companies')
-        .insert({
-          name: companyForm.name,
-          description: companyForm.description,
-          created_by: String(user?.id)
-        })
-        .select()
-        .single()
+      const { data, error } = await supabase.from('companies').insert({ name: companyForm.name, description: companyForm.description, created_by: String(user?.id) }).select().single()
       if (error) throw error
-      
-      await supabase.from('company_members').insert({
-        company_id: data.id,
-        user_id: String(user?.id),
-        user_name: user?.name || user?.email,
-        user_email: user?.email,
-        role: 'OWNER',
-        can_manage_members: true
-      })
-      
+      await supabase.from('company_members').insert({ company_id: data.id, user_id: String(user?.id), user_name: user?.name || user?.email, user_email: user?.email, role: 'OWNER', can_manage_members: true })
       setCompanies(prev => [...prev, data])
       setShowCreateModal(false)
       setCompanyForm({ name: '', description: '' })
@@ -143,18 +118,9 @@ export default function ContentCalendarPage() {
     }
     const selectedUser = teamMembers.find(m => String(m.id) === memberForm.user_id)
     if (!selectedUser) return
-    
     try {
       const { supabase } = await import('@/lib/supabase')
-      const { error } = await supabase.from('company_members').insert({
-        company_id: selectedCompany.id,
-        user_id: memberForm.user_id,
-        user_name: selectedUser.name,
-        user_email: selectedUser.email,
-        role: memberForm.role,
-        team_function: memberForm.team_function || null,
-        can_manage_members: memberForm.role === 'OWNER' || memberForm.role === 'MANAGER'
-      })
+      const { error } = await supabase.from('company_members').insert({ company_id: selectedCompany.id, user_id: memberForm.user_id, user_name: selectedUser.name, user_email: selectedUser.email, role: memberForm.role, team_function: memberForm.team_function || null, can_manage_members: memberForm.role === 'OWNER' || memberForm.role === 'MANAGER' })
       if (error) throw error
       fetchMembers(selectedCompany.id)
       setMemberForm({ user_id: '', role: 'EDITOR', team_function: '' })
@@ -180,10 +146,7 @@ export default function ContentCalendarPage() {
     setShowMembersModal(true)
   }
 
-  const filteredCompanies = companies.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (c.description && c.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+  const filteredCompanies = companies.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || (c.description && c.description.toLowerCase().includes(searchQuery.toLowerCase())))
 
   if (authLoading) {
     return (
@@ -197,7 +160,6 @@ export default function ContentCalendarPage() {
   return (
     <div>
       <MobileHeader title="Content Calendar" isMobile={isMobile} />
-      
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg); } }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #F5F5ED; }
@@ -240,7 +202,6 @@ export default function ContentCalendarPage() {
 
       <div className="cc-container">
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-
         <main className="cc-main">
           <header className="cc-header">
             <h1 className="cc-title">Content Calendar</h1>
@@ -263,12 +224,8 @@ export default function ContentCalendarPage() {
                   <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>
-                {searchQuery ? 'No companies found' : 'No companies yet'}
-              </h3>
-              <p style={{ color: '#666', margin: '0 0 1.75rem 0' }}>
-                {searchQuery ? 'Try a different search term' : 'Create your first company to start managing content'}
-              </p>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{searchQuery ? 'No companies found' : 'No companies yet'}</h3>
+              <p style={{ color: '#666', margin: '0 0 1.75rem 0' }}>{searchQuery ? 'Try a different search term' : 'Create your first company to start managing content'}</p>
               {!searchQuery && <button onClick={() => setShowCreateModal(true)} className="cc-btn-primary">+ Create Company</button>}
             </div>
           ) : (
@@ -292,22 +249,18 @@ export default function ContentCalendarPage() {
         </main>
       </div>
 
-      {/* Create Company Modal */}
       {showCreateModal && (
         <div className="cc-modal" onClick={() => setShowCreateModal(false)}>
           <div className="cc-modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 className="cc-modal-title">Create Company</h3>
-            
             <div className="cc-form-group">
               <label className="cc-label">Company Name *</label>
               <input type="text" value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} placeholder="Enter company name" className="cc-input" />
             </div>
-
             <div className="cc-form-group">
               <label className="cc-label">Description</label>
               <textarea value={companyForm.description} onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })} placeholder="Optional description" rows={3} className="cc-textarea" />
             </div>
-
             <div className="cc-modal-footer">
               <button onClick={() => setShowCreateModal(false)} className="cc-btn-card cc-btn-secondary">Cancel</button>
               <button onClick={handleCreateCompany} className="cc-btn-primary">Create Company</button>
@@ -316,13 +269,11 @@ export default function ContentCalendarPage() {
         </div>
       )}
 
-      {/* Members Modal */}
       {showMembersModal && selectedCompany && (
         <div className="cc-modal" onClick={() => setShowMembersModal(false)}>
           <div className="cc-modal-content" style={{ maxWidth: '640px', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <h3 className="cc-modal-title">Team Members</h3>
             <p style={{ fontSize: '0.9rem', color: '#666', margin: '-1rem 0 1.5rem 0' }}>{selectedCompany.name}</p>
-
             <div style={{ background: '#fafafa', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
               <h4 style={{ fontSize: '0.9rem', fontWeight: 500, color: '#333', margin: '0 0 1rem 0' }}>Add Member</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.75rem' }}>
@@ -336,7 +287,6 @@ export default function ContentCalendarPage() {
                 <button onClick={handleAddMember} className="cc-btn-primary" style={{ padding: '0.75rem 1.5rem' }}>Add</button>
               </div>
             </div>
-
             {members.length === 0 ? (
               <p style={{ color: '#666', fontSize: '0.9rem', textAlign: 'center', padding: '1.5rem' }}>No members yet</p>
             ) : (
@@ -355,7 +305,6 @@ export default function ContentCalendarPage() {
                 ))}
               </div>
             )}
-
             <div className="cc-modal-footer">
               <button onClick={() => setShowMembersModal(false)} className="cc-btn-card cc-btn-secondary">Close</button>
             </div>

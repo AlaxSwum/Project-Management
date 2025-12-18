@@ -3,7 +3,7 @@
 export type CompanyRole = 'OWNER' | 'MANAGER' | 'EDITOR' | 'VIEWER' | 'ANALYST';
 export type TeamFunction = 'marketing_manager' | 'content_writer' | 'designer' | 'video_editor' | 'analyst' | null;
 export type ContentType = 'static' | 'photo' | 'reel' | 'video' | 'story' | 'carousel' | 'article';
-export type PostStatus = 'idea' | 'draft' | 'design' | 'review' | 'approved' | 'scheduled' | 'published' | 'reported';
+export type PostStatus = 'idea' | 'draft' | 'assigned' | 'in_progress' | 'review' | 'approved' | 'scheduled' | 'published' | 'reported';
 export type Platform = 'facebook' | 'instagram' | 'tiktok' | 'linkedin';
 export type PlatformStatus = 'planned' | 'scheduled' | 'published' | 'not_posting';
 export type MetricScope = 'lifetime' | 'week' | 'month' | 'custom';
@@ -183,7 +183,7 @@ export interface KPIFormData {
 // Constants
 export const PLATFORMS: Platform[] = ['facebook', 'instagram', 'tiktok', 'linkedin'];
 export const CONTENT_TYPES: ContentType[] = ['static', 'photo', 'reel', 'video', 'story', 'carousel', 'article'];
-export const POST_STATUSES: PostStatus[] = ['idea', 'draft', 'design', 'review', 'approved', 'scheduled', 'published', 'reported'];
+export const POST_STATUSES: PostStatus[] = ['idea', 'draft', 'assigned', 'in_progress', 'review', 'approved', 'scheduled', 'published', 'reported'];
 export const PLATFORM_STATUSES: PlatformStatus[] = ['planned', 'scheduled', 'published', 'not_posting'];
 export const COMPANY_ROLES: CompanyRole[] = ['OWNER', 'MANAGER', 'EDITOR', 'VIEWER', 'ANALYST'];
 export const TEAM_FUNCTIONS: TeamFunction[] = ['marketing_manager', 'content_writer', 'designer', 'video_editor', 'analyst'];
@@ -191,7 +191,8 @@ export const TEAM_FUNCTIONS: TeamFunction[] = ['marketing_manager', 'content_wri
 export const STATUS_COLORS: Record<PostStatus, { bg: string; text: string }> = {
   idea: { bg: '#F3E8FF', text: '#9333EA' },
   draft: { bg: '#F3F4F6', text: '#6B7280' },
-  design: { bg: '#FEF3C7', text: '#D97706' },
+  assigned: { bg: '#FEF3C7', text: '#D97706' },
+  in_progress: { bg: '#FED7AA', text: '#EA580C' },
   review: { bg: '#DBEAFE', text: '#3B82F6' },
   approved: { bg: '#D1FAE5', text: '#10B981' },
   scheduled: { bg: '#E0E7FF', text: '#4F46E5' },
