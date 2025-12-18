@@ -14,7 +14,7 @@ export default function ReportsPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const params = useParams()
-  const companyId = params.companyId as string
+  const companyId = params?.companyId as string || ''
 
   const [isMobile, setIsMobile] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
