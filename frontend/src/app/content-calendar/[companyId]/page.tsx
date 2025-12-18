@@ -32,27 +32,10 @@ export default function CompanyCalendarPage() {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   
   const [postForm, setPostForm] = useState({
-    title: '',
-    description: '',
-    content_type: 'static' as ContentType,
-    category: '',
-    status: 'draft' as PostStatus,
-    planned_date: new Date().toISOString().split('T')[0],
-    planned_time: '',
-    content_deadline: '',
-    graphic_deadline: '',
-    owner_id: '',
-    owner_name: '',
-    designer_id: '',
-    designer_name: '',
-    hashtags: '',
-    visual_concept: '',
-    key_points: '',
-    media_buying_notes: '',
-    media_budget: 0,
-    content_text: '',
-    drive_link: '',
-    platforms: ['facebook'] as Platform[]
+    title: '', description: '', content_type: 'static' as ContentType, category: '', status: 'draft' as PostStatus,
+    planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '',
+    owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '',
+    media_buying_notes: '', media_budget: 0, content_text: '', drive_link: '', platforms: ['facebook'] as Platform[]
   })
 
   useEffect(() => {
@@ -62,11 +45,7 @@ export default function CompanyCalendarPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login')
-    }
-  }, [authLoading, isAuthenticated, router])
+  useEffect(() => { if (!authLoading && !isAuthenticated) router.push('/login') }, [authLoading, isAuthenticated, router])
 
   const fetchCompany = useCallback(async () => {
     if (!companyId) return
@@ -75,9 +54,7 @@ export default function CompanyCalendarPage() {
       const { data, error } = await supabase.from('companies').select('*').eq('id', companyId).single()
       if (error) throw error
       setCompany(data)
-    } catch (err) {
-      router.push('/content-calendar')
-    }
+    } catch (err) { router.push('/content-calendar') }
   }, [companyId, router])
 
   const fetchMembers = useCallback(async () => {
@@ -86,9 +63,7 @@ export default function CompanyCalendarPage() {
       const { supabase } = await import('@/lib/supabase')
       const { data } = await supabase.from('company_members').select('*').eq('company_id', companyId)
       setMembers(data || [])
-    } catch (err) {
-      console.error('Error:', err)
-    }
+    } catch (err) { console.error('Error:', err) }
   }, [companyId])
 
   const fetchPosts = useCallback(async () => {
@@ -96,95 +71,25 @@ export default function CompanyCalendarPage() {
     setIsLoading(true)
     try {
       const { supabase } = await import('@/lib/supabase')
-      const { data: postsData, error } = await supabase
-        .from('content_posts')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('planned_date', { ascending: true })
-      
+      const { data: postsData, error } = await supabase.from('content_posts').select('*').eq('company_id', companyId).order('planned_date', { ascending: true })
       if (error) throw error
-      
       const postsWithTargets = await Promise.all((postsData || []).map(async (post) => {
         const { data: targets } = await supabase.from('content_post_targets').select('*').eq('post_id', post.id)
         return { ...post, targets: targets || [] }
       }))
-      
       setPosts(postsWithTargets)
-    } catch (err) {
-      console.error('Error:', err)
-      setPosts([])
-    } finally {
-      setIsLoading(false)
-    }
+    } catch (err) { console.error('Error:', err); setPosts([]) } finally { setIsLoading(false) }
   }, [companyId])
 
-  useEffect(() => {
-    if (user?.id && companyId) {
-      fetchCompany()
-      fetchMembers()
-      fetchPosts()
-    }
-  }, [user?.id, companyId, fetchCompany, fetchMembers, fetchPosts])
+  useEffect(() => { if (user?.id && companyId) { fetchCompany(); fetchMembers(); fetchPosts() } }, [user?.id, companyId, fetchCompany, fetchMembers, fetchPosts])
 
-  const resetForm = () => {
-    setPostForm({
-      title: '',
-      description: '',
-      content_type: 'static',
-      category: '',
-      status: 'draft',
-      planned_date: new Date().toISOString().split('T')[0],
-      planned_time: '',
-      content_deadline: '',
-      graphic_deadline: '',
-      owner_id: '',
-      owner_name: '',
-      designer_id: '',
-      designer_name: '',
-      hashtags: '',
-      visual_concept: '',
-      key_points: '',
-      media_buying_notes: '',
-      media_budget: 0,
-      content_text: '',
-      drive_link: '',
-      platforms: ['facebook']
-    })
-  }
+  const resetForm = () => setPostForm({ title: '', description: '', content_type: 'static', category: '', status: 'draft', planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '', owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '', media_buying_notes: '', media_budget: 0, content_text: '', drive_link: '', platforms: ['facebook'] })
 
-  const openNewPost = (date?: string) => {
-    resetForm()
-    if (date) setPostForm(prev => ({ ...prev, planned_date: date }))
-    setSelectedPost(null)
-    setIsEditing(true)
-    setShowPostDrawer(true)
-  }
+  const openNewPost = (date?: string) => { resetForm(); if (date) setPostForm(prev => ({ ...prev, planned_date: date })); setSelectedPost(null); setIsEditing(true); setShowPostDrawer(true) }
 
   const openPostDetails = (post: ContentPost) => {
     setSelectedPost(post)
-    setPostForm({
-      title: post.title,
-      description: post.description || '',
-      content_type: post.content_type,
-      category: post.category || '',
-      status: post.status,
-      planned_date: post.planned_date,
-      planned_time: post.planned_time || '',
-      content_deadline: post.content_deadline || '',
-      graphic_deadline: post.graphic_deadline || '',
-      owner_id: post.owner_id || '',
-      owner_name: post.owner_name || '',
-      designer_id: post.designer_id || '',
-      designer_name: post.designer_name || '',
-      hashtags: post.hashtags || '',
-      visual_concept: post.visual_concept || '',
-      key_points: post.key_points || '',
-      media_buying_notes: post.media_buying_notes || '',
-      media_budget: post.media_budget || 0,
-      content_text: (post as any).content_text || '',
-      drive_link: (post as any).drive_link || '',
-      platforms: post.targets?.map(t => t.platform) || ['facebook']
-    })
+    setPostForm({ title: post.title, description: post.description || '', content_type: post.content_type, category: post.category || '', status: post.status, planned_date: post.planned_date, planned_time: post.planned_time || '', content_deadline: post.content_deadline || '', graphic_deadline: post.graphic_deadline || '', owner_id: post.owner_id || '', owner_name: post.owner_name || '', designer_id: post.designer_id || '', designer_name: post.designer_name || '', hashtags: post.hashtags || '', visual_concept: post.visual_concept || '', key_points: post.key_points || '', media_buying_notes: post.media_buying_notes || '', media_budget: post.media_budget || 0, content_text: (post as any).content_text || '', drive_link: (post as any).drive_link || '', platforms: post.targets?.map(t => t.platform) || ['facebook'] })
     setIsEditing(false)
     setShowPostDrawer(true)
   }
@@ -192,515 +97,343 @@ export default function CompanyCalendarPage() {
   const handleSavePost = async () => {
     if (!postForm.title.trim()) { alert('Enter post title'); return }
     if (postForm.platforms.length === 0) { alert('Select at least one platform'); return }
-
     try {
       const { supabase } = await import('@/lib/supabase')
-      
-      const postData = {
-        title: postForm.title,
-        description: postForm.description,
-        content_type: postForm.content_type,
-        category: postForm.category,
-        status: postForm.status,
-        planned_date: postForm.planned_date,
-        planned_time: postForm.planned_time || null,
-        content_deadline: postForm.content_deadline || null,
-        graphic_deadline: postForm.graphic_deadline || null,
-        owner_id: postForm.owner_id || null,
-        owner_name: postForm.owner_name || null,
-        designer_id: postForm.designer_id || null,
-        designer_name: postForm.designer_name || null,
-        hashtags: postForm.hashtags,
-        visual_concept: postForm.visual_concept,
-        key_points: postForm.key_points,
-        media_buying_notes: postForm.media_buying_notes,
-        media_budget: postForm.media_budget
-      }
-      
+      const postData = { title: postForm.title, description: postForm.description, content_type: postForm.content_type, category: postForm.category, status: postForm.status, planned_date: postForm.planned_date, planned_time: postForm.planned_time || null, content_deadline: postForm.content_deadline || null, graphic_deadline: postForm.graphic_deadline || null, owner_id: postForm.owner_id || null, owner_name: postForm.owner_name || null, designer_id: postForm.designer_id || null, designer_name: postForm.designer_name || null, hashtags: postForm.hashtags, visual_concept: postForm.visual_concept, key_points: postForm.key_points, media_buying_notes: postForm.media_buying_notes, media_budget: postForm.media_budget }
       if (selectedPost) {
         const { error } = await supabase.from('content_posts').update(postData).eq('id', selectedPost.id)
         if (error) throw error
-        
         await supabase.from('content_post_targets').delete().eq('post_id', selectedPost.id)
-        
         for (const platform of postForm.platforms) {
           const existing = selectedPost.targets?.find(t => t.platform === platform)
-          await supabase.from('content_post_targets').insert({
-            post_id: selectedPost.id,
-            platform,
-            platform_status: existing?.platform_status || 'planned',
-            publish_at: existing?.publish_at || null,
-            permalink: existing?.permalink || null,
-            manual_posted_by: existing?.manual_posted_by || null,
-            manual_posted_by_name: existing?.manual_posted_by_name || null,
-            manual_posted_at: existing?.manual_posted_at || null,
-            notes: existing?.notes || null
-          })
+          await supabase.from('content_post_targets').insert({ post_id: selectedPost.id, platform, platform_status: existing?.platform_status || 'planned', publish_at: existing?.publish_at || null, permalink: existing?.permalink || null, manual_posted_by: existing?.manual_posted_by || null, manual_posted_by_name: existing?.manual_posted_by_name || null, manual_posted_at: existing?.manual_posted_at || null, notes: existing?.notes || null })
         }
       } else {
-        const { data: newPost, error } = await supabase
-          .from('content_posts')
-          .insert({ ...postData, company_id: companyId, created_by: String(user?.id) })
-          .select()
-          .single()
+        const { data: newPost, error } = await supabase.from('content_posts').insert({ ...postData, company_id: companyId, created_by: String(user?.id) }).select().single()
         if (error) throw error
-        
-        for (const platform of postForm.platforms) {
-          await supabase.from('content_post_targets').insert({
-            post_id: newPost.id,
-            platform,
-            platform_status: 'planned'
-          })
-        }
+        for (const platform of postForm.platforms) await supabase.from('content_post_targets').insert({ post_id: newPost.id, platform, platform_status: 'planned' })
       }
-
-      setShowPostDrawer(false)
-      setSelectedPost(null)
-      setIsEditing(false)
-      fetchPosts()
-    } catch (err: any) {
-      alert('Error: ' + err.message)
-    }
+      setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false); fetchPosts()
+    } catch (err: any) { alert('Error: ' + err.message) }
   }
 
-  const handleDeletePost = async () => {
-    if (!selectedPost) return
-    if (!confirm('Delete this post?')) return
-    
-    try {
-      const { supabase } = await import('@/lib/supabase')
-      await supabase.from('content_posts').delete().eq('id', selectedPost.id)
-      setShowPostDrawer(false)
-      setSelectedPost(null)
-      fetchPosts()
-    } catch (err: any) {
-      alert('Error: ' + err.message)
-    }
-  }
+  const handleDeletePost = async () => { if (!selectedPost || !confirm('Delete this post?')) return; try { const { supabase } = await import('@/lib/supabase'); await supabase.from('content_posts').delete().eq('id', selectedPost.id); setShowPostDrawer(false); setSelectedPost(null); fetchPosts() } catch (err: any) { alert('Error: ' + err.message) } }
 
   const handleUpdateTarget = async (targetId: string, updates: Partial<ContentPostTarget>) => {
     try {
       const { supabase } = await import('@/lib/supabase')
       await supabase.from('content_post_targets').update(updates).eq('id', targetId)
       fetchPosts()
-      
       if (selectedPost) {
         const { data } = await supabase.from('content_posts').select('*').eq('id', selectedPost.id).single()
-        if (data) {
-          const { data: targets } = await supabase.from('content_post_targets').select('*').eq('post_id', data.id)
-          setSelectedPost({ ...data, targets: targets || [] })
-        }
+        if (data) { const { data: targets } = await supabase.from('content_post_targets').select('*').eq('post_id', data.id); setSelectedPost({ ...data, targets: targets || [] }) }
       }
-    } catch (err: any) {
-      alert('Error: ' + err.message)
-    }
+    } catch (err: any) { alert('Error: ' + err.message) }
   }
 
-  const handleMarkAsPublished = async (target: ContentPostTarget) => {
-    await handleUpdateTarget(target.id, {
-      platform_status: 'published',
-      manual_posted_by: String(user?.id),
-      manual_posted_by_name: user?.name || user?.email,
-      manual_posted_at: new Date().toISOString()
-    })
-  }
+  const handleMarkAsPublished = async (target: ContentPostTarget) => { await handleUpdateTarget(target.id, { platform_status: 'published', manual_posted_by: String(user?.id), manual_posted_by_name: user?.name || user?.email, manual_posted_at: new Date().toISOString() }) }
 
-  const copyToClipboard = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedField(field)
-      setTimeout(() => setCopiedField(null), 2000)
-    } catch (err) {
-      alert('Failed to copy')
-    }
-  }
+  const copyToClipboard = async (text: string, field: string) => { try { await navigator.clipboard.writeText(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000) } catch { alert('Failed to copy') } }
 
   const calendarDays = useMemo(() => {
-    const year = currentMonth.getFullYear()
-    const month = currentMonth.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const startOffset = firstDay.getDay()
-    const days: { date: Date; isCurrentMonth: boolean; isToday: boolean }[] = []
+    const year = currentMonth.getFullYear(), month = currentMonth.getMonth()
+    const firstDay = new Date(year, month, 1), lastDay = new Date(year, month + 1, 0)
+    const startOffset = firstDay.getDay(), days: { date: Date; isCurrentMonth: boolean; isToday: boolean }[] = []
     const today = new Date()
-
-    for (let i = startOffset - 1; i >= 0; i--) {
-      days.push({ date: new Date(year, month, -i), isCurrentMonth: false, isToday: false })
-    }
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      const date = new Date(year, month, i)
-      days.push({ date, isCurrentMonth: true, isToday: date.toDateString() === today.toDateString() })
-    }
-    while (days.length < 42) {
-      days.push({ date: new Date(year, month + 1, days.length - lastDay.getDate() - startOffset + 1), isCurrentMonth: false, isToday: false })
-    }
+    for (let i = startOffset - 1; i >= 0; i--) days.push({ date: new Date(year, month, -i), isCurrentMonth: false, isToday: false })
+    for (let i = 1; i <= lastDay.getDate(); i++) { const date = new Date(year, month, i); days.push({ date, isCurrentMonth: true, isToday: date.toDateString() === today.toDateString() }) }
+    while (days.length < 42) days.push({ date: new Date(year, month + 1, days.length - lastDay.getDate() - startOffset + 1), isCurrentMonth: false, isToday: false })
     return days
   }, [currentMonth])
 
-  const postsByDate = useMemo(() => {
-    const map: Record<string, ContentPost[]> = {}
-    posts.forEach(post => {
-      const key = new Date(post.planned_date).toDateString()
-      if (!map[key]) map[key] = []
-      map[key].push(post)
-    })
-    return map
-  }, [posts])
+  const postsByDate = useMemo(() => { const map: Record<string, ContentPost[]> = {}; posts.forEach(post => { const key = new Date(post.planned_date).toDateString(); if (!map[key]) map[key] = []; map[key].push(post) }); return map }, [posts])
 
-  if (authLoading || !company) {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
-        <div style={{ width: '48px', height: '48px', border: '4px solid #e2e8f0', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (authLoading || !company) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
+      <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
 
   const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', fontFamily: 'Inter, sans-serif' }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+    <div>
+      <MobileHeader title={company.name} isMobile={isMobile} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes spin { to { transform: rotate(360deg); } }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #F5F5ED; }
+        .cal-container { min-height: 100vh; display: flex; background: #F5F5ED; }
+        .cal-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; display: flex; flex-direction: column; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; }
+        .cal-header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .cal-nav { display: flex; align-items: center; gap: 1rem; }
+        .cal-back { padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; transition: all 0.2s; }
+        .cal-back:hover { border-color: #C483D9; }
+        .cal-title { font-size: 1.5rem; font-weight: 400; color: #1a1a1a; margin: 0; }
+        .cal-subtitle { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0 0; }
+        .cal-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .cal-toggle { display: flex; background: #fff; border-radius: 10px; padding: 4px; border: 1px solid #e8e8e8; }
+        .cal-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
+        .cal-toggle-btn.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
+        .cal-btn-secondary { padding: 0.625rem 1.25rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; transition: all 0.2s; }
+        .cal-btn-secondary:hover { border-color: #C483D9; }
+        .cal-btn-primary { padding: 0.625rem 1.5rem; font-size: 0.9rem; font-weight: 500; border-radius: 10px; border: none; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(196, 131, 217, 0.3); transition: all 0.2s; }
+        .cal-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196, 131, 217, 0.4); }
+        .cal-content { flex: 1; display: flex; overflow: hidden; padding: 0 2rem 2rem; }
+        .cal-left { flex: ${showPostDrawer ? '0 0 60%' : '1'}; overflow: auto; transition: flex 0.3s; }
+        .cal-calendar { background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #e8e8e8; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        .cal-cal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; }
+        .cal-month { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
+        .cal-cal-nav { display: flex; gap: 0.5rem; }
+        .cal-cal-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; transition: all 0.2s; }
+        .cal-cal-btn:hover { border-color: #C483D9; }
+        .cal-days-header { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #f0f0f0; }
+        .cal-day-header { padding: 0.75rem 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cal-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .cal-day { min-height: 100px; padding: 0.5rem; border-bottom: 1px solid #f5f5f5; border-right: 1px solid #f5f5f5; cursor: pointer; transition: background 0.2s; }
+        .cal-day:hover { background: #fafafa; }
+        .cal-day.other { background: #fafafa; }
+        .cal-day-num { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.375rem; color: #1a1a1a; }
+        .cal-day-num.other { color: #bbb; }
+        .cal-day-num.today { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
+        .cal-post { font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 500; transition: transform 0.2s; }
+        .cal-post:hover { transform: scale(1.02); }
+        .cal-more { font-size: 0.65rem; color: #666; text-align: center; font-weight: 500; }
+        .cal-drawer { width: 40%; min-width: 400px; background: #fff; border-left: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
+        .cal-drawer-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+        .cal-drawer-title { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
+        .cal-drawer-close { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; padding: 0.25rem; line-height: 1; }
+        .cal-drawer-body { flex: 1; overflow: auto; padding: 1.5rem; }
+        .cal-drawer-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; gap: 0.75rem; background: #fafafa; }
+        .cal-form-group { margin-bottom: 1.25rem; }
+        .cal-label { display: block; font-size: 0.85rem; font-weight: 500; color: #333; margin-bottom: 0.5rem; }
+        .cal-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: border-color 0.2s; }
+        .cal-input:focus { border-color: #C483D9; }
+        .cal-textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; resize: none; box-sizing: border-box; outline: none; }
+        .cal-textarea:focus { border-color: #C483D9; }
+        .cal-platforms { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .cal-platform-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; transition: all 0.2s; text-transform: capitalize; }
+        .cal-platform-btn.active { border-width: 2px; font-weight: 500; }
+        .cal-copy-section { background: #f0fff4; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #c6f6d5; }
+        .cal-copy-title { font-size: 0.9rem; font-weight: 600; color: #22543d; margin: 0 0 1rem 0; }
+        .cal-copy-item { margin-bottom: 1rem; }
+        .cal-copy-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+        .cal-copy-item-label { font-size: 0.8rem; font-weight: 500; color: #276749; }
+        .cal-copy-btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border: none; border-radius: 6px; background: #48bb78; color: #fff; cursor: pointer; transition: background 0.2s; }
+        .cal-copy-btn:hover { background: #38a169; }
+        .cal-copy-btn.copied { background: #2f855a; }
+        .cal-copy-content { background: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: #1a1a1a; line-height: 1.5; border: 1px solid #c6f6d5; }
+        .cal-target { background: #fafafa; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #f0f0f0; }
+        .cal-target-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .cal-target-platform { display: flex; align-items: center; gap: 0.5rem; }
+        .cal-target-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .cal-target-name { font-weight: 500; text-transform: capitalize; color: #1a1a1a; }
+        .cal-target-status { padding: 0.25rem 0.75rem; font-size: 0.7rem; font-weight: 500; border-radius: 20px; }
+        .cal-target-select { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; outline: none; }
+        .cal-target-input { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; box-sizing: border-box; outline: none; }
+        .cal-target-publish-btn { width: 100%; padding: 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
+        .cal-target-published { font-size: 0.8rem; color: #666; margin-top: 0.75rem; padding: 0.625rem; background: #fff; border-radius: 6px; }
+        .cal-sheet { background: #fff; border-radius: 20px; overflow: auto; border: 1px solid #e8e8e8; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        .cal-table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 0.85rem; }
+        .cal-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; background: #fafafa; }
+        .cal-table td { padding: 1rem; border-bottom: 1px solid #f5f5f5; }
+        .cal-table tr:hover { background: #fafafa; cursor: pointer; }
+        .cal-status-badge { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 20px; }
+        .cal-empty { padding: 4rem 1.5rem; text-align: center; }
+        .cal-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #f0e6f5 0%, #e6f0ff 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+      `}} />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: isMobile ? 0 : '256px' }}>
-        {isMobile && <MobileHeader title={company.name} isMobile={isMobile} />}
+      <div className="cal-container">
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
 
-        {/* Header */}
-        <header style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', padding: '16px 32px', color: '#fff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <button onClick={() => router.push('/content-calendar')} style={{ padding: '10px 16px', fontSize: '14px', fontWeight: 500, border: '2px solid rgba(255,255,255,0.3)', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
-                Back
-              </button>
+        <main className="cal-main">
+          <header className="cal-header">
+            <div className="cal-nav">
+              <button onClick={() => router.push('/content-calendar')} className="cal-back">Back</button>
               <div>
-                <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{company.name}</h1>
-                <p style={{ fontSize: '13px', opacity: 0.8, margin: 0 }}>Content Calendar</p>
+                <h1 className="cal-title">{company.name}</h1>
+                <p className="cal-subtitle">Content Calendar</p>
               </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '4px' }}>
+            <div className="cal-actions">
+              <div className="cal-toggle">
                 {(['calendar', 'sheet'] as const).map(mode => (
-                  <button key={mode} onClick={() => setViewMode(mode)} style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 600, borderRadius: '8px', border: 'none', cursor: 'pointer', background: viewMode === mode ? '#fff' : 'transparent', color: viewMode === mode ? '#4f46e5' : '#fff', textTransform: 'capitalize', transition: 'all 0.2s' }}>
-                    {mode}
-                  </button>
+                  <button key={mode} onClick={() => setViewMode(mode)} className={`cal-toggle-btn ${viewMode === mode ? 'active' : ''}`}>{mode}</button>
                 ))}
               </div>
-              
-              <button onClick={() => router.push(`/content-calendar/${companyId}/reports`)} style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 600, borderRadius: '10px', border: '2px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer' }}>
-                Reports
-              </button>
-
-              <button onClick={() => openNewPost()} style={{ padding: '10px 24px', fontSize: '14px', fontWeight: 600, borderRadius: '10px', border: 'none', background: '#fff', color: '#4f46e5', cursor: 'pointer', boxShadow: '0 4px 14px rgba(0,0,0,0.15)' }}>
-                + New Post
-              </button>
+              <button onClick={() => router.push(`/content-calendar/${companyId}/reports`)} className="cal-btn-secondary">Reports</button>
+              <button onClick={() => openNewPost()} className="cal-btn-primary">+ New Post</button>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Main Content Area */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Left: Calendar/Sheet */}
-          <div style={{ flex: showPostDrawer ? '0 0 60%' : 1, padding: '24px', overflow: 'auto', transition: 'flex 0.3s' }}>
-            {viewMode === 'calendar' ? (
-              <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-                  <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', margin: 0 }}>{monthName}</h2>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setCurrentMonth(new Date())} style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 500, border: '2px solid #e2e8f0', borderRadius: '8px', background: '#fff', cursor: 'pointer', color: '#475569' }}>Today</button>
-                    <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} style={{ padding: '8px 12px', fontSize: '13px', border: '2px solid #e2e8f0', borderRadius: '8px', background: '#fff', cursor: 'pointer', color: '#475569' }}>Prev</button>
-                    <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} style={{ padding: '8px 12px', fontSize: '13px', border: '2px solid #e2e8f0', borderRadius: '8px', background: '#fff', cursor: 'pointer', color: '#475569' }}>Next</button>
+          <div className="cal-content">
+            <div className="cal-left">
+              {viewMode === 'calendar' ? (
+                <div className="cal-calendar">
+                  <div className="cal-cal-header">
+                    <h2 className="cal-month">{monthName}</h2>
+                    <div className="cal-cal-nav">
+                      <button onClick={() => setCurrentMonth(new Date())} className="cal-cal-btn">Today</button>
+                      <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="cal-cal-btn">Prev</button>
+                      <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="cal-cal-btn">Next</button>
+                    </div>
+                  </div>
+                  <div className="cal-days-header">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="cal-day-header">{d}</div>)}
+                  </div>
+                  <div className="cal-days-grid">
+                    {calendarDays.map((day, idx) => {
+                      const dayPosts = postsByDate[day.date.toDateString()] || []
+                      const dateStr = day.date.toISOString().split('T')[0]
+                      return (
+                        <div key={idx} onClick={() => openNewPost(dateStr)} className={`cal-day ${!day.isCurrentMonth ? 'other' : ''}`}>
+                          <div className={`cal-day-num ${!day.isCurrentMonth ? 'other' : ''} ${day.isToday ? 'today' : ''}`}>{day.date.getDate()}</div>
+                          {dayPosts.slice(0, 3).map(post => (
+                            <div key={post.id} onClick={(e) => { e.stopPropagation(); openPostDetails(post) }} className="cal-post" style={{ background: STATUS_COLORS[post.status]?.bg, color: STATUS_COLORS[post.status]?.text }}>{post.title}</div>
+                          ))}
+                          {dayPosts.length > 3 && <div className="cal-more">+{dayPosts.length - 3} more</div>}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #e2e8f0' }}>
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                    <div key={d} style={{ padding: '12px 8px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{d}</div>
-                  ))}
+              ) : (
+                <div className="cal-sheet">
+                  {posts.length === 0 ? (
+                    <div className="cal-empty">
+                      <div className="cal-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C483D9" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg></div>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.5rem 0' }}>No posts yet</h3>
+                      <p style={{ color: '#666' }}>Click "+ New Post" to create content</p>
+                    </div>
+                  ) : (
+                    <table className="cal-table">
+                      <thead><tr>{['Title', 'Type', 'Date', 'Platforms', 'Status', 'Owner'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                      <tbody>
+                        {posts.map(post => (
+                          <tr key={post.id} onClick={() => openPostDetails(post)}>
+                            <td style={{ fontWeight: 500, color: '#1a1a1a' }}>{post.title}</td>
+                            <td style={{ color: '#666' }}>{post.content_type}</td>
+                            <td style={{ color: '#666' }}>{new Date(post.planned_date).toLocaleDateString()}</td>
+                            <td><div style={{ display: 'flex', gap: '4px' }}>{post.targets?.map(t => <span key={t.platform} style={{ width: '10px', height: '10px', borderRadius: '50%', background: PLATFORM_COLORS[t.platform] }} title={t.platform} />)}</div></td>
+                            <td><span className="cal-status-badge" style={{ background: STATUS_COLORS[post.status]?.bg, color: STATUS_COLORS[post.status]?.text }}>{post.status}</span></td>
+                            <td style={{ color: '#666' }}>{post.owner_name || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
-                  {calendarDays.map((day, idx) => {
-                    const dayPosts = postsByDate[day.date.toDateString()] || []
-                    const dateStr = day.date.toISOString().split('T')[0]
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => openNewPost(dateStr)}
-                        style={{ minHeight: '100px', padding: '8px', borderBottom: '1px solid #f1f5f9', borderRight: '1px solid #f1f5f9', cursor: 'pointer', background: day.isCurrentMonth ? '#fff' : '#f8fafc', transition: 'background 0.2s' }}
-                        onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseOut={(e) => e.currentTarget.style.background = day.isCurrentMonth ? '#fff' : '#f8fafc'}
-                      >
-                        <div style={{ display: day.isToday ? 'flex' : 'block', alignItems: 'center', justifyContent: 'center', width: day.isToday ? '28px' : 'auto', height: day.isToday ? '28px' : 'auto', fontSize: '13px', fontWeight: 600, marginBottom: '6px', borderRadius: '50%', background: day.isToday ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : 'transparent', color: day.isToday ? '#fff' : day.isCurrentMonth ? '#1e293b' : '#94a3b8' }}>
-                          {day.date.getDate()}
+              )}
+            </div>
+
+            {showPostDrawer && (
+              <div className="cal-drawer">
+                <div className="cal-drawer-header">
+                  <h3 className="cal-drawer-title">{isEditing ? (selectedPost ? 'Edit Post' : 'New Post') : 'Post Details'}</h3>
+                  <button onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }} className="cal-drawer-close">x</button>
+                </div>
+                <div className="cal-drawer-body">
+                  {isEditing ? (
+                    <>
+                      <div className="cal-form-group"><label className="cal-label">Title *</label><input type="text" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} placeholder="Post title" className="cal-input" /></div>
+                      <div className="cal-form-group"><label className="cal-label">Platforms *</label><div className="cal-platforms">{PLATFORMS.map(p => <button key={p} type="button" onClick={() => setPostForm(prev => ({ ...prev, platforms: prev.platforms.includes(p) ? prev.platforms.filter(x => x !== p) : [...prev.platforms, p] }))} className={`cal-platform-btn ${postForm.platforms.includes(p) ? 'active' : ''}`} style={postForm.platforms.includes(p) ? { borderColor: PLATFORM_COLORS[p], background: `${PLATFORM_COLORS[p]}10`, color: PLATFORM_COLORS[p] } : {}}>{p}</button>)}</div></div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="cal-form-group"><label className="cal-label">Content Type</label><select value={postForm.content_type} onChange={(e) => setPostForm({ ...postForm, content_type: e.target.value as ContentType })} className="cal-input">{CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                        <div className="cal-form-group"><label className="cal-label">Status</label><select value={postForm.status} onChange={(e) => setPostForm({ ...postForm, status: e.target.value as PostStatus })} className="cal-input">{POST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="cal-form-group"><label className="cal-label">Planned Date</label><input type="date" value={postForm.planned_date} onChange={(e) => setPostForm({ ...postForm, planned_date: e.target.value })} className="cal-input" /></div>
+                        <div className="cal-form-group"><label className="cal-label">Planned Time</label><input type="time" value={postForm.planned_time} onChange={(e) => setPostForm({ ...postForm, planned_time: e.target.value })} className="cal-input" /></div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="cal-form-group"><label className="cal-label">Content Owner</label><select value={postForm.owner_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, owner_id: e.target.value, owner_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
+                        <div className="cal-form-group"><label className="cal-label">Designer</label><select value={postForm.designer_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, designer_id: e.target.value, designer_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
+                      </div>
+                      <div className="cal-form-group"><label className="cal-label">Description / Caption</label><textarea value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} placeholder="Post description or caption" rows={4} className="cal-textarea" /></div>
+                      <div className="cal-form-group"><label className="cal-label">Visual Concept</label><textarea value={postForm.visual_concept} onChange={(e) => setPostForm({ ...postForm, visual_concept: e.target.value })} placeholder="Visual concept notes" rows={2} className="cal-textarea" /></div>
+                      <div className="cal-form-group"><label className="cal-label">Hashtags</label><input type="text" value={postForm.hashtags} onChange={(e) => setPostForm({ ...postForm, hashtags: e.target.value })} placeholder="#hashtag1 #hashtag2" className="cal-input" /></div>
+                    </>
+                  ) : selectedPost ? (
+                    <>
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{selectedPost.title}</h4>
+                        <span className="cal-status-badge" style={{ background: STATUS_COLORS[selectedPost.status]?.bg, color: STATUS_COLORS[selectedPost.status]?.text }}>{selectedPost.status}</span>
+                      </div>
+                      {(selectedPost.description || selectedPost.hashtags) && (
+                        <div className="cal-copy-section">
+                          <h5 className="cal-copy-title">Ready to Post</h5>
+                          {selectedPost.description && (
+                            <div className="cal-copy-item">
+                              <div className="cal-copy-item-header">
+                                <span className="cal-copy-item-label">Caption / Content</span>
+                                <button onClick={() => copyToClipboard(selectedPost.description || '', 'caption')} className={`cal-copy-btn ${copiedField === 'caption' ? 'copied' : ''}`}>{copiedField === 'caption' ? 'Copied!' : 'Copy'}</button>
+                              </div>
+                              <div className="cal-copy-content">{selectedPost.description}</div>
+                            </div>
+                          )}
+                          {selectedPost.hashtags && (
+                            <div className="cal-copy-item">
+                              <div className="cal-copy-item-header">
+                                <span className="cal-copy-item-label">Hashtags</span>
+                                <button onClick={() => copyToClipboard(selectedPost.hashtags || '', 'hashtags')} className={`cal-copy-btn ${copiedField === 'hashtags' ? 'copied' : ''}`}>{copiedField === 'hashtags' ? 'Copied!' : 'Copy'}</button>
+                              </div>
+                              <div className="cal-copy-content">{selectedPost.hashtags}</div>
+                            </div>
+                          )}
+                          {selectedPost.description && selectedPost.hashtags && (
+                            <button onClick={() => copyToClipboard(`${selectedPost.description}\n\n${selectedPost.hashtags}`, 'all')} className="cal-copy-btn" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}>{copiedField === 'all' ? 'Copied All!' : 'Copy Caption + Hashtags'}</button>
+                          )}
                         </div>
-                        {dayPosts.slice(0, 3).map(post => (
-                          <div
-                            key={post.id}
-                            onClick={(e) => { e.stopPropagation(); openPostDetails(post) }}
-                            style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: STATUS_COLORS[post.status]?.bg, color: STATUS_COLORS[post.status]?.text, cursor: 'pointer', fontWeight: 500, transition: 'transform 0.2s' }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                          >
-                            {post.title}
+                      )}
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Planned Date</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 500, color: '#1a1a1a' }}>{new Date(selectedPost.planned_date).toLocaleDateString()} {selectedPost.planned_time || ''}</div>
+                      </div>
+                      {selectedPost.visual_concept && (
+                        <div style={{ marginBottom: '1.25rem' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Visual Concept</div>
+                          <div style={{ fontSize: '0.9rem', color: '#1a1a1a', lineHeight: 1.6 }}>{selectedPost.visual_concept}</div>
+                        </div>
+                      )}
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <h5 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', margin: '0 0 1rem 0' }}>Platform Targets</h5>
+                        {selectedPost.targets?.map(target => (
+                          <div key={target.id} className="cal-target">
+                            <div className="cal-target-header">
+                              <div className="cal-target-platform">
+                                <span className="cal-target-dot" style={{ background: PLATFORM_COLORS[target.platform], boxShadow: `0 0 0 3px ${PLATFORM_COLORS[target.platform]}33` }} />
+                                <span className="cal-target-name">{target.platform}</span>
+                              </div>
+                              <span className="cal-target-status" style={{ background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>{target.platform_status}</span>
+                            </div>
+                            <select value={target.platform_status} onChange={(e) => handleUpdateTarget(target.id, { platform_status: e.target.value as PlatformStatus })} className="cal-target-select">{PLATFORM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select>
+                            <input type="text" value={target.permalink || ''} onChange={(e) => handleUpdateTarget(target.id, { permalink: e.target.value })} placeholder="Enter permalink after posting" className="cal-target-input" />
+                            {target.platform_status !== 'published' && <button onClick={() => handleMarkAsPublished(target)} className="cal-target-publish-btn">Mark as Published</button>}
+                            {target.manual_posted_at && <div className="cal-target-published">Published by {target.manual_posted_by_name} on {new Date(target.manual_posted_at).toLocaleString()}</div>}
                           </div>
                         ))}
-                        {dayPosts.length > 3 && <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'center', fontWeight: 500 }}>+{dayPosts.length - 3} more</div>}
                       </div>
-                    )
-                  })}
+                    </>
+                  ) : null}
                 </div>
-              </div>
-            ) : (
-              <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', overflow: 'auto' }}>
-                {posts.length === 0 ? (
-                  <div style={{ padding: '80px 24px', textAlign: 'center' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg>
-                    </div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b', margin: '0 0 8px 0' }}>No posts yet</h3>
-                    <p style={{ color: '#64748b' }}>Click "+ New Post" to create content</p>
-                  </div>
-                ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px', fontSize: '13px' }}>
-                    <thead>
-                      <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
-                        {['Title', 'Type', 'Date', 'Platforms', 'Status', 'Owner'].map(h => (
-                          <th key={h} style={{ padding: '14px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px', borderBottom: '2px solid #e2e8f0' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {posts.map(post => (
-                        <tr key={post.id} onClick={() => openPostDetails(post)} style={{ cursor: 'pointer', borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = '#fff'}>
-                          <td style={{ padding: '14px 16px', fontWeight: 600, color: '#1e293b' }}>{post.title}</td>
-                          <td style={{ padding: '14px 16px', color: '#475569' }}>{post.content_type}</td>
-                          <td style={{ padding: '14px 16px', color: '#475569' }}>{new Date(post.planned_date).toLocaleDateString()}</td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              {post.targets?.map(t => (
-                                <span key={t.platform} style={{ width: '10px', height: '10px', borderRadius: '50%', background: PLATFORM_COLORS[t.platform], boxShadow: `0 0 0 2px ${PLATFORM_COLORS[t.platform]}33` }} title={t.platform} />
-                              ))}
-                            </div>
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <span style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 600, borderRadius: '20px', background: STATUS_COLORS[post.status]?.bg, color: STATUS_COLORS[post.status]?.text }}>{post.status}</span>
-                          </td>
-                          <td style={{ padding: '14px 16px', color: '#475569' }}>{post.owner_name || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                <div className="cal-drawer-footer">
+                  {isEditing ? (
+                    <>
+                      <button onClick={() => { if (selectedPost) setIsEditing(false); else setShowPostDrawer(false) }} className="cal-btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                      <button onClick={handleSavePost} className="cal-btn-primary" style={{ flex: 1 }}>Save</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => setIsEditing(true)} className="cal-btn-secondary" style={{ flex: 1 }}>Edit</button>
+                      <button onClick={handleDeletePost} style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem', fontWeight: 500, border: '1px solid #fed7d7', borderRadius: '10px', background: '#fff5f5', color: '#c53030', cursor: 'pointer' }}>Delete</button>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
-
-          {/* Right: Post Drawer */}
-          {showPostDrawer && (
-            <div style={{ width: '40%', minWidth: '420px', background: '#fff', borderLeft: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '-4px 0 20px rgba(0,0,0,0.05)' }}>
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
-                  {isEditing ? (selectedPost ? 'Edit Post' : 'New Post') : 'Post Details'}
-                </h3>
-                <button onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }} style={{ background: 'none', border: 'none', fontSize: '24px', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}>x</button>
-              </div>
-
-              <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
-                {isEditing ? (
-                  /* Edit Form */
-                  <>
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Title *</label>
-                      <input type="text" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} placeholder="Post title" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#4f46e5'} onBlur={(e) => e.target.style.borderColor = '#e2e8f0'} />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Platforms *</label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                        {PLATFORMS.map(p => (
-                          <button key={p} type="button" onClick={() => setPostForm(prev => ({ ...prev, platforms: prev.platforms.includes(p) ? prev.platforms.filter(x => x !== p) : [...prev.platforms, p] }))} style={{ padding: '10px 18px', fontSize: '13px', border: postForm.platforms.includes(p) ? `2px solid ${PLATFORM_COLORS[p]}` : '2px solid #e2e8f0', borderRadius: '10px', background: postForm.platforms.includes(p) ? `${PLATFORM_COLORS[p]}15` : '#fff', color: postForm.platforms.includes(p) ? PLATFORM_COLORS[p] : '#475569', cursor: 'pointer', fontWeight: postForm.platforms.includes(p) ? 600 : 500, textTransform: 'capitalize', transition: 'all 0.2s' }}>
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Content Type</label>
-                        <select value={postForm.content_type} onChange={(e) => setPostForm({ ...postForm, content_type: e.target.value as ContentType })} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }}>
-                          {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Status</label>
-                        <select value={postForm.status} onChange={(e) => setPostForm({ ...postForm, status: e.target.value as PostStatus })} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }}>
-                          {POST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Planned Date</label>
-                        <input type="date" value={postForm.planned_date} onChange={(e) => setPostForm({ ...postForm, planned_date: e.target.value })} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Planned Time</label>
-                        <input type="time" value={postForm.planned_time} onChange={(e) => setPostForm({ ...postForm, planned_time: e.target.value })} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Content Owner</label>
-                        <select value={postForm.owner_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, owner_id: e.target.value, owner_name: m?.user_name || '' }) }} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }}>
-                          <option value="">Select</option>
-                          {members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Designer</label>
-                        <select value={postForm.designer_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, designer_id: e.target.value, designer_name: m?.user_name || '' }) }} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }}>
-                          <option value="">Select</option>
-                          {members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Description / Caption</label>
-                      <textarea value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} placeholder="Post description or caption" rows={4} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', resize: 'none', boxSizing: 'border-box', outline: 'none' }} />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Visual Concept</label>
-                      <textarea value={postForm.visual_concept} onChange={(e) => setPostForm({ ...postForm, visual_concept: e.target.value })} placeholder="Visual concept notes" rows={2} style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', resize: 'none', boxSizing: 'border-box', outline: 'none' }} />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Hashtags</label>
-                      <input type="text" value={postForm.hashtags} onChange={(e) => setPostForm({ ...postForm, hashtags: e.target.value })} placeholder="#hashtag1 #hashtag2" style={{ width: '100%', padding: '12px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }} />
-                    </div>
-                  </>
-                ) : selectedPost ? (
-                  /* View Details */
-                  <>
-                    <div style={{ marginBottom: '24px' }}>
-                      <h4 style={{ fontSize: '20px', fontWeight: 700, color: '#1e293b', margin: '0 0 12px 0' }}>{selectedPost.title}</h4>
-                      <span style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '20px', background: STATUS_COLORS[selectedPost.status]?.bg, color: STATUS_COLORS[selectedPost.status]?.text }}>{selectedPost.status}</span>
-                    </div>
-
-                    {/* Copy-to-Post Section */}
-                    <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', borderRadius: '12px', padding: '20px', marginBottom: '24px', border: '2px solid #bbf7d0' }}>
-                      <h5 style={{ fontSize: '14px', fontWeight: 700, color: '#166534', margin: '0 0 16px 0' }}>Ready to Post</h5>
-                      
-                      {selectedPost.description && (
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>Caption / Content</span>
-                            <button onClick={() => copyToClipboard(selectedPost.description || '', 'caption')} style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 600, border: 'none', borderRadius: '6px', background: copiedField === 'caption' ? '#16a34a' : '#22c55e', color: '#fff', cursor: 'pointer' }}>
-                              {copiedField === 'caption' ? 'Copied!' : 'Copy'}
-                            </button>
-                          </div>
-                          <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', fontSize: '13px', color: '#1e293b', lineHeight: 1.6, border: '1px solid #d1fae5' }}>
-                            {selectedPost.description}
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedPost.hashtags && (
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>Hashtags</span>
-                            <button onClick={() => copyToClipboard(selectedPost.hashtags || '', 'hashtags')} style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 600, border: 'none', borderRadius: '6px', background: copiedField === 'hashtags' ? '#16a34a' : '#22c55e', color: '#fff', cursor: 'pointer' }}>
-                              {copiedField === 'hashtags' ? 'Copied!' : 'Copy'}
-                            </button>
-                          </div>
-                          <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', fontSize: '13px', color: '#1e293b', border: '1px solid #d1fae5' }}>
-                            {selectedPost.hashtags}
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedPost.description && selectedPost.hashtags && (
-                        <button onClick={() => copyToClipboard(`${selectedPost.description}\n\n${selectedPost.hashtags}`, 'all')} style={{ width: '100%', padding: '12px', fontSize: '13px', fontWeight: 600, border: 'none', borderRadius: '8px', background: copiedField === 'all' ? '#16a34a' : '#22c55e', color: '#fff', cursor: 'pointer' }}>
-                          {copiedField === 'all' ? 'Copied All!' : 'Copy Caption + Hashtags'}
-                        </button>
-                      )}
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>Planned Date</div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>{new Date(selectedPost.planned_date).toLocaleDateString()} {selectedPost.planned_time || ''}</div>
-                    </div>
-
-                    {selectedPost.visual_concept && (
-                      <div style={{ marginBottom: '20px' }}>
-                        <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>Visual Concept</div>
-                        <div style={{ fontSize: '14px', color: '#1e293b', lineHeight: 1.6 }}>{selectedPost.visual_concept}</div>
-                      </div>
-                    )}
-
-                    {/* Platform Targets */}
-                    <div style={{ marginBottom: '24px' }}>
-                      <h5 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: '0 0 16px 0' }}>Platform Targets</h5>
-                      {selectedPost.targets?.map(target => (
-                        <div key={target.id} style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', marginBottom: '12px', border: '1px solid #e2e8f0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: PLATFORM_COLORS[target.platform], boxShadow: `0 0 0 3px ${PLATFORM_COLORS[target.platform]}33` }} />
-                              <span style={{ fontWeight: 600, textTransform: 'capitalize', color: '#1e293b' }}>{target.platform}</span>
-                            </div>
-                            <span style={{ padding: '4px 12px', fontSize: '11px', fontWeight: 600, borderRadius: '20px', background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f1f5f9', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#475569' }}>{target.platform_status}</span>
-                          </div>
-                          
-                          <div style={{ marginBottom: '12px' }}>
-                            <select value={target.platform_status} onChange={(e) => handleUpdateTarget(target.id, { platform_status: e.target.value as PlatformStatus })} style={{ width: '100%', padding: '10px 14px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', outline: 'none' }}>
-                              {PLATFORM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                          </div>
-
-                          <div style={{ marginBottom: '12px' }}>
-                            <input type="text" value={target.permalink || ''} onChange={(e) => handleUpdateTarget(target.id, { permalink: e.target.value })} placeholder="Enter permalink after posting" style={{ width: '100%', padding: '10px 14px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box', outline: 'none' }} />
-                          </div>
-
-                          {target.platform_status !== 'published' && (
-                            <button onClick={() => handleMarkAsPublished(target)} style={{ width: '100%', padding: '12px', fontSize: '13px', fontWeight: 600, borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(22, 163, 74, 0.4)' }}>
-                              Mark as Published
-                            </button>
-                          )}
-
-                          {target.manual_posted_at && (
-                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '12px', padding: '10px', background: '#fff', borderRadius: '6px' }}>
-                              Published by {target.manual_posted_by_name} on {new Date(target.manual_posted_at).toLocaleString()}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : null}
-              </div>
-
-              {/* Drawer Footer */}
-              <div style={{ padding: '20px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '12px', background: '#f8fafc' }}>
-                {isEditing ? (
-                  <>
-                    <button onClick={() => { if (selectedPost) { setIsEditing(false) } else { setShowPostDrawer(false) } }} style={{ flex: 1, padding: '14px', fontSize: '14px', fontWeight: 500, border: '2px solid #e2e8f0', borderRadius: '10px', background: '#fff', cursor: 'pointer' }}>Cancel</button>
-                    <button onClick={handleSavePost} style={{ flex: 1, padding: '14px', fontSize: '14px', fontWeight: 600, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)' }}>Save</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => setIsEditing(true)} style={{ flex: 1, padding: '14px', fontSize: '14px', fontWeight: 500, border: '2px solid #e2e8f0', borderRadius: '10px', background: '#fff', cursor: 'pointer' }}>Edit</button>
-                    <button onClick={handleDeletePost} style={{ padding: '14px 24px', fontSize: '14px', fontWeight: 500, border: '2px solid #fecaca', borderRadius: '10px', background: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}>Delete</button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

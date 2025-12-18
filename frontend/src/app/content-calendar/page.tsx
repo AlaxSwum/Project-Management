@@ -7,229 +7,6 @@ import Sidebar from '@/components/Sidebar'
 import MobileHeader from '@/components/MobileHeader'
 import { Company, CompanyMember, COMPANY_ROLES } from '@/types/content-calendar-v3'
 
-const styles = {
-  container: {
-    display: 'flex',
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
-  },
-  main: {
-    flex: 1,
-    marginLeft: '256px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    minHeight: '100vh'
-  },
-  mainMobile: {
-    flex: 1,
-    marginLeft: 0,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    minHeight: '100vh'
-  },
-  header: {
-    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-    padding: '32px 40px',
-    color: '#fff'
-  },
-  headerTitle: {
-    fontSize: '28px',
-    fontWeight: 700,
-    margin: '0 0 8px 0',
-    letterSpacing: '-0.5px'
-  },
-  headerSubtitle: {
-    fontSize: '15px',
-    opacity: 0.9,
-    margin: 0
-  },
-  content: {
-    flex: 1,
-    padding: '32px 40px'
-  },
-  searchRow: {
-    display: 'flex',
-    gap: '16px',
-    marginBottom: '32px',
-    flexWrap: 'wrap' as const
-  },
-  searchInput: {
-    flex: 1,
-    minWidth: '280px',
-    padding: '14px 20px',
-    border: '2px solid #e2e8f0',
-    borderRadius: '12px',
-    fontSize: '15px',
-    background: '#fff',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    outline: 'none'
-  },
-  primaryBtn: {
-    padding: '14px 28px',
-    fontSize: '15px',
-    fontWeight: 600,
-    borderRadius: '12px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-    color: '#fff',
-    cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    whiteSpace: 'nowrap' as const
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-    gap: '24px'
-  },
-  card: {
-    background: '#fff',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-    border: '1px solid #e2e8f0',
-    transition: 'transform 0.2s, box-shadow 0.2s'
-  },
-  cardHeader: {
-    padding: '24px',
-    borderBottom: '1px solid #f1f5f9'
-  },
-  cardTitle: {
-    fontSize: '20px',
-    fontWeight: 600,
-    color: '#1e293b',
-    margin: '0 0 8px 0'
-  },
-  cardDesc: {
-    fontSize: '14px',
-    color: '#64748b',
-    margin: 0,
-    lineHeight: 1.5
-  },
-  cardFooter: {
-    padding: '16px 24px',
-    background: '#f8fafc',
-    display: 'flex',
-    gap: '12px',
-    flexWrap: 'wrap' as const
-  },
-  btnPrimary: {
-    flex: 1,
-    padding: '12px 20px',
-    fontSize: '14px',
-    fontWeight: 600,
-    borderRadius: '10px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-    color: '#fff',
-    cursor: 'pointer',
-    transition: 'transform 0.2s'
-  },
-  btnSecondary: {
-    padding: '12px 20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    borderRadius: '10px',
-    border: '2px solid #e2e8f0',
-    background: '#fff',
-    color: '#475569',
-    cursor: 'pointer',
-    transition: 'border-color 0.2s'
-  },
-  btnDanger: {
-    padding: '12px 16px',
-    fontSize: '14px',
-    fontWeight: 500,
-    borderRadius: '10px',
-    border: '2px solid #fecaca',
-    background: '#fef2f2',
-    color: '#dc2626',
-    cursor: 'pointer'
-  },
-  emptyState: {
-    background: '#fff',
-    borderRadius: '20px',
-    padding: '80px 40px',
-    textAlign: 'center' as const,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-  },
-  emptyIcon: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '20px',
-    background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '0 auto 24px',
-    fontSize: '32px',
-    color: '#4f46e5'
-  },
-  modal: {
-    position: 'fixed' as const,
-    inset: 0,
-    zIndex: 100,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(15, 23, 42, 0.6)',
-    backdropFilter: 'blur(4px)'
-  },
-  modalContent: {
-    background: '#fff',
-    borderRadius: '20px',
-    width: '100%',
-    maxWidth: '520px',
-    padding: '32px',
-    boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
-  },
-  modalTitle: {
-    fontSize: '22px',
-    fontWeight: 700,
-    color: '#1e293b',
-    margin: '0 0 24px 0'
-  },
-  formGroup: {
-    marginBottom: '20px'
-  },
-  label: {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#374151',
-    marginBottom: '8px'
-  },
-  input: {
-    width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: '10px',
-    fontSize: '15px',
-    transition: 'border-color 0.2s',
-    boxSizing: 'border-box' as const,
-    outline: 'none'
-  },
-  textarea: {
-    width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: '10px',
-    fontSize: '15px',
-    resize: 'none' as const,
-    boxSizing: 'border-box' as const,
-    outline: 'none'
-  },
-  modalFooter: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '12px',
-    marginTop: '28px',
-    paddingTop: '20px',
-    borderTop: '1px solid #e2e8f0'
-  }
-}
-
 export default function ContentCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
@@ -410,139 +187,130 @@ export default function ContentCalendarPage() {
 
   if (authLoading) {
     return (
-      <div style={{ ...styles.container, alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '48px', height: '48px', border: '4px solid #e2e8f0', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
   return (
-    <div style={styles.container}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+    <div>
+      <MobileHeader title="Content Calendar" isMobile={isMobile} />
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes spin { to { transform: rotate(360deg); } }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #F5F5ED; }
+        .cc-container { min-height: 100vh; display: flex; background: #F5F5ED; }
+        .cc-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; }
+        .cc-header { background: transparent; padding: 2rem; margin-bottom: 1rem; }
+        .cc-title { font-size: 2.5rem; font-weight: 300; color: #1a1a1a; margin: 0; letter-spacing: -0.02em; }
+        .cc-subtitle { font-size: 1rem; color: #666; margin-top: 0.5rem; font-weight: 400; }
+        .cc-search-row { display: flex; gap: 1rem; padding: 0 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .cc-search { flex: 1; min-width: 280px; padding: 1rem 1.25rem; border: 1px solid #e8e8e8; border-radius: 12px; font-size: 1rem; background: #fff; transition: all 0.2s; outline: none; }
+        .cc-search:focus { border-color: #C483D9; box-shadow: 0 0 0 3px rgba(196, 131, 217, 0.1); }
+        .cc-btn-primary { padding: 1rem 1.75rem; font-size: 0.95rem; font-weight: 500; border-radius: 12px; border: none; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 14px rgba(196, 131, 217, 0.3); }
+        .cc-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196, 131, 217, 0.4); }
+        .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; padding: 0 2rem 2rem; }
+        .cc-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 20px; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04); }
+        .cc-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border-color: #C483D9; }
+        .cc-card-header { padding: 1.75rem; cursor: pointer; }
+        .cc-card-title { font-size: 1.25rem; font-weight: 500; color: #1a1a1a; margin: 0 0 0.5rem 0; }
+        .cc-card-desc { font-size: 0.9rem; color: #666; margin: 0; line-height: 1.5; }
+        .cc-card-footer { padding: 1rem 1.75rem; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .cc-btn-card { flex: 1; padding: 0.75rem 1rem; font-size: 0.85rem; font-weight: 500; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; }
+        .cc-btn-open { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
+        .cc-btn-secondary { background: #fff; border: 1px solid #e8e8e8; color: #333; }
+        .cc-btn-secondary:hover { border-color: #C483D9; background: #fafafa; }
+        .cc-btn-danger { background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; }
+        .cc-btn-danger:hover { background: #fed7d7; }
+        .cc-empty { background: #fff; border-radius: 24px; padding: 4rem 2rem; text-align: center; margin: 0 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        .cc-empty-icon { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, #f0e6f5 0%, #e6f0ff 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .cc-modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); }
+        .cc-modal-content { background: #fff; border-radius: 24px; width: 100%; max-width: 520px; padding: 2rem; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2); }
+        .cc-modal-title { font-size: 1.5rem; font-weight: 500; color: #1a1a1a; margin: 0 0 1.5rem 0; }
+        .cc-form-group { margin-bottom: 1.25rem; }
+        .cc-label { display: block; font-size: 0.9rem; font-weight: 500; color: #333; margin-bottom: 0.5rem; }
+        .cc-input { width: 100%; padding: 0.875rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 1rem; transition: all 0.2s; box-sizing: border-box; outline: none; }
+        .cc-input:focus { border-color: #C483D9; box-shadow: 0 0 0 3px rgba(196, 131, 217, 0.1); }
+        .cc-textarea { width: 100%; padding: 0.875rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 1rem; resize: none; box-sizing: border-box; outline: none; }
+        .cc-textarea:focus { border-color: #C483D9; }
+        .cc-modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #f0f0f0; }
+      `}} />
 
-      <main style={isMobile ? styles.mainMobile : styles.main}>
-        {isMobile && <MobileHeader title="Content Calendar" isMobile={isMobile} />}
+      <div className="cc-container">
+        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
 
-        <header style={styles.header}>
-          <h1 style={styles.headerTitle}>Content Calendar</h1>
-          <p style={styles.headerSubtitle}>Manage your social media content across multiple companies</p>
-        </header>
+        <main className="cc-main">
+          <header className="cc-header">
+            <h1 className="cc-title">Content Calendar</h1>
+            <p className="cc-subtitle">Manage your social media content across multiple companies</p>
+          </header>
 
-        <div style={styles.content}>
-          <div style={styles.searchRow}>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search companies..."
-              style={styles.searchInput}
-              onFocus={(e) => { e.target.style.borderColor = '#4f46e5'; e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)' }}
-              onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none' }}
-            />
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={styles.primaryBtn}
-              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(79, 70, 229, 0.5)' }}
-              onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(79, 70, 229, 0.4)' }}
-            >
-              + New Company
-            </button>
+          <div className="cc-search-row">
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search companies..." className="cc-search" />
+            <button onClick={() => setShowCreateModal(true)} className="cc-btn-primary">+ New Company</button>
           </div>
 
           {isLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '80px' }}>
-              <div style={{ width: '48px', height: '48px', border: '4px solid #e2e8f0', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+              <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             </div>
           ) : filteredCompanies.length === 0 ? (
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="cc-empty">
+              <div className="cc-empty-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C483D9" strokeWidth="2">
                   <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#1e293b', margin: '0 0 12px 0' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>
                 {searchQuery ? 'No companies found' : 'No companies yet'}
               </h3>
-              <p style={{ color: '#64748b', margin: '0 0 28px 0', fontSize: '15px' }}>
+              <p style={{ color: '#666', margin: '0 0 1.75rem 0' }}>
                 {searchQuery ? 'Try a different search term' : 'Create your first company to start managing content'}
               </p>
-              {!searchQuery && (
-                <button onClick={() => setShowCreateModal(true)} style={styles.primaryBtn}>
-                  + Create Company
-                </button>
-              )}
+              {!searchQuery && <button onClick={() => setShowCreateModal(true)} className="cc-btn-primary">+ Create Company</button>}
             </div>
           ) : (
-            <div style={styles.grid}>
+            <div className="cc-grid">
               {filteredCompanies.map(company => (
-                <div
-                  key={company.id}
-                  style={styles.card}
-                  onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.12)' }}
-                  onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)' }}
-                >
-                  <div style={styles.cardHeader} onClick={() => router.push(`/content-calendar/${company.id}`)}>
-                    <h3 style={styles.cardTitle}>{company.name}</h3>
-                    {company.description && <p style={styles.cardDesc}>{company.description}</p>}
+                <div key={company.id} className="cc-card">
+                  <div className="cc-card-header" onClick={() => router.push(`/content-calendar/${company.id}`)}>
+                    <h3 className="cc-card-title">{company.name}</h3>
+                    {company.description && <p className="cc-card-desc">{company.description}</p>}
                   </div>
-                  <div style={styles.cardFooter}>
-                    <button onClick={() => router.push(`/content-calendar/${company.id}`)} style={styles.btnPrimary}>
-                      Open Calendar
-                    </button>
-                    <button onClick={() => router.push(`/content-calendar/${company.id}/reports`)} style={styles.btnSecondary}>
-                      Reports
-                    </button>
-                    <button onClick={() => openMembersModal(company)} style={styles.btnSecondary}>
-                      Team
-                    </button>
-                    <button onClick={() => handleDeleteCompany(company.id)} style={styles.btnDanger}>
-                      Delete
-                    </button>
+                  <div className="cc-card-footer">
+                    <button onClick={() => router.push(`/content-calendar/${company.id}`)} className="cc-btn-card cc-btn-open">Calendar</button>
+                    <button onClick={() => router.push(`/content-calendar/${company.id}/reports`)} className="cc-btn-card cc-btn-secondary">Reports</button>
+                    <button onClick={() => openMembersModal(company)} className="cc-btn-card cc-btn-secondary">Team</button>
+                    <button onClick={() => handleDeleteCompany(company.id)} className="cc-btn-card cc-btn-danger">Delete</button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
 
       {/* Create Company Modal */}
       {showCreateModal && (
-        <div style={styles.modal} onClick={() => setShowCreateModal(false)}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>Create Company</h3>
+        <div className="cc-modal" onClick={() => setShowCreateModal(false)}>
+          <div className="cc-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="cc-modal-title">Create Company</h3>
             
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Company Name *</label>
-              <input
-                type="text"
-                value={companyForm.name}
-                onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
-                placeholder="Enter company name"
-                style={styles.input}
-                onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-              />
+            <div className="cc-form-group">
+              <label className="cc-label">Company Name *</label>
+              <input type="text" value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} placeholder="Enter company name" className="cc-input" />
             </div>
 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Description</label>
-              <textarea
-                value={companyForm.description}
-                onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })}
-                placeholder="Optional description"
-                rows={3}
-                style={styles.textarea}
-                onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-              />
+            <div className="cc-form-group">
+              <label className="cc-label">Description</label>
+              <textarea value={companyForm.description} onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })} placeholder="Optional description" rows={3} className="cc-textarea" />
             </div>
 
-            <div style={styles.modalFooter}>
-              <button onClick={() => setShowCreateModal(false)} style={styles.btnSecondary}>Cancel</button>
-              <button onClick={handleCreateCompany} style={styles.primaryBtn}>Create Company</button>
+            <div className="cc-modal-footer">
+              <button onClick={() => setShowCreateModal(false)} className="cc-btn-card cc-btn-secondary">Cancel</button>
+              <button onClick={handleCreateCompany} className="cc-btn-primary">Create Company</button>
             </div>
           </div>
         </div>
@@ -550,64 +318,46 @@ export default function ContentCalendarPage() {
 
       {/* Members Modal */}
       {showMembersModal && selectedCompany && (
-        <div style={styles.modal} onClick={() => setShowMembersModal(false)}>
-          <div style={{ ...styles.modalContent, maxWidth: '640px', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>Team Members</h3>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: '-16px 0 24px 0' }}>{selectedCompany.name}</p>
+        <div className="cc-modal" onClick={() => setShowMembersModal(false)}>
+          <div className="cc-modal-content" style={{ maxWidth: '640px', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <h3 className="cc-modal-title">Team Members</h3>
+            <p style={{ fontSize: '0.9rem', color: '#666', margin: '-1rem 0 1.5rem 0' }}>{selectedCompany.name}</p>
 
-            <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#374151', margin: '0 0 16px 0' }}>Add Member</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '12px' }}>
-                <select
-                  value={memberForm.user_id}
-                  onChange={(e) => setMemberForm({ ...memberForm, user_id: e.target.value })}
-                  style={{ ...styles.input, padding: '12px' }}
-                >
+            <div style={{ background: '#fafafa', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 500, color: '#333', margin: '0 0 1rem 0' }}>Add Member</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.75rem' }}>
+                <select value={memberForm.user_id} onChange={(e) => setMemberForm({ ...memberForm, user_id: e.target.value })} className="cc-input" style={{ padding: '0.75rem' }}>
                   <option value="">Select member</option>
-                  {teamMembers.map(m => (
-                    <option key={m.id} value={String(m.id)}>{m.name}</option>
-                  ))}
+                  {teamMembers.map(m => <option key={m.id} value={String(m.id)}>{m.name}</option>)}
                 </select>
-                <select
-                  value={memberForm.role}
-                  onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })}
-                  style={{ ...styles.input, padding: '12px' }}
-                >
-                  {COMPANY_ROLES.map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
+                <select value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} className="cc-input" style={{ padding: '0.75rem' }}>
+                  {COMPANY_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-                <button onClick={handleAddMember} style={{ ...styles.primaryBtn, padding: '12px 24px' }}>
-                  Add
-                </button>
+                <button onClick={handleAddMember} className="cc-btn-primary" style={{ padding: '0.75rem 1.5rem' }}>Add</button>
               </div>
             </div>
 
             {members.length === 0 ? (
-              <p style={{ color: '#64748b', fontSize: '14px', textAlign: 'center', padding: '24px' }}>No members yet</p>
+              <p style={{ color: '#666', fontSize: '0.9rem', textAlign: 'center', padding: '1.5rem' }}>No members yet</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {members.map(member => (
-                  <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', borderRadius: '12px' }}>
+                  <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#fafafa', borderRadius: '12px' }}>
                     <div>
-                      <div style={{ fontWeight: 600, color: '#1e293b' }}>{member.user_name || 'Unknown'}</div>
-                      <div style={{ fontSize: '13px', color: '#64748b' }}>{member.user_email}</div>
+                      <div style={{ fontWeight: 500, color: '#1a1a1a' }}>{member.user_name || 'Unknown'}</div>
+                      <div style={{ fontSize: '0.85rem', color: '#666' }}>{member.user_email}</div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '20px', background: member.role === 'OWNER' ? 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' : '#f1f5f9', color: member.role === 'OWNER' ? '#1d4ed8' : '#475569' }}>
-                        {member.role}
-                      </span>
-                      <button onClick={() => handleRemoveMember(member.id)} style={styles.btnDanger}>
-                        Remove
-                      </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ padding: '0.375rem 0.875rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '20px', background: member.role === 'OWNER' ? 'linear-gradient(135deg, #e6f0ff 0%, #f0e6f5 100%)' : '#f0f0f0', color: member.role === 'OWNER' ? '#5884FD' : '#666' }}>{member.role}</span>
+                      <button onClick={() => handleRemoveMember(member.id)} className="cc-btn-card cc-btn-danger" style={{ padding: '0.5rem 0.875rem' }}>Remove</button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            <div style={styles.modalFooter}>
-              <button onClick={() => setShowMembersModal(false)} style={styles.btnSecondary}>Close</button>
+            <div className="cc-modal-footer">
+              <button onClick={() => setShowMembersModal(false)} className="cc-btn-card cc-btn-secondary">Close</button>
             </div>
           </div>
         </div>
