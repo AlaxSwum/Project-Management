@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Dynamic import for resend to avoid build errors if not installed
+const getResend = async () => {
+  try {
+    const { Resend } = await import('resend')
+    return new Resend(process.env.RESEND_API_KEY)
+  } catch {
+    return null
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,6 +64,11 @@ export async function POST(request: NextRequest) {
           const scheduledTime = `${post.planned_date} ${post.planned_time || '00:00'}`
           
           try {
+            const resend = await getResend()
+            if (!resend) {
+              console.log('Resend not configured, skipping email')
+              continue
+            }
             await resend.emails.send({
               from: 'Content Calendar <noreply@focus-project.co.uk>',
               to: owner.email,
