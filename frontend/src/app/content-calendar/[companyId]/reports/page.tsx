@@ -88,11 +88,12 @@ export default function ReportsPage() {
       const kpi = kpiData.find(k => k.platform === platform && k.report_month === monthStart)
       const targets = filteredPosts.flatMap(post => (post.targets || []).filter(t => t.platform === platform))
       const totalBudget = targets.reduce((sum, t) => sum + (t.ad_budget || 0), 0)
-      return { platform, netGrowth: kpi?.net_growth || 0, totalPosts: targets.filter(t => t.platform_status === 'published').length, totalReach: kpi?.total_reach || 0, totalImpressions: kpi?.total_impressions_views || 0, totalEngagement: kpi?.total_engagement_interactions || 0, startFollowers: kpi?.start_followers || 0, endFollowers: kpi?.end_followers || 0, totalBudget }
+      const publishedCount = targets.filter(t => t.platform_status === 'published').length
+      return { platform, netGrowth: kpi?.net_growth || 0, totalPosts: targets.length, publishedPosts: publishedCount, totalReach: kpi?.total_reach || 0, totalImpressions: kpi?.total_impressions_views || 0, totalEngagement: kpi?.total_engagement_interactions || 0, startFollowers: kpi?.start_followers || 0, endFollowers: kpi?.end_followers || 0, totalBudget }
     })
   }, [filteredPosts, kpiData, selectedMonth])
 
-  const overallStats = useMemo(() => platformSummary.reduce((acc, p) => ({ totalPosts: acc.totalPosts + p.totalPosts, totalReach: acc.totalReach + p.totalReach, totalEngagement: acc.totalEngagement + p.totalEngagement, totalGrowth: acc.totalGrowth + p.netGrowth, totalBudget: acc.totalBudget + p.totalBudget }), { totalPosts: 0, totalReach: 0, totalEngagement: 0, totalGrowth: 0, totalBudget: 0 }), [platformSummary])
+  const overallStats = useMemo(() => platformSummary.reduce((acc, p) => ({ totalPosts: acc.totalPosts + p.totalPosts, publishedPosts: acc.publishedPosts + p.publishedPosts, totalReach: acc.totalReach + p.totalReach, totalEngagement: acc.totalEngagement + p.totalEngagement, totalGrowth: acc.totalGrowth + p.netGrowth, totalBudget: acc.totalBudget + p.totalBudget }), { totalPosts: 0, publishedPosts: 0, totalReach: 0, totalEngagement: 0, totalGrowth: 0, totalBudget: 0 }), [platformSummary])
 
   const handleSaveKPI = async () => {
     if (!selectedPlatform) return
@@ -328,10 +329,10 @@ export default function ReportsPage() {
                 {/* Stats Row */}
                 <div className="rpt-stats-row">
                   {[
-                    { label: 'Total Posts', value: overallStats.totalPosts, color: '#C483D9', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+                    { label: 'Planned Posts', value: overallStats.totalPosts, color: '#C483D9', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+                    { label: 'Published', value: overallStats.publishedPosts, color: '#10b981', icon: 'M5 13l4 4L19 7' },
                     { label: 'Total Reach', value: overallStats.totalReach, color: '#5884FD', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-                    { label: 'Engagement', value: overallStats.totalEngagement, color: '#10b981', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
-                    { label: 'Net Growth', value: overallStats.totalGrowth, color: overallStats.totalGrowth >= 0 ? '#10b981' : '#ef4444', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
+                    { label: 'Engagement', value: overallStats.totalEngagement, color: '#ec4899', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
                     { label: 'Ad Budget', value: overallStats.totalBudget, color: '#f59e0b', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', prefix: '$' }
                   ].map(stat => (
                     <div key={stat.label} className="rpt-stat-card">
@@ -382,6 +383,32 @@ export default function ReportsPage() {
                   </div>
                 </div>
 
+                {/* Posts Summary */}
+                <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 500, color: '#1a1a1a', margin: 0 }}>Posts This Month ({filteredPosts.length} total)</h3>
+                    <span style={{ fontSize: '0.85rem', color: '#666' }}>All posts loaded: {posts.length}</span>
+                  </div>
+                  {filteredPosts.length === 0 ? (
+                    <p style={{ color: '#666', margin: 0 }}>No posts found for {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}. Try selecting a different month.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {filteredPosts.slice(0, 10).map(post => (
+                        <div key={post.id} style={{ background: '#f5f5f5', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+                          <span style={{ fontWeight: 500 }}>{post.title}</span>
+                          <span style={{ color: '#666', marginLeft: '0.5rem' }}>({new Date(post.planned_date).toLocaleDateString()})</span>
+                          <span style={{ marginLeft: '0.5rem' }}>
+                            {(post.targets || []).map(t => (
+                              <span key={t.platform} style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: PLATFORM_COLORS[t.platform], marginRight: '4px' }} />
+                            ))}
+                          </span>
+                        </div>
+                      ))}
+                      {filteredPosts.length > 10 && <span style={{ padding: '0.5rem 1rem', color: '#666' }}>+{filteredPosts.length - 10} more</span>}
+                    </div>
+                  )}
+                </div>
+
                 {/* Platform Cards */}
                 <h2 className="rpt-section-title">{new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} by Platform</h2>
                 <div className="rpt-platforms-grid">
@@ -407,8 +434,8 @@ export default function ReportsPage() {
                           </div>
                         </div>
                         <div className="rpt-platform-footer">
-                          <div><div className="rpt-footer-value">{p.totalPosts}</div><div className="rpt-footer-label">Posts</div></div>
-                          <div><div className="rpt-footer-value">{p.endFollowers.toLocaleString()}</div><div className="rpt-footer-label">Followers</div></div>
+                          <div><div className="rpt-footer-value">{p.totalPosts}</div><div className="rpt-footer-label">Planned</div></div>
+                          <div><div className="rpt-footer-value" style={{ color: '#10b981' }}>{p.publishedPosts}</div><div className="rpt-footer-label">Published</div></div>
                           <div><div className="rpt-footer-value" style={{ color: p.netGrowth >= 0 ? '#10b981' : '#ef4444' }}>{p.netGrowth >= 0 ? '+' : ''}{p.netGrowth.toLocaleString()}</div><div className="rpt-footer-label">Growth</div></div>
                           <div><div className="rpt-footer-value" style={{ color: '#f59e0b' }}>${p.totalBudget.toLocaleString()}</div><div className="rpt-footer-label">Budget</div></div>
                         </div>
