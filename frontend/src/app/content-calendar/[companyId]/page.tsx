@@ -12,6 +12,11 @@ import {
   STATUS_COLORS, PLATFORM_STATUS_COLORS, PLATFORM_COLORS
 } from '@/types/content-calendar-v3'
 
+interface PlatformBudget {
+  platform: Platform
+  budget: number
+}
+
 export default function CompanyCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
@@ -35,8 +40,10 @@ export default function CompanyCalendarPage() {
     title: '', description: '', content_type: 'static' as ContentType, category: '', status: 'draft' as PostStatus,
     planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '',
     owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '',
-    media_buying_notes: '', media_budget: 0, content_text: '', drive_link: '', platforms: ['facebook'] as Platform[]
+    media_buying_notes: '', media_budget: 0, platforms: ['facebook'] as Platform[]
   })
+  
+  const [platformBudgets, setPlatformBudgets] = useState<PlatformBudget[]>([])
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -83,15 +90,48 @@ export default function CompanyCalendarPage() {
 
   useEffect(() => { if (user?.id && companyId) { fetchCompany(); fetchMembers(); fetchPosts() } }, [user?.id, companyId, fetchCompany, fetchMembers, fetchPosts])
 
-  const resetForm = () => setPostForm({ title: '', description: '', content_type: 'static', category: '', status: 'draft', planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '', owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '', media_buying_notes: '', media_budget: 0, content_text: '', drive_link: '', platforms: ['facebook'] })
+  const resetForm = () => {
+    setPostForm({ title: '', description: '', content_type: 'static', category: '', status: 'draft', planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '', owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '', media_buying_notes: '', media_budget: 0, platforms: ['facebook'] })
+    setPlatformBudgets([{ platform: 'facebook', budget: 0 }])
+  }
 
-  const openNewPost = (date?: string) => { resetForm(); if (date) setPostForm(prev => ({ ...prev, planned_date: date })); setSelectedPost(null); setIsEditing(true); setShowPostDrawer(true) }
+  const openNewPost = (date?: string) => {
+    resetForm()
+    if (date) setPostForm(prev => ({ ...prev, planned_date: date }))
+    setSelectedPost(null)
+    setIsEditing(true)
+    setShowPostDrawer(true)
+  }
 
   const openPostDetails = (post: ContentPost) => {
     setSelectedPost(post)
-    setPostForm({ title: post.title, description: post.description || '', content_type: post.content_type, category: post.category || '', status: post.status, planned_date: post.planned_date, planned_time: post.planned_time || '', content_deadline: post.content_deadline || '', graphic_deadline: post.graphic_deadline || '', owner_id: post.owner_id || '', owner_name: post.owner_name || '', designer_id: post.designer_id || '', designer_name: post.designer_name || '', hashtags: post.hashtags || '', visual_concept: post.visual_concept || '', key_points: post.key_points || '', media_buying_notes: post.media_buying_notes || '', media_budget: post.media_budget || 0, content_text: (post as any).content_text || '', drive_link: (post as any).drive_link || '', platforms: post.targets?.map(t => t.platform) || ['facebook'] })
+    setPostForm({
+      title: post.title, description: post.description || '', content_type: post.content_type, category: post.category || '',
+      status: post.status, planned_date: post.planned_date, planned_time: post.planned_time || '',
+      content_deadline: post.content_deadline || '', graphic_deadline: post.graphic_deadline || '',
+      owner_id: post.owner_id || '', owner_name: post.owner_name || '', designer_id: post.designer_id || '',
+      designer_name: post.designer_name || '', hashtags: post.hashtags || '', visual_concept: post.visual_concept || '',
+      key_points: post.key_points || '', media_buying_notes: post.media_buying_notes || '', media_budget: post.media_budget || 0,
+      platforms: post.targets?.map(t => t.platform) || ['facebook']
+    })
+    setPlatformBudgets(post.targets?.map(t => ({ platform: t.platform, budget: t.ad_budget || 0 })) || [])
     setIsEditing(false)
     setShowPostDrawer(true)
+  }
+
+  const handlePlatformToggle = (platform: Platform) => {
+    const isSelected = postForm.platforms.includes(platform)
+    if (isSelected) {
+      setPostForm(prev => ({ ...prev, platforms: prev.platforms.filter(p => p !== platform) }))
+      setPlatformBudgets(prev => prev.filter(pb => pb.platform !== platform))
+    } else {
+      setPostForm(prev => ({ ...prev, platforms: [...prev.platforms, platform] }))
+      setPlatformBudgets(prev => [...prev, { platform, budget: 0 }])
+    }
+  }
+
+  const handleBudgetChange = (platform: Platform, budget: number) => {
+    setPlatformBudgets(prev => prev.map(pb => pb.platform === platform ? { ...pb, budget } : pb))
   }
 
   const handleSavePost = async () => {
@@ -99,25 +139,51 @@ export default function CompanyCalendarPage() {
     if (postForm.platforms.length === 0) { alert('Select at least one platform'); return }
     try {
       const { supabase } = await import('@/lib/supabase')
-      const postData = { title: postForm.title, description: postForm.description, content_type: postForm.content_type, category: postForm.category, status: postForm.status, planned_date: postForm.planned_date, planned_time: postForm.planned_time || null, content_deadline: postForm.content_deadline || null, graphic_deadline: postForm.graphic_deadline || null, owner_id: postForm.owner_id || null, owner_name: postForm.owner_name || null, designer_id: postForm.designer_id || null, designer_name: postForm.designer_name || null, hashtags: postForm.hashtags, visual_concept: postForm.visual_concept, key_points: postForm.key_points, media_buying_notes: postForm.media_buying_notes, media_budget: postForm.media_budget }
+      const totalBudget = platformBudgets.reduce((sum, pb) => sum + pb.budget, 0)
+      const postData = {
+        title: postForm.title, description: postForm.description, content_type: postForm.content_type,
+        category: postForm.category, status: postForm.status, planned_date: postForm.planned_date,
+        planned_time: postForm.planned_time || null, content_deadline: postForm.content_deadline || null,
+        graphic_deadline: postForm.graphic_deadline || null, owner_id: postForm.owner_id || null,
+        owner_name: postForm.owner_name || null, designer_id: postForm.designer_id || null,
+        designer_name: postForm.designer_name || null, hashtags: postForm.hashtags, visual_concept: postForm.visual_concept,
+        key_points: postForm.key_points, media_buying_notes: postForm.media_buying_notes, media_budget: totalBudget
+      }
+      
       if (selectedPost) {
         const { error } = await supabase.from('content_posts').update(postData).eq('id', selectedPost.id)
         if (error) throw error
         await supabase.from('content_post_targets').delete().eq('post_id', selectedPost.id)
         for (const platform of postForm.platforms) {
           const existing = selectedPost.targets?.find(t => t.platform === platform)
-          await supabase.from('content_post_targets').insert({ post_id: selectedPost.id, platform, platform_status: existing?.platform_status || 'planned', publish_at: existing?.publish_at || null, permalink: existing?.permalink || null, manual_posted_by: existing?.manual_posted_by || null, manual_posted_by_name: existing?.manual_posted_by_name || null, manual_posted_at: existing?.manual_posted_at || null, notes: existing?.notes || null })
+          const budget = platformBudgets.find(pb => pb.platform === platform)?.budget || 0
+          await supabase.from('content_post_targets').insert({
+            post_id: selectedPost.id, platform, platform_status: existing?.platform_status || 'planned',
+            publish_at: existing?.publish_at || null, permalink: existing?.permalink || null,
+            manual_posted_by: existing?.manual_posted_by || null, manual_posted_by_name: existing?.manual_posted_by_name || null,
+            manual_posted_at: existing?.manual_posted_at || null, ad_budget: budget, notes: existing?.notes || null
+          })
         }
       } else {
         const { data: newPost, error } = await supabase.from('content_posts').insert({ ...postData, company_id: companyId, created_by: String(user?.id) }).select().single()
         if (error) throw error
-        for (const platform of postForm.platforms) await supabase.from('content_post_targets').insert({ post_id: newPost.id, platform, platform_status: 'planned' })
+        for (const platform of postForm.platforms) {
+          const budget = platformBudgets.find(pb => pb.platform === platform)?.budget || 0
+          await supabase.from('content_post_targets').insert({ post_id: newPost.id, platform, platform_status: 'planned', ad_budget: budget })
+        }
       }
       setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false); fetchPosts()
     } catch (err: any) { alert('Error: ' + err.message) }
   }
 
-  const handleDeletePost = async () => { if (!selectedPost || !confirm('Delete this post?')) return; try { const { supabase } = await import('@/lib/supabase'); await supabase.from('content_posts').delete().eq('id', selectedPost.id); setShowPostDrawer(false); setSelectedPost(null); fetchPosts() } catch (err: any) { alert('Error: ' + err.message) } }
+  const handleDeletePost = async () => {
+    if (!selectedPost || !confirm('Delete this post?')) return
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      await supabase.from('content_posts').delete().eq('id', selectedPost.id)
+      setShowPostDrawer(false); setSelectedPost(null); fetchPosts()
+    } catch (err: any) { alert('Error: ' + err.message) }
+  }
 
   const handleUpdateTarget = async (targetId: string, updates: Partial<ContentPostTarget>) => {
     try {
@@ -126,14 +192,21 @@ export default function CompanyCalendarPage() {
       fetchPosts()
       if (selectedPost) {
         const { data } = await supabase.from('content_posts').select('*').eq('id', selectedPost.id).single()
-        if (data) { const { data: targets } = await supabase.from('content_post_targets').select('*').eq('post_id', data.id); setSelectedPost({ ...data, targets: targets || [] }) }
+        if (data) {
+          const { data: targets } = await supabase.from('content_post_targets').select('*').eq('post_id', data.id)
+          setSelectedPost({ ...data, targets: targets || [] })
+        }
       }
     } catch (err: any) { alert('Error: ' + err.message) }
   }
 
-  const handleMarkAsPublished = async (target: ContentPostTarget) => { await handleUpdateTarget(target.id, { platform_status: 'published', manual_posted_by: String(user?.id), manual_posted_by_name: user?.name || user?.email, manual_posted_at: new Date().toISOString() }) }
+  const handleMarkAsPublished = async (target: ContentPostTarget) => {
+    await handleUpdateTarget(target.id, { platform_status: 'published', manual_posted_by: String(user?.id), manual_posted_by_name: user?.name || user?.email, manual_posted_at: new Date().toISOString() })
+  }
 
-  const copyToClipboard = async (text: string, field: string) => { try { await navigator.clipboard.writeText(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000) } catch { alert('Failed to copy') } }
+  const copyToClipboard = async (text: string, field: string) => {
+    try { await navigator.clipboard.writeText(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000) } catch { alert('Failed to copy') }
+  }
 
   const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear(), month = currentMonth.getMonth()
@@ -147,6 +220,8 @@ export default function CompanyCalendarPage() {
   }, [currentMonth])
 
   const postsByDate = useMemo(() => { const map: Record<string, ContentPost[]> = {}; posts.forEach(post => { const key = new Date(post.planned_date).toDateString(); if (!map[key]) map[key] = []; map[key].push(post) }); return map }, [posts])
+
+  const totalBudget = useMemo(() => posts.reduce((sum, p) => sum + (p.media_budget || 0), 0), [posts])
 
   if (authLoading || !company) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
@@ -165,77 +240,76 @@ export default function CompanyCalendarPage() {
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #F5F5ED; }
         .cal-container { min-height: 100vh; display: flex; background: #F5F5ED; }
         .cal-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; display: flex; flex-direction: column; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; }
-        .cal-header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .cal-header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: #fff; border-bottom: 1px solid #e8e8e8; }
         .cal-nav { display: flex; align-items: center; gap: 1rem; }
-        .cal-back { padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; transition: all 0.2s; }
-        .cal-back:hover { border-color: #C483D9; }
-        .cal-title { font-size: 1.5rem; font-weight: 400; color: #1a1a1a; margin: 0; }
+        .cal-back { padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; }
+        .cal-title { font-size: 1.5rem; font-weight: 500; color: #1a1a1a; margin: 0; }
         .cal-subtitle { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0 0; }
-        .cal-actions { display: flex; align-items: center; gap: 0.75rem; }
-        .cal-toggle { display: flex; background: #fff; border-radius: 10px; padding: 4px; border: 1px solid #e8e8e8; }
-        .cal-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
+        .cal-budget-badge { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .cal-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .cal-toggle { display: flex; background: #f5f5f5; border-radius: 10px; padding: 4px; }
+        .cal-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; background: transparent; color: #666; }
         .cal-toggle-btn.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
-        .cal-btn-secondary { padding: 0.625rem 1.25rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; transition: all 0.2s; }
-        .cal-btn-secondary:hover { border-color: #C483D9; }
-        .cal-btn-primary { padding: 0.625rem 1.5rem; font-size: 0.9rem; font-weight: 500; border-radius: 10px; border: none; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(196, 131, 217, 0.3); transition: all 0.2s; }
-        .cal-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196, 131, 217, 0.4); }
-        .cal-content { flex: 1; display: flex; overflow: hidden; padding: 0 2rem 2rem; }
-        .cal-left { flex: ${showPostDrawer ? '0 0 60%' : '1'}; overflow: auto; transition: flex 0.3s; }
-        .cal-calendar { background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #e8e8e8; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        .cal-btn-secondary { padding: 0.625rem 1.25rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; }
+        .cal-btn-primary { padding: 0.625rem 1.5rem; font-size: 0.9rem; font-weight: 500; border-radius: 10px; border: none; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(196, 131, 217, 0.3); }
+        .cal-content { flex: 1; display: flex; overflow: hidden; padding: 1.5rem 2rem; gap: 1.5rem; }
+        .cal-left { flex: ${showPostDrawer ? '0 0 58%' : '1'}; overflow: auto; }
+        .cal-calendar { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; }
         .cal-cal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; }
         .cal-month { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
         .cal-cal-nav { display: flex; gap: 0.5rem; }
-        .cal-cal-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; transition: all 0.2s; }
-        .cal-cal-btn:hover { border-color: #C483D9; }
+        .cal-cal-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; }
         .cal-days-header { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #f0f0f0; }
-        .cal-day-header { padding: 0.75rem 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cal-day-header { padding: 0.75rem 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 600; color: #666; text-transform: uppercase; }
         .cal-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .cal-day { min-height: 100px; padding: 0.5rem; border-bottom: 1px solid #f5f5f5; border-right: 1px solid #f5f5f5; cursor: pointer; transition: background 0.2s; }
+        .cal-day { min-height: 90px; padding: 0.5rem; border-bottom: 1px solid #f5f5f5; border-right: 1px solid #f5f5f5; cursor: pointer; background: #fff; }
         .cal-day:hover { background: #fafafa; }
         .cal-day.other { background: #fafafa; }
         .cal-day-num { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.375rem; color: #1a1a1a; }
         .cal-day-num.other { color: #bbb; }
         .cal-day-num.today { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
-        .cal-post { font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 500; transition: transform 0.2s; }
-        .cal-post:hover { transform: scale(1.02); }
+        .cal-post { font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 500; }
         .cal-more { font-size: 0.65rem; color: #666; text-align: center; font-weight: 500; }
-        .cal-drawer { width: 40%; min-width: 400px; background: #fff; border-left: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
-        .cal-drawer-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+        .cal-drawer { width: 42%; min-width: 420px; background: #fff; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e8e8e8; }
+        .cal-drawer-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
         .cal-drawer-title { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
-        .cal-drawer-close { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; padding: 0.25rem; line-height: 1; }
+        .cal-drawer-close { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; }
         .cal-drawer-body { flex: 1; overflow: auto; padding: 1.5rem; }
         .cal-drawer-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; gap: 0.75rem; background: #fafafa; }
         .cal-form-group { margin-bottom: 1.25rem; }
         .cal-label { display: block; font-size: 0.85rem; font-weight: 500; color: #333; margin-bottom: 0.5rem; }
-        .cal-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: border-color 0.2s; }
+        .cal-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; outline: none; }
         .cal-input:focus { border-color: #C483D9; }
         .cal-textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; resize: none; box-sizing: border-box; outline: none; }
-        .cal-textarea:focus { border-color: #C483D9; }
-        .cal-platforms { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .cal-platform-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; transition: all 0.2s; text-transform: capitalize; }
-        .cal-platform-btn.active { border-width: 2px; font-weight: 500; }
-        .cal-copy-section { background: #f0fff4; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #c6f6d5; }
-        .cal-copy-title { font-size: 0.9rem; font-weight: 600; color: #22543d; margin: 0 0 1rem 0; }
+        .cal-platforms { display: flex; flex-direction: column; gap: 0.75rem; }
+        .cal-platform-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #fafafa; border-radius: 10px; border: 1px solid #e8e8e8; }
+        .cal-platform-row.active { border-color: #C483D9; background: #fdf4ff; }
+        .cal-platform-check { width: 20px; height: 20px; border-radius: 4px; border: 2px solid #e8e8e8; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cal-platform-check.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); border-color: #C483D9; color: #fff; }
+        .cal-platform-name { flex: 1; font-weight: 500; text-transform: capitalize; }
+        .cal-platform-budget { width: 120px; padding: 0.5rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; text-align: right; }
+        .cal-copy-section { background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #bbf7d0; }
+        .cal-copy-title { font-size: 0.9rem; font-weight: 600; color: #166534; margin: 0 0 1rem 0; }
         .cal-copy-item { margin-bottom: 1rem; }
         .cal-copy-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
-        .cal-copy-item-label { font-size: 0.8rem; font-weight: 500; color: #276749; }
-        .cal-copy-btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border: none; border-radius: 6px; background: #48bb78; color: #fff; cursor: pointer; transition: background 0.2s; }
-        .cal-copy-btn:hover { background: #38a169; }
-        .cal-copy-btn.copied { background: #2f855a; }
-        .cal-copy-content { background: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: #1a1a1a; line-height: 1.5; border: 1px solid #c6f6d5; }
-        .cal-target { background: #fafafa; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #f0f0f0; }
+        .cal-copy-item-label { font-size: 0.8rem; font-weight: 500; color: #15803d; }
+        .cal-copy-btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border: none; border-radius: 6px; background: #22c55e; color: #fff; cursor: pointer; }
+        .cal-copy-btn.copied { background: #16a34a; }
+        .cal-copy-content { background: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: #1a1a1a; line-height: 1.5; border: 1px solid #bbf7d0; }
+        .cal-target { background: #fafafa; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #e8e8e8; }
         .cal-target-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
         .cal-target-platform { display: flex; align-items: center; gap: 0.5rem; }
-        .cal-target-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .cal-target-dot { width: 12px; height: 12px; border-radius: 50%; }
         .cal-target-name { font-weight: 500; text-transform: capitalize; color: #1a1a1a; }
+        .cal-target-budget { font-size: 0.85rem; font-weight: 600; color: #10b981; }
         .cal-target-status { padding: 0.25rem 0.75rem; font-size: 0.7rem; font-weight: 500; border-radius: 20px; }
-        .cal-target-select { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; outline: none; }
-        .cal-target-input { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; box-sizing: border-box; outline: none; }
-        .cal-target-publish-btn { width: 100%; padding: 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
+        .cal-target-select { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .cal-target-input { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; box-sizing: border-box; }
+        .cal-target-publish-btn { width: 100%; padding: 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #fff; cursor: pointer; }
         .cal-target-published { font-size: 0.8rem; color: #666; margin-top: 0.75rem; padding: 0.625rem; background: #fff; border-radius: 6px; }
-        .cal-sheet { background: #fff; border-radius: 20px; overflow: auto; border: 1px solid #e8e8e8; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-        .cal-table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 0.85rem; }
-        .cal-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; background: #fafafa; }
+        .cal-sheet { background: #fff; border-radius: 16px; overflow: auto; border: 1px solid #e8e8e8; }
+        .cal-table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: 0.85rem; }
+        .cal-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; border-bottom: 2px solid #f0f0f0; background: #fafafa; }
         .cal-table td { padding: 1rem; border-bottom: 1px solid #f5f5f5; }
         .cal-table tr:hover { background: #fafafa; cursor: pointer; }
         .cal-status-badge { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 20px; }
@@ -245,7 +319,6 @@ export default function CompanyCalendarPage() {
 
       <div className="cal-container">
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-
         <main className="cal-main">
           <header className="cal-header">
             <div className="cal-nav">
@@ -254,6 +327,9 @@ export default function CompanyCalendarPage() {
                 <h1 className="cal-title">{company.name}</h1>
                 <p className="cal-subtitle">Content Calendar</p>
               </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className="cal-budget-badge">Total Budget: ${totalBudget.toLocaleString()}</div>
             </div>
             <div className="cal-actions">
               <div className="cal-toggle">
@@ -307,7 +383,7 @@ export default function CompanyCalendarPage() {
                     </div>
                   ) : (
                     <table className="cal-table">
-                      <thead><tr>{['Title', 'Type', 'Date', 'Platforms', 'Status', 'Owner'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                      <thead><tr>{['Title', 'Type', 'Date', 'Platforms', 'Budget', 'Status', 'Owner'].map(h => <th key={h}>{h}</th>)}</tr></thead>
                       <tbody>
                         {posts.map(post => (
                           <tr key={post.id} onClick={() => openPostDetails(post)}>
@@ -315,6 +391,7 @@ export default function CompanyCalendarPage() {
                             <td style={{ color: '#666' }}>{post.content_type}</td>
                             <td style={{ color: '#666' }}>{new Date(post.planned_date).toLocaleDateString()}</td>
                             <td><div style={{ display: 'flex', gap: '4px' }}>{post.targets?.map(t => <span key={t.platform} style={{ width: '10px', height: '10px', borderRadius: '50%', background: PLATFORM_COLORS[t.platform] }} title={t.platform} />)}</div></td>
+                            <td style={{ fontWeight: 600, color: '#10b981' }}>${(post.media_budget || 0).toLocaleString()}</td>
                             <td><span className="cal-status-badge" style={{ background: STATUS_COLORS[post.status]?.bg, color: STATUS_COLORS[post.status]?.text }}>{post.status}</span></td>
                             <td style={{ color: '#666' }}>{post.owner_name || '-'}</td>
                           </tr>
@@ -336,7 +413,33 @@ export default function CompanyCalendarPage() {
                   {isEditing ? (
                     <>
                       <div className="cal-form-group"><label className="cal-label">Title *</label><input type="text" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} placeholder="Post title" className="cal-input" /></div>
-                      <div className="cal-form-group"><label className="cal-label">Platforms *</label><div className="cal-platforms">{PLATFORMS.map(p => <button key={p} type="button" onClick={() => setPostForm(prev => ({ ...prev, platforms: prev.platforms.includes(p) ? prev.platforms.filter(x => x !== p) : [...prev.platforms, p] }))} className={`cal-platform-btn ${postForm.platforms.includes(p) ? 'active' : ''}`} style={postForm.platforms.includes(p) ? { borderColor: PLATFORM_COLORS[p], background: `${PLATFORM_COLORS[p]}10`, color: PLATFORM_COLORS[p] } : {}}>{p}</button>)}</div></div>
+                      
+                      <div className="cal-form-group">
+                        <label className="cal-label">Platforms & Budget *</label>
+                        <div className="cal-platforms">
+                          {PLATFORMS.map(p => {
+                            const isActive = postForm.platforms.includes(p)
+                            const budget = platformBudgets.find(pb => pb.platform === p)?.budget || 0
+                            return (
+                              <div key={p} className={`cal-platform-row ${isActive ? 'active' : ''}`}>
+                                <div className={`cal-platform-check ${isActive ? 'active' : ''}`} onClick={() => handlePlatformToggle(p)}>
+                                  {isActive && <span style={{ fontSize: '12px' }}>✓</span>}
+                                </div>
+                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: PLATFORM_COLORS[p] }} />
+                                <span className="cal-platform-name">{p}</span>
+                                {isActive && (
+                                  <input type="number" value={budget} onChange={(e) => handleBudgetChange(p, Number(e.target.value))} placeholder="Budget" className="cal-platform-budget" />
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0fff4', borderRadius: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#166534', fontWeight: 500 }}>Total Ad Budget:</span>
+                          <span style={{ color: '#166534', fontWeight: 700 }}>${platformBudgets.reduce((sum, pb) => sum + pb.budget, 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div className="cal-form-group"><label className="cal-label">Content Type</label><select value={postForm.content_type} onChange={(e) => setPostForm({ ...postForm, content_type: e.target.value as ContentType })} className="cal-input">{CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                         <div className="cal-form-group"><label className="cal-label">Status</label><select value={postForm.status} onChange={(e) => setPostForm({ ...postForm, status: e.target.value as PostStatus })} className="cal-input">{POST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
@@ -357,8 +460,12 @@ export default function CompanyCalendarPage() {
                     <>
                       <div style={{ marginBottom: '1.5rem' }}>
                         <h4 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{selectedPost.title}</h4>
-                        <span className="cal-status-badge" style={{ background: STATUS_COLORS[selectedPost.status]?.bg, color: STATUS_COLORS[selectedPost.status]?.text }}>{selectedPost.status}</span>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          <span className="cal-status-badge" style={{ background: STATUS_COLORS[selectedPost.status]?.bg, color: STATUS_COLORS[selectedPost.status]?.text }}>{selectedPost.status}</span>
+                          <span style={{ color: '#10b981', fontWeight: 600 }}>Total: ${(selectedPost.media_budget || 0).toLocaleString()}</span>
+                        </div>
                       </div>
+                      
                       {(selectedPost.description || selectedPost.hashtags) && (
                         <div className="cal-copy-section">
                           <h5 className="cal-copy-title">Ready to Post</h5>
@@ -385,24 +492,21 @@ export default function CompanyCalendarPage() {
                           )}
                         </div>
                       )}
+                      
                       <div style={{ marginBottom: '1.25rem' }}>
                         <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Planned Date</div>
                         <div style={{ fontSize: '1rem', fontWeight: 500, color: '#1a1a1a' }}>{new Date(selectedPost.planned_date).toLocaleDateString()} {selectedPost.planned_time || ''}</div>
                       </div>
-                      {selectedPost.visual_concept && (
-                        <div style={{ marginBottom: '1.25rem' }}>
-                          <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Visual Concept</div>
-                          <div style={{ fontSize: '0.9rem', color: '#1a1a1a', lineHeight: 1.6 }}>{selectedPost.visual_concept}</div>
-                        </div>
-                      )}
+                      
                       <div style={{ marginBottom: '1.5rem' }}>
                         <h5 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', margin: '0 0 1rem 0' }}>Platform Targets</h5>
                         {selectedPost.targets?.map(target => (
                           <div key={target.id} className="cal-target">
                             <div className="cal-target-header">
                               <div className="cal-target-platform">
-                                <span className="cal-target-dot" style={{ background: PLATFORM_COLORS[target.platform], boxShadow: `0 0 0 3px ${PLATFORM_COLORS[target.platform]}33` }} />
+                                <span className="cal-target-dot" style={{ background: PLATFORM_COLORS[target.platform] }} />
                                 <span className="cal-target-name">{target.platform}</span>
+                                <span className="cal-target-budget">${(target.ad_budget || 0).toLocaleString()}</span>
                               </div>
                               <span className="cal-target-status" style={{ background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>{target.platform_status}</span>
                             </div>

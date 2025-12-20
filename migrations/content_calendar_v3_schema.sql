@@ -43,7 +43,7 @@ CREATE TABLE content_posts (
   description TEXT,
   content_type TEXT NOT NULL DEFAULT 'static' CHECK (content_type IN ('static', 'photo', 'reel', 'video', 'story', 'carousel', 'article')),
   category TEXT,
-  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('idea', 'draft', 'assigned', 'in_progress', 'review', 'approved', 'scheduled', 'published', 'reported')),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('idea', 'draft', 'design', 'review', 'approved', 'scheduled', 'published', 'reported')),
   planned_date DATE NOT NULL,
   planned_time TIME,
   content_deadline DATE,
@@ -76,6 +76,7 @@ CREATE TABLE content_post_targets (
   manual_posted_by TEXT,
   manual_posted_by_name TEXT,
   manual_posted_at TIMESTAMP WITH TIME ZONE,
+  ad_budget DECIMAL(10,2) DEFAULT 0,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -218,4 +219,5 @@ CREATE TRIGGER update_company_kpi_overview_updated_at BEFORE UPDATE ON company_k
 
 -- Verify
 SELECT 'Content Calendar V3 Schema created successfully!' AS status;
+
 
