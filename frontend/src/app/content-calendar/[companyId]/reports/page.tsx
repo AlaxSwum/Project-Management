@@ -505,59 +505,144 @@ export default function ReportsPage() {
               </>
             ) : (
               /* Posts Tab */
-              <div className="rpt-section">
-                <div className="rpt-section-header">
-                  <h3 className="rpt-section-title">{selectedPlatform} Posts - {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-                  <span style={{ fontSize: '0.9rem', color: '#666' }}>{platformPosts.length} posts</span>
+              <>
+                {/* Post Stats Summary */}
+                <div className="rpt-stats">
+                  {(() => {
+                    const postTotals = platformPosts.reduce((acc, t: any) => {
+                      const m = t.metrics?.find((x: any) => x.metric_scope === 'lifetime')
+                      return {
+                        posts: acc.posts + 1,
+                        reach: acc.reach + (m?.reach || 0),
+                        engagement: acc.engagement + (m?.interactions || 0),
+                        likes: acc.likes + (m?.reactions || 0),
+                        budget: acc.budget + (t.ad_budget || 0)
+                      }
+                    }, { posts: 0, reach: 0, engagement: 0, likes: 0, budget: 0 })
+                    return [
+                      { label: 'Total Posts', value: postTotals.posts, color: '#C483D9' },
+                      { label: 'Total Reach', value: postTotals.reach, color: '#5884FD' },
+                      { label: 'Total Engagement', value: postTotals.engagement, color: '#10b981' },
+                      { label: 'Total Likes', value: postTotals.likes, color: '#ec4899' },
+                      { label: 'Total Budget', value: postTotals.budget, color: '#f59e0b', prefix: '$' }
+                    ].map(s => (
+                      <div key={s.label} className="rpt-stat">
+                        <div className="rpt-stat-value" style={{ color: s.color }}>{s.prefix || ''}{s.value.toLocaleString()}</div>
+                        <div className="rpt-stat-label">{s.label}</div>
+                      </div>
+                    ))
+                  })()}
                 </div>
-                {platformPosts.length === 0 ? (
-                  <div className="rpt-empty">No posts for {selectedPlatform} in this month</div>
-                ) : (
-                  <table className="rpt-table">
-                    <thead>
-                      <tr>
-                        <th>Title</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Budget</th>
-                        <th>Reach</th>
-                        <th>Engagement</th>
-                        <th>Likes</th>
-                        <th>Comments</th>
-                        <th>Shares</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {platformPosts.map((target: any) => {
-                        const metrics = target.metrics?.find((m: any) => m.metric_scope === 'lifetime')
-                        return (
-                          <tr key={target.id}>
-                            <td style={{ fontWeight: 500, color: '#1a1a1a', maxWidth: '200px' }}>{target.post.title}</td>
-                            <td style={{ color: '#666' }}>{new Date(target.post.planned_date).toLocaleDateString()}</td>
-                            <td>
-                              <span style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '20px', background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>
-                                {target.platform_status}
-                              </span>
-                            </td>
-                            <td style={{ fontWeight: 500, color: '#f59e0b' }}>${(target.ad_budget || 0).toLocaleString()}</td>
-                            <td style={{ fontWeight: 500 }}>{(metrics?.reach || 0).toLocaleString()}</td>
-                            <td style={{ fontWeight: 500 }}>{(metrics?.interactions || 0).toLocaleString()}</td>
-                            <td>{(metrics?.reactions || 0).toLocaleString()}</td>
-                            <td>{(metrics?.comments || 0).toLocaleString()}</td>
-                            <td>{(metrics?.shares || 0).toLocaleString()}</td>
-                            <td>
-                              <button onClick={() => openMetricsModal(target)} className="rpt-btn-edit">
-                                {metrics ? 'Edit' : 'Add'}
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+
+                {/* Top Posts */}
+                {platformPosts.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div className="rpt-section">
+                      <div className="rpt-section-header">
+                        <h3 className="rpt-section-title">Top by Engagement</h3>
+                      </div>
+                      <div style={{ padding: '1rem' }}>
+                        {[...platformPosts].sort((a: any, b: any) => {
+                          const aM = a.metrics?.find((x: any) => x.metric_scope === 'lifetime')?.interactions || 0
+                          const bM = b.metrics?.find((x: any) => x.metric_scope === 'lifetime')?.interactions || 0
+                          return bM - aM
+                        }).slice(0, 5).map((t: any, idx) => {
+                          const m = t.metrics?.find((x: any) => x.metric_scope === 'lifetime')
+                          return (
+                            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: idx === 0 ? '#f0f7ff' : '#fafafa', borderRadius: '10px', marginBottom: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <span style={{ width: '24px', height: '24px', borderRadius: '50%', background: idx === 0 ? PLATFORM_COLORS[selectedPlatform] : '#e0e0e0', color: idx === 0 ? '#fff' : '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600 }}>{idx + 1}</span>
+                                <span style={{ fontWeight: 500, fontSize: '0.9rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.post.title}</span>
+                              </div>
+                              <span style={{ fontWeight: 600, color: PLATFORM_COLORS[selectedPlatform] }}>{(m?.interactions || 0).toLocaleString()}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    <div className="rpt-section">
+                      <div className="rpt-section-header">
+                        <h3 className="rpt-section-title">Top by Reach</h3>
+                      </div>
+                      <div style={{ padding: '1rem' }}>
+                        {[...platformPosts].sort((a: any, b: any) => {
+                          const aM = a.metrics?.find((x: any) => x.metric_scope === 'lifetime')?.reach || 0
+                          const bM = b.metrics?.find((x: any) => x.metric_scope === 'lifetime')?.reach || 0
+                          return bM - aM
+                        }).slice(0, 5).map((t: any, idx) => {
+                          const m = t.metrics?.find((x: any) => x.metric_scope === 'lifetime')
+                          return (
+                            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: idx === 0 ? '#f0fff4' : '#fafafa', borderRadius: '10px', marginBottom: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <span style={{ width: '24px', height: '24px', borderRadius: '50%', background: idx === 0 ? '#10b981' : '#e0e0e0', color: idx === 0 ? '#fff' : '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600 }}>{idx + 1}</span>
+                                <span style={{ fontWeight: 500, fontSize: '0.9rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.post.title}</span>
+                              </div>
+                              <span style={{ fontWeight: 600, color: '#10b981' }}>{(m?.reach || 0).toLocaleString()}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </div>
+
+                {/* Posts Table */}
+                <div className="rpt-section">
+                  <div className="rpt-section-header">
+                    <h3 className="rpt-section-title">{selectedPlatform} Posts - {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
+                    <span style={{ fontSize: '0.9rem', color: '#666' }}>{platformPosts.length} posts</span>
+                  </div>
+                  {platformPosts.length === 0 ? (
+                    <div className="rpt-empty">No posts for {selectedPlatform} in this month</div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="rpt-table">
+                        <thead>
+                          <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Budget</th>
+                            <th>Reach</th>
+                            <th>Engagement</th>
+                            <th>Likes</th>
+                            <th>Comments</th>
+                            <th>Shares</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {platformPosts.map((target: any) => {
+                            const metrics = target.metrics?.find((m: any) => m.metric_scope === 'lifetime')
+                            return (
+                              <tr key={target.id}>
+                                <td style={{ fontWeight: 500, color: '#1a1a1a', maxWidth: '200px' }}>{target.post.title}</td>
+                                <td style={{ color: '#666' }}>{new Date(target.post.planned_date).toLocaleDateString()}</td>
+                                <td>
+                                  <span style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '20px', background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>
+                                    {target.platform_status}
+                                  </span>
+                                </td>
+                                <td style={{ fontWeight: 500, color: '#f59e0b' }}>${(target.ad_budget || 0).toLocaleString()}</td>
+                                <td style={{ fontWeight: 500 }}>{(metrics?.reach || 0).toLocaleString()}</td>
+                                <td style={{ fontWeight: 500 }}>{(metrics?.interactions || 0).toLocaleString()}</td>
+                                <td>{(metrics?.reactions || 0).toLocaleString()}</td>
+                                <td>{(metrics?.comments || 0).toLocaleString()}</td>
+                                <td>{(metrics?.shares || 0).toLocaleString()}</td>
+                                <td>
+                                  <button onClick={() => openMetricsModal(target)} className="rpt-btn-edit">
+                                    {metrics ? 'Edit' : 'Add'}
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </main>
