@@ -119,10 +119,42 @@ CREATE TABLE company_kpi_overview (
   total_reach INTEGER DEFAULT 0,
   total_impressions_views INTEGER DEFAULT 0,
   total_engagement_interactions INTEGER DEFAULT 0,
+  total_likes INTEGER DEFAULT 0,
+  total_comments INTEGER DEFAULT 0,
+  total_shares INTEGER DEFAULT 0,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(company_id, report_month, platform)
+);
+
+-- G) Weekly KPI Data (weekly metrics per platform)
+CREATE TABLE company_weekly_kpi (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  platform TEXT NOT NULL CHECK (platform IN ('facebook', 'instagram', 'tiktok', 'linkedin')),
+  year INTEGER NOT NULL,
+  month INTEGER NOT NULL CHECK (month >= 1 AND month <= 12),
+  week_number INTEGER NOT NULL CHECK (week_number >= 1 AND week_number <= 5),
+  week_start DATE,
+  week_end DATE,
+  start_followers INTEGER DEFAULT 0,
+  end_followers INTEGER DEFAULT 0,
+  followers_gained INTEGER DEFAULT 0,
+  followers_lost INTEGER DEFAULT 0,
+  net_growth INTEGER DEFAULT 0,
+  total_reach INTEGER DEFAULT 0,
+  total_impressions INTEGER DEFAULT 0,
+  total_engagement INTEGER DEFAULT 0,
+  total_likes INTEGER DEFAULT 0,
+  total_comments INTEGER DEFAULT 0,
+  total_shares INTEGER DEFAULT 0,
+  total_saves INTEGER DEFAULT 0,
+  posts_published INTEGER DEFAULT 0,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(company_id, platform, year, month, week_number)
 );
 
 -- Create indexes
@@ -138,6 +170,7 @@ CREATE INDEX idx_content_post_targets_platform_status ON content_post_targets(pl
 CREATE INDEX idx_content_post_metrics_post_target_id ON content_post_metrics(post_target_id);
 CREATE INDEX idx_content_post_metrics_range ON content_post_metrics(range_start, range_end);
 CREATE INDEX idx_company_kpi_company_month ON company_kpi_overview(company_id, report_month);
+CREATE INDEX idx_company_weekly_kpi_lookup ON company_weekly_kpi(company_id, platform, year, month);
 
 -- Enable RLS
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
@@ -146,6 +179,7 @@ ALTER TABLE content_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content_post_targets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content_post_metrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_kpi_overview ENABLE ROW LEVEL SECURITY;
+ALTER TABLE company_weekly_kpi ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for companies
 CREATE POLICY "Users can view companies they belong to" ON companies

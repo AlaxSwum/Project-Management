@@ -113,6 +113,36 @@ export interface CompanyKPIOverview {
   total_reach: number;
   total_impressions_views: number;
   total_engagement_interactions: number;
+  total_likes: number;
+  total_comments: number;
+  total_shares: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompanyWeeklyKPI {
+  id: string;
+  company_id: string;
+  platform: Platform;
+  year: number;
+  month: number;
+  week_number: number;
+  week_start: string | null;
+  week_end: string | null;
+  start_followers: number;
+  end_followers: number;
+  followers_gained: number;
+  followers_lost: number;
+  net_growth: number;
+  total_reach: number;
+  total_impressions: number;
+  total_engagement: number;
+  total_likes: number;
+  total_comments: number;
+  total_shares: number;
+  total_saves: number;
+  posts_published: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
