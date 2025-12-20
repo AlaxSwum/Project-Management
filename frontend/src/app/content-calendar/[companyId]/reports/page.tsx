@@ -504,117 +504,158 @@ export default function ReportsPage() {
                 </div>
               </>
             ) : (
-              /* Posts Tab - Show all platforms */
+              /* Posts Tab - Platform selection with posts */
               <>
-                {/* Month header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: 0 }}>
-                    Posts for {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </h2>
-                  <span style={{ fontSize: '0.9rem', color: '#666' }}>{posts.length} total posts</span>
+                {/* Platform Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                  {PLATFORMS.map(platform => {
+                    const platformTargets = posts.flatMap(post => 
+                      (post.targets || []).filter(t => t.platform === platform).map(t => ({ ...t, post }))
+                    )
+                    const publishedCount = platformTargets.filter(t => t.platform_status === 'published').length
+                    const totals = platformTargets.reduce((acc, t: any) => {
+                      const m = t.metrics?.find((x: any) => x.metric_scope === 'lifetime')
+                      return { reach: acc.reach + (m?.reach || 0), engagement: acc.engagement + (m?.interactions || 0) }
+                    }, { reach: 0, engagement: 0 })
+                    const isSelected = selectedPlatform === platform
+                    
+                    return (
+                      <div key={platform} onClick={() => setSelectedPlatform(platform)} style={{
+                        background: isSelected ? PLATFORM_COLORS[platform] : '#fff',
+                        border: `2px solid ${PLATFORM_COLORS[platform]}`,
+                        borderRadius: '16px', padding: '1.25rem', cursor: 'pointer',
+                        transition: 'all 0.2s', transform: isSelected ? 'scale(1.02)' : 'scale(1)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: isSelected ? 'rgba(255,255,255,0.2)' : PLATFORM_COLORS[platform], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '1.25rem' }}>
+                            {platform.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 500, color: isSelected ? '#fff' : '#1a1a1a', textTransform: 'capitalize' }}>{platform}</div>
+                            <div style={{ fontSize: '0.8rem', color: isSelected ? 'rgba(255,255,255,0.8)' : '#666' }}>{platformTargets.length} posts</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', textAlign: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isSelected ? '#fff' : PLATFORM_COLORS[platform] }}>{publishedCount}</div>
+                            <div style={{ fontSize: '0.65rem', color: isSelected ? 'rgba(255,255,255,0.7)' : '#666' }}>Published</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isSelected ? '#fff' : PLATFORM_COLORS[platform] }}>{totals.reach.toLocaleString()}</div>
+                            <div style={{ fontSize: '0.65rem', color: isSelected ? 'rgba(255,255,255,0.7)' : '#666' }}>Reach</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isSelected ? '#fff' : PLATFORM_COLORS[platform] }}>{totals.engagement.toLocaleString()}</div>
+                            <div style={{ fontSize: '0.65rem', color: isSelected ? 'rgba(255,255,255,0.7)' : '#666' }}>Engagement</div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
-                {/* Each Platform Section */}
-                {PLATFORMS.map(platform => {
+                {/* Selected Platform Posts */}
+                {(() => {
                   const platformTargets = posts.flatMap(post => 
-                    (post.targets || [])
-                      .filter(t => t.platform === platform)
-                      .map(t => ({ ...t, post }))
+                    (post.targets || []).filter(t => t.platform === selectedPlatform).map(t => ({ ...t, post }))
                   )
-                  
-                  if (platformTargets.length === 0) return null
-                  
-                  const platformTotals = platformTargets.reduce((acc, t: any) => {
+                  const totals = platformTargets.reduce((acc, t: any) => {
                     const m = t.metrics?.find((x: any) => x.metric_scope === 'lifetime')
                     return {
                       reach: acc.reach + (m?.reach || 0),
                       engagement: acc.engagement + (m?.interactions || 0),
+                      likes: acc.likes + (m?.reactions || 0),
+                      comments: acc.comments + (m?.comments || 0),
+                      shares: acc.shares + (m?.shares || 0),
                       budget: acc.budget + (t.ad_budget || 0)
                     }
-                  }, { reach: 0, engagement: 0, budget: 0 })
-                  
+                  }, { reach: 0, engagement: 0, likes: 0, comments: 0, shares: 0, budget: 0 })
+
                   return (
-                    <div key={platform} className="rpt-section" style={{ marginBottom: '1.5rem' }}>
-                      <div className="rpt-section-header" style={{ background: `${PLATFORM_COLORS[platform]}10` }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: PLATFORM_COLORS[platform], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '1.125rem' }}>
-                            {platform.charAt(0).toUpperCase()}
+                    <>
+                      {/* Stats Row */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                        {[
+                          { label: 'Total Posts', value: platformTargets.length },
+                          { label: 'Total Reach', value: totals.reach },
+                          { label: 'Engagement', value: totals.engagement },
+                          { label: 'Likes', value: totals.likes },
+                          { label: 'Comments', value: totals.comments },
+                          { label: 'Ad Budget', value: totals.budget, prefix: '$' }
+                        ].map(s => (
+                          <div key={s.label} style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.375rem', fontWeight: 600, color: PLATFORM_COLORS[selectedPlatform] }}>{s.prefix || ''}{s.value.toLocaleString()}</div>
+                            <div style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase', marginTop: '0.25rem' }}>{s.label}</div>
                           </div>
-                          <div>
-                            <h3 className="rpt-section-title" style={{ textTransform: 'capitalize', margin: 0 }}>{platform}</h3>
-                            <span style={{ fontSize: '0.8rem', color: '#666' }}>{platformTargets.length} posts</span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '1.5rem' }}>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '1rem', fontWeight: 600, color: PLATFORM_COLORS[platform] }}>{platformTotals.reach.toLocaleString()}</div>
-                            <div style={{ fontSize: '0.7rem', color: '#666' }}>REACH</div>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '1rem', fontWeight: 600, color: PLATFORM_COLORS[platform] }}>{platformTotals.engagement.toLocaleString()}</div>
-                            <div style={{ fontSize: '0.7rem', color: '#666' }}>ENGAGEMENT</div>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#f59e0b' }}>${platformTotals.budget.toLocaleString()}</div>
-                            <div style={{ fontSize: '0.7rem', color: '#666' }}>BUDGET</div>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                      <div style={{ overflowX: 'auto' }}>
-                        <table className="rpt-table">
-                          <thead>
-                            <tr>
-                              <th>Title</th>
-                              <th>Date</th>
-                              <th>Status</th>
-                              <th>Budget</th>
-                              <th>Reach</th>
-                              <th>Engagement</th>
-                              <th>Likes</th>
-                              <th>Comments</th>
-                              <th>Shares</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
+
+                      {/* Posts List */}
+                      <div className="rpt-section">
+                        <div className="rpt-section-header">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: PLATFORM_COLORS[selectedPlatform], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
+                              {selectedPlatform.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 className="rpt-section-title" style={{ textTransform: 'capitalize', margin: 0 }}>{selectedPlatform} Posts</h3>
+                              <span style={{ fontSize: '0.8rem', color: '#666' }}>{new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {platformTargets.length === 0 ? (
+                          <div className="rpt-empty">
+                            <p>No {selectedPlatform} posts for this month</p>
+                            <p style={{ fontSize: '0.85rem', color: '#999' }}>Posts you create in the content calendar will appear here</p>
+                          </div>
+                        ) : (
+                          <div style={{ padding: '1rem' }}>
                             {platformTargets.map((target: any) => {
                               const metrics = target.metrics?.find((m: any) => m.metric_scope === 'lifetime')
+                              const hasMetrics = !!metrics
                               return (
-                                <tr key={target.id}>
-                                  <td style={{ fontWeight: 500, color: '#1a1a1a' }}>{target.post.title}</td>
-                                  <td style={{ color: '#666', fontSize: '0.85rem' }}>{new Date(target.post.planned_date).toLocaleDateString()}</td>
-                                  <td>
-                                    <span style={{ padding: '0.25rem 0.625rem', fontSize: '0.7rem', fontWeight: 500, borderRadius: '20px', background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>
-                                      {target.platform_status}
-                                    </span>
-                                  </td>
-                                  <td style={{ fontWeight: 500, color: '#f59e0b' }}>${(target.ad_budget || 0).toLocaleString()}</td>
-                                  <td style={{ fontWeight: 500 }}>{(metrics?.reach || 0).toLocaleString()}</td>
-                                  <td style={{ fontWeight: 500, color: PLATFORM_COLORS[platform] }}>{(metrics?.interactions || 0).toLocaleString()}</td>
-                                  <td>{(metrics?.reactions || 0).toLocaleString()}</td>
-                                  <td>{(metrics?.comments || 0).toLocaleString()}</td>
-                                  <td>{(metrics?.shares || 0).toLocaleString()}</td>
-                                  <td>
-                                    <button onClick={() => openMetricsModal(target)} className="rpt-btn-edit" style={{ background: metrics ? '#f0f7ff' : '#fff', borderColor: metrics ? PLATFORM_COLORS[platform] : '#e8e8e8', color: metrics ? PLATFORM_COLORS[platform] : '#333' }}>
-                                      {metrics ? 'Edit' : 'Add Metrics'}
-                                    </button>
-                                  </td>
-                                </tr>
+                                <div key={target.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#fafafa', borderRadius: '12px', marginBottom: '0.75rem', border: '1px solid #e8e8e8' }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                                      <span style={{ fontWeight: 500, color: '#1a1a1a', fontSize: '1rem' }}>{target.post.title}</span>
+                                      <span style={{ padding: '0.25rem 0.625rem', fontSize: '0.7rem', fontWeight: 500, borderRadius: '20px', background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>
+                                        {target.platform_status}
+                                      </span>
+                                      {target.ad_budget > 0 && (
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#f59e0b' }}>${target.ad_budget}</span>
+                                      )}
+                                    </div>
+                                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                                      {new Date(target.post.planned_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                    </div>
+                                    {hasMetrics && (
+                                      <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', fontSize: '0.85rem' }}>
+                                        <span><strong style={{ color: PLATFORM_COLORS[selectedPlatform] }}>{metrics.reach?.toLocaleString() || 0}</strong> reach</span>
+                                        <span><strong style={{ color: PLATFORM_COLORS[selectedPlatform] }}>{metrics.interactions?.toLocaleString() || 0}</strong> engagement</span>
+                                        <span><strong>{metrics.reactions?.toLocaleString() || 0}</strong> likes</span>
+                                        <span><strong>{metrics.comments?.toLocaleString() || 0}</strong> comments</span>
+                                        <span><strong>{metrics.shares?.toLocaleString() || 0}</strong> shares</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <button onClick={() => openMetricsModal(target)} style={{
+                                    padding: '0.75rem 1.5rem', fontSize: '0.9rem', fontWeight: 500, borderRadius: '10px', cursor: 'pointer',
+                                    background: hasMetrics ? '#fff' : PLATFORM_COLORS[selectedPlatform],
+                                    border: `2px solid ${PLATFORM_COLORS[selectedPlatform]}`,
+                                    color: hasMetrics ? PLATFORM_COLORS[selectedPlatform] : '#fff'
+                                  }}>
+                                    {hasMetrics ? 'Edit KPI' : 'Add KPI'}
+                                  </button>
+                                </div>
                               )
                             })}
-                          </tbody>
-                        </table>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    </>
                   )
-                })}
-
-                {posts.length === 0 && (
-                  <div className="rpt-empty">
-                    <p>No posts for {new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
-                    <p style={{ fontSize: '0.9rem' }}>Create posts in the calendar and they will appear here</p>
-                  </div>
-                )}
+                })()}
               </>
             )}
           </div>
