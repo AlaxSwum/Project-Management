@@ -348,6 +348,10 @@ export default function ReportsPage() {
             </div>
 
             {/* Months Grid */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 500, color: '#1a1a1a', margin: 0, textTransform: 'capitalize' }}>{selectedPlatform} - {selectedYear} {viewMode === 'weekly' ? '(Weekly View)' : '(Monthly View)'}</h2>
+              <span style={{ fontSize: '0.85rem', color: '#666' }}>12 Months</span>
+            </div>
             <div className="rpt-months-grid">
               {MONTHS.map((monthName, idx) => {
                 const monthNum = idx + 1
