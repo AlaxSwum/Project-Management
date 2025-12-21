@@ -272,7 +272,6 @@ export default function TimelineRoadmapPage() {
 
   const loadTimelineItemDetails = async (item: TimelineItem) => {
     setSelectedItem(item);
-    setItemNotes(item.notes || '');
     
     // Load checklist items for this timeline item
     try {
