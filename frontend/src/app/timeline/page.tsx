@@ -1753,10 +1753,13 @@ export default function TimelineRoadmapPage() {
                                   </div>
                                 </div>
 
-                                {/* Gantt Bar */}
+                                {/* Gantt Bar - spans from startCol to endCol */}
                                 {timeColumns.map((col, idx) => {
                                   const isToday = new Date().toDateString() === col.date.toDateString();
                                   const isWeekend = col.date.getDay() === 0 || col.date.getDay() === 6;
+                                  const isInRange = idx >= startCol && idx < startCol + spanCols;
+                                  const isStart = idx === startCol;
+                                  const isEnd = idx === startCol + spanCols - 1;
                                   
                                   return (
                                   <div key={idx} style={{ 
@@ -1766,74 +1769,87 @@ export default function TimelineRoadmapPage() {
                                     borderLeft: '1px solid #E5E7EB',
                                     borderBottom: '1px solid #E5E7EB'
                                   }}>
-                                    {idx === startCol && (
-                                      <div style={{
-                                        position: 'absolute',
-                                        left: '4px',
-                                        width: `calc(${spanCols * 100}% + ${(spanCols - 1) * 0}px - 8px)`,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        background: `linear-gradient(135deg, ${item.color}, ${item.color}dd)`,
-                                        borderRadius: '10px',
-                                        padding: '10px 14px',
-                                        color: 'white',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        boxShadow: `0 4px 12px ${item.color}40`,
-                                        cursor: 'pointer',
-                                        zIndex: 10,
-                                        overflow: 'hidden',
-                                        transition: 'all 0.2s ease',
-                                        border: '2px solid rgba(255,255,255,0.3)'
-                                      }}
-                                      onClick={() => loadTimelineItemDetails(item)}
-                                      title={`${item.title} - ${item.completion_percentage}% complete`}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)';
-                                        e.currentTarget.style.boxShadow = `0 6px 20px ${item.color}50`;
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                                        e.currentTarget.style.boxShadow = `0 4px 12px ${item.color}40`;
-                                      }}
-                                      >
-                                        <div style={{ 
-                                          fontWeight: '700',
-                                          marginBottom: '6px',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap'
-                                        }}>
-                                          {item.title}
-                                        </div>
-                                        <div style={{ 
+                                    {isInRange && (
+                                      <div 
+                                        style={{
+                                          position: 'absolute',
+                                          left: isStart ? '4px' : '0',
+                                          right: isEnd ? '4px' : '0',
+                                          top: '10px',
+                                          bottom: '10px',
+                                          background: `linear-gradient(135deg, ${item.color}, ${item.color}dd)`,
+                                          borderRadius: isStart && isEnd ? '10px' : isStart ? '10px 0 0 10px' : isEnd ? '0 10px 10px 0' : '0',
+                                          cursor: 'pointer',
+                                          boxShadow: isStart ? `0 4px 12px ${item.color}40` : 'none',
                                           display: 'flex',
                                           alignItems: 'center',
-                                          gap: '8px'
-                                        }}>
-                                          <div style={{
-                                            flex: 1,
-                                            height: '6px',
-                                            background: 'rgba(255,255,255,0.3)',
-                                            borderRadius: '3px',
-                                            overflow: 'hidden'
+                                          justifyContent: isStart ? 'flex-start' : 'center',
+                                          padding: isStart ? '0 12px' : '0 4px',
+                                          overflow: 'hidden',
+                                          transition: 'all 0.2s ease',
+                                          borderTop: '2px solid rgba(255,255,255,0.3)',
+                                          borderBottom: '2px solid rgba(255,255,255,0.3)',
+                                          borderLeft: isStart ? '2px solid rgba(255,255,255,0.3)' : 'none',
+                                          borderRight: isEnd ? '2px solid rgba(255,255,255,0.3)' : 'none'
+                                        }}
+                                        onClick={() => loadTimelineItemDetails(item)}
+                                        title={`${item.title} - ${item.completion_percentage}% complete\n${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`}
+                                        onMouseEnter={(e) => {
+                                          if (isStart) {
+                                            e.currentTarget.style.boxShadow = `0 6px 20px ${item.color}50`;
+                                          }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          if (isStart) {
+                                            e.currentTarget.style.boxShadow = `0 4px 12px ${item.color}40`;
+                                          }
+                                        }}
+                                      >
+                                        {isStart && (
+                                          <div style={{ 
+                                            color: 'white',
+                                            minWidth: 0,
+                                            flex: 1
                                           }}>
-                                            <div style={{
-                                              width: `${item.completion_percentage}%`,
-                                              height: '100%',
-                                              background: 'white',
-                                              borderRadius: '3px',
-                                              transition: 'width 0.3s ease'
-                                            }} />
+                                            <div style={{ 
+                                              fontWeight: '700',
+                                              fontSize: '13px',
+                                              marginBottom: '4px',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap'
+                                            }}>
+                                              {item.title}
+                                            </div>
+                                            <div style={{ 
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '6px'
+                                            }}>
+                                              <div style={{
+                                                width: '60px',
+                                                height: '5px',
+                                                background: 'rgba(255,255,255,0.3)',
+                                                borderRadius: '3px',
+                                                overflow: 'hidden'
+                                              }}>
+                                                <div style={{
+                                                  width: `${item.completion_percentage}%`,
+                                                  height: '100%',
+                                                  background: 'white',
+                                                  borderRadius: '3px'
+                                                }} />
+                                              </div>
+                                              <span style={{ 
+                                                fontSize: '11px', 
+                                                fontWeight: '600',
+                                                color: 'white'
+                                              }}>
+                                                {item.completion_percentage}%
+                                              </span>
+                                            </div>
                                           </div>
-                                          <span style={{ 
-                                            fontSize: '11px', 
-                                            fontWeight: '700',
-                                            minWidth: '35px'
-                                          }}>
-                                            {item.completion_percentage}%
-                                          </span>
-                                        </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
