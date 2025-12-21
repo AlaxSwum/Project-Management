@@ -1606,29 +1606,42 @@ export default function TimelineRoadmapPage() {
                     Gantt Chart
                   </h2>
 
-                  <div style={{ minWidth: viewMode === 'day' ? '1400px' : viewMode === 'week' ? '1200px' : '800px' }}>
+                  <div style={{ minWidth: viewMode === 'day' ? '2000px' : viewMode === 'week' ? '1600px' : '1000px' }}>
                     {/* Timeline Header */}
                     <div style={{ 
                       display: 'grid', 
-                      gridTemplateColumns: `220px repeat(${timeColumns.length}, ${viewMode === 'day' ? '45px' : viewMode === 'week' ? '80px' : '1fr'})`, 
-                      gap: '1px', 
-                      marginBottom: '1px' 
+                      gridTemplateColumns: `280px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '60px' : viewMode === 'week' ? '120px' : '100px'}, 1fr))`, 
+                      gap: '0', 
+                      marginBottom: '0' 
                     }}>
-                      <div style={{ background: '#F8FAFC', padding: '12px', fontWeight: '700', color: '#374151', borderRadius: '8px 0 0 0' }}>
+                      <div style={{ 
+                        background: 'linear-gradient(135deg, #1F2937, #374151)', 
+                        padding: '16px 20px', 
+                        fontWeight: '700', 
+                        color: 'white', 
+                        borderRadius: '12px 0 0 0',
+                        fontSize: '14px'
+                      }}>
                         Category / Item
                       </div>
-                      {timeColumns.map((col, idx) => (
+                      {timeColumns.map((col, idx) => {
+                        const isToday = new Date().toDateString() === col.date.toDateString();
+                        const isWeekend = col.date.getDay() === 0 || col.date.getDay() === 6;
+                        return (
                         <div key={idx} style={{ 
-                          background: '#F8FAFC', 
-                          padding: viewMode === 'day' ? '8px 4px' : '12px', 
+                          background: isToday ? '#FFB333' : isWeekend ? '#F1F5F9' : '#F8FAFC', 
+                          padding: '12px 8px', 
                           textAlign: 'center', 
-                          fontWeight: '600', 
-                          fontSize: viewMode === 'day' ? '11px' : '13px', 
-                          color: '#64748B' 
+                          fontWeight: isToday ? '700' : '600', 
+                          fontSize: '12px', 
+                          color: isToday ? 'white' : '#64748B',
+                          borderLeft: '1px solid #E5E7EB',
+                          borderBottom: '2px solid #E5E7EB'
                         }}>
                           {col.label}
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
 
                     {/* Categories & Timeline Items - Recursive Rendering */}
@@ -1638,9 +1651,9 @@ export default function TimelineRoadmapPage() {
                         const indentPadding = level * 20;
                         
                         return (
-                          <div key={category.id} style={{ marginBottom: '2px' }}>
+                          <div key={category.id} style={{ marginBottom: '0' }}>
                             {/* Category Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: `220px repeat(${timeColumns.length}, ${viewMode === 'day' ? '45px' : viewMode === 'week' ? '80px' : '1fr'})`, gap: '1px', background: '#F1F5F9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: `280px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '60px' : viewMode === 'week' ? '120px' : '100px'}, 1fr))`, gap: '0', background: '#F1F5F9' }}>
                               <div style={{ 
                                 background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
                                 padding: '16px', 
@@ -1700,7 +1713,7 @@ export default function TimelineRoadmapPage() {
                             const isCompleted = item.status === 'completed';
                             
                             return (
-                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `220px repeat(${timeColumns.length}, ${viewMode === 'day' ? '45px' : viewMode === 'week' ? '80px' : '1fr'})`, gap: '1px', marginBottom: '1px' }}>
+                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `280px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '60px' : viewMode === 'week' ? '120px' : '100px'}, 1fr))`, gap: '0', marginBottom: '0' }}>
                                 <div style={{ 
                                   background: isCompleted ? '#F3F4F6' : 'white', 
                                   padding: '12px 16px', 
@@ -1741,102 +1754,86 @@ export default function TimelineRoadmapPage() {
                                 </div>
 
                                 {/* Gantt Bar */}
-                                {timeColumns.map((_, idx) => {
-                                  const colWidth = viewMode === 'day' ? 45 : viewMode === 'week' ? 80 : 100;
-                                  const barWidth = spanCols * colWidth + (spanCols - 1) * 1; // account for gap
-                                  const isNarrow = viewMode === 'day' || viewMode === 'week';
+                                {timeColumns.map((col, idx) => {
+                                  const isToday = new Date().toDateString() === col.date.toDateString();
+                                  const isWeekend = col.date.getDay() === 0 || col.date.getDay() === 6;
                                   
                                   return (
                                   <div key={idx} style={{ 
-                                    background: '#F8FAFC', 
+                                    background: isToday ? '#FFF8E7' : isWeekend ? '#FAFAFA' : 'white', 
                                     position: 'relative', 
-                                    minHeight: isNarrow ? '50px' : '60px', 
-                                    border: '1px solid #E5E7EB' 
+                                    minHeight: '70px', 
+                                    borderLeft: '1px solid #E5E7EB',
+                                    borderBottom: '1px solid #E5E7EB'
                                   }}>
                                     {idx === startCol && (
                                       <div style={{
                                         position: 'absolute',
-                                        left: '2px',
-                                        width: spanCols > 1 ? `calc(${barWidth}px - 4px)` : 'calc(100% - 4px)',
+                                        left: '4px',
+                                        width: `calc(${spanCols * 100}% + ${(spanCols - 1) * 0}px - 8px)`,
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        background: `linear-gradient(135deg, ${item.color}, ${item.color}cc)`,
-                                        borderRadius: isNarrow ? '6px' : '8px',
-                                        padding: isNarrow ? '6px 8px' : '8px 12px',
+                                        background: `linear-gradient(135deg, ${item.color}, ${item.color}dd)`,
+                                        borderRadius: '10px',
+                                        padding: '10px 14px',
                                         color: 'white',
-                                        fontSize: isNarrow ? '10px' : '12px',
+                                        fontSize: '13px',
                                         fontWeight: '600',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                        boxShadow: `0 4px 12px ${item.color}40`,
                                         cursor: 'pointer',
                                         zIndex: 10,
                                         overflow: 'hidden',
-                                        whiteSpace: 'nowrap',
-                                        textOverflow: 'ellipsis',
-                                        minWidth: isNarrow ? '40px' : 'auto'
+                                        transition: 'all 0.2s ease',
+                                        border: '2px solid rgba(255,255,255,0.3)'
                                       }}
                                       onClick={() => loadTimelineItemDetails(item)}
                                       title={`${item.title} - ${item.completion_percentage}% complete`}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)';
+                                        e.currentTarget.style.boxShadow = `0 6px 20px ${item.color}50`;
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                                        e.currentTarget.style.boxShadow = `0 4px 12px ${item.color}40`;
+                                      }}
                                       >
-                                        {isNarrow && spanCols === 1 ? (
-                                          <div style={{ 
-                                            display: 'flex', 
-                                            flexDirection: 'column', 
-                                            alignItems: 'center',
-                                            gap: '2px'
+                                        <div style={{ 
+                                          fontWeight: '700',
+                                          marginBottom: '6px',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap'
+                                        }}>
+                                          {item.title}
+                                        </div>
+                                        <div style={{ 
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '8px'
+                                        }}>
+                                          <div style={{
+                                            flex: 1,
+                                            height: '6px',
+                                            background: 'rgba(255,255,255,0.3)',
+                                            borderRadius: '3px',
+                                            overflow: 'hidden'
                                           }}>
-                                            <div style={{ 
-                                              fontSize: '9px', 
-                                              fontWeight: '700',
-                                              maxWidth: '100%',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis'
-                                            }}>
-                                              {item.title.substring(0, 8)}{item.title.length > 8 ? '..' : ''}
-                                            </div>
-                                            <div style={{ 
-                                              fontSize: '8px', 
-                                              opacity: 0.9,
-                                              background: 'rgba(255,255,255,0.2)',
-                                              padding: '1px 4px',
-                                              borderRadius: '3px'
-                                            }}>
-                                              {item.completion_percentage}%
-                                            </div>
+                                            <div style={{
+                                              width: `${item.completion_percentage}%`,
+                                              height: '100%',
+                                              background: 'white',
+                                              borderRadius: '3px',
+                                              transition: 'width 0.3s ease'
+                                            }} />
                                           </div>
-                                        ) : (
-                                          <>
-                                            <div style={{ 
-                                              overflow: 'hidden', 
-                                              textOverflow: 'ellipsis',
-                                              marginBottom: isNarrow ? '2px' : '4px'
-                                            }}>
-                                              {isNarrow ? item.title.substring(0, 15) + (item.title.length > 15 ? '..' : '') : item.title}
-                                            </div>
-                                            <div style={{ 
-                                              fontSize: isNarrow ? '8px' : '10px', 
-                                              opacity: 0.9,
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: '4px'
-                                            }}>
-                                              <div style={{
-                                                width: isNarrow ? '30px' : '50px',
-                                                height: '4px',
-                                                background: 'rgba(255,255,255,0.3)',
-                                                borderRadius: '2px',
-                                                overflow: 'hidden'
-                                              }}>
-                                                <div style={{
-                                                  width: `${item.completion_percentage}%`,
-                                                  height: '100%',
-                                                  background: 'rgba(255,255,255,0.9)',
-                                                  borderRadius: '2px'
-                                                }} />
-                                              </div>
-                                              {item.completion_percentage}%
-                                            </div>
-                                          </>
-                                        )}
+                                          <span style={{ 
+                                            fontSize: '11px', 
+                                            fontWeight: '700',
+                                            minWidth: '35px'
+                                          }}>
+                                            {item.completion_percentage}%
+                                          </span>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
