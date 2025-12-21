@@ -1606,14 +1606,26 @@ export default function TimelineRoadmapPage() {
                     Gantt Chart
                   </h2>
 
-                  <div style={{ minWidth: '800px' }}>
+                  <div style={{ minWidth: viewMode === 'day' ? '1400px' : viewMode === 'week' ? '1200px' : '800px' }}>
                     {/* Timeline Header */}
-                    <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: `220px repeat(${timeColumns.length}, ${viewMode === 'day' ? '45px' : viewMode === 'week' ? '80px' : '1fr'})`, 
+                      gap: '1px', 
+                      marginBottom: '1px' 
+                    }}>
                       <div style={{ background: '#F8FAFC', padding: '12px', fontWeight: '700', color: '#374151', borderRadius: '8px 0 0 0' }}>
                         Category / Item
                       </div>
                       {timeColumns.map((col, idx) => (
-                        <div key={idx} style={{ background: '#F8FAFC', padding: '12px', textAlign: 'center', fontWeight: '600', fontSize: '13px', color: '#64748B' }}>
+                        <div key={idx} style={{ 
+                          background: '#F8FAFC', 
+                          padding: viewMode === 'day' ? '8px 4px' : '12px', 
+                          textAlign: 'center', 
+                          fontWeight: '600', 
+                          fontSize: viewMode === 'day' ? '11px' : '13px', 
+                          color: '#64748B' 
+                        }}>
                           {col.label}
                         </div>
                       ))}
@@ -1628,7 +1640,7 @@ export default function TimelineRoadmapPage() {
                         return (
                           <div key={category.id} style={{ marginBottom: '2px' }}>
                             {/* Category Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', background: '#F1F5F9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: `220px repeat(${timeColumns.length}, ${viewMode === 'day' ? '45px' : viewMode === 'week' ? '80px' : '1fr'})`, gap: '1px', background: '#F1F5F9' }}>
                               <div style={{ 
                                 background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
                                 padding: '16px', 
@@ -1688,7 +1700,7 @@ export default function TimelineRoadmapPage() {
                             const isCompleted = item.status === 'completed';
                             
                             return (
-                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
+                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `220px repeat(${timeColumns.length}, ${viewMode === 'day' ? '45px' : viewMode === 'week' ? '80px' : '1fr'})`, gap: '1px', marginBottom: '1px' }}>
                                 <div style={{ 
                                   background: isCompleted ? '#F3F4F6' : 'white', 
                                   padding: '12px 16px', 
@@ -1729,36 +1741,107 @@ export default function TimelineRoadmapPage() {
                                 </div>
 
                                 {/* Gantt Bar */}
-                                {timeColumns.map((_, idx) => (
-                                  <div key={idx} style={{ background: '#F8FAFC', position: 'relative', minHeight: '60px', border: '1px solid #E5E7EB' }}>
+                                {timeColumns.map((_, idx) => {
+                                  const colWidth = viewMode === 'day' ? 45 : viewMode === 'week' ? 80 : 100;
+                                  const barWidth = spanCols * colWidth + (spanCols - 1) * 1; // account for gap
+                                  const isNarrow = viewMode === 'day' || viewMode === 'week';
+                                  
+                                  return (
+                                  <div key={idx} style={{ 
+                                    background: '#F8FAFC', 
+                                    position: 'relative', 
+                                    minHeight: isNarrow ? '50px' : '60px', 
+                                    border: '1px solid #E5E7EB' 
+                                  }}>
                                     {idx === startCol && (
                                       <div style={{
                                         position: 'absolute',
-                                        left: '4px',
-                                        right: spanCols > 1 ? 'auto' : '4px',
-                                        width: spanCols > 1 ? `calc(${spanCols * 100}% + ${(spanCols - 1) * 100}% - 8px)` : 'calc(100% - 8px)',
+                                        left: '2px',
+                                        width: spanCols > 1 ? `calc(${barWidth}px - 4px)` : 'calc(100% - 4px)',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        background: `linear-gradient(90deg, ${item.color}, ${item.color}dd)`,
-                                        borderRadius: '8px',
-                                        padding: '8px 12px',
+                                        background: `linear-gradient(135deg, ${item.color}, ${item.color}cc)`,
+                                        borderRadius: isNarrow ? '6px' : '8px',
+                                        padding: isNarrow ? '6px 8px' : '8px 12px',
                                         color: 'white',
-                                        fontSize: '12px',
+                                        fontSize: isNarrow ? '10px' : '12px',
                                         fontWeight: '600',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                                         cursor: 'pointer',
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        overflow: 'hidden',
+                                        whiteSpace: 'nowrap',
+                                        textOverflow: 'ellipsis',
+                                        minWidth: isNarrow ? '40px' : 'auto'
                                       }}
                                       onClick={() => loadTimelineItemDetails(item)}
+                                      title={`${item.title} - ${item.completion_percentage}% complete`}
                                       >
-                                        <div>{item.title}</div>
-                                        <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
-                                          {item.completion_percentage}% complete
-                                        </div>
+                                        {isNarrow && spanCols === 1 ? (
+                                          <div style={{ 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            alignItems: 'center',
+                                            gap: '2px'
+                                          }}>
+                                            <div style={{ 
+                                              fontSize: '9px', 
+                                              fontWeight: '700',
+                                              maxWidth: '100%',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}>
+                                              {item.title.substring(0, 8)}{item.title.length > 8 ? '..' : ''}
+                                            </div>
+                                            <div style={{ 
+                                              fontSize: '8px', 
+                                              opacity: 0.9,
+                                              background: 'rgba(255,255,255,0.2)',
+                                              padding: '1px 4px',
+                                              borderRadius: '3px'
+                                            }}>
+                                              {item.completion_percentage}%
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <div style={{ 
+                                              overflow: 'hidden', 
+                                              textOverflow: 'ellipsis',
+                                              marginBottom: isNarrow ? '2px' : '4px'
+                                            }}>
+                                              {isNarrow ? item.title.substring(0, 15) + (item.title.length > 15 ? '..' : '') : item.title}
+                                            </div>
+                                            <div style={{ 
+                                              fontSize: isNarrow ? '8px' : '10px', 
+                                              opacity: 0.9,
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '4px'
+                                            }}>
+                                              <div style={{
+                                                width: isNarrow ? '30px' : '50px',
+                                                height: '4px',
+                                                background: 'rgba(255,255,255,0.3)',
+                                                borderRadius: '2px',
+                                                overflow: 'hidden'
+                                              }}>
+                                                <div style={{
+                                                  width: `${item.completion_percentage}%`,
+                                                  height: '100%',
+                                                  background: 'rgba(255,255,255,0.9)',
+                                                  borderRadius: '2px'
+                                                }} />
+                                              </div>
+                                              {item.completion_percentage}%
+                                            </div>
+                                          </>
+                                        )}
                                       </div>
                                     )}
                                   </div>
-                                ))}
+                                );
+                                })}
                               </div>
                             );
                           })}
