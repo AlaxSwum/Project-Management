@@ -1801,17 +1801,17 @@ export default function DashboardPage() {
                       {folder.description || 'Timeline project with Gantt chart view'}
                     </p>
                     
-                    {folder.item_count > 0 && (
+                    {(folder.item_count || 0) > 0 && (
                       <div className="progress-section">
                         <div className="progress-header">
                           <span>Progress</span>
-                          <span>{folder.completed_count} / {folder.item_count} items</span>
+                          <span>{folder.completed_count || 0} / {folder.item_count || 0} items</span>
                         </div>
                         <div className="progress-bar">
                           <div 
                             className="progress-fill"
                             style={{ 
-                              width: `${folder.item_count > 0 ? (folder.completed_count / folder.item_count) * 100 : 0}%`,
+                              width: `${(folder.item_count || 0) > 0 ? ((folder.completed_count || 0) / (folder.item_count || 1)) * 100 : 0}%`,
                               background: 'linear-gradient(90deg, #5884FD, #8BA4FE)'
                             }}
                           />
