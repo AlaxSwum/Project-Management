@@ -196,6 +196,8 @@ export default function TimelineRoadmapPage() {
   const [loadedChecklistItems, setLoadedChecklistItems] = useState<ChecklistItem[]>([]);
   const [availableTeamMembers, setAvailableTeamMembers] = useState<{id: number; name: string; email: string}[]>([]);
   const [showItemDetailsModal, setShowItemDetailsModal] = useState(false);
+  const [itemAttachments, setItemAttachments] = useState<{id: number; file_name: string; file_url: string; file_type: string; uploaded_at: string}[]>([]);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set()); // Track which categories are expanded
   const [reportTab, setReportTab] = useState<'overview' | 'team' | 'phase' | 'monthly' | 'weekly'>('overview');
 
@@ -287,7 +289,95 @@ export default function TimelineRoadmapPage() {
       setLoadedChecklistItems([]);
     }
     
+    // Load attachments for this timeline item
+    try {
+      const { data: attachments, error: attachError } = await supabase
+        .from('timeline_item_attachments')
+        .select('*')
+        .eq('timeline_item_id', item.id)
+        .order('uploaded_at', { ascending: false });
+      
+      if (!attachError && attachments) {
+        setItemAttachments(attachments);
+      } else {
+        setItemAttachments([]);
+      }
+    } catch (error) {
+      console.error('Error loading attachments:', error);
+      setItemAttachments([]);
+    }
+    
     setShowItemDetailsModal(true);
+  };
+
+  // Handle file upload to Google Drive
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !selectedItem) return;
+    
+    const file = e.target.files[0];
+    setIsUploadingFile(true);
+    
+    try {
+      // Create FormData for the file
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder_name', `Timeline_${selectedFolder?.name || 'Project'}`);
+      formData.append('item_name', selectedItem.title);
+      
+      // Upload to Google Drive via API
+      const response = await fetch('/api/google-drive/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+      
+      const result = await response.json();
+      
+      // Save attachment record to database
+      const { data, error } = await supabase
+        .from('timeline_item_attachments')
+        .insert([{
+          timeline_item_id: selectedItem.id,
+          file_name: file.name,
+          file_url: result.webViewLink || result.url,
+          file_type: file.type,
+          google_drive_id: result.id,
+          uploaded_by_id: parseInt(user?.id?.toString() || '0')
+        }])
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setItemAttachments(prev => [data, ...prev]);
+        setSuccessMessage('File uploaded to Google Drive!');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Failed to upload file. Please try again.');
+    } finally {
+      setIsUploadingFile(false);
+      e.target.value = ''; // Reset file input
+    }
+  };
+
+  // Delete attachment
+  const handleDeleteAttachment = async (attachmentId: number) => {
+    if (!confirm('Delete this attachment?')) return;
+    
+    try {
+      await supabase
+        .from('timeline_item_attachments')
+        .delete()
+        .eq('id', attachmentId);
+      
+      setItemAttachments(prev => prev.filter(a => a.id !== attachmentId));
+      setSuccessMessage('Attachment deleted');
+    } catch (error) {
+      console.error('Error deleting attachment:', error);
+    }
   };
 
   // =============================================
@@ -1642,10 +1732,7 @@ export default function TimelineRoadmapPage() {
                                         cursor: 'pointer',
                                         zIndex: 10
                                       }}
-                                      onClick={() => {
-                                        setSelectedItem(item);
-                                        setShowItemModal(true);
-                                      }}
+                                      onClick={() => loadTimelineItemDetails(item)}
                                       >
                                         <div>{item.title}</div>
                                         <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
@@ -2655,6 +2742,121 @@ export default function TimelineRoadmapPage() {
               ) : (
                 <p style={{textAlign: 'center', color: '#9CA3AF', fontSize: '14px', padding: '20px', fontStyle: 'italic'}}>
                   No checklist items for this timeline item
+                </p>
+              )}
+            </div>
+
+            {/* File Attachments Section */}
+            <div style={{marginBottom: '24px'}}>
+              <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>
+                Attachments ({itemAttachments.length})
+              </h4>
+              
+              {/* Upload Button */}
+              <div style={{marginBottom: '16px'}}>
+                <label style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  background: isUploadingFile ? '#E5E7EB' : 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
+                  color: isUploadingFile ? '#6B7280' : 'white',
+                  borderRadius: '8px',
+                  cursor: isUploadingFile ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  boxShadow: '0 2px 8px rgba(66, 133, 244, 0.3)'
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                  </svg>
+                  {isUploadingFile ? 'Uploading...' : 'Upload to Google Drive'}
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    disabled={isUploadingFile}
+                    style={{display: 'none'}}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.txt"
+                  />
+                </label>
+              </div>
+
+              {/* Attachments List */}
+              {itemAttachments.length > 0 ? (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                  {itemAttachments.map((attachment) => (
+                    <div key={attachment.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      background: '#F9FAFB',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px'
+                    }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        background: attachment.file_type?.includes('image') ? '#DCFCE7' : 
+                                   attachment.file_type?.includes('pdf') ? '#FEE2E2' :
+                                   attachment.file_type?.includes('sheet') || attachment.file_type?.includes('excel') ? '#D1FAE5' :
+                                   '#EFF6FF',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill={
+                          attachment.file_type?.includes('image') ? '#22C55E' : 
+                          attachment.file_type?.includes('pdf') ? '#EF4444' :
+                          '#3B82F6'
+                        }>
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                        </svg>
+                      </div>
+                      <div style={{flex: 1}}>
+                        <div style={{fontWeight: '500', fontSize: '14px', color: '#374151'}}>{attachment.file_name}</div>
+                        <div style={{fontSize: '12px', color: '#9CA3AF'}}>
+                          {new Date(attachment.uploaded_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <a
+                        href={attachment.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          padding: '6px 12px',
+                          background: '#4285F4',
+                          color: 'white',
+                          borderRadius: '6px',
+                          textDecoration: 'none',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        Open
+                      </a>
+                      <button
+                        onClick={() => handleDeleteAttachment(attachment.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#FEE2E2',
+                          color: '#DC2626',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{textAlign: 'center', color: '#9CA3AF', fontSize: '14px', padding: '20px', fontStyle: 'italic', background: '#F9FAFB', borderRadius: '8px'}}>
+                  No files attached yet. Upload files to Google Drive.
                 </p>
               )}
             </div>

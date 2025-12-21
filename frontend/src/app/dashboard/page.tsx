@@ -42,6 +42,7 @@ interface TimelineFolder {
   is_active: boolean;
   item_count?: number;
   completed_count?: number;
+  categories?: { id: number; name: string; color: string }[];
 }
 
 export default function DashboardPage() {
@@ -127,7 +128,7 @@ export default function DashboardPage() {
       
       if (error) throw error;
       
-      // Get item counts for each folder
+      // Get item counts and categories for each folder
       const foldersWithCounts = await Promise.all(
         (folders || []).map(async (folder) => {
           const { data: items } = await supabase
@@ -135,10 +136,20 @@ export default function DashboardPage() {
             .select('id, status')
             .eq('folder_id', folder.id);
           
+          // Get categories for this folder
+          const { data: categories } = await supabase
+            .from('timeline_categories')
+            .select('id, name, color')
+            .eq('folder_id', folder.id)
+            .eq('is_active', true)
+            .is('parent_category_id', null)
+            .order('display_order');
+          
           return {
             ...folder,
             item_count: items?.length || 0,
-            completed_count: items?.filter(i => i.status === 'completed').length || 0
+            completed_count: items?.filter(i => i.status === 'completed').length || 0,
+            categories: categories || []
           };
         })
       );
@@ -1765,20 +1776,16 @@ export default function DashboardPage() {
                   </div>
                 ))}
                 
-                {/* Show Timeline Folders */}
+                {/* Show Timeline Folders as Normal Projects */}
                 {(viewMode === 'all' || viewMode === 'timeline') && timelineFolders.map((folder) => (
                   <div
                     key={`timeline-${folder.id}`}
                     className="project-card"
                     onClick={() => router.push('/timeline')}
-                    style={{ borderTop: '4px solid #5884FD' }}
+                    style={{ borderTop: `4px solid ${folder.categories?.[0]?.color || '#FFB333'}` }}
                   >
                     <div className="project-header">
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <ChartBarIcon style={{ width: '20px', height: '20px', color: '#5884FD' }} />
-                          <span style={{ fontSize: '0.75rem', color: '#5884FD', textTransform: 'uppercase', fontWeight: 600 }}>Timeline</span>
-                        </div>
                         <h3 className="project-title" style={{
                           wordWrap: 'break-word',
                           overflowWrap: 'break-word',
@@ -1787,32 +1794,50 @@ export default function DashboardPage() {
                           hyphens: 'auto'
                         }}>{folder.name}</h3>
                         <div className="project-badges">
-                          <span className="project-badge" style={{ background: 'rgba(88, 132, 253, 0.1)', borderColor: 'rgba(88, 132, 253, 0.2)', color: '#3B5EDB' }}>
-                            Timeline Project
-                          </span>
-                          <span className="project-badge" style={{ background: 'rgba(88, 132, 253, 0.1)', borderColor: 'rgba(88, 132, 253, 0.2)', color: '#3B5EDB' }}>
-                            {folder.is_active ? 'Active' : 'Inactive'}
-                          </span>
+                          {/* Show categories as badges */}
+                          {folder.categories && folder.categories.length > 0 ? (
+                            folder.categories.slice(0, 4).map(cat => (
+                              <span 
+                                key={cat.id} 
+                                className="project-badge" 
+                                style={{ 
+                                  background: `${cat.color}15`, 
+                                  borderColor: `${cat.color}30`, 
+                                  color: cat.color 
+                                }}
+                              >
+                                {cat.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="project-badge">
+                              Project
+                            </span>
+                          )}
+                          {folder.categories && folder.categories.length > 4 && (
+                            <span className="project-badge" style={{ background: '#f0f0f0', color: '#666' }}>
+                              +{folder.categories.length - 4} more
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
                     
                     <p className="project-description">
-                      {folder.description || 'Timeline project with Gantt chart view'}
+                      {folder.description || 'Project with tasks and timeline'}
                     </p>
                     
                     {(folder.item_count || 0) > 0 && (
                       <div className="progress-section">
                         <div className="progress-header">
                           <span>Progress</span>
-                          <span>{folder.completed_count || 0} / {folder.item_count || 0} items</span>
+                          <span>{folder.completed_count || 0} / {folder.item_count || 0} tasks</span>
                         </div>
                         <div className="progress-bar">
                           <div 
                             className="progress-fill"
                             style={{ 
-                              width: `${(folder.item_count || 0) > 0 ? ((folder.completed_count || 0) / (folder.item_count || 1)) * 100 : 0}%`,
-                              background: 'linear-gradient(90deg, #5884FD, #8BA4FE)'
+                              width: `${(folder.item_count || 0) > 0 ? ((folder.completed_count || 0) / (folder.item_count || 1)) * 100 : 0}%`
                             }}
                           />
                         </div>
@@ -1822,8 +1847,8 @@ export default function DashboardPage() {
                     <div className="project-footer">
                       <div className="project-stats">
                         <div className="project-stat">
-                          <ChartBarIcon style={{ width: '16px', height: '16px' }} />
-                          {folder.item_count || 0} items
+                          <CalendarIcon style={{ width: '16px', height: '16px' }} />
+                          {folder.item_count || 0} tasks
                         </div>
                         {folder.total_budget > 0 && (
                           <div className="project-stat">
@@ -1833,8 +1858,8 @@ export default function DashboardPage() {
                         )}
                       </div>
                       {folder.end_date && (
-                        <div className="project-due" style={{ background: 'rgba(88, 132, 253, 0.1)', color: '#3B5EDB' }}>
-                          Ends {new Date(folder.end_date).toLocaleDateString()}
+                        <div className="project-due">
+                          Due {new Date(folder.end_date).toLocaleDateString()}
                         </div>
                       )}
                     </div>
