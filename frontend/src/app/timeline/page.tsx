@@ -19,8 +19,11 @@ import {
   CheckIcon,
   FunnelIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  CloudArrowUpIcon,
+  DocumentIcon
 } from '@heroicons/react/24/outline';
+import GoogleDriveExplorer from '@/components/GoogleDriveExplorer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -198,6 +201,7 @@ export default function TimelineRoadmapPage() {
   const [showItemDetailsModal, setShowItemDetailsModal] = useState(false);
   const [itemAttachments, setItemAttachments] = useState<{id: number; file_name: string; file_url: string; file_type: string; uploaded_at: string}[]>([]);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [showDriveExplorer, setShowDriveExplorer] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set()); // Track which categories are expanded
   const [reportTab, setReportTab] = useState<'overview' | 'team' | 'phase' | 'monthly' | 'weekly'>('overview');
 
@@ -377,6 +381,36 @@ export default function TimelineRoadmapPage() {
       setSuccessMessage('Attachment deleted');
     } catch (error) {
       console.error('Error deleting attachment:', error);
+    }
+  };
+
+  // Handle file selection from Google Drive Explorer
+  const handleDriveFileSelect = async (file: any) => {
+    if (!selectedItem) return;
+    
+    try {
+      // Save the selected file as an attachment
+      const { data, error } = await supabase
+        .from('timeline_item_attachments')
+        .insert([{
+          timeline_item_id: selectedItem.id,
+          file_name: file.name,
+          file_url: file.webViewLink,
+          file_type: file.mimeType,
+          google_drive_id: file.id,
+          uploaded_by_id: parseInt(user?.id?.toString() || '0')
+        }])
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setItemAttachments(prev => [data, ...prev]);
+        setSuccessMessage('File linked from Google Drive!');
+        setShowDriveExplorer(false);
+      }
+    } catch (error) {
+      console.error('Error linking file:', error);
+      alert('Failed to link file');
     }
   };
 
@@ -2749,11 +2783,12 @@ export default function TimelineRoadmapPage() {
             {/* File Attachments Section */}
             <div style={{marginBottom: '24px'}}>
               <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>
-                Attachments ({itemAttachments.length})
+                Google Drive Files ({itemAttachments.length} attached)
               </h4>
               
-              {/* Upload Button */}
-              <div style={{marginBottom: '16px'}}>
+              {/* Action Buttons */}
+              <div style={{display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap'}}>
+                {/* Upload Button */}
                 <label style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -2767,10 +2802,8 @@ export default function TimelineRoadmapPage() {
                   fontSize: '14px',
                   boxShadow: '0 2px 8px rgba(66, 133, 244, 0.3)'
                 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-                  </svg>
-                  {isUploadingFile ? 'Uploading...' : 'Upload to Google Drive'}
+                  <CloudArrowUpIcon style={{width: '18px', height: '18px'}} />
+                  {isUploadingFile ? 'Uploading...' : 'Upload New File'}
                   <input
                     type="file"
                     onChange={handleFileUpload}
@@ -2779,6 +2812,27 @@ export default function TimelineRoadmapPage() {
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.txt"
                   />
                 </label>
+                
+                {/* Browse Drive Button */}
+                <button
+                  onClick={() => setShowDriveExplorer(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    background: '#fff',
+                    border: '2px solid #4285F4',
+                    color: '#4285F4',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px'
+                  }}
+                >
+                  <FolderIcon style={{width: '18px', height: '18px'}} />
+                  Browse Google Drive
+                </button>
               </div>
 
               {/* Attachments List */}
@@ -2886,6 +2940,78 @@ export default function TimelineRoadmapPage() {
                 setShowItemDetailsModal(false);
                 setShowItemModal(true);
               }} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Edit Item</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Google Drive Explorer Modal */}
+      {showDriveExplorer && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1100,
+          padding: '20px'
+        }} onClick={() => setShowDriveExplorer(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '900px',
+            maxHeight: '80vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              padding: '20px 24px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h3 style={{fontSize: '20px', fontWeight: '700', margin: 0, color: '#1f2937'}}>
+                  Browse Google Drive
+                </h3>
+                <p style={{fontSize: '14px', color: '#6b7280', margin: '4px 0 0 0'}}>
+                  Select a file to attach to "{selectedItem?.title}"
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDriveExplorer(false)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  background: '#f3f4f6',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  color: '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{flex: 1, overflow: 'hidden'}}>
+              <GoogleDriveExplorer
+                onFileSelect={handleDriveFileSelect}
+                allowFileSelection={true}
+                allowFolderSelection={false}
+                showCreateFolder={true}
+                mode="select"
+              />
             </div>
           </div>
         </div>

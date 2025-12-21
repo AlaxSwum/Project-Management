@@ -55,6 +55,8 @@ export default function DashboardPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'all' | 'projects' | 'timeline'>('all');
+  const [selectedTimelineFolder, setSelectedTimelineFolder] = useState<TimelineFolder | null>(null);
+  const [timelineItems, setTimelineItems] = useState<any[]>([]);
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -98,6 +100,29 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+
+  const fetchTimelineItems = async (folderId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('timeline_items')
+        .select('*')
+        .eq('folder_id', folderId)
+        .order('start_date');
+      
+      if (!error && data) {
+        setTimelineItems(data);
+      }
+    } catch (error) {
+      console.error('Error fetching timeline items:', error);
+    }
+  };
+
+  // When a timeline folder is selected, fetch its items
+  useEffect(() => {
+    if (selectedTimelineFolder) {
+      fetchTimelineItems(selectedTimelineFolder.id);
+    }
+  }, [selectedTimelineFolder]);
 
   const fetchTimelineFolders = async () => {
     if (!user?.id) return;
@@ -1781,7 +1806,7 @@ export default function DashboardPage() {
                   <div
                     key={`timeline-${folder.id}`}
                     className="project-card"
-                    onClick={() => router.push('/timeline')}
+                    onClick={() => setSelectedTimelineFolder(folder)}
                     style={{ borderTop: `4px solid ${folder.categories?.[0]?.color || '#FFB333'}` }}
                   >
                     <div className="project-header">
@@ -1900,6 +1925,230 @@ export default function DashboardPage() {
           </main>
         </div>
       </div>
+
+      {/* Timeline Project Detail Modal */}
+      {selectedTimelineFolder && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }} onClick={() => setSelectedTimelineFolder(null)}>
+          <div style={{
+            background: '#fff',
+            borderRadius: '20px',
+            width: '100%',
+            maxWidth: '900px',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{
+              padding: '1.5rem 2rem',
+              borderBottom: '1px solid #e5e7eb',
+              background: `linear-gradient(135deg, ${selectedTimelineFolder.categories?.[0]?.color || '#FFB333'}15, #fff)`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937', margin: 0 }}>
+                    {selectedTimelineFolder.name}
+                  </h2>
+                  <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>
+                    {selectedTimelineFolder.description || 'Project overview'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    onClick={() => { setSelectedTimelineFolder(null); router.push('/timeline'); }}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: 'linear-gradient(135deg, #FFB333, #FFD480)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    Open Timeline View
+                  </button>
+                  <button
+                    onClick={() => setSelectedTimelineFolder(null)}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      background: '#f3f4f6',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontSize: '1.25rem',
+                      color: '#6b7280'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              
+              {/* Categories */}
+              {selectedTimelineFolder.categories && selectedTimelineFolder.categories.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                  {selectedTimelineFolder.categories.map(cat => (
+                    <span key={cat.id} style={{
+                      padding: '0.375rem 0.875rem',
+                      background: `${cat.color}15`,
+                      color: cat.color,
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      border: `1px solid ${cat.color}30`
+                    }}>
+                      {cat.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Stats Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '1rem',
+              padding: '1.5rem 2rem',
+              background: '#fafafa',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFB333' }}>
+                  {selectedTimelineFolder.item_count || 0}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Total Tasks</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#10B981' }}>
+                  {selectedTimelineFolder.completed_count || 0}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Completed</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#3B82F6' }}>
+                  {(selectedTimelineFolder.item_count || 0) - (selectedTimelineFolder.completed_count || 0)}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>In Progress</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#8B5CF6' }}>
+                  {selectedTimelineFolder.item_count && selectedTimelineFolder.completed_count 
+                    ? Math.round((selectedTimelineFolder.completed_count / selectedTimelineFolder.item_count) * 100)
+                    : 0}%
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Progress</div>
+              </div>
+            </div>
+            
+            {/* Tasks List */}
+            <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem 2rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
+                Tasks
+              </h3>
+              {timelineItems.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+                  <p>No tasks yet in this project.</p>
+                  <button
+                    onClick={() => { setSelectedTimelineFolder(null); router.push('/timeline'); }}
+                    style={{
+                      marginTop: '1rem',
+                      padding: '0.75rem 1.5rem',
+                      background: '#FFB333',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    Add Tasks in Timeline
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {timelineItems.map(item => (
+                    <div key={item.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      padding: '1rem',
+                      background: item.status === 'completed' ? '#f0fdf4' : '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '12px',
+                      borderLeft: `4px solid ${item.color || '#FFB333'}`
+                    }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: item.status === 'completed' ? '#10B981' : '#e5e7eb',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {item.status === 'completed' && (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontWeight: 600,
+                          color: item.status === 'completed' ? '#6b7280' : '#1f2937',
+                          textDecoration: item.status === 'completed' ? 'line-through' : 'none'
+                        }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                          {item.phase} • {new Date(item.start_date).toLocaleDateString()} - {new Date(item.end_date).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: '0.375rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        borderRadius: '20px',
+                        background: item.status === 'completed' ? '#dcfce7' : 
+                                   item.status === 'in_progress' ? '#dbeafe' : 
+                                   item.status === 'on_hold' ? '#fef3c7' : '#f3f4f6',
+                        color: item.status === 'completed' ? '#16a34a' : 
+                               item.status === 'in_progress' ? '#2563eb' : 
+                               item.status === 'on_hold' ? '#d97706' : '#6b7280'
+                      }}>
+                        {item.status.replace('_', ' ')}
+                      </div>
+                      <div style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: '#3B82F6'
+                      }}>
+                        {item.completion_percentage}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 
