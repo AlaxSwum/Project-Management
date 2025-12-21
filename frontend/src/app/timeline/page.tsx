@@ -357,18 +357,27 @@ export default function TimelineRoadmapPage() {
     }
   };
 
-  // Get link icon based on type
-  const getLinkIcon = (url: string, linkType: string): string => {
-    if (url.includes('drive.google.com') || linkType === 'drive') return '📁';
-    if (url.includes('docs.google.com')) return '📄';
-    if (url.includes('sheets.google.com')) return '📊';
-    if (url.includes('figma.com')) return '🎨';
-    if (url.includes('github.com')) return '💻';
-    if (url.includes('notion.')) return '📝';
-    if (linkType === 'document') return '📄';
-    if (linkType === 'design') return '🎨';
-    if (linkType === 'video') return '🎬';
-    return '🔗';
+  // Get link icon color based on type
+  const getLinkStyle = (url: string, linkType: string): { bg: string; color: string; label: string } => {
+    if (url.includes('drive.google.com') || linkType === 'drive') 
+      return { bg: '#E8F0FE', color: '#4285F4', label: 'Drive' };
+    if (url.includes('docs.google.com')) 
+      return { bg: '#E6F4EA', color: '#34A853', label: 'Doc' };
+    if (url.includes('sheets.google.com')) 
+      return { bg: '#E6F4EA', color: '#0F9D58', label: 'Sheet' };
+    if (url.includes('figma.com')) 
+      return { bg: '#F3E8FF', color: '#A259FF', label: 'Figma' };
+    if (url.includes('github.com')) 
+      return { bg: '#F3F4F6', color: '#24292F', label: 'GitHub' };
+    if (url.includes('notion.')) 
+      return { bg: '#F3F4F6', color: '#000000', label: 'Notion' };
+    if (linkType === 'document') 
+      return { bg: '#E6F4EA', color: '#34A853', label: 'Doc' };
+    if (linkType === 'design') 
+      return { bg: '#F3E8FF', color: '#A259FF', label: 'Design' };
+    if (linkType === 'video') 
+      return { bg: '#FEE2E2', color: '#DC2626', label: 'Video' };
+    return { bg: '#F3F4F6', color: '#6B7280', label: 'Link' };
   };
 
   // Delete link
@@ -2784,7 +2793,9 @@ export default function TimelineRoadmapPage() {
               {/* Links List */}
               {itemLinks.length > 0 ? (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                  {itemLinks.map((link) => (
+                  {itemLinks.map((link) => {
+                    const linkStyle = getLinkStyle(link.url, link.link_type);
+                    return (
                     <div key={link.id} style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -2796,7 +2807,20 @@ export default function TimelineRoadmapPage() {
                       transition: 'all 0.2s',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                     }}>
-                      <span style={{fontSize: '24px'}}>{getLinkIcon(link.url, link.link_type)}</span>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        background: linkStyle.bg,
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: linkStyle.color
+                      }}>
+                        {linkStyle.label}
+                      </div>
                       <div style={{flex: 1, minWidth: 0}}>
                         <div style={{fontWeight: '600', fontSize: '14px', color: '#1F2937'}}>{link.title}</div>
                         <div style={{
@@ -2842,7 +2866,8 @@ export default function TimelineRoadmapPage() {
                         <TrashIcon style={{width: '16px', height: '16px'}} />
                       </button>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               ) : (
                 <div style={{
@@ -2937,11 +2962,11 @@ export default function TimelineRoadmapPage() {
                 </label>
                 <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
                   {[
-                    { value: 'drive', label: '📁 Drive', color: '#4285F4' },
-                    { value: 'document', label: '📄 Document', color: '#34A853' },
-                    { value: 'design', label: '🎨 Design', color: '#A259FF' },
-                    { value: 'video', label: '🎬 Video', color: '#FF0000' },
-                    { value: 'other', label: '🔗 Other', color: '#6B7280' }
+                    { value: 'drive', label: 'Drive', color: '#4285F4' },
+                    { value: 'document', label: 'Document', color: '#34A853' },
+                    { value: 'design', label: 'Design', color: '#A259FF' },
+                    { value: 'video', label: 'Video', color: '#DC2626' },
+                    { value: 'other', label: 'Other', color: '#6B7280' }
                   ].map(type => (
                     <button
                       key={type.value}
