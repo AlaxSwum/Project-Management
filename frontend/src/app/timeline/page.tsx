@@ -20,10 +20,8 @@ import {
   FunnelIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  CloudArrowUpIcon,
-  DocumentIcon
+  LinkIcon
 } from '@heroicons/react/24/outline';
-import GoogleDriveExplorer from '@/components/GoogleDriveExplorer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -199,9 +197,9 @@ export default function TimelineRoadmapPage() {
   const [loadedChecklistItems, setLoadedChecklistItems] = useState<ChecklistItem[]>([]);
   const [availableTeamMembers, setAvailableTeamMembers] = useState<{id: number; name: string; email: string}[]>([]);
   const [showItemDetailsModal, setShowItemDetailsModal] = useState(false);
-  const [itemAttachments, setItemAttachments] = useState<{id: number; file_name: string; file_url: string; file_type: string; uploaded_at: string}[]>([]);
-  const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [showDriveExplorer, setShowDriveExplorer] = useState(false);
+  const [itemLinks, setItemLinks] = useState<{id: number; title: string; url: string; link_type: string; created_at: string}[]>([]);
+  const [showAddLinkModal, setShowAddLinkModal] = useState(false);
+  const [newLink, setNewLink] = useState({ title: '', url: '', link_type: 'drive' });
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set()); // Track which categories are expanded
   const [reportTab, setReportTab] = useState<'overview' | 'team' | 'phase' | 'monthly' | 'weekly'>('overview');
 
@@ -274,6 +272,7 @@ export default function TimelineRoadmapPage() {
 
   const loadTimelineItemDetails = async (item: TimelineItem) => {
     setSelectedItem(item);
+    setItemNotes(item.notes || '');
     
     // Load checklist items for this timeline item
     try {
@@ -293,124 +292,100 @@ export default function TimelineRoadmapPage() {
       setLoadedChecklistItems([]);
     }
     
-    // Load attachments for this timeline item
+    // Load links for this timeline item
     try {
-      const { data: attachments, error: attachError } = await supabase
-        .from('timeline_item_attachments')
+      const { data: links, error: linkError } = await supabase
+        .from('timeline_item_links')
         .select('*')
         .eq('timeline_item_id', item.id)
-        .order('uploaded_at', { ascending: false });
+        .order('created_at', { ascending: false });
       
-      if (!attachError && attachments) {
-        setItemAttachments(attachments);
+      if (!linkError && links) {
+        setItemLinks(links);
       } else {
-        setItemAttachments([]);
+        setItemLinks([]);
       }
     } catch (error) {
-      console.error('Error loading attachments:', error);
-      setItemAttachments([]);
+      console.error('Error loading links:', error);
+      setItemLinks([]);
     }
     
     setShowItemDetailsModal(true);
   };
 
-  // Handle file upload to Google Drive
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !e.target.files[0] || !selectedItem) return;
-    
-    const file = e.target.files[0];
-    setIsUploadingFile(true);
+  // Add a new link
+  const handleAddLink = async () => {
+    if (!selectedItem || !newLink.url.trim()) return;
     
     try {
-      // Create FormData for the file
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder_name', `Timeline_${selectedFolder?.name || 'Project'}`);
-      formData.append('item_name', selectedItem.title);
-      
-      // Upload to Google Drive via API
-      const response = await fetch('/api/google-drive/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-      
-      const result = await response.json();
-      
-      // Save attachment record to database
       const { data, error } = await supabase
-        .from('timeline_item_attachments')
+        .from('timeline_item_links')
         .insert([{
           timeline_item_id: selectedItem.id,
-          file_name: file.name,
-          file_url: result.webViewLink || result.url,
-          file_type: file.type,
-          google_drive_id: result.id,
-          uploaded_by_id: parseInt(user?.id?.toString() || '0')
+          title: newLink.title.trim() || getLinkTitle(newLink.url),
+          url: newLink.url.trim(),
+          link_type: newLink.link_type,
+          created_by_id: parseInt(user?.id?.toString() || '0')
         }])
         .select()
         .single();
-      
+
       if (!error && data) {
-        setItemAttachments(prev => [data, ...prev]);
-        setSuccessMessage('File uploaded to Google Drive!');
+        setItemLinks(prev => [data, ...prev]);
+        setNewLink({ title: '', url: '', link_type: 'drive' });
+        setShowAddLinkModal(false);
+        setSuccessMessage('Link added!');
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('Failed to upload file. Please try again.');
-    } finally {
-      setIsUploadingFile(false);
-      e.target.value = ''; // Reset file input
+      console.error('Error adding link:', error);
+      alert('Failed to add link');
     }
   };
 
-  // Delete attachment
-  const handleDeleteAttachment = async (attachmentId: number) => {
-    if (!confirm('Delete this attachment?')) return;
+  // Get default title from URL
+  const getLinkTitle = (url: string): string => {
+    if (url.includes('drive.google.com')) return 'Google Drive File';
+    if (url.includes('docs.google.com')) return 'Google Doc';
+    if (url.includes('sheets.google.com')) return 'Google Sheet';
+    if (url.includes('figma.com')) return 'Figma Design';
+    if (url.includes('github.com')) return 'GitHub Link';
+    if (url.includes('notion.')) return 'Notion Page';
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname.replace('www.', '');
+    } catch {
+      return 'External Link';
+    }
+  };
+
+  // Get link icon based on type
+  const getLinkIcon = (url: string, linkType: string): string => {
+    if (url.includes('drive.google.com') || linkType === 'drive') return '📁';
+    if (url.includes('docs.google.com')) return '📄';
+    if (url.includes('sheets.google.com')) return '📊';
+    if (url.includes('figma.com')) return '🎨';
+    if (url.includes('github.com')) return '💻';
+    if (url.includes('notion.')) return '📝';
+    if (linkType === 'document') return '📄';
+    if (linkType === 'design') return '🎨';
+    if (linkType === 'video') return '🎬';
+    return '🔗';
+  };
+
+  // Delete link
+  const handleDeleteLink = async (linkId: number) => {
+    if (!confirm('Delete this link?')) return;
     
     try {
       await supabase
-        .from('timeline_item_attachments')
+        .from('timeline_item_links')
         .delete()
-        .eq('id', attachmentId);
+        .eq('id', linkId);
       
-      setItemAttachments(prev => prev.filter(a => a.id !== attachmentId));
-      setSuccessMessage('Attachment deleted');
+      setItemLinks(prev => prev.filter(l => l.id !== linkId));
+      setSuccessMessage('Link deleted');
     } catch (error) {
-      console.error('Error deleting attachment:', error);
-    }
-  };
-
-  // Handle file selection from Google Drive Explorer
-  const handleDriveFileSelect = async (file: any) => {
-    if (!selectedItem) return;
-    
-    try {
-      // Save the selected file as an attachment
-      const { data, error } = await supabase
-        .from('timeline_item_attachments')
-        .insert([{
-          timeline_item_id: selectedItem.id,
-          file_name: file.name,
-          file_url: file.webViewLink,
-          file_type: file.mimeType,
-          google_drive_id: file.id,
-          uploaded_by_id: parseInt(user?.id?.toString() || '0')
-        }])
-        .select()
-        .single();
-      
-      if (!error && data) {
-        setItemAttachments(prev => [data, ...prev]);
-        setSuccessMessage('File linked from Google Drive!');
-        setShowDriveExplorer(false);
-      }
-    } catch (error) {
-      console.error('Error linking file:', error);
-      alert('Failed to link file');
+      console.error('Error deleting link:', error);
     }
   };
 
@@ -2780,138 +2755,109 @@ export default function TimelineRoadmapPage() {
               )}
             </div>
 
-            {/* File Attachments Section */}
+            {/* Resources & Links Section */}
             <div style={{marginBottom: '24px'}}>
-              <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>
-                Google Drive Files ({itemAttachments.length} attached)
-              </h4>
-              
-              {/* Action Buttons */}
-              <div style={{display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap'}}>
-                {/* Upload Button */}
-                <label style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 20px',
-                  background: isUploadingFile ? '#E5E7EB' : 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
-                  color: isUploadingFile ? '#6B7280' : 'white',
-                  borderRadius: '8px',
-                  cursor: isUploadingFile ? 'not-allowed' : 'pointer',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                  boxShadow: '0 2px 8px rgba(66, 133, 244, 0.3)'
-                }}>
-                  <CloudArrowUpIcon style={{width: '18px', height: '18px'}} />
-                  {isUploadingFile ? 'Uploading...' : 'Upload New File'}
-                  <input
-                    type="file"
-                    onChange={handleFileUpload}
-                    disabled={isUploadingFile}
-                    style={{display: 'none'}}
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.txt"
-                  />
-                </label>
-                
-                {/* Browse Drive Button */}
+              <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px'}}>
+                <h4 style={{fontSize: '16px', fontWeight: '600', margin: 0}}>
+                  Resources & Links ({itemLinks.length})
+                </h4>
                 <button
-                  onClick={() => setShowDriveExplorer(true)}
+                  onClick={() => setShowAddLinkModal(true)}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 20px',
-                    background: '#fff',
-                    border: '2px solid #4285F4',
-                    color: '#4285F4',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg, #FFB333, #F87239)',
+                    color: 'white',
+                    border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     fontWeight: '600',
-                    fontSize: '14px'
+                    fontSize: '13px'
                   }}
                 >
-                  <FolderIcon style={{width: '18px', height: '18px'}} />
-                  Browse Google Drive
+                  <LinkIcon style={{width: '16px', height: '16px'}} />
+                  Add Link
                 </button>
               </div>
 
-              {/* Attachments List */}
-              {itemAttachments.length > 0 ? (
+              {/* Links List */}
+              {itemLinks.length > 0 ? (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                  {itemAttachments.map((attachment) => (
-                    <div key={attachment.id} style={{
+                  {itemLinks.map((link) => (
+                    <div key={link.id} style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '12px',
-                      background: '#F9FAFB',
+                      padding: '12px 16px',
+                      background: '#fff',
                       border: '1px solid #E5E7EB',
-                      borderRadius: '8px'
+                      borderRadius: '10px',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                     }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        background: attachment.file_type?.includes('image') ? '#DCFCE7' : 
-                                   attachment.file_type?.includes('pdf') ? '#FEE2E2' :
-                                   attachment.file_type?.includes('sheet') || attachment.file_type?.includes('excel') ? '#D1FAE5' :
-                                   '#EFF6FF',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill={
-                          attachment.file_type?.includes('image') ? '#22C55E' : 
-                          attachment.file_type?.includes('pdf') ? '#EF4444' :
-                          '#3B82F6'
-                        }>
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
-                        </svg>
-                      </div>
-                      <div style={{flex: 1}}>
-                        <div style={{fontWeight: '500', fontSize: '14px', color: '#374151'}}>{attachment.file_name}</div>
-                        <div style={{fontSize: '12px', color: '#9CA3AF'}}>
-                          {new Date(attachment.uploaded_at).toLocaleDateString()}
+                      <span style={{fontSize: '24px'}}>{getLinkIcon(link.url, link.link_type)}</span>
+                      <div style={{flex: 1, minWidth: 0}}>
+                        <div style={{fontWeight: '600', fontSize: '14px', color: '#1F2937'}}>{link.title}</div>
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#6B7280',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {link.url}
                         </div>
                       </div>
                       <a
-                        href={attachment.file_url}
+                        href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
-                          padding: '6px 12px',
-                          background: '#4285F4',
+                          padding: '6px 14px',
+                          background: '#3B82F6',
                           color: 'white',
                           borderRadius: '6px',
                           textDecoration: 'none',
                           fontSize: '12px',
-                          fontWeight: '500'
+                          fontWeight: '500',
+                          whiteSpace: 'nowrap'
                         }}
                       >
                         Open
                       </a>
                       <button
-                        onClick={() => handleDeleteAttachment(attachment.id)}
+                        onClick={() => handleDeleteLink(link.id)}
                         style={{
-                          padding: '6px 12px',
+                          padding: '6px',
                           background: '#FEE2E2',
                           color: '#DC2626',
                           border: 'none',
                           borderRadius: '6px',
                           cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '500'
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       >
-                        Delete
+                        <TrashIcon style={{width: '16px', height: '16px'}} />
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p style={{textAlign: 'center', color: '#9CA3AF', fontSize: '14px', padding: '20px', fontStyle: 'italic', background: '#F9FAFB', borderRadius: '8px'}}>
-                  No files attached yet. Upload files to Google Drive.
-                </p>
+                <div style={{
+                  textAlign: 'center',
+                  padding: '30px 20px',
+                  background: '#FAFAFA',
+                  borderRadius: '10px',
+                  border: '2px dashed #E5E7EB'
+                }}>
+                  <LinkIcon style={{width: '32px', height: '32px', color: '#D1D5DB', margin: '0 auto 12px'}} />
+                  <p style={{color: '#9CA3AF', fontSize: '14px', margin: 0}}>
+                    No links added yet. Add Google Drive, Figma, or any file links.
+                  </p>
+                </div>
               )}
             </div>
             
@@ -2945,73 +2891,170 @@ export default function TimelineRoadmapPage() {
         </div>
       )}
 
-      {/* Google Drive Explorer Modal */}
-      {showDriveExplorer && (
+      {/* Add Link Modal */}
+      {showAddLinkModal && (
         <div style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1100,
           padding: '20px'
-        }} onClick={() => setShowDriveExplorer(false)}>
+        }} onClick={() => setShowAddLinkModal(false)}>
           <div style={{
             background: 'white',
-            borderRadius: '16px',
+            borderRadius: '20px',
             width: '100%',
-            maxWidth: '900px',
-            maxHeight: '80vh',
+            maxWidth: '500px',
             overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
+            boxShadow: '0 25px 50px rgba(0,0,0,0.2)'
           }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
             <div style={{
-              padding: '20px 24px',
+              padding: '24px',
               borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
+              background: 'linear-gradient(135deg, #FFB333 0%, #F87239 100%)'
             }}>
-              <div>
-                <h3 style={{fontSize: '20px', fontWeight: '700', margin: 0, color: '#1f2937'}}>
-                  Browse Google Drive
-                </h3>
-                <p style={{fontSize: '14px', color: '#6b7280', margin: '4px 0 0 0'}}>
-                  Select a file to attach to "{selectedItem?.title}"
+              <h3 style={{fontSize: '20px', fontWeight: '700', margin: 0, color: 'white'}}>
+                Add Resource Link
+              </h3>
+              <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.9)', margin: '8px 0 0 0'}}>
+                Add a link to Google Drive, Figma, Notion, or any file URL
+              </p>
+            </div>
+            
+            {/* Form */}
+            <div style={{padding: '24px'}}>
+              {/* Link Type */}
+              <div style={{marginBottom: '20px'}}>
+                <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px'}}>
+                  Link Type
+                </label>
+                <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                  {[
+                    { value: 'drive', label: '📁 Drive', color: '#4285F4' },
+                    { value: 'document', label: '📄 Document', color: '#34A853' },
+                    { value: 'design', label: '🎨 Design', color: '#A259FF' },
+                    { value: 'video', label: '🎬 Video', color: '#FF0000' },
+                    { value: 'other', label: '🔗 Other', color: '#6B7280' }
+                  ].map(type => (
+                    <button
+                      key={type.value}
+                      onClick={() => setNewLink(prev => ({ ...prev, link_type: type.value }))}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: newLink.link_type === type.value ? `2px solid ${type.color}` : '2px solid #E5E7EB',
+                        background: newLink.link_type === type.value ? `${type.color}15` : '#fff',
+                        color: newLink.link_type === type.value ? type.color : '#6B7280',
+                        fontWeight: '500',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* URL Input */}
+              <div style={{marginBottom: '20px'}}>
+                <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px'}}>
+                  URL <span style={{color: '#EF4444'}}>*</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/file/... or any URL"
+                  value={newLink.url}
+                  onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'border-color 0.2s',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#FFB333'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+              
+              {/* Title Input */}
+              <div style={{marginBottom: '24px'}}>
+                <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px'}}>
+                  Title <span style={{color: '#9CA3AF', fontWeight: '400'}}>(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Design Mockup, Project Brief..."
+                  value={newLink.title}
+                  onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    transition: 'border-color 0.2s',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#FFB333'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+                <p style={{fontSize: '12px', color: '#9CA3AF', margin: '6px 0 0 0'}}>
+                  If empty, title will be auto-generated from URL
                 </p>
               </div>
-              <button
-                onClick={() => setShowDriveExplorer(false)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  background: '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '20px',
-                  color: '#6b7280',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div style={{flex: 1, overflow: 'hidden'}}>
-              <GoogleDriveExplorer
-                onFileSelect={handleDriveFileSelect}
-                allowFileSelection={true}
-                allowFolderSelection={false}
-                showCreateFolder={true}
-                mode="select"
-              />
+              
+              {/* Actions */}
+              <div style={{display: 'flex', gap: '12px'}}>
+                <button
+                  onClick={() => {
+                    setShowAddLinkModal(false);
+                    setNewLink({ title: '', url: '', link_type: 'drive' });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 20px',
+                    background: '#F3F4F6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddLink}
+                  disabled={!newLink.url.trim()}
+                  style={{
+                    flex: 1,
+                    padding: '12px 20px',
+                    background: newLink.url.trim() ? 'linear-gradient(135deg, #FFB333, #F87239)' : '#E5E7EB',
+                    color: newLink.url.trim() ? 'white' : '#9CA3AF',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    cursor: newLink.url.trim() ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  Add Link
+                </button>
+              </div>
             </div>
           </div>
         </div>
