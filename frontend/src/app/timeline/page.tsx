@@ -448,9 +448,11 @@ export default function TimelineRoadmapPage() {
         return;
       }
 
+      const userId = parseInt(user?.id?.toString() || '0');
+
       const folderData = {
         ...newFolder,
-        created_by_id: parseInt(user?.id?.toString() || '0'),
+        created_by_id: userId,
         is_active: true
       };
 
@@ -462,12 +464,38 @@ export default function TimelineRoadmapPage() {
 
       if (error) throw error;
 
+      // Also create a corresponding project in the projects table for dashboard sync
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .insert([{
+          name: newFolder.name,
+          description: newFolder.description || `Timeline project: ${newFolder.name}`,
+          project_type: 'timeline',
+          status: 'active',
+          color: '#FFB333',
+          created_by: userId,
+          timeline_folder_id: data.id // Link to timeline folder
+        }])
+        .select()
+        .single();
+
+      if (!projectError && projectData) {
+        // Add creator as project member
+        await supabase
+          .from('project_members')
+          .insert([{
+            project_id: projectData.id,
+            user_id: userId,
+            role: 'owner'
+          }]);
+      }
+
       // Add creator as owner
       await supabase
         .from('timeline_folder_members')
         .insert([{
           folder_id: data.id,
-          user_id: parseInt(user?.id?.toString() || '0'),
+          user_id: userId,
           role: 'owner',
           can_edit: true,
           can_delete: true,
@@ -604,26 +632,56 @@ export default function TimelineRoadmapPage() {
         setSuccessMessage('Timeline item updated successfully!');
       } else {
         // CREATE new item
-      const { data, error } = await supabase
-        .from('timeline_items')
-          .insert([{ ...itemData, created_by_id: parseInt(user?.id?.toString() || '0') }])
-        .select()
-        .single();
+        const userId = parseInt(user?.id?.toString() || '0');
+        const { data, error } = await supabase
+          .from('timeline_items')
+          .insert([{ ...itemData, created_by_id: userId }])
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Save checklist items
-      if (checklistItems.length > 0) {
-        const checklistData = checklistItems.map((item, index) => ({
-          timeline_item_id: data.id,
-          item_text: item,
-          is_completed: false,
-          item_order: index
-        }));
+        // Save checklist items
+        if (checklistItems.length > 0) {
+          const checklistData = checklistItems.map((item, index) => ({
+            timeline_item_id: data.id,
+            item_text: item,
+            is_completed: false,
+            item_order: index
+          }));
 
-        await supabase
-          .from('timeline_item_checklist')
-          .insert(checklistData);
+          await supabase
+            .from('timeline_item_checklist')
+            .insert(checklistData);
+        }
+
+        // Sync with dashboard tasks - find linked project and create task
+        if (selectedFolder) {
+          const { data: projectData } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('timeline_folder_id', selectedFolder.id)
+            .single();
+
+          if (projectData) {
+            // Create corresponding task in the project
+            await supabase
+              .from('tasks')
+              .insert([{
+                project_id: projectData.id,
+                name: newItem.title,
+                description: newItem.description,
+                status: newItem.status === 'not_started' ? 'todo' : 
+                        newItem.status === 'in_progress' ? 'in_progress' :
+                        newItem.status === 'completed' ? 'done' : 'todo',
+                priority: newItem.priority,
+                start_date: newItem.start_date,
+                due_date: newItem.end_date,
+                created_by: userId,
+                timeline_item_id: data.id, // Link to timeline item
+                assignee_ids: newItem.team_member_ids.length > 0 ? newItem.team_member_ids : null
+              }]);
+          }
         }
 
         setSuccessMessage('Timeline item created successfully!');

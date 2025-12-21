@@ -4,9 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService } from '@/lib/api-compatibility';
-import { PlusIcon, UsersIcon, CalendarIcon, SparklesIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UsersIcon, CalendarIcon, SparklesIcon, ChevronRightIcon, FolderIcon, ChartBarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface Project {
   id: number;
@@ -22,16 +28,32 @@ interface Project {
   created_at: string;
   updated_at: string;
   created_by: any;
+  timeline_folder_id?: number;
+}
+
+interface TimelineFolder {
+  id: number;
+  name: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  total_budget: number;
+  currency: string;
+  is_active: boolean;
+  item_count?: number;
+  completed_count?: number;
 }
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [timelineFolders, setTimelineFolders] = useState<TimelineFolder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [viewMode, setViewMode] = useState<'all' | 'projects' | 'timeline'>('all');
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -60,6 +82,7 @@ export default function DashboardPage() {
       return;
     }
     fetchProjects();
+    fetchTimelineFolders();
   }, [isAuthenticated, authLoading, router]);
 
   const fetchProjects = async () => {
@@ -73,11 +96,106 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchTimelineFolders = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const userId = parseInt(user.id.toString());
+      
+      // Get folders the user has access to
+      const { data: memberData } = await supabase
+        .from('timeline_folder_members')
+        .select('folder_id')
+        .eq('user_id', userId);
+      
+      const folderIds = memberData?.map(m => m.folder_id) || [];
+      
+      if (folderIds.length === 0) {
+        setTimelineFolders([]);
+        return;
+      }
+      
+      // Get folder details
+      const { data: folders, error } = await supabase
+        .from('timeline_folders')
+        .select('*')
+        .in('id', folderIds)
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      
+      // Get item counts for each folder
+      const foldersWithCounts = await Promise.all(
+        (folders || []).map(async (folder) => {
+          const { data: items } = await supabase
+            .from('timeline_items')
+            .select('id, status')
+            .eq('folder_id', folder.id);
+          
+          return {
+            ...folder,
+            item_count: items?.length || 0,
+            completed_count: items?.filter(i => i.status === 'completed').length || 0
+          };
+        })
+      );
+      
+      setTimelineFolders(foldersWithCounts);
+    } catch (error) {
+      console.error('Error fetching timeline folders:', error);
+    }
+  };
+
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const project = await projectService.createProject(newProject);
-      setProjects([project, ...projects]);
+      const userId = parseInt(user?.id?.toString() || '0');
+      
+      // If project type is timeline, create both timeline folder and project
+      if (newProject.project_type === 'timeline') {
+        // Create timeline folder first
+        const { data: folderData, error: folderError } = await supabase
+          .from('timeline_folders')
+          .insert([{
+            name: newProject.name,
+            description: newProject.description || `Timeline project: ${newProject.name}`,
+            created_by_id: userId,
+            is_active: true,
+            total_budget: 0,
+            currency: 'USD'
+          }])
+          .select()
+          .single();
+        
+        if (folderError) throw folderError;
+        
+        // Add user as folder owner
+        await supabase
+          .from('timeline_folder_members')
+          .insert([{
+            folder_id: folderData.id,
+            user_id: userId,
+            role: 'owner',
+            can_edit: true,
+            can_delete: true,
+            can_manage_members: true,
+            can_manage_budget: true
+          }]);
+        
+        // Create linked project
+        const project = await projectService.createProject({
+          ...newProject,
+          timeline_folder_id: folderData.id
+        });
+        
+        setProjects([project, ...projects]);
+        fetchTimelineFolders();
+      } else {
+        const project = await projectService.createProject(newProject);
+        setProjects([project, ...projects]);
+      }
+      
       setNewProject({ 
         name: '', 
         description: '', 
@@ -86,6 +204,7 @@ export default function DashboardPage() {
       });
       setShowCreateForm(false);
     } catch (err: any) {
+      console.error('Error creating project:', err);
       setError('Failed to create project');
     }
   };
@@ -1321,10 +1440,10 @@ export default function DashboardPage() {
                 <p>Manage your projects with style and efficiency</p>
               </div>
               <div className="header-actions">
-                {projects.length > 0 && (
+                {(projects.length > 0 || timelineFolders.length > 0) && (
                   <div className="project-count">
                     <SparklesIcon style={{ width: '16px', height: '16px' }} />
-                    {projects.length} Active Project{projects.length !== 1 ? 's' : ''}
+                    {projects.length + timelineFolders.length} Active Item{(projects.length + timelineFolders.length) !== 1 ? 's' : ''}
                   </div>
                 )}
                 <button
@@ -1335,6 +1454,64 @@ export default function DashboardPage() {
                   Create Project
                 </button>
               </div>
+            </div>
+            
+            {/* View Mode Tabs */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '0.5rem', 
+              marginTop: '1.5rem',
+              maxWidth: '1400px',
+              margin: '1.5rem auto 0'
+            }}>
+              {[
+                { id: 'all', label: 'All', icon: SparklesIcon },
+                { id: 'projects', label: 'Projects', icon: FolderIcon },
+                { id: 'timeline', label: 'Timeline', icon: ChartBarIcon }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setViewMode(tab.id as any)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s',
+                    background: viewMode === tab.id ? 'linear-gradient(135deg, #FFB333, #FFD480)' : 'rgba(255,255,255,0.8)',
+                    color: viewMode === tab.id ? '#fff' : '#6B7280',
+                    boxShadow: viewMode === tab.id ? '0 4px 12px rgba(255, 179, 51, 0.3)' : 'none'
+                  }}
+                >
+                  <tab.icon style={{ width: '18px', height: '18px' }} />
+                  {tab.label}
+                  {tab.id === 'projects' && projects.length > 0 && (
+                    <span style={{
+                      background: viewMode === tab.id ? 'rgba(255,255,255,0.3)' : 'rgba(255, 179, 51, 0.2)',
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem'
+                    }}>
+                      {projects.length}
+                    </span>
+                  )}
+                  {tab.id === 'timeline' && timelineFolders.length > 0 && (
+                    <span style={{
+                      background: viewMode === tab.id ? 'rgba(255,255,255,0.3)' : 'rgba(255, 179, 51, 0.2)',
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem'
+                    }}>
+                      {timelineFolders.length}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </header>
 
@@ -1412,6 +1589,7 @@ export default function DashboardPage() {
                           onChange={(e) => setNewProject({ ...newProject, project_type: e.target.value })}
                         >
                           <option value="general">General Project</option>
+                          <option value="timeline">Timeline Project (Gantt Chart)</option>
                           <option value="team">Team Project</option>
                           <option value="marketing">Marketing Campaign</option>
                           <option value="product">Product Development</option>
@@ -1471,35 +1649,63 @@ export default function DashboardPage() {
               <div className="loading-container">
                 <div className="spinner"></div>
               </div>
-            ) : projects.length === 0 ? (
+            ) : (projects.length === 0 && timelineFolders.length === 0) ? (
               <div className="empty-state">
                 <div className="empty-icon">
                   <SparklesIcon style={{ width: '60px', height: '60px', color: '#FFB333' }} />
                 </div>
                 <h3 className="empty-title">Ready to start something amazing?</h3>
                 <p className="empty-description">
-                  Create your first project and begin organizing your work with our powerful project management tools.
+                  Create your first project or timeline and begin organizing your work with our powerful project management tools.
                 </p>
-                <div className="empty-actions">
+                <div className="empty-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                   <button
                     onClick={() => setShowCreateForm(true)}
                     className="create-button"
                   >
                     <PlusIcon style={{ width: '20px', height: '20px' }} />
-                    Create Your First Project
+                    Create Project
+                  </button>
+                  <button
+                    onClick={() => router.push('/timeline')}
+                    style={{
+                      background: 'linear-gradient(135deg, #5884FD, #8BA4FE)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '1rem 2rem',
+                      borderRadius: '16px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      boxShadow: '0 8px 25px rgba(88, 132, 253, 0.25)'
+                    }}
+                  >
+                    <ChartBarIcon style={{ width: '20px', height: '20px' }} />
+                    Create Timeline
                   </button>
                 </div>
               </div>
             ) : (
               <div className="projects-grid">
-                {projects.map((project) => (
+                {/* Show Projects */}
+                {(viewMode === 'all' || viewMode === 'projects') && projects.map((project) => (
                   <div
-                    key={project.id}
+                    key={`project-${project.id}`}
                     className="project-card"
-                    onClick={() => router.push(`/projects/${project.id}`)}
+                    onClick={() => project.timeline_folder_id 
+                      ? router.push('/timeline') 
+                      : router.push(`/projects/${project.id}`)
+                    }
+                    style={{ borderTop: `4px solid ${project.color || '#FFB333'}` }}
                   >
                     <div className="project-header">
                       <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <FolderIcon style={{ width: '20px', height: '20px', color: project.color || '#FFB333' }} />
+                          <span style={{ fontSize: '0.75rem', color: '#6B7280', textTransform: 'uppercase', fontWeight: 600 }}>Project</span>
+                        </div>
                         <h3 className="project-title" style={{
                           wordWrap: 'break-word',
                           overflowWrap: 'break-word',
@@ -1558,6 +1764,112 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
+                
+                {/* Show Timeline Folders */}
+                {(viewMode === 'all' || viewMode === 'timeline') && timelineFolders.map((folder) => (
+                  <div
+                    key={`timeline-${folder.id}`}
+                    className="project-card"
+                    onClick={() => router.push('/timeline')}
+                    style={{ borderTop: '4px solid #5884FD' }}
+                  >
+                    <div className="project-header">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <ChartBarIcon style={{ width: '20px', height: '20px', color: '#5884FD' }} />
+                          <span style={{ fontSize: '0.75rem', color: '#5884FD', textTransform: 'uppercase', fontWeight: 600 }}>Timeline</span>
+                        </div>
+                        <h3 className="project-title" style={{
+                          wordWrap: 'break-word',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.3',
+                          hyphens: 'auto'
+                        }}>{folder.name}</h3>
+                        <div className="project-badges">
+                          <span className="project-badge" style={{ background: 'rgba(88, 132, 253, 0.1)', borderColor: 'rgba(88, 132, 253, 0.2)', color: '#3B5EDB' }}>
+                            Timeline Project
+                          </span>
+                          <span className="project-badge" style={{ background: 'rgba(88, 132, 253, 0.1)', borderColor: 'rgba(88, 132, 253, 0.2)', color: '#3B5EDB' }}>
+                            {folder.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="project-description">
+                      {folder.description || 'Timeline project with Gantt chart view'}
+                    </p>
+                    
+                    {folder.item_count > 0 && (
+                      <div className="progress-section">
+                        <div className="progress-header">
+                          <span>Progress</span>
+                          <span>{folder.completed_count} / {folder.item_count} items</span>
+                        </div>
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-fill"
+                            style={{ 
+                              width: `${folder.item_count > 0 ? (folder.completed_count / folder.item_count) * 100 : 0}%`,
+                              background: 'linear-gradient(90deg, #5884FD, #8BA4FE)'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="project-footer">
+                      <div className="project-stats">
+                        <div className="project-stat">
+                          <ChartBarIcon style={{ width: '16px', height: '16px' }} />
+                          {folder.item_count || 0} items
+                        </div>
+                        {folder.total_budget > 0 && (
+                          <div className="project-stat">
+                            <span style={{ fontSize: '0.75rem' }}>{folder.currency}</span>
+                            {folder.total_budget.toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                      {folder.end_date && (
+                        <div className="project-due" style={{ background: 'rgba(88, 132, 253, 0.1)', color: '#3B5EDB' }}>
+                          Ends {new Date(folder.end_date).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Empty state for filtered view */}
+                {viewMode === 'projects' && projects.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
+                    <FolderIcon style={{ width: '48px', height: '48px', color: '#D1D5DB', margin: '0 auto 1rem' }} />
+                    <p style={{ color: '#6B7280' }}>No projects yet. Create one to get started!</p>
+                  </div>
+                )}
+                
+                {viewMode === 'timeline' && timelineFolders.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
+                    <ChartBarIcon style={{ width: '48px', height: '48px', color: '#D1D5DB', margin: '0 auto 1rem' }} />
+                    <p style={{ color: '#6B7280' }}>No timeline projects yet.</p>
+                    <button
+                      onClick={() => router.push('/timeline')}
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem 1.5rem',
+                        background: '#5884FD',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 500
+                      }}
+                    >
+                      Go to Timeline
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </main>
