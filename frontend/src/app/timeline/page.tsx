@@ -1760,7 +1760,7 @@ export default function TimelineRoadmapPage() {
                                   </div>
                                 </div>
 
-                                {/* Gantt Bar - spans from startCol to endCol */}
+                                {/* Gantt Bar - render in each column */}
                                 {timeColumns.map((col, idx) => {
                                   const today = new Date();
                                   today.setHours(0, 0, 0, 0);
@@ -1769,55 +1769,48 @@ export default function TimelineRoadmapPage() {
                                   const isToday = today.getTime() === colDate.getTime();
                                   const isPast = colDate < today;
                                   const isWeekend = col.date.getDay() === 0 || col.date.getDay() === 6;
-                                  const isInRange = idx >= startCol && idx < startCol + spanCols;
-                                  const isStart = idx === startCol;
-                                  const isEnd = idx === startCol + spanCols - 1;
                                   
                                   return (
                                   <div key={idx} style={{ 
                                     background: isToday ? '#FEF3C7' : isPast ? '#F8FAFC' : isWeekend ? '#FAFAFA' : 'white', 
                                     position: 'relative', 
-                                    minHeight: '60px', 
+                                    minHeight: '50px', 
                                     borderLeft: '1px solid #E2E8F0',
                                     borderBottom: '1px solid #E2E8F0'
                                   }}>
-                                    {isInRange && (
+                                    {/* Only render bar starting from startCol */}
+                                    {idx === startCol && startCol >= 0 && (
                                       <div 
                                         style={{
                                           position: 'absolute',
-                                          left: isStart ? '4px' : '0',
-                                          right: isEnd ? '4px' : '0',
-                                          top: '8px',
-                                          bottom: '8px',
+                                          left: '3px',
+                                          top: '6px',
+                                          bottom: '6px',
+                                          width: `calc(${spanCols * 100}% - 6px + ${(spanCols - 1) * 1}px)`,
                                           background: item.color,
-                                          borderRadius: isStart && isEnd ? '6px' : isStart ? '6px 0 0 6px' : isEnd ? '0 6px 6px 0' : '0',
+                                          borderRadius: '5px',
                                           cursor: 'pointer',
-                                          boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                                          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
                                           display: 'flex',
                                           alignItems: 'center',
+                                          paddingLeft: '8px',
+                                          paddingRight: '8px',
+                                          zIndex: 5,
                                           overflow: 'hidden'
                                         }}
                                         onClick={() => loadTimelineItemDetails(item)}
                                         title={item.title}
                                       >
-                                        {isStart && (
-                                          <div style={{ 
-                                            color: 'white',
-                                            padding: '0 10px',
-                                            overflow: 'hidden',
-                                            width: '100%'
-                                          }}>
-                                            <div style={{ 
-                                              fontWeight: '600',
-                                              fontSize: viewMode === 'day' ? '11px' : viewMode === 'week' ? '11px' : '12px',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis',
-                                              whiteSpace: 'nowrap'
-                                            }}>
-                                              {item.title}
-                                            </div>
-                                          </div>
-                                        )}
+                                        <span style={{ 
+                                          color: 'white',
+                                          fontWeight: '600',
+                                          fontSize: '11px',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}>
+                                          {item.title}
+                                        </span>
                                       </div>
                                     )}
                                   </div>
