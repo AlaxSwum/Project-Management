@@ -464,7 +464,7 @@ export default function TimelineRoadmapPage() {
 
       if (error) throw error;
 
-// Add creator as owner
+      // Add creator as owner
       await supabase
         .from('timeline_folder_members')
         .insert([{
@@ -607,26 +607,26 @@ export default function TimelineRoadmapPage() {
       } else {
         // CREATE new item
         const userId = parseInt(user?.id?.toString() || '0');
-        const { data, error } = await supabase
-          .from('timeline_items')
+      const { data, error } = await supabase
+        .from('timeline_items')
           .insert([{ ...itemData, created_by_id: userId }])
-          .select()
-          .single();
+        .select()
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Save checklist items
-        if (checklistItems.length > 0) {
-          const checklistData = checklistItems.map((item, index) => ({
-            timeline_item_id: data.id,
-            item_text: item,
-            is_completed: false,
-            item_order: index
-          }));
+      // Save checklist items
+      if (checklistItems.length > 0) {
+        const checklistData = checklistItems.map((item, index) => ({
+          timeline_item_id: data.id,
+          item_text: item,
+          is_completed: false,
+          item_order: index
+        }));
 
-          await supabase
-            .from('timeline_item_checklist')
-            .insert(checklistData);
+        await supabase
+          .from('timeline_item_checklist')
+          .insert(checklistData);
         }
 
         setSuccessMessage('Timeline item created successfully!');

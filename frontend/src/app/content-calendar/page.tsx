@@ -175,7 +175,7 @@ export default function ContentCalendarPage() {
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search companies..." className="cc-search" />
             <button onClick={() => setShowCreateModal(true)} className="cc-btn-primary">+ New Company</button>
           </div>
-
+            
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
               <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
