@@ -1731,25 +1731,26 @@ export default function TimelineRoadmapPage() {
                                   loadTimelineItemDetails(item);
                                 }}
                                 >
-                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('timeline_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: '600', marginBottom: '4px', textDecoration: isCompleted ? 'line-through' : 'none' }}>{item.title}</div>
-                                    <div style={{ fontSize: '11px', color: '#64748B' }}>
-                                      {item.completion_percentage}% • ${item.actual_spending.toLocaleString()}/${item.planned_budget.toLocaleString()}
+                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('timeline_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '16px', height: '16px', cursor: 'pointer', marginRight: '10px', flexShrink: 0, accentColor: '#10B981'}} />
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: '600', fontSize: '13px', textDecoration: isCompleted ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                                    <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>
+                                      {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     </div>
                                   </div>
-                                  <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                                  <div style={{display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0}}>
                                     <div style={{
-                                      padding: '4px 8px',
-                                      background: getStatusColor(item.status) + '20',
+                                      padding: '3px 8px',
+                                      background: getStatusColor(item.status) + '15',
                                       color: getStatusColor(item.status),
-                                      borderRadius: '12px',
-                                      fontSize: '11px',
-                                      fontWeight: '600'
+                                      borderRadius: '6px',
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                      textTransform: 'capitalize'
                                     }}>
                                       {item.status.replace('_', ' ')}
                                     </div>
-                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete timeline item "${item.title}"?`)) {await supabase.from('timeline_items').delete().eq('id', item.id); fetchTimelineItems(); setSuccessMessage('Item deleted');}}} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '600'}}>Delete</button>
+                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete "${item.title}"?`)) {await supabase.from('timeline_items').delete().eq('id', item.id); fetchTimelineItems(); setSuccessMessage('Item deleted');}}} style={{padding: '4px 8px', background: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: '600'}}>Delete</button>
                                   </div>
                                 </div>
 
@@ -1763,90 +1764,56 @@ export default function TimelineRoadmapPage() {
                                   
                                   return (
                                   <div key={idx} style={{ 
-                                    background: isToday ? '#FFF8E7' : isWeekend ? '#FAFAFA' : 'white', 
+                                    background: isToday ? '#FEF3C7' : isWeekend ? '#F9FAFB' : 'white', 
                                     position: 'relative', 
-                                    minHeight: '70px', 
-                                    borderLeft: '1px solid #E5E7EB',
-                                    borderBottom: '1px solid #E5E7EB'
+                                    minHeight: '80px', 
+                                    borderLeft: '1px solid #E2E8F0',
+                                    borderBottom: '1px solid #E2E8F0'
                                   }}>
                                     {isInRange && (
                                       <div 
                                         style={{
                                           position: 'absolute',
-                                          left: isStart ? '4px' : '0',
-                                          right: isEnd ? '4px' : '0',
-                                          top: '10px',
-                                          bottom: '10px',
-                                          background: `linear-gradient(135deg, ${item.color}, ${item.color}dd)`,
-                                          borderRadius: isStart && isEnd ? '10px' : isStart ? '10px 0 0 10px' : isEnd ? '0 10px 10px 0' : '0',
+                                          left: isStart ? '6px' : '0',
+                                          right: isEnd ? '6px' : '0',
+                                          top: '12px',
+                                          bottom: '12px',
+                                          background: item.color,
+                                          borderRadius: isStart && isEnd ? '8px' : isStart ? '8px 0 0 8px' : isEnd ? '0 8px 8px 0' : '0',
                                           cursor: 'pointer',
-                                          boxShadow: isStart ? `0 4px 12px ${item.color}40` : 'none',
+                                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                                           display: 'flex',
                                           alignItems: 'center',
-                                          justifyContent: isStart ? 'flex-start' : 'center',
-                                          padding: isStart ? '0 12px' : '0 4px',
                                           overflow: 'hidden',
-                                          transition: 'all 0.2s ease',
-                                          borderTop: '2px solid rgba(255,255,255,0.3)',
-                                          borderBottom: '2px solid rgba(255,255,255,0.3)',
-                                          borderLeft: isStart ? '2px solid rgba(255,255,255,0.3)' : 'none',
-                                          borderRight: isEnd ? '2px solid rgba(255,255,255,0.3)' : 'none'
+                                          transition: 'transform 0.15s ease, box-shadow 0.15s ease'
                                         }}
                                         onClick={() => loadTimelineItemDetails(item)}
-                                        title={`${item.title} - ${item.completion_percentage}% complete\n${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`}
+                                        title={`${item.title}\n${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`}
                                         onMouseEnter={(e) => {
-                                          if (isStart) {
-                                            e.currentTarget.style.boxShadow = `0 6px 20px ${item.color}50`;
-                                          }
+                                          e.currentTarget.style.transform = 'scaleY(1.05)';
+                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
                                         }}
                                         onMouseLeave={(e) => {
-                                          if (isStart) {
-                                            e.currentTarget.style.boxShadow = `0 4px 12px ${item.color}40`;
-                                          }
+                                          e.currentTarget.style.transform = 'scaleY(1)';
+                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
                                         }}
                                       >
                                         {isStart && (
                                           <div style={{ 
                                             color: 'white',
-                                            minWidth: 0,
-                                            flex: 1
+                                            padding: '0 12px',
+                                            overflow: 'hidden',
+                                            width: '100%'
                                           }}>
                                             <div style={{ 
-                                              fontWeight: '700',
+                                              fontWeight: '600',
                                               fontSize: '13px',
-                                              marginBottom: '4px',
                                               overflow: 'hidden',
                                               textOverflow: 'ellipsis',
-                                              whiteSpace: 'nowrap'
+                                              whiteSpace: 'nowrap',
+                                              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
                                             }}>
                                               {item.title}
-                                            </div>
-                                            <div style={{ 
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: '6px'
-                                            }}>
-                                              <div style={{
-                                                width: '60px',
-                                                height: '5px',
-                                                background: 'rgba(255,255,255,0.3)',
-                                                borderRadius: '3px',
-                                                overflow: 'hidden'
-                                              }}>
-                                                <div style={{
-                                                  width: `${item.completion_percentage}%`,
-                                                  height: '100%',
-                                                  background: 'white',
-                                                  borderRadius: '3px'
-                                                }} />
-                                              </div>
-                                              <span style={{ 
-                                                fontSize: '11px', 
-                                                fontWeight: '600',
-                                                color: 'white'
-                                              }}>
-                                                {item.completion_percentage}%
-                                              </span>
                                             </div>
                                           </div>
                                         )}
