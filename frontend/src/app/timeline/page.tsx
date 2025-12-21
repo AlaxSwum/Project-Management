@@ -806,8 +806,9 @@ export default function TimelineRoadmapPage() {
     const start = new Date(currentDate);
 
     if (viewMode === 'day') {
-      // Show 30 days starting from current date
+      // Show 7 days before and 23 days after current date (30 total)
       start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - 7); // Start 7 days before
       for (let i = 0; i < 30; i++) {
         const dayDate = new Date(start);
         dayDate.setDate(start.getDate() + i);
@@ -1606,37 +1607,42 @@ export default function TimelineRoadmapPage() {
                     Gantt Chart
                   </h2>
 
-                  <div style={{ minWidth: viewMode === 'day' ? '2000px' : viewMode === 'week' ? '1600px' : '1000px' }}>
+                  <div style={{ minWidth: viewMode === 'day' ? '1600px' : viewMode === 'week' ? '1200px' : '900px' }}>
                     {/* Timeline Header */}
                     <div style={{ 
                       display: 'grid', 
-                      gridTemplateColumns: `280px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '60px' : viewMode === 'week' ? '120px' : '100px'}, 1fr))`, 
+                      gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '50px' : viewMode === 'week' ? '90px' : '80px'}, 1fr))`, 
                       gap: '0', 
                       marginBottom: '0' 
                     }}>
                       <div style={{ 
-                        background: 'linear-gradient(135deg, #1F2937, #374151)', 
-                        padding: '16px 20px', 
-                        fontWeight: '700', 
+                        background: '#1F2937', 
+                        padding: '12px 16px', 
+                        fontWeight: '600', 
                         color: 'white', 
-                        borderRadius: '12px 0 0 0',
-                        fontSize: '14px'
+                        borderRadius: '8px 0 0 0',
+                        fontSize: '13px'
                       }}>
                         Category / Item
                       </div>
                       {timeColumns.map((col, idx) => {
-                        const isToday = new Date().toDateString() === col.date.toDateString();
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const colDate = new Date(col.date);
+                        colDate.setHours(0, 0, 0, 0);
+                        const isToday = today.getTime() === colDate.getTime();
+                        const isPast = colDate < today;
                         const isWeekend = col.date.getDay() === 0 || col.date.getDay() === 6;
                         return (
                         <div key={idx} style={{ 
-                          background: isToday ? '#FFB333' : isWeekend ? '#F1F5F9' : '#F8FAFC', 
-                          padding: '12px 8px', 
+                          background: isToday ? '#FFB333' : isPast ? '#F1F5F9' : isWeekend ? '#F8FAFC' : '#FAFAFA', 
+                          padding: '10px 4px', 
                           textAlign: 'center', 
-                          fontWeight: isToday ? '700' : '600', 
-                          fontSize: '12px', 
-                          color: isToday ? 'white' : '#64748B',
+                          fontWeight: isToday ? '700' : '500', 
+                          fontSize: viewMode === 'day' ? '10px' : viewMode === 'week' ? '10px' : '11px', 
+                          color: isToday ? 'white' : isPast ? '#94A3B8' : '#64748B',
                           borderLeft: '1px solid #E5E7EB',
-                          borderBottom: '2px solid #E5E7EB'
+                          borderBottom: '1px solid #E5E7EB'
                         }}>
                           {col.label}
                         </div>
@@ -1653,7 +1659,7 @@ export default function TimelineRoadmapPage() {
                         return (
                           <div key={category.id} style={{ marginBottom: '0' }}>
                             {/* Category Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: `280px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '60px' : viewMode === 'week' ? '120px' : '100px'}, 1fr))`, gap: '0', background: '#F1F5F9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '50px' : viewMode === 'week' ? '90px' : '80px'}, 1fr))`, gap: '0', background: '#F1F5F9' }}>
                               <div style={{ 
                                 background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
                                 padding: '16px', 
@@ -1713,7 +1719,7 @@ export default function TimelineRoadmapPage() {
                             const isCompleted = item.status === 'completed';
                             
                             return (
-                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `280px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '60px' : viewMode === 'week' ? '120px' : '100px'}, 1fr))`, gap: '0', marginBottom: '0' }}>
+                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '50px' : viewMode === 'week' ? '90px' : '80px'}, 1fr))`, gap: '0', marginBottom: '0' }}>
                                 <div style={{ 
                                   background: isCompleted ? '#F3F4F6' : 'white', 
                                   padding: '12px 16px', 
@@ -1756,7 +1762,12 @@ export default function TimelineRoadmapPage() {
 
                                 {/* Gantt Bar - spans from startCol to endCol */}
                                 {timeColumns.map((col, idx) => {
-                                  const isToday = new Date().toDateString() === col.date.toDateString();
+                                  const today = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  const colDate = new Date(col.date);
+                                  colDate.setHours(0, 0, 0, 0);
+                                  const isToday = today.getTime() === colDate.getTime();
+                                  const isPast = colDate < today;
                                   const isWeekend = col.date.getDay() === 0 || col.date.getDay() === 6;
                                   const isInRange = idx >= startCol && idx < startCol + spanCols;
                                   const isStart = idx === startCol;
@@ -1764,9 +1775,9 @@ export default function TimelineRoadmapPage() {
                                   
                                   return (
                                   <div key={idx} style={{ 
-                                    background: isToday ? '#FEF3C7' : isWeekend ? '#F9FAFB' : 'white', 
+                                    background: isToday ? '#FEF3C7' : isPast ? '#F8FAFC' : isWeekend ? '#FAFAFA' : 'white', 
                                     position: 'relative', 
-                                    minHeight: '80px', 
+                                    minHeight: '60px', 
                                     borderLeft: '1px solid #E2E8F0',
                                     borderBottom: '1px solid #E2E8F0'
                                   }}>
@@ -1774,44 +1785,34 @@ export default function TimelineRoadmapPage() {
                                       <div 
                                         style={{
                                           position: 'absolute',
-                                          left: isStart ? '6px' : '0',
-                                          right: isEnd ? '6px' : '0',
-                                          top: '12px',
-                                          bottom: '12px',
+                                          left: isStart ? '4px' : '0',
+                                          right: isEnd ? '4px' : '0',
+                                          top: '8px',
+                                          bottom: '8px',
                                           background: item.color,
-                                          borderRadius: isStart && isEnd ? '8px' : isStart ? '8px 0 0 8px' : isEnd ? '0 8px 8px 0' : '0',
+                                          borderRadius: isStart && isEnd ? '6px' : isStart ? '6px 0 0 6px' : isEnd ? '0 6px 6px 0' : '0',
                                           cursor: 'pointer',
-                                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                          boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
                                           display: 'flex',
                                           alignItems: 'center',
-                                          overflow: 'hidden',
-                                          transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                                          overflow: 'hidden'
                                         }}
                                         onClick={() => loadTimelineItemDetails(item)}
-                                        title={`${item.title}\n${new Date(item.start_date).toLocaleDateString()} - ${new Date(item.end_date).toLocaleDateString()}`}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.transform = 'scaleY(1.05)';
-                                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.transform = 'scaleY(1)';
-                                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                                        }}
+                                        title={item.title}
                                       >
                                         {isStart && (
                                           <div style={{ 
                                             color: 'white',
-                                            padding: '0 12px',
+                                            padding: '0 10px',
                                             overflow: 'hidden',
                                             width: '100%'
                                           }}>
                                             <div style={{ 
                                               fontWeight: '600',
-                                              fontSize: '13px',
+                                              fontSize: viewMode === 'day' ? '11px' : viewMode === 'week' ? '11px' : '12px',
                                               overflow: 'hidden',
                                               textOverflow: 'ellipsis',
-                                              whiteSpace: 'nowrap',
-                                              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                                              whiteSpace: 'nowrap'
                                             }}>
                                               {item.title}
                                             </div>
