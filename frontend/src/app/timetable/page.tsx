@@ -601,7 +601,7 @@ export default function TimetablePage() {
       <div style={{ minHeight: '100vh', background: '#F5F5ED' }}>
         {isMobile && <MobileHeader title="Meeting Schedule" isMobile={isMobile} />}
         <div style={{ display: 'flex' }}>
-          {!isMobile && <Sidebar />}
+          {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
           <div style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
             {/* Skeleton Header */}
             <div style={{ marginBottom: '2rem' }}>
