@@ -3540,10 +3540,10 @@ export default function TimelineRoadmapPage() {
                               fontWeight: '600',
                               background: task.status === 'completed' ? '#D1FAE5' : 
                                          task.status === 'in_progress' ? '#DBEAFE' : 
-                                         task.status === 'review' ? '#FEF3C7' : '#F3F4F6',
+                                         (task.status as string) === 'review' ? '#FEF3C7' : '#F3F4F6',
                               color: task.status === 'completed' ? '#059669' : 
                                     task.status === 'in_progress' ? '#2563EB' : 
-                                    task.status === 'review' ? '#D97706' : '#6B7280'
+                                    (task.status as string) === 'review' ? '#D97706' : '#6B7280'
                             }}>
                               {task.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
                             </span>
