@@ -160,6 +160,9 @@ export default function TimelineRoadmapPage() {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showKPIModal, setShowKPIModal] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
+  const [showDayTasksModal, setShowDayTasksModal] = useState(false);
+  const [selectedDayTasks, setSelectedDayTasks] = useState<TimelineItem[]>([]);
+  const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
 
   // Form states
   const [newFolder, setNewFolder] = useState({
@@ -2093,9 +2096,28 @@ export default function TimelineRoadmapPage() {
                                 </div>
                               ))}
                               {dayItems.length > 3 && (
-                                <div style={{ fontSize: '10px', color: '#6B7280', fontWeight: '500' }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedDayTasks(dayItems);
+                                    setSelectedDayDate(cellDate);
+                                    setShowDayTasksModal(true);
+                                  }}
+                                  style={{ 
+                                    fontSize: '10px', 
+                                    color: '#5884FD', 
+                                    fontWeight: '600',
+                                    background: '#EFF6FF',
+                                    border: 'none',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    width: '100%',
+                                    textAlign: 'center'
+                                  }}
+                                >
                                   +{dayItems.length - 3} more
-                                </div>
+                                </button>
                               )}
                             </div>
                           </div>
@@ -3383,6 +3405,179 @@ export default function TimelineRoadmapPage() {
                   Add Link
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DAY TASKS MODAL - Shows all tasks for selected day */}
+      {showDayTasksModal && (
+        <div 
+          style={{
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0,0,0,0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 1000, 
+            padding: '20px'
+          }} 
+          onClick={() => setShowDayTasksModal(false)}
+        >
+          <div 
+            style={{
+              background: 'white', 
+              borderRadius: '16px', 
+              maxWidth: '600px', 
+              width: '100%', 
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: '1px solid #E5E7EB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h3 style={{fontSize: '20px', fontWeight: '700', color: '#1F2937', margin: 0}}>
+                  Tasks for {selectedDayDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                </h3>
+                <p style={{fontSize: '14px', color: '#6B7280', margin: '4px 0 0 0'}}>
+                  {selectedDayTasks.length} task{selectedDayTasks.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDayTasksModal(false)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: '#F3F4F6',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                  color: '#6B7280'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Task List */}
+            <div style={{
+              padding: '16px 24px',
+              overflowY: 'auto',
+              flex: 1
+            }}>
+              {selectedDayTasks.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px 20px',
+                  color: '#9CA3AF'
+                }}>
+                  No tasks for this day
+                </div>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                  {selectedDayTasks.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => {
+                        setShowDayTasksModal(false);
+                        loadTimelineItemDetails(task);
+                      }}
+                      style={{
+                        padding: '16px',
+                        background: '#F9FAFB',
+                        borderRadius: '12px',
+                        borderLeft: `4px solid ${task.color}`,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#F3F4F6';
+                        e.currentTarget.style.transform = 'translateX(4px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#F9FAFB';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px'}}>
+                        <div style={{flex: 1}}>
+                          <h4 style={{
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            color: '#1F2937',
+                            margin: '0 0 6px 0'
+                          }}>
+                            {task.title}
+                          </h4>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap'}}>
+                            <span style={{
+                              fontSize: '12px',
+                              color: '#6B7280'
+                            }}>
+                              {new Date(task.start_date).toLocaleDateString()} - {new Date(task.end_date).toLocaleDateString()}
+                            </span>
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              background: task.status === 'completed' ? '#D1FAE5' : 
+                                         task.status === 'in_progress' ? '#DBEAFE' : 
+                                         task.status === 'review' ? '#FEF3C7' : '#F3F4F6',
+                              color: task.status === 'completed' ? '#059669' : 
+                                    task.status === 'in_progress' ? '#2563EB' : 
+                                    task.status === 'review' ? '#D97706' : '#6B7280'
+                            }}>
+                              {task.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                            </span>
+                            {task.priority && (
+                              <span style={{
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                background: task.priority === 'urgent' ? '#FEE2E2' : 
+                                           task.priority === 'high' ? '#FFEDD5' : '#F3F4F6',
+                                color: task.priority === 'urgent' ? '#DC2626' : 
+                                      task.priority === 'high' ? '#EA580C' : '#6B7280'
+                              }}>
+                                {task.priority.toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{
+                          padding: '8px 12px',
+                          background: task.color,
+                          color: 'white',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}>
+                          View
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

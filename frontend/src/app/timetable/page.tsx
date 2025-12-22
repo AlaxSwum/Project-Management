@@ -93,8 +93,13 @@ export default function TimetablePage() {
     project_id: 0,
     attendees: '',
     attendee_ids: [] as number[],
-    agenda: '' as string,
+    agenda_items: [] as string[],
   });
+  const [newAgendaItem, setNewAgendaItem] = useState('');
+  
+  // Cache for meetings data
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const CACHE_DURATION = 30000; // 30 seconds cache
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -118,7 +123,14 @@ export default function TimetablePage() {
     }
   }, [newMeeting.project_id]);
 
-  const fetchData = async () => {
+  const fetchData = async (forceRefresh = false) => {
+    // Use cache if available and not forcing refresh
+    const now = Date.now();
+    if (!forceRefresh && lastFetchTime > 0 && (now - lastFetchTime) < CACHE_DURATION && meetings.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       setError('');
       
@@ -166,6 +178,7 @@ export default function TimetablePage() {
       });
       
       setMeetings(filteredMeetings || []);
+      setLastFetchTime(now);
       
       // Fetch users in background (not blocking)
       projectService.getUsers().then(usersData => setUsers(usersData || []));
@@ -231,7 +244,7 @@ export default function TimetablePage() {
         project_id: 0,
         attendees: '',
         attendee_ids: [],
-        agenda: '',
+        agenda_items: [],
       });
       setShowCreateForm(false);
       setError('');
@@ -302,8 +315,9 @@ export default function TimetablePage() {
       project_id: meeting.project_id || meeting.project || 0,
       attendees: meeting.attendees_list ? meeting.attendees_list.join(', ') : meeting.attendees || '',
       attendee_ids: [],
-      agenda: (meeting as any).agenda || '',
+      agenda_items: (meeting as any).agenda_items || ((meeting as any).agenda ? (meeting as any).agenda.split('\n').filter((a: string) => a.trim()) : []),
     });
+    setNewAgendaItem('');
     setShowCreateForm(true);
   };
 
@@ -343,7 +357,7 @@ export default function TimetablePage() {
         project_id: 0,
         attendees: '',
         attendee_ids: [],
-        agenda: '',
+        agenda_items: [],
       });
       setShowCreateForm(false);
       setError('');
@@ -3386,7 +3400,7 @@ export default function TimetablePage() {
             project_id: 0,
             attendees: '',
             attendee_ids: [],
-            agenda: '',
+            agenda_items: [],
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3408,7 +3422,7 @@ export default function TimetablePage() {
                     project_id: 0,
                     attendees: '',
                     attendee_ids: [],
-                    agenda: '',
+                    agenda_items: [],
                   });
                 }}
                 className="modal-close-btn"
@@ -3609,17 +3623,128 @@ export default function TimetablePage() {
               {/* Meeting Agenda */}
               <div className="form-group">
                 <label className="form-label">Meeting Agenda</label>
-                <textarea
-                  className="form-textarea"
-                  placeholder="List the agenda items for this meeting...&#10;• Item 1&#10;• Item 2&#10;• Item 3"
-                  value={newMeeting.agenda}
-                  onChange={(e) => setNewMeeting({ ...newMeeting, agenda: e.target.value })}
-                  rows={5}
-                  style={{ minHeight: '120px' }}
-                />
-                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
-                  Add agenda items to keep the meeting focused and productive
-                </p>
+                
+                {/* Add new agenda item */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Add agenda item..."
+                    value={newAgendaItem}
+                    onChange={(e) => setNewAgendaItem(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && newAgendaItem.trim()) {
+                        e.preventDefault();
+                        setNewMeeting({
+                          ...newMeeting,
+                          agenda_items: [...newMeeting.agenda_items, newAgendaItem.trim()]
+                        });
+                        setNewAgendaItem('');
+                      }
+                    }}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newAgendaItem.trim()) {
+                        setNewMeeting({
+                          ...newMeeting,
+                          agenda_items: [...newMeeting.agenda_items, newAgendaItem.trim()]
+                        });
+                        setNewAgendaItem('');
+                      }
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      background: '#10B981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add
+                  </button>
+                </div>
+
+                {/* Agenda items list */}
+                {newMeeting.agenda_items.length > 0 ? (
+                  <div style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    overflow: 'hidden',
+                    background: '#F9FAFB'
+                  }}>
+                    {newMeeting.agenda_items.map((item, index) => (
+                      <div 
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          borderBottom: index < newMeeting.agenda_items.length - 1 ? '1px solid #E5E7EB' : 'none',
+                          background: 'white'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: '#5884FD',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {index + 1}
+                          </span>
+                          <span style={{ fontSize: '14px', color: '#374151' }}>{item}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewMeeting({
+                              ...newMeeting,
+                              agenda_items: newMeeting.agenda_items.filter((_, i) => i !== index)
+                            });
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            background: '#FEE2E2',
+                            color: '#DC2626',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: '#9CA3AF',
+                    border: '2px dashed #E5E7EB',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}>
+                    No agenda items yet. Add items to keep your meeting focused.
+                  </div>
+                )}
               </div>
 
               <div className="form-actions">
@@ -3638,7 +3763,7 @@ export default function TimetablePage() {
                     project_id: 0,
                     attendees: '',
                     attendee_ids: [],
-                    agenda: '',
+                    agenda_items: [],
                   });
                 }} className="btn-secondary">
                   Cancel

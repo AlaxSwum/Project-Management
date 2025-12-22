@@ -121,10 +121,10 @@ export default function ContentCalendarPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
       <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
+      </div>
+    )
 
-  return (
+    return (
     <div>
       <MobileHeader title="Content Calendar" isMobile={isMobile} />
       <style dangerouslySetInnerHTML={{ __html: `
@@ -174,41 +174,41 @@ export default function ContentCalendarPage() {
           <div className="cc-search-row">
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search companies..." className="cc-search" />
             <button onClick={() => setShowCreateModal(true)} className="cc-btn-primary">+ New Company</button>
-          </div>
+            </div>
             
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
               <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            </div>
+              </div>
           ) : filteredCompanies.length === 0 ? (
             <div className="cc-empty">
               <div className="cc-empty-icon">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C483D9" strokeWidth="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-              </div>
+            </div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{searchQuery ? 'No companies found' : 'No companies yet'}</h3>
               <p style={{ color: '#666', margin: '0 0 1.5rem 0' }}>{searchQuery ? 'Try a different search term' : 'Create your first company to start managing content'}</p>
               {!searchQuery && <button onClick={() => setShowCreateModal(true)} className="cc-btn-primary">+ Create Company</button>}
-            </div>
-          ) : (
+                </div>
+              ) : (
             <div className="cc-grid">
               {filteredCompanies.map(company => (
                 <div key={company.id} className="cc-card">
                   <div className="cc-card-header" onClick={() => router.push(`/content-calendar/${company.id}`)}>
                     <h3 className="cc-card-title">{company.name}</h3>
                     {company.description && <p className="cc-card-desc">{company.description}</p>}
-                  </div>
+                        </div>
                   <div className="cc-card-footer">
                     <button onClick={() => router.push(`/content-calendar/${company.id}`)} className="cc-btn-card cc-btn-open">Calendar</button>
                     <button onClick={() => router.push(`/content-calendar/${company.id}/reports`)} className="cc-btn-card cc-btn-secondary">Reports</button>
                     <button onClick={() => openMembersModal(company)} className="cc-btn-card cc-btn-secondary">Team</button>
                     <button onClick={() => handleDeleteCompany(company.id)} className="cc-btn-card cc-btn-danger">Delete</button>
-                  </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
         </main>
-      </div>
+            </div>
 
       {showCreateModal && (
         <div className="cc-modal" onClick={() => setShowCreateModal(false)}>
@@ -217,17 +217,17 @@ export default function ContentCalendarPage() {
             <div className="cc-form-group">
               <label className="cc-label">Company Name *</label>
               <input type="text" value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} placeholder="Enter company name" className="cc-input" />
-            </div>
+          </div>
             <div className="cc-form-group">
               <label className="cc-label">Description</label>
               <textarea value={companyForm.description} onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })} placeholder="Optional description" rows={3} className="cc-textarea" />
-            </div>
+              </div>
             <div className="cc-modal-footer">
               <button onClick={() => setShowCreateModal(false)} className="cc-btn-card cc-btn-secondary">Cancel</button>
               <button onClick={handleCreateCompany} className="cc-btn-primary">Create Company</button>
             </div>
-          </div>
-        </div>
+                </div>
+                </div>
       )}
 
       {showMembersModal && selectedCompany && (
@@ -239,37 +239,37 @@ export default function ContentCalendarPage() {
                 <select value={memberForm.user_id} onChange={(e) => setMemberForm({ ...memberForm, user_id: e.target.value })} className="cc-input">
                   <option value="">Select member</option>
                   {teamMembers.map(m => <option key={m.id} value={String(m.id)}>{m.name}</option>)}
-                </select>
+                        </select>
                 <select value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} className="cc-input">
                   {COMPANY_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
+                        </select>
                 <button onClick={handleAddMember} className="cc-btn-primary" style={{ padding: '0.75rem 1.5rem' }}>Add</button>
-              </div>
-            </div>
-            {members.length === 0 ? (
+                    </div>
+                    </div>
+                {members.length === 0 ? (
               <p style={{ color: '#666', textAlign: 'center', padding: '1.5rem' }}>No members yet</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {members.map(member => (
                   <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#fafafa', borderRadius: '12px' }}>
                     <div>
                       <div style={{ fontWeight: 500, color: '#1a1a1a' }}>{member.user_name || 'Unknown'}</div>
                       <div style={{ fontSize: '0.85rem', color: '#666' }}>{member.user_email}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem', fontWeight: 500, borderRadius: '20px', background: member.role === 'OWNER' ? '#e6f0ff' : '#f0f0f0', color: member.role === 'OWNER' ? '#5884FD' : '#666' }}>{member.role}</span>
                       <button onClick={() => handleRemoveMember(member.id)} className="cc-btn-card cc-btn-danger">Remove</button>
-                    </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
             <div className="cc-modal-footer">
               <button onClick={() => setShowMembersModal(false)} className="cc-btn-card cc-btn-secondary">Close</button>
             </div>
           </div>
         </div>
       )}
-    </div>
+            </div>
   )
 }

@@ -1054,7 +1054,6 @@ Your report is now available in the system.`);
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
     { name: 'Timeline & Roadmap', href: '/timeline', icon: ChartBarIcon },
-    { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
     { name: 'Meeting Schedule', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
@@ -1100,7 +1099,6 @@ Your report is now available in the system.`);
   const hrNavItems = [
     { name: 'Inbox', href: '/inbox', icon: InboxIcon },
     { name: 'Daily Reports', href: '/daily-reports', icon: ClipboardDocumentListIcon },
-    { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Absence Management', href: '/employee-absent', icon: CalendarDaysIcon },
   ];
 

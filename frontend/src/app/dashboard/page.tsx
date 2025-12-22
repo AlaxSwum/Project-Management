@@ -224,9 +224,9 @@ export default function DashboardPage() {
         fetchTimelineFolders();
       } else {
         // For other project types, try to create in projects table
-        try {
-          const project = await projectService.createProject(newProject);
-          setProjects([project, ...projects]);
+    try {
+      const project = await projectService.createProject(newProject);
+      setProjects([project, ...projects]);
         } catch (projectErr) {
           console.log('Projects table not available, skipping');
         }
