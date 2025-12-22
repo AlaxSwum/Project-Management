@@ -145,6 +145,11 @@ export default function TimelineRoadmapPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showGanttChart, setShowGanttChart] = useState(true);
+  const [displayMode, setDisplayMode] = useState<'gantt' | 'calendar'>('gantt');
+  
+  // Role-based access
+  const isAdmin = (user as any)?.role === 'admin' || (user as any)?.user_metadata?.role === 'admin';
+  const [userAssignedCategories, setUserAssignedCategories] = useState<number[]>([]);
 
   // Modal states
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -443,6 +448,18 @@ export default function TimelineRoadmapPage() {
     if (!selectedFolder) return;
 
     try {
+      // Get user's assigned categories based on responsible_person_id
+      const { data: assignedData } = await supabase
+        .from('timeline_categories')
+        .select('id')
+        .eq('folder_id', selectedFolder.id)
+        .eq('responsible_person_id', user?.id)
+        .eq('is_active', true);
+      
+      if (assignedData) {
+        setUserAssignedCategories(assignedData.map(c => c.id));
+      }
+
       const { data, error } = await supabase
         .from('timeline_categories')
         .select('*')
@@ -1348,7 +1365,42 @@ export default function TimelineRoadmapPage() {
                   ))}
                 </select>
 
-                {/* View Mode Selector */}
+                {/* Display Mode Toggle */}
+                <div style={{ display: 'flex', gap: '4px', background: 'white', padding: '4px', borderRadius: '8px', border: '2px solid #E5E7EB' }}>
+                  <button
+                    onClick={() => setDisplayMode('gantt')}
+                    style={{
+                      padding: '8px 16px',
+                      background: displayMode === 'gantt' ? '#FFB333' : 'transparent',
+                      color: displayMode === 'gantt' ? 'white' : '#64748B',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Gantt
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('calendar')}
+                    style={{
+                      padding: '8px 16px',
+                      background: displayMode === 'calendar' ? '#FFB333' : 'transparent',
+                      color: displayMode === 'calendar' ? 'white' : '#64748B',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Calendar
+                  </button>
+                </div>
+
+                {/* View Mode Selector - only show for Gantt */}
+                {displayMode === 'gantt' && (
                 <div style={{ display: 'flex', gap: '4px', background: 'white', padding: '4px', borderRadius: '8px', border: '2px solid #E5E7EB' }}>
                   <button
                     onClick={() => setViewMode('day')}
@@ -1411,8 +1463,10 @@ export default function TimelineRoadmapPage() {
                     Quarter
                   </button>
                 </div>
+                )}
 
-                {/* Navigation */}
+                {/* Navigation - only show for Gantt */}
+                {displayMode === 'gantt' && (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     onClick={() => {
@@ -1470,6 +1524,7 @@ export default function TimelineRoadmapPage() {
                     <ChevronRightIcon style={{ width: '20px', height: '20px', color: '#64748B' }} />
                   </button>
                 </div>
+                )}
 
                 {selectedFolder && (
                   <button
@@ -1601,7 +1656,7 @@ export default function TimelineRoadmapPage() {
               </div>
 
               {/* GANTT CHART */}
-              {categories.length > 0 && (
+              {displayMode === 'gantt' && categories.length > 0 && (
                 <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflowX: 'auto' }}>
                   <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#1F2937' }}>
                     Gantt Chart
@@ -1830,8 +1885,15 @@ export default function TimelineRoadmapPage() {
                       );
                     };
                     
-                    // Render all root categories
-                    return categories.map(cat => renderCategory(cat, 0));
+                    // Render all root categories (filtered by role)
+                    // Admin sees all, others see only assigned categories
+                    const filteredCategories = isAdmin 
+                      ? categories 
+                      : categories.filter(cat => 
+                          userAssignedCategories.includes(cat.id) || 
+                          cat.responsible_person_id === parseInt(user?.id?.toString() || '0')
+                        );
+                    return filteredCategories.map(cat => renderCategory(cat, 0));
                   })()}
 
                     {categories.length === 0 && (
@@ -1854,6 +1916,144 @@ export default function TimelineRoadmapPage() {
                         </button>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* CALENDAR VIEW */}
+              {displayMode === 'calendar' && (
+                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1F2937', margin: 0 }}>
+                      Calendar View
+                    </h2>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button
+                        onClick={() => setCurrentDate(prev => {
+                          const d = new Date(prev);
+                          d.setMonth(d.getMonth() - 1);
+                          return d;
+                        })}
+                        style={{ padding: '8px', background: '#F3F4F6', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        <ChevronLeftIcon style={{ width: '18px', height: '18px' }} />
+                      </button>
+                      <span style={{ fontWeight: '600', fontSize: '16px', minWidth: '150px', textAlign: 'center' }}>
+                        {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </span>
+                      <button
+                        onClick={() => setCurrentDate(prev => {
+                          const d = new Date(prev);
+                          d.setMonth(d.getMonth() + 1);
+                          return d;
+                        })}
+                        style={{ padding: '8px', background: '#F3F4F6', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        <ChevronRightIcon style={{ width: '18px', height: '18px' }} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Calendar Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: '#E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+                    {/* Day Headers */}
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <div key={day} style={{ background: '#F8FAFC', padding: '12px', textAlign: 'center', fontWeight: '600', fontSize: '12px', color: '#64748B' }}>
+                        {day}
+                      </div>
+                    ))}
+                    
+                    {/* Calendar Days */}
+                    {(() => {
+                      const year = currentDate.getFullYear();
+                      const month = currentDate.getMonth();
+                      const firstDay = new Date(year, month, 1).getDay();
+                      const daysInMonth = new Date(year, month + 1, 0).getDate();
+                      const today = new Date();
+                      const cells = [];
+                      
+                      // Empty cells before first day
+                      for (let i = 0; i < firstDay; i++) {
+                        cells.push(
+                          <div key={`empty-${i}`} style={{ background: '#FAFAFA', minHeight: '100px', padding: '8px' }} />
+                        );
+                      }
+                      
+                      // Days of the month
+                      for (let day = 1; day <= daysInMonth; day++) {
+                        const cellDate = new Date(year, month, day);
+                        const isToday = cellDate.toDateString() === today.toDateString();
+                        
+                        // Filter items for this day (admin sees all, others see assigned)
+                        const dayItems = timelineItems.filter(item => {
+                          const start = new Date(item.start_date);
+                          const end = new Date(item.end_date);
+                          start.setHours(0,0,0,0);
+                          end.setHours(23,59,59,999);
+                          cellDate.setHours(12,0,0,0);
+                          
+                          const inDateRange = cellDate >= start && cellDate <= end;
+                          if (!inDateRange) return false;
+                          
+                          // Role-based filtering
+                          if (isAdmin) return true;
+                          return userAssignedCategories.includes(item.category_id || 0) ||
+                                 item.team_leader_id === parseInt(user?.id?.toString() || '0') ||
+                                 (item.team_member_ids || []).includes(parseInt(user?.id?.toString() || '0'));
+                        });
+                        
+                        cells.push(
+                          <div 
+                            key={day} 
+                            style={{ 
+                              background: isToday ? '#FEF3C7' : 'white', 
+                              minHeight: '100px', 
+                              padding: '8px',
+                              borderTop: isToday ? '3px solid #FFB333' : 'none'
+                            }}
+                          >
+                            <div style={{ 
+                              fontWeight: isToday ? '700' : '500', 
+                              fontSize: '14px', 
+                              color: isToday ? '#B45309' : '#374151',
+                              marginBottom: '6px'
+                            }}>
+                              {day}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {dayItems.slice(0, 3).map(item => (
+                                <div
+                                  key={item.id}
+                                  onClick={() => loadTimelineItemDetails(item)}
+                                  style={{
+                                    padding: '4px 6px',
+                                    background: item.color,
+                                    color: 'white',
+                                    borderRadius: '4px',
+                                    fontSize: '10px',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  title={item.title}
+                                >
+                                  {item.title}
+                                </div>
+                              ))}
+                              {dayItems.length > 3 && (
+                                <div style={{ fontSize: '10px', color: '#6B7280', fontWeight: '500' }}>
+                                  +{dayItems.length - 3} more
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      return cells;
+                    })()}
                   </div>
                 </div>
               )}

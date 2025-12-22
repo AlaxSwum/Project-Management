@@ -93,6 +93,7 @@ export default function TimetablePage() {
     project_id: 0,
     attendees: '',
     attendee_ids: [] as number[],
+    agenda: '' as string,
   });
 
   useEffect(() => {
@@ -264,6 +265,7 @@ export default function TimetablePage() {
         project_id: 0,
         attendees: '',
         attendee_ids: [],
+        agenda: '',
       });
       setShowCreateForm(false);
       setError('');
@@ -334,6 +336,7 @@ export default function TimetablePage() {
       project_id: meeting.project_id || meeting.project || 0,
       attendees: meeting.attendees_list ? meeting.attendees_list.join(', ') : meeting.attendees || '',
       attendee_ids: [],
+      agenda: (meeting as any).agenda || '',
     });
     setShowCreateForm(true);
   };
@@ -374,6 +377,7 @@ export default function TimetablePage() {
         project_id: 0,
         attendees: '',
         attendee_ids: [],
+        agenda: '',
       });
       setShowCreateForm(false);
       setError('');
@@ -607,7 +611,7 @@ export default function TimetablePage() {
 
   return (
     <div>
-      {isMobile && <MobileHeader title="Timetable" isMobile={isMobile} />}
+      {isMobile && <MobileHeader title="Meeting Schedule" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -2232,7 +2236,7 @@ export default function TimetablePage() {
               <div>
                 <h1 className="header-title">
                   <ClockIcon style={{ width: '32px', height: '32px' }} />
-                  Timetable & Meetings
+                  Meeting Schedule
                 </h1>
                 <p style={{ color: '#666666', fontSize: '1.1rem', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                   Schedule and manage team meetings across all projects
@@ -3404,6 +3408,7 @@ export default function TimetablePage() {
             project_id: 0,
             attendees: '',
             attendee_ids: [],
+            agenda: '',
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3425,6 +3430,7 @@ export default function TimetablePage() {
                     project_id: 0,
                     attendees: '',
                     attendee_ids: [],
+                    agenda: '',
                   });
                 }}
                 className="modal-close-btn"
@@ -3622,6 +3628,22 @@ export default function TimetablePage() {
                 )}
               </div>
 
+              {/* Meeting Agenda */}
+              <div className="form-group">
+                <label className="form-label">Meeting Agenda</label>
+                <textarea
+                  className="form-textarea"
+                  placeholder="List the agenda items for this meeting...&#10;• Item 1&#10;• Item 2&#10;• Item 3"
+                  value={newMeeting.agenda}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, agenda: e.target.value })}
+                  rows={5}
+                  style={{ minHeight: '120px' }}
+                />
+                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                  Add agenda items to keep the meeting focused and productive
+                </p>
+              </div>
+
               <div className="form-actions">
                 <button type="submit" className="btn-primary">
                   {editingMeeting ? 'Update Meeting' : 'Schedule Meeting'}
@@ -3638,6 +3660,7 @@ export default function TimetablePage() {
                     project_id: 0,
                     attendees: '',
                     attendee_ids: [],
+                    agenda: '',
                   });
                 }} className="btn-secondary">
                   Cancel

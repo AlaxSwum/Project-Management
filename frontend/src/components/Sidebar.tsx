@@ -1053,12 +1053,10 @@ Your report is now available in the system.`);
   const baseNavItems = [
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
-    { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
-    { name: 'My Personal', href: '/personal', icon: CalendarDaysIcon },
     { name: 'Timeline & Roadmap', href: '/timeline', icon: ChartBarIcon },
     { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
-    { name: 'Timetable', href: '/timetable', icon: ClockIcon },
+    { name: 'Meeting Schedule', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
   ];
 
@@ -1094,8 +1092,7 @@ Your report is now available in the system.`);
     ? [
         { name: 'Home', href: '/dashboard', icon: HomeIcon },
         { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
-        { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
-        { name: 'Timetable', href: '/timetable', icon: ClockIcon },
+        { name: 'Meeting Schedule', href: '/timetable', icon: ClockIcon },
       ]
     : mainNavItems;
 
