@@ -48,7 +48,7 @@ interface FolderMember {
   id: number;
   folder_id: number;
   user_id: number;
-  role: 'owner' | 'manager' | 'editor' | 'viewer';
+  role: 'admin' | 'member' | 'owner'; // 'owner' for legacy data compatibility
   can_edit: boolean;
   can_delete: boolean;
   can_manage_members: boolean;
@@ -148,8 +148,10 @@ export default function TimelineRoadmapPage() {
   const [displayMode, setDisplayMode] = useState<'gantt' | 'calendar'>('gantt');
   
   // Role-based access
-  const isAdmin = (user as any)?.role === 'admin' || (user as any)?.user_metadata?.role === 'admin';
+  const isSystemAdmin = (user as any)?.role === 'admin' || (user as any)?.user_metadata?.role === 'admin';
+  const [isFolderAdmin, setIsFolderAdmin] = useState(false); // Is owner/admin of current folder
   const [userAssignedCategories, setUserAssignedCategories] = useState<number[]>([]);
+  const [userAssignedItems, setUserAssignedItems] = useState<number[]>([]);
 
   // Modal states
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -523,6 +525,16 @@ export default function TimelineRoadmapPage() {
       }));
 
       setTimelineItems(items);
+      
+      // Track items assigned to current user (team_leader or in team_member_ids)
+      const userId = parseInt(user?.id?.toString() || '0');
+      const assignedIds = items
+        .filter(item => 
+          item.team_leader_id === userId || 
+          (item.team_member_ids || []).includes(userId)
+        )
+        .map(item => item.id);
+      setUserAssignedItems(assignedIds);
     } catch (error) {
       console.error('Error fetching timeline items:', error);
     }
@@ -555,9 +567,14 @@ export default function TimelineRoadmapPage() {
       }));
 
       setFolderMembers(membersWithUsers);
+      
+      // Check if current user is folder admin (owner or admin role)
+      const currentUserMember = membersWithUsers.find(m => m.user_id === user?.id);
+      setIsFolderAdmin(currentUserMember?.role === 'admin' || currentUserMember?.role === 'owner' || isSystemAdmin);
     } catch (error) {
       console.error('Error fetching folder members:', error);
-      setFolderMembers([]); // Set empty array on error
+      setFolderMembers([]);
+      setIsFolderAdmin(isSystemAdmin);
     }
   };
 
@@ -588,13 +605,13 @@ export default function TimelineRoadmapPage() {
 
       if (error) throw error;
 
-      // Add creator as owner
+      // Add creator as admin (owner)
       await supabase
         .from('timeline_folder_members')
         .insert([{
           folder_id: data.id,
           user_id: userId,
-          role: 'owner',
+          role: 'admin',
           can_edit: true,
           can_delete: true,
           can_manage_members: true,
@@ -1707,8 +1724,46 @@ export default function TimelineRoadmapPage() {
 
                     {/* Categories & Timeline Items - Recursive Rendering */}
                     {(() => {
+                      const userId = parseInt(user?.id?.toString() || '0');
+                      
+                      // Helper: Check if user has access to a category
+                      const userHasAccessToCategory = (category: Category): boolean => {
+                        // Admins see all
+                        if (isFolderAdmin || isSystemAdmin) return true;
+                        
+                        // Check if user is responsible for this category
+                        if (category.responsible_person_id === userId) return true;
+                        
+                        // Check if user has any assigned items in this category
+                        const hasAssignedItems = timelineItems.some(item => 
+                          item.category_id === category.id && 
+                          (item.team_leader_id === userId || (item.team_member_ids || []).includes(userId))
+                        );
+                        if (hasAssignedItems) return true;
+                        
+                        // Check subcategories recursively
+                        if (category.subcategories && category.subcategories.length > 0) {
+                          return category.subcategories.some(subcat => userHasAccessToCategory(subcat));
+                        }
+                        
+                        return false;
+                      };
+                      
+                      // Helper: Filter items visible to user
+                      const getVisibleItems = (items: TimelineItem[]) => {
+                        if (isFolderAdmin || isSystemAdmin) return items;
+                        return items.filter(item => 
+                          item.team_leader_id === userId || 
+                          (item.team_member_ids || []).includes(userId)
+                        );
+                      };
+                      
                       const renderCategory = (category: Category, level: number = 0) => {
-                        const categoryItems = timelineItems.filter(item => item.category_id === category.id);
+                        // Skip categories user doesn't have access to
+                        if (!userHasAccessToCategory(category)) return null;
+                        
+                        const allCategoryItems = timelineItems.filter(item => item.category_id === category.id);
+                        const categoryItems = getVisibleItems(allCategoryItems);
                         const indentPadding = level * 20;
                         
                         return (
@@ -1979,7 +2034,8 @@ export default function TimelineRoadmapPage() {
                         const cellDate = new Date(year, month, day);
                         const isToday = cellDate.toDateString() === today.toDateString();
                         
-                        // Filter items for this day (admin sees all, others see assigned)
+                        // Filter items for this day (admin sees all, members see only assigned)
+                        const userId = parseInt(user?.id?.toString() || '0');
                         const dayItems = timelineItems.filter(item => {
                           const start = new Date(item.start_date);
                           const end = new Date(item.end_date);
@@ -1990,11 +2046,10 @@ export default function TimelineRoadmapPage() {
                           const inDateRange = cellDate >= start && cellDate <= end;
                           if (!inDateRange) return false;
                           
-                          // Role-based filtering
-                          if (isAdmin) return true;
-                          return userAssignedCategories.includes(item.category_id || 0) ||
-                                 item.team_leader_id === parseInt(user?.id?.toString() || '0') ||
-                                 (item.team_member_ids || []).includes(parseInt(user?.id?.toString() || '0'));
+                          // Role-based filtering - admins see all, members see only assigned
+                          if (isFolderAdmin || isSystemAdmin) return true;
+                          return item.team_leader_id === userId ||
+                                 (item.team_member_ids || []).includes(userId);
                         });
                         
                         cells.push(
@@ -2296,6 +2351,7 @@ export default function TimelineRoadmapPage() {
             <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Manage Team Members</h3>
             
             <div style={{marginBottom: '24px'}}>
+              <p style={{fontSize: '13px', color: '#64748B', marginBottom: '12px'}}>Add team members who can view and work on their assigned tasks only.</p>
               <div style={{display: 'flex', gap: '8px', marginBottom: '16px', flexDirection: isMobile ? 'column' : 'row'}}>
                 <input 
                   type="email" 
@@ -2303,15 +2359,9 @@ export default function TimelineRoadmapPage() {
                   id="memberEmail"
                   style={{flex: 1, padding: '14px 16px', border: '2px solid #E5E7EB', borderRadius: '8px', fontSize: '15px', minWidth: isMobile ? '100%' : '300px'}}
                 />
-                <select id="memberRole" style={{padding: '12px', border: '2px solid #E5E7EB', borderRadius: '8px'}}>
-                  <option value="viewer">Viewer</option>
-                  <option value="editor">Editor</option>
-                  <option value="manager">Manager</option>
-                </select>
                 <button 
                   onClick={async () => {
                     const email = (document.getElementById('memberEmail') as HTMLInputElement).value;
-                    const role = (document.getElementById('memberRole') as HTMLSelectElement).value;
                     if (email.trim()) {
                       try {
                         const { data: userData } = await supabase.from('auth_user').select('id').eq('email', email).single();
@@ -2319,15 +2369,17 @@ export default function TimelineRoadmapPage() {
                           await supabase.from('timeline_folder_members').insert([{
                             folder_id: selectedFolder.id,
                             user_id: userData.id,
-                            role,
-                            can_edit: role !== 'viewer',
-                            can_delete: role === 'manager',
-                            can_manage_members: role === 'manager',
-                            can_manage_budget: role === 'manager'
+                            role: 'member',
+                            can_edit: true,
+                            can_delete: false,
+                            can_manage_members: false,
+                            can_manage_budget: false
                           }]);
                           fetchFolderMembers();
                           setSuccessMessage('Member added successfully!');
                           (document.getElementById('memberEmail') as HTMLInputElement).value = '';
+                        } else {
+                          setError('User not found with this email');
                         }
                       } catch (err) {
                         setError('Failed to add member');
@@ -2336,7 +2388,7 @@ export default function TimelineRoadmapPage() {
                   }}
                   style={{padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}
                 >
-                  Add
+                  Add Member
                 </button>
               </div>
             </div>
@@ -2350,10 +2402,10 @@ export default function TimelineRoadmapPage() {
                     <div style={{fontSize: '12px', color: '#64748B'}}>{member.user_email}</div>
                   </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                    <span style={{padding: '4px 12px', background: member.role === 'owner' ? '#3B82F6' : member.role === 'manager' ? '#10B981' : '#6B7280', color: 'white', borderRadius: '12px', fontSize: '12px', fontWeight: '600'}}>
-                      {member.role}
+                    <span style={{padding: '4px 12px', background: (member.role === 'owner' || member.role === 'admin') ? '#3B82F6' : '#6B7280', color: 'white', borderRadius: '12px', fontSize: '12px', fontWeight: '600'}}>
+                      {member.role === 'owner' || member.role === 'admin' ? 'Admin' : 'Member'}
                     </span>
-                    {member.role !== 'owner' && (
+                    {member.role !== 'owner' && member.role !== 'admin' && (
                       <button onClick={async () => {
                         if (confirm('Remove this member?')) {
                           await supabase.from('timeline_folder_members').delete().eq('id', member.id);
