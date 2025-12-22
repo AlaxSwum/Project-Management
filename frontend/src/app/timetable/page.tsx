@@ -154,7 +154,7 @@ export default function TimetablePage() {
         if (meeting.created_by?.id === user?.id) return true;
         
         // Check attendee_ids
-        if (meeting.attendee_ids?.includes(user?.id)) return true;
+        if (meeting.attendee_ids && user?.id && meeting.attendee_ids.includes(user.id)) return true;
         
         // Check attendees string
         const attendeesList = meeting.attendees_list || 
