@@ -121,92 +121,58 @@ export default function TimetablePage() {
   const fetchData = async () => {
     try {
       setError('');
-      console.log('Timetable: Fetching data for user:', user?.id);
       
-      const [projectsData, meetingsData, usersData, userTasks] = await Promise.all([
-        projectService.getProjects(),
-        meetingService.getMeetings(),
-        projectService.getUsers(),
-        taskService.getUserTasks()
-      ]);
+      // Fetch projects first (usually smaller dataset)
+      const projectsData = await projectService.getProjects();
+      setProjects(projectsData || []);
       
-      console.log('Timetable: Fetched projects:', projectsData?.length || 0);
-      console.log('Timetable: Fetched meetings:', meetingsData?.length || 0);
-      console.log('Timetable: Fetched users:', usersData?.length || 0);
-      
-      // Use all projects the user has access to (same as dashboard)
-      // The projectService.getProjects() already filters based on user access
+      // Build accessible projects set
       const accessibleProjects = new Set<number>();
       projectsData.forEach((project: any) => {
         accessibleProjects.add(project.id);
       });
+      setAccessibleProjectIds(accessibleProjects);
       
-      // Also track projects where user has task involvement for meeting access control
-      userTasks.forEach((task: any) => {
-        if (task.assignee?.id === user?.id || task.created_by?.id === user?.id) {
-          accessibleProjects.add(task.project_id);
-        }
-      });
+      // Fetch meetings (this is usually the large dataset)
+      const meetingsData = await meetingService.getMeetings();
       
-      // Filter meetings for visibility - show meetings where user is:
-      // 1. The creator of the meeting, OR 
-      // 2. Listed as an attendee by ID (attendee_ids), OR
-      // 3. Listed as an attendee by name/email (attendees), OR  
-      // 4. Has access to the project AND is specifically assigned
+      // Filter meetings efficiently
       const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
         const projectId = meeting.project_id || meeting.project;
         
-        // PERSONAL EVENTS (event_type === 'personal'): Only show to creator
-        if (meeting.event_type === 'personal') {
+        // Personal events: only show to creator
+        if (meeting.event_type === 'personal' || !projectId) {
           return meeting.created_by?.id === user?.id;
         }
         
-        // PERSONAL EVENTS (no project_id): Only show to creator (legacy support)
-        if (!projectId) {
-          return meeting.created_by?.id === user?.id;
-        }
-        
-        // PROJECT MEETINGS: Must have project access first
+        // Project meetings: must have project access
         if (!accessibleProjects.has(projectId)) {
           return false;
         }
         
-        // Show if user created the meeting
-        if (meeting.created_by?.id === user?.id) {
-          return true;
-        }
+        // Show if user created it
+        if (meeting.created_by?.id === user?.id) return true;
         
-        // IMPORTANT: Check if user is assigned via attendee_ids (primary method)
-        if (meeting.attendee_ids && Array.isArray(meeting.attendee_ids) && user?.id && meeting.attendee_ids.includes(user.id)) {
-          return true;
-        }
+        // Check attendee_ids
+        if (meeting.attendee_ids?.includes(user?.id)) return true;
         
-        // Fallback: Check if user is in attendees string/list (legacy method)
+        // Check attendees string
         const attendeesList = meeting.attendees_list || 
-          (meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()) : []);
+          (meeting.attendees ? meeting.attendees.split(',').map((a: string) => a.trim().toLowerCase()) : []);
+        const userName = (user?.name || '').toLowerCase();
+        const userEmail = (user?.email || '').toLowerCase();
         
-        const userInAttendees = attendeesList.some(attendee => 
-          attendee.toLowerCase().includes(user?.name?.toLowerCase() || '') ||
-          attendee.toLowerCase().includes(user?.email?.toLowerCase() || '')
-        );
-        
-        if (userInAttendees) {
-          return true;
-        }
-        
-        // Don't show meetings where user is not explicitly involved
-        return false;
+        return attendeesList.some((a: string) => a.includes(userName) || a.includes(userEmail));
       });
       
-      setAccessibleProjectIds(accessibleProjects);
-      setProjects(projectsData || []);
       setMeetings(filteredMeetings || []);
-      setUsers(usersData || []);
-      console.log('Timetable: Data loaded successfully');
+      
+      // Fetch users in background (not blocking)
+      projectService.getUsers().then(usersData => setUsers(usersData || []));
+      
     } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load timetable data';
-      setError(errorMessage);
-      console.error('Timetable: Fetch error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+      console.error('Fetch error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -502,12 +468,24 @@ export default function TimetablePage() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
+  // Memoized meetings grouped by date for faster lookups
+  const meetingsByDate = useMemo(() => {
+    const grouped: Record<string, Meeting[]> = {};
+    meetings.forEach(meeting => {
+      if (!grouped[meeting.date]) {
+        grouped[meeting.date] = [];
+      }
+      grouped[meeting.date].push(meeting);
+    });
+    return grouped;
+  }, [meetings]);
+
   const getMeetingsForDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
-    return meetings.filter(meeting => meeting.date === dateStr);
+    return meetingsByDate[dateStr] || [];
   };
 
   // Helper functions for week and day views
