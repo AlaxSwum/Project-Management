@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "ProjectFlow - Modern Project Management",
+  title: "Focus Project - Project Management",
   description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
 };
 

@@ -29,7 +29,7 @@ export default function TermsPage() {
               margin: 0,
               cursor: 'pointer'
             }}>
-              ProjectFlow
+              Focus Project
             </h1>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -91,7 +91,7 @@ export default function TermsPage() {
                 1. Acceptance of Terms
               </h2>
               <p style={{ marginBottom: '1rem' }}>
-                By accessing and using ProjectFlow, you accept and agree to be bound by the terms and provision of this agreement.
+                By accessing and using Focus Project, you accept and agree to be bound by the terms and provision of this agreement.
                 If you do not agree to abide by the above, please do not use this service.
               </p>
             </section>
@@ -106,7 +106,7 @@ export default function TermsPage() {
                 2. Description of Service
               </h2>
               <p style={{ marginBottom: '1rem' }}>
-                ProjectFlow is a web-based project management platform that helps teams collaborate, track progress, and manage tasks.
+                Focus Project is a web-based project management platform that helps teams collaborate, track progress, and manage tasks.
                 The service is provided "as is" and we reserve the right to modify or discontinue the service at any time.
               </p>
             </section>
@@ -156,7 +156,7 @@ export default function TermsPage() {
               }}>
                 5. Prohibited Uses
               </h2>
-              <p style={{ marginBottom: '1rem' }}>You may not use ProjectFlow for:</p>
+              <p style={{ marginBottom: '1rem' }}>You may not use Focus Project for:</p>
               <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
                 <li style={{ marginBottom: '0.5rem' }}>Any unlawful purpose or to solicit others to unlawful acts</li>
                 <li style={{ marginBottom: '0.5rem' }}>Violating any international, federal, provincial, or state regulations, rules, laws, or local ordinances</li>
@@ -175,7 +175,7 @@ export default function TermsPage() {
                 6. Limitation of Liability
               </h2>
               <p style={{ marginBottom: '1rem' }}>
-                In no event shall ProjectFlow, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any
+                In no event shall Focus Project, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any
                 indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use,
                 goodwill, or other intangible losses, resulting from your use of the service.
               </p>
@@ -249,7 +249,7 @@ export default function TermsPage() {
             color: '#6B7280',
             margin: 0
           }}>
-            © 2024 ProjectFlow. All rights reserved.
+            © 2024 Focus Project. All rights reserved.
           </p>
         </div>
       </footer>

@@ -29,7 +29,7 @@ export default function PrivacyPage() {
               margin: 0,
               cursor: 'pointer'
             }}>
-              ProjectFlow
+              Focus Project
             </h1>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
               <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
                 <li style={{ marginBottom: '0.5rem' }}>With your consent or at your direction</li>
                 <li style={{ marginBottom: '0.5rem' }}>To comply with laws, regulations, or legal processes</li>
-                <li style={{ marginBottom: '0.5rem' }}>To protect the rights, property, and safety of ProjectFlow and our users</li>
+                <li style={{ marginBottom: '0.5rem' }}>To protect the rights, property, and safety of Focus Project and our users</li>
                 <li style={{ marginBottom: '0.5rem' }}>In connection with a merger, acquisition, or sale of assets</li>
               </ul>
             </section>
@@ -281,7 +281,7 @@ export default function PrivacyPage() {
             color: '#6B7280',
             margin: 0
           }}>
-            © 2024 ProjectFlow. All rights reserved.
+            © 2024 Focus Project. All rights reserved.
           </p>
         </div>
       </footer>
