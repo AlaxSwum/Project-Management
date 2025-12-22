@@ -308,16 +308,25 @@ export default function TimetablePage() {
     }
 
     setEditingMeeting(meeting);
+    
+    // Parse agenda_items - handle different formats
+    let agendaItems: string[] = [];
+    if (Array.isArray(meeting.agenda_items) && meeting.agenda_items.length > 0) {
+      agendaItems = meeting.agenda_items;
+    } else if (typeof (meeting as any).agenda === 'string' && (meeting as any).agenda.trim()) {
+      agendaItems = (meeting as any).agenda.split('\n').filter((a: string) => a.trim());
+    }
+    
     setNewMeeting({
       title: meeting.title,
-      description: meeting.description,
+      description: meeting.description || '',
       date: meeting.date,
       time: meeting.time,
       duration: meeting.duration,
       project_id: meeting.project_id || meeting.project || 0,
       attendees: meeting.attendees_list ? meeting.attendees_list.join(', ') : meeting.attendees || '',
-      attendee_ids: [],
-      agenda_items: (meeting as any).agenda_items || ((meeting as any).agenda ? (meeting as any).agenda.split('\n').filter((a: string) => a.trim()) : []),
+      attendee_ids: meeting.attendee_ids || [],
+      agenda_items: agendaItems,
     });
     setNewAgendaItem('');
     setShowCreateForm(true);

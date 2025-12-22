@@ -791,58 +791,49 @@ export const supabaseDb = {
   // Meetings
   getMeetings: async () => {
     try {
-    // Query meetings with attendee_ids and agenda_items columns
-    const { data, error } = await supabase
-      .from('projects_meeting')
-      .select(`
-          id,
-          title,
-          description,
-          date,
-          time,
-          duration,
-          attendee_ids,
-          agenda_items,
-          created_at,
-          updated_at,
-          created_by_id,
-          project_id
-        `)
+      // Query all meetings at once
+      const { data: meetingsData, error: meetingsError } = await supabase
+        .from('projects_meeting')
+        .select('id, title, description, date, time, duration, attendee_ids, agenda_items, created_at, updated_at, created_by_id, project_id')
+        .order('date', { ascending: false });
       
-      if (error) return { data: null, error }
+      if (meetingsError) return { data: null, error: meetingsError };
+      if (!meetingsData || meetingsData.length === 0) return { data: [], error: null };
       
-      // Enrich with project and creator info
-      const enrichedMeetings = await Promise.all(
-        (data || []).map(async (meeting) => {
-          // Get project info
-          const projectPromise = meeting.project_id 
-            ? supabase.from('projects_project').select('id, name').eq('id', meeting.project_id).single()
-            : Promise.resolve({ data: null });
-          
-          // Get creator info
-          const creatorPromise = meeting.created_by_id
-            ? supabase.from('auth_user').select('id, name, email').eq('id', meeting.created_by_id).single()
-            : Promise.resolve({ data: null });
-
-          const [projectResult, creatorResult] = await Promise.all([projectPromise, creatorPromise]);
-
-          return {
-            ...meeting,
-            project: meeting.project_id,
-            project_id: meeting.project_id,
-            project_name: projectResult.data?.name || 'Unknown Project',
-            created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
-            attendees_list: [], // Legacy field for backward compatibility
-            attendee_ids: meeting.attendee_ids || [],
-            agenda_items: meeting.agenda_items || []
-          };
-        })
-      );
+      // Get unique project IDs and creator IDs
+      const projectIds = [...new Set(meetingsData.map(m => m.project_id).filter(Boolean))];
+      const creatorIds = [...new Set(meetingsData.map(m => m.created_by_id).filter(Boolean))];
       
-      return { data: enrichedMeetings, error: null }
+      // Batch fetch projects and users (2 queries instead of N*2)
+      const [projectsResult, usersResult] = await Promise.all([
+        projectIds.length > 0 
+          ? supabase.from('projects_project').select('id, name').in('id', projectIds)
+          : Promise.resolve({ data: [] }),
+        creatorIds.length > 0
+          ? supabase.from('auth_user').select('id, name, email').in('id', creatorIds)
+          : Promise.resolve({ data: [] })
+      ]);
+      
+      // Create lookup maps
+      const projectMap = new Map((projectsResult.data || []).map(p => [p.id, p.name]));
+      const userMap = new Map((usersResult.data || []).map(u => [u.id, u]));
+      
+      // Enrich meetings using maps (no additional queries)
+      const enrichedMeetings = meetingsData.map(meeting => ({
+        ...meeting,
+        project: meeting.project_id,
+        project_id: meeting.project_id,
+        project_name: projectMap.get(meeting.project_id) || 'Unknown Project',
+        created_by: userMap.get(meeting.created_by_id) || { id: 0, name: 'Unknown User', email: '' },
+        attendees_list: [],
+        attendee_ids: meeting.attendee_ids || [],
+        agenda_items: meeting.agenda_items || []
+      }));
+      
+      return { data: enrichedMeetings, error: null };
     } catch (error) {
       console.error('Error in getMeetings:', error);
-      return { data: [], error }
+      return { data: [], error };
     }
   },
 
