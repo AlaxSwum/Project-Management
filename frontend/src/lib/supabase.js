@@ -791,7 +791,7 @@ export const supabaseDb = {
   // Meetings
   getMeetings: async () => {
     try {
-    // Query meetings with attendee_ids column
+    // Query meetings with attendee_ids and agenda_items columns
     const { data, error } = await supabase
       .from('projects_meeting')
       .select(`
@@ -802,6 +802,7 @@ export const supabaseDb = {
           time,
           duration,
           attendee_ids,
+          agenda_items,
           created_at,
           updated_at,
           created_by_id,
@@ -832,7 +833,8 @@ export const supabaseDb = {
             project_name: projectResult.data?.name || 'Unknown Project',
             created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
             attendees_list: [], // Legacy field for backward compatibility
-            attendee_ids: meeting.attendee_ids || []
+            attendee_ids: meeting.attendee_ids || [],
+            agenda_items: meeting.agenda_items || []
           };
         })
       );
@@ -861,6 +863,7 @@ export const supabaseDb = {
         time: meetingData.time,
         duration: meetingData.duration || 60,
         attendee_ids: meetingData.attendee_ids || null,
+        agenda_items: meetingData.agenda_items || null,
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -926,6 +929,7 @@ export const supabaseDb = {
       if (meetingData.time) updateData.time = meetingData.time;
       if (meetingData.duration) updateData.duration = meetingData.duration;
       if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;
+      if (meetingData.agenda_items !== undefined) updateData.agenda_items = meetingData.agenda_items;
 
     const { data, error } = await supabase
       .from('projects_meeting')
@@ -963,7 +967,8 @@ export const supabaseDb = {
           project_name: projectResult.data?.name || 'Unknown Project',
           created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
           attendees_list: [], // Legacy field for backward compatibility
-          attendee_ids: updatedMeeting.attendee_ids || []
+          attendee_ids: updatedMeeting.attendee_ids || [],
+          agenda_items: updatedMeeting.agenda_items || []
         },
         error: null
       };
