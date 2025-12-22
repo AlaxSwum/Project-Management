@@ -2424,16 +2424,62 @@ export default function TimelineRoadmapPage() {
                     <div style={{fontSize: '12px', color: '#64748B'}}>{member.user_email}</div>
                   </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                    <span style={{padding: '4px 12px', background: (member.role === 'owner' || member.role === 'admin') ? '#3B82F6' : '#6B7280', color: 'white', borderRadius: '12px', fontSize: '12px', fontWeight: '600'}}>
-                      {member.role === 'owner' || member.role === 'admin' ? 'Admin' : 'Member'}
-                    </span>
-                    {member.role !== 'owner' && member.role !== 'admin' && (
+                    {/* Role selector - only show for non-owner members */}
+                    {member.role === 'owner' ? (
+                      <span style={{padding: '6px 14px', background: '#3B82F6', color: 'white', borderRadius: '8px', fontSize: '12px', fontWeight: '600'}}>
+                        Owner
+                      </span>
+                    ) : (
+                      <select
+                        value={member.role === 'admin' ? 'admin' : 'member'}
+                        onChange={async (e) => {
+                          const newRole = e.target.value as 'admin' | 'member';
+                          try {
+                            await supabase
+                              .from('timeline_folder_members')
+                              .update({ 
+                                role: newRole,
+                                can_edit: true,
+                                can_delete: newRole === 'admin',
+                                can_manage_members: newRole === 'admin',
+                                can_manage_budget: newRole === 'admin'
+                              })
+                              .eq('id', member.id);
+                            fetchFolderMembers();
+                            setSuccessMessage(`Role updated to ${newRole}`);
+                          } catch (err) {
+                            setError('Failed to update role');
+                          }
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          border: '2px solid #E5E7EB',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          background: member.role === 'admin' ? '#3B82F6' : '#6B7280',
+                          color: 'white',
+                          cursor: 'pointer',
+                          appearance: 'none',
+                          WebkitAppearance: 'none',
+                          paddingRight: '28px',
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 6px center',
+                          backgroundSize: '14px'
+                        }}
+                      >
+                        <option value="member" style={{background: 'white', color: '#374151'}}>Member</option>
+                        <option value="admin" style={{background: 'white', color: '#374151'}}>Admin</option>
+                      </select>
+                    )}
+                    {member.role !== 'owner' && (
                       <button onClick={async () => {
                         if (confirm('Remove this member?')) {
                           await supabase.from('timeline_folder_members').delete().eq('id', member.id);
                           fetchFolderMembers();
                         }
-                      }} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'}}>
+                      }} style={{padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: '600'}}>
                         Remove
                       </button>
                     )}
