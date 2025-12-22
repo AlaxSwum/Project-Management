@@ -2386,9 +2386,31 @@ export default function TimelineRoadmapPage() {
                     const email = (document.getElementById('memberEmail') as HTMLInputElement).value;
                     if (email.trim()) {
                       try {
-                        const { data: userData } = await supabase.from('auth_user').select('id').eq('email', email).single();
-                        if (userData) {
-                          await supabase.from('timeline_folder_members').insert([{
+                        setError('');
+                        
+                        // Find user by email
+                        const { data: userData, error: userError } = await supabase
+                          .from('auth_user')
+                          .select('id, name, email')
+                          .eq('email', email.trim())
+                          .single();
+                        
+                        if (userError || !userData) {
+                          setError('User not found with this email');
+                          return;
+                        }
+                        
+                        // Check if already a member
+                        const existingMember = folderMembers.find(m => m.user_id === userData.id);
+                        if (existingMember) {
+                          setError('This user is already a member');
+                          return;
+                        }
+                        
+                        // Add member
+                        const { error: insertError } = await supabase
+                          .from('timeline_folder_members')
+                          .insert([{
                             folder_id: selectedFolder.id,
                             user_id: userData.id,
                             role: 'member',
@@ -2397,14 +2419,20 @@ export default function TimelineRoadmapPage() {
                             can_manage_members: false,
                             can_manage_budget: false
                           }]);
-                          fetchFolderMembers();
-                          setSuccessMessage('Member added successfully!');
-                          (document.getElementById('memberEmail') as HTMLInputElement).value = '';
-                        } else {
-                          setError('User not found with this email');
+                        
+                        if (insertError) {
+                          console.error('Insert error:', insertError);
+                          setError('Failed to add member: ' + insertError.message);
+                          return;
                         }
-                      } catch (err) {
-                        setError('Failed to add member');
+                        
+                        // Refresh member list
+                        await fetchFolderMembers();
+                        setSuccessMessage('Member added successfully!');
+                        (document.getElementById('memberEmail') as HTMLInputElement).value = '';
+                      } catch (err: any) {
+                        console.error('Add member error:', err);
+                        setError('Failed to add member: ' + (err.message || 'Unknown error'));
                       }
                     }
                   }}
