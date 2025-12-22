@@ -1056,7 +1056,6 @@ Your report is now available in the system.`);
     { name: 'Timeline & Roadmap', href: '/timeline', icon: ChartBarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
     { name: 'Meeting Schedule', href: '/timetable', icon: ClockIcon },
-    { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
   ];
 
   // Conditionally add Content Calendar and Class Schedule based on user access

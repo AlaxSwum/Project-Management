@@ -34,6 +34,7 @@ interface Meeting {
   attendees?: string;
   attendees_list?: string[];
   attendee_ids?: number[];
+  agenda_items?: string[];
 }
 
 interface MeetingDetailModalProps {
@@ -521,6 +522,54 @@ export default function MeetingDetailModal({
                           <span key={index} className="attendee-tag">
                             {attendee}
                           </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Meeting Agenda Section */}
+                {meeting.agenda_items && meeting.agenda_items.length > 0 && (
+                  <div className="info-row" style={{ alignItems: 'flex-start' }}>
+                    <ClipboardDocumentListIcon className="info-icon" style={{ width: '20px', height: '20px', marginTop: '2px' }} />
+                    <div className="info-content">
+                      <div className="info-label">Meeting Agenda</div>
+                      <div style={{ 
+                        marginTop: '8px',
+                        background: '#F9FAFB',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '1px solid #E5E7EB'
+                      }}>
+                        {meeting.agenda_items.map((item, index) => (
+                          <div 
+                            key={index}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              padding: '10px 12px',
+                              borderBottom: index < meeting.agenda_items!.length - 1 ? '1px solid #E5E7EB' : 'none',
+                              background: 'white'
+                            }}
+                          >
+                            <span style={{
+                              width: '22px',
+                              height: '22px',
+                              borderRadius: '50%',
+                              background: '#5884FD',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              flexShrink: 0
+                            }}>
+                              {index + 1}
+                            </span>
+                            <span style={{ fontSize: '13px', color: '#374151' }}>{item}</span>
+                          </div>
                         ))}
                       </div>
                     </div>

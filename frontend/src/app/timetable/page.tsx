@@ -46,8 +46,9 @@ interface Meeting {
   updated_at: string;
   attendees?: string;
   attendees_list?: string[];
-  attendee_ids?: number[]; // Add this field for proper attendee assignment
-  event_type?: string; // Add this field to distinguish personal vs project events
+  attendee_ids?: number[];
+  event_type?: string;
+  agenda_items?: string[];
 }
 
 export default function TimetablePage() {
@@ -230,6 +231,7 @@ export default function TimetablePage() {
         duration: newMeeting.duration,
         attendees: newMeeting.attendees,
         attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+        agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
       };
 
       const createdMeeting = await meetingService.createMeeting(meetingData);
@@ -342,6 +344,7 @@ export default function TimetablePage() {
         duration: newMeeting.duration,
         attendees: newMeeting.attendees,
         attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+        agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
       };
 
       const updatedMeeting = await meetingService.updateMeeting(editingMeeting.id, meetingData);
@@ -595,8 +598,32 @@ export default function TimetablePage() {
 
   if (isLoading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ minHeight: '100vh', background: '#F5F5ED' }}>
+        {isMobile && <MobileHeader title="Meeting Schedule" isMobile={isMobile} />}
+        <div style={{ display: 'flex' }}>
+          {!isMobile && <Sidebar />}
+          <div style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
+            {/* Skeleton Header */}
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ height: '32px', width: '250px', background: '#E5E7EB', borderRadius: '8px', marginBottom: '12px', animation: 'pulse 1.5s infinite' }}></div>
+              <div style={{ height: '20px', width: '350px', background: '#E5E7EB', borderRadius: '6px', animation: 'pulse 1.5s infinite' }}></div>
+            </div>
+            {/* Skeleton Calendar Grid */}
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '16px' }}>
+                {[1,2,3,4,5,6,7].map(i => (
+                  <div key={i} style={{ height: '40px', background: '#F3F4F6', borderRadius: '8px', animation: 'pulse 1.5s infinite' }}></div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                {Array.from({length: 35}, (_, i) => (
+                  <div key={i} style={{ height: '100px', background: '#F9FAFB', borderRadius: '8px', animation: 'pulse 1.5s infinite' }}></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
       </div>
     );
   }
