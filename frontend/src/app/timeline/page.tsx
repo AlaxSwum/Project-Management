@@ -491,9 +491,9 @@ export default function TimelineRoadmapPage() {
 
       setCategories(rootCategories);
       
-      // Auto-expand all categories on first load
-      if (data && data.length > 0 && expandedCategories.size === 0) {
-        const allCategoryIds = new Set(data.map(cat => cat.id));
+      // Auto-expand all categories
+      if (data && data.length > 0) {
+        const allCategoryIds = new Set(data.map((cat: any) => cat.id));
         setExpandedCategories(allCategoryIds);
       }
     } catch (error) {
@@ -1885,15 +1885,10 @@ export default function TimelineRoadmapPage() {
                       );
                     };
                     
-                    // Render all root categories (filtered by role)
-                    // Admin sees all, others see only assigned categories
-                    const filteredCategories = isAdmin 
-                      ? categories 
-                      : categories.filter(cat => 
-                          userAssignedCategories.includes(cat.id) || 
-                          cat.responsible_person_id === parseInt(user?.id?.toString() || '0')
-                        );
-                    return filteredCategories.map(cat => renderCategory(cat, 0));
+                    // Render all root categories
+                    // If user is a folder member, they can see all categories in that folder
+                    // The folder membership already controls access at the folder level
+                    return categories.map(cat => renderCategory(cat, 0));
                   })()}
 
                     {categories.length === 0 && (
