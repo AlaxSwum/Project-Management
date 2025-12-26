@@ -1,3803 +1,1952 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CalendarIcon,
-  ClockIcon,
   PlusIcon,
-  CheckCircleIcon,
-  PencilIcon,
-  TrashIcon,
-  TagIcon,
-  FlagIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   XMarkIcon,
-  ListBulletIcon,
-  Squares2X2Icon,
-  CalendarDaysIcon,
-  ExclamationTriangleIcon,
-  StarIcon,
-  EyeIcon,
+  LinkIcon,
+  TrashIcon,
   CheckIcon,
-  Bars3Icon,
-  DevicePhoneMobileIcon
+  CalendarDaysIcon,
+  ClockIcon,
+  VideoCameraIcon,
+  SparklesIcon,
+  UserIcon,
+  BellIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
 } from '@heroicons/react/24/outline';
-import { CheckCircleIcon as CheckCircleIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
-import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
-import { createClient } from '@supabase/supabase-js';
+import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 
-// Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-interface PersonalTask {
+// Types
+interface ChecklistItem {
   id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category?: string;
-  tags?: string[];
-  due_date?: string;
-  estimated_duration?: number;
-  actual_duration?: number;
-  scheduled_start?: string;
-  scheduled_end?: string;
-  is_recurring?: boolean;
-  recurring_pattern?: any;
-  created_at: string;
-  updated_at: string;
-  completed_at?: string;
+  text: string;
+  completed: boolean;
 }
 
-interface PersonalTimeBlock {
+interface TimeBlock {
   id: string;
-  user_id: string;
-  task_id?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
   title: string;
   description?: string;
-  start_datetime: string;
-  end_datetime: string;
-  block_type: 'task' | 'break' | 'meeting' | 'focus' | 'personal' | 'other';
-  color: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
+  type: 'focus' | 'meeting' | 'personal';
+  checklist: ChecklistItem[];
+  meetingLink?: string;
+  notificationTime?: number; // minutes before
+  color?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-type ViewType = 'month' | 'week' | 'day';
-type LayoutType = 'list' | 'kanban' | 'calendar';
+type ViewMode = 'day' | 'week' | 'month';
 
-export default function PersonalTaskManager() {
+// Color palette for block types
+const blockTypeColors = {
+  focus: { bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.2)', text: '#3b82f6', solid: '#3b82f6' },
+  meeting: { bg: 'rgba(168, 85, 247, 0.08)', border: 'rgba(168, 85, 247, 0.2)', text: '#a855f7', solid: '#a855f7' },
+  personal: { bg: 'rgba(34, 197, 94, 0.08)', border: 'rgba(34, 197, 94, 0.2)', text: '#22c55e', solid: '#22c55e' },
+};
+
+// Hours for the day view
+const hours = Array.from({ length: 24 }, (_, i) => i);
+
+// Animation variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
+const scaleIn = {
+  initial: { opacity: 0, scale: 0.95 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.95 },
+};
+
+const slideIn = {
+  initial: { opacity: 0, x: 400 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 400 },
+};
+
+// Utility functions
+const formatDate = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+const formatTime = (time: string): string => {
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
+
+const getDaysInMonth = (date: Date): Date[] => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const days: Date[] = [];
+  
+  // Add padding for days before the first day
+  const startPadding = firstDay.getDay();
+  for (let i = startPadding - 1; i >= 0; i--) {
+    days.push(new Date(year, month, -i));
+  }
+  
+  // Add all days in the month
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    days.push(new Date(year, month, i));
+  }
+  
+  // Add padding to complete the last week
+  const endPadding = 42 - days.length;
+  for (let i = 1; i <= endPadding; i++) {
+    days.push(new Date(year, month + 1, i));
+  }
+  
+  return days;
+};
+
+const getWeekDays = (date: Date): Date[] => {
+  const day = date.getDay();
+  const diff = date.getDate() - day;
+  const days: Date[] = [];
+  
+  for (let i = 0; i < 7; i++) {
+    days.push(new Date(date.getFullYear(), date.getMonth(), diff + i));
+  }
+  
+  return days;
+};
+
+const generateId = (): string => {
+  return Math.random().toString(36).substr(2, 9);
+};
+
+// Database column mapping (snake_case <-> camelCase)
+interface DbTimeBlock {
+  id: string;
+  user_id?: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  title: string;
+  description?: string;
+  type: 'focus' | 'meeting' | 'personal';
+  checklist: ChecklistItem[];
+  meeting_link?: string;
+  notification_time?: number;
+  color?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
+  id: db.id,
+  date: db.date,
+  startTime: db.start_time,
+  endTime: db.end_time,
+  title: db.title,
+  description: db.description,
+  type: db.type,
+  checklist: db.checklist || [],
+  meetingLink: db.meeting_link,
+  notificationTime: db.notification_time,
+  color: db.color,
+  created_at: db.created_at,
+  updated_at: db.updated_at,
+});
+
+const mapBlockToDb = (block: TimeBlock, userId?: string): DbTimeBlock => ({
+  id: block.id,
+  user_id: userId,
+  date: block.date,
+  start_time: block.startTime,
+  end_time: block.endTime,
+  title: block.title,
+  description: block.description,
+  type: block.type,
+  checklist: block.checklist || [],
+  meeting_link: block.meetingLink,
+  notification_time: block.notificationTime,
+  color: block.color,
+  created_at: block.created_at,
+  updated_at: block.updated_at,
+});
+
+export default function PersonalPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   
-  // State
-  const [tasks, setTasks] = useState<PersonalTask[]>([]);
-  const [projectTasks, setProjectTasks] = useState<any[]>([]);
-  const [allTasks, setAllTasks] = useState<PersonalTask[]>([]); // Combined personal + project tasks
-  const [timeBlocks, setTimeBlocks] = useState<PersonalTimeBlock[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [currentView, setCurrentView] = useState<ViewType>('week');
-  const [layoutType, setLayoutType] = useState<LayoutType>('calendar');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [blocks, setBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Filters
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  
-  // Modal states
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showTimeBlockModal, setShowTimeBlockModal] = useState(false);
-  
-  const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null);
-  const [selectedTimeBlock, setSelectedTimeBlock] = useState<PersonalTimeBlock | null>(null);
-  const [isEditingTask, setIsEditingTask] = useState(false);
-  const [isEditingTimeBlock, setIsEditingTimeBlock] = useState(false);
-  
-  
-  // Week multi-selection state
-  const [selectedHours, setSelectedHours] = useState<{day: Date, hour: number}[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [dragStartHour, setDragStartHour] = useState<{day: Date, hour: number} | null>(null);
-  
-  // Form states
-  const getDefaultTaskForm = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(9, 0, 0, 0);
-    
-    const today = new Date();
-    today.setHours(9, 0, 0, 0);
-    
-    return {
-    title: '',
-    description: '',
-      status: 'todo' as PersonalTask['status'],
-      priority: 'medium' as PersonalTask['priority'],
-    category: '',
-      tags: [] as string[],
-      scheduled_start: today.toISOString().slice(0, 16),
-      due_date: tomorrow.toISOString().slice(0, 16),
-      estimated_duration: 60,
-      is_recurring: false
-    };
-  };
-  
-  const [newTask, setNewTask] = useState(getDefaultTaskForm());
-  
-  // Checklist state
-  const [checklistItems, setChecklistItems] = useState<{text: string, completed: boolean}[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedBlock, setSelectedBlock] = useState<TimeBlock | null>(null);
+  const [showPanel, setShowPanel] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newChecklistItem, setNewChecklistItem] = useState('');
-  const [loadedChecklistItems, setLoadedChecklistItems] = useState<any[]>([]);
   
-  const [newTimeBlock, setNewTimeBlock] = useState({
+  // Form state for new/edit block
+  const [blockForm, setBlockForm] = useState<Partial<TimeBlock>>({
     title: '',
     description: '',
-    start_time: '',
-    end_time: '',
-    block_type: 'task' as PersonalTimeBlock['block_type'],
-    color: '#3B82F6',
-    notes: ''
+    type: 'focus',
+    startTime: '09:00',
+    endTime: '10:00',
+    checklist: [],
+    meetingLink: '',
+    notificationTime: 10,
   });
 
-  // Categories for dropdown
-  const categories = [
-    'Work', 'Personal', 'Health', 'Learning', 'Finance', 'Shopping', 'Travel', 'Other'
-  ];
-
-  // Check if mobile
+  // Auth check
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      router.push('/login');
+        return;
+      }
+    fetchBlocks();
+  }, [isAuthenticated, authLoading, router, user]);
 
-  // Load data
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      loadPersonalData();
-    }
-  }, [isAuthenticated, user, currentView, currentDate]);
-
-  const loadPersonalData = async () => {
+  const fetchBlocks = async () => {
     try {
       setIsLoading(true);
-      setError('');
+      const supabase = (await import('@/lib/supabase')).supabase;
 
-      // Get date range based on current view
-      const { startDate, endDate } = getDateRange();
-
-      // Load tasks with fallback
-      let tasksData = [];
-      try {
       const { data, error } = await supabase
-          .from('personal_tasks')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.log('personal_tasks table not available, using projects_meeting as fallback');
-          // Fallback to projects_meeting table
-          const { data: fallbackData, error: fallbackError } = await supabase
-        .from('projects_meeting')
+        .from('time_blocks')
         .select('*')
-            .eq('user_id', parseInt(user?.id?.toString() || '0'))
-            .eq('type', 'personal_task')
-            .order('created_at', { ascending: false });
-          
-          if (fallbackError) {
-            console.error('Error loading tasks from fallback:', fallbackError);
-            tasksData = [];
-          } else {
-            // Transform projects_meeting data to personal task format
-            tasksData = (fallbackData || []).map(item => ({
-              id: item.id,
-              title: item.name,
-              description: item.description,
-              status: item.status || 'todo',
-              priority: item.priority || 'medium',
-              category: 'Personal',
-              tags: [],
-              due_date: item.meeting_date,
-              is_recurring: false,
-              created_at: item.created_at,
-              updated_at: item.updated_at,
-              user_id: item.user_id.toString()
-            }));
-          }
-        } else {
-          tasksData = data || [];
-        }
-      } catch (err) {
-        console.log('Error loading tasks, using empty array');
-        tasksData = [];
-      }
-
-      console.log('Loaded tasks:', tasksData.length);
-
-      // Load time blocks with error handling
-      let timeBlocksData = [];
-      try {
-      const { data, error } = await supabase
-          .from('personal_time_blocks')
-        .select('*')
-          .eq('user_id', user?.id)
-          .gte('start_time', startDate.toISOString())
-          .lte('end_time', endDate.toISOString())
-          .order('start_time', { ascending: true });
+        .eq('user_id', user?.id)
+        .order('date', { ascending: true });
 
       if (error) {
-          console.log('Time blocks table not available, continuing without time blocks');
-          timeBlocksData = [];
-        } else {
-          timeBlocksData = data || [];
-        }
-      } catch (err) {
-        console.log('Time blocks feature not available, using empty array');
-        timeBlocksData = [];
+        if (error.code === '42P01' || error.code === '42703') {
+          // Table doesn't exist or column error, use local storage fallback
+          console.log('Database table not ready, using localStorage');
+          const stored = localStorage.getItem('timeBlocks');
+          if (stored) {
+            setBlocks(JSON.parse(stored));
+          }
+        return;
       }
-
-      // Load project tasks assigned to current user
-      const { data: projectTasksData, error: projectTasksError } = await supabase
-        .from('tasks')
-        .select(`
-          id, name, description, status, priority, due_date, start_date, 
-          estimated_hours, actual_hours, created_at, updated_at, project_id,
-          projects(name, color),
-          task_assignees!inner(user_id)
-        `)
-        .eq('task_assignees.user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (projectTasksError) {
-        console.error('Error loading project tasks:', projectTasksError);
+        throw error;
       }
-
-      // Convert project tasks to personal task format
-      const convertedProjectTasks: PersonalTask[] = (projectTasksData || []).map(task => ({
-        id: `project_${task.id}`,
-        user_id: user?.id?.toString() || '60',
-        title: `[${(task.projects as any)?.name || 'Project'}] ${task.name}`,
-        description: task.description,
-        status: task.status === 'todo' ? 'todo' : 
-                task.status === 'in_progress' ? 'in_progress' :
-                task.status === 'done' ? 'completed' : 'todo',
-        priority: task.priority as PersonalTask['priority'],
-        category: 'Project Work',
-        tags: [`Project: ${(task.projects as any)?.name || 'Unknown'}`],
-        due_date: task.due_date,
-        actual_duration: task.actual_hours ? task.actual_hours * 60 : undefined,
-        created_at: task.created_at,
-        updated_at: task.updated_at,
-        completed_at: task.status === 'done' ? task.updated_at : undefined
-      }));
-
-      console.log('Personal tasks loaded:', tasksData?.length || 0);
-      console.log('Project tasks loaded:', projectTasksData?.length || 0);
-      console.log('Time blocks loaded:', timeBlocksData?.length || 0, 'blocks');
-      console.log('Current view:', currentView, 'Layout:', layoutType);
       
-      setTasks(tasksData || []);
-      setProjectTasks(projectTasksData || []);
-      setAllTasks([...(tasksData || []), ...convertedProjectTasks]);
-      setTimeBlocks(timeBlocksData || []);
-    } catch (error) {
-      console.error('Error loading personal data:', error);
-      setError('Failed to load personal data');
+      // Map database records to frontend format
+      const mappedBlocks = (data || []).map((record: DbTimeBlock) => mapDbToBlock(record));
+      setBlocks(mappedBlocks);
+    } catch (err: any) {
+      console.error('Error fetching blocks:', err);
+      // Fallback to localStorage
+      const stored = localStorage.getItem('timeBlocks');
+      if (stored) {
+        setBlocks(JSON.parse(stored));
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getDateRange = () => {
-    const today = new Date(currentDate);
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (currentView) {
-      case 'day':
-        startDate = new Date(today);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'week':
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - today.getDay());
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'month':
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-    }
-
-    return { startDate, endDate };
-  };
-
-  const handleCreateTask = async () => {
+  const saveBlock = async (block: TimeBlock) => {
+    // Always update local state first for responsive UI
+    const newBlocks = blocks.some(b => b.id === block.id)
+      ? blocks.map(b => b.id === block.id ? block : b)
+      : [...blocks, block];
+    setBlocks(newBlocks);
+    localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
+    
     try {
-      if (!newTask.title.trim()) {
-        setError('Task title is required');
-        return;
-      }
-
-      const taskData = {
-          title: newTask.title,
-          description: newTask.description,
-        status: newTask.status,
-        priority: newTask.priority,
-        category: newTask.category,
-        user_id: user?.id,
-        tags: newTask.tags.length > 0 ? newTask.tags : null,
-        scheduled_start: newTask.scheduled_start ? new Date(newTask.scheduled_start).toISOString() : null,
-        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null
-      };
-
-      // Try personal_tasks first, fallback to projects_meeting
-      let data, error;
-      try {
-        const result = await supabase
-          .from('personal_tasks')
-          .insert([taskData])
-        .select()
-        .single();
-        data = result.data;
-        error = result.error;
-      } catch (err) {
-        console.log('personal_tasks table not available, using projects_meeting as fallback');
-        // Fallback to projects_meeting table
-        const fallbackData = {
-          name: taskData.title,
-          description: taskData.description,
-          meeting_date: taskData.due_date || new Date().toISOString(),
-          start_time: taskData.due_date || new Date().toISOString(),
-          end_time: taskData.due_date || new Date().toISOString(),
-          user_id: parseInt(user?.id?.toString() || '0'),
-          type: 'personal_task',
-          priority: taskData.priority,
-          status: taskData.status
-        };
-        
-        const result = await supabase
-          .from('projects_meeting')
-          .insert([fallbackData])
-          .select()
-          .single();
-        data = result.data;
-        error = result.error;
-      }
-
-      if (error) {
-        console.error('Error creating task:', error);
-        setError('Failed to create task');
-        return;
-      }
-
-      setTasks(prev => [data, ...prev]);
-      setAllTasks(prev => [data, ...prev]); // Also update allTasks
+      const supabase = (await import('@/lib/supabase')).supabase;
       
-      // Save checklist items if any
-      if (checklistItems.length > 0 && data?.id) {
-        try {
-          const checklistData = checklistItems.map((item, index) => ({
-            task_id: parseInt(data.id.toString()),
-            user_id: parseInt(user?.id?.toString() || '0'),
-            item_text: item,
-            is_completed: false,
-            item_order: index
-          }));
-          
-          await supabase
-            .from('personal_task_checklist')
-            .insert(checklistData);
-        } catch (checklistError) {
-          console.error('Error saving checklist items:', checklistError);
-        }
-      }
+      // Map to database format
+      const dbRecord = mapBlockToDb(block, user?.id);
+      dbRecord.updated_at = new Date().toISOString();
       
-      setShowTaskModal(false);
-      resetTaskForm();
-      setSuccessMessage('Task created successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      console.error('Error creating task:', error);
-      setError('Failed to create task');
-    }
-  };
-
-  const handleUpdateTask = async () => {
-    try {
-      if (!selectedTask || !newTask.title.trim()) {
-        setError('Task title is required');
-        return;
-      }
-
-      const updateData = {
-        ...newTask,
-        tags: newTask.tags.length > 0 ? newTask.tags : null,
-        due_date: newTask.due_date ? new Date(newTask.due_date).toISOString() : null,
-      };
-
-      const { data, error } = await supabase
-        .from('personal_tasks')
-        .update(updateData)
-        .eq('id', selectedTask.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating task:', error);
-        setError('Failed to update task');
-        return;
-      }
-
-      setTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task));
-      setAllTasks(prev => prev.map(task => task.id === selectedTask.id ? data : task)); // Also update allTasks
-      setShowTaskModal(false);
-      resetTaskForm();
-      setSuccessMessage('Task updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      console.error('Error updating task:', error);
-      setError('Failed to update task');
-    }
-  };
-
-  const handleUpdateTaskStatus = async (taskId: string, status: PersonalTask['status']) => {
-    try {
-      const updateData: any = { status };
-      if (status === 'completed') {
-        updateData.completed_at = new Date().toISOString();
-      }
-
       const { error } = await supabase
-        .from('personal_tasks')
-        .update(updateData)
-        .eq('id', taskId);
+        .from('time_blocks')
+        .upsert(dbRecord);
 
       if (error) {
-        console.error('Error updating task:', error);
-        setError('Failed to update task');
+        console.log('Database save error, using localStorage:', error.message);
         return;
       }
 
-      setTasks(prev => prev.map(task => 
-        task.id === taskId 
-          ? { ...task, status, ...(status === 'completed' ? { completed_at: updateData.completed_at } : {}) }
-          : task
-      ));
-      setAllTasks(prev => prev.map(task => 
-        task.id === taskId 
-          ? { ...task, status, ...(status === 'completed' ? { completed_at: updateData.completed_at } : {}) }
-          : task
-      )); // Also update allTasks
-
-      setSuccessMessage(`Task marked as ${status.replace('_', ' ')}!`);
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      console.error('Error updating task:', error);
-      setError('Failed to update task');
-    }
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('personal_tasks')
-        .delete()
-        .eq('id', taskId);
-
-      if (error) {
-        console.error('Error deleting task:', error);
-        setError('Failed to delete task');
-        return;
-      }
-
-      setTasks(prev => prev.filter(task => task.id !== taskId));
-      setAllTasks(prev => prev.filter(task => task.id !== taskId)); // Also update allTasks
-      setSuccessMessage('Task deleted successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      setError('Failed to delete task');
-    }
-  };
-
-  const handleCreateTimeBlock = async () => {
-    try {
-      if (!newTimeBlock.title.trim() || !newTimeBlock.start_time || !newTimeBlock.end_time) {
-        setError('Title, start time, and end time are required');
-        return;
-      }
-
-      const startTime = new Date(newTimeBlock.start_time);
-      const endTime = new Date(newTimeBlock.end_time);
-
-      if (endTime <= startTime) {
-        setError('End time must be after start time');
-        return;
-      }
-
-      const timeBlockData = {
-        ...newTimeBlock,
-        user_id: user?.id,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString()
-      };
-
-      // Try to create time block with fallback
-      let data, error;
-      try {
-        const result = await supabase
-          .from('personal_time_blocks')
-          .insert([timeBlockData])
-          .select()
-          .single();
-        data = result.data;
-        error = result.error;
-      } catch (err) {
-        console.log('personal_time_blocks table not available, using projects_meeting as fallback');
-        // Fallback to projects_meeting table
-        const fallbackData = {
-          name: timeBlockData.title,
-          description: timeBlockData.description,
-          meeting_date: timeBlockData.start_time,
-          start_time: timeBlockData.start_time,
-          end_time: timeBlockData.end_time,
-          user_id: parseInt(user?.id?.toString() || '0'),
-          type: 'time_block'
-        };
-        
-        const result = await supabase
-        .from('projects_meeting')
-          .insert([fallbackData])
-          .select()
-          .single();
-        data = result.data;
-        error = result.error;
-      }
-
-      if (error) {
-        console.error('Error creating time block:', error);
-        setError('Failed to create time block');
-        return;
-      }
-
-      setTimeBlocks(prev => [...prev, data]);
-      setShowTimeBlockModal(false);
-      resetTimeBlockForm();
-      setSuccessMessage('Time block created successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      console.error('Error creating time block:', error);
-      setError('Failed to create time block');
-    }
-  };
-
-  const handleCreateTaskFromSelection = async () => {
-    if (selectedHours.length === 0) return;
-    
-    // Calculate start and end time from selection
-    const sortedHours = selectedHours.sort((a, b) => {
-      if (a.day.getTime() !== b.day.getTime()) {
-        return a.day.getTime() - b.day.getTime();
-      }
-      return a.hour - b.hour;
-    });
-    
-    const startTime = new Date(sortedHours[0].day);
-    startTime.setHours(sortedHours[0].hour, 0, 0, 0);
-    
-    const lastSelection = sortedHours[sortedHours.length - 1];
-    const endTime = new Date(lastSelection.day);
-    endTime.setHours(lastSelection.hour + 1, 0, 0, 0);
-    
-    // Create the task directly instead of opening modal
-    const taskData = {
-      title: `Task for ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}`,
-      description: `Created from ${selectedHours.length} hour selection in week view`,
-      status: 'todo' as PersonalTask['status'],
-      priority: 'medium' as PersonalTask['priority'],
-      category: 'Work',
-      tags: null,
-      due_date: startTime.toISOString(),
-      user_id: user?.id
-    };
-
-    try {
-    // Try personal_tasks first, fallback to projects_meeting
-    let data, error;
-    try {
-      const result = await supabase
-        .from('personal_tasks')
-        .insert([taskData])
-        .select()
-        .single();
-      data = result.data;
-      error = result.error;
+      // Refresh from database
+      await fetchBlocks();
     } catch (err) {
-      console.log('personal_tasks table not available, using projects_meeting as fallback');
-      // Fallback to projects_meeting table
-      const fallbackData = {
-        name: taskData.title,
-        description: taskData.description,
-        meeting_date: taskData.due_date || new Date().toISOString(),
-        start_time: taskData.due_date || new Date().toISOString(),
-        end_time: taskData.due_date || new Date().toISOString(),
-        user_id: parseInt(user?.id?.toString() || '0'),
-        type: 'personal_task',
-        priority: taskData.priority,
-        status: taskData.status
-      };
-      
-      const result = await supabase
-        .from('projects_meeting')
-        .insert([fallbackData])
-        .select()
-        .single();
-      data = result.data;
-      error = result.error;
-    }
-
-    if (error) {
-      console.error('Error creating task from selection:', error);
-      setError('Failed to create task from selection');
-      return;
-    }
-
-      setTasks(prev => [data, ...prev]);
-      setAllTasks(prev => [data, ...prev]); // Also update allTasks
-      setSelectedHours([]);
-      setSuccessMessage(`Task created for ${selectedHours.length} hour${selectedHours.length > 1 ? 's' : ''}!`);
-      setTimeout(() => setSuccessMessage(''), 3000);
-      
-      console.log('Task created from week selection:', data);
-    } catch (error) {
-      console.error('Error creating task from selection:', error);
-      setError('Failed to create task from selection');
+      console.error('Error saving block:', err);
     }
   };
 
-  const resetTaskForm = () => {
-    setNewTask(getDefaultTaskForm());
-    setSelectedTask(null);
-    setIsEditingTask(false);
-    setChecklistItems([]);
-    setNewChecklistItem('');
-    setLoadedChecklistItems([]);
+  const deleteBlock = async (blockId: string) => {
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      
+      await supabase
+        .from('time_blocks')
+        .delete()
+        .eq('id', blockId);
+      
+      const newBlocks = blocks.filter(b => b.id !== blockId);
+      setBlocks(newBlocks);
+      localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
+      setShowPanel(false);
+      setSelectedBlock(null);
+    } catch (err) {
+      console.error('Error deleting block:', err);
+      const newBlocks = blocks.filter(b => b.id !== blockId);
+      setBlocks(newBlocks);
+      localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
+      setShowPanel(false);
+      setSelectedBlock(null);
+    }
   };
 
-  const resetTimeBlockForm = () => {
-    setNewTimeBlock({
+  const handleAddBlock = () => {
+    const newBlock: TimeBlock = {
+      id: generateId(),
+      date: formatDate(currentDate),
+      startTime: blockForm.startTime || '09:00',
+      endTime: blockForm.endTime || '10:00',
+      title: blockForm.title || 'New Block',
+      description: blockForm.description,
+      type: blockForm.type || 'focus',
+      checklist: blockForm.checklist || [],
+      meetingLink: blockForm.meetingLink,
+      notificationTime: blockForm.notificationTime,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    saveBlock(newBlock);
+    setShowAddModal(false);
+    setBlockForm({
       title: '',
       description: '',
-      start_time: '',
-      end_time: '',
-      block_type: 'task' as PersonalTimeBlock['block_type'],
-      color: '#3B82F6',
-      notes: ''
+      type: 'focus',
+      startTime: '09:00',
+      endTime: '10:00',
+      checklist: [],
+      meetingLink: '',
+      notificationTime: 10,
     });
-    setSelectedTimeBlock(null);
-    setIsEditingTimeBlock(false);
   };
 
-  const openEditTask = async (task: PersonalTask) => {
-    setSelectedTask(task);
-    setNewTask({
-      title: task.title,
-      description: task.description || '',
-      status: task.status,
-      priority: task.priority,
-      category: task.category || '',
-      tags: task.tags || [],
-      scheduled_start: task.scheduled_start ? new Date(task.scheduled_start).toISOString().slice(0, 16) : '',
-      due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
-      estimated_duration: 60,
-      is_recurring: false
-    });
-    
-    // Load checklist items for this task
-    try {
-      const { data: checklistData, error } = await supabase
-        .from('personal_task_checklist')
-        .select('*')
-        .eq('task_id', parseInt(task.id))
-        .order('item_order', { ascending: true });
-      
-      if (!error && checklistData) {
-        setChecklistItems(checklistData.map(item => item.item_text));
-        setLoadedChecklistItems(checklistData);
-      } else {
-        setChecklistItems([]);
-        setLoadedChecklistItems([]);
-      }
-    } catch (error) {
-      console.error('Error loading checklist items:', error);
-      setChecklistItems([]);
-      setLoadedChecklistItems([]);
-    }
-    
-    setIsEditingTask(true);
-    setShowTaskModal(true);
+  const handleBlockClick = (block: TimeBlock) => {
+    setSelectedBlock(block);
+    setBlockForm(block);
+    setShowPanel(true);
   };
 
-  const navigateDate = (direction: 'prev' | 'next') => {
+  const handleUpdateBlock = () => {
+    if (!selectedBlock) return;
+    
+    const updatedBlock: TimeBlock = {
+      ...selectedBlock,
+      ...blockForm,
+      checklist: blockForm.checklist || selectedBlock.checklist,
+      updated_at: new Date().toISOString(),
+    };
+    
+    saveBlock(updatedBlock);
+    setSelectedBlock(updatedBlock);
+  };
+
+  const toggleChecklistItem = (itemId: string) => {
+    if (!selectedBlock) return;
+    
+    const updatedChecklist = selectedBlock.checklist.map(item =>
+      item.id === itemId ? { ...item, completed: !item.completed } : item
+    );
+    
+    const updatedBlock = { ...selectedBlock, checklist: updatedChecklist };
+    setSelectedBlock(updatedBlock);
+    setBlockForm({ ...blockForm, checklist: updatedChecklist });
+    saveBlock(updatedBlock);
+  };
+
+  const addChecklistItem = () => {
+    if (!newChecklistItem.trim() || !selectedBlock) return;
+    
+    const newItem: ChecklistItem = {
+      id: generateId(),
+      text: newChecklistItem,
+      completed: false,
+    };
+    
+    const updatedChecklist = [...(selectedBlock.checklist || []), newItem];
+    const updatedBlock = { ...selectedBlock, checklist: updatedChecklist };
+    
+    setSelectedBlock(updatedBlock);
+    setBlockForm({ ...blockForm, checklist: updatedChecklist });
+    setNewChecklistItem('');
+    saveBlock(updatedBlock);
+  };
+
+  const removeChecklistItem = (itemId: string) => {
+    if (!selectedBlock) return;
+    
+    const updatedChecklist = selectedBlock.checklist.filter(item => item.id !== itemId);
+    const updatedBlock = { ...selectedBlock, checklist: updatedChecklist };
+    
+    setSelectedBlock(updatedBlock);
+    setBlockForm({ ...blockForm, checklist: updatedChecklist });
+    saveBlock(updatedBlock);
+  };
+
+  const navigate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     
-    switch (currentView) {
-      case 'day':
+    if (viewMode === 'day') {
         newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'week':
+    } else if (viewMode === 'week') {
         newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-        break;
-      case 'month':
+    } else {
         newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
     }
     
     setCurrentDate(newDate);
   };
 
-  const formatDate = (date: Date) => {
-    switch (currentView) {
-      case 'day':
-        return date.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        });
-      case 'week':
-        const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay());
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-      case 'month':
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-    }
+  const getBlocksForDate = (date: Date): TimeBlock[] => {
+    return blocks.filter(block => block.date === formatDate(date));
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return '#EF4444';
-      case 'high': return '#F97316';
-      case 'medium': return '#3B82F6';
-      case 'low': return '#10B981';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return '#10B981';
-      case 'in_progress': return '#3B82F6';
-      case 'pending': return '#F59E0B';
-      case 'cancelled': return '#6B7280';
-      default: return '#6B7280';
-    }
-  };
-
-  const filteredTasks = allTasks.filter(task => {
-    const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+  const getBlockPosition = (block: TimeBlock): { top: number; height: number } => {
+    const [startHour, startMin] = block.startTime.split(':').map(Number);
+    const [endHour, endMin] = block.endTime.split(':').map(Number);
     
-    return matchesStatus && matchesPriority;
-  });
-  
-  // Debug logging for task visibility
-  console.log('Personal tasks:', tasks.length);
-  console.log('Project tasks:', projectTasks.length);
-  console.log('Total combined tasks:', allTasks.length);
-  console.log('Filtered tasks:', filteredTasks.length);
-  console.log('Current filters:', { statusFilter, priorityFilter });
-
-  const tasksByStatus = {
-    todo: filteredTasks.filter(task => task.status === 'todo'),
-    in_progress: filteredTasks.filter(task => task.status === 'in_progress'),
-    completed: filteredTasks.filter(task => task.status === 'completed'),
-    cancelled: filteredTasks.filter(task => task.status === 'cancelled')
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    const duration = endMinutes - startMinutes;
+    
+    return {
+      top: (startMinutes / 60) * 60 + 40, // 60px per hour + header offset
+      height: Math.max((duration / 60) * 60, 30), // minimum 30px
+    };
   };
 
-  // Kanban drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, task: PersonalTask) => {
-    e.dataTransfer.setData('application/json', JSON.stringify(task));
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  if (!isAuthenticated) return null;
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const handleDrop = async (e: React.DragEvent, newStatus: PersonalTask['status']) => {
-    e.preventDefault();
-    try {
-      const taskData = JSON.parse(e.dataTransfer.getData('application/json'));
-      await handleUpdateTaskStatus(taskData.id, newStatus);
-    } catch (error) {
-      console.error('Error in drag drop:', error);
-    }
-  };
-
-  if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
-        {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
-        <div style={{ 
-          marginLeft: isMobile ? '0' : '256px',
-          padding: isMobile ? '1rem' : '2rem', 
-          background: '#F8FAFC', 
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh'
-        }}>
-          <div style={{ 
-            width: '40px', 
-            height: '40px', 
-            border: '4px solid #E2E8F0', 
-            borderTop: '4px solid #3B82F6', 
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
+      }}
+    >
+      {/* Header */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        style={{
+          padding: '24px 40px',
+          background: 'rgba(255, 255, 255, 0.72)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <motion.h1
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                style={{
+                  fontSize: '28px',
+                  fontWeight: '600',
+                  color: '#1d1d1f',
+                  letterSpacing: '-0.02em',
+                  margin: 0,
+                }}
+              >
+                Focus
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                style={{
+                  fontSize: '15px',
+                  color: '#86868b',
+                  margin: '4px 0 0 0',
+                  fontWeight: '400',
+                }}
+              >
+                Plan your time. Achieve your goals.
+              </motion.p>
         </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          
-          .task-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border-left: 4px solid #3B82F6;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            border: 1px solid #E2E8F0;
-            position: relative;
-          }
-          
-          .task-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-            transform: translateY(-2px);
-          }
-          
-          .task-card.completed {
-            opacity: 0.7;
-            background: #F8FAFC;
-          }
-          
-          .task-card.dragging {
-            opacity: 0.5;
-            transform: rotate(2deg) scale(1.02);
-            z-index: 1000;
-          }
-          
-          .kanban-column {
-            background: #F8FAFC;
-            border-radius: 16px;
-            padding: 20px;
-            min-height: 600px;
-            border: 2px dashed transparent;
-            transition: all 0.3s ease;
-          }
-          
-          .kanban-column.drag-over {
-            border-color: #3B82F6;
-            background: #EFF6FF;
-          }
-          
-          .kanban-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding: 12px 16px;
-            background: white;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          }
-          
-          .priority-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          
-          .status-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 6px 14px;
-            border-radius: 24px;
-            font-size: 12px;
-            font-weight: 500;
-            text-transform: capitalize;
-          }
-          
-          .view-tabs {
-            display: flex;
-            background: white;
-            border-radius: 16px;
-            padding: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #E2E8F0;
-          }
-          
-          .view-tab {
-            padding: 12px 24px;
-            border-radius: 12px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            color: #64748B;
-          }
-          
-          .view-tab.active {
-            background: #3B82F6;
-            color: white;
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
-          }
-          
-          .layout-tabs {
-            display: flex;
-            background: white;
-            border-radius: 16px;
-            padding: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #E2E8F0;
-          }
-          
-          .layout-tab {
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #64748B;
-          }
-          
-          .layout-tab.active {
-            background: #3B82F6;
-            color: white;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-          }
-          
-          .btn {
-            padding: 14px 28px;
-            border-radius: 12px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-          }
-          
-          .btn-primary {
-            background: #3B82F6;
-            color: white;
-          }
-          
-          .btn-primary:hover {
-            background: #2563EB;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-          }
-          
-          .btn-secondary {
-            background: #6B7280;
-            color: white;
-          }
-          
-          .btn-secondary:hover {
-            background: #4B5563;
-          }
-          
-          .btn-danger {
-            background: #EF4444;
-            color: white;
-          }
-          
-          .btn-danger:hover {
-            background: #DC2626;
-          }
-          
-          .btn-small {
-            padding: 8px 12px;
-            font-size: 12px;
-          }
-          
-          
-          .filter-select {
-            padding: 14px 20px;
-            border: 2px solid #E2E8F0;
-            border-radius: 16px;
-            font-size: 14px;
-            background: white;
-            cursor: pointer;
-            font-weight: 600;
-            color: #374151;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
-          }
-          
-          .filter-select:focus {
-            outline: none;
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 2px 8px rgba(0,0,0,0.05);
-          }
-          
-          .filter-select:hover {
-            border-color: #C4B5FD;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          }
-          
-          .stats-card {
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #E2E8F0;
-            text-align: center;
-            transition: all 0.2s ease;
-          }
-          
-          .stats-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-          }
-          
-          .stats-number {
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            line-height: 1;
-          }
-          
-          .stats-label {
-            font-size: 12px;
-            color: #64748B;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-          }
-          
-          .alert {
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-            font-weight: 500;
-          }
-          
-          .alert-error {
-            background: #FEF2F2;
-            border: 1px solid #FECACA;
-            color: #B91C1C;
-          }
-          
-          .alert-success {
-            background: #F0FDF4;
-            border: 1px solid #BBF7D0;
-            color: #166534;
-          }
-          
-          .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: #64748B;
-          }
-          
-          .empty-state-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 20px;
-            opacity: 0.5;
-          }
-          
-          .hour-slot {
-            min-height: 60px;
-            border: 1px solid #F1F5F9;
-            border-radius: 8px;
-            margin: 2px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-          }
-          
-          .hour-slot:hover {
-            background: #EFF6FF;
-            border-color: #3B82F6;
-          }
-          
-          .hour-slot.selected {
-            background: #3B82F6;
-            color: white;
-            border-color: #2563EB;
-          }
-          
-          .mobile-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: white;
-            border-bottom: 1px solid #E2E8F0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-          }
-          
-          .mobile-sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: white;
-            z-index: 1000;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-          }
-          
-          .mobile-sidebar.open {
-            transform: translateX(0);
-          }
-          
-          @media (max-width: 768px) {
-            html, body {
-              overflow-x: hidden !important;
-            }
             
-            .desktop-only {
-              display: none !important;
-            }
-            
-            .mobile-only {
-              display: block !important;
-            }
-            
-            .stats-grid {
-              grid-template-columns: repeat(2, 1fr) !important;
-              gap: 12px !important;
-            }
-            
-            .controls-mobile {
-              flex-direction: column !important;
-              gap: 12px !important;
-              width: 100% !important;
-            }
-            
-            .view-tabs {
-              width: 100% !important;
-              justify-content: center !important;
-            }
-            
-            .view-tabs button {
-              flex: 1 !important;
-              min-width: 0 !important;
-            }
-            
-            .kanban-grid {
-              grid-template-columns: 1fr !important;
-              gap: 16px !important;
-            }
-            
-            .task-card {
-              padding: 12px !important;
-              margin-bottom: 8px !important;
-            }
-            
-            .modal-content-mobile {
-              margin: 16px !important;
-              padding: 24px !important;
-              max-width: calc(100vw - 32px) !important;
-              border-radius: 16px !important;
-            }
-            
-            .filter-select {
-              width: 100% !important;
-              margin-bottom: 8px !important;
-              padding: 12px 16px !important;
-              font-size: 16px !important;
-            }
-            
-            .btn-small {
-              width: 100% !important;
-              padding: 12px 16px !important;
-              font-size: 14px !important;
-              text-align: center !important;
-              border-radius: 8px !important;
-            }
-            
-            .mobile-task-item {
-              touch-action: manipulation !important;
-              -webkit-tap-highlight-color: transparent !important;
-            }
-            
-            .mobile-delete-btn {
-              min-width: 28px !important;
-              min-height: 28px !important;
-              padding: 6px !important;
-            }
-            
-            .week-calendar-grid {
-              gap: 2px !important;
-              padding: 2px !important;
-              display: grid !important;
-              grid-template-columns: repeat(7, 1fr) !important;
-              width: 100% !important;
-            }
-            
-            .week-day-cell {
-              min-height: 120px !important;
-              padding: 6px !important;
-              display: flex !important;
-              flex-direction: column !important;
-              background: white !important;
-              border-radius: 6px !important;
-            }
-          }
-          
-          @media (max-width: 480px) {
-            .stats-grid {
-              grid-template-columns: 1fr !important;
-            }
-            
-            .modal-content-mobile {
-              margin: 10px !important;
-              padding: 30px !important;
-            }
-            
-            .week-calendar-grid {
-              gap: 4px !important;
-            }
-            
-            .week-day-cell {
-              min-height: 120px !important;
-              padding: 6px !important;
-            }
-            
-            .mobile-task-text {
-              font-size: 11px !important;
-              line-height: 1.3 !important;
-            }
-            
-            .mobile-timeblock-text {
-              font-size: 10px !important;
-            }
-          }
-        `
-      }} />
-      
-      <MobileHeader title="Personal Tasks" isMobile={isMobile} />
-      
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
-        {/* Mobile New Task Button */}
-        {isMobile && (
-          <div style={{
-            position: 'fixed',
-            top: '60px',
-            left: '16px',
-            right: '16px',
-            zIndex: 50,
-            padding: '12px 0'
-          }}>
-            <button
-              onClick={() => {
-                setNewTask(getDefaultTaskForm());
-                setIsEditingTask(false);
-                setSelectedTask(null);
-                setShowTaskModal(true);
-              }}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* View Mode Switcher */}
+              <div
+                style={{
+                  display: 'flex',
+                  background: 'rgba(0, 0, 0, 0.04)',
+                  borderRadius: '10px',
+                  padding: '4px',
+                }}
+              >
+                {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
+                  <motion.button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
               style={{
-                background: '#3B82F6',
-                color: 'white',
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: '500',
                 border: 'none',
                 borderRadius: '8px',
-                padding: '12px 16px',
-                fontSize: '16px',
-                fontWeight: '600',
                 cursor: 'pointer',
-                width: '100%',
-                minHeight: '48px'
-              }}
-            >
-              + New Task
-            </button>
-          </div>
-        )}
-
-
-        {/* Desktop Sidebar */}
-        {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
-
-        <div style={{ 
-          marginLeft: isMobile ? '0' : '256px',
-          flex: 1,
-          padding: isMobile ? '12px' : '32px',
-          paddingTop: isMobile ? '130px' : '32px',
-          maxWidth: '100%',
-          overflow: 'hidden'
-        }}>
-          {/* Header */}
-          <div style={{ marginBottom: '32px' }} className="desktop-only">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '20px' }}>
-              <div>
-                <h1 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: '800', color: '#1F2937', margin: 0, marginBottom: '8px' }}>
-                  Personal Task Manager
-                </h1>
-                <p style={{ color: '#64748B', margin: 0, fontSize: '16px' }}>
-                  Organize your personal tasks and manage your time effectively
-                </p>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <button
-                  onClick={() => {
-                    setNewTask(getDefaultTaskForm());
-                    setIsEditingTask(false);
-                    setSelectedTask(null);
-                    setShowTaskModal(true);
-                  }}
-                  className="btn btn-primary"
-                >
-                  <PlusIcon style={{ width: '18px', height: '18px' }} />
-                  New Task
-                </button>
-                <button
-                  onClick={() => {
-                    resetTimeBlockForm();
-                    setShowTimeBlockModal(true);
-                  }}
-                  className="btn btn-secondary"
-                >
-                  <ClockIcon style={{ width: '18px', height: '18px' }} />
-                  Time Block
-                </button>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
-              <div className="stats-card">
-                <div className="stats-number" style={{ color: '#F59E0B' }}>{tasksByStatus.todo.length}</div>
-                <div className="stats-label">Todo</div>
-              </div>
-              <div className="stats-card">
-                <div className="stats-number" style={{ color: '#3B82F6' }}>{tasksByStatus.in_progress.length}</div>
-                <div className="stats-label">In Progress</div>
-              </div>
-              <div className="stats-card">
-                <div className="stats-number" style={{ color: '#10B981' }}>{tasksByStatus.completed.length}</div>
-                <div className="stats-label">Completed</div>
-              </div>
-              <div className="stats-card">
-                <div className="stats-number" style={{ color: '#64748B' }}>{allTasks.length}</div>
-                <div className="stats-label">Total Tasks</div>
-                <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '4px' }}>
-                  {tasks.length} personal + {projectTasks.length} project
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="controls-mobile" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: isMobile ? 'stretch' : 'center', 
-            marginBottom: isMobile ? '16px' : '24px', 
-            flexWrap: 'wrap', 
-            gap: isMobile ? '8px' : '16px',
-            flexDirection: isMobile ? 'column' : 'row'
-          }}>
-            {/* Filters */}
-            <div style={{ 
-              display: 'flex', 
-              gap: isMobile ? '8px' : '16px', 
-            alignItems: 'center', 
-              flex: 1, 
-            flexWrap: 'wrap',
-              width: isMobile ? '100%' : 'auto'
-            }}>
-              
-              {!isMobile && (
-                <>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="all">All Priority</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </>
-              )}
-            </div>
-
-            {/* Layout and View Controls */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div className="layout-tabs">
-                  <button
-                  className={`layout-tab ${layoutType === 'list' ? 'active' : ''}`}
-                  onClick={() => setLayoutType('list')}
-                  title="List View"
-                >
-                  <ListBulletIcon style={{ width: '18px', height: '18px' }} />
-                </button>
-                <button
-                  className={`layout-tab ${layoutType === 'kanban' ? 'active' : ''}`}
-                  onClick={() => setLayoutType('kanban')}
-                  title="Kanban View"
-                >
-                  <Squares2X2Icon style={{ width: '18px', height: '18px' }} />
-                </button>
-                <button
-                  className={`layout-tab ${layoutType === 'calendar' ? 'active' : ''}`}
-                  onClick={() => setLayoutType('calendar')}
-                  title="Calendar View"
-                >
-                  <CalendarDaysIcon style={{ width: '18px', height: '18px' }} />
-                </button>
-              </div>
-
-              {layoutType === 'calendar' && (
-                <>
-                  <div className="view-tabs">
-                    <button
-                      className={`view-tab ${currentView === 'month' ? 'active' : ''}`}
-                      onClick={() => setCurrentView('month')}
-                    >
-                      Month
-                    </button>
-                    <button
-                      className={`view-tab ${currentView === 'week' ? 'active' : ''}`}
-                      onClick={() => setCurrentView('week')}
-                    >
-                      Week
-                    </button>
-                    <button
-                      className={`view-tab ${currentView === 'day' ? 'active' : ''}`}
-                      onClick={() => setCurrentView('day')}
-                    >
-                      Day
-                    </button>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <button
-                      onClick={() => navigateDate('prev')}
-                      className="btn btn-secondary btn-small"
-                    >
-                      <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
-                    </button>
-                    
-                    <h3 style={{ margin: 0, color: '#1F2937', fontSize: '16px', minWidth: '200px', textAlign: 'center' }}>
-                      {formatDate(currentDate)}
-                    </h3>
-                    
-                    <button
-                      onClick={() => navigateDate('next')}
-                      className="btn btn-secondary btn-small"
-                    >
-                      <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile Filters */}
-          {isMobile && (
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', overflowX: 'auto', padding: '0 4px' }}>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="filter-select"
-                style={{ minWidth: '120px' }}
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="filter-select"
-                style={{ minWidth: '120px' }}
-              >
-                <option value="all">All Priority</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-          )}
-
-          {/* Selected Hours Action */}
-          {selectedHours.length > 0 && (
-            <div style={{
-              background: '#3B82F6',
-              color: 'white',
-              padding: '16px 24px',
-              borderRadius: '12px',
-              marginBottom: '24px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <span style={{ fontWeight: '600' }}>
-                {selectedHours.length} hour{selectedHours.length > 1 ? 's' : ''} selected
-              </span>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={handleCreateTaskFromSelection}
-                    style={{
-                    background: 'white',
-                    color: '#3B82F6',
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                      border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600'
-                  }}
-                >
-                  Create Task
-                </button>
-                <button
-                  onClick={() => setSelectedHours([])}
-                  style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    padding: '8px 16px',
-                      borderRadius: '8px',
-                    border: 'none',
-                      cursor: 'pointer',
-                    fontWeight: '600'
+                      transition: 'all 0.2s ease',
+                      background: viewMode === mode ? '#fff' : 'transparent',
+                      color: viewMode === mode ? '#1d1d1f' : '#86868b',
+                      boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                      textTransform: 'capitalize',
                     }}
                   >
-                  Clear
-                  </button>
+                    {mode}
+                  </motion.button>
+                ))}
+          </div>
+              
+              {/* Add Block Button */}
+              <motion.button
+                onClick={() => setShowAddModal(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  background: '#0071e3',
+                  color: '#fff',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                Add Block
+              </motion.button>
               </div>
             </div>
-          )}
 
-          {/* Alerts */}
-          {error && (
-            <div className="alert alert-error">
-              <ExclamationTriangleIcon style={{ width: '16px', height: '16px' }} />
-              {error}
-              <button
-                onClick={() => setError('')}
-                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                <XMarkIcon style={{ width: '16px', height: '16px' }} />
-              </button>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="alert alert-success">
-              <CheckIcon style={{ width: '16px', height: '16px' }} />
-              {successMessage}
-              <button
-                onClick={() => setSuccessMessage('')}
-                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                <XMarkIcon style={{ width: '16px', height: '16px' }} />
-              </button>
-            </div>
-          )}
-
-          {/* Main Content */}
-          {layoutType === 'kanban' && (
-            <div className="kanban-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '20px' }}>
-              {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
-                <div 
-                  key={status} 
-                  className="kanban-column"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, status as PersonalTask['status'])}
-                >
-                  <div className="kanban-header" style={{ color: getStatusColor(status) }}>
-                    <span style={{ textTransform: 'capitalize' }}>{status.replace('_', ' ')}</span>
-                    <span style={{ 
-                      background: getStatusColor(status) + '20',
-                      color: getStatusColor(status),
-                      padding: '4px 8px',
-                      borderRadius: '16px',
-                      fontSize: '12px',
-                      fontWeight: '700'
-                    }}>
-                      {statusTasks.length}
-                    </span>
-                  </div>
-                  
-                  {statusTasks.map(task => (
-                    <div 
-                      key={task.id} 
-                      className="task-card"
+          {/* Navigation */}
+          <div
+            style={{
+            display: 'flex', 
+              alignItems: 'center',
+            justifyContent: 'space-between', 
+              marginTop: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <motion.button
+                onClick={() => navigate('prev')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 style={{
-                        borderLeftColor: getPriorityColor(task.priority),
-                        cursor: 'grab'
-                      }}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, task)}
-                      onDragEnd={(e) => {
-                        e.currentTarget.classList.remove('dragging');
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                        <h5 style={{ 
-                          margin: 0, 
-                          fontSize: '16px', 
-                  fontWeight: '600',
-                          color: '#1F2937',
-                          flex: 1,
-                          lineHeight: '1.4'
-                        }}>
-                          {task.title}
-                        </h5>
-                        
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: '12px' }}>
-                          <button
-                            onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed')}
-                            style={{ 
-                              background: 'none', 
-                              border: 'none', 
+                  width: '36px',
+                  height: '36px',
+              display: 'flex', 
+            alignItems: 'center', 
+                  justifyContent: 'center',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: 'rgba(0, 0, 0, 0.04)',
                   cursor: 'pointer',
-                              color: task.status === 'completed' ? '#10B981' : '#6B7280',
-                              padding: '4px'
-                            }}
-                            title={task.status === 'completed' ? 'Mark as todo' : 'Mark as completed'}
-                          >
-                            {task.status === 'completed' ? (
-                              <CheckCircleIconSolid style={{ width: '20px', height: '20px' }} />
-                            ) : (
-                              <CheckCircleIcon style={{ width: '20px', height: '20px' }} />
-                            )}
-                          </button>
-                          
-                          <button
-                            onClick={() => openEditTask(task)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6', padding: '4px' }}
-                            title="Edit task"
-                          >
-                            <PencilIcon style={{ width: '16px', height: '16px' }} />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteTask(task.id)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}
-                            title="Delete task"
-                          >
-                            <TrashIcon style={{ width: '16px', height: '16px' }} />
-              </button>
-            </div>
-          </div>
+                  color: '#1d1d1f',
+                }}
+              >
+                <ChevronLeftIcon style={{ width: '18px', height: '18px' }} />
+              </motion.button>
+              
+              <motion.h2
+                key={currentDate.toISOString()}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  color: '#1d1d1f',
+                  margin: 0,
+                  minWidth: '200px',
+                  textAlign: 'center',
+                }}
+              >
+                {viewMode === 'day' && (
+                  <>
+                    {weekDays[currentDate.getDay()]}, {monthNames[currentDate.getMonth()]} {currentDate.getDate()}
+                </>
+              )}
+                {viewMode === 'week' && (
+                  <>
+                    {monthNames[currentDate.getMonth()]} {getWeekDays(currentDate)[0].getDate()} - {getWeekDays(currentDate)[6].getDate()}
+                  </>
+                )}
+                {viewMode === 'month' && (
+                  <>
+                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </>
+                )}
+              </motion.h2>
+              
+              <motion.button
+                onClick={() => navigate('next')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: 'rgba(0, 0, 0, 0.04)',
+                  cursor: 'pointer',
+                  color: '#1d1d1f',
+                }}
+              >
+                <ChevronRightIcon style={{ width: '18px', height: '18px' }} />
+              </motion.button>
+              </div>
 
-                      {task.description && (
-                        <p style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: '14px', lineHeight: '1.5' }}>
-                          {task.description.length > 100 
-                            ? task.description.substring(0, 100) + '...'
-                            : task.description
-                          }
-                        </p>
-                      )}
-                      
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span 
-                          className="priority-badge"
-                          style={{ 
-                            background: getPriorityColor(task.priority) + '20',
-                            color: getPriorityColor(task.priority)
+            <motion.button
+              onClick={() => setCurrentDate(new Date())}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                padding: '8px 16px',
+                fontSize: '13px',
+                fontWeight: '500',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+                background: '#fff',
+                cursor: 'pointer',
+                color: '#1d1d1f',
+              }}
+            >
+              Today
+            </motion.button>
+                  </div>
+        </div>
+      </motion.header>
+
+      {/* Main Content */}
+      <main style={{ padding: '32px 40px', maxWidth: '1400px', margin: '0 auto' }}>
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '400px',
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '3px solid #f0f0f0',
+                  borderTopColor: '#0071e3',
+                  borderRadius: '50%',
+                }}
+              />
+            </motion.div>
+          ) : (
+            <>
+              {/* Day View */}
+              {viewMode === 'day' && (
+                <motion.div
+                  key="day"
+                  {...fadeInUp}
+                  transition={{ duration: 0.4 }}
+                  style={{
+                    background: '#fff',
+                    borderRadius: '16px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div style={{ position: 'relative' }}>
+                    {/* Time Column */}
+                    {hours.map((hour) => (
+                      <div
+                        key={hour}
+                        style={{
+                          display: 'flex',
+                          borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                          minHeight: '60px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '80px',
+                            padding: '8px 16px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            color: '#86868b',
+                            textAlign: 'right',
+                            flexShrink: 0,
                           }}
                         >
-                          {task.priority}
-                        </span>
-                        
-                        {task.category && (
-                          <span style={{ 
-                            fontSize: '11px', 
-                            color: '#64748B',
-                            background: '#F1F5F9',
-                            padding: '4px 8px',
-                            borderRadius: '12px'
-                          }}>
-                            {task.category}
-                          </span>
-                        )}
-                        
-                        {task.due_date && (
-                          <span style={{ fontSize: '11px', color: '#64748B' }}>
-                            Due: {new Date(task.due_date).toLocaleDateString()}
-                          </span>
-                        )}
-                        
-                        {task.estimated_duration && (
-                          <span style={{ fontSize: '11px', color: '#64748B' }}>
-                            {task.estimated_duration}m
-                          </span>
-                        )}
+                          {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+            </div>
+                        <div
+                          style={{
+                            flex: 1,
+                            borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
+                            position: 'relative',
+                          }}
+                        />
                       </div>
+                    ))}
+                    
+                    {/* Time Blocks */}
+                    {getBlocksForDate(currentDate).map((block) => {
+                      const { top, height } = getBlockPosition(block);
+                      const colors = blockTypeColors[block.type];
+                      
+                      return (
+                        <motion.div
+                          key={block.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileHover={{ scale: 1.01, zIndex: 10 }}
+                          onClick={() => handleBlockClick(block)}
+                    style={{
+                            position: 'absolute',
+                            top: `${top}px`,
+                            left: '96px',
+                            right: '16px',
+                            height: `${height}px`,
+                            background: colors.bg,
+                            borderLeft: `3px solid ${colors.solid}`,
+                    borderRadius: '8px',
+                            padding: '8px 12px',
+                    cursor: 'pointer',
+                            overflow: 'hidden',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {block.type === 'focus' && <SparklesIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
+                            {block.type === 'meeting' && <VideoCameraIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
+                            {block.type === 'personal' && <UserIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
+                            <span
+                  style={{
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                color: '#1d1d1f',
+                              }}
+                            >
+                              {block.title}
+                            </span>
+              </div>
+                          <div
+                            style={{
+                              fontSize: '11px',
+                              color: '#86868b',
+                              marginTop: '4px',
+                            }}
+                          >
+                            {formatTime(block.startTime)} - {formatTime(block.endTime)}
+            </div>
+                          {block.checklist.length > 0 && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                marginTop: '4px',
+                                fontSize: '11px',
+                                color: '#86868b',
+                              }}
+                            >
+                              <ListBulletIcon style={{ width: '12px', height: '12px' }} />
+                              {block.checklist.filter(i => i.completed).length}/{block.checklist.length}
+            </div>
+          )}
+                        </motion.div>
+                      );
+                    })}
+            </div>
+                </motion.div>
+              )}
+
+              {/* Week View */}
+              {viewMode === 'week' && (
+                <motion.div
+                  key="week"
+                  {...fadeInUp}
+                  transition={{ duration: 0.4 }}
+                  style={{
+                    background: '#fff',
+                    borderRadius: '16px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Week Header */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '80px repeat(7, 1fr)',
+                      borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                    }}
+                  >
+                    <div style={{ padding: '16px' }} />
+                    {getWeekDays(currentDate).map((day, index) => {
+                      const isToday = formatDate(day) === formatDate(new Date());
+                      return (
+                        <div
+                          key={index}
+                style={{
+                            padding: '16px',
+                            textAlign: 'center',
+                            borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              color: '#86868b',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {weekDays[day.getDay()]}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '24px',
+                  fontWeight: '600',
+                              color: isToday ? '#fff' : '#1d1d1f',
+                              background: isToday ? '#0071e3' : 'transparent',
+                              borderRadius: '50%',
+                              width: '40px',
+                              height: '40px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '8px auto 0',
+                            }}
+                          >
+                            {day.getDate()}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Week Grid */}
+                  <div
+                            style={{ 
+                      display: 'grid',
+                      gridTemplateColumns: '80px repeat(7, 1fr)',
+                      minHeight: '600px',
+                    }}
+                  >
+                    <div style={{ borderRight: '1px solid rgba(0, 0, 0, 0.04)' }}>
+                      {hours.slice(6, 22).map((hour) => (
+                        <div
+                          key={hour}
+                          style={{
+                            height: '37.5px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            color: '#86868b',
+                            textAlign: 'right',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                          }}
+                        >
+                          {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+            </div>
+                      ))}
+          </div>
+                    {getWeekDays(currentDate).map((day, dayIndex) => (
+                      <div
+                        key={dayIndex}
+                          style={{ 
+                          borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
+                          position: 'relative',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          setCurrentDate(day);
+                          setViewMode('day');
+                        }}
+                      >
+                        {hours.slice(6, 22).map((hour) => (
+                          <div
+                            key={hour}
+                            style={{
+                              height: '37.5px',
+                              borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                            }}
+                          />
+                        ))}
+                        
+                        {/* Blocks for this day */}
+                        {getBlocksForDate(day).map((block) => {
+                          const [startHour] = block.startTime.split(':').map(Number);
+                          const [endHour] = block.endTime.split(':').map(Number);
+                          if (startHour < 6 || startHour >= 22) return null;
+                          
+                          const top = (startHour - 6) * 37.5;
+                          const height = Math.max((endHour - startHour) * 37.5, 20);
+                          const colors = blockTypeColors[block.type];
+                          
+                          return (
+                            <motion.div
+                              key={block.id}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBlockClick(block);
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: `${top}px`,
+                                left: '4px',
+                                right: '4px',
+                                height: `${height}px`,
+                                background: colors.bg,
+                                borderLeft: `2px solid ${colors.solid}`,
+                                borderRadius: '4px',
+                                padding: '4px 6px',
+                                cursor: 'pointer',
+                                fontSize: '10px',
+                                fontWeight: '500',
+                                color: '#1d1d1f',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {block.title}
+                            </motion.div>
+                          );
+                        })}
                     </div>
                   ))}
-                  
-                  {statusTasks.length === 0 && (
-            <div style={{ 
-                      textAlign: 'center', 
-                      color: '#9CA3AF', 
-                      padding: '40px 20px',
-                      border: '2px dashed #E2E8F0',
-                      borderRadius: '12px'
-                    }}>
-                      <p style={{ margin: 0, fontSize: '14px' }}>
-                        Drop tasks here or create new ones
-                      </p>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                </motion.div>
+              )}
 
-          {/* List View */}
-          {layoutType === 'list' && (
-            <div>
-              {filteredTasks.length === 0 ? (
-                <div className="empty-state">
-                  <ListBulletIcon className="empty-state-icon" />
-                  <h3 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 12px 0' }}>No tasks found</h3>
-                  <p style={{ margin: '0 0 24px 0' }}>
-                    {statusFilter !== 'all' || priorityFilter !== 'all' 
-                      ? 'Try adjusting your filters'
-                      : 'Create your first task to get started'
-                    }
-                  </p>
-                  {statusFilter === 'all' && priorityFilter === 'all' && (
-                    <button
-                      onClick={() => {
-                        setNewTask(getDefaultTaskForm());
-                        setIsEditingTask(false);
-                        setSelectedTask(null);
-                        setShowTaskModal(true);
-                      }}
-                      className="btn btn-primary"
-                    >
-                      <PlusIcon style={{ width: '16px', height: '16px' }} />
-                      Create Task
-                    </button>
-                  )}
-                </div>
-              ) : (
-                filteredTasks.map(task => (
-                  <div 
-                    key={task.id} 
-                    className={`task-card ${task.status === 'completed' ? 'completed' : ''}`}
-                    style={{ borderLeftColor: getPriorityColor(task.priority) }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <h4 style={{ 
-                        margin: 0, 
-                        fontSize: '18px', 
-                        fontWeight: '600',
-                        color: task.status === 'completed' ? '#6B7280' : '#1F2937',
-                        textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                        flex: 1
-                      }}>
-                        {task.title}
-                      </h4>
-                      
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button
-                          onClick={() => handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed')}
-                          style={{ 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer',
-                            color: task.status === 'completed' ? '#10B981' : '#6B7280',
-                            padding: '4px'
-                          }}
-                          title={task.status === 'completed' ? 'Mark as todo' : 'Mark as completed'}
-                        >
-                          {task.status === 'completed' ? (
-                            <CheckCircleIconSolid style={{ width: '20px', height: '20px' }} />
-                          ) : (
-                            <CheckCircleIcon style={{ width: '20px', height: '20px' }} />
-                          )}
-                        </button>
-                        
-                        <button
-                          onClick={() => openEditTask(task)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6', padding: '4px' }}
-                          title="Edit task"
-                        >
-                          <PencilIcon style={{ width: '16px', height: '16px' }} />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDeleteTask(task.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}
-                          title="Delete task"
-                        >
-                          <TrashIcon style={{ width: '16px', height: '16px' }} />
-                        </button>
-            </div>
-                    </div>
-                    
-                    {task.description && (
-                      <p style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: '14px', lineHeight: '1.5' }}>
-                        {task.description}
-                      </p>
-                    )}
-                    
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span 
-                        className="priority-badge"
-                        style={{ 
-                          background: getPriorityColor(task.priority) + '20',
-                          color: getPriorityColor(task.priority)
-                        }}
-                      >
-                        {task.priority}
-                      </span>
-                      
-                      <span 
-                        className="status-badge"
-                        style={{ 
-                          background: getStatusColor(task.status) + '20',
-                          color: getStatusColor(task.status)
-                        }}
-                      >
-                        {task.status.replace('_', ' ')}
-                      </span>
-                      
-                      {task.category && (
-                        <span style={{ 
-                          fontSize: '12px', 
-                          color: '#64748B',
-                          background: '#F1F5F9',
-                          padding: '4px 8px',
-                          borderRadius: '12px'
-                        }}>
-                          {task.category}
-                        </span>
-                      )}
-                      
-                      {task.due_date && (
-                        <span style={{ fontSize: '12px', color: '#64748B' }}>
-                          Due: {new Date(task.due_date).toLocaleDateString()}
-                        </span>
-                      )}
-                      
-                      {task.estimated_duration && (
-                        <span style={{ fontSize: '12px', color: '#64748B' }}>
-                          {task.estimated_duration}m
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* Calendar View */}
-          {layoutType === 'calendar' && (
-            <div>
-              {currentView === 'month' && (
-                <MonthCalendarView 
-                  currentDate={currentDate}
-                  tasks={filteredTasks}
-                  timeBlocks={timeBlocks}
-                  onTaskClick={openEditTask}
-                  getPriorityColor={getPriorityColor}
-                  isMobile={isMobile}
-                />
-              )}
-              
-              {currentView === 'week' && (
-                <WeekCalendarView 
-                  currentDate={currentDate}
-                  tasks={filteredTasks}
-                  timeBlocks={timeBlocks}
-                  selectedHours={selectedHours}
-                  setSelectedHours={setSelectedHours}
-                  isSelecting={isSelecting}
-                  setIsSelecting={setIsSelecting}
-                  dragStartHour={dragStartHour}
-                  setDragStartHour={setDragStartHour}
-                  onTaskClick={openEditTask}
-                  getPriorityColor={getPriorityColor}
-                  isMobile={isMobile}
-                  user={user}
-                />
-              )}
-              
-              {currentView === 'day' && (
-                <DayCalendarView 
-                  currentDate={currentDate}
-                  tasks={filteredTasks}
-                  timeBlocks={timeBlocks}
-                  onTaskClick={openEditTask}
-                  setTimeBlocks={setTimeBlocks}
-                  setTasks={setTasks}
-                  setAllTasks={setAllTasks}
-                  onCreateTimeBlock={(startTime, endTime) => {
-                    setNewTimeBlock({
-                      title: '',
-                      description: '',
-                      start_time: startTime.toISOString().slice(0, 16),
-                      end_time: endTime.toISOString().slice(0, 16),
-                      block_type: 'task',
-                      color: '#3B82F6',
-                      notes: ''
-                    });
-                    setShowTimeBlockModal(true);
+              {/* Month View */}
+              {viewMode === 'month' && (
+                <motion.div
+                  key="month"
+                  {...fadeInUp}
+                  transition={{ duration: 0.4 }}
+                  style={{
+                    background: '#fff',
+                    borderRadius: '16px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    overflow: 'hidden',
                   }}
-                  getPriorityColor={getPriorityColor}
-                  isMobile={isMobile}
-                  user={user}
-                  handleUpdateTaskStatus={handleUpdateTaskStatus}
-                  handleDeleteTask={handleDeleteTask}
-                  openEditTask={openEditTask}
-                />
+                >
+                  {/* Month Header */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(7, 1fr)',
+                      borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                    }}
+                  >
+                    {weekDays.map((day) => (
+                      <div
+                        key={day}
+                        style={{
+                          padding: '16px',
+                          textAlign: 'center',
+                          fontSize: '12px',
+                        fontWeight: '600',
+                          color: '#86868b',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Month Grid */}
+                  <div
+                          style={{ 
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(7, 1fr)',
+                    }}
+                  >
+                    {getDaysInMonth(currentDate).map((day, index) => {
+                      const isToday = formatDate(day) === formatDate(new Date());
+                      const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                      const dayBlocks = getBlocksForDate(day);
+                      
+                      return (
+                        <motion.div
+                          key={index}
+                          whileHover={{ background: 'rgba(0, 0, 0, 0.02)' }}
+                          onClick={() => {
+                            setCurrentDate(day);
+                            setViewMode('day');
+                          }}
+                          style={{
+                            minHeight: '100px',
+                            padding: '8px',
+                            borderRight: (index + 1) % 7 !== 0 ? '1px solid rgba(0, 0, 0, 0.04)' : 'none',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                            cursor: 'pointer',
+                            opacity: isCurrentMonth ? 1 : 0.4,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              color: isToday ? '#fff' : '#1d1d1f',
+                              background: isToday ? '#0071e3' : 'transparent',
+                              borderRadius: '50%',
+                              width: '28px',
+                              height: '28px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginBottom: '4px',
+                            }}
+                          >
+                            {day.getDate()}
+                    </div>
+                    
+                          {dayBlocks.slice(0, 3).map((block) => {
+                            const colors = blockTypeColors[block.type];
+                            return (
+                              <div
+                                key={block.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleBlockClick(block);
+                                }}
+                        style={{ 
+                                  fontSize: '10px',
+                                  padding: '2px 6px',
+                                  marginBottom: '2px',
+                                  background: colors.bg,
+                                  borderLeft: `2px solid ${colors.solid}`,
+                                  borderRadius: '3px',
+                                  color: '#1d1d1f',
+                                  fontWeight: '500',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {block.title}
+                              </div>
+                            );
+                          })}
+                          
+                          {dayBlocks.length > 3 && (
+                            <div
+                        style={{ 
+                                fontSize: '10px',
+                                color: '#86868b',
+                                fontWeight: '500',
+                              }}
+                            >
+                              +{dayBlocks.length - 3} more
+                    </div>
               )}
+                        </motion.div>
+                      );
+                    })}
             </div>
+                </motion.div>
+              )}
+            </>
           )}
-        </div>
-      </div>
+        </AnimatePresence>
+      </main>
 
-      {/* Task Modal */}
-          {showTaskModal && (
-            <div style={{
+      {/* Add Block Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowAddModal(false)}
+            style={{
               position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-          background: 'rgba(0,0,0,0.7)',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
           zIndex: 1000,
-          backdropFilter: 'blur(6px)',
-          padding: isMobile ? '20px' : '60px'
-        }} onClick={() => setShowTaskModal(false)}>
-          <div className={isMobile ? 'modal-content-mobile' : ''} style={{
-            background: 'white',
-            borderRadius: '24px',
-            padding: isMobile ? '40px' : '80px',
-            maxWidth: isMobile ? 'calc(100vw - 40px)' : '750px',
-            width: '100%',
-            maxHeight: isMobile ? 'calc(100vh - 40px)' : '100%',
-            overflowY: 'auto',
-            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.35), 0 25px 25px -5px rgba(0, 0, 0, 0.2)',
-            border: '2px solid rgba(255, 255, 255, 0.3)'
-          }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-              <h3 style={{ margin: 0, fontSize: isMobile ? '20px' : '24px', fontWeight: '700', color: '#1F2937' }}>
-                {isEditingTask ? 'Edit Task' : 'Create New Task'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowTaskModal(false);
-                  resetTaskForm();
+              padding: '24px',
+            }}
+          >
+            <motion.div
+              {...scaleIn}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+                      style={{
+                background: '#fff',
+                borderRadius: '20px',
+                        width: '100%',
+                maxWidth: '480px',
+                overflow: 'hidden',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              }}
+            >
+              <div
+                style={{
+                  padding: '24px',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '8px' }}
               >
-                <XMarkIcon style={{ width: '24px', height: '24px' }} />
-              </button>
-            </div>
-            
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '12px', 
-                fontWeight: '600', 
-                color: '#374151', 
-                fontSize: '16px' 
-              }}>Title *</label>
-                    <input
-                      type="text"
-                      style={{
-                        width: '100%',
-                  padding: '16px 20px',
-                  border: '2px solid #E2E8F0',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                  background: '#FAFBFC',
-                  transition: 'all 0.2s ease',
-                  boxSizing: 'border-box'
-                }}
-                      value={newTask.title}
-                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                placeholder="Enter task title..."
-                required
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#3B82F6';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  e.target.style.background = 'white';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#E2E8F0';
-                  e.target.style.boxShadow = 'none';
-                  e.target.style.background = '#FAFBFC';
-                }}
-                    />
-                  </div>
-
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '12px', 
-                fontWeight: '600', 
-                color: '#374151', 
-                fontSize: '16px' 
-              }}>Description</label>
-                    <textarea
-                      style={{
-                        width: '100%',
-                  padding: '16px 20px',
-                  border: '2px solid #E2E8F0',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                  background: '#FAFBFC',
-                  transition: 'all 0.2s ease',
-                  resize: 'vertical',
-                  minHeight: '100px',
-                  boxSizing: 'border-box'
-                }}
-                      value={newTask.description}
-                      onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                placeholder="Enter task description..."
-                rows={3}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#3B82F6';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  e.target.style.background = 'white';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#E2E8F0';
-                  e.target.style.boxShadow = 'none';
-                  e.target.style.background = '#FAFBFC';
-                }}
-                    />
-                  </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '12px', 
-                  fontWeight: '600', 
-                  color: '#374151', 
-                  fontSize: '16px' 
-                }}>Priority</label>
-                    <select
-                      style={{
-                        width: '100%',
-                    padding: '16px 20px',
-                    border: '2px solid #E2E8F0',
-                    borderRadius: '12px',
-                    fontSize: '15px',
-                    background: '#FAFBFC',
-                    cursor: 'pointer',
-                    boxSizing: 'border-box',
+                <h3
+                  style={{
+                    fontSize: '18px',
                     fontWeight: '600',
-                    color: '#374151',
-                    transition: 'all 0.2s ease'
-                      }}
-                      value={newTask.priority}
-                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3B82F6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    e.target.style.background = 'white';
+                    color: '#1d1d1f',
+                    margin: 0,
                   }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#E2E8F0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.background = '#FAFBFC';
+                >
+                  New Time Block
+                </h3>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowAddModal(false)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.04)',
+                    cursor: 'pointer',
+                    color: '#86868b',
                   }}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                    </select>
+                >
+                  <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                </motion.button>
                   </div>
 
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Title */}
+                <div>
+                  <label
+                    style={{
+                display: 'block', 
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#86868b',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={blockForm.title}
+                    onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
+                    placeholder="What are you working on?"
+                      style={{
+                        width: '100%',
+                      padding: '12px 16px',
+                  fontSize: '15px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                }}
+                    />
+                  </div>
+
+                {/* Type */}
               <div>
-                <label style={{ 
+                  <label
+                    style={{
                   display: 'block', 
-                  marginBottom: '12px', 
-                  fontWeight: '600', 
-                  color: '#374151', 
-                  fontSize: '16px' 
-                }}>Status</label>
-                <select
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#86868b',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Type
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {(['focus', 'meeting', 'personal'] as const).map((type) => {
+                      const colors = blockTypeColors[type];
+                      const icons = {
+                        focus: SparklesIcon,
+                        meeting: VideoCameraIcon,
+                        personal: UserIcon,
+                      };
+                      const Icon = icons[type];
+                      
+                      return (
+                        <motion.button
+                          key={type}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setBlockForm({ ...blockForm, type })}
+                      style={{
+                            flex: 1,
+                            padding: '12px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '8px',
+                            border: blockForm.type === type ? `2px solid ${colors.solid}` : '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '12px',
+                            background: blockForm.type === type ? colors.bg : '#fff',
+                    cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <Icon style={{ width: '20px', height: '20px', color: colors.text }} />
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              color: blockForm.type === type ? colors.text : '#86868b',
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {type}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  </div>
+
+                {/* Time */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                    <label
+                      style={{
+                  display: 'block', 
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#86868b',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={blockForm.startTime}
+                      onChange={(e) => setBlockForm({ ...blockForm, startTime: e.target.value })}
                           style={{
                     width: '100%',
-                    padding: '16px 20px',
-                    border: '2px solid #E2E8F0',
-                    borderRadius: '12px',
+                        padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#FAFBFC',
-                            cursor: 'pointer',
-                    boxSizing: 'border-box',
-                    fontWeight: '600',
-                    color: '#374151',
-                            transition: 'all 0.2s ease'
-                          }}
-                  value={newTask.status}
-                  onChange={(e) => setNewTask({ ...newTask, status: e.target.value as any })}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3B82F6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    e.target.style.background = 'white';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#E2E8F0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.background = '#FAFBFC';
-                  }}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '12px', 
-                  fontWeight: '600', 
-                  color: '#374151', 
-                  fontSize: '16px' 
-                }}>Category</label>
-                <select
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    border: '2px solid #E2E8F0',
-                    borderRadius: '12px',
-                    fontSize: '15px',
-                    background: '#FAFBFC',
-                    cursor: 'pointer',
-                    boxSizing: 'border-box',
-                    fontWeight: '600',
-                    color: '#374151',
-                    transition: 'all 0.2s ease'
-                  }}
-                  value={newTask.category}
-                  onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3B82F6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    e.target.style.background = 'white';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#E2E8F0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.background = '#FAFBFC';
-                  }}
-                >
-                  <option value="">Select category...</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                    </div>
-              
-              {/* Duration field removed as requested */}
-                  </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '12px', 
-                  fontWeight: '600', 
-                  color: '#374151', 
-                  fontSize: '16px' 
-                }}>Start Date & Time</label>
-                <input
-                  type="datetime-local"
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    border: '2px solid #E2E8F0',
-                    borderRadius: '12px',
-                    fontSize: '15px',
-                    background: '#FAFBFC',
-                    boxSizing: 'border-box',
-                    transition: 'all 0.2s ease'
-                  }}
-                  value={newTask.scheduled_start}
-                  onChange={(e) => setNewTask({ ...newTask, scheduled_start: e.target.value })}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3B82F6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    e.target.style.background = 'white';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#E2E8F0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.background = '#FAFBFC';
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '12px', 
-                  fontWeight: '600', 
-                  color: '#374151', 
-                  fontSize: '16px' 
-                }}>Due Date & Time</label>
-                <input
-                  type="datetime-local"
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    border: '2px solid #E2E8F0',
-                    borderRadius: '12px',
-                    fontSize: '15px',
-                    background: '#FAFBFC',
-                    boxSizing: 'border-box',
-                    transition: 'all 0.2s ease'
-                  }}
-                  value={newTask.due_date}
-                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#3B82F6';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    e.target.style.background = 'white';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#E2E8F0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.background = '#FAFBFC';
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Checklist Section */}
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#374151', fontSize: '16px' }}>Discussion Points / Checklist</label>
-              <div style={{ border: '2px solid #E2E8F0', borderRadius: '12px', padding: '16px', background: '#FAFBFC' }}>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                  <input type="text" placeholder="Add checklist item..." value={newChecklistItem} onChange={(e) => setNewChecklistItem(e.target.value)} onKeyPress={(e) => {if (e.key === 'Enter') {e.preventDefault(); if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, { text: newChecklistItem.trim(), completed: false }]); setNewChecklistItem('');}}}} style={{ flex: 1, padding: '12px 16px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px' }} />
-                  <button type="button" onClick={() => {if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, { text: newChecklistItem.trim(), completed: false }]); setNewChecklistItem('');}}} style={{ padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Add</button>
-                </div>
-                {checklistItems.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {checklistItems.map((item, index) => (
-                      <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={item.completed}
-                          onChange={() => {
-                            const updated = [...checklistItems];
-                            updated[index] = { ...updated[index], completed: !updated[index].completed };
-                            setChecklistItems(updated);
-                          }}
-                          style={{ 
-                            width: '20px', 
-                            height: '20px', 
-                            cursor: 'pointer',
-                            flexShrink: 0,
-                            accentColor: '#3B82F6'
-                          }}
-                        />
-                        <span style={{ flex: 1, fontSize: '14px', color: '#374151', textDecoration: item.completed ? 'line-through' : 'none', opacity: item.completed ? 0.6 : 1 }}>{item.text}</span>
-                        <button type="button" onClick={() => setChecklistItems(checklistItems.filter((_, i) => i !== index))} style={{ padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>Remove</button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '14px', margin: 0, padding: '20px', fontStyle: 'italic' }}>No checklist items yet.</p>
-                )}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', marginTop: '40px', flexWrap: 'wrap' }}>
-                    <button
-                onClick={() => {
-                  setShowTaskModal(false);
-                  resetTaskForm();
-                }}
-                      style={{
-                  padding: '16px 32px',
-                  borderRadius: '12px',
-                        border: 'none',
-                        cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '16px',
-                  background: '#6B7280',
-                  color: 'white',
-                        transition: 'all 0.2s ease'
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '10px',
+                        outline: 'none',
                       }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#4B5563';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
+                    />
+              </div>
+              <div>
+                    <label
+                      style={{
+                  display: 'block', 
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#86868b',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={blockForm.endTime}
+                      onChange={(e) => setBlockForm({ ...blockForm, endTime: e.target.value })}
+                  style={{
+                    width: '100%',
+                        padding: '12px 16px',
+                    fontSize: '15px',
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '10px',
+                        outline: 'none',
+                      }}
+                    />
+                    </div>
+                  </div>
+
+                {/* Description */}
+              <div>
+                  <label
+                    style={{
+                  display: 'block', 
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#86868b',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Description (optional)
+                  </label>
+                  <textarea
+                    value={blockForm.description}
+                    onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })}
+                    placeholder="Add notes or details..."
+                    rows={3}
+                  style={{
+                    width: '100%',
+                      padding: '12px 16px',
+                    fontSize: '15px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      resize: 'none',
+                  }}
+                />
+              </div>
+
+                {/* Meeting Link (if meeting type) */}
+                {blockForm.type === 'meeting' && (
+              <div>
+                    <label
+                      style={{
+                  display: 'block', 
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#86868b',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Meeting Link
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <LinkIcon
+                        style={{
+                          position: 'absolute',
+                          left: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: '18px',
+                          height: '18px',
+                          color: '#86868b',
+                        }}
+                      />
+                <input
+                        type="url"
+                        value={blockForm.meetingLink}
+                        onChange={(e) => setBlockForm({ ...blockForm, meetingLink: e.target.value })}
+                        placeholder="https://zoom.us/j/..."
+                  style={{
+                    width: '100%',
+                          padding: '12px 16px 12px 42px',
+                    fontSize: '15px',
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          borderRadius: '10px',
+                          outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+                )}
+                
+                {/* Notification */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#86868b',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Reminder
+                  </label>
+                  <select
+                    value={blockForm.notificationTime}
+                    onChange={(e) => setBlockForm({ ...blockForm, notificationTime: Number(e.target.value) })}
+                          style={{ 
+                      width: '100%',
+                      padding: '12px 16px',
+                      fontSize: '15px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      background: '#fff',
+                            cursor: 'pointer',
+                    }}
+                  >
+                    <option value={0}>No reminder</option>
+                    <option value={5}>5 minutes before</option>
+                    <option value={10}>10 minutes before</option>
+                    <option value={15}>15 minutes before</option>
+                    <option value={30}>30 minutes before</option>
+                    <option value={60}>1 hour before</option>
+                  </select>
+              </div>
+            </div>
+            
+              <div
+                style={{
+                  padding: '16px 24px 24px',
+                  display: 'flex',
+                  gap: '12px',
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#6B7280';
-                  e.currentTarget.style.transform = 'translateY(0)';
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowAddModal(false)}
+                      style={{
+                    flex: 1,
+                    padding: '14px',
+                    fontSize: '15px',
+                    fontWeight: '500',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                  borderRadius: '12px',
+                    background: '#fff',
+                        cursor: 'pointer',
+                    color: '#1d1d1f',
                       }}
                     >
                       Cancel
-                    </button>
-                    <button
-                onClick={isEditingTask ? handleUpdateTask : handleCreateTask}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAddBlock}
                       style={{
-                  padding: '16px 32px',
-                  borderRadius: '12px',
+                    flex: 1,
+                    padding: '14px',
+                    fontSize: '15px',
+                    fontWeight: '500',
                         border: 'none',
+                    borderRadius: '12px',
+                    background: '#0071e3',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '16px',
-                  background: '#3B82F6',
-                  color: 'white',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#2563EB';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#3B82F6';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                {isEditingTask ? 'Update Task' : 'Create Task'}
-              </button>
+                    color: '#fff',
+                  }}
+                >
+                  Create Block
+                </motion.button>
             </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-// Calendar View Interfaces
-interface CalendarViewProps {
-  currentDate: Date;
-  tasks: PersonalTask[];
-  timeBlocks: PersonalTimeBlock[];
-  onTaskClick: (task: PersonalTask) => void;
-  getPriorityColor: (priority: string) => string;
-  isMobile: boolean;
-}
-
-interface WeekCalendarProps extends CalendarViewProps {
-  selectedHours: {day: Date, hour: number}[];
-  setSelectedHours: (hours: {day: Date, hour: number}[]) => void;
-  isSelecting: boolean;
-  setIsSelecting: (selecting: boolean) => void;
-  dragStartHour: {day: Date, hour: number} | null;
-  setDragStartHour: (hour: {day: Date, hour: number} | null) => void;
-  user: any;
-}
-
-interface DayCalendarProps extends CalendarViewProps {
-  onCreateTimeBlock: (startTime: Date, endTime: Date) => void;
-  user: any;
-  handleUpdateTaskStatus: (taskId: string, status: PersonalTask['status']) => void;
-  handleDeleteTask: (taskId: string) => void;
-  openEditTask: (task: PersonalTask) => void;
-  setTimeBlocks: React.Dispatch<React.SetStateAction<PersonalTimeBlock[]>>;
-  setTasks: React.Dispatch<React.SetStateAction<PersonalTask[]>>;
-  setAllTasks: React.Dispatch<React.SetStateAction<PersonalTask[]>>;
-}
-
-const WeekCalendarView: React.FC<WeekCalendarProps> = ({ 
-  currentDate, tasks, timeBlocks, selectedHours, setSelectedHours, isSelecting, setIsSelecting,
-  dragStartHour, setDragStartHour, onTaskClick, getPriorityColor, isMobile, user
-}) => {
-  // State for showing task details
-  const [clickedTaskId, setClickedTaskId] = useState<string | null>(null);
-  const weekStart = new Date(currentDate);
-  weekStart.setDate(currentDate.getDate() - currentDate.getDay());
-  
-  const weekDays: Date[] = [];
-  for (let i = 0; i < 7; i++) {
-    const day = new Date(weekStart);
-    day.setDate(weekStart.getDate() + i);
-    weekDays.push(day);
-  }
-  
-  const getDayTasks = (day: Date) => {
-    return tasks.filter(task => {
-      if (!task.due_date) return false;
-      const taskDate = new Date(task.due_date);
-      return taskDate.toDateString() === day.toDateString();
-    });
-  };
-  
-  const getDayTimeBlocks = (day: Date) => {
-    return timeBlocks.filter(block => {
-      const blockDate = new Date(block.start_datetime);
-      return blockDate.toDateString() === day.toDateString();
-    });
-  };
-  
-  
-  return (
-    <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-      {/* Debug Panel */}
-      <div style={{ marginBottom: '20px', padding: '16px', background: '#EFF6FF', borderRadius: '12px' }}>
-        <p style={{ margin: 0, fontSize: '14px', color: '#3B82F6', fontWeight: '700' }}>
-          Week View Debug: {tasks.length} tasks loaded
-        </p>
-        <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#64748B' }}>
-          Week tasks: {weekDays.map((day, i) => {
-            const dayTasks = getDayTasks(day);
-            return `${day.toLocaleDateString('en-US', { weekday: 'short' })}: ${dayTasks.length}`;
-          }).join(' | ')}
-        </p>
-        {tasks.length > 0 && (
-          <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#64748B' }}>
-            Sample: {tasks.slice(0, 3).map(t => `"${t.title}"`).join(', ')}
-          </p>
+            </motion.div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
-      {/* Week Header */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(7, 1fr)', 
-        gap: '2px', 
-        marginBottom: '12px',
-        background: '#F1F5F9',
-        borderRadius: '12px',
-        padding: '12px'
-      }}>
-        {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((dayName, index) => {
-          const day = weekDays[index];
-          const isToday = day.toDateString() === new Date().toDateString();
-          const dayTasks = getDayTasks(day);
-          
-          return (
-            <div key={dayName} style={{ 
-              textAlign: 'center', 
-              fontWeight: '700', 
-              color: isToday ? '#3B82F6' : '#64748B', 
-              fontSize: isMobile ? '11px' : '14px',
-              padding: '8px'
-            }}>
-              <div>{dayName}</div>
-              <div style={{ 
-                fontSize: isMobile ? '16px' : '20px', 
-                fontWeight: '800',
-                color: isToday ? '#3B82F6' : '#1F2937',
-                marginTop: '4px'
-              }}>
-                {day.getDate()}
-              </div>
-              <div style={{ 
-                fontSize: '10px', 
-                color: '#64748B',
-                marginTop: '4px',
-                fontWeight: '500'
-              }}>
-                {dayTasks.length} task{dayTasks.length !== 1 ? 's' : ''}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {/* Week Calendar Grid - Proper Calendar Layout */}
-      <div 
-        className="week-calendar-grid"
+      {/* Side Panel for Block Details */}
+      <AnimatePresence>
+        {showPanel && selectedBlock && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPanel(false)}
         style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(7, 1fr)', 
-          gap: isMobile ? '2px' : '4px',
-          background: '#E2E8F0',
-          borderRadius: '12px',
-          padding: '4px',
-          minHeight: isMobile ? '300px' : '400px'
-        }}>
-        {weekDays.map((day, index) => {
-          const dayTasks = getDayTasks(day);
-          const dayTimeBlocks = getDayTimeBlocks(day);
-          const isToday = day.toDateString() === new Date().toDateString();
-          
-          return (
-            <div
-              key={index}
-              className={`week-day-cell ${isMobile ? 'mobile-task-item' : ''}`}
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.2)',
+                zIndex: 200,
+              }}
+            />
+            <motion.div
+              {...slideIn}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               style={{
-                background: 'white',
-                minHeight: isMobile ? '120px' : '150px',
-                padding: isMobile ? '8px' : '12px',
-                border: isToday ? '2px solid #3B82F6' : '1px solid #E5E7EB',
-                position: 'relative',
-                cursor: 'pointer',
-                        borderRadius: '8px',
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: '420px',
+                maxWidth: '100%',
+                background: '#fff',
+                boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.1)',
+                zIndex: 300,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: isMobile ? '4px' : '6px'
               }}
             >
-              <div style={{ 
-                textAlign: 'center',
-                marginBottom: '8px'
-              }}>
-                <div style={{
-                  fontSize: isMobile ? '10px' : '12px',
-                  color: '#64748B',
-                        fontWeight: '500',
-                  marginBottom: '2px'
-                }}>
-                  {day.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
-                </div>
-                <div style={{
-                  fontSize: isMobile ? '18px' : '20px',
-                  fontWeight: '800',
-                  color: isToday ? '#3B82F6' : '#1F2937'
-                }}>
-                  {day.getDate()}
-                </div>
-              </div>
-              
-              {/* Tasks for this day */}
-              {dayTasks.map(task => (
-                <div
-                  key={task.id}
-                  className={`${isMobile ? 'mobile-task-item' : ''}`}
+              {/* Panel Header */}
+              <div
                   style={{
-                    background: '#F8FAFC',
-                    color: '#374151',
-                    padding: isMobile ? '8px 10px' : '8px 10px',
-                    borderRadius: '6px',
-                    fontSize: isMobile ? '11px' : '12px',
-                    fontWeight: '500',
-                    textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                    border: '1px solid #E5E7EB',
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                    minHeight: isMobile ? '36px' : 'auto'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#F1F5F9';
-                    e.currentTarget.style.borderColor = '#CBD5E1';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#F8FAFC';
-                    e.currentTarget.style.borderColor = '#E5E7EB';
-                  }}
-                >
-                  <div 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (clickedTaskId === task.id) {
-                        setClickedTaskId(null); // Hide details if already shown
-                      } else {
-                        setClickedTaskId(task.id); // Show details
-                      }
-                    }}
-                    style={{ 
-                      fontWeight: '600', 
-                      marginBottom: clickedTaskId === task.id ? '4px' : '0',
-                        cursor: 'pointer',
-                      paddingRight: '20px' // Space for delete button
-                    }}
-                  >
-                    {task.title}
-                  </div>
-                  
-                  {/* Delete button */}
-                  <button
-                    className={`${isMobile ? 'mobile-delete-btn' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`Delete task "${task.title}"?`)) {
-                        // Call the delete function from parent component
-                        const taskIdStr = String(task.id);
-                        if (taskIdStr.startsWith('project_')) {
-                          // Handle project tasks differently if needed
-                          alert('Project tasks cannot be deleted from here');
-                        } else {
-                          // Delete personal task
-                          const handleDelete = async () => {
-                            try {
-                              const { error } = await supabase
-                                .from('personal_tasks')
-                                .delete()
-                                .eq('id', task.id);
-                              
-                              if (error) throw error;
-                              
-                              // Refresh the page or update state
-                              window.location.reload();
-                            } catch (error) {
-                              console.error('Error deleting task:', error);
-                              alert('Failed to delete task');
-                            }
-                          };
-                          handleDelete();
-                        }
-                      }
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: isMobile ? '2px' : '4px',
-                      right: isMobile ? '2px' : '4px',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#DC2626',
-                      cursor: 'pointer',
-                      fontSize: isMobile ? '14px' : '12px',
-                      padding: isMobile ? '4px' : '2px',
-                      borderRadius: '2px',
-                      opacity: 0.7,
-                      minWidth: isMobile ? '24px' : 'auto',
-                      minHeight: isMobile ? '24px' : 'auto'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '1';
-                      e.currentTarget.style.background = '#FEE2E2';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '0.7';
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    ×
-                  </button>
-                  
-                  {clickedTaskId === task.id && task.due_date && (
-                    <div style={{ 
-                      fontSize: isMobile ? '9px' : '10px', 
-                      color: '#6B7280',
-                      fontWeight: '400'
-                    }}>
-                      {new Date(task.due_date).toLocaleString('en-US', { 
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true 
-                      })}
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {/* Time Blocks for this day */}
-              {dayTimeBlocks.map(block => (
-                <div
-                  key={block.id}
-                  style={{
-                    background: '#FEF3C7',
-                    color: '#92400E',
-                    padding: isMobile ? '6px 8px' : '8px 10px',
-                    borderRadius: '6px',
-                    fontSize: isMobile ? '10px' : '12px',
-                    fontWeight: '500',
-                    border: '1px solid #FCD34D',
-                        transition: 'all 0.2s ease',
-                    position: 'relative'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#FDE68A';
-                    e.currentTarget.style.borderColor = '#F59E0B';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#FEF3C7';
-                    e.currentTarget.style.borderColor = '#FCD34D';
-                  }}
-                >
-                  <div 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (clickedTaskId === `timeblock_${block.id}`) {
-                        setClickedTaskId(null); // Hide details if already shown
-                      } else {
-                        setClickedTaskId(`timeblock_${block.id}`); // Show details
-                      }
-                    }}
-                    style={{ 
-                      fontWeight: '600', 
-                      marginBottom: clickedTaskId === `timeblock_${block.id}` ? '4px' : '0',
-                      cursor: 'pointer',
-                      paddingRight: '20px' // Space for delete button
-                    }}
-                  >
-                    {block.title}
-                  </div>
-                  
-                  {/* Delete button for time block */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`Delete time block "${block.title}"?`)) {
-                        const handleDelete = async () => {
-                          try {
-                            const { error } = await supabase
-                              .from('personal_time_blocks')
-                              .delete()
-                              .eq('id', block.id);
-                            
-                            if (error) throw error;
-                            
-                            // Refresh the page
-                            window.location.reload();
-                          } catch (error) {
-                            console.error('Error deleting time block:', error);
-                            alert('Failed to delete time block');
-                          }
-                        };
-                        handleDelete();
-                      }
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: '4px',
-                      right: '4px',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#DC2626',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      padding: '2px',
-                      borderRadius: '2px',
-                      opacity: 0.7
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '1';
-                      e.currentTarget.style.background = '#FEE2E2';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '0.7';
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    ×
-                    </button>
-                  
-                  {clickedTaskId === `timeblock_${block.id}` && (
-                    <div style={{ 
-                      fontSize: isMobile ? '9px' : '10px', 
-                      color: '#92400E',
-                      fontWeight: '400',
-                      marginTop: '4px'
-                    }}>
-                      <div style={{ marginBottom: '2px' }}>
-                        {new Date(block.start_datetime).toLocaleString('en-US', { 
-                          month: 'short',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true 
-                        })} - {new Date(block.end_datetime).toLocaleString('en-US', { 
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true 
-                        })}
-                  </div>
-                      {block.description && (
-                        <div style={{ fontSize: isMobile ? '8px' : '9px', color: '#78716C' }}>
-                          {block.description}
-              </div>
-                      )}
-            </div>
-          )}
-        </div>
-              ))}
-      </div>
-          );
-        })}
-      </div>
-      
-      {selectedHours.length > 0 && (
-        <div style={{ 
-          marginTop: '20px', 
-          padding: '16px', 
-          background: '#EFF6FF', 
-          borderRadius: '12px',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: '0 0 12px 0', fontWeight: '600', color: '#3B82F6' }}>
-            {selectedHours.length} hour{selectedHours.length > 1 ? 's' : ''} selected
-          </p>
-          <p style={{ margin: 0, fontSize: '12px', color: '#64748B' }}>
-            Click "Create Task" above to create a task for the selected time slots
-          </p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Month Calendar View
-const MonthCalendarView: React.FC<CalendarViewProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, getPriorityColor, isMobile 
-}) => {
-  const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const startDate = new Date(monthStart);
-  startDate.setDate(startDate.getDate() - startDate.getDay());
-  
-  const days: Date[] = [];
-  const currentDay = new Date(startDate);
-  
-  for (let i = 0; i < 42; i++) {
-    days.push(new Date(currentDay));
-    currentDay.setDate(currentDay.getDate() + 1);
-  }
-  
-  const getDayTasks = (day: Date) => {
-    return tasks.filter(task => {
-      if (!task.due_date) return false;
-      const taskDate = new Date(task.due_date);
-      return taskDate.toDateString() === day.toDateString();
-    });
-  };
-  
-  return (
-    <div style={{ background: 'white', borderRadius: '16px', padding: isMobile ? '16px' : '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-      {/* Calendar Header */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(7, 1fr)', 
-        gap: '1px', 
-        marginBottom: '12px',
-        background: '#F1F5F9',
-        borderRadius: '12px',
-        padding: '12px'
-      }}>
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} style={{ 
-            textAlign: 'center', 
-            fontWeight: '700', 
-            color: '#64748B', 
-            fontSize: isMobile ? '11px' : '13px',
-            padding: '8px'
-          }}>
-            {day}
-          </div>
-        ))}
-      </div>
-      
-      {/* Calendar Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(7, 1fr)', 
-        gap: '2px',
-        background: '#E2E8F0',
-        borderRadius: '12px',
-        padding: '2px'
-      }}>
-        {days.map((day, index) => {
-          const dayTasks = getDayTasks(day);
-          const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-          const isToday = day.toDateString() === new Date().toDateString();
-          
-          return (
-            <div
-              key={index}
-              style={{
-                background: 'white',
-                minHeight: isMobile ? '80px' : '120px',
-                padding: isMobile ? '6px' : '8px',
-                opacity: isCurrentMonth ? 1 : 0.5,
-                border: isToday ? '2px solid #3B82F6' : 'none',
-                position: 'relative',
-                cursor: 'pointer',
-                borderRadius: '8px'
-              }}
-              onClick={() => {
-                const taskDate = new Date(day);
-                taskDate.setHours(9, 0, 0, 0);
-                // You can add create task functionality here
-              }}
-            >
-              <div style={{ 
-                fontWeight: isToday ? '700' : '500',
-                color: isToday ? '#3B82F6' : '#1F2937',
-                marginBottom: '4px',
-                fontSize: isMobile ? '12px' : '14px'
-              }}>
-                {day.getDate()}
-              </div>
-              
-              {/* Tasks */}
-              {dayTasks.slice(0, isMobile ? 1 : 2).map(task => (
-                <div
-                  key={task.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTaskClick(task);
-                  }}
-                  style={{
-                    background: getPriorityColor(task.priority) + '20',
-                    color: getPriorityColor(task.priority),
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    fontSize: isMobile ? '8px' : '10px',
-                    marginBottom: '2px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                  }}
-                >
-                  {task.title.length > (isMobile ? 10 : 15) ? task.title.substring(0, isMobile ? 10 : 15) + '...' : task.title}
-                </div>
-              ))}
-              
-              {/* More indicator */}
-              {dayTasks.length > (isMobile ? 1 : 2) && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: '4px',
-                  right: '4px',
-                  background: '#6B7280',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '16px',
-                  height: '16px',
+                  padding: '20px 24px',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
                   display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '8px',
-                  fontWeight: '600'
-                }}>
-                  +{dayTasks.length - (isMobile ? 1 : 2)}
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      background: blockTypeColors[selectedBlock.type].bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {selectedBlock.type === 'focus' && <SparklesIcon style={{ width: '18px', height: '18px', color: blockTypeColors.focus.text }} />}
+                    {selectedBlock.type === 'meeting' && <VideoCameraIcon style={{ width: '18px', height: '18px', color: blockTypeColors.meeting.text }} />}
+                    {selectedBlock.type === 'personal' && <UserIcon style={{ width: '18px', height: '18px', color: blockTypeColors.personal.text }} />}
+                  </div>
+                  <span
+                    style={{ 
+                      fontSize: '12px',
+                      fontWeight: '600', 
+                      color: blockTypeColors[selectedBlock.type].text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    {selectedBlock.type}
+                  </span>
+                  </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => deleteBlock(selectedBlock.id)}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      cursor: 'pointer',
+                      color: '#ef4444',
+                    }}
+                  >
+                    <TrashIcon style={{ width: '18px', height: '18px' }} />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowPanel(false)}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'rgba(0, 0, 0, 0.04)',
+                      cursor: 'pointer',
+                      color: '#86868b',
+                    }}
+                  >
+                    <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                  </motion.button>
+                    </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// Day Calendar View - Previous Design with Enhanced Functionality
-const DayCalendarView: React.FC<DayCalendarProps> = ({ 
-  currentDate, tasks, timeBlocks, onTaskClick, onCreateTimeBlock, getPriorityColor, isMobile, user,
-  handleUpdateTaskStatus, handleDeleteTask, openEditTask, setTimeBlocks, setTasks, setAllTasks
-}) => {
-  // Local drag state for this component
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStartTime, setDragStartTime] = useState<Date | null>(null);
-  const [dragEndTime, setDragEndTime] = useState<Date | null>(null);
-  const [dragPreview, setDragPreview] = useState<{ start: Date; end: Date } | null>(null);
-  const [draggedTask, setDraggedTask] = useState<PersonalTask | null>(null);
-  
-  // Get unscheduled tasks for sidebar (tasks not yet scheduled in time blocks)
-  const unscheduledDayTasks = tasks.filter(task => {
-    // Hide tasks with scheduled_start
-    if (task.scheduled_start) return false;
-    
-    // Hide tasks with due_date that has a specific time (those are considered scheduled)
-    if (task.due_date) {
-      const dueDate = new Date(task.due_date);
-      const hasSpecificTime = dueDate.getHours() !== 0 || dueDate.getMinutes() !== 0;
-      
-      // If it has a specific time and is today, it's scheduled - hide it
-      if (hasSpecificTime && dueDate.toDateString() === currentDate.toDateString()) {
-        return false;
-      }
-      
-      // If it's due today with no specific time (midnight), show it as unscheduled
-      if (dueDate.toDateString() === currentDate.toDateString() && !hasSpecificTime) {
-        return true;
-      }
-    }
-    
-    // Show tasks with no due date (always available)
-    if (!task.due_date) return true;
-    
-    return false;
-  });
-  
-  // Get scheduled tasks for today (tasks with scheduled_start OR due_date with specific time)
-  const scheduledDayTasks = tasks.filter(task => {
-    // Check scheduled_start first
-    if (task.scheduled_start) {
-      const taskDate = new Date(task.scheduled_start);
-      return taskDate.toDateString() === currentDate.toDateString();
-    }
-    
-    // Also check due_date if it has a specific time set (not just midnight)
-    if (task.due_date) {
-      const dueDate = new Date(task.due_date);
-      const isSameDay = dueDate.toDateString() === currentDate.toDateString();
-      // Check if the time is not midnight (meaning a specific time was set)
-      const hasSpecificTime = dueDate.getHours() !== 0 || dueDate.getMinutes() !== 0;
-      return isSameDay && hasSpecificTime;
-    }
-    
-    return false;
-  });
-  
-  // Combine unscheduled and scheduled tasks for sidebar
-  const dayTasks = [...unscheduledDayTasks, ...scheduledDayTasks];
-  
-  const dayTimeBlocks = timeBlocks.filter(block => {
-    const blockDate = new Date(block.start_datetime);
-    return blockDate.toDateString() === currentDate.toDateString();
-  });
-  
-  // Generate 1-hour slots
-  const timeSlots: { hour: number; minute: number }[] = [];
-  for (let hour = 0; hour < 24; hour++) {
-    timeSlots.push({ hour, minute: 0 });
-  }
-  
-  const getBlocksForSlot = (hour: number, minute: number) => {
-    return dayTimeBlocks.filter(block => {
-      const blockStart = new Date(block.start_datetime);
-      const blockEnd = new Date(block.end_datetime);
-      // Show block if it starts or overlaps with this hour
-      return blockStart.getHours() <= hour && blockEnd.getHours() > hour;
-    });
-  };
-  
-  // Get scheduled tasks for a specific time slot (check both scheduled_start and due_date)
-  const getScheduledTasksForSlot = (hour: number, minute: number) => {
-    return scheduledDayTasks.filter(task => {
-      // Try scheduled_start first
-      if (task.scheduled_start) {
-        const taskStart = new Date(task.scheduled_start);
-        let taskEnd;
-        if (task.scheduled_end) {
-          taskEnd = new Date(task.scheduled_end);
-        } else if (task.estimated_duration) {
-          // Use task's estimated duration
-          taskEnd = new Date(taskStart.getTime() + task.estimated_duration * 60 * 1000);
-        } else {
-          // Default to 60 minutes if no duration specified
-          taskEnd = new Date(taskStart.getTime() + 60 * 60 * 1000);
-        }
-        // Show task if it starts or overlaps with this hour
-        return taskStart.getHours() <= hour && taskEnd.getHours() > hour;
-      }
-      
-      // Fall back to due_date if no scheduled_start
-      if (task.due_date) {
-        const dueDate = new Date(task.due_date);
-        return dueDate.getHours() === hour;
-      }
-      
-      return false;
-    });
-  };
-  
-  const handleSlotClick = (hour: number, minute: number) => {
-    const startTime = new Date(currentDate);
-    startTime.setHours(hour, minute, 0, 0);
-    const endTime = new Date(startTime);
-    endTime.setHours(endTime.getHours() + 1); // 1 hour blocks
-    
-    onCreateTimeBlock(startTime, endTime);
-  };
-  
-  const handleMouseDown = (hour: number, minute: number) => {
-    const startTime = new Date(currentDate);
-    startTime.setHours(hour, minute, 0, 0);
-    setDragStartTime(startTime);
-    setIsDragging(true);
-  };
-  
-  const handleMouseMove = (hour: number, minute: number) => {
-    if (isDragging && dragStartTime) {
-      const currentTime = new Date(currentDate);
-      currentTime.setHours(hour, minute, 0, 0);
-      setDragEndTime(currentTime);
-      
-      const start = dragStartTime < currentTime ? dragStartTime : currentTime;
-      const end = dragStartTime < currentTime ? currentTime : dragStartTime;
-      end.setHours(end.getHours() + 1); // 1 hour blocks
-      
-      setDragPreview({ start, end });
-    }
-  };
-  
-  const handleMouseUp = () => {
-    if (isDragging && dragStartTime && dragEndTime) {
-      const start = dragStartTime < dragEndTime ? dragStartTime : dragEndTime;
-      const end = dragStartTime < dragEndTime ? dragEndTime : dragStartTime;
-      end.setHours(end.getHours() + 1); // 1 hour blocks
-      
-      onCreateTimeBlock(start, end);
-    }
-    
-    setIsDragging(false);
-    setDragStartTime(null);
-    setDragEndTime(null);
-    setDragPreview(null);
-  };
-  
-  const isTimeInDragRange = (hour: number, minute: number, dragRange: { start: Date; end: Date }) => {
-    const slotTime = new Date(currentDate);
-    slotTime.setHours(hour, minute, 0, 0);
-    
-    return slotTime >= dragRange.start && slotTime <= dragRange.end;
-  };
-  
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '24px' }}>
-      {/* Time Slots - Previous Design */}
-      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
-          {currentDate.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </h3>
-        
-        <div style={{ maxHeight: '700px', overflowY: 'auto' }}>
-          {timeSlots.map(({ hour, minute }) => {
-            const blocks = getBlocksForSlot(hour, minute);
-            const scheduledTasks = getScheduledTasksForSlot(hour, minute);
-            const hasContent = blocks.length > 0 || scheduledTasks.length > 0;
-            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const displayTime = hour === 0 ? '12:00 AM' : 
-                               hour < 12 ? `${hour}:${minute.toString().padStart(2, '0')} AM` :
-                               hour === 12 ? `12:${minute.toString().padStart(2, '0')} PM` :
-                               `${hour - 12}:${minute.toString().padStart(2, '0')} PM`;
-            
-            return (
-              <div key={timeString} style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '80px 1fr', 
-                gap: '12px',
-                minHeight: '60px',
-                borderBottom: '2px solid #E2E8F0',
-                padding: '8px 0'
-              }}>
-                <div style={{ 
-                  fontSize: '12px', 
-                  color: '#64748B',
-                  fontWeight: '500',
-                  textAlign: 'right',
-                  paddingTop: '4px'
-                }}>
-                  {displayTime}
-                </div>
+              
+              {/* Panel Content */}
+              <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+                {/* Title */}
+                <input
+                  type="text"
+                  value={blockForm.title}
+                  onChange={(e) => {
+                    setBlockForm({ ...blockForm, title: e.target.value });
+                  }}
+                  onBlur={handleUpdateBlock}
+                  style={{
+                    width: '100%',
+                    fontSize: '22px',
+                    fontWeight: '600',
+                    color: '#1d1d1f',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    marginBottom: '16px',
+                  }}
+                />
                 
-                <div 
-                  style={{ 
-                    minHeight: '52px',
-                    background: hasContent ? 'transparent' : 
-                               (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '#3B82F6' : '#FAFBFC',
-                    borderRadius: '8px',
-                    padding: '8px',
-                    cursor: hasContent ? 'default' : (isDragging ? 'grabbing' : 'grab'),
-                    border: '2px solid #E5E7EB',
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                    userSelect: 'none'
-                  }}
-                  onClick={() => !hasContent && !isDragging && handleSlotClick(hour, minute)}
-                  onMouseDown={() => !hasContent && handleMouseDown(hour, minute)}
-                  onMouseMove={() => handleMouseMove(hour, minute)}
-                  onMouseUp={handleMouseUp}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (draggedTask && !hasContent) {
-                      e.currentTarget.style.background = '#EFF6FF';
-                      e.currentTarget.style.border = '2px dashed #3B82F6';
-                      e.currentTarget.innerHTML = `<div style="color: #3B82F6; font-weight: 600; text-align: center; padding: 8px; font-size: 12px;">DROP HERE<br/>${draggedTask.title}</div>`;
-                    }
-                  }}
-                  onDragLeave={(e) => {
-                    if (draggedTask) {
-                      e.currentTarget.style.background = '#FAFBFC';
-                      e.currentTarget.style.border = '2px dashed transparent';
-                      e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Drop zone</div>';
-                    }
-                  }}
-                  onDrop={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('DROP EVENT FIRED!', { draggedTask, hour, minute, hasContent });
-                    
-                    if (draggedTask && !hasContent) {
-                      console.log('Valid drop - processing...', {
-                        taskId: draggedTask.id,
-                        taskTitle: draggedTask.title,
-                        dropTime: `${hour}:${minute}`,
-                        currentDate: currentDate.toDateString()
-                      });
-                      // Create time block directly here
-                      const startTime = new Date(currentDate);
-                      startTime.setHours(hour, minute, 0, 0);
-                      const endTime = new Date(startTime);
-                      // Use task's estimated_duration if available, otherwise default to 60 minutes
-                      const taskDuration = draggedTask.estimated_duration || 60;
-                      endTime.setMinutes(endTime.getMinutes() + taskDuration);
-                      
-                      const timeBlockData = {
-                        title: draggedTask.title,
-                        description: draggedTask.description || '',
-                        start_datetime: startTime.toISOString(),
-                        end_datetime: endTime.toISOString(),
-                        block_type: 'task',
-                        color: getPriorityColor(draggedTask.priority),
-                        notes: `Scheduled from task: ${draggedTask.title}`,
-                        user_id: user?.id || 60
-                      };
-
-                      try {
-                        // Try personal_time_blocks first, fallback to projects_meeting
-                        let result;
-                        try {
-                          result = await supabase
-                            .from('personal_time_blocks')
-                            .insert([timeBlockData])
-                            .select()
-                            .single();
-                        } catch (err) {
-                          // Fallback to projects_meeting
-                          const fallbackData = {
-                            name: timeBlockData.title,
-                            description: timeBlockData.description,
-                            meeting_date: timeBlockData.start_datetime,
-                            start_time: timeBlockData.start_datetime,
-                            end_time: timeBlockData.end_datetime,
-                            user_id: parseInt(user?.id?.toString() || '0'),
-                            type: 'time_block'
-                          };
-                          result = await supabase
-                            .from('projects_meeting')
-                            .insert([fallbackData])
-                            .select()
-                            .single();
-                        }
-
-                        if (result.error) {
-                          console.error('Supabase error:', result.error);
-                          alert('Error creating time block: ' + result.error.message);
-                        } else {
-                          console.log('Time block created successfully!', result.data);
-                          
-                          // Update time blocks state
-                          const newTimeBlock: PersonalTimeBlock = {
-                            id: result.data.id.toString(),
-                            user_id: user?.id?.toString() || '60',
-                            title: draggedTask.title,
-                            description: draggedTask.description || '',
-                            start_datetime: startTime.toISOString(),
-                            end_datetime: endTime.toISOString(),
-                            color: getPriorityColor(draggedTask.priority),
-                            block_type: 'task',
-                            notes: `Scheduled from task: ${draggedTask.title}`,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                          };
-                          setTimeBlocks(prev => [...prev, newTimeBlock]);
-                          
-                          // Update the original task with scheduled time (so it disappears from sidebar)
-                          const updatedTask = {
-                            ...draggedTask,
-                            due_date: startTime.toISOString(),
-                            scheduled_start: startTime.toISOString(),
-                            scheduled_end: endTime.toISOString()
-                          };
-                          
-                          // Update task in database with scheduled time
-                          console.log('Updating task with scheduled time:', draggedTask.id);
-                          try {
-                            const { error: updateError } = await supabase
-                              .from('personal_tasks')
-                              .update({
-                                scheduled_start: startTime.toISOString(),
-                                scheduled_end: endTime.toISOString(),
-                                due_date: startTime.toISOString()
-                              })
-                              .eq('id', draggedTask.id);
-                            
-                            if (updateError) {
-                              console.error('Error updating task schedule:', updateError);
-                            } else {
-                              console.log('Task schedule updated successfully in database');
-                            }
-                          } catch (updateErr) {
-                            console.error('Failed to update task schedule:', updateErr);
-                          }
-                          
-                          // Update tasks state to remove from unscheduled list
-                          console.log('Updating task states - before:', {
-                            taskId: draggedTask.id,
-                            taskTitle: draggedTask.title,
-                            hasScheduledStart: !!draggedTask.scheduled_start
-                          });
-                          
-                          setTasks(prev => {
-                            const updated = prev.map(task => 
-                              task.id === draggedTask.id ? updatedTask : task
-                            );
-                            console.log('Tasks updated:', updated.length);
-                            return updated;
-                          });
-                          setAllTasks(prev => {
-                            const updated = prev.map(task => 
-                              task.id === draggedTask.id ? updatedTask : task
-                            );
-                            console.log('AllTasks updated:', updated.length);
-                            return updated;
-                          });
-                          
-                          console.log('Task scheduled successfully:', {
-                            taskId: updatedTask.id,
-                            scheduledStart: updatedTask.scheduled_start,
-                            timeBlockId: newTimeBlock.id
-                          });
-                          
-                          setDraggedTask(null); // Clear the dragged task
-                          // Remove alert for now to see console logs clearly
-                          console.log(`SUCCESS: Task "${draggedTask.title}" scheduled for ${startTime.toLocaleTimeString()}`);
-                        }
-                      } catch (error) {
-                        console.error('Error:', error);
-                      }
-                    }
-                    
-                    // Reset visual state
-                    e.currentTarget.style.background = '#FAFBFC';
-                    e.currentTarget.style.border = '1px dashed transparent';
-                    e.currentTarget.innerHTML = '<div style="color: #9CA3AF; font-size: 11px; text-align: center; padding-top: 6px;">Click to select time</div>';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!hasContent && !isDragging) {
-                      e.currentTarget.style.border = '1px dashed #3B82F6';
-                      e.currentTarget.style.background = '#EFF6FF';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!hasContent && !isDragging) {
-                      e.currentTarget.style.border = '1px dashed transparent';
-                      e.currentTarget.style.background = '#FAFBFC';
-                    }
+                {/* Time */}
+                <div
+                    style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '24px',
+                    color: '#86868b',
+                    fontSize: '14px',
                   }}
                 >
-                  {!hasContent ? (
-                    <div style={{ 
-                      color: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 'white' : '#9CA3AF', 
-                      fontSize: '11px',
-                      textAlign: 'center',
-                      paddingTop: '6px',
-                      fontWeight: (dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? '600' : '400'
-                    }}>
-                      {(dragPreview && isTimeInDragRange(hour, minute, dragPreview)) ? 
-                        'Creating block...' : 
-                        'Click to select time'
-                      }
-                    </div>
-                  ) : (
-                    <>
-                      {blocks.map(block => (
-                        <div
-                          key={block.id}
+                  <ClockIcon style={{ width: '18px', height: '18px' }} />
+                  <span>
+                    {formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}
+                  </span>
+                  <span>•</span>
+                  <span>{new Date(selectedBlock.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                  </div>
+                  
+                {/* Meeting Link */}
+                {selectedBlock.type === 'meeting' && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#86868b',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      <LinkIcon style={{ width: '14px', height: '14px' }} />
+                      Meeting Link
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="url"
+                        value={blockForm.meetingLink || ''}
+                        onChange={(e) => setBlockForm({ ...blockForm, meetingLink: e.target.value })}
+                        onBlur={handleUpdateBlock}
+                        placeholder="Add meeting link..."
+                    style={{
+                          flex: 1,
+                          padding: '10px 14px',
+                          fontSize: '14px',
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          borderRadius: '8px',
+                          outline: 'none',
+                        }}
+                      />
+                      {selectedBlock.meetingLink && (
+                        <motion.a
+                          href={selectedBlock.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           style={{
-                            background: block.color,
-                            color: 'white',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            marginBottom: '4px',
+                            padding: '10px 16px',
+                            fontSize: '14px',
                             fontWeight: '500',
-                            fontSize: '13px'
+                      border: 'none',
+                            borderRadius: '8px',
+                            background: '#0071e3',
+                            color: '#fff',
+                            textDecoration: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
                           }}
                         >
-                          <div>{block.title}</div>
-                          <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                            {new Date(block.start_datetime).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })} - {new Date(block.end_datetime).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                      {scheduledTasks.map(task => {
-                        // Determine start and end times from scheduled_start or due_date
-                        const startTime = task.scheduled_start ? new Date(task.scheduled_start) : (task.due_date ? new Date(task.due_date) : null);
-                        let endTime;
-                        if (task.scheduled_end) {
-                          endTime = new Date(task.scheduled_end);
-                        } else if (startTime && task.estimated_duration) {
-                          // Use task's estimated duration
-                          endTime = new Date(startTime.getTime() + task.estimated_duration * 60 * 1000);
-                        } else if (startTime) {
-                          // Default to 60 minutes if no duration specified
-                          endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
-                        } else {
-                          endTime = null;
-                        }
-                        
-                        return (
-                          <div
-                            key={task.id}
-                            style={{
-                              background: task.status === 'completed' ? '#10B981' : '#F97316',
-                              color: 'white',
-                              padding: '8px 12px',
-                              borderRadius: '6px',
-                              marginBottom: '4px',
-                              fontWeight: '500',
-                              fontSize: '13px',
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: '8px'
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={task.status === 'completed'}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed');
-                              }}
-                              style={{
-                                width: '18px',
-                                height: '18px',
-                                marginTop: '2px',
-                                cursor: 'pointer',
-                                flexShrink: 0
-                              }}
-                            />
-                            <div 
-                              style={{ flex: 1, cursor: 'pointer' }}
-                              onClick={() => onTaskClick(task)}
+                          <VideoCameraIcon style={{ width: '16px', height: '16px' }} />
+                          Join
+                        </motion.a>
+                      )}
+            </div>
+        </div>
+      )}
+                
+                {/* Description */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+              style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#86868b',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Notes
+                  </label>
+                  <textarea
+                    value={blockForm.description || ''}
+                    onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })}
+                    onBlur={handleUpdateBlock}
+                    placeholder="Add notes..."
+                    rows={4}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      fontSize: '14px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      resize: 'none',
+                      lineHeight: '1.6',
+                    }}
+                  />
+              </div>
+              
+                {/* Checklist */}
+                <div>
+                  <label
+                  style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '13px',
+                    fontWeight: '500',
+                      color: '#86868b',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <ListBulletIcon style={{ width: '14px', height: '14px' }} />
+                    Checklist
+                    {selectedBlock.checklist.length > 0 && (
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          color: '#22c55e',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {selectedBlock.checklist.filter(i => i.completed).length}/{selectedBlock.checklist.length}
+                      </span>
+                    )}
+                  </label>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedBlock.checklist.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                gap: '12px',
+                          padding: '10px 12px',
+                          background: item.completed ? 'rgba(34, 197, 94, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: '8px',
+                    transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => toggleChecklistItem(item.id)}
+                          style={{
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '6px',
+                            border: item.completed ? 'none' : '2px solid rgba(0, 0, 0, 0.15)',
+                            background: item.completed ? '#22c55e' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {item.completed && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: 'spring', damping: 15 }}
                             >
-                              <div style={{ 
-                                fontWeight: '600',
-                                textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                              }}>
-                                {task.title}
-                              </div>
-                              {startTime && endTime && (
-                                <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                                  {startTime.toLocaleTimeString('en-US', { 
-                                    hour: 'numeric', 
-                                    minute: '2-digit',
-                                    hour12: true 
-                                  })} - {endTime.toLocaleTimeString('en-US', { 
-                                    hour: 'numeric', 
-                                    minute: '2-digit',
-                                    hour12: true 
-                                  })}
-                                </div>
+                              <CheckIcon style={{ width: '14px', height: '14px', color: '#fff' }} />
+                            </motion.div>
+                          )}
+                        </motion.button>
+                        <span
+                          style={{
+                            flex: 1,
+                            fontSize: '14px',
+                            color: item.completed ? '#86868b' : '#1d1d1f',
+                            textDecoration: item.completed ? 'line-through' : 'none',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {item.text}
+                        </span>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => removeChecklistItem(item.id)}
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: 'none',
+                            borderRadius: '6px',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            color: '#86868b',
+                            opacity: 0.5,
+                          }}
+                        >
+                          <XMarkIcon style={{ width: '14px', height: '14px' }} />
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                    
+                    {/* Add new item */}
+                    <div
+                            style={{
+                              display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px 12px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '6px',
+                          border: '2px dashed rgba(0, 0, 0, 0.1)',
+                          flexShrink: 0,
+                        }}
+                      />
+                            <input
+                        type="text"
+                        value={newChecklistItem}
+                        onChange={(e) => setNewChecklistItem(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            addChecklistItem();
+                          }
+                        }}
+                        placeholder="Add an item..."
+                              style={{
+                          flex: 1,
+                          fontSize: '14px',
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          color: '#1d1d1f',
+                        }}
+                      />
+                      {newChecklistItem && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={addChecklistItem}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            border: 'none',
+                            borderRadius: '6px',
+                            background: '#0071e3',
+                            color: '#fff',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Add
+                        </motion.button>
                               )}
                             </div>
                           </div>
-                        );
-                      })}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
       
-      {/* Day Tasks Sidebar - Previous Design */}
-      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
-          Tasks for Today
-        </h3>
-        <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748B', fontStyle: 'italic' }}>
-          Double-click any task to schedule it automatically
-        </p>
-        
-        {dayTasks.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#64748B', padding: '20px' }}>
-            <CalendarIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
-            <p style={{ margin: 0, fontSize: '14px' }}>No tasks for today</p>
-          </div>
-        ) : (
-          dayTasks.map(task => (
-            <div 
-              key={task.id} 
-              className="task-card" 
+              {/* Notification Settings */}
+              <div
               style={{ 
-                borderLeftColor: getPriorityColor(task.priority),
-                marginBottom: '12px',
-                cursor: 'grab',
-                padding: '16px'
-              }}
-              draggable
-              onDragStart={(e) => {
-                setDraggedTask(task);
-                e.currentTarget.style.opacity = '0.6';
-                e.currentTarget.style.transform = 'rotate(3deg) scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
-                e.currentTarget.style.zIndex = '1000';
-                console.log('Started dragging task:', task.title);
-                
-                // Set drag data
-                e.dataTransfer.setData('text/plain', task.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onDragEnd={(e) => {
-                setDraggedTask(null);
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.transform = 'rotate(0deg) scale(1)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-                e.currentTarget.style.zIndex = 'auto';
-                console.log('Finished dragging task');
-              }}
-              onDoubleClick={async () => {
-                console.log('Double-clicked task:', task.title);
-                
-                // Simple scheduling: place at next available 9 AM slot
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                tomorrow.setHours(9, 0, 0, 0);
-                
-                const endTime = new Date(tomorrow);
-                endTime.setMinutes(endTime.getMinutes() + 60); // Default 1 hour duration
-                
-                const timeBlockData = {
-                  title: task.title,
-                  description: task.description || '',
-                  start_time: tomorrow.toISOString(),
-                  end_time: endTime.toISOString(),
-                  block_type: 'task',
-                  color: getPriorityColor(task.priority),
-                  notes: `Scheduled from task: ${task.title}`,
-                  user_id: user?.id || 60,
-                  is_completed: false
-                };
-
-                try {
-                  // Try personal_time_blocks first, fallback to projects_meeting
-                  let result;
-                  try {
-                    result = await supabase
-                      .from('personal_time_blocks')
-                      .insert([timeBlockData])
-                      .select()
-                      .single();
-                  } catch (err) {
-                    // Fallback to projects_meeting
-                    const fallbackData = {
-                      name: timeBlockData.title,
-                      description: timeBlockData.description,
-                      meeting_date: timeBlockData.start_time,
-                      start_time: timeBlockData.start_time,
-                      end_time: timeBlockData.end_time,
-                      user_id: parseInt(user?.id?.toString() || '0'),
-                      type: 'time_block'
-                    };
-                    result = await supabase
-                      .from('projects_meeting')
-                      .insert([fallbackData])
-                      .select()
-                      .single();
-                  }
-
-                  if (result.error) {
-                    console.error('Error creating time block:', result.error);
-                    alert('Error: ' + result.error.message);
-                  } else {
-                    console.log('Time block created successfully!', result.data);
-                    
-                    // Update task in database with scheduled time
-                    try {
-                      const { error: updateError } = await supabase
-                        .from('personal_tasks')
-                        .update({
-                          scheduled_start: tomorrow.toISOString(),
-                          scheduled_end: endTime.toISOString(),
-                          due_date: tomorrow.toISOString()
-                        })
-                        .eq('id', task.id);
-                      
-                      if (updateError) {
-                        console.error('Error updating task schedule:', updateError);
-                      } else {
-                        console.log('Task schedule updated successfully in database');
-                      }
-                    } catch (updateErr) {
-                      console.error('Failed to update task schedule:', updateErr);
-                    }
-                    
-                    // Update time blocks state instead of reloading
-                    const newTimeBlock: PersonalTimeBlock = {
-                      id: result.data.id.toString(),
-                      user_id: user?.id?.toString() || '60',
-                      title: task.title,
-                      description: task.description || '',
-                      start_datetime: tomorrow.toISOString(),
-                      end_datetime: endTime.toISOString(),
-                      color: getPriorityColor(task.priority),
-                      block_type: 'task',
-                      notes: `Scheduled from task: ${task.title}`,
-                      created_at: new Date().toISOString(),
-                      updated_at: new Date().toISOString()
-                    };
-                    setTimeBlocks(prev => [...prev, newTimeBlock]);
-                    
-                    // Update local task state
-                    const updatedTask = {
-                      ...task,
-                      scheduled_start: tomorrow.toISOString(),
-                      scheduled_end: endTime.toISOString(),
-                      due_date: tomorrow.toISOString()
-                    };
-                    setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
-                    setAllTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
-                    
-                    alert(`Task "${task.title}" scheduled for ${tomorrow.toLocaleString()}`);
-                  }
-                } catch (error) {
-                  console.error('Error:', error);
-                  alert('Error creating time block');
-                }
-              }}
-              onClick={() => onTaskClick(task)}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h5 style={{ 
-                  margin: 0, 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                }}>
-                  {task.title}
-                </h5>
-                
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleUpdateTaskStatus(task.id, task.status === 'completed' ? 'todo' : 'completed');
-                    }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: task.status === 'completed' ? '#10B981' : '#6B7280' }}
-                  >
-                    {task.status === 'completed' ? (
-                      <CheckCircleIconSolid style={{ width: '16px', height: '16px' }} />
-                    ) : (
-                      <CheckCircleIcon style={{ width: '16px', height: '16px' }} />
-                    )}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEditTask(task);
-                    }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6' }}
-                  >
-                    <PencilIcon style={{ width: '14px', height: '14px' }} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteTask(task.id);
-                    }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}
-                  >
-                    <TrashIcon style={{ width: '14px', height: '14px' }} />
-                  </button>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px' }}>
-                <span 
-                  className="priority-badge"
+                  padding: '16px 24px',
+                  borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                }}
+              >
+                <BellIcon style={{ width: '18px', height: '18px', color: '#86868b' }} />
+                <select
+                  value={blockForm.notificationTime || 0}
+                  onChange={(e) => {
+                    setBlockForm({ ...blockForm, notificationTime: Number(e.target.value) });
+                    handleUpdateBlock();
+                  }}
                   style={{ 
-                    background: getPriorityColor(task.priority) + '20',
-                    color: getPriorityColor(task.priority),
-                    fontSize: '10px',
-                    padding: '2px 6px'
+                    flex: 1,
+                    padding: '10px 14px',
+                    fontSize: '14px',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '8px',
+                    outline: 'none',
+                    background: '#fff',
+                    cursor: 'pointer',
                   }}
                 >
-                  {task.priority}
-                </span>
-                
-                {task.due_date && (
-                  <span style={{ fontSize: '10px', color: '#64748B' }}>
-                    {new Date(task.due_date).toLocaleDateString()}
-                  </span>
-                )}
+                  <option value={0}>No reminder</option>
+                  <option value={5}>5 min before</option>
+                  <option value={10}>10 min before</option>
+                  <option value={15}>15 min before</option>
+                  <option value={30}>30 min before</option>
+                  <option value={60}>1 hour before</option>
+                </select>
               </div>
-            </div>
-          ))
+            </motion.div>
+          </>
         )}
-      </div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
-};
+}

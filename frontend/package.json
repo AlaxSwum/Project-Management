@@ -13,6 +13,7 @@
     "@heroicons/react": "^2.0.18",
     "@supabase/supabase-js": "^2.50.0",
     "axios": "^1.6.2",
+    "framer-motion": "^12.23.26",
     "googleapis": "^128.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
