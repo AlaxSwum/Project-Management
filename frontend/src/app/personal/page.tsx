@@ -136,7 +136,7 @@ const generateId = (): string => {
 // Database column mapping (snake_case <-> camelCase)
 interface DbTimeBlock {
   id: string;
-  user_id?: string;
+  user_id?: string | number;
   date: string;
   start_time: string;
   end_time: string;
@@ -167,7 +167,7 @@ const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
   updated_at: db.updated_at,
 });
 
-const mapBlockToDb = (block: TimeBlock, userId?: string): DbTimeBlock => ({
+const mapBlockToDb = (block: TimeBlock, userId?: string | number): DbTimeBlock => ({
   id: block.id,
   user_id: userId,
   date: block.date,
