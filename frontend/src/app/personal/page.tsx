@@ -702,7 +702,7 @@ export default function PersonalPage() {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
     return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <>
       {/* Sidebar */}
       <Sidebar 
         projects={[]} 
@@ -716,7 +716,6 @@ export default function PersonalPage() {
         transition={{ duration: 0.5 }}
         className="main-content"
         style={{
-          flex: 1,
           minHeight: '100vh',
           background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
@@ -2874,6 +2873,6 @@ export default function PersonalPage() {
         )}
       </AnimatePresence>
       </motion.div>
-    </div>
+    </>
   );
 }
