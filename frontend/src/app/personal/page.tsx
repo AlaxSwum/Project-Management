@@ -49,8 +49,17 @@ interface TimeBlock {
   category?: string; // e.g., "Workout", "Study", "Work"
   isRecurring?: boolean;
   recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
+  recurringStartDate?: string; // Start date for recurring
+  recurringEndDate?: string; // End date for recurring
   created_at?: string;
   updated_at?: string;
+}
+
+// User custom category
+interface CustomCategory {
+  id: string;
+  name: string;
+  color: string;
 }
 
 type ViewMode = 'day' | 'week' | 'month';
@@ -66,16 +75,23 @@ const DAYS_OF_WEEK = [
   { id: 6, name: 'Sat', fullName: 'Saturday' },
 ];
 
-// Categories for blocks
-const CATEGORIES = [
-  { id: 'work', name: 'Work', icon: '💼' },
-  { id: 'study', name: 'Study', icon: '📚' },
-  { id: 'workout', name: 'Workout', icon: '🏋️' },
-  { id: 'health', name: 'Health', icon: '🧘' },
-  { id: 'creative', name: 'Creative', icon: '🎨' },
-  { id: 'social', name: 'Social', icon: '👥' },
-  { id: 'errands', name: 'Errands', icon: '🏃' },
-  { id: 'rest', name: 'Rest', icon: '😴' },
+// Default categories (no emojis, clean design)
+const DEFAULT_CATEGORIES = [
+  { id: 'work', name: 'Work', color: '#3b82f6' },
+  { id: 'study', name: 'Study', color: '#8b5cf6' },
+  { id: 'workout', name: 'Workout', color: '#ef4444' },
+  { id: 'health', name: 'Health', color: '#10b981' },
+  { id: 'creative', name: 'Creative', color: '#f59e0b' },
+  { id: 'social', name: 'Social', color: '#ec4899' },
+  { id: 'errands', name: 'Errands', color: '#6366f1' },
+  { id: 'rest', name: 'Rest', color: '#64748b' },
+];
+
+// Category colors for custom categories
+const CATEGORY_COLORS = [
+  '#3b82f6', '#8b5cf6', '#ef4444', '#10b981', 
+  '#f59e0b', '#ec4899', '#6366f1', '#64748b',
+  '#14b8a6', '#f97316', '#06b6d4', '#84cc16',
 ];
 
 // Color palette for block types
@@ -184,7 +200,7 @@ const getDailyProgress = (blocks: TimeBlock[], date: Date): { total: number; com
     if (block.checklist && block.checklist.length > 0) {
       totalTasks += block.checklist.length;
       completedTasks += block.checklist.filter(item => item.completed).length;
-    } else {
+        } else {
       // Count blocks without checklists as single tasks
       totalTasks += 1;
     }
@@ -269,8 +285,8 @@ export default function PersonalPage() {
   
   // Form state for new/edit block
   const [blockForm, setBlockForm] = useState<Partial<TimeBlock>>({
-    title: '',
-    description: '',
+      title: '',
+      description: '',
     type: 'focus',
     startTime: '09:00',
     endTime: '10:00',
@@ -280,7 +296,60 @@ export default function PersonalPage() {
     category: '',
     isRecurring: false,
     recurringDays: [],
+    recurringStartDate: '',
+    recurringEndDate: '',
   });
+
+  // Custom categories (stored per user)
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
+
+  // Load custom categories from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedCategories = localStorage.getItem('personal_custom_categories');
+      if (savedCategories) {
+        try {
+          setCustomCategories(JSON.parse(savedCategories));
+        } catch (e) {
+          console.error('Error loading custom categories:', e);
+        }
+      }
+    }
+  }, []);
+
+  // Save custom categories to localStorage
+  const saveCustomCategories = (categories: CustomCategory[]) => {
+    setCustomCategories(categories);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('personal_custom_categories', JSON.stringify(categories));
+    }
+  };
+
+  // Add new custom category
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    
+    const newCategory: CustomCategory = {
+      id: `custom_${generateId()}`,
+      name: newCategoryName.trim(),
+      color: newCategoryColor,
+    };
+    
+    saveCustomCategories([...customCategories, newCategory]);
+    setNewCategoryName('');
+    setShowAddCategory(false);
+  };
+
+  // Delete custom category
+  const handleDeleteCategory = (id: string) => {
+    saveCustomCategories(customCategories.filter(c => c.id !== id));
+  };
+
+  // Get all categories (default + custom)
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories];
 
   // Drag to create state
   const [isDragging, setIsDragging] = useState(false);
@@ -328,8 +397,8 @@ export default function PersonalPage() {
   const handleDragEnd = useCallback(() => {
     if (!isDragging || !dragStart || !dragEnd || !dragDate) {
       setIsDragging(false);
-      return;
-    }
+        return;
+      }
 
     // Calculate start and end times
     const startMinutes = dragStart.hour * 60 + dragStart.minute;
@@ -635,13 +704,13 @@ export default function PersonalPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      style={{
+              style={{
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
       }}
     >
-      {/* Header */}
+          {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -659,7 +728,7 @@ export default function PersonalPage() {
       >
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
+              <div>
               <motion.h1
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -698,8 +767,8 @@ export default function PersonalPage() {
                     transition={{ delay: 0.4 }}
                     style={{
                       marginTop: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
                       gap: '16px',
                     }}
                   >
@@ -711,7 +780,7 @@ export default function PersonalPage() {
                         <span style={{ fontSize: '12px', fontWeight: '600', color: progress.percentage >= 100 ? '#34c759' : '#1d1d1f' }}>
                           {progress.percentage}%
                         </span>
-                      </div>
+              </div>
                       <div
                         style={{
                           height: '6px',
@@ -734,8 +803,8 @@ export default function PersonalPage() {
                             borderRadius: '3px',
                           }}
                         />
-                      </div>
-                    </div>
+              </div>
+              </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <CheckCircleIconSolid 
                         style={{ 
@@ -747,11 +816,11 @@ export default function PersonalPage() {
                       <span style={{ fontSize: '13px', color: '#86868b' }}>
                         {progress.completed}/{progress.total} tasks
                       </span>
-                    </div>
+                </div>
                   </motion.div>
                 );
               })()}
-            </div>
+              </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {/* View Mode Switcher */}
@@ -811,8 +880,8 @@ export default function PersonalPage() {
                 <PlusIcon style={{ width: '16px', height: '16px' }} />
                 Add Block
               </motion.button>
-              </div>
             </div>
+          </div>
 
           {/* Navigation */}
           <div
@@ -893,7 +962,7 @@ export default function PersonalPage() {
               >
                 <ChevronRightIcon style={{ width: '18px', height: '18px' }} />
               </motion.button>
-              </div>
+            </div>
 
             <motion.button
               onClick={() => setCurrentDate(new Date())}
@@ -912,7 +981,7 @@ export default function PersonalPage() {
             >
               Today
             </motion.button>
-                  </div>
+              </div>
         </div>
       </motion.header>
 
@@ -992,7 +1061,7 @@ export default function PersonalPage() {
                           }}
                         >
                           {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
-                        </div>
+                  </div>
                         <div
                           style={{
                             flex: 1,
@@ -1047,7 +1116,7 @@ export default function PersonalPage() {
                       const { top, height } = getBlockPosition(block);
                       const colors = blockTypeColors[block.type] || blockTypeColors.focus;
                       const progress = getChecklistProgress(block.checklist);
-                      const category = CATEGORIES.find(c => c.id === block.category);
+                      const category = [...DEFAULT_CATEGORIES, ...customCategories].find(c => c.id === block.category);
                       
                       return (
                         <motion.div
@@ -1090,12 +1159,21 @@ export default function PersonalPage() {
                               {block.title}
                             </span>
                             {category && (
-                              <span style={{ fontSize: '12px' }}>{category.icon}</span>
+                              <div 
+                                style={{ 
+                                  width: '8px', 
+                                  height: '8px', 
+                                  borderRadius: '50%', 
+                                  background: category.color,
+                                  flexShrink: 0,
+                                }} 
+                                title={category.name}
+                              />
                             )}
                             {block.isRecurring && (
                               <ArrowPathIcon style={{ width: '12px', height: '12px', color: '#86868b' }} />
-                            )}
-                          </div>
+              )}
+            </div>
                           <div
                             style={{
                               fontSize: '11px',
@@ -1104,14 +1182,14 @@ export default function PersonalPage() {
                             }}
                           >
                             {formatTime(block.startTime)} - {formatTime(block.endTime)}
-                          </div>
+            </div>
                           {block.checklist.length > 0 && (
                             <div style={{ marginTop: '6px' }}>
                               <div
                                 style={{
-                                  display: 'flex',
+              display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'space-between',
+              justifyContent: 'space-between',
                                   marginBottom: '4px',
                                 }}
                               >
@@ -1120,7 +1198,7 @@ export default function PersonalPage() {
                                   {block.checklist.filter(i => i.completed).length}/{block.checklist.length}
                                 </div>
                                 <span 
-                                  style={{ 
+                    style={{
                                     fontSize: '10px', 
                                     fontWeight: '600', 
                                     color: progress >= 100 ? '#34c759' : colors.text,
@@ -1131,7 +1209,7 @@ export default function PersonalPage() {
                               </div>
                               {/* Mini progress bar */}
                               <div
-                                style={{
+                  style={{
                                   height: '3px',
                                   background: 'rgba(0, 0, 0, 0.08)',
                                   borderRadius: '2px',
@@ -1148,9 +1226,9 @@ export default function PersonalPage() {
                                     borderRadius: '2px',
                                   }}
                                 />
-                              </div>
-                            </div>
-                          )}
+              </div>
+            </div>
+          )}
                         </motion.div>
                       );
                     })}
@@ -1483,7 +1561,7 @@ export default function PersonalPage() {
                       style={{
                 background: '#fff',
                 borderRadius: '20px',
-                        width: '100%',
+            width: '100%',
                 maxWidth: '480px',
                 overflow: 'hidden',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
@@ -1507,7 +1585,7 @@ export default function PersonalPage() {
                   }}
                 >
                   New Time Block
-                </h3>
+              </h3>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -1527,8 +1605,8 @@ export default function PersonalPage() {
                 >
                   <XMarkIcon style={{ width: '18px', height: '18px' }} />
                 </motion.button>
-                  </div>
-
+            </div>
+            
               <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Title */}
                 <div>
@@ -1543,8 +1621,8 @@ export default function PersonalPage() {
                   >
                     Title
                   </label>
-                  <input
-                    type="text"
+                    <input
+                      type="text"
                     value={blockForm.title}
                     onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
                     placeholder="What are you working on?"
@@ -1564,7 +1642,7 @@ export default function PersonalPage() {
                 <div>
                   <label
                     style={{
-                      display: 'block', 
+                display: 'block', 
                       fontSize: '13px',
                       fontWeight: '500',
                       color: '#86868b',
@@ -1591,7 +1669,7 @@ export default function PersonalPage() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => setBlockForm({ ...blockForm, type })}
-                          style={{
+                      style={{
                             flex: '1 1 calc(33.333% - 6px)',
                             minWidth: '80px',
                             padding: '10px 8px',
@@ -1600,10 +1678,10 @@ export default function PersonalPage() {
                             alignItems: 'center',
                             gap: '6px',
                             border: blockForm.type === type ? `2px solid ${colors.solid}` : '1px solid rgba(0, 0, 0, 0.1)',
-                            borderRadius: '12px',
+                  borderRadius: '12px',
                             background: blockForm.type === type ? colors.bg : '#fff',
                             cursor: 'pointer',
-                            transition: 'all 0.2s ease',
+                  transition: 'all 0.2s ease',
                           }}
                         >
                           <Icon style={{ width: '18px', height: '18px', color: colors.text }} />
@@ -1621,13 +1699,13 @@ export default function PersonalPage() {
                       );
                     })}
                   </div>
-                </div>
+                  </div>
 
                 {/* Category */}
-                <div>
+              <div>
                   <label
                     style={{
-                      display: 'block', 
+                  display: 'block', 
                       fontSize: '13px',
                       fontWeight: '500',
                       color: '#86868b',
@@ -1636,40 +1714,170 @@ export default function PersonalPage() {
                   >
                     Category (optional)
                   </label>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {CATEGORIES.map((cat) => (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {allCategories.map((cat) => {
+                      const isCustom = cat.id.startsWith('custom_');
+                      return (
+                        <motion.button
+                          key={cat.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setBlockForm({ ...blockForm, category: blockForm.category === cat.id ? '' : cat.id })}
+                      style={{
+                            padding: '8px 14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            border: blockForm.category === cat.id ? `2px solid ${cat.color}` : '1px solid rgba(0, 0, 0, 0.1)',
+                            borderRadius: '20px',
+                            background: blockForm.category === cat.id ? `${cat.color}15` : '#fff',
+                    cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            position: 'relative',
+                          }}
+                        >
+                          <div 
+                            style={{ 
+                              width: '8px', 
+                              height: '8px', 
+                              borderRadius: '50%', 
+                              background: cat.color,
+                            }} 
+                          />
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              color: blockForm.category === cat.id ? cat.color : '#86868b',
+                            }}
+                          >
+                            {cat.name}
+                          </span>
+                          {isCustom && blockForm.category !== cat.id && (
+                            <motion.span
+                              whileHover={{ scale: 1.2 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCategory(cat.id);
+                              }}
+                              style={{
+                                marginLeft: '4px',
+                                color: '#ff3b30',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              ×
+                            </motion.span>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                    
+                    {/* Add Category Button */}
+                    {!showAddCategory ? (
                       <motion.button
-                        key={cat.id}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setBlockForm({ ...blockForm, category: blockForm.category === cat.id ? '' : cat.id })}
-                        style={{
+                        onClick={() => setShowAddCategory(true)}
+                          style={{
                           padding: '8px 14px',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          border: blockForm.category === cat.id ? '2px solid #0071e3' : '1px solid rgba(0, 0, 0, 0.1)',
+                          gap: '4px',
+                          border: '1px dashed rgba(0, 0, 0, 0.2)',
                           borderRadius: '20px',
-                          background: blockForm.category === cat.id ? 'rgba(0, 113, 227, 0.08)' : '#fff',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
+                          background: '#fff',
+                            cursor: 'pointer',
+                          color: '#86868b',
+                          fontSize: '12px',
+                          fontWeight: '500',
                         }}
                       >
-                        <span style={{ fontSize: '14px' }}>{cat.icon}</span>
-                        <span
+                        <PlusIcon style={{ width: '12px', height: '12px' }} />
+                        Add
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 10px',
+                          background: 'rgba(0, 0, 0, 0.02)',
+                          borderRadius: '20px',
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          {CATEGORY_COLORS.slice(0, 6).map((color) => (
+                            <button
+                              key={color}
+                              onClick={() => setNewCategoryColor(color)}
+                              style={{
+                                width: '16px',
+                                height: '16px',
+                                borderRadius: '50%',
+                                background: color,
+                                border: newCategoryColor === color ? '2px solid #1d1d1f' : 'none',
+                                cursor: 'pointer',
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                          placeholder="Name"
+                          autoFocus
                           style={{
+                            width: '80px',
+                            padding: '4px 8px',
                             fontSize: '12px',
-                            fontWeight: '500',
-                            color: blockForm.category === cat.id ? '#0071e3' : '#86868b',
+                            border: '1px solid rgba(0, 0, 0, 0.1)',
+                            borderRadius: '8px',
+                            outline: 'none',
+                          }}
+                        />
+                        <button
+                          onClick={handleAddCategory}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                    fontWeight: '600',
+                            background: '#0071e3',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
                           }}
                         >
-                          {cat.name}
-                        </span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-
+                          Add
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAddCategory(false);
+                            setNewCategoryName('');
+                          }}
+                          style={{
+                            padding: '4px',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#86868b',
+                          }}
+                        >
+                          <XMarkIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
+                      </motion.div>
+                    )}
+              </div>
+            </div>
+            
                 {/* Time */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
@@ -1688,7 +1896,7 @@ export default function PersonalPage() {
                       type="time"
                       value={blockForm.startTime}
                       onChange={(e) => setBlockForm({ ...blockForm, startTime: e.target.value })}
-                          style={{
+                  style={{
                     width: '100%',
                         padding: '12px 16px',
                     fontSize: '15px',
@@ -1816,7 +2024,7 @@ export default function PersonalPage() {
                   <select
                     value={blockForm.notificationTime}
                     onChange={(e) => setBlockForm({ ...blockForm, notificationTime: Number(e.target.value) })}
-                    style={{ 
+                          style={{ 
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
@@ -1824,7 +2032,7 @@ export default function PersonalPage() {
                       borderRadius: '10px',
                       outline: 'none',
                       background: '#fff',
-                      cursor: 'pointer',
+                            cursor: 'pointer',
                     }}
                   >
                     <option value={0}>No reminder</option>
@@ -1834,8 +2042,8 @@ export default function PersonalPage() {
                     <option value={30}>30 minutes before</option>
                     <option value={60}>1 hour before</option>
                   </select>
-                </div>
-
+            </div>
+            
                 {/* Recurring Days */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
@@ -1885,54 +2093,101 @@ export default function PersonalPage() {
                         exit={{ opacity: 0, height: 0 }}
                         style={{ overflow: 'hidden' }}
                       >
-                        <div style={{ display: 'flex', gap: '6px', paddingTop: '8px' }}>
-                          {DAYS_OF_WEEK.map((day) => {
-                            const isSelected = blockForm.recurringDays?.includes(day.id);
-                            return (
-                              <motion.button
-                                key={day.id}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => {
-                                  const days = blockForm.recurringDays || [];
-                                  const newDays = isSelected 
-                                    ? days.filter(d => d !== day.id)
-                                    : [...days, day.id];
-                                  setBlockForm({ ...blockForm, recurringDays: newDays });
-                                }}
-                                style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  borderRadius: '20px',
-                                  border: 'none',
-                                  background: isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.05)',
-                                  color: isSelected ? '#fff' : '#86868b',
-                                  fontSize: '12px',
-                                  fontWeight: '600',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                }}
-                              >
-                                {day.name}
-                              </motion.button>
-                            );
-                          })}
-                        </div>
+                        {/* Days of week selection */}
+                        <div style={{ paddingTop: '12px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: '500', color: '#86868b', marginBottom: '8px', display: 'block' }}>
+                            Repeat on
+                          </label>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {DAYS_OF_WEEK.map((day) => {
+                              const isSelected = blockForm.recurringDays?.includes(day.id);
+                              return (
+                                <motion.button
+                                  key={day.id}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => {
+                                    const days = blockForm.recurringDays || [];
+                                    const newDays = isSelected 
+                                      ? days.filter(d => d !== day.id)
+                                      : [...days, day.id];
+                                    setBlockForm({ ...blockForm, recurringDays: newDays });
+                                  }}
+                      style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: '20px',
+                        border: 'none',
+                                    background: isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.05)',
+                                    color: isSelected ? '#fff' : '#86868b',
+                                    fontSize: '12px',
+                  fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                  }}
+                                >
+                                  {day.name}
+                                </motion.button>
+          );
+        })}
+                          </div>
+      </div>
+      
+                        {/* Date range selection */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', paddingTop: '16px' }}>
+                          <div>
+                            <label style={{ fontSize: '12px', fontWeight: '500', color: '#86868b', marginBottom: '6px', display: 'block' }}>
+                              Start Date
+                            </label>
+                            <input
+                              type="date"
+                              value={blockForm.recurringStartDate || ''}
+                              onChange={(e) => setBlockForm({ ...blockForm, recurringStartDate: e.target.value })}
+        style={{ 
+                                width: '100%',
+                                padding: '10px 12px',
+                                fontSize: '14px',
+                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                borderRadius: '10px',
+                                outline: 'none',
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '12px', fontWeight: '500', color: '#86868b', marginBottom: '6px', display: 'block' }}>
+                              End Date
+                            </label>
+                            <input
+                              type="date"
+                              value={blockForm.recurringEndDate || ''}
+                              onChange={(e) => setBlockForm({ ...blockForm, recurringEndDate: e.target.value })}
+                              min={blockForm.recurringStartDate || ''}
+              style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                fontSize: '14px',
+                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                borderRadius: '10px',
+                                outline: 'none',
+                              }}
+                            />
+                </div>
+                </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
-
+              </div>
+              
                 {/* Checklist */}
                 <div>
                   <label
-                    style={{
+                  style={{
                       display: 'block',
                       fontSize: '13px',
-                      fontWeight: '500',
+                    fontWeight: '500',
                       color: '#86868b',
                       marginBottom: '8px',
                     }}
@@ -1985,9 +2240,9 @@ export default function PersonalPage() {
                             checklist: [...(blockForm.checklist || []), newItem],
                           });
                           setNewChecklistItem('');
-                        }
-                      }}
-                      style={{
+                      }
+                    }}
+                    style={{ 
                         width: '40px',
                         height: '40px',
                         display: 'flex',
@@ -1998,12 +2253,12 @@ export default function PersonalPage() {
                         background: '#0071e3',
                         color: '#fff',
                         cursor: 'pointer',
-                      }}
-                    >
+                    }}
+                  >
                       <PlusIcon style={{ width: '20px', height: '20px' }} />
                     </motion.button>
                   </div>
-
+                  
                   {/* Checklist items */}
                   {(blockForm.checklist?.length ?? 0) > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto' }}>
@@ -2013,7 +2268,7 @@ export default function PersonalPage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 20 }}
-                          style={{
+        style={{ 
                             display: 'flex',
                             alignItems: 'center',
                             gap: '10px',
@@ -2031,8 +2286,8 @@ export default function PersonalPage() {
                                   i.id === item.id ? { ...i, completed: !i.completed } : i
                                 ),
                               });
-                            }}
-                            style={{
+                    }}
+                    style={{
                               width: '22px',
                               height: '22px',
                               borderRadius: '6px',
@@ -2041,7 +2296,7 @@ export default function PersonalPage() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              cursor: 'pointer',
+                      cursor: 'pointer',
                               flexShrink: 0,
                             }}
                           >
@@ -2077,7 +2332,7 @@ export default function PersonalPage() {
                             style={{
                               width: '24px',
                               height: '24px',
-                              display: 'flex',
+                display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               border: 'none',
@@ -2095,9 +2350,9 @@ export default function PersonalPage() {
                   )}
                 </div>
               </div>
-            
-              <div
-                style={{
+              
+                <div
+                  style={{
                   padding: '16px 24px 24px',
                   display: 'flex',
                   gap: '12px',
@@ -2107,7 +2362,7 @@ export default function PersonalPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setShowAddModal(false)}
-                      style={{
+                    style={{ 
                     flex: 1,
                     padding: '14px',
                     fontSize: '15px',
@@ -2125,21 +2380,21 @@ export default function PersonalPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleAddBlock}
-                      style={{
+                    style={{
                     flex: 1,
                     padding: '14px',
                     fontSize: '15px',
                     fontWeight: '500',
-                        border: 'none',
+                      border: 'none',
                     borderRadius: '12px',
                     background: '#0071e3',
-                  cursor: 'pointer',
+                      cursor: 'pointer',
                     color: '#fff',
                   }}
                 >
                   Create Block
                 </motion.button>
-            </div>
+                    </div>
             </motion.div>
           </motion.div>
         )}
@@ -2154,7 +2409,7 @@ export default function PersonalPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowPanel(false)}
-        style={{ 
+                  style={{
                 position: 'fixed',
                 inset: 0,
                 background: 'rgba(0, 0, 0, 0.2)',
@@ -2190,7 +2445,7 @@ export default function PersonalPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div
-                    style={{
+                    style={{ 
                       width: '36px',
                       height: '36px',
                       borderRadius: '10px',
@@ -2257,9 +2512,9 @@ export default function PersonalPage() {
                   >
                     <XMarkIcon style={{ width: '18px', height: '18px' }} />
                   </motion.button>
-                    </div>
-                </div>
-              
+                  </div>
+      </div>
+      
               {/* Panel Content */}
               <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
                 {/* Title */}
@@ -2284,7 +2539,7 @@ export default function PersonalPage() {
                 
                 {/* Time */}
                 <div
-                    style={{ 
+              style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
@@ -2299,18 +2554,18 @@ export default function PersonalPage() {
                   </span>
                   <span>•</span>
                   <span>{new Date(selectedBlock.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-                  </div>
-                  
+              </div>
+              
                 {/* Meeting Link */}
                 {selectedBlock.type === 'meeting' && (
                   <div style={{ marginBottom: '24px' }}>
                     <label
-                      style={{
+                  style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
                         fontSize: '13px',
-                        fontWeight: '500',
+                    fontWeight: '500',
                         color: '#86868b',
                         marginBottom: '8px',
                       }}
@@ -2350,17 +2605,17 @@ export default function PersonalPage() {
                             background: '#0071e3',
                             color: '#fff',
                             textDecoration: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
                             gap: '6px',
                           }}
                         >
                           <VideoCameraIcon style={{ width: '16px', height: '16px' }} />
                           Join
                         </motion.a>
-                      )}
+              )}
             </div>
-        </div>
+      </div>
       )}
                 
                 {/* Description */}
@@ -2369,7 +2624,7 @@ export default function PersonalPage() {
               style={{
                       display: 'block',
                       fontSize: '13px',
-                      fontWeight: '500',
+                  fontWeight: '500',
                       color: '#86868b',
                       marginBottom: '8px',
                     }}
@@ -2393,12 +2648,12 @@ export default function PersonalPage() {
                       lineHeight: '1.6',
                     }}
                   />
-              </div>
-              
+                </div>
+                
                 {/* Checklist */}
                 <div>
                   <label
-                  style={{
+                  style={{ 
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
