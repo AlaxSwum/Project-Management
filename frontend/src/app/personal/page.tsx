@@ -25,7 +25,6 @@ import {
   FolderIcon,
   ArrowPathIcon,
   TagIcon,
-  Bars3Icon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 
@@ -285,19 +284,6 @@ export default function PersonalPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   
-  // Mobile sidebar state
-  const [isMobile, setIsMobile] = useState(false);
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  
-  // Check if mobile on mount
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   
   // Form state for new/edit block
   const [blockForm, setBlockForm] = useState<Partial<TimeBlock>>({
@@ -717,106 +703,23 @@ export default function PersonalPage() {
 
     return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Mobile Header */}
-      {isMobile && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '60px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 16px',
-            zIndex: 1000,
-          }}
-        >
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowMobileSidebar(true)}
-            style={{
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: 'none',
-              background: 'rgba(0, 0, 0, 0.04)',
-              borderRadius: '10px',
-              cursor: 'pointer',
-            }}
-          >
-            <Bars3Icon style={{ width: '24px', height: '24px', color: '#1d1d1f' }} />
-          </motion.button>
-          <span style={{ marginLeft: '12px', fontSize: '17px', fontWeight: '600', color: '#1d1d1f' }}>
-            Focus
-          </span>
-        </div>
-      )}
-
       {/* Sidebar */}
-      {!isMobile && (
-        <Sidebar 
-          projects={[]} 
-          onCreateProject={() => {}} 
-        />
-      )}
-
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {showMobileSidebar && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowMobileSidebar(false)}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0, 0, 0, 0.3)',
-                zIndex: 1001,
-              }}
-            />
-            <motion.div
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                bottom: 0,
-                width: '280px',
-                zIndex: 1002,
-              }}
-            >
-              <Sidebar 
-                projects={[]} 
-                onCreateProject={() => {}} 
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <Sidebar 
+        projects={[]} 
+        onCreateProject={() => {}} 
+      />
 
       {/* Main Content */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
+        className="main-content"
         style={{
           flex: 1,
           minHeight: '100vh',
           background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
-          paddingTop: isMobile ? '60px' : '0',
         }}
       >
         {/* Header */}
