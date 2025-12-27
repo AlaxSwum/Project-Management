@@ -369,6 +369,7 @@ export default function PersonalPage() {
   const [dragEnd, setDragEnd] = useState<{ hour: number; minute: number } | null>(null);
   const [dragDate, setDragDate] = useState<Date | null>(null);
   const dayViewRef = React.useRef<HTMLDivElement>(null);
+  const weekViewRefs = React.useRef<(HTMLDivElement | null)[]>([]);
 
   // Convert Y position to time
   const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
@@ -399,10 +400,35 @@ export default function PersonalPage() {
 
   // Handle drag move
   const handleDragMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !dayViewRef.current) return;
-    const rect = dayViewRef.current.getBoundingClientRect();
-    const time = getTimeFromY(e.clientY, rect.top);
-    setDragEnd(time);
+    if (!isDragging) return;
+    
+    // Check day view ref first
+    if (dayViewRef.current) {
+      const rect = dayViewRef.current.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && 
+          e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        const time = getTimeFromY(e.clientY, rect.top);
+        setDragEnd(time);
+        return;
+      }
+    }
+    
+    // Check week view refs
+    for (const ref of weekViewRefs.current) {
+      if (ref) {
+        const rect = ref.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right && 
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          const relativeY = e.clientY - rect.top;
+          const hourHeight = 30; // 30px per hour in week view
+          const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
+          const hour = Math.floor(totalMinutes / 60);
+          const minute = Math.round((totalMinutes % 60) / 15) * 15;
+          setDragEnd({ hour: Math.min(23, hour), minute: minute >= 60 ? 0 : minute });
+          return;
+        }
+      }
+    }
   }, [isDragging]);
 
   // Handle drag end
@@ -689,7 +715,33 @@ export default function PersonalPage() {
   };
 
   const getBlocksForDate = (date: Date): TimeBlock[] => {
-    return blocks.filter(block => block.date === formatDate(date));
+    const dateStr = formatDate(date);
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    return blocks.filter(block => {
+      // Exact date match
+      if (block.date === dateStr) return true;
+      
+      // Check for recurring blocks
+      if (block.isRecurring && block.recurringDays && block.recurringDays.length > 0) {
+        // Check if this day of week is selected
+        if (!block.recurringDays.includes(dayOfWeek)) return false;
+        
+        // Check if within date range (if specified)
+        const blockStartDate = new Date(block.recurringStartDate || block.date);
+        const blockEndDate = block.recurringEndDate ? new Date(block.recurringEndDate) : null;
+        
+        // Date must be >= start date
+        if (date < blockStartDate) return false;
+        
+        // Date must be <= end date (if end date is specified)
+        if (blockEndDate && date > blockEndDate) return false;
+        
+        return true;
+      }
+      
+      return false;
+    });
   };
 
   const getBlockPosition = (block: TimeBlock): { top: number; height: number } => {
@@ -1330,60 +1382,100 @@ export default function PersonalPage() {
                   
                   {/* Week Grid */}
                   <div
-                            style={{ 
+                    style={{ 
                       display: 'grid',
-                      gridTemplateColumns: '80px repeat(7, 1fr)',
-                      minHeight: '600px',
+                      gridTemplateColumns: '60px repeat(7, 1fr)',
+                      minHeight: '720px',
+                      maxHeight: '720px',
+                      overflow: 'auto',
                     }}
                   >
+                    {/* Time labels column */}
                     <div style={{ borderRight: '1px solid rgba(0, 0, 0, 0.04)' }}>
-                      {hours.slice(6, 22).map((hour) => (
+                      {hours.map((hour) => (
                         <div
                           key={hour}
                           style={{
-                            height: '37.5px',
-                            padding: '4px 8px',
-                            fontSize: '11px',
+                            height: '30px',
+                            padding: '2px 6px',
+                            fontSize: '10px',
                             color: '#86868b',
                             textAlign: 'right',
                             borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
                           }}
                         >
                           {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
-            </div>
+                        </div>
                       ))}
-          </div>
+                    </div>
+                    
+                    {/* Day columns with drag-to-create */}
                     {getWeekDays(currentDate).map((day, dayIndex) => (
                       <div
                         key={dayIndex}
-                          style={{ 
+                        ref={(el) => { weekViewRefs.current[dayIndex] = el; }}
+                        style={{ 
                           borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
                           position: 'relative',
-                          cursor: 'pointer',
+                          cursor: isDragging ? 'ns-resize' : 'crosshair',
                         }}
-                        onClick={() => {
-                          setCurrentDate(day);
-                          setViewMode('day');
+                        onMouseDown={(e) => {
+                          const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
+                          if (!rect) return;
+                          const relativeY = e.clientY - rect.top;
+                          const hourHeight = 30;
+                          const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
+                          const hour = Math.floor(totalMinutes / 60);
+                          const minute = Math.round((totalMinutes % 60) / 15) * 15;
+                          const time = { hour: Math.min(23, hour), minute: minute >= 60 ? 0 : minute };
+                          setIsDragging(true);
+                          setDragStart(time);
+                          setDragEnd(time);
+                          setDragDate(day);
+                          e.preventDefault();
                         }}
                       >
-                        {hours.slice(6, 22).map((hour) => (
+                        {/* Hour grid lines */}
+                        {hours.map((hour) => (
                           <div
                             key={hour}
                             style={{
-                              height: '37.5px',
+                              height: '30px',
                               borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
                             }}
                           />
                         ))}
                         
+                        {/* Drag preview for this day */}
+                        {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
+                          const startMinutes = dragStart.hour * 60 + dragStart.minute;
+                          const endMinutes = dragEnd.hour * 60 + dragEnd.minute;
+                          const top = Math.min(startMinutes, endMinutes) / 2;
+                          const height = Math.max(Math.abs(endMinutes - startMinutes) / 2, 15);
+                          return (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: `${top}px`,
+                                left: '2px',
+                                right: '2px',
+                                height: `${height}px`,
+                                background: 'rgba(0, 113, 227, 0.2)',
+                                border: '2px dashed #0071e3',
+                                borderRadius: '4px',
+                                pointerEvents: 'none',
+                              }}
+                            />
+                          );
+                        })()}
+                        
                         {/* Blocks for this day */}
                         {getBlocksForDate(day).map((block) => {
-                          const [startHour] = block.startTime.split(':').map(Number);
-                          const [endHour] = block.endTime.split(':').map(Number);
-                          if (startHour < 6 || startHour >= 22) return null;
+                          const [startHour, startMin] = block.startTime.split(':').map(Number);
+                          const [endHour, endMin] = block.endTime.split(':').map(Number);
                           
-                          const top = (startHour - 6) * 37.5;
-                          const height = Math.max((endHour - startHour) * 37.5, 20);
+                          const top = (startHour * 60 + startMin) / 2; // 30px per hour = 0.5px per minute
+                          const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) / 2, 15);
                           const colors = blockTypeColors[block.type];
                           
                           return (
@@ -1397,15 +1489,15 @@ export default function PersonalPage() {
                               style={{
                                 position: 'absolute',
                                 top: `${top}px`,
-                                left: '4px',
-                                right: '4px',
+                                left: '2px',
+                                right: '2px',
                                 height: `${height}px`,
                                 background: colors.bg,
                                 borderLeft: `2px solid ${colors.solid}`,
                                 borderRadius: '4px',
-                                padding: '4px 6px',
+                                padding: '2px 4px',
                                 cursor: 'pointer',
-                                fontSize: '10px',
+                                fontSize: '9px',
                                 fontWeight: '500',
                                 color: '#1d1d1f',
                                 overflow: 'hidden',
