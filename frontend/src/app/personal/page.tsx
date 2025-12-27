@@ -209,6 +209,121 @@ export default function PersonalPage() {
     notificationTime: 10,
   });
 
+  // Drag to create state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ hour: number; minute: number } | null>(null);
+  const [dragEnd, setDragEnd] = useState<{ hour: number; minute: number } | null>(null);
+  const [dragDate, setDragDate] = useState<Date | null>(null);
+  const dayViewRef = React.useRef<HTMLDivElement>(null);
+
+  // Convert Y position to time
+  const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
+    const relativeY = y - containerTop;
+    const hourHeight = 60; // 60px per hour
+    const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = Math.round((totalMinutes % 60) / 15) * 15; // Snap to 15-min intervals
+    return { hour: Math.min(23, hour), minute: minute >= 60 ? 0 : minute };
+  };
+
+  // Format time from hour/minute
+  const formatTimeFromParts = (hour: number, minute: number): string => {
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  };
+
+  // Handle drag start on day view
+  const handleDragStart = (e: React.MouseEvent, date: Date) => {
+    if (!dayViewRef.current) return;
+    const rect = dayViewRef.current.getBoundingClientRect();
+    const time = getTimeFromY(e.clientY, rect.top);
+    setIsDragging(true);
+    setDragStart(time);
+    setDragEnd(time);
+    setDragDate(date);
+    e.preventDefault();
+  };
+
+  // Handle drag move
+  const handleDragMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !dayViewRef.current) return;
+    const rect = dayViewRef.current.getBoundingClientRect();
+    const time = getTimeFromY(e.clientY, rect.top);
+    setDragEnd(time);
+  }, [isDragging]);
+
+  // Handle drag end
+  const handleDragEnd = useCallback(() => {
+    if (!isDragging || !dragStart || !dragEnd || !dragDate) {
+      setIsDragging(false);
+      return;
+    }
+
+    // Calculate start and end times
+    const startMinutes = dragStart.hour * 60 + dragStart.minute;
+    const endMinutes = dragEnd.hour * 60 + dragEnd.minute;
+    
+    const actualStart = Math.min(startMinutes, endMinutes);
+    const actualEnd = Math.max(startMinutes, endMinutes);
+    
+    // Minimum 15 minutes
+    const finalEnd = actualEnd <= actualStart ? actualStart + 60 : actualEnd;
+    
+    const startHour = Math.floor(actualStart / 60);
+    const startMin = actualStart % 60;
+    const endHour = Math.floor(finalEnd / 60);
+    const endMin = finalEnd % 60;
+
+    // Set form with the dragged times
+    setBlockForm({
+      title: '',
+      description: '',
+      type: 'focus',
+      startTime: formatTimeFromParts(startHour, startMin),
+      endTime: formatTimeFromParts(Math.min(23, endHour), endMin),
+      checklist: [],
+      meetingLink: '',
+      notificationTime: 10,
+    });
+    
+    setCurrentDate(dragDate);
+    setShowAddModal(true);
+    
+    // Reset drag state
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+    setDragDate(null);
+  }, [isDragging, dragStart, dragEnd, dragDate]);
+
+  // Add global mouse listeners for drag
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleDragMove);
+      window.addEventListener('mouseup', handleDragEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleDragMove);
+        window.removeEventListener('mouseup', handleDragEnd);
+      };
+    }
+  }, [isDragging, handleDragMove, handleDragEnd]);
+
+  // Get drag preview position
+  const getDragPreview = () => {
+    if (!isDragging || !dragStart || !dragEnd) return null;
+    
+    const startMinutes = dragStart.hour * 60 + dragStart.minute;
+    const endMinutes = dragEnd.hour * 60 + dragEnd.minute;
+    
+    const top = Math.min(startMinutes, endMinutes);
+    const bottom = Math.max(startMinutes, endMinutes);
+    const height = Math.max(bottom - top, 15);
+    
+    return {
+      top: (top / 60) * 60,
+      height: (height / 60) * 60,
+    };
+  };
+
   // Auth check
   useEffect(() => {
     if (authLoading) return;
@@ -708,7 +823,15 @@ export default function PersonalPage() {
                     overflow: 'hidden',
                   }}
                 >
-                  <div style={{ position: 'relative' }}>
+                  <div 
+                    ref={dayViewRef}
+                    style={{ position: 'relative', cursor: isDragging ? 'ns-resize' : 'crosshair' }}
+                    onMouseDown={(e) => {
+                      // Only start drag if clicking on empty space (not on a block)
+                      if ((e.target as HTMLElement).closest('[data-block]')) return;
+                      handleDragStart(e, currentDate);
+                    }}
+                  >
                     {/* Time Column */}
                     {hours.map((hour) => (
                       <div
@@ -728,10 +851,11 @@ export default function PersonalPage() {
                             color: '#86868b',
                             textAlign: 'right',
                             flexShrink: 0,
+                            pointerEvents: 'none',
                           }}
                         >
                           {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
-            </div>
+                        </div>
                         <div
                           style={{
                             flex: 1,
@@ -742,6 +866,45 @@ export default function PersonalPage() {
                       </div>
                     ))}
                     
+                    {/* Drag Preview */}
+                    {isDragging && getDragPreview() && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        style={{
+                          position: 'absolute',
+                          top: `${getDragPreview()!.top}px`,
+                          left: '96px',
+                          right: '16px',
+                          height: `${Math.max(getDragPreview()!.height, 30)}px`,
+                          background: 'rgba(59, 130, 246, 0.15)',
+                          borderLeft: '3px solid #3b82f6',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          pointerEvents: 'none',
+                          zIndex: 5,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <SparklesIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>
+                            New Block
+                          </span>
+                        </div>
+                        {dragStart && dragEnd && (
+                          <div style={{ fontSize: '11px', color: '#86868b', marginTop: '4px' }}>
+                            {formatTime(formatTimeFromParts(
+                              Math.min(dragStart.hour, dragEnd.hour),
+                              Math.min(dragStart.hour, dragEnd.hour) === dragStart.hour ? dragStart.minute : dragEnd.minute
+                            ))} - {formatTime(formatTimeFromParts(
+                              Math.max(dragStart.hour, dragEnd.hour),
+                              Math.max(dragStart.hour, dragEnd.hour) === dragStart.hour ? dragStart.minute : dragEnd.minute
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                    
                     {/* Time Blocks */}
                     {getBlocksForDate(currentDate).map((block) => {
                       const { top, height } = getBlockPosition(block);
@@ -750,11 +913,12 @@ export default function PersonalPage() {
                       return (
                         <motion.div
                           key={block.id}
+                          data-block="true"
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           whileHover={{ scale: 1.01, zIndex: 10 }}
                           onClick={() => handleBlockClick(block)}
-                    style={{
+                          style={{
                             position: 'absolute',
                             top: `${top}px`,
                             left: '96px',
@@ -762,11 +926,12 @@ export default function PersonalPage() {
                             height: `${height}px`,
                             background: colors.bg,
                             borderLeft: `3px solid ${colors.solid}`,
-                    borderRadius: '8px',
+                            borderRadius: '8px',
                             padding: '8px 12px',
-                    cursor: 'pointer',
+                            cursor: 'pointer',
                             overflow: 'hidden',
                             transition: 'all 0.2s ease',
+                            zIndex: 2,
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
