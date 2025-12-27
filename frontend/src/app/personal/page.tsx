@@ -307,6 +307,16 @@ export default function PersonalPage() {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
+  
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Load custom categories from localStorage
   useEffect(() => {
@@ -703,11 +713,13 @@ export default function PersonalPage() {
 
     return (
     <>
-      {/* Sidebar */}
-      <Sidebar 
-        projects={[]} 
-        onCreateProject={() => {}} 
-      />
+      {/* Sidebar - only on desktop */}
+      {!isMobile && (
+        <Sidebar 
+          projects={[]} 
+          onCreateProject={() => {}} 
+        />
+      )}
 
       {/* Main Content */}
       <motion.div
@@ -717,8 +729,10 @@ export default function PersonalPage() {
         className="main-content"
         style={{
           minHeight: '100vh',
+          marginLeft: isMobile ? '0' : '280px',
           background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
+          transition: 'margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
         {/* Header */}
