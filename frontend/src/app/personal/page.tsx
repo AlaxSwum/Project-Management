@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import Sidebar from '@/components/Sidebar';
 import {
   PlusIcon,
   ChevronLeftIcon,
@@ -24,6 +25,7 @@ import {
   FolderIcon,
   ArrowPathIcon,
   TagIcon,
+  Bars3Icon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 
@@ -282,6 +284,20 @@ export default function PersonalPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  
+  // Mobile sidebar state
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  
+  // Check if mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Form state for new/edit block
   const [blockForm, setBlockForm] = useState<Partial<TimeBlock>>({
@@ -700,18 +716,111 @@ export default function PersonalPage() {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
     return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Mobile Header */}
+      {isMobile && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '60px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 16px',
+            zIndex: 1000,
+          }}
+        >
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowMobileSidebar(true)}
+            style={{
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              background: 'rgba(0, 0, 0, 0.04)',
+              borderRadius: '10px',
+              cursor: 'pointer',
+            }}
+          >
+            <Bars3Icon style={{ width: '24px', height: '24px', color: '#1d1d1f' }} />
+          </motion.button>
+          <span style={{ marginLeft: '12px', fontSize: '17px', fontWeight: '600', color: '#1d1d1f' }}>
+            Focus
+          </span>
+        </div>
+      )}
+
+      {/* Sidebar */}
+      {!isMobile && (
+        <Sidebar 
+          projects={[]} 
+          onCreateProject={() => {}} 
+        />
+      )}
+
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {showMobileSidebar && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileSidebar(false)}
               style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
-      }}
-    >
-          {/* Header */}
-      <motion.header
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.3)',
+                zIndex: 1001,
+              }}
+            />
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: '280px',
+                zIndex: 1002,
+              }}
+            >
+              <Sidebar 
+                projects={[]} 
+                onCreateProject={() => {}} 
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        style={{
+          flex: 1,
+          minHeight: '100vh',
+          background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
+          paddingTop: isMobile ? '60px' : '0',
+        }}
+      >
+        {/* Header */}
+        <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -2400,37 +2509,41 @@ export default function PersonalPage() {
         )}
       </AnimatePresence>
 
-      {/* Side Panel for Block Details */}
+      {/* Block Details Popup Modal */}
       <AnimatePresence>
         {showPanel && selectedBlock && (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPanel(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '24px',
+            }}
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowPanel(false)}
-                  style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0, 0, 0, 0.2)',
-                zIndex: 200,
-              }}
-            />
-            <motion.div
-              {...slideIn}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              {...scaleIn}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
               style={{
-                position: 'fixed',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                width: '420px',
-                maxWidth: '100%',
+                width: '100%',
+                maxWidth: '520px',
+                maxHeight: '90vh',
                 background: '#fff',
-                boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.1)',
-                zIndex: 300,
+                borderRadius: '20px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 display: 'flex',
                 flexDirection: 'column',
+                overflow: 'hidden',
               }}
             >
               {/* Panel Header */}
@@ -2854,9 +2967,10 @@ export default function PersonalPage() {
                 </select>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
