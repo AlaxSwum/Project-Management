@@ -34,6 +34,7 @@ import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
   EnvelopeIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -1052,6 +1053,7 @@ Your report is now available in the system.`);
   // Base navigation items available to all users
   const baseNavItems = [
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
+    { name: 'Personal', href: '/personal', icon: SparklesIcon },
     { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
     { name: 'Timeline & Roadmap', href: '/timeline', icon: ChartBarIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
@@ -1089,6 +1091,7 @@ Your report is now available in the system.`);
   const filteredMainNavItems = isInstructorUser
     ? [
         { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Personal', href: '/personal', icon: SparklesIcon },
         { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
         { name: 'Meeting Schedule', href: '/timetable', icon: ClockIcon },
       ]
