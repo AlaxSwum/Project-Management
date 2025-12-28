@@ -1304,6 +1304,30 @@ export default function PersonalPage() {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {/* Quick Complete Checkbox */}
+                            <motion.div
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const updatedBlock = { ...block, completed: !block.completed };
+                                saveBlock(updatedBlock);
+                              }}
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '5px',
+                                border: block.completed ? 'none' : '2px solid rgba(0, 0, 0, 0.2)',
+                                background: block.completed ? '#22c55e' : 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {block.completed && <CheckIcon style={{ width: '12px', height: '12px', color: '#fff' }} />}
+                            </motion.div>
                             {block.type === 'focus' && <SparklesIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
                             {block.type === 'meeting' && <VideoCameraIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
                             {block.type === 'personal' && <UserIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
@@ -1313,7 +1337,8 @@ export default function PersonalPage() {
                               style={{
                                 fontSize: '13px',
                                 fontWeight: '600',
-                                color: '#1d1d1f',
+                                color: block.completed ? '#86868b' : '#1d1d1f',
+                                textDecoration: block.completed ? 'line-through' : 'none',
                                 flex: 1,
                               }}
                             >
@@ -1591,11 +1616,37 @@ export default function PersonalPage() {
                                 cursor: 'pointer',
                                 fontSize: '9px',
                                 fontWeight: '500',
-                                color: '#1d1d1f',
+                                color: block.completed ? '#86868b' : '#1d1d1f',
                                 overflow: 'hidden',
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '3px',
                               }}
                             >
-                              {block.title}
+                              {/* Quick checkbox */}
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const updatedBlock = { ...block, completed: !block.completed };
+                                  saveBlock(updatedBlock);
+                                }}
+                                style={{
+                                  width: '12px',
+                                  height: '12px',
+                                  borderRadius: '3px',
+                                  border: block.completed ? 'none' : '1.5px solid rgba(0, 0, 0, 0.25)',
+                                  background: block.completed ? '#22c55e' : 'transparent',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  flexShrink: 0,
+                                  marginTop: '1px',
+                                }}
+                              >
+                                {block.completed && <CheckIcon style={{ width: '8px', height: '8px', color: '#fff' }} />}
+                              </div>
+                              <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1 }}>{block.title}</span>
                             </motion.div>
                           );
                         })}
@@ -1703,21 +1754,45 @@ export default function PersonalPage() {
                                   e.stopPropagation();
                                   handleBlockClick(block);
                                 }}
-                        style={{ 
+                                style={{ 
                                   fontSize: '10px',
                                   padding: '2px 6px',
                                   marginBottom: '2px',
                                   background: colors.bg,
                                   borderLeft: `2px solid ${colors.solid}`,
                                   borderRadius: '3px',
-                                  color: '#1d1d1f',
+                                  color: block.completed ? '#86868b' : '#1d1d1f',
                                   fontWeight: '500',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
                                 }}
                               >
-                                {block.title}
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const updatedBlock = { ...block, completed: !block.completed };
+                                    saveBlock(updatedBlock);
+                                  }}
+                                  style={{
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '2px',
+                                    border: block.completed ? 'none' : '1.5px solid rgba(0, 0, 0, 0.25)',
+                                    background: block.completed ? '#22c55e' : 'transparent',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {block.completed && <CheckIcon style={{ width: '6px', height: '6px', color: '#fff' }} />}
+                                </div>
+                                <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
                               </div>
                             );
                           })}
