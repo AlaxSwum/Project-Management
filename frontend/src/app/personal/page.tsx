@@ -964,7 +964,7 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : '280px',
-          marginRight: isMobile ? '0' : (showRightPanel ? '300px' : '0'),
+          marginRight: isMobile ? '0' : (showRightPanel ? '320px' : '0'),
           background: '#f8f9fa',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -975,7 +975,7 @@ export default function PersonalPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          style={{
+              style={{
             padding: '20px 32px',
             background: '#fff',
             borderBottom: '1px solid #e5e7eb',
@@ -1002,7 +1002,7 @@ export default function PersonalPage() {
                 >
                   Focus
                 </motion.h1>
-              </div>
+          </div>
               
               {/* Daily Progress - Inline */}
               {(() => {
@@ -1021,7 +1021,7 @@ export default function PersonalPage() {
                       borderRadius: '24px',
                     }}
                   >
-                    <div style={{ 
+        <div style={{ 
                       width: '100px', 
                       height: '6px', 
                       background: 'rgba(0,0,0,0.08)', 
@@ -1049,8 +1049,8 @@ export default function PersonalPage() {
                   </motion.div>
                 );
               })()}
-            </div>
-            
+              </div>
+              
             {/* Right: View Mode & Add Button */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {/* View Mode Switcher with Sliding Indicator */}
@@ -1104,8 +1104,8 @@ export default function PersonalPage() {
                     {mode}
                   </motion.button>
                 ))}
-              </div>
-              
+            </div>
+
               {/* Add Block Button */}
               <motion.button
                 onClick={() => setShowAddModal(true)}
@@ -1136,9 +1136,9 @@ export default function PersonalPage() {
           {/* Navigation */}
           <div
             style={{
-              display: 'flex', 
+            display: 'flex', 
               alignItems: 'center',
-              justifyContent: 'space-between', 
+            justifyContent: 'space-between', 
               marginTop: '16px',
               paddingTop: '16px',
               borderTop: '1px solid #f3f4f6',
@@ -1152,8 +1152,8 @@ export default function PersonalPage() {
                 style={{
                   width: '32px',
                   height: '32px',
-                  display: 'flex', 
-                  alignItems: 'center', 
+              display: 'flex', 
+            alignItems: 'center', 
                   justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
@@ -1182,8 +1182,8 @@ export default function PersonalPage() {
                 {viewMode === 'day' && (
                   <>
                     {weekDays[currentDate.getDay()]}, {monthNames[currentDate.getMonth()]} {currentDate.getDate()}
-                  </>
-                )}
+                </>
+              )}
                 {viewMode === 'week' && (
                   <>
                     {monthNames[currentDate.getMonth()]} {getWeekDays(currentDate)[0].getDate()} - {getWeekDays(currentDate)[6].getDate()}
@@ -1235,7 +1235,7 @@ export default function PersonalPage() {
             >
               Today
             </motion.button>
-          </div>
+              </div>
         </motion.header>
 
       {/* Main Content */}
@@ -1454,11 +1454,11 @@ export default function PersonalPage() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: block.checklist.filter(i => i.completed).length === block.checklist.length ? '#22c55e' : '#86868b' }}>
                                 <ListBulletIcon style={{ width: '12px', height: '12px' }} />
                                 <span style={{ fontSize: '10px', fontWeight: '600' }}>{block.checklist.filter(i => i.completed).length}/{block.checklist.length}</span>
-                              </div>
+                  </div>
                             )}
                             {block.isRecurring && (
                               <ArrowPathIcon style={{ width: '12px', height: '12px', color: '#8b5cf6' }} />
-                            )}
+              )}
             </div>
                           <div
                             style={{
@@ -1568,7 +1568,7 @@ export default function PersonalPage() {
                             }}
                           >
                             {weekDays[day.getDay()]}
-                          </div>
+            </div>
                           <div
                             style={{
                               fontSize: '24px',
@@ -1607,7 +1607,7 @@ export default function PersonalPage() {
                           key={hour}
                           style={{
                             height: '50px',
-                            padding: '4px 8px',
+                      padding: '4px 8px',
                             fontSize: '11px',
                             color: '#86868b',
                             textAlign: 'right',
@@ -1617,14 +1617,14 @@ export default function PersonalPage() {
                           {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
                         </div>
                       ))}
-                    </div>
-                    
+                  </div>
+                  
                     {/* Day columns with drag-to-create */}
                     {getWeekDays(currentDate).map((day, dayIndex) => (
-                      <div
+                    <div 
                         key={dayIndex}
                         ref={(el) => { weekViewRefs.current[dayIndex] = el; }}
-                        style={{ 
+                style={{
                           borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
                           position: 'relative',
                           cursor: isDragging ? 'ns-resize' : 'crosshair',
@@ -1665,7 +1665,7 @@ export default function PersonalPage() {
                           const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 20);
                           return (
                             <div
-                              style={{
+                            style={{ 
                                 position: 'absolute',
                                 top: `${top}px`,
                                 left: '2px',
@@ -1707,7 +1707,7 @@ export default function PersonalPage() {
                                 borderLeft: `2px solid ${colors.solid}`,
                                 borderRadius: '4px',
                                 padding: '2px 4px',
-                                cursor: 'pointer',
+                  cursor: 'pointer',
                                 fontSize: '9px',
                                 fontWeight: '500',
                                 color: block.completed ? '#86868b' : '#1d1d1f',
@@ -1788,10 +1788,10 @@ export default function PersonalPage() {
                         }}
                       >
                         {day}
-                      </div>
+            </div>
                     ))}
-                  </div>
-                  
+          </div>
+
                   {/* Month Grid */}
                   <div
                           style={{ 
@@ -1812,7 +1812,7 @@ export default function PersonalPage() {
                             setCurrentDate(day);
                             setViewMode('day');
                           }}
-                          style={{
+                          style={{ 
                             minHeight: '100px',
                             padding: '8px',
                             borderRight: (index + 1) % 7 !== 0 ? '1px solid rgba(0, 0, 0, 0.04)' : 'none',
@@ -1885,9 +1885,9 @@ export default function PersonalPage() {
                                   }}
                                 >
                                   {block.completed && <CheckIcon style={{ width: '6px', height: '6px', color: '#fff' }} />}
-                                </div>
+                      </div>
                                 <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
-                              </div>
+                    </div>
                             );
                           })}
                           
@@ -1901,11 +1901,11 @@ export default function PersonalPage() {
                             >
                               +{dayBlocks.length - 3} more
                     </div>
-              )}
+                  )}
                         </motion.div>
                       );
                     })}
-            </div>
+                </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1990,14 +1990,14 @@ export default function PersonalPage() {
           style={{
             position: 'fixed',
             right: 0,
-            top: '120px',
-            width: '300px',
-            height: 'calc(100vh - 120px)',
-            background: '#fff',
+            top: '72px',
+            width: '320px',
+            height: 'calc(100vh - 72px)',
+            background: '#fafafa',
             borderLeft: '1px solid #e5e7eb',
             overflowY: 'auto',
             zIndex: 50,
-            padding: '16px',
+            padding: '0',
           }}
         >
           {/* Toggle button */}
@@ -2005,49 +2005,51 @@ export default function PersonalPage() {
             onClick={() => setShowRightPanel(false)}
             style={{
               position: 'absolute',
-              top: '12px',
-              right: '12px',
-              width: '24px',
-              height: '24px',
+              top: '8px',
+              right: '8px',
+              width: '28px',
+              height: '28px',
               borderRadius: '8px',
               border: 'none',
-              background: 'rgba(0, 0, 0, 0.04)',
+              background: '#fff',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
             }}
           >
             <ChevronRightIcon style={{ width: '14px', height: '14px', color: '#86868b' }} />
-          </button>
+                    </button>
 
           {/* Tasks & Timeline Box */}
           <div
             style={{
-              background: '#f9fafb',
-              borderRadius: '12px',
+              background: '#fff',
+              margin: '12px',
+              borderRadius: '14px',
               border: '1px solid #e5e7eb',
               overflow: 'hidden',
-              marginBottom: '12px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
             {/* Tabs */}
             <div
               style={{
                 display: 'flex',
-                background: '#fff',
+                background: '#f9fafb',
                 borderBottom: '1px solid #e5e7eb',
               }}
             >
               <button
                 onClick={() => setSidebarTab('tasks')}
-                style={{
+                style={{ 
                   flex: 1,
-                  padding: '10px',
-                  fontSize: '11px',
+                  padding: '12px',
+                  fontSize: '12px',
                   fontWeight: '600',
-                  border: 'none',
-                  background: 'transparent',
+                  border: 'none', 
+                  background: sidebarTab === 'tasks' ? '#fff' : 'transparent',
                   color: sidebarTab === 'tasks' ? '#3b82f6' : '#6b7280',
                   cursor: 'pointer',
                   borderBottom: sidebarTab === 'tasks' ? '2px solid #3b82f6' : '2px solid transparent',
@@ -2060,19 +2062,19 @@ export default function PersonalPage() {
               >
                 <BriefcaseIcon style={{ width: '13px', height: '13px' }} />
                 Tasks
-              </button>
-              <button
+                        </button>
+                        <button
                 onClick={() => setSidebarTab('timeline')}
                 style={{
                   flex: 1,
-                  padding: '10px',
-                  fontSize: '11px',
+                  padding: '12px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   border: 'none',
-                  background: 'transparent',
-                  color: sidebarTab === 'timeline' ? '#3b82f6' : '#6b7280',
+                  background: sidebarTab === 'timeline' ? '#fff' : 'transparent',
+                  color: sidebarTab === 'timeline' ? '#8b5cf6' : '#6b7280',
                   cursor: 'pointer',
-                  borderBottom: sidebarTab === 'timeline' ? '2px solid #3b82f6' : '2px solid transparent',
+                  borderBottom: sidebarTab === 'timeline' ? '2px solid #8b5cf6' : '2px solid transparent',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -2080,7 +2082,7 @@ export default function PersonalPage() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <RocketLaunchIcon style={{ width: '13px', height: '13px' }} />
+                <RocketLaunchIcon style={{ width: '14px', height: '14px' }} />
                 Timeline
               </button>
             </div>
@@ -2088,8 +2090,8 @@ export default function PersonalPage() {
             {/* View Label */}
             <div style={{ padding: '8px 12px', fontSize: '10px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
               {viewLabel}
-            </div>
-
+                    </div>
+                    
             {/* Content */}
             <div style={{ padding: '12px', maxHeight: '280px', overflowY: 'auto' }}>
               {sidebarTab === 'tasks' ? (
@@ -2106,7 +2108,7 @@ export default function PersonalPage() {
                         key={task.id}
                         whileHover={{ scale: 1.01, background: '#f3f4f6' }}
                         onClick={() => setSelectedExternalTask(task)}
-                        style={{
+                        style={{ 
                           padding: '10px 12px',
                           borderRadius: '8px',
                           marginBottom: '6px',
@@ -2125,7 +2127,7 @@ export default function PersonalPage() {
                             <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#6b7280' }}>
                               {isOverdue && <ExclamationTriangleIcon style={{ width: '10px', height: '10px', display: 'inline', marginRight: '2px' }} />}
                               {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </span>
+                      </span>
                           )}
                         </div>
                       </motion.div>
@@ -2145,7 +2147,7 @@ export default function PersonalPage() {
                         key={item.id}
                         whileHover={{ scale: 1.01, background: '#f3f4f6' }}
                         onClick={() => setSelectedExternalTimeline(item)}
-                        style={{
+                        style={{ 
                           padding: '10px 12px',
                           borderRadius: '8px',
                           marginBottom: '6px',
@@ -2163,7 +2165,7 @@ export default function PersonalPage() {
                           <span>
                             {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                          </span>
+                      </span>
                         </div>
                       </motion.div>
                     );
@@ -2177,30 +2179,33 @@ export default function PersonalPage() {
           <div
             style={{
               background: '#fff',
-              borderRadius: '16px',
-              border: '1px solid rgba(0, 0, 0, 0.06)',
+              margin: '0 12px 12px',
+              borderRadius: '14px',
+              border: '1px solid #e5e7eb',
               overflow: 'hidden',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
             <div
               style={{
-                padding: '14px 16px',
-                borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                padding: '12px 16px',
+                background: '#fef3c7',
+                borderBottom: '1px solid #fde68a',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
               }}
             >
-              <UsersIcon style={{ width: '14px', height: '14px', color: '#0071e3' }} />
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f' }}>Meetings</span>
-              <span style={{ fontSize: '10px', color: '#86868b', marginLeft: 'auto' }}>
-                {filteredMeetings.length} {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : ''}
+              <UsersIcon style={{ width: '16px', height: '16px', color: '#d97706' }} />
+              <span style={{ fontSize: '13px', fontWeight: '700', color: '#92400e' }}>Meetings</span>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: '#b45309', marginLeft: 'auto', background: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
+                {filteredMeetings.length}
               </span>
             </div>
 
-            <div style={{ padding: '12px', maxHeight: '200px', overflowY: 'auto' }}>
+            <div style={{ padding: '8px', maxHeight: '220px', overflowY: 'auto' }}>
               {filteredMeetings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
+                <div style={{ textAlign: 'center', padding: '20px', color: '#9ca3af', fontSize: '13px' }}>
                   No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}
                 </div>
               ) : (
@@ -2223,12 +2228,12 @@ export default function PersonalPage() {
                     >
                       <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
                         {meeting.title}
-                      </div>
+                  </div>
                       <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#ea580c' }}>{meeting.time}</span>
                         <span>{meeting.duration}min</span>
                         <span>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                      </div>
+            </div>
                     </motion.div>
                   );
                 })
@@ -3114,7 +3119,7 @@ export default function PersonalPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleAddBlock}
-                    style={{
+                    style={{ 
                     flex: 1,
                     padding: '14px',
                     fontSize: '15px',
@@ -3124,11 +3129,11 @@ export default function PersonalPage() {
                     background: '#0071e3',
                       cursor: 'pointer',
                     color: '#fff',
-                  }}
-                >
+                    }}
+                  >
                   Create Block
                 </motion.button>
-                    </div>
+                  </div>
             </motion.div>
           </motion.div>
         )}
@@ -3161,7 +3166,7 @@ export default function PersonalPage() {
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: 'spring', damping: 30, stiffness: 400 }}
               onClick={(e) => e.stopPropagation()}
-              style={{
+                    style={{
                 width: '100%',
                 maxWidth: '480px',
                 maxHeight: '85vh',
@@ -3201,14 +3206,14 @@ export default function PersonalPage() {
                       <span style={{ fontSize: '11px', fontWeight: '600', color: blockTypeColors[selectedBlock.type].text, textTransform: 'capitalize' }}>
                         {selectedBlock.type}
                       </span>
-                    </div>
+                  </div>
                     {selectedBlock.isRecurring && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', borderRadius: '16px', background: 'rgba(139, 92, 246, 0.1)' }}>
                         <ArrowPathIcon style={{ width: '11px', height: '11px', color: '#8b5cf6' }} />
                         <span style={{ fontSize: '11px', fontWeight: '500', color: '#8b5cf6' }}>Recurring</span>
-                      </div>
-                    )}
-                  </div>
+              </div>
+                      )}
+            </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -3252,9 +3257,9 @@ export default function PersonalPage() {
                     >
                       <XMarkIcon style={{ width: '15px', height: '15px' }} />
                     </motion.button>
-                  </div>
-                </div>
-                
+        </div>
+      </div>
+      
                 {/* Task Title with Checkbox */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <motion.button
@@ -3293,8 +3298,8 @@ export default function PersonalPage() {
                       <span>{formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}</span>
                       <span style={{ margin: '0 4px' }}>·</span>
                       <span>{new Date(selectedBlock.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                    </div>
-                  </div>
+        </div>
+    </div>
                 </div>
               </div>
               
@@ -3351,31 +3356,31 @@ export default function PersonalPage() {
                             animate={{ width: `${(selectedBlock.checklist.filter(i => i.completed).length / selectedBlock.checklist.length) * 100}%` }}
                             style={{ height: '100%', background: '#22c55e', borderRadius: '2px' }}
                           />
-                        </div>
+          </div>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: '#22c55e' }}>
                           {Math.round((selectedBlock.checklist.filter(i => i.completed).length / selectedBlock.checklist.length) * 100)}%
                         </span>
                       </div>
                     )}
-                  </div>
-                  
+      </div>
+      
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {selectedBlock.checklist.map((item) => (
                       <motion.div
                         key={item.id}
                         whileHover={{ background: 'rgba(0, 0, 0, 0.03)' }}
                         onClick={() => toggleChecklistItem(item.id)}
-                        style={{
+              style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: '10px',
                           padding: '10px 12px',
                           borderRadius: '10px',
-                          cursor: 'pointer',
+                cursor: 'pointer',
                         }}
                       >
                         <div
-                          style={{
+                  style={{
                             width: '20px',
                             height: '20px',
                             borderRadius: '6px',
@@ -3388,7 +3393,7 @@ export default function PersonalPage() {
                           }}
                         >
                           {item.completed && <CheckIcon style={{ width: '12px', height: '12px', color: '#fff' }} />}
-                        </div>
+                </div>
                         <span style={{
                           flex: 1,
                           fontSize: '14px',
@@ -3426,10 +3431,10 @@ export default function PersonalPage() {
                         >
                           Add
                         </motion.button>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              )}
+            </div>
+      </div>
+    </div>
                 
                 {/* Email Reminder - only show if set */}
                 {selectedBlock.notificationTime && selectedBlock.notificationTime > 0 && (
@@ -3450,7 +3455,7 @@ export default function PersonalPage() {
                 >
                   Done
                 </motion.button>
-              </div>
+                </div>
             </motion.div>
           </motion.div>
         )}
@@ -3464,7 +3469,7 @@ export default function PersonalPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedExternalTask(null)}
-            style={{
+                  style={{ 
               position: 'fixed',
               inset: 0,
               background: 'rgba(0, 0, 0, 0.4)',
@@ -3546,6 +3551,10 @@ export default function PersonalPage() {
               <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => {
+                    // Set the date to the task's due date if available
+                    if (selectedExternalTask.due_date) {
+                      setCurrentDate(new Date(selectedExternalTask.due_date));
+                    }
                     setBlockForm({
                       title: selectedExternalTask.name,
                       description: selectedExternalTask.description || `From: ${selectedExternalTask.project_name}`,
@@ -3558,17 +3567,17 @@ export default function PersonalPage() {
                     setSelectedExternalTask(null);
                     setShowAddModal(true);
                   }}
-                  style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)' }}
                 >
                   Add to Calendar
                 </button>
                 <button
                   onClick={() => setSelectedExternalTask(null)}
-                  style={{ padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '10px', background: '#fff', color: '#374151', cursor: 'pointer' }}
                 >
                   Close
                 </button>
-              </div>
+                          </div>
             </motion.div>
           </motion.div>
         )}
@@ -3582,12 +3591,12 @@ export default function PersonalPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedExternalTimeline(null)}
-            style={{
+                            style={{
               position: 'fixed',
               inset: 0,
               background: 'rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(4px)',
-              display: 'flex',
+                              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               zIndex: 1000,
@@ -3599,7 +3608,7 @@ export default function PersonalPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              style={{
+                              style={{
                 background: '#fff',
                 borderRadius: '16px',
                 width: '100%',
@@ -3620,19 +3629,19 @@ export default function PersonalPage() {
                     <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
                       {selectedExternalTimeline.title}
                     </h2>
-                  </div>
+                              </div>
                   <button onClick={() => setSelectedExternalTimeline(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
                     <XMarkIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />
                   </button>
-                </div>
-              </div>
+                                </div>
+                            </div>
               
               <div style={{ padding: '20px' }}>
                 {selectedExternalTimeline.description && (
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Description</label>
                     <p style={{ fontSize: '14px', color: '#374151', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTimeline.description}</p>
-                  </div>
+                          </div>
                 )}
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -3641,21 +3650,23 @@ export default function PersonalPage() {
                     <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
                       {new Date(selectedExternalTimeline.start_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </p>
-                  </div>
+                </div>
                   {selectedExternalTimeline.end_date && (
                     <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
                       <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>End Date</label>
                       <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
                         {new Date(selectedExternalTimeline.end_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </p>
-                    </div>
-                  )}
-                </div>
               </div>
-              
+                  )}
+        </div>
+      </div>
+      
               <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
-                <button
+                  <button
                   onClick={() => {
+                    // Set the date to the timeline's start date
+                    setCurrentDate(new Date(selectedExternalTimeline.start_date));
                     setBlockForm({
                       title: selectedExternalTimeline.title,
                       description: selectedExternalTimeline.description || '',
@@ -3668,17 +3679,17 @@ export default function PersonalPage() {
                     setSelectedExternalTimeline(null);
                     setShowAddModal(true);
                   }}
-                  style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px', background: '#8b5cf6', color: '#fff', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)' }}
                 >
                   Add to Calendar
-                </button>
-                <button
+                  </button>
+                  <button
                   onClick={() => setSelectedExternalTimeline(null)}
-                  style={{ padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '10px', background: '#fff', color: '#374151', cursor: 'pointer' }}
                 >
                   Close
-                </button>
-              </div>
+                  </button>
+                </div>
             </motion.div>
           </motion.div>
         )}
@@ -3692,7 +3703,7 @@ export default function PersonalPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedExternalMeeting(null)}
-            style={{
+                  style={{ 
               position: 'fixed',
               inset: 0,
               background: 'rgba(0, 0, 0, 0.4)',
@@ -3724,7 +3735,7 @@ export default function PersonalPage() {
                   <div>
                     <span style={{ fontSize: '10px', fontWeight: '600', color: '#ea580c', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {selectedExternalMeeting.project_name || 'Meeting'}
-                    </span>
+                </span>
                     <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
                       {selectedExternalMeeting.title}
                     </h2>
@@ -3749,13 +3760,13 @@ export default function PersonalPage() {
                     <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
                       {new Date(selectedExternalMeeting.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </p>
-                  </div>
+              </div>
                   <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
                     <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Time</label>
                     <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
                       {selectedExternalMeeting.time} ({selectedExternalMeeting.duration}min)
                     </p>
-                  </div>
+            </div>
                 </div>
                 
                 {selectedExternalMeeting.meeting_link && (
@@ -3770,8 +3781,8 @@ export default function PersonalPage() {
                       Join Meeting
                     </a>
                   </div>
-                )}
-              </div>
+        )}
+      </div>
               
               <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
                 <button
@@ -3780,6 +3791,8 @@ export default function PersonalPage() {
                     const endMinutes = h * 60 + m + (selectedExternalMeeting.duration || 60);
                     const endH = Math.floor(endMinutes / 60) % 24;
                     const endM = endMinutes % 60;
+                    // Set the date to the meeting's date
+                    setCurrentDate(new Date(selectedExternalMeeting.date));
                     setBlockForm({
                       title: selectedExternalMeeting.title,
                       description: selectedExternalMeeting.description || '',
@@ -3792,7 +3805,7 @@ export default function PersonalPage() {
                     setSelectedExternalMeeting(null);
                     setShowAddModal(true);
                   }}
-                  style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px', background: '#ea580c', color: '#fff', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #ea580c, #dc2626)', color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px rgba(234, 88, 12, 0.3)' }}
                 >
                   Add to Calendar
                 </button>
@@ -3802,7 +3815,7 @@ export default function PersonalPage() {
                 >
                   Close
                 </button>
-              </div>
+    </div>
             </motion.div>
           </motion.div>
         )}
