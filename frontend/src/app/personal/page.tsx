@@ -958,7 +958,7 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : '280px',
-          marginRight: isMobile ? '0' : (showRightPanel ? '340px' : '0'),
+          marginRight: isMobile ? '0' : (showRightPanel ? '320px' : '0'),
           background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -1934,7 +1934,75 @@ export default function PersonalPage() {
       </main>
 
       {/* Right Sidebar - Tasks, Timeline & Meetings */}
-      {!isMobile && showRightPanel && (
+      {!isMobile && showRightPanel && (() => {
+        // Filter tasks and meetings based on view mode
+        const getFilteredTasks = () => {
+          if (viewMode === 'day') {
+            const dateStr = formatDate(currentDate);
+            return projectTasks.filter(task => {
+              if (!task.due_date) return false;
+              return formatDate(new Date(task.due_date)) === dateStr;
+            });
+          } else if (viewMode === 'week') {
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return projectTasks.filter(task => {
+              if (!task.due_date) return false;
+              const taskDate = new Date(task.due_date);
+              return taskDate >= weekStart && taskDate <= weekEnd;
+            });
+          }
+          return projectTasks; // Month view shows all
+        };
+
+        const getFilteredMeetings = () => {
+          if (viewMode === 'day') {
+            const dateStr = formatDate(currentDate);
+            return meetings.filter(m => formatDate(new Date(m.date)) === dateStr);
+          } else if (viewMode === 'week') {
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return meetings.filter(m => {
+              const meetingDate = new Date(m.date);
+              return meetingDate >= weekStart && meetingDate <= weekEnd;
+            });
+          }
+          return meetings; // Month view shows all
+        };
+
+        const getFilteredTimeline = () => {
+          if (viewMode === 'day') {
+            const dateStr = formatDate(currentDate);
+            return timelineItems.filter(item => {
+              const startDate = formatDate(new Date(item.start_date));
+              const endDate = item.end_date ? formatDate(new Date(item.end_date)) : startDate;
+              return dateStr >= startDate && dateStr <= endDate;
+            });
+          } else if (viewMode === 'week') {
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return timelineItems.filter(item => {
+              const itemStart = new Date(item.start_date);
+              const itemEnd = item.end_date ? new Date(item.end_date) : itemStart;
+              return itemStart <= weekEnd && itemEnd >= weekStart;
+            });
+          }
+          return timelineItems; // Month view shows all
+        };
+
+        const filteredTasks = getFilteredTasks();
+        const filteredMeetings = getFilteredMeetings();
+        const filteredTimeline = getFilteredTimeline();
+
+        const viewLabel = viewMode === 'day' ? 'Today' : viewMode === 'week' ? 'This Week' : 'This Month';
+
+        return (
         <motion.aside
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -1942,16 +2010,16 @@ export default function PersonalPage() {
           style={{
             position: 'fixed',
             right: 0,
-            top: 0,
-            width: '340px',
-            height: '100vh',
-            background: 'rgba(255, 255, 255, 0.95)',
+            top: '140px',
+            width: '320px',
+            height: 'calc(100vh - 140px)',
+            background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderLeft: '1px solid rgba(0, 0, 0, 0.06)',
             overflowY: 'auto',
             zIndex: 50,
-            padding: '24px',
+            padding: '20px',
           }}
         >
           {/* Toggle button */}
@@ -2036,15 +2104,20 @@ export default function PersonalPage() {
               </button>
             </div>
 
+            {/* View Label */}
+            <div style={{ padding: '8px 12px', fontSize: '10px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+              {viewLabel}
+            </div>
+
             {/* Content */}
-            <div style={{ padding: '12px', maxHeight: '300px', overflowY: 'auto' }}>
+            <div style={{ padding: '12px', maxHeight: '280px', overflowY: 'auto' }}>
               {sidebarTab === 'tasks' ? (
-                projectTasks.length === 0 ? (
+                filteredTasks.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
-                    No assigned tasks
+                    No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}
                   </div>
                 ) : (
-                  projectTasks.slice(0, 10).map((task) => {
+                  filteredTasks.map((task) => {
                     const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
                     const isDueToday = task.due_date && formatDate(new Date(task.due_date)) === formatDate(currentDate);
                     return (
@@ -2090,12 +2163,12 @@ export default function PersonalPage() {
                   })
                 )
               ) : (
-                timelineItems.length === 0 ? (
+                filteredTimeline.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
-                    No timeline items assigned
+                    No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}
                   </div>
                 ) : (
-                  timelineItems.slice(0, 10).map((item) => {
+                  filteredTimeline.map((item) => {
                     const isDueToday = item.start_date && formatDate(new Date(item.start_date)) === formatDate(currentDate);
                     return (
                       <motion.div
@@ -2161,17 +2234,17 @@ export default function PersonalPage() {
               <UsersIcon style={{ width: '14px', height: '14px', color: '#0071e3' }} />
               <span style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f' }}>Meetings</span>
               <span style={{ fontSize: '10px', color: '#86868b', marginLeft: 'auto' }}>
-                {meetings.filter(m => formatDate(new Date(m.date)) === formatDate(currentDate)).length} today
+                {filteredMeetings.length} {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : ''}
               </span>
             </div>
 
             <div style={{ padding: '12px', maxHeight: '200px', overflowY: 'auto' }}>
-              {meetings.length === 0 ? (
+              {filteredMeetings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
-                  No upcoming meetings
+                  No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}
                 </div>
               ) : (
-                meetings.slice(0, 8).map((meeting) => {
+                filteredMeetings.map((meeting) => {
                   const isToday = formatDate(new Date(meeting.date)) === formatDate(currentDate);
                   return (
                     <motion.div
@@ -2219,7 +2292,8 @@ export default function PersonalPage() {
             </div>
           </div>
         </motion.aside>
-      )}
+        );
+      })()}
 
       {/* Toggle Right Panel Button (when hidden) */}
       {!isMobile && !showRightPanel && (
