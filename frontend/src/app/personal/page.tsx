@@ -945,7 +945,7 @@ export default function PersonalPage() {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    return (
+  return (
     <>
       {/* Sidebar - only on desktop */}
       {!isMobile && (
