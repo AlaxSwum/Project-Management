@@ -5,8 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import NotificationDropdown from './NotificationDropdown';
-import WorldClock from './WorldClock';
+// Removed NotificationDropdown and WorldClock imports
 import {
   HomeIcon,
   FolderIcon,
@@ -2177,9 +2176,8 @@ Your report is now available in the system.`);
             >
               <Bars3Icon style={{ width: '20px', height: '20px' }} />
             </button>
-            <h1 className="sidebar-title">Projects</h1>
+            <h1 className="sidebar-title">Project</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <NotificationDropdown />
               <div className="sidebar-add-container" ref={dropdownRef}>
                 <button
                   onClick={(e) => {
@@ -2197,7 +2195,6 @@ Your report is now available in the system.`);
             </div>
           </div>
 
-          <WorldClock isCollapsed={isCollapsed} />
         </div>
 
         {/* Navigation */}
@@ -2346,51 +2343,6 @@ Your report is now available in the system.`);
           )}
           </div>
 
-          {/* Projects List */}
-          <div className="nav-section">
-            <button
-              onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-              className="projects-toggle"
-            >
-              <span className="projects-toggle-text">My Projects</span>
-              <span className="projects-toggle-icon">
-                {isProjectsExpanded ? (
-                  <ChevronUpIcon style={{ width: '16px', height: '16px' }} />
-                ) : (
-                  <ChevronDownIcon style={{ width: '16px', height: '16px' }} />
-                )}
-              </span>
-            </button>
-
-            {isProjectsExpanded && (
-              <div className="projects-list">
-                {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    href={`/projects/${project.id}`}
-                    className={`project-item ${isActive(`/projects/${project.id}`) ? 'active' : ''}`}
-                    onClick={closeMobileMenu}
-                  >
-                    <div className="project-info">
-                      <div
-                        className="project-color"
-                        style={{ backgroundColor: project.color || '#000000' }}
-                      />
-                      <span className="project-name" style={{
-                        wordWrap: 'break-word',
-                        overflowWrap: 'break-word',
-                        whiteSpace: 'normal',
-                        lineHeight: '1.3'
-                      }}>{project.name}</span>
-                    </div>
-                    <span className="project-count">
-                      {project.completed_task_count || 0}/{project.task_count || 0}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
         </nav>
 
         {/* User Profile */}
@@ -2400,14 +2352,6 @@ Your report is now available in the system.`);
               <span className="user-avatar-text">
                 {user?.name?.charAt(0).toUpperCase()}
               </span>
-            </div>
-            <div className="user-info">
-              <p className="user-name">
-                {user?.name}
-              </p>
-              <p className="user-email">
-                {user?.email}
-              </p>
             </div>
             <button
               onClick={handleLogout}

@@ -960,10 +960,9 @@ export default function PersonalPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="main-content"
+        className="main-content personal-main"
         style={{
           minHeight: '100vh',
-          marginLeft: isMobile ? '0' : '280px',
           marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
           background: '#f8f9fa',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
@@ -2055,129 +2054,103 @@ export default function PersonalPage() {
               <div
                 style={{
                   display: 'flex',
-                  padding: '4px',
+                  padding: '3px',
                   background: '#f1f5f9',
                   margin: '8px',
-                  borderRadius: '10px',
-                  gap: '4px',
+                  borderRadius: '8px',
+                  gap: '3px',
                 }}
               >
                 <button
                   onClick={() => setSidebarTab('tasks')}
                   style={{ 
                     flex: 1,
-                    padding: '10px 16px',
-                    fontSize: '12px',
+                    padding: '8px 12px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     border: 'none', 
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     background: sidebarTab === 'tasks' ? '#fff' : 'transparent',
                     color: sidebarTab === 'tasks' ? '#3b82f6' : '#64748b',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '6px',
+                    gap: '4px',
                     transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'tasks' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    boxShadow: sidebarTab === 'tasks' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                   }}
                 >
-                  <BriefcaseIcon style={{ width: '14px', height: '14px' }} />
+                  <BriefcaseIcon style={{ width: '12px', height: '12px' }} />
                   Tasks
                 </button>
                 <button
                   onClick={() => setSidebarTab('timeline')}
                   style={{
                     flex: 1,
-                    padding: '10px 16px',
-                    fontSize: '12px',
+                    padding: '8px 12px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     background: sidebarTab === 'timeline' ? '#fff' : 'transparent',
                     color: sidebarTab === 'timeline' ? '#8b5cf6' : '#64748b',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '6px',
+                    gap: '4px',
                     transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'timeline' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    boxShadow: sidebarTab === 'timeline' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                   }}
                 >
-                  <RocketLaunchIcon style={{ width: '14px', height: '14px' }} />
+                  <RocketLaunchIcon style={{ width: '12px', height: '12px' }} />
                   Timeline
                 </button>
+              </div>
                     
               {/* Content */}
-              <div style={{ padding: '12px', maxHeight: '300px', overflowY: 'auto' }}>
+              <div style={{ padding: '8px', maxHeight: '280px', overflowY: 'auto' }}>
                 {sidebarTab === 'tasks' ? (
                   filteredTasks.length === 0 ? (
                     <div style={{ 
                       textAlign: 'center', 
-                      padding: '40px 20px', 
+                      padding: '24px 16px', 
                       color: '#94a3b8',
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                      borderRadius: '12px',
-                      border: '1px dashed #cbd5e1',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px dashed #e2e8f0',
                     }}>
-                      <div style={{
-                        width: '48px',
-                        height: '48px',
-                        margin: '0 auto 12px',
-                        background: '#fff',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                      }}>
-                        <BriefcaseIcon style={{ width: '24px', height: '24px', color: '#94a3b8' }} />
-                      </div>
-                      <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', color: '#64748b' }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
-                      <p style={{ fontSize: '11px', margin: 0, color: '#94a3b8' }}>Tasks will appear here when assigned</p>
+                      <BriefcaseIcon style={{ width: '20px', height: '20px', color: '#cbd5e1', margin: '0 auto 8px' }} />
+                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#94a3b8' }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {filteredTasks.map((task) => {
                         const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
                         const isDueToday = task.due_date && formatDate(new Date(task.due_date)) === formatDate(currentDate);
                         return (
                           <motion.div
                             key={task.id}
-                            whileHover={{ scale: 1.02, y: -1 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ x: 2 }}
+                            whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedExternalTask(task)}
                             style={{ 
-                              padding: '12px 14px',
-                              borderRadius: '12px',
+                              padding: '8px 10px',
+                              borderRadius: '8px',
                               cursor: 'pointer',
-                              borderLeft: `4px solid ${task.project_color || '#6b7280'}`,
-                              background: isDueToday ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%)' : '#f8fafc',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                              borderLeft: `3px solid ${task.project_color || '#6b7280'}`,
+                              background: isDueToday ? 'rgba(59, 130, 246, 0.06)' : '#f8fafc',
+                              transition: 'all 0.15s ease',
                             }}
                           >
-                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px', lineHeight: '1.3' }}>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
                               {task.name}
                             </div>
-                            <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                              <span style={{ 
-                                color: task.project_color, 
-                                background: `${task.project_color}15`,
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                                fontWeight: '500',
-                              }}>{task.project_name}</span>
+                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ color: task.project_color, fontWeight: '500' }}>{task.project_name}</span>
                               {task.due_date && (
-                                <span style={{ 
-                                  color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#64748b',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '3px',
-                                  fontWeight: '500',
-                                }}>
-                                  {isOverdue && <ExclamationTriangleIcon style={{ width: '11px', height: '11px' }} />}
+                                <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#94a3b8' }}>
                                   {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </span>
                               )}
@@ -2191,62 +2164,40 @@ export default function PersonalPage() {
                   filteredTimeline.length === 0 ? (
                     <div style={{ 
                       textAlign: 'center', 
-                      padding: '40px 20px', 
-                      color: '#94a3b8',
-                      background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
-                      borderRadius: '12px',
-                      border: '1px dashed #c4b5fd',
+                      padding: '24px 16px', 
+                      color: '#a78bfa',
+                      background: '#faf5ff',
+                      borderRadius: '8px',
+                      border: '1px dashed #ddd6fe',
                     }}>
-                      <div style={{
-                        width: '48px',
-                        height: '48px',
-                        margin: '0 auto 12px',
-                        background: '#fff',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                      }}>
-                        <RocketLaunchIcon style={{ width: '24px', height: '24px', color: '#a78bfa' }} />
-                      </div>
-                      <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', color: '#7c3aed' }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
-                      <p style={{ fontSize: '11px', margin: 0, color: '#a78bfa' }}>Timeline items will appear here</p>
+                      <RocketLaunchIcon style={{ width: '20px', height: '20px', color: '#c4b5fd', margin: '0 auto 8px' }} />
+                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#a78bfa' }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {filteredTimeline.map((item) => {
                         const isDueToday = item.start_date && formatDate(new Date(item.start_date)) === formatDate(currentDate);
                         return (
                           <motion.div
                             key={item.id}
-                            whileHover={{ scale: 1.02, y: -1 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ x: 2 }}
+                            whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedExternalTimeline(item)}
                             style={{ 
-                              padding: '12px 14px',
-                              borderRadius: '12px',
+                              padding: '8px 10px',
+                              borderRadius: '8px',
                               cursor: 'pointer',
-                              borderLeft: '4px solid #8b5cf6',
-                              background: isDueToday ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.03) 100%)' : '#f8fafc',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                              borderLeft: '3px solid #8b5cf6',
+                              background: isDueToday ? 'rgba(139, 92, 246, 0.06)' : '#f8fafc',
+                              transition: 'all 0.15s ease',
                             }}
                           >
-                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px', lineHeight: '1.3' }}>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
                               {item.title}
                             </div>
-                            <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                              {item.category_name && (
-                                <span style={{ 
-                                  color: '#8b5cf6', 
-                                  background: 'rgba(139, 92, 246, 0.1)',
-                                  padding: '2px 8px',
-                                  borderRadius: '6px',
-                                  fontWeight: '500',
-                                }}>{item.category_name}</span>
-                              )}
-                              <span style={{ fontWeight: '500' }}>
+                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {item.category_name && <span style={{ color: '#8b5cf6', fontWeight: '500' }}>{item.category_name}</span>}
+                              <span style={{ color: '#94a3b8' }}>
                                 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                               </span>
@@ -2312,27 +2263,14 @@ export default function PersonalPage() {
                 {filteredMeetings.length === 0 ? (
                   <div style={{ 
                     textAlign: 'center', 
-                    padding: '40px 20px', 
-                    color: '#94a3b8',
-                    background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-                    borderRadius: '12px',
-                    border: '1px dashed #fcd34d',
+                    padding: '24px 16px', 
+                    color: '#d97706',
+                    background: '#fffbeb',
+                    borderRadius: '8px',
+                    border: '1px dashed #fde68a',
                   }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      margin: '0 auto 12px',
-                      background: '#fff',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    }}>
-                      <UsersIcon style={{ width: '24px', height: '24px', color: '#f59e0b' }} />
-                    </div>
-                    <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', color: '#b45309' }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
-                    <p style={{ fontSize: '11px', margin: 0, color: '#d97706' }}>Meetings will appear here</p>
+                    <UsersIcon style={{ width: '20px', height: '20px', color: '#fbbf24', margin: '0 auto 8px' }} />
+                    <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#d97706' }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2341,32 +2279,25 @@ export default function PersonalPage() {
                       return (
                         <motion.div
                           key={meeting.id}
-                          whileHover={{ scale: 1.02, y: -1 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ x: 2 }}
+                          whileTap={{ scale: 0.99 }}
                           onClick={() => setSelectedExternalMeeting(meeting)}
                           style={{
-                            padding: '12px 14px',
-                            borderRadius: '12px',
+                            padding: '8px 10px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
-                            borderLeft: '4px solid #f59e0b',
-                            background: isToday ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%)' : '#f8fafc',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                            borderLeft: '3px solid #f59e0b',
+                            background: isToday ? 'rgba(245, 158, 11, 0.06)' : '#f8fafc',
+                            transition: 'all 0.15s ease',
                           }}
                         >
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px', lineHeight: '1.3' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
                             {meeting.title}
                           </div>
-                          <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ 
-                              color: '#d97706', 
-                              background: 'rgba(217, 119, 6, 0.1)',
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              fontWeight: '600',
-                            }}>{meeting.time}</span>
-                            <span style={{ fontWeight: '500' }}>{meeting.duration}min</span>
-                            <span style={{ fontWeight: '500' }}>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ color: '#d97706', fontWeight: '600' }}>{meeting.time}</span>
+                            <span style={{ color: '#94a3b8' }}>{meeting.duration}min</span>
+                            <span style={{ color: '#94a3b8' }}>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                           </div>
                         </motion.div>
                       );
