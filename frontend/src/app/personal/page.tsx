@@ -615,9 +615,14 @@ export default function PersonalPage() {
   };
 
   const handleAddBlock = () => {
+    // For recurring blocks, use the start date or current date
+    const blockDate = blockForm.isRecurring && blockForm.recurringStartDate 
+      ? blockForm.recurringStartDate 
+      : formatDate(currentDate);
+    
     const newBlock: TimeBlock = {
       id: generateId(),
-      date: formatDate(currentDate),
+      date: blockDate,
       startTime: blockForm.startTime || '09:00',
       endTime: blockForm.endTime || '10:00',
       title: blockForm.title || 'New Block',
@@ -626,6 +631,11 @@ export default function PersonalPage() {
       checklist: blockForm.checklist || [],
       meetingLink: blockForm.meetingLink,
       notificationTime: blockForm.notificationTime,
+      category: blockForm.category,
+      isRecurring: blockForm.isRecurring || false,
+      recurringDays: blockForm.recurringDays || [],
+      recurringStartDate: blockForm.isRecurring ? (blockForm.recurringStartDate || formatDate(currentDate)) : undefined,
+      recurringEndDate: blockForm.isRecurring ? blockForm.recurringEndDate : undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -641,6 +651,11 @@ export default function PersonalPage() {
       checklist: [],
       meetingLink: '',
       notificationTime: 10,
+      category: '',
+      isRecurring: false,
+      recurringDays: [],
+      recurringStartDate: '',
+      recurringEndDate: '',
     });
   };
 
@@ -724,24 +739,29 @@ export default function PersonalPage() {
     const dateStr = formatDate(date);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
+    // Helper to compare dates as strings (YYYY-MM-DD format)
+    const compareDates = (d1: string, d2: string): number => {
+      return d1.localeCompare(d2);
+    };
+    
     return blocks.filter(block => {
-      // Exact date match
-      if (block.date === dateStr) return true;
+      // Exact date match (non-recurring blocks)
+      if (!block.isRecurring && block.date === dateStr) return true;
       
-      // Check for recurring blocks
+      // For recurring blocks, check if this date should show the block
       if (block.isRecurring && block.recurringDays && block.recurringDays.length > 0) {
         // Check if this day of week is selected
         if (!block.recurringDays.includes(dayOfWeek)) return false;
         
-        // Check if within date range (if specified)
-        const blockStartDate = new Date(block.recurringStartDate || block.date);
-        const blockEndDate = block.recurringEndDate ? new Date(block.recurringEndDate) : null;
+        // Get the start and end dates for the recurring range
+        const startDateStr = block.recurringStartDate || block.date;
+        const endDateStr = block.recurringEndDate || '';
         
         // Date must be >= start date
-        if (date < blockStartDate) return false;
+        if (compareDates(dateStr, startDateStr) < 0) return false;
         
         // Date must be <= end date (if end date is specified)
-        if (blockEndDate && date > blockEndDate) return false;
+        if (endDateStr && compareDates(dateStr, endDateStr) > 0) return false;
         
         return true;
       }
@@ -906,39 +926,58 @@ export default function PersonalPage() {
               </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {/* View Mode Switcher */}
+              {/* View Mode Switcher with Sliding Indicator */}
               <div
                 style={{
                   display: 'flex',
                   background: 'rgba(0, 0, 0, 0.04)',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   padding: '4px',
+                  position: 'relative',
                 }}
               >
+                {/* Sliding Background Indicator */}
+                <motion.div
+                  layout
+                  layoutId="viewModeIndicator"
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    bottom: '4px',
+                    width: 'calc(33.33% - 2px)',
+                    background: '#fff',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  }}
+                  animate={{
+                    left: viewMode === 'day' ? '4px' : viewMode === 'week' ? 'calc(33.33% + 2px)' : 'calc(66.66%)',
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
                 {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
                   <motion.button
                     key={mode}
                     onClick={() => setViewMode(mode)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-              style={{
-                      padding: '8px 16px',
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      padding: '10px 20px',
                       fontSize: '13px',
-                      fontWeight: '500',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      background: viewMode === mode ? '#fff' : 'transparent',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      background: 'transparent',
                       color: viewMode === mode ? '#1d1d1f' : '#86868b',
-                      boxShadow: viewMode === mode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                       textTransform: 'capitalize',
+                      position: 'relative',
+                      zIndex: 1,
+                      transition: 'color 0.2s ease',
                     }}
                   >
                     {mode}
                   </motion.button>
                 ))}
-          </div>
+              </div>
               
               {/* Add Block Button */}
               <motion.button
