@@ -2344,24 +2344,6 @@ Your report is now available in the system.`);
           </div>
 
         </nav>
-
-        {/* User Profile */}
-        <div className="sidebar-footer">
-          <div className="user-profile">
-            <div className="user-avatar">
-              <span className="user-avatar-text">
-                {user?.name?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="logout-btn"
-              title="Sign out"
-            >
-              <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px' }} />
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Dropdown Portal - Render outside sidebar */}
