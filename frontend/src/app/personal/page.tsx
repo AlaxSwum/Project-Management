@@ -958,132 +958,102 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : '280px',
-          marginRight: isMobile ? '0' : (showRightPanel ? '320px' : '0'),
-          background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
+          marginRight: isMobile ? '0' : (showRightPanel ? '300px' : '0'),
+          background: '#f8f9fa',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
-        {/* Header */}
+        {/* Premium Header */}
         <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        style={{
-          padding: '24px 40px',
-          background: 'rgba(255, 255, 255, 0.72)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          style={{
+            padding: '20px 32px',
+            background: '#fff',
+            borderBottom: '1px solid #e5e7eb',
+            position: 'sticky',
+            top: 0,
+            zIndex: 100,
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* Left: Title & Progress */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
               <div>
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                style={{
-                  fontSize: '28px',
-                  fontWeight: '600',
-                  color: '#1d1d1f',
-                  letterSpacing: '-0.02em',
-                  margin: 0,
-                }}
-              >
-                Focus
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                style={{
-                  fontSize: '15px',
-                  color: '#86868b',
-                  margin: '4px 0 0 0',
-                  fontWeight: '400',
-                }}
-              >
-                Plan your time. Achieve your goals.
-              </motion.p>
+                <motion.h1
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: '700',
+                    color: '#111827',
+                    letterSpacing: '-0.025em',
+                    margin: 0,
+                  }}
+                >
+                  Focus
+                </motion.h1>
+              </div>
               
-              {/* Daily Progress Tracker */}
+              {/* Daily Progress - Inline */}
               {(() => {
                 const progress = getDailyProgress(blocks, currentDate);
                 return (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 }}
                     style={{
-                      marginTop: '16px',
-          display: 'flex',
-          alignItems: 'center',
-                      gap: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '8px 16px',
+                      background: progress.percentage >= 100 ? 'rgba(34, 197, 94, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                      borderRadius: '24px',
                     }}
                   >
-                    <div style={{ flex: 1, maxWidth: '200px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: '500', color: '#86868b' }}>
-                          Today&apos;s Progress
-                        </span>
-                        <span style={{ fontSize: '12px', fontWeight: '600', color: progress.percentage >= 100 ? '#34c759' : '#1d1d1f' }}>
-                          {progress.percentage}%
-                        </span>
-              </div>
-                      <div
+                    <div style={{ 
+                      width: '100px', 
+                      height: '6px', 
+                      background: 'rgba(0,0,0,0.08)', 
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                    }}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress.percentage}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.5 }}
                         style={{
-                          height: '6px',
-                          background: 'rgba(0, 0, 0, 0.06)',
+                          height: '100%',
+                          background: progress.percentage >= 100 ? '#22c55e' : '#3b82f6',
                           borderRadius: '3px',
-                          overflow: 'hidden',
                         }}
-                      >
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress.percentage}%` }}
-                          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.5 }}
-                          style={{
-                            height: '100%',
-                            background: progress.percentage >= 100 
-                              ? 'linear-gradient(90deg, #34c759, #30d158)' 
-                              : progress.percentage >= 50 
-                                ? 'linear-gradient(90deg, #ff9f0a, #ff9500)'
-                                : 'linear-gradient(90deg, #0071e3, #5ac8fa)',
-                            borderRadius: '3px',
-                          }}
-                        />
-              </div>
-              </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <CheckCircleIconSolid 
-                        style={{ 
-                          width: '16px', 
-                          height: '16px', 
-                          color: progress.percentage >= 100 ? '#34c759' : '#86868b' 
-                        }} 
                       />
-                      <span style={{ fontSize: '13px', color: '#86868b' }}>
-                        {progress.completed}/{progress.total} tasks
-                      </span>
-                </div>
+                    </div>
+                    <span style={{ 
+                      fontSize: '13px', 
+                      fontWeight: '600', 
+                      color: progress.percentage >= 100 ? '#16a34a' : '#2563eb' 
+                    }}>
+                      {progress.completed}/{progress.total}
+                    </span>
                   </motion.div>
                 );
               })()}
-              </div>
+            </div>
             
+            {/* Right: View Mode & Add Button */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {/* View Mode Switcher with Sliding Indicator */}
               <div
                 style={{
                   display: 'flex',
-                  background: 'rgba(0, 0, 0, 0.04)',
-                  borderRadius: '12px',
-                  padding: '4px',
+                  background: '#f3f4f6',
+                  borderRadius: '10px',
+                  padding: '3px',
                   position: 'relative',
                 }}
               >
@@ -1093,36 +1063,36 @@ export default function PersonalPage() {
                   layoutId="viewModeIndicator"
                   style={{
                     position: 'absolute',
-                    top: '4px',
-                    bottom: '4px',
+                    top: '3px',
+                    bottom: '3px',
                     width: 'calc(33.33% - 2px)',
                     background: '#fff',
                     borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                   }}
                   animate={{
-                    left: viewMode === 'day' ? '4px' : viewMode === 'week' ? 'calc(33.33% + 2px)' : 'calc(66.66%)',
+                    left: viewMode === 'day' ? '3px' : viewMode === 'week' ? 'calc(33.33% + 1px)' : 'calc(66.66% - 1px)',
                   }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
                 {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
                   <motion.button
                     key={mode}
                     onClick={() => setViewMode(mode)}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.97 }}
                     style={{
-                      padding: '10px 20px',
+                      padding: '8px 18px',
                       fontSize: '13px',
-                      fontWeight: '600',
+                      fontWeight: '500',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: '7px',
                       cursor: 'pointer',
                       background: 'transparent',
-                      color: viewMode === mode ? '#1d1d1f' : '#86868b',
+                      color: viewMode === mode ? '#111827' : '#6b7280',
                       textTransform: 'capitalize',
                       position: 'relative',
                       zIndex: 1,
-                      transition: 'color 0.2s ease',
+                      transition: 'color 0.15s ease',
                     }}
                   >
                     {mode}
@@ -1133,24 +1103,25 @@ export default function PersonalPage() {
               {/* Add Block Button */}
               <motion.button
                 onClick={() => setShowAddModal(true)}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}
                 whileTap={{ scale: 0.98 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 20px',
-                  fontSize: '14px',
-                  fontWeight: '500',
+                  gap: '6px',
+                  padding: '9px 18px',
+                  fontSize: '13px',
+                  fontWeight: '600',
                   border: 'none',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  background: '#0071e3',
+                  background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                   color: '#fff',
+                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
                   transition: 'all 0.2s ease',
                 }}
               >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                <PlusIcon style={{ width: '15px', height: '15px' }} />
                 Add Block
               </motion.button>
             </div>
@@ -1159,51 +1130,54 @@ export default function PersonalPage() {
           {/* Navigation */}
           <div
             style={{
-            display: 'flex', 
+              display: 'flex', 
               alignItems: 'center',
-            justifyContent: 'space-between', 
-              marginTop: '24px',
+              justifyContent: 'space-between', 
+              marginTop: '16px',
+              paddingTop: '16px',
+              borderTop: '1px solid #f3f4f6',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <motion.button
                 onClick={() => navigate('prev')}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, background: '#e5e7eb' }}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  width: '36px',
-                  height: '36px',
-              display: 'flex', 
-            alignItems: 'center', 
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex', 
+                  alignItems: 'center', 
                   justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  background: 'rgba(0, 0, 0, 0.04)',
+                  background: '#f3f4f6',
                   cursor: 'pointer',
-                  color: '#1d1d1f',
+                  color: '#374151',
+                  transition: 'background 0.15s ease',
                 }}
               >
-                <ChevronLeftIcon style={{ width: '18px', height: '18px' }} />
+                <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
               </motion.button>
               
               <motion.h2
                 key={currentDate.toISOString()}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 style={{
-                  fontSize: '20px',
+                  fontSize: '16px',
                   fontWeight: '600',
-                  color: '#1d1d1f',
+                  color: '#111827',
                   margin: 0,
-                  minWidth: '200px',
+                  minWidth: '180px',
                   textAlign: 'center',
                 }}
               >
                 {viewMode === 'day' && (
                   <>
                     {weekDays[currentDate.getDay()]}, {monthNames[currentDate.getMonth()]} {currentDate.getDate()}
-                </>
-              )}
+                  </>
+                )}
                 {viewMode === 'week' && (
                   <>
                     {monthNames[currentDate.getMonth()]} {getWeekDays(currentDate)[0].getDate()} - {getWeekDays(currentDate)[6].getDate()}
@@ -1218,35 +1192,36 @@ export default function PersonalPage() {
               
               <motion.button
                 onClick={() => navigate('next')}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, background: '#e5e7eb' }}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  width: '36px',
-                  height: '36px',
+                  width: '32px',
+                  height: '32px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  background: 'rgba(0, 0, 0, 0.04)',
+                  background: '#f3f4f6',
                   cursor: 'pointer',
-                  color: '#1d1d1f',
+                  color: '#374151',
+                  transition: 'background 0.15s ease',
                 }}
               >
-                <ChevronRightIcon style={{ width: '18px', height: '18px' }} />
+                <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
               </motion.button>
             </div>
 
             <motion.button
               onClick={() => setCurrentDate(new Date())}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, background: '#f3f4f6' }}
               whileTap={{ scale: 0.98 }}
               style={{
-                padding: '8px 16px',
-                fontSize: '13px',
+                padding: '7px 14px',
+                fontSize: '12px',
                 fontWeight: '500',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '6px',
                 background: '#fff',
                 cursor: 'pointer',
                 color: '#1d1d1f',
@@ -1254,9 +1229,8 @@ export default function PersonalPage() {
             >
               Today
             </motion.button>
-              </div>
-        </div>
-      </motion.header>
+          </div>
+        </motion.header>
 
       {/* Main Content */}
       <main style={{ padding: '32px 40px', maxWidth: '1400px', margin: '0 auto' }}>
@@ -2004,22 +1978,20 @@ export default function PersonalPage() {
 
         return (
         <motion.aside
-          initial={{ opacity: 0, x: 50 }}
+          initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
           style={{
             position: 'fixed',
             right: 0,
-            top: '140px',
-            width: '320px',
-            height: 'calc(100vh - 140px)',
-            background: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderLeft: '1px solid rgba(0, 0, 0, 0.06)',
+            top: '120px',
+            width: '300px',
+            height: 'calc(100vh - 120px)',
+            background: '#fff',
+            borderLeft: '1px solid #e5e7eb',
             overflowY: 'auto',
             zIndex: 50,
-            padding: '20px',
+            padding: '16px',
           }}
         >
           {/* Toggle button */}
@@ -2027,10 +1999,10 @@ export default function PersonalPage() {
             onClick={() => setShowRightPanel(false)}
             style={{
               position: 'absolute',
-              top: '16px',
-              right: '16px',
-              width: '28px',
-              height: '28px',
+              top: '12px',
+              right: '12px',
+              width: '24px',
+              height: '24px',
               borderRadius: '8px',
               border: 'none',
               background: 'rgba(0, 0, 0, 0.04)',
@@ -2046,60 +2018,63 @@ export default function PersonalPage() {
           {/* Tasks & Timeline Box */}
           <div
             style={{
-              background: '#fff',
-              borderRadius: '16px',
-              border: '1px solid rgba(0, 0, 0, 0.06)',
+              background: '#f9fafb',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
               overflow: 'hidden',
-              marginBottom: '16px',
+              marginBottom: '12px',
             }}
           >
             {/* Tabs */}
             <div
               style={{
                 display: 'flex',
-                borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                background: '#fff',
+                borderBottom: '1px solid #e5e7eb',
               }}
             >
               <button
                 onClick={() => setSidebarTab('tasks')}
                 style={{
                   flex: 1,
-                  padding: '14px',
-                  fontSize: '12px',
+                  padding: '10px',
+                  fontSize: '11px',
                   fontWeight: '600',
                   border: 'none',
-                  background: sidebarTab === 'tasks' ? '#fff' : 'rgba(0, 0, 0, 0.02)',
-                  color: sidebarTab === 'tasks' ? '#0071e3' : '#86868b',
+                  background: 'transparent',
+                  color: sidebarTab === 'tasks' ? '#3b82f6' : '#6b7280',
                   cursor: 'pointer',
-                  borderBottom: sidebarTab === 'tasks' ? '2px solid #0071e3' : '2px solid transparent',
+                  borderBottom: sidebarTab === 'tasks' ? '2px solid #3b82f6' : '2px solid transparent',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: '5px',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                <BriefcaseIcon style={{ width: '14px', height: '14px' }} />
+                <BriefcaseIcon style={{ width: '13px', height: '13px' }} />
                 Tasks
               </button>
               <button
                 onClick={() => setSidebarTab('timeline')}
                 style={{
                   flex: 1,
-                  padding: '14px',
-                  fontSize: '12px',
+                  padding: '10px',
+                  fontSize: '11px',
                   fontWeight: '600',
                   border: 'none',
-                  background: sidebarTab === 'timeline' ? '#fff' : 'rgba(0, 0, 0, 0.02)',
-                  color: sidebarTab === 'timeline' ? '#0071e3' : '#86868b',
+                  background: 'transparent',
+                  color: sidebarTab === 'timeline' ? '#3b82f6' : '#6b7280',
                   cursor: 'pointer',
-                  borderBottom: sidebarTab === 'timeline' ? '2px solid #0071e3' : '2px solid transparent',
+                  borderBottom: sidebarTab === 'timeline' ? '2px solid #3b82f6' : '2px solid transparent',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: '5px',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                <RocketLaunchIcon style={{ width: '14px', height: '14px' }} />
+                <RocketLaunchIcon style={{ width: '13px', height: '13px' }} />
                 Timeline
               </button>
             </div>
