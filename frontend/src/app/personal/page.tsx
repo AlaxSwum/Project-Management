@@ -964,7 +964,7 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : '280px',
-          marginRight: isMobile ? '0' : (showRightPanel ? '320px' : '0'),
+          marginRight: isMobile ? '0' : (showRightPanel ? '340px' : '0'),
           background: '#f8f9fa',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -1990,254 +1990,330 @@ export default function PersonalPage() {
           style={{
             position: 'fixed',
             right: 0,
-            top: '72px',
-            width: '320px',
-            height: 'calc(100vh - 72px)',
-            background: '#fafafa',
-            borderLeft: '1px solid #e5e7eb',
+            top: '0',
+            width: '340px',
+            height: '100vh',
+            background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+            borderLeft: '1px solid #e2e8f0',
             overflowY: 'auto',
-            zIndex: 50,
+            zIndex: 100,
             padding: '0',
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.05)',
           }}
         >
-          {/* Toggle button */}
-          <button
-            onClick={() => setShowRightPanel(false)}
-            style={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              width: '28px',
-              height: '28px',
-              borderRadius: '8px',
-              border: 'none',
-              background: '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            }}
-          >
-            <ChevronRightIcon style={{ width: '14px', height: '14px', color: '#86868b' }} />
-                    </button>
-
-          {/* Tasks & Timeline Box */}
-          <div
-            style={{
-              background: '#fff',
-              margin: '12px',
-              borderRadius: '14px',
-              border: '1px solid #e5e7eb',
-              overflow: 'hidden',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}
-          >
-            {/* Tabs */}
-            <div
-              style={{
-                display: 'flex',
-                background: '#f9fafb',
-                borderBottom: '1px solid #e5e7eb',
-              }}
-            >
-              <button
-                onClick={() => setSidebarTab('tasks')}
-                style={{ 
-                  flex: 1,
-                  padding: '12px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  border: 'none', 
-                  background: sidebarTab === 'tasks' ? '#fff' : 'transparent',
-                  color: sidebarTab === 'tasks' ? '#3b82f6' : '#6b7280',
-                  cursor: 'pointer',
-                  borderBottom: sidebarTab === 'tasks' ? '2px solid #3b82f6' : '2px solid transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '5px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <BriefcaseIcon style={{ width: '13px', height: '13px' }} />
-                Tasks
-                        </button>
-                        <button
-                onClick={() => setSidebarTab('timeline')}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  border: 'none',
-                  background: sidebarTab === 'timeline' ? '#fff' : 'transparent',
-                  color: sidebarTab === 'timeline' ? '#8b5cf6' : '#6b7280',
-                  cursor: 'pointer',
-                  borderBottom: sidebarTab === 'timeline' ? '2px solid #8b5cf6' : '2px solid transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '5px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <RocketLaunchIcon style={{ width: '14px', height: '14px' }} />
-                Timeline
-              </button>
+          {/* Header */}
+          <div style={{
+            padding: '16px 20px',
+            background: '#fff',
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+          }}>
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+                {viewMode === 'day' ? 'Today\'s Focus' : viewMode === 'week' ? 'This Week' : 'This Month'}
+              </h3>
+              <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0' }}>
+                Projects & Schedules
+              </p>
             </div>
-
-            {/* View Label */}
-            <div style={{ padding: '8px 12px', fontSize: '10px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
-              {viewLabel}
-                    </div>
-                    
-            {/* Content */}
-            <div style={{ padding: '12px', maxHeight: '280px', overflowY: 'auto' }}>
-              {sidebarTab === 'tasks' ? (
-                filteredTasks.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
-                    No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}
-                  </div>
-                ) : (
-                  filteredTasks.map((task) => {
-                    const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
-                    const isDueToday = task.due_date && formatDate(new Date(task.due_date)) === formatDate(currentDate);
-                    return (
-                      <motion.div
-                        key={task.id}
-                        whileHover={{ scale: 1.01, background: '#f3f4f6' }}
-                        onClick={() => setSelectedExternalTask(task)}
-                        style={{ 
-                          padding: '10px 12px',
-                          borderRadius: '8px',
-                          marginBottom: '6px',
-                          cursor: 'pointer',
-                          borderLeft: `3px solid ${task.project_color || '#6b7280'}`,
-                          background: isDueToday ? 'rgba(59, 130, 246, 0.06)' : '#fff',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                          {task.name}
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ color: task.project_color }}>{task.project_name}</span>
-                          {task.due_date && (
-                            <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#6b7280' }}>
-                              {isOverdue && <ExclamationTriangleIcon style={{ width: '10px', height: '10px', display: 'inline', marginRight: '2px' }} />}
-                              {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                )
-              ) : (
-                filteredTimeline.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
-                    No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}
-                  </div>
-                ) : (
-                  filteredTimeline.map((item) => {
-                    const isDueToday = item.start_date && formatDate(new Date(item.start_date)) === formatDate(currentDate);
-                    return (
-                      <motion.div
-                        key={item.id}
-                        whileHover={{ scale: 1.01, background: '#f3f4f6' }}
-                        onClick={() => setSelectedExternalTimeline(item)}
-                        style={{ 
-                          padding: '10px 12px',
-                          borderRadius: '8px',
-                          marginBottom: '6px',
-                          cursor: 'pointer',
-                          borderLeft: '3px solid #8b5cf6',
-                          background: isDueToday ? 'rgba(139, 92, 246, 0.06)' : '#fff',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                          {item.title}
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {item.category_name && <span style={{ color: '#8b5cf6' }}>{item.category_name}</span>}
-                          <span>
-                            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                      </span>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Meetings Box */}
-          <div
-            style={{
-              background: '#fff',
-              margin: '0 12px 12px',
-              borderRadius: '14px',
-              border: '1px solid #e5e7eb',
-              overflow: 'hidden',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}
-          >
-            <div
+            <button
+              onClick={() => setShowRightPanel(false)}
               style={{
-                padding: '12px 16px',
-                background: '#fef3c7',
-                borderBottom: '1px solid #fde68a',
+                width: '32px',
+                height: '32px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#f1f5f9',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
               }}
             >
-              <UsersIcon style={{ width: '16px', height: '16px', color: '#d97706' }} />
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#92400e' }}>Meetings</span>
-              <span style={{ fontSize: '11px', fontWeight: '600', color: '#b45309', marginLeft: 'auto', background: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
-                {filteredMeetings.length}
-              </span>
+              <ChevronRightIcon style={{ width: '16px', height: '16px', color: '#64748b' }} />
+            </button>
+          </div>
+
+          {/* Tasks & Timeline Box */}
+          <div style={{ padding: '16px' }}>
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              }}
+            >
+              {/* Tabs */}
+              <div
+                style={{
+                  display: 'flex',
+                  padding: '4px',
+                  background: '#f1f5f9',
+                  margin: '8px',
+                  borderRadius: '10px',
+                  gap: '4px',
+                }}
+              >
+                <button
+                  onClick={() => setSidebarTab('tasks')}
+                  style={{ 
+                    flex: 1,
+                    padding: '10px 16px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    border: 'none', 
+                    borderRadius: '8px',
+                    background: sidebarTab === 'tasks' ? '#fff' : 'transparent',
+                    color: sidebarTab === 'tasks' ? '#3b82f6' : '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: sidebarTab === 'tasks' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  }}
+                >
+                  <BriefcaseIcon style={{ width: '14px', height: '14px' }} />
+                  Tasks
+                </button>
+                <button
+                  onClick={() => setSidebarTab('timeline')}
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: sidebarTab === 'timeline' ? '#fff' : 'transparent',
+                    color: sidebarTab === 'timeline' ? '#8b5cf6' : '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: sidebarTab === 'timeline' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  }}
+                >
+                  <RocketLaunchIcon style={{ width: '14px', height: '14px' }} />
+                  Timeline
+                </button>
+                    
+              {/* Content */}
+              <div style={{ padding: '8px 12px 12px', maxHeight: '300px', overflowY: 'auto' }}>
+                {sidebarTab === 'tasks' ? (
+                  filteredTasks.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
+                      <BriefcaseIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
+                      <p style={{ fontSize: '13px', fontWeight: '500', margin: 0 }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {filteredTasks.map((task) => {
+                        const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
+                        const isDueToday = task.due_date && formatDate(new Date(task.due_date)) === formatDate(currentDate);
+                        return (
+                          <motion.div
+                            key={task.id}
+                            whileHover={{ scale: 1.02, y: -1 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedExternalTask(task)}
+                            style={{ 
+                              padding: '12px 14px',
+                              borderRadius: '12px',
+                              cursor: 'pointer',
+                              borderLeft: `4px solid ${task.project_color || '#6b7280'}`,
+                              background: isDueToday ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%)' : '#f8fafc',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                            }}
+                          >
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px', lineHeight: '1.3' }}>
+                              {task.name}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ 
+                                color: task.project_color, 
+                                background: `${task.project_color}15`,
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                fontWeight: '500',
+                              }}>{task.project_name}</span>
+                              {task.due_date && (
+                                <span style={{ 
+                                  color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#64748b',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  fontWeight: '500',
+                                }}>
+                                  {isOverdue && <ExclamationTriangleIcon style={{ width: '11px', height: '11px' }} />}
+                                  {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : (
+                  filteredTimeline.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
+                      <RocketLaunchIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
+                      <p style={{ fontSize: '13px', fontWeight: '500', margin: 0 }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {filteredTimeline.map((item) => {
+                        const isDueToday = item.start_date && formatDate(new Date(item.start_date)) === formatDate(currentDate);
+                        return (
+                          <motion.div
+                            key={item.id}
+                            whileHover={{ scale: 1.02, y: -1 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedExternalTimeline(item)}
+                            style={{ 
+                              padding: '12px 14px',
+                              borderRadius: '12px',
+                              cursor: 'pointer',
+                              borderLeft: '4px solid #8b5cf6',
+                              background: isDueToday ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.03) 100%)' : '#f8fafc',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                            }}
+                          >
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px', lineHeight: '1.3' }}>
+                              {item.title}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              {item.category_name && (
+                                <span style={{ 
+                                  color: '#8b5cf6', 
+                                  background: 'rgba(139, 92, 246, 0.1)',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontWeight: '500',
+                                }}>{item.category_name}</span>
+                              )}
+                              <span style={{ fontWeight: '500' }}>
+                                {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                              </span>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )
+                )}
+              </div>
             </div>
 
-            <div style={{ padding: '8px', maxHeight: '220px', overflowY: 'auto' }}>
-              {filteredMeetings.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#9ca3af', fontSize: '13px' }}>
-                  No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}
+            {/* Meetings Box */}
+            <div
+              style={{
+                background: '#fff',
+                marginTop: '16px',
+                borderRadius: '16px',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              }}
+            >
+              <div
+                style={{
+                  padding: '14px 16px',
+                  background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ 
+                  width: '32px', 
+                  height: '32px', 
+                  borderRadius: '10px', 
+                  background: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                }}>
+                  <UsersIcon style={{ width: '18px', height: '18px', color: '#d97706' }} />
                 </div>
-              ) : (
-                filteredMeetings.map((meeting) => {
-                  const isToday = formatDate(new Date(meeting.date)) === formatDate(currentDate);
-                  return (
-                    <motion.div
-                      key={meeting.id}
-                      whileHover={{ scale: 1.01, background: '#f3f4f6' }}
-                      onClick={() => setSelectedExternalMeeting(meeting)}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        marginBottom: '6px',
-                        cursor: 'pointer',
-                        borderLeft: '3px solid #ea580c',
-                        background: isToday ? 'rgba(234, 88, 12, 0.06)' : '#fff',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                        {meeting.title}
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#92400e' }}>Meetings</span>
+                </div>
+                <span style={{ 
+                  fontSize: '12px', 
+                  fontWeight: '700', 
+                  color: '#d97706', 
+                  background: '#fff', 
+                  padding: '4px 10px', 
+                  borderRadius: '12px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                }}>
+                  {filteredMeetings.length}
+                </span>
+              </div>
+
+              <div style={{ padding: '12px', maxHeight: '250px', overflowY: 'auto' }}>
+                {filteredMeetings.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
+                    <UsersIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
+                    <p style={{ fontSize: '13px', fontWeight: '500', margin: 0 }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                   </div>
-                      <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#ea580c' }}>{meeting.time}</span>
-                        <span>{meeting.duration}min</span>
-                        <span>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-            </div>
-                    </motion.div>
-                  );
-                })
-              )}
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {filteredMeetings.map((meeting) => {
+                      const isToday = formatDate(new Date(meeting.date)) === formatDate(currentDate);
+                      return (
+                        <motion.div
+                          key={meeting.id}
+                          whileHover={{ scale: 1.02, y: -1 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedExternalMeeting(meeting)}
+                          style={{
+                            padding: '12px 14px',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            borderLeft: '4px solid #f59e0b',
+                            background: isToday ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%)' : '#f8fafc',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                          }}
+                        >
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px', lineHeight: '1.3' }}>
+                            {meeting.title}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ 
+                              color: '#d97706', 
+                              background: 'rgba(217, 119, 6, 0.1)',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontWeight: '600',
+                            }}>{meeting.time}</span>
+                            <span style={{ fontWeight: '500' }}>{meeting.duration}min</span>
+                            <span style={{ fontWeight: '500' }}>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </motion.aside>
