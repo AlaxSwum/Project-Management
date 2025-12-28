@@ -608,6 +608,191 @@ export default function PersonalPage() {
     fetchExternalData();
   }, [isAuthenticated, authLoading, router, user]);
 
+  // Automatic notification sender - checks every minute for upcoming blocks
+  useEffect(() => {
+    if (!user?.email || blocks.length === 0) return;
+
+    const checkAndSendReminders = async () => {
+      const now = new Date();
+      const todayStr = formatDate(now);
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      
+      // Get sent reminders from localStorage to avoid duplicates
+      const sentRemindersKey = 'sent_reminders';
+      const sentRemindersStr = localStorage.getItem(sentRemindersKey) || '{}';
+      const sentReminders: Record<string, boolean> = JSON.parse(sentRemindersStr);
+      
+      // Clean old entries (older than 1 day)
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      Object.keys(sentReminders).forEach(key => {
+        const timestamp = parseInt(key.split('_').pop() || '0');
+        if (timestamp < oneDayAgo) delete sentReminders[key];
+      });
+      
+      // Get blocks for today (including recurring)
+      const todayBlocks = blocks.filter(block => {
+        if (block.date === todayStr) return true;
+        
+        if (block.isRecurring && block.recurringDays && block.recurringDays.includes(now.getDay())) {
+          const startDate = block.recurringStartDate || block.date;
+          const endDate = block.recurringEndDate;
+          if (todayStr >= startDate && (!endDate || todayStr <= endDate)) {
+            return true;
+          }
+        }
+        return false;
+      });
+      
+      // Check each block
+      for (const block of todayBlocks) {
+        if (!block.notificationTime || block.notificationTime <= 0) continue;
+        
+        const [hours, minutes] = block.startTime.split(':').map(Number);
+        const blockStartMinutes = hours * 60 + minutes;
+        const reminderMinutes = blockStartMinutes - block.notificationTime;
+        
+        // Create unique reminder key
+        const reminderKey = `${block.id}_${todayStr}_${Date.now()}`;
+        const blockReminderKey = `${block.id}_${todayStr}`;
+        
+        // Check if reminder should be sent (within 1 minute of reminder time)
+        if (currentMinutes >= reminderMinutes && 
+            currentMinutes < reminderMinutes + 2 && 
+            currentMinutes < blockStartMinutes &&
+            !sentReminders[blockReminderKey]) {
+          
+          try {
+            console.log(`📧 Sending reminder for: ${block.title}`);
+            
+            const response = await fetch('/api/time-block-reminders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                block: {
+                  id: block.id,
+                  title: block.title,
+                  description: block.description,
+                  date: todayStr,
+                  startTime: block.startTime,
+                  endTime: block.endTime,
+                  type: block.type,
+                  meetingLink: block.meetingLink,
+                  notificationTime: block.notificationTime,
+                  checklist: block.checklist,
+                  category: block.category,
+                },
+                userEmail: user.email,
+              }),
+            });
+            
+            if (response.ok) {
+              console.log(`✅ Reminder sent for: ${block.title}`);
+              sentReminders[blockReminderKey] = true;
+              localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
+            } else {
+              console.error(`❌ Failed to send reminder for: ${block.title}`);
+            }
+          } catch (error) {
+            console.error(`Error sending reminder for ${block.title}:`, error);
+          }
+        }
+      }
+    };
+
+    // Check immediately
+    checkAndSendReminders();
+
+    // Then check every minute
+    const interval = setInterval(checkAndSendReminders, 60000);
+    
+    return () => clearInterval(interval);
+  }, [user?.email, blocks]);
+
+  // Automatic meeting reminder sender - checks for upcoming project meetings
+  useEffect(() => {
+    if (!user?.email || meetings.length === 0) return;
+
+    const checkAndSendMeetingReminders = async () => {
+      const now = new Date();
+      const todayStr = formatDate(now);
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      
+      // Get sent meeting reminders from localStorage
+      const sentRemindersKey = 'sent_meeting_reminders';
+      const sentRemindersStr = localStorage.getItem(sentRemindersKey) || '{}';
+      const sentReminders: Record<string, boolean> = JSON.parse(sentRemindersStr);
+      
+      // Clean old entries (older than 1 day)
+      Object.keys(sentReminders).forEach(key => {
+        if (!key.includes(todayStr)) delete sentReminders[key];
+      });
+      
+      // Check meetings for today
+      for (const meeting of meetings) {
+        if (meeting.date !== todayStr) continue;
+        
+        const reminderTime = (meeting as any).reminder_time || 15; // Default 15 minutes
+        if (reminderTime <= 0) continue;
+        
+        const [hours, minutes] = meeting.time.split(':').map(Number);
+        const meetingStartMinutes = hours * 60 + minutes;
+        const reminderMinutes = meetingStartMinutes - reminderTime;
+        
+        const meetingReminderKey = `meeting_${meeting.id}_${todayStr}`;
+        
+        // Check if reminder should be sent (within 1 minute of reminder time)
+        if (currentMinutes >= reminderMinutes && 
+            currentMinutes < reminderMinutes + 2 && 
+            currentMinutes < meetingStartMinutes &&
+            !sentReminders[meetingReminderKey]) {
+          
+          try {
+            console.log(`📧 Sending meeting reminder for: ${meeting.title}`);
+            
+            const response = await fetch('/api/meeting-reminders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                meeting: {
+                  id: meeting.id,
+                  title: meeting.title,
+                  description: meeting.description,
+                  date: meeting.date,
+                  time: meeting.time,
+                  duration: meeting.duration,
+                  project_name: meeting.project_name,
+                  meeting_link: meeting.meeting_link,
+                  agenda_items: meeting.agenda_items,
+                  attendees_list: meeting.attendees_list,
+                  reminder_time: reminderTime,
+                },
+                attendeeEmails: [user.email], // Current user's email
+              }),
+            });
+            
+            if (response.ok) {
+              console.log(`✅ Meeting reminder sent for: ${meeting.title}`);
+              sentReminders[meetingReminderKey] = true;
+              localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
+            } else {
+              console.error(`❌ Failed to send meeting reminder for: ${meeting.title}`);
+            }
+          } catch (error) {
+            console.error(`Error sending meeting reminder for ${meeting.title}:`, error);
+          }
+        }
+      }
+    };
+
+    // Check immediately
+    checkAndSendMeetingReminders();
+
+    // Then check every minute
+    const interval = setInterval(checkAndSendMeetingReminders, 60000);
+    
+    return () => clearInterval(interval);
+  }, [user?.email, meetings]);
+
   // Fetch external data - Projects Tasks, Timeline Items, Meetings
   const fetchExternalData = async () => {
     if (!user?.id) return;
