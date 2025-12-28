@@ -1311,9 +1311,15 @@ export default function PersonalPage() {
                                 title={category.name}
                               />
                             )}
+                            {block.checklist.length > 0 && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: block.checklist.filter(i => i.completed).length === block.checklist.length ? '#22c55e' : '#86868b' }}>
+                                <ListBulletIcon style={{ width: '12px', height: '12px' }} />
+                                <span style={{ fontSize: '10px', fontWeight: '600' }}>{block.checklist.filter(i => i.completed).length}/{block.checklist.length}</span>
+                              </div>
+                            )}
                             {block.isRecurring && (
-                              <ArrowPathIcon style={{ width: '12px', height: '12px', color: '#86868b' }} />
-              )}
+                              <ArrowPathIcon style={{ width: '12px', height: '12px', color: '#8b5cf6' }} />
+                            )}
             </div>
                           <div
                             style={{
