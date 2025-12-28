@@ -2585,7 +2585,7 @@ export default function PersonalPage() {
         )}
       </AnimatePresence>
 
-      {/* Block Details Popup Modal - Premium Design */}
+      {/* Block Details Popup Modal - Clean Minimal Design */}
       <AnimatePresence>
         {showPanel && selectedBlock && (
           <motion.div
@@ -2596,9 +2596,9 @@ export default function PersonalPage() {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2607,494 +2607,273 @@ export default function PersonalPage() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
               onClick={(e) => e.stopPropagation()}
               style={{
                 width: '100%',
-                maxWidth: '560px',
-                maxHeight: '90vh',
-                background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
-                borderRadius: '24px',
-                boxShadow: '0 32px 64px -16px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+                maxWidth: '480px',
+                maxHeight: '85vh',
+                background: '#fff',
+                borderRadius: '20px',
+                boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.2)',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
               }}
             >
-              {/* Colored Header Bar */}
+              {/* Minimal Header */}
               <div
                 style={{
-                  height: '6px',
-                  background: `linear-gradient(90deg, ${blockTypeColors[selectedBlock.type].solid}, ${blockTypeColors[selectedBlock.type].text})`,
-                }}
-              />
-              
-              {/* Panel Header */}
-              <div
-                style={{
-                  padding: '20px 24px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
+                  padding: '20px 20px 16px',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  {/* Type Badge */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                {/* Top row: Type badge + Actions */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div
                       style={{ 
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 12px',
-                        borderRadius: '20px',
+                        gap: '6px',
+                        padding: '5px 10px',
+                        borderRadius: '16px',
                         background: blockTypeColors[selectedBlock.type].bg,
                       }}
                     >
-                      {selectedBlock.type === 'focus' && <SparklesIcon style={{ width: '14px', height: '14px', color: blockTypeColors.focus.text }} />}
-                      {selectedBlock.type === 'meeting' && <VideoCameraIcon style={{ width: '14px', height: '14px', color: blockTypeColors.meeting.text }} />}
-                      {selectedBlock.type === 'personal' && <UserIcon style={{ width: '14px', height: '14px', color: blockTypeColors.personal.text }} />}
-                      {selectedBlock.type === 'goal' && <FlagIcon style={{ width: '14px', height: '14px', color: blockTypeColors.goal.text }} />}
-                      {selectedBlock.type === 'project' && <FolderIcon style={{ width: '14px', height: '14px', color: blockTypeColors.project.text }} />}
-                      <span style={{ fontSize: '12px', fontWeight: '600', color: blockTypeColors[selectedBlock.type].text, textTransform: 'capitalize' }}>
+                      {selectedBlock.type === 'focus' && <SparklesIcon style={{ width: '12px', height: '12px', color: blockTypeColors.focus.text }} />}
+                      {selectedBlock.type === 'meeting' && <VideoCameraIcon style={{ width: '12px', height: '12px', color: blockTypeColors.meeting.text }} />}
+                      {selectedBlock.type === 'personal' && <UserIcon style={{ width: '12px', height: '12px', color: blockTypeColors.personal.text }} />}
+                      {selectedBlock.type === 'goal' && <FlagIcon style={{ width: '12px', height: '12px', color: blockTypeColors.goal.text }} />}
+                      {selectedBlock.type === 'project' && <FolderIcon style={{ width: '12px', height: '12px', color: blockTypeColors.project.text }} />}
+                      <span style={{ fontSize: '11px', fontWeight: '600', color: blockTypeColors[selectedBlock.type].text, textTransform: 'capitalize' }}>
                         {selectedBlock.type}
                       </span>
                     </div>
-                    {selectedBlock.category && (
-                      <div
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '20px',
-                          background: 'rgba(0, 0, 0, 0.04)',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          color: '#86868b',
-                        }}
-                      >
-                        {selectedBlock.category}
-                      </div>
-                    )}
                     {selectedBlock.isRecurring && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '6px 10px',
-                          borderRadius: '20px',
-                          background: 'rgba(139, 92, 246, 0.1)',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          color: '#8b5cf6',
-                        }}
-                      >
-                        <ArrowPathIcon style={{ width: '12px', height: '12px' }} />
-                        Recurring
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', borderRadius: '16px', background: 'rgba(139, 92, 246, 0.1)' }}>
+                        <ArrowPathIcon style={{ width: '11px', height: '11px', color: '#8b5cf6' }} />
+                        <span style={{ fontSize: '11px', fontWeight: '500', color: '#8b5cf6' }}>Recurring</span>
                       </div>
                     )}
                   </div>
-                  
-                  {/* Main Task Checkbox + Title */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    {/* Main Task Checkbox */}
+                  <div style={{ display: 'flex', gap: '4px' }}>
                     <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={toggleMainTaskCompletion}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '10px',
-                        border: selectedBlock.completed ? 'none' : '2.5px solid rgba(0, 0, 0, 0.2)',
-                        background: selectedBlock.completed ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        flexShrink: 0,
-                        boxShadow: selectedBlock.completed ? '0 4px 12px rgba(34, 197, 94, 0.4)' : 'none',
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setShowPanel(false);
+                        setBlockForm({
+                          title: selectedBlock.title,
+                          description: selectedBlock.description,
+                          type: selectedBlock.type,
+                          startTime: selectedBlock.startTime,
+                          endTime: selectedBlock.endTime,
+                          checklist: selectedBlock.checklist,
+                          meetingLink: selectedBlock.meetingLink,
+                          notificationTime: selectedBlock.notificationTime,
+                          category: selectedBlock.category,
+                          isRecurring: selectedBlock.isRecurring,
+                          recurringDays: selectedBlock.recurringDays,
+                          recurringStartDate: selectedBlock.recurringStartDate,
+                          recurringEndDate: selectedBlock.recurringEndDate,
+                        });
+                        setShowAddModal(true);
                       }}
+                      style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(0, 113, 227, 0.08)', cursor: 'pointer', color: '#0071e3' }}
                     >
-                      {selectedBlock.completed && (
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15 }}>
-                          <CheckIcon style={{ width: '18px', height: '18px', color: '#fff' }} />
-                        </motion.div>
-                      )}
+                      <PencilSquareIcon style={{ width: '15px', height: '15px' }} />
                     </motion.button>
-                    
-                    {/* Title Input */}
-                    <input
-                      type="text"
-                      value={blockForm.title}
-                      onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
-                      onBlur={handleUpdateBlock}
-                      style={{
-                        flex: 1,
-                        fontSize: '24px',
-                        fontWeight: '700',
-                        color: selectedBlock.completed ? '#86868b' : '#1d1d1f',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        letterSpacing: '-0.5px',
-                        textDecoration: selectedBlock.completed ? 'line-through' : 'none',
-                      }}
-                    />
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => deleteBlock(selectedBlock.id)}
+                      style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.08)', cursor: 'pointer', color: '#ef4444' }}
+                    >
+                      <TrashIcon style={{ width: '15px', height: '15px' }} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowPanel(false)}
+                      style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(0, 0, 0, 0.04)', cursor: 'pointer', color: '#86868b' }}
+                    >
+                      <XMarkIcon style={{ width: '15px', height: '15px' }} />
+                    </motion.button>
                   </div>
                 </div>
                 
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
-                  {/* Edit Button */}
+                {/* Task Title with Checkbox */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <motion.button
-                    whileHover={{ scale: 1.05, background: 'rgba(0, 113, 227, 0.15)' }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      // Close detail modal and open edit modal
-                      setShowPanel(false);
-                      setBlockForm({
-                        title: selectedBlock.title,
-                        description: selectedBlock.description,
-                        type: selectedBlock.type,
-                        startTime: selectedBlock.startTime,
-                        endTime: selectedBlock.endTime,
-                        checklist: selectedBlock.checklist,
-                        meetingLink: selectedBlock.meetingLink,
-                        notificationTime: selectedBlock.notificationTime,
-                        category: selectedBlock.category,
-                        isRecurring: selectedBlock.isRecurring,
-                        recurringDays: selectedBlock.recurringDays,
-                        recurringStartDate: selectedBlock.recurringStartDate,
-                        recurringEndDate: selectedBlock.recurringEndDate,
-                      });
-                      setShowAddModal(true);
-                    }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={toggleMainTaskCompletion}
                     style={{
-                      width: '40px',
-                      height: '40px',
+                      width: '26px',
+                      height: '26px',
+                      marginTop: '2px',
+                      borderRadius: '8px',
+                      border: selectedBlock.completed ? 'none' : '2px solid rgba(0, 0, 0, 0.2)',
+                      background: selectedBlock.completed ? '#22c55e' : 'transparent',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      border: 'none',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 113, 227, 0.1)',
                       cursor: 'pointer',
-                      color: '#0071e3',
-                      transition: 'background 0.2s ease',
+                      flexShrink: 0,
                     }}
                   >
-                    <PencilSquareIcon style={{ width: '18px', height: '18px' }} />
+                    {selectedBlock.completed && <CheckIcon style={{ width: '14px', height: '14px', color: '#fff' }} />}
                   </motion.button>
-                  {/* Delete Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.05, background: 'rgba(239, 68, 68, 0.15)' }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => deleteBlock(selectedBlock.id)}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: 'none',
-                      borderRadius: '12px',
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      cursor: 'pointer',
-                      color: '#ef4444',
-                      transition: 'background 0.2s ease',
-                    }}
-                  >
-                    <TrashIcon style={{ width: '18px', height: '18px' }} />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05, background: 'rgba(0, 0, 0, 0.08)' }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowPanel(false)}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: 'none',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 0, 0, 0.04)',
-                      cursor: 'pointer',
-                      color: '#86868b',
-                      transition: 'background 0.2s ease',
-                    }}
-                  >
-                    <XMarkIcon style={{ width: '18px', height: '18px' }} />
-                  </motion.button>
+                  <div style={{ flex: 1 }}>
+                    <h2 style={{
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      color: selectedBlock.completed ? '#86868b' : '#1d1d1f',
+                      textDecoration: selectedBlock.completed ? 'line-through' : 'none',
+                      margin: 0,
+                      lineHeight: 1.3,
+                    }}>
+                      {selectedBlock.title}
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '13px', color: '#86868b' }}>
+                      <ClockIcon style={{ width: '13px', height: '13px' }} />
+                      <span>{formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}</span>
+                      <span style={{ margin: '0 4px' }}>·</span>
+                      <span>{new Date(selectedBlock.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              {/* Time & Date Card */}
-              <div style={{ padding: '0 24px', marginBottom: '20px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px 20px',
-                    background: 'rgba(0, 113, 227, 0.04)',
-                    borderRadius: '14px',
-                    border: '1px solid rgba(0, 113, 227, 0.1)',
-                  }}
-                >
-                  <div
+              {/* Content - Scrollable */}
+              <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+                {/* Meeting Link - only if meeting type */}
+                {selectedBlock.type === 'meeting' && selectedBlock.meetingLink && (
+                  <motion.a
+                    href={selectedBlock.meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.01 }}
                     style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '12px',
-                      background: 'rgba(0, 113, 227, 0.1)',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      gap: '10px',
+                      padding: '12px 14px',
+                      marginBottom: '16px',
+                      background: 'rgba(0, 113, 227, 0.06)',
+                      borderRadius: '12px',
+                      textDecoration: 'none',
+                      color: '#0071e3',
+                      fontSize: '13px',
+                      fontWeight: '500',
                     }}
                   >
-                    <ClockIcon style={{ width: '22px', height: '22px', color: '#0071e3' }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '17px', fontWeight: '600', color: '#1d1d1f' }}>
-                      {formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#86868b', marginTop: '2px' }}>
-                      {new Date(selectedBlock.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-      
-              {/* Panel Content - Scrollable */}
-              <div style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
-                {/* Meeting Link */}
-                {selectedBlock.type === 'meeting' && (
-                  <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '10px' }}>
-                      <LinkIcon style={{ width: '14px', height: '14px', color: '#0071e3' }} />
-                      Meeting Link
-                    </label>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <input
-                        type="url"
-                        value={blockForm.meetingLink || ''}
-                        onChange={(e) => setBlockForm({ ...blockForm, meetingLink: e.target.value })}
-                        onBlur={handleUpdateBlock}
-                        placeholder="Paste meeting link here..."
-                        style={{
-                          flex: 1,
-                          padding: '14px 16px',
-                          fontSize: '14px',
-                          border: '1px solid rgba(0, 0, 0, 0.08)',
-                          borderRadius: '12px',
-                          outline: 'none',
-                          background: '#fff',
-                          transition: 'border-color 0.2s ease',
-                        }}
-                      />
-                      {selectedBlock.meetingLink && (
-                        <motion.a
-                          href={selectedBlock.meetingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          style={{
-                            padding: '14px 20px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            border: 'none',
-                            borderRadius: '12px',
-                            background: 'linear-gradient(135deg, #0071e3, #0077ed)',
-                            color: '#fff',
-                            textDecoration: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            boxShadow: '0 4px 12px rgba(0, 113, 227, 0.3)',
-                          }}
-                        >
-                          <VideoCameraIcon style={{ width: '16px', height: '16px' }} />
-                          Join
-                        </motion.a>
-                      )}
+                    <LinkIcon style={{ width: '14px', height: '14px' }} />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedBlock.meetingLink}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', background: '#0071e3', color: '#fff', borderRadius: '8px' }}>Join</span>
+                  </motion.a>
+                )}
+                
+                {/* Notes - only show if has content */}
+                {selectedBlock.description && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#86868b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notes</div>
+                    <div style={{ fontSize: '14px', lineHeight: 1.6, color: '#1d1d1f', whiteSpace: 'pre-wrap' }}>
+                      {selectedBlock.description}
                     </div>
                   </div>
                 )}
                 
-                {/* Notes Section */}
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '10px' }}>
-                    <DocumentTextIcon style={{ width: '14px', height: '14px', color: '#f59e0b' }} />
-                    Notes
-                  </label>
-                  <textarea
-                    value={blockForm.description || ''}
-                    onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })}
-                    onBlur={handleUpdateBlock}
-                    placeholder="Add notes, ideas, or details..."
-                    rows={4}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      fontSize: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.08)',
-                      borderRadius: '12px',
-                      outline: 'none',
-                      resize: 'none',
-                      lineHeight: '1.7',
-                      background: '#fff',
-                      transition: 'border-color 0.2s ease',
-                    }}
-                  />
-                </div>
-                
-                {/* Checklist Section with Progress */}
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>
-                      <CheckCircleIcon style={{ width: '14px', height: '14px', color: '#22c55e' }} />
-                      Checklist
-                    </label>
+                {/* Checklist Section - Always show */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Checklist {selectedBlock.checklist.length > 0 && `(${selectedBlock.checklist.filter(i => i.completed).length}/${selectedBlock.checklist.length})`}
+                    </span>
                     {selectedBlock.checklist.length > 0 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '100px', height: '6px', borderRadius: '3px', background: 'rgba(0, 0, 0, 0.08)', overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '60px', height: '4px', borderRadius: '2px', background: 'rgba(0, 0, 0, 0.08)', overflow: 'hidden' }}>
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${(selectedBlock.checklist.filter(i => i.completed).length / selectedBlock.checklist.length) * 100}%` }}
-                            transition={{ duration: 0.5, ease: 'easeOut' }}
-                            style={{ height: '100%', background: 'linear-gradient(90deg, #22c55e, #16a34a)', borderRadius: '3px' }}
+                            style={{ height: '100%', background: '#22c55e', borderRadius: '2px' }}
                           />
                         </div>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#22c55e' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#22c55e' }}>
                           {Math.round((selectedBlock.checklist.filter(i => i.completed).length / selectedBlock.checklist.length) * 100)}%
                         </span>
                       </div>
                     )}
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0, 0, 0, 0.02)', borderRadius: '14px', padding: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {selectedBlock.checklist.map((item) => (
                       <motion.div
                         key={item.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        whileHover={{ background: item.completed ? 'rgba(34, 197, 94, 0.08)' : 'rgba(0, 0, 0, 0.04)' }}
+                        whileHover={{ background: 'rgba(0, 0, 0, 0.03)' }}
+                        onClick={() => toggleChecklistItem(item.id)}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '12px',
-                          padding: '12px 14px',
-                          background: item.completed ? 'rgba(34, 197, 94, 0.05)' : 'transparent',
+                          gap: '10px',
+                          padding: '10px 12px',
                           borderRadius: '10px',
-                          transition: 'all 0.2s ease',
                           cursor: 'pointer',
                         }}
-                        onClick={() => toggleChecklistItem(item.id)}
                       >
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                        <div
                           style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '8px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '6px',
                             border: item.completed ? 'none' : '2px solid rgba(0, 0, 0, 0.15)',
-                            background: item.completed ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent',
+                            background: item.completed ? '#22c55e' : 'transparent',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'all 0.2s ease',
                             flexShrink: 0,
-                            boxShadow: item.completed ? '0 2px 8px rgba(34, 197, 94, 0.3)' : 'none',
                           }}
                         >
-                          {item.completed && (
-                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15 }}>
-                              <CheckIcon style={{ width: '14px', height: '14px', color: '#fff' }} />
-                            </motion.div>
-                          )}
-                        </motion.div>
-                        <span
-                          style={{
-                            flex: 1,
-                            fontSize: '14px',
-                            color: item.completed ? '#86868b' : '#1d1d1f',
-                            textDecoration: item.completed ? 'line-through' : 'none',
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
+                          {item.completed && <CheckIcon style={{ width: '12px', height: '12px', color: '#fff' }} />}
+                        </div>
+                        <span style={{
+                          flex: 1,
+                          fontSize: '14px',
+                          color: item.completed ? '#86868b' : '#1d1d1f',
+                          textDecoration: item.completed ? 'line-through' : 'none',
+                        }}>
                           {item.text}
                         </span>
                         <motion.button
-                          whileHover={{ scale: 1.1, opacity: 1 }}
-                          whileTap={{ scale: 0.9 }}
+                          whileHover={{ opacity: 1 }}
                           onClick={(e) => { e.stopPropagation(); removeChecklistItem(item.id); }}
-                          style={{
-                            width: '28px',
-                            height: '28px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: 'none',
-                            borderRadius: '8px',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            color: '#86868b',
-                            opacity: 0.4,
-                          }}
+                          style={{ opacity: 0.3, border: 'none', background: 'none', cursor: 'pointer', color: '#86868b', padding: '4px' }}
                         >
                           <XMarkIcon style={{ width: '14px', height: '14px' }} />
                         </motion.button>
                       </motion.div>
                     ))}
                     
-                    {/* Add new checklist item */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px' }}>
-                      <div
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '8px',
-                          border: '2px dashed rgba(0, 0, 0, 0.12)',
-                          flexShrink: 0,
-                        }}
-                      />
+                    {/* Add checklist item */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px' }}>
+                      <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '2px dashed rgba(0, 0, 0, 0.1)', flexShrink: 0 }} />
                       <input
                         type="text"
                         value={newChecklistItem}
                         onChange={(e) => setNewChecklistItem(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') addChecklistItem(); }}
-                        placeholder="Add a new task..."
-                        style={{
-                          flex: 1,
-                          fontSize: '14px',
-                          border: 'none',
-                          outline: 'none',
-                          background: 'transparent',
-                          color: '#1d1d1f',
-                        }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && newChecklistItem.trim()) addChecklistItem(); }}
+                        placeholder="Add item..."
+                        style={{ flex: 1, fontSize: '14px', border: 'none', outline: 'none', background: 'transparent', color: '#1d1d1f' }}
                       />
                       {newChecklistItem && (
                         <motion.button
-                          whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={addChecklistItem}
-                          style={{
-                            padding: '8px 16px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            border: 'none',
-                            borderRadius: '8px',
-                            background: '#0071e3',
-                            color: '#fff',
-                            cursor: 'pointer',
-                          }}
+                          style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '600', border: 'none', borderRadius: '6px', background: '#0071e3', color: '#fff', cursor: 'pointer' }}
                         >
                           Add
                         </motion.button>
@@ -3103,106 +2882,22 @@ export default function PersonalPage() {
                   </div>
                 </div>
                 
-                {/* Email Notification Section */}
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '10px' }}>
-                    <BellIcon style={{ width: '14px', height: '14px', color: '#f97316' }} />
-                    Email Reminder
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      background: 'rgba(249, 115, 22, 0.04)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(249, 115, 22, 0.1)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
-                        background: 'rgba(249, 115, 22, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <EnvelopeIcon style={{ width: '20px', height: '20px', color: '#f97316' }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#1d1d1f', marginBottom: '2px' }}>
-                        Send reminder to your email
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#86868b' }}>
-                        You&apos;ll receive an email before this block starts
-                      </div>
-                    </div>
-                    <select
-                      value={blockForm.notificationTime || 0}
-                      onChange={(e) => {
-                        setBlockForm({ ...blockForm, notificationTime: Number(e.target.value) });
-                        handleUpdateBlock();
-                      }}
-                      style={{
-                        padding: '10px 14px',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
-                        borderRadius: '10px',
-                        background: '#fff',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        color: '#1d1d1f',
-                      }}
-                    >
-                      <option value={0}>No reminder</option>
-                      <option value={5}>5 min before</option>
-                      <option value={10}>10 min before</option>
-                      <option value={15}>15 min before</option>
-                      <option value={30}>30 min before</option>
-                      <option value={60}>1 hour before</option>
-                    </select>
+                {/* Email Reminder - only show if set */}
+                {selectedBlock.notificationTime && selectedBlock.notificationTime > 0 && (
+                  <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'rgba(249, 115, 22, 0.06)', borderRadius: '10px', fontSize: '13px', color: '#f97316' }}>
+                    <BellIcon style={{ width: '14px', height: '14px' }} />
+                    <span>Reminder {selectedBlock.notificationTime} min before</span>
                   </div>
-                </div>
+                )}
               </div>
-      
-              {/* Footer with Save Button */}
-              <div
-                style={{
-                  padding: '16px 24px',
-                  borderTop: '1px solid rgba(0, 0, 0, 0.06)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  background: 'rgba(0, 0, 0, 0.02)',
-                }}
-              >
-                <div style={{ fontSize: '12px', color: '#86868b' }}>
-                  Changes are saved automatically
-                </div>
+              
+              {/* Footer */}
+              <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(0, 0, 0, 0.06)', display: 'flex', justifyContent: 'flex-end' }}>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    handleUpdateBlock();
-                    setShowPanel(false);
-                  }}
-                  style={{
-                    padding: '12px 24px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    border: 'none',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #1d1d1f, #333)',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  }}
+                  onClick={() => setShowPanel(false)}
+                  style={{ padding: '10px 20px', fontSize: '14px', fontWeight: '600', border: 'none', borderRadius: '10px', background: '#1d1d1f', color: '#fff', cursor: 'pointer' }}
                 >
                   Done
                 </motion.button>
