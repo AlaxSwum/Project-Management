@@ -49,6 +49,8 @@ interface Meeting {
   attendee_ids?: number[];
   event_type?: string;
   agenda_items?: string[];
+  meeting_link?: string;
+  reminder_time?: number; // in minutes before meeting
 }
 
 export default function TimetablePage() {
@@ -95,6 +97,8 @@ export default function TimetablePage() {
     attendees: '',
     attendee_ids: [] as number[],
     agenda_items: [] as string[],
+    meeting_link: '',
+    reminder_time: 15, // default 15 minutes before
   });
   const [newAgendaItem, setNewAgendaItem] = useState('');
   
@@ -232,6 +236,8 @@ export default function TimetablePage() {
         attendees: newMeeting.attendees,
         attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
         agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+        meeting_link: newMeeting.meeting_link.trim() || undefined,
+        reminder_time: newMeeting.reminder_time || undefined,
       };
 
       const createdMeeting = await meetingService.createMeeting(meetingData);
@@ -327,6 +333,8 @@ export default function TimetablePage() {
       attendees: meeting.attendees_list ? meeting.attendees_list.join(', ') : meeting.attendees || '',
       attendee_ids: meeting.attendee_ids || [],
       agenda_items: agendaItems,
+      meeting_link: meeting.meeting_link || '',
+      reminder_time: meeting.reminder_time || 15,
     });
     setNewAgendaItem('');
     setShowCreateForm(true);
@@ -354,6 +362,8 @@ export default function TimetablePage() {
         attendees: newMeeting.attendees,
         attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
         agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+        meeting_link: newMeeting.meeting_link.trim() || undefined,
+        reminder_time: newMeeting.reminder_time || undefined,
       };
 
       const updatedMeeting = await meetingService.updateMeeting(editingMeeting.id, meetingData);
@@ -370,6 +380,8 @@ export default function TimetablePage() {
         attendees: '',
         attendee_ids: [],
         agenda_items: [],
+        meeting_link: '',
+        reminder_time: 15,
       });
       setShowCreateForm(false);
       setError('');
@@ -3783,6 +3795,61 @@ export default function TimetablePage() {
                 )}
               </div>
 
+              {/* Meeting Link */}
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '18px', height: '18px', color: '#3b82f6' }}>
+                    <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  Meeting Link (Zoom/Google Meet/Teams)
+                </label>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+                  value={newMeeting.meeting_link}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, meeting_link: e.target.value })}
+                  style={{ 
+                    borderColor: newMeeting.meeting_link ? '#3b82f6' : undefined,
+                    background: newMeeting.meeting_link ? '#eff6ff' : undefined
+                  }}
+                />
+                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                  Add a video call link for remote attendees
+                </p>
+              </div>
+
+              {/* Email Reminder */}
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '18px', height: '18px', color: '#f59e0b' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
+                  Email Reminder
+                </label>
+                <select
+                  className="form-select"
+                  value={newMeeting.reminder_time}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, reminder_time: Number(e.target.value) })}
+                  style={{ 
+                    borderColor: '#f59e0b',
+                    background: '#fffbeb'
+                  }}
+                >
+                  <option value={0}>No reminder</option>
+                  <option value={5}>5 minutes before</option>
+                  <option value={10}>10 minutes before</option>
+                  <option value={15}>15 minutes before</option>
+                  <option value={30}>30 minutes before</option>
+                  <option value={60}>1 hour before</option>
+                  <option value={120}>2 hours before</option>
+                  <option value={1440}>1 day before</option>
+                </select>
+                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                  Send an email notification to all attendees before the meeting starts
+                </p>
+              </div>
+
               <div className="form-actions">
                 <button type="submit" className="btn-primary">
                   {editingMeeting ? 'Update Meeting' : 'Schedule Meeting'}
@@ -3800,6 +3867,8 @@ export default function TimetablePage() {
                     attendees: '',
                     attendee_ids: [],
                     agenda_items: [],
+                    meeting_link: '',
+                    reminder_time: 15,
                   });
                 }} className="btn-secondary">
                   Cancel

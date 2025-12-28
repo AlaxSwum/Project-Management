@@ -794,7 +794,7 @@ export const supabaseDb = {
       // Query all meetings at once
       const { data: meetingsData, error: meetingsError } = await supabase
         .from('projects_meeting')
-        .select('id, title, description, date, time, duration, attendee_ids, agenda_items, created_at, updated_at, created_by_id, project_id')
+        .select('id, title, description, date, time, duration, attendee_ids, agenda_items, meeting_link, reminder_time, created_at, updated_at, created_by_id, project_id')
         .order('date', { ascending: false });
       
       if (meetingsError) return { data: null, error: meetingsError };
@@ -827,7 +827,9 @@ export const supabaseDb = {
         created_by: userMap.get(meeting.created_by_id) || { id: 0, name: 'Unknown User', email: '' },
         attendees_list: [],
         attendee_ids: meeting.attendee_ids || [],
-        agenda_items: meeting.agenda_items || []
+        agenda_items: meeting.agenda_items || [],
+        meeting_link: meeting.meeting_link || null,
+        reminder_time: meeting.reminder_time || null
       }));
       
       return { data: enrichedMeetings, error: null };
@@ -855,6 +857,8 @@ export const supabaseDb = {
         duration: meetingData.duration || 60,
         attendee_ids: meetingData.attendee_ids || null,
         agenda_items: meetingData.agenda_items || null,
+        meeting_link: meetingData.meeting_link || null,
+        reminder_time: meetingData.reminder_time || null,
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -921,6 +925,8 @@ export const supabaseDb = {
       if (meetingData.duration) updateData.duration = meetingData.duration;
       if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;
       if (meetingData.agenda_items !== undefined) updateData.agenda_items = meetingData.agenda_items;
+      if (meetingData.meeting_link !== undefined) updateData.meeting_link = meetingData.meeting_link;
+      if (meetingData.reminder_time !== undefined) updateData.reminder_time = meetingData.reminder_time;
 
     const { data, error } = await supabase
       .from('projects_meeting')
