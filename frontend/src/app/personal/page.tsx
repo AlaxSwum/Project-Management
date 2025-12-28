@@ -964,7 +964,7 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : '280px',
-          marginRight: isMobile ? '0' : (showRightPanel ? '340px' : '0'),
+          marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
           background: '#f8f9fa',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -1991,7 +1991,7 @@ export default function PersonalPage() {
             position: 'fixed',
             right: 0,
             top: '0',
-            width: '340px',
+            width: '380px',
             height: '100vh',
             background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
             borderLeft: '1px solid #e2e8f0',
@@ -2110,12 +2110,32 @@ export default function PersonalPage() {
                 </button>
                     
               {/* Content */}
-              <div style={{ padding: '8px 12px 12px', maxHeight: '300px', overflowY: 'auto' }}>
+              <div style={{ padding: '12px', maxHeight: '300px', overflowY: 'auto' }}>
                 {sidebarTab === 'tasks' ? (
                   filteredTasks.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
-                      <BriefcaseIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
-                      <p style={{ fontSize: '13px', fontWeight: '500', margin: 0 }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '40px 20px', 
+                      color: '#94a3b8',
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                      borderRadius: '12px',
+                      border: '1px dashed #cbd5e1',
+                    }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        margin: '0 auto 12px',
+                        background: '#fff',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                      }}>
+                        <BriefcaseIcon style={{ width: '24px', height: '24px', color: '#94a3b8' }} />
+                      </div>
+                      <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', color: '#64748b' }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                      <p style={{ fontSize: '11px', margin: 0, color: '#94a3b8' }}>Tasks will appear here when assigned</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2169,9 +2189,29 @@ export default function PersonalPage() {
                   )
                 ) : (
                   filteredTimeline.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
-                      <RocketLaunchIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
-                      <p style={{ fontSize: '13px', fontWeight: '500', margin: 0 }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '40px 20px', 
+                      color: '#94a3b8',
+                      background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
+                      borderRadius: '12px',
+                      border: '1px dashed #c4b5fd',
+                    }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        margin: '0 auto 12px',
+                        background: '#fff',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                      }}>
+                        <RocketLaunchIcon style={{ width: '24px', height: '24px', color: '#a78bfa' }} />
+                      </div>
+                      <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', color: '#7c3aed' }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                      <p style={{ fontSize: '11px', margin: 0, color: '#a78bfa' }}>Timeline items will appear here</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2270,9 +2310,29 @@ export default function PersonalPage() {
 
               <div style={{ padding: '12px', maxHeight: '250px', overflowY: 'auto' }}>
                 {filteredMeetings.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
-                    <UsersIcon style={{ width: '32px', height: '32px', margin: '0 auto 8px', opacity: 0.5 }} />
-                    <p style={{ fontSize: '13px', fontWeight: '500', margin: 0 }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '40px 20px', 
+                    color: '#94a3b8',
+                    background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                    borderRadius: '12px',
+                    border: '1px dashed #fcd34d',
+                  }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      margin: '0 auto 12px',
+                      background: '#fff',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                    }}>
+                      <UsersIcon style={{ width: '24px', height: '24px', color: '#f59e0b' }} />
+                    </div>
+                    <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', color: '#b45309' }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    <p style={{ fontSize: '11px', margin: 0, color: '#d97706' }}>Meetings will appear here</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

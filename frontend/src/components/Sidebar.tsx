@@ -1141,6 +1141,11 @@ Your report is now available in the system.`);
           
           .sidebar.collapsed {
             width: 72px;
+            background: #fff;
+          }
+          
+          .sidebar.collapsed::before {
+            display: none;
           }
           
           .sidebar::before {
@@ -1173,7 +1178,11 @@ Your report is now available in the system.`);
           }
           
           .sidebar.collapsed .sidebar-header {
-            padding: 1rem 0.75rem;
+            padding: 1rem 0.5rem;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
           }
           
           .sidebar-header-content {
@@ -1186,10 +1195,10 @@ Your report is now available in the system.`);
           }
           
           .sidebar.collapsed .sidebar-header-content {
-            margin-bottom: 0.75rem;
+            margin-bottom: 0;
             justify-content: center;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.75rem;
           }
           
           .sidebar-title {
@@ -1478,13 +1487,23 @@ Your report is now available in the system.`);
           }
           
           .sidebar.collapsed .nav-text {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.8);
+            display: none;
           }
           
           .sidebar.collapsed .nav-icon {
             margin-right: 0;
+          }
+          
+          .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
+            margin: 0 0.25rem 0.25rem;
+          }
+          
+          .sidebar.collapsed .nav-item.active::before {
+            left: 0;
+            width: 3px;
+            height: 24px;
           }
           
           .projects-section {
@@ -1734,9 +1753,20 @@ Your report is now available in the system.`);
           }
           
           .sidebar.collapsed .user-info {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.8);
+            display: none;
+          }
+          
+          .sidebar.collapsed .sidebar-footer {
+            padding: 0.75rem 0.5rem;
+          }
+          
+          .sidebar.collapsed .user-profile {
+            justify-content: center;
+            padding: 0.5rem;
+          }
+          
+          .sidebar.collapsed .logout-button {
+            display: none;
           }
           
           .user-name {
