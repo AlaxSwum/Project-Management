@@ -25,6 +25,9 @@ import {
   FolderIcon,
   ArrowPathIcon,
   TagIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 
@@ -2568,7 +2571,7 @@ export default function PersonalPage() {
         )}
       </AnimatePresence>
 
-      {/* Block Details Popup Modal */}
+      {/* Block Details Popup Modal - Premium Design */}
       <AnimatePresence>
         {showPanel && selectedBlock && (
           <motion.div
@@ -2579,9 +2582,9 @@ export default function PersonalPage() {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0, 0, 0, 0.4)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2590,175 +2593,222 @@ export default function PersonalPage() {
             }}
           >
             <motion.div
-              {...scaleIn}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
               style={{
                 width: '100%',
-                maxWidth: '520px',
+                maxWidth: '560px',
                 maxHeight: '90vh',
-                background: '#fff',
-                borderRadius: '20px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
+                borderRadius: '24px',
+                boxShadow: '0 32px 64px -16px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
               }}
             >
+              {/* Colored Header Bar */}
+              <div
+                style={{
+                  height: '6px',
+                  background: `linear-gradient(90deg, ${blockTypeColors[selectedBlock.type].solid}, ${blockTypeColors[selectedBlock.type].text})`,
+                }}
+              />
+              
               {/* Panel Header */}
               <div
-                  style={{
+                style={{
                   padding: '20px 24px',
-                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div
-                    style={{ 
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '10px',
-                      background: blockTypeColors[selectedBlock.type].bg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {selectedBlock.type === 'focus' && <SparklesIcon style={{ width: '18px', height: '18px', color: blockTypeColors.focus.text }} />}
-                    {selectedBlock.type === 'meeting' && <VideoCameraIcon style={{ width: '18px', height: '18px', color: blockTypeColors.meeting.text }} />}
-                    {selectedBlock.type === 'personal' && <UserIcon style={{ width: '18px', height: '18px', color: blockTypeColors.personal.text }} />}
-                    {selectedBlock.type === 'goal' && <FlagIcon style={{ width: '18px', height: '18px', color: blockTypeColors.goal.text }} />}
-                    {selectedBlock.type === 'project' && <FolderIcon style={{ width: '18px', height: '18px', color: blockTypeColors.project.text }} />}
+                <div style={{ flex: 1 }}>
+                  {/* Type Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <div
+                      style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        background: blockTypeColors[selectedBlock.type].bg,
+                      }}
+                    >
+                      {selectedBlock.type === 'focus' && <SparklesIcon style={{ width: '14px', height: '14px', color: blockTypeColors.focus.text }} />}
+                      {selectedBlock.type === 'meeting' && <VideoCameraIcon style={{ width: '14px', height: '14px', color: blockTypeColors.meeting.text }} />}
+                      {selectedBlock.type === 'personal' && <UserIcon style={{ width: '14px', height: '14px', color: blockTypeColors.personal.text }} />}
+                      {selectedBlock.type === 'goal' && <FlagIcon style={{ width: '14px', height: '14px', color: blockTypeColors.goal.text }} />}
+                      {selectedBlock.type === 'project' && <FolderIcon style={{ width: '14px', height: '14px', color: blockTypeColors.project.text }} />}
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: blockTypeColors[selectedBlock.type].text, textTransform: 'capitalize' }}>
+                        {selectedBlock.type}
+                      </span>
+                    </div>
+                    {selectedBlock.category && (
+                      <div
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          background: 'rgba(0, 0, 0, 0.04)',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          color: '#86868b',
+                        }}
+                      >
+                        {selectedBlock.category}
+                      </div>
+                    )}
+                    {selectedBlock.isRecurring && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '6px 10px',
+                          borderRadius: '20px',
+                          background: 'rgba(139, 92, 246, 0.1)',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          color: '#8b5cf6',
+                        }}
+                      >
+                        <ArrowPathIcon style={{ width: '12px', height: '12px' }} />
+                        Recurring
+                      </div>
+                    )}
                   </div>
-                  <span
-                    style={{ 
-                      fontSize: '12px',
-                      fontWeight: '600', 
-                      color: blockTypeColors[selectedBlock.type].text,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                  
+                  {/* Title Input */}
+                  <input
+                    type="text"
+                    value={blockForm.title}
+                    onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
+                    onBlur={handleUpdateBlock}
+                    style={{
+                      width: '100%',
+                      fontSize: '24px',
+                      fontWeight: '700',
+                      color: '#1d1d1f',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      letterSpacing: '-0.5px',
                     }}
-                  >
-                    {selectedBlock.type}
-                  </span>
-                  </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                  />
+                </div>
+                
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
                   <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05, background: 'rgba(239, 68, 68, 0.15)' }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => deleteBlock(selectedBlock.id)}
                     style={{
-                      width: '36px',
-                      height: '36px',
+                      width: '40px',
+                      height: '40px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: '12px',
                       background: 'rgba(239, 68, 68, 0.1)',
                       cursor: 'pointer',
                       color: '#ef4444',
+                      transition: 'background 0.2s ease',
                     }}
                   >
                     <TrashIcon style={{ width: '18px', height: '18px' }} />
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05, background: 'rgba(0, 0, 0, 0.08)' }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPanel(false)}
                     style={{
-                      width: '36px',
-                      height: '36px',
+                      width: '40px',
+                      height: '40px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: '12px',
                       background: 'rgba(0, 0, 0, 0.04)',
                       cursor: 'pointer',
                       color: '#86868b',
+                      transition: 'background 0.2s ease',
                     }}
                   >
                     <XMarkIcon style={{ width: '18px', height: '18px' }} />
                   </motion.button>
-                  </div>
-      </div>
-      
-              {/* Panel Content */}
-              <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
-                {/* Title */}
-                <input
-                  type="text"
-                  value={blockForm.title}
-                  onChange={(e) => {
-                    setBlockForm({ ...blockForm, title: e.target.value });
-                  }}
-                  onBlur={handleUpdateBlock}
-                  style={{
-                    width: '100%',
-                    fontSize: '22px',
-                    fontWeight: '600',
-                    color: '#1d1d1f',
-                    border: 'none',
-                    outline: 'none',
-                    background: 'transparent',
-                    marginBottom: '16px',
-                  }}
-                />
-                
-                {/* Time */}
-                <div
-              style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '24px',
-                    color: '#86868b',
-                    fontSize: '14px',
-                  }}
-                >
-                  <ClockIcon style={{ width: '18px', height: '18px' }} />
-                  <span>
-                    {formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}
-                  </span>
-                  <span>•</span>
-                  <span>{new Date(selectedBlock.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                </div>
               </div>
               
+              {/* Time & Date Card */}
+              <div style={{ padding: '0 24px', marginBottom: '20px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '16px 20px',
+                    background: 'rgba(0, 113, 227, 0.04)',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(0, 113, 227, 0.1)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: 'rgba(0, 113, 227, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ClockIcon style={{ width: '22px', height: '22px', color: '#0071e3' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '17px', fontWeight: '600', color: '#1d1d1f' }}>
+                      {formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#86868b', marginTop: '2px' }}>
+                      {new Date(selectedBlock.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+      
+              {/* Panel Content - Scrollable */}
+              <div style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px' }}>
                 {/* Meeting Link */}
                 {selectedBlock.type === 'meeting' && (
                   <div style={{ marginBottom: '24px' }}>
-                    <label
-                  style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '13px',
-                    fontWeight: '500',
-                        color: '#86868b',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <LinkIcon style={{ width: '14px', height: '14px' }} />
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '10px' }}>
+                      <LinkIcon style={{ width: '14px', height: '14px', color: '#0071e3' }} />
                       Meeting Link
                     </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '10px' }}>
                       <input
                         type="url"
                         value={blockForm.meetingLink || ''}
                         onChange={(e) => setBlockForm({ ...blockForm, meetingLink: e.target.value })}
                         onBlur={handleUpdateBlock}
-                        placeholder="Add meeting link..."
-                    style={{
+                        placeholder="Paste meeting link here..."
+                        style={{
                           flex: 1,
-                          padding: '10px 14px',
+                          padding: '14px 16px',
                           fontSize: '14px',
-                          border: '1px solid rgba(0, 0, 0, 0.1)',
-                          borderRadius: '8px',
+                          border: '1px solid rgba(0, 0, 0, 0.08)',
+                          borderRadius: '12px',
                           outline: 'none',
+                          background: '#fff',
+                          transition: 'border-color 0.2s ease',
                         }}
                       />
                       {selectedBlock.meetingLink && (
@@ -2766,134 +2816,124 @@ export default function PersonalPage() {
                           href={selectedBlock.meetingLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           style={{
-                            padding: '10px 16px',
+                            padding: '14px 20px',
                             fontSize: '14px',
-                            fontWeight: '500',
-                      border: 'none',
-                            borderRadius: '8px',
-                            background: '#0071e3',
+                            fontWeight: '600',
+                            border: 'none',
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #0071e3, #0077ed)',
                             color: '#fff',
                             textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                            gap: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(0, 113, 227, 0.3)',
                           }}
                         >
                           <VideoCameraIcon style={{ width: '16px', height: '16px' }} />
                           Join
                         </motion.a>
-              )}
-            </div>
-      </div>
-      )}
+                      )}
+                    </div>
+                  </div>
+                )}
                 
-                {/* Description */}
+                {/* Notes Section */}
                 <div style={{ marginBottom: '24px' }}>
-                  <label
-              style={{
-                      display: 'block',
-                      fontSize: '13px',
-                  fontWeight: '500',
-                      color: '#86868b',
-                      marginBottom: '8px',
-                    }}
-                  >
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '10px' }}>
+                    <DocumentTextIcon style={{ width: '14px', height: '14px', color: '#f59e0b' }} />
                     Notes
                   </label>
                   <textarea
                     value={blockForm.description || ''}
                     onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })}
                     onBlur={handleUpdateBlock}
-                    placeholder="Add notes..."
+                    placeholder="Add notes, ideas, or details..."
                     rows={4}
                     style={{
                       width: '100%',
-                      padding: '12px 14px',
+                      padding: '14px 16px',
                       fontSize: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      borderRadius: '10px',
+                      border: '1px solid rgba(0, 0, 0, 0.08)',
+                      borderRadius: '12px',
                       outline: 'none',
                       resize: 'none',
-                      lineHeight: '1.6',
+                      lineHeight: '1.7',
+                      background: '#fff',
+                      transition: 'border-color 0.2s ease',
                     }}
                   />
                 </div>
                 
-                {/* Checklist */}
-                <div>
-                  <label
-                  style={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '13px',
-                    fontWeight: '500',
-                      color: '#86868b',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    <ListBulletIcon style={{ width: '14px', height: '14px' }} />
-                    Checklist
+                {/* Checklist Section with Progress */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>
+                      <CheckCircleIcon style={{ width: '14px', height: '14px', color: '#22c55e' }} />
+                      Checklist
+                    </label>
                     {selectedBlock.checklist.length > 0 && (
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          color: '#22c55e',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {selectedBlock.checklist.filter(i => i.completed).length}/{selectedBlock.checklist.length}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '100px', height: '6px', borderRadius: '3px', background: 'rgba(0, 0, 0, 0.08)', overflow: 'hidden' }}>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(selectedBlock.checklist.filter(i => i.completed).length / selectedBlock.checklist.length) * 100}%` }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            style={{ height: '100%', background: 'linear-gradient(90deg, #22c55e, #16a34a)', borderRadius: '3px' }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#22c55e' }}>
+                          {Math.round((selectedBlock.checklist.filter(i => i.completed).length / selectedBlock.checklist.length) * 100)}%
+                        </span>
+                      </div>
                     )}
-                  </label>
+                  </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0, 0, 0, 0.02)', borderRadius: '14px', padding: '12px' }}>
                     {selectedBlock.checklist.map((item) => (
                       <motion.div
                         key={item.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
+                        whileHover={{ background: item.completed ? 'rgba(34, 197, 94, 0.08)' : 'rgba(0, 0, 0, 0.04)' }}
                         style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                gap: '12px',
-                          padding: '10px 12px',
-                          background: item.completed ? 'rgba(34, 197, 94, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: '8px',
-                    transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px 14px',
+                          background: item.completed ? 'rgba(34, 197, 94, 0.05)' : 'transparent',
+                          borderRadius: '10px',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer',
                         }}
+                        onClick={() => toggleChecklistItem(item.id)}
                       >
-                        <motion.button
+                        <motion.div
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => toggleChecklistItem(item.id)}
                           style={{
-                            width: '22px',
-                            height: '22px',
-                            borderRadius: '6px',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '8px',
                             border: item.completed ? 'none' : '2px solid rgba(0, 0, 0, 0.15)',
-                            background: item.completed ? '#22c55e' : 'transparent',
+                            background: item.completed ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             flexShrink: 0,
+                            boxShadow: item.completed ? '0 2px 8px rgba(34, 197, 94, 0.3)' : 'none',
                           }}
                         >
                           {item.completed && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', damping: 15 }}
-                            >
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15 }}>
                               <CheckIcon style={{ width: '14px', height: '14px', color: '#fff' }} />
                             </motion.div>
                           )}
-                        </motion.button>
+                        </motion.div>
                         <span
                           style={{
                             flex: 1,
@@ -2906,21 +2946,21 @@ export default function PersonalPage() {
                           {item.text}
                         </span>
                         <motion.button
-                          whileHover={{ scale: 1.1 }}
+                          whileHover={{ scale: 1.1, opacity: 1 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => removeChecklistItem(item.id)}
+                          onClick={(e) => { e.stopPropagation(); removeChecklistItem(item.id); }}
                           style={{
-                            width: '24px',
-                            height: '24px',
+                            width: '28px',
+                            height: '28px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             border: 'none',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             background: 'transparent',
                             cursor: 'pointer',
                             color: '#86868b',
-                            opacity: 0.5,
+                            opacity: 0.4,
                           }}
                         >
                           <XMarkIcon style={{ width: '14px', height: '14px' }} />
@@ -2928,35 +2968,24 @@ export default function PersonalPage() {
                       </motion.div>
                     ))}
                     
-                    {/* Add new item */}
-                    <div
-                            style={{
-                              display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '8px 12px',
-                      }}
-                    >
+                    {/* Add new checklist item */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px' }}>
                       <div
                         style={{
-                          width: '22px',
-                          height: '22px',
-                          borderRadius: '6px',
-                          border: '2px dashed rgba(0, 0, 0, 0.1)',
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '8px',
+                          border: '2px dashed rgba(0, 0, 0, 0.12)',
                           flexShrink: 0,
                         }}
                       />
-                            <input
+                      <input
                         type="text"
                         value={newChecklistItem}
                         onChange={(e) => setNewChecklistItem(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            addChecklistItem();
-                          }
-                        }}
-                        placeholder="Add an item..."
-                              style={{
+                        onKeyDown={(e) => { if (e.key === 'Enter') addChecklistItem(); }}
+                        placeholder="Add a new task..."
+                        style={{
                           flex: 1,
                           fontSize: '14px',
                           border: 'none',
@@ -2967,15 +2996,15 @@ export default function PersonalPage() {
                       />
                       {newChecklistItem && (
                         <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={addChecklistItem}
                           style={{
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            fontWeight: '500',
+                            padding: '8px 16px',
+                            fontSize: '13px',
+                            fontWeight: '600',
                             border: 'none',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             background: '#0071e3',
                             color: '#fff',
                             cursor: 'pointer',
@@ -2983,52 +3012,120 @@ export default function PersonalPage() {
                         >
                           Add
                         </motion.button>
-                              )}
-                            </div>
-                          </div>
-        </div>
-      </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Email Notification Section */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '10px' }}>
+                    <BellIcon style={{ width: '14px', height: '14px', color: '#f97316' }} />
+                    Email Reminder
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      background: 'rgba(249, 115, 22, 0.04)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(249, 115, 22, 0.1)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'rgba(249, 115, 22, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <EnvelopeIcon style={{ width: '20px', height: '20px', color: '#f97316' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#1d1d1f', marginBottom: '2px' }}>
+                        Send reminder to your email
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#86868b' }}>
+                        You&apos;ll receive an email before this block starts
+                      </div>
+                    </div>
+                    <select
+                      value={blockForm.notificationTime || 0}
+                      onChange={(e) => {
+                        setBlockForm({ ...blockForm, notificationTime: Number(e.target.value) });
+                        handleUpdateBlock();
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '10px',
+                        background: '#fff',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        color: '#1d1d1f',
+                      }}
+                    >
+                      <option value={0}>No reminder</option>
+                      <option value={5}>5 min before</option>
+                      <option value={10}>10 min before</option>
+                      <option value={15}>15 min before</option>
+                      <option value={30}>30 min before</option>
+                      <option value={60}>1 hour before</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
       
-              {/* Notification Settings */}
+              {/* Footer with Save Button */}
               <div
-              style={{ 
+                style={{
                   padding: '16px 24px',
                   borderTop: '1px solid rgba(0, 0, 0, 0.06)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  justifyContent: 'space-between',
+                  background: 'rgba(0, 0, 0, 0.02)',
                 }}
               >
-                <BellIcon style={{ width: '18px', height: '18px', color: '#86868b' }} />
-                <select
-                  value={blockForm.notificationTime || 0}
-                  onChange={(e) => {
-                    setBlockForm({ ...blockForm, notificationTime: Number(e.target.value) });
+                <div style={{ fontSize: '12px', color: '#86868b' }}>
+                  Changes are saved automatically
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
                     handleUpdateBlock();
+                    setShowPanel(false);
                   }}
-                  style={{ 
-                    flex: 1,
-                    padding: '10px 14px',
+                  style={{
+                    padding: '12px 24px',
                     fontSize: '14px',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
-                    borderRadius: '8px',
-                    outline: 'none',
-                    background: '#fff',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #1d1d1f, #333)',
+                    color: '#fff',
                     cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                   }}
                 >
-                  <option value={0}>No reminder</option>
-                  <option value={5}>5 min before</option>
-                  <option value={10}>10 min before</option>
-                  <option value={15}>15 min before</option>
-                  <option value={30}>30 min before</option>
-                  <option value={60}>1 hour before</option>
-                </select>
+                  Done
+                </motion.button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
       </motion.div>
     </>
   );
