@@ -28,6 +28,7 @@ import {
   DocumentTextIcon,
   EnvelopeIcon,
   CheckCircleIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 
@@ -55,6 +56,7 @@ interface TimeBlock {
   recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
   recurringStartDate?: string; // Start date for recurring
   recurringEndDate?: string; // End date for recurring
+  completed?: boolean; // Main task completion status
   created_at?: string;
   updated_at?: string;
 }
@@ -233,6 +235,7 @@ interface DbTimeBlock {
   recurring_days?: number[];
   recurring_start_date?: string;
   recurring_end_date?: string;
+  completed?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -254,6 +257,7 @@ const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
   recurringDays: db.recurring_days,
   recurringStartDate: db.recurring_start_date,
   recurringEndDate: db.recurring_end_date,
+  completed: db.completed,
   created_at: db.created_at,
   updated_at: db.updated_at,
 });
@@ -276,6 +280,7 @@ const mapBlockToDb = (block: TimeBlock, userId?: string | number): DbTimeBlock =
   recurring_days: block.recurringDays,
   recurring_start_date: block.recurringStartDate,
   recurring_end_date: block.recurringEndDate,
+  completed: block.completed,
   created_at: block.created_at,
   updated_at: block.updated_at,
 });
@@ -692,6 +697,15 @@ export default function PersonalPage() {
     const updatedBlock = { ...selectedBlock, checklist: updatedChecklist };
     setSelectedBlock(updatedBlock);
     setBlockForm({ ...blockForm, checklist: updatedChecklist });
+    saveBlock(updatedBlock);
+  };
+
+  // Toggle main task completion
+  const toggleMainTaskCompletion = () => {
+    if (!selectedBlock) return;
+    
+    const updatedBlock = { ...selectedBlock, completed: !selectedBlock.completed };
+    setSelectedBlock(updatedBlock);
     saveBlock(updatedBlock);
   };
 
@@ -2683,27 +2697,99 @@ export default function PersonalPage() {
                     )}
                   </div>
                   
-                  {/* Title Input */}
-                  <input
-                    type="text"
-                    value={blockForm.title}
-                    onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
-                    onBlur={handleUpdateBlock}
-                    style={{
-                      width: '100%',
-                      fontSize: '24px',
-                      fontWeight: '700',
-                      color: '#1d1d1f',
-                      border: 'none',
-                      outline: 'none',
-                      background: 'transparent',
-                      letterSpacing: '-0.5px',
-                    }}
-                  />
+                  {/* Main Task Checkbox + Title */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    {/* Main Task Checkbox */}
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={toggleMainTaskCompletion}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '10px',
+                        border: selectedBlock.completed ? 'none' : '2.5px solid rgba(0, 0, 0, 0.2)',
+                        background: selectedBlock.completed ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        flexShrink: 0,
+                        boxShadow: selectedBlock.completed ? '0 4px 12px rgba(34, 197, 94, 0.4)' : 'none',
+                      }}
+                    >
+                      {selectedBlock.completed && (
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15 }}>
+                          <CheckIcon style={{ width: '18px', height: '18px', color: '#fff' }} />
+                        </motion.div>
+                      )}
+                    </motion.button>
+                    
+                    {/* Title Input */}
+                    <input
+                      type="text"
+                      value={blockForm.title}
+                      onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
+                      onBlur={handleUpdateBlock}
+                      style={{
+                        flex: 1,
+                        fontSize: '24px',
+                        fontWeight: '700',
+                        color: selectedBlock.completed ? '#86868b' : '#1d1d1f',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        letterSpacing: '-0.5px',
+                        textDecoration: selectedBlock.completed ? 'line-through' : 'none',
+                      }}
+                    />
+                  </div>
                 </div>
                 
                 {/* Action Buttons */}
                 <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+                  {/* Edit Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05, background: 'rgba(0, 113, 227, 0.15)' }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      // Close detail modal and open edit modal
+                      setShowPanel(false);
+                      setBlockForm({
+                        title: selectedBlock.title,
+                        description: selectedBlock.description,
+                        type: selectedBlock.type,
+                        startTime: selectedBlock.startTime,
+                        endTime: selectedBlock.endTime,
+                        checklist: selectedBlock.checklist,
+                        meetingLink: selectedBlock.meetingLink,
+                        notificationTime: selectedBlock.notificationTime,
+                        category: selectedBlock.category,
+                        isRecurring: selectedBlock.isRecurring,
+                        recurringDays: selectedBlock.recurringDays,
+                        recurringStartDate: selectedBlock.recurringStartDate,
+                        recurringEndDate: selectedBlock.recurringEndDate,
+                      });
+                      setShowAddModal(true);
+                    }}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: 'none',
+                      borderRadius: '12px',
+                      background: 'rgba(0, 113, 227, 0.1)',
+                      cursor: 'pointer',
+                      color: '#0071e3',
+                      transition: 'background 0.2s ease',
+                    }}
+                  >
+                    <PencilSquareIcon style={{ width: '18px', height: '18px' }} />
+                  </motion.button>
+                  {/* Delete Button */}
                   <motion.button
                     whileHover={{ scale: 1.05, background: 'rgba(239, 68, 68, 0.15)' }}
                     whileTap={{ scale: 0.95 }}
