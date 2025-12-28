@@ -72,12 +72,11 @@ interface Meeting {
   time: string;
   duration: number;
   project_name?: string;
-  project_id?: number;
   attendees_list?: string[];
   meeting_link?: string;
-  agenda?: string;
+  agenda_items?: string[];
+  notes?: string;
   location?: string;
-  status?: string;
 }
 
 // Types
@@ -2024,7 +2023,7 @@ export default function PersonalPage() {
                 Projects & Schedules
               </p>
             </div>
-            <button
+                    <button
               onClick={() => setShowRightPanel(false)}
               style={{
                 width: '32px',
@@ -2040,8 +2039,8 @@ export default function PersonalPage() {
               }}
             >
               <ChevronRightIcon style={{ width: '16px', height: '16px', color: '#64748b' }} />
-            </button>
-          </div>
+                    </button>
+                </div>
 
           {/* Tasks & Timeline Box */}
           <div style={{ padding: '16px' }}>
@@ -2065,18 +2064,18 @@ export default function PersonalPage() {
                   gap: '3px',
                 }}
               >
-                <button
+                        <button
                   onClick={() => setSidebarTab('tasks')}
-                  style={{ 
+                          style={{ 
                     flex: 1,
                     padding: '8px 12px',
                     fontSize: '11px',
                     fontWeight: '600',
-                    border: 'none', 
+                            border: 'none', 
                     borderRadius: '6px',
                     background: sidebarTab === 'tasks' ? '#fff' : 'transparent',
                     color: sidebarTab === 'tasks' ? '#3b82f6' : '#64748b',
-                    cursor: 'pointer',
+                            cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -2087,8 +2086,8 @@ export default function PersonalPage() {
                 >
                   <BriefcaseIcon style={{ width: '12px', height: '12px' }} />
                   Tasks
-                </button>
-                <button
+                        </button>
+                        <button
                   onClick={() => setSidebarTab('timeline')}
                   style={{
                     flex: 1,
@@ -2110,7 +2109,7 @@ export default function PersonalPage() {
                 >
                   <RocketLaunchIcon style={{ width: '12px', height: '12px' }} />
                   Timeline
-                </button>
+                        </button>
               </div>
                     
               {/* Content */}
@@ -2150,7 +2149,7 @@ export default function PersonalPage() {
                           >
                             <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
                               {task.name}
-                            </div>
+            </div>
                             <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ color: task.project_color, fontWeight: '500' }}>{task.project_name}</span>
                               {task.due_date && (
@@ -2187,7 +2186,7 @@ export default function PersonalPage() {
                             whileHover={{ x: 2 }}
                             whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedExternalTimeline(item)}
-                            style={{ 
+                        style={{ 
                               padding: '8px 10px',
                               borderRadius: '8px',
                               cursor: 'pointer',
@@ -2204,7 +2203,7 @@ export default function PersonalPage() {
                               <span style={{ color: '#94a3b8' }}>
                                 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                              </span>
+                      </span>
                             </div>
                           </motion.div>
                         );
@@ -2217,7 +2216,7 @@ export default function PersonalPage() {
 
             {/* Meetings Box */}
             <div
-              style={{
+                        style={{ 
                 background: '#fff',
                 marginTop: '16px',
                 borderRadius: '16px',
@@ -2250,8 +2249,8 @@ export default function PersonalPage() {
                 <div style={{ flex: 1 }}>
                   <span style={{ fontSize: '14px', fontWeight: '700', color: '#92400e' }}>Meetings</span>
                 </div>
-                <span style={{ 
-                  fontSize: '12px', 
+                        <span style={{ 
+                          fontSize: '12px', 
                   fontWeight: '700', 
                   color: '#d97706', 
                   background: '#fff', 
@@ -2260,7 +2259,7 @@ export default function PersonalPage() {
                   boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
                 }}>
                   {filteredMeetings.length}
-                </span>
+                        </span>
               </div>
 
               <div style={{ padding: '12px', maxHeight: '250px', overflowY: 'auto' }}>
@@ -2275,7 +2274,7 @@ export default function PersonalPage() {
                   }}>
                     <UsersIcon style={{ width: '20px', height: '20px', color: '#fbbf24', margin: '0 auto 8px' }} />
                     <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#d97706' }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
-                  </div>
+                    </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {filteredMeetings.map((meeting) => {
@@ -2297,19 +2296,19 @@ export default function PersonalPage() {
                         >
                           <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
                             {meeting.title}
-                          </div>
+                  </div>
                           <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span style={{ color: '#d97706', fontWeight: '600' }}>{meeting.time}</span>
                             <span style={{ color: '#94a3b8' }}>{meeting.duration}min</span>
                             <span style={{ color: '#94a3b8' }}>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                          </div>
+            </div>
                         </motion.div>
                       );
                     })}
-                  </div>
-                )}
-              </div>
             </div>
+          )}
+        </div>
+      </div>
           </div>
         </motion.aside>
         );
@@ -2323,7 +2322,7 @@ export default function PersonalPage() {
           whileHover={{ scale: 1.05 }}
           onClick={() => setShowRightPanel(true)}
           style={{
-            position: 'fixed',
+              position: 'fixed',
             right: '12px',
             top: '140px',
             width: '32px',
@@ -3806,269 +3805,225 @@ export default function PersonalPage() {
                 padding: '24px', 
                 background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
                 borderRadius: '20px 20px 0 0',
-                position: 'relative',
               }}>
-                <button 
-                  onClick={() => setSelectedExternalMeeting(null)} 
-                  style={{ 
-                    position: 'absolute', 
-                    top: '16px', 
-                    right: '16px', 
-                    background: 'rgba(255,255,255,0.8)', 
-                    border: 'none', 
-                    cursor: 'pointer', 
-                    padding: '8px',
-                    borderRadius: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <XMarkIcon style={{ width: '18px', height: '18px', color: '#92400e' }} />
-                </button>
-                
-                {/* Project Badge */}
-                {selectedExternalMeeting.project_name && (
-                  <div style={{ 
-                    display: 'inline-flex', 
-                    alignItems: 'center', 
-                    gap: '6px',
-                    background: 'rgba(255,255,255,0.9)', 
-                    padding: '6px 12px', 
-                    borderRadius: '20px',
-                    marginBottom: '12px',
-                  }}>
-                    <FolderIcon style={{ width: '14px', height: '14px', color: '#d97706' }} />
-                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#92400e' }}>
-                      {selectedExternalMeeting.project_name}
-                    </span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    {selectedExternalMeeting.project_name && (
+                      <span style={{ 
+                        display: 'inline-block',
+                        fontSize: '10px', 
+                        fontWeight: '700', 
+                        color: '#fff', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.5px',
+                        background: '#f59e0b',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        marginBottom: '10px',
+                      }}>
+                        {selectedExternalMeeting.project_name}
+                      </span>
+                    )}
+                    <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#78350f', margin: 0, lineHeight: '1.3' }}>
+                      {selectedExternalMeeting.title}
+                    </h2>
                   </div>
-                )}
-                
-                <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#78350f', margin: 0, lineHeight: '1.3' }}>
-                  {selectedExternalMeeting.title}
-                </h2>
-                
-                {/* Status Badge */}
-                <div style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: '4px',
-                  background: '#fff', 
-                  padding: '4px 10px', 
-                  borderRadius: '6px',
-                  marginTop: '12px',
-                }}>
-                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }} />
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: '#166534' }}>
-                    {selectedExternalMeeting.status || 'Scheduled'}
-                  </span>
+                  <button 
+                    onClick={() => setSelectedExternalMeeting(null)} 
+                    style={{ 
+                      background: 'rgba(255,255,255,0.8)', 
+                      border: 'none', 
+                      cursor: 'pointer', 
+                      padding: '8px',
+                      borderRadius: '10px',
+                      marginLeft: '12px',
+                    }}
+                  >
+                    <XMarkIcon style={{ width: '18px', height: '18px', color: '#78350f' }} />
+                  </button>
                 </div>
               </div>
               
-              {/* Content */}
               <div style={{ padding: '24px' }}>
-                {/* Date & Time Section */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr', 
-                  gap: '12px', 
-                  marginBottom: '20px' 
-                }}>
-                  <div style={{ 
-                    padding: '16px', 
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
-                    borderRadius: '14px',
-                    border: '1px solid #e2e8f0',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <CalendarDaysIcon style={{ width: '16px', height: '16px', color: '#6366f1' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#6366f1', textTransform: 'uppercase' }}>Date</span>
-                    </div>
-                    <p style={{ fontSize: '15px', color: '#1e293b', fontWeight: '600', margin: 0 }}>
-                      {new Date(selectedExternalMeeting.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                {/* Date & Time Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                  <div style={{ padding: '14px', background: '#fef3c7', borderRadius: '12px', textAlign: 'center' }}>
+                    <CalendarDaysIcon style={{ width: '20px', height: '20px', color: '#d97706', margin: '0 auto 6px' }} />
+                    <p style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', margin: 0 }}>
+                      {new Date(selectedExternalMeeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
-                  
-                  <div style={{ 
-                    padding: '16px', 
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
-                    borderRadius: '14px',
-                    border: '1px solid #e2e8f0',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <ClockIcon style={{ width: '16px', height: '16px', color: '#8b5cf6' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#8b5cf6', textTransform: 'uppercase' }}>Time</span>
-                    </div>
-                    <p style={{ fontSize: '15px', color: '#1e293b', fontWeight: '600', margin: 0 }}>
+                  <div style={{ padding: '14px', background: '#fef3c7', borderRadius: '12px', textAlign: 'center' }}>
+                    <ClockIcon style={{ width: '20px', height: '20px', color: '#d97706', margin: '0 auto 6px' }} />
+                    <p style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', margin: 0 }}>
                       {selectedExternalMeeting.time}
                     </p>
-                    <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>
-                      Duration: {selectedExternalMeeting.duration} min
+                  </div>
+                  <div style={{ padding: '14px', background: '#fef3c7', borderRadius: '12px', textAlign: 'center' }}>
+                    <SparklesIcon style={{ width: '20px', height: '20px', color: '#d97706', margin: '0 auto 6px' }} />
+                    <p style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', margin: 0 }}>
+                      {selectedExternalMeeting.duration} min
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Meeting Link */}
                 {selectedExternalMeeting.meeting_link && (
-                  <div style={{ 
-                    padding: '16px', 
-                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', 
-                    borderRadius: '14px',
-                    border: '1px solid #bfdbfe',
-                    marginBottom: '20px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                      <VideoCameraIcon style={{ width: '16px', height: '16px', color: '#2563eb' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#2563eb', textTransform: 'uppercase' }}>Meeting Link</span>
-                    </div>
+                  <div style={{ marginBottom: '20px' }}>
                     <a 
                       href={selectedExternalMeeting.meeting_link} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        padding: '10px 16px', 
-                        background: '#2563eb', 
-                        color: '#fff', 
-                        borderRadius: '10px',
-                        fontSize: '13px',
-                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '14px 16px',
+                        background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                        color: '#fff',
+                        borderRadius: '12px',
                         textDecoration: 'none',
-                        transition: 'all 0.2s ease',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
                       }}
                     >
-                      <LinkIcon style={{ width: '14px', height: '14px' }} />
+                      <VideoCameraIcon style={{ width: '20px', height: '20px' }} />
                       Join Meeting
                     </a>
                   </div>
                 )}
-                
+
                 {/* Description */}
                 {selectedExternalMeeting.description && (
                   <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                      <DocumentTextIcon style={{ width: '16px', height: '16px', color: '#64748b' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Description</span>
-                    </div>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Description
+                    </h4>
                     <p style={{ 
                       fontSize: '14px', 
                       color: '#374151', 
-                      lineHeight: '1.6', 
+                      lineHeight: '1.6',
                       margin: 0,
                       padding: '14px',
                       background: '#f9fafb',
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
+                      borderRadius: '10px',
+                      borderLeft: '3px solid #f59e0b',
                     }}>
                       {selectedExternalMeeting.description}
                     </p>
                   </div>
                 )}
-                
-                {/* Meeting Agenda */}
-                {selectedExternalMeeting.agenda && (
+
+                {/* Agenda Items */}
+                {selectedExternalMeeting.agenda_items && selectedExternalMeeting.agenda_items.length > 0 && (
                   <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                      <ListBulletIcon style={{ width: '16px', height: '16px', color: '#059669' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#059669', textTransform: 'uppercase' }}>Meeting Agenda</span>
-                    </div>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Meeting Agenda
+                    </h4>
                     <div style={{ 
-                      padding: '14px',
-                      background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-                      borderRadius: '12px',
-                      border: '1px solid #a7f3d0',
+                      background: '#f9fafb', 
+                      borderRadius: '12px', 
+                      padding: '12px',
+                      borderLeft: '3px solid #10b981',
                     }}>
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#065f46', 
-                        lineHeight: '1.6', 
-                        margin: 0,
-                        whiteSpace: 'pre-wrap',
-                      }}>
-                        {selectedExternalMeeting.agenda}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Attendees */}
-                {selectedExternalMeeting.attendees_list && selectedExternalMeeting.attendees_list.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <UsersIcon style={{ width: '16px', height: '16px', color: '#7c3aed' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#7c3aed', textTransform: 'uppercase' }}>
-                        Attendees ({selectedExternalMeeting.attendees_list.length})
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {selectedExternalMeeting.attendees_list.map((attendee, index) => (
+                      {selectedExternalMeeting.agenda_items.map((item, idx) => (
                         <div 
-                          key={index}
+                          key={idx} 
                           style={{ 
                             display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '8px',
-                            padding: '8px 12px',
-                            background: '#f5f3ff',
-                            borderRadius: '10px',
-                            border: '1px solid #ddd6fe',
+                            alignItems: 'flex-start', 
+                            gap: '10px',
+                            padding: '8px 0',
+                            borderBottom: idx < selectedExternalMeeting.agenda_items!.length - 1 ? '1px solid #e5e7eb' : 'none',
                           }}
                         >
-                          <div style={{ 
-                            width: '28px', 
-                            height: '28px', 
+                          <span style={{ 
+                            width: '20px', 
+                            height: '20px', 
                             borderRadius: '50%', 
-                            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            fontSize: '11px',
+                            background: '#10b981', 
+                            color: '#fff', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            fontSize: '11px', 
                             fontWeight: '700',
+                            flexShrink: 0,
                           }}>
-                            {attendee.charAt(0).toUpperCase()}
-                          </div>
-                          <span style={{ fontSize: '13px', color: '#5b21b6', fontWeight: '500' }}>{attendee}</span>
+                            {idx + 1}
+                          </span>
+                          <span style={{ fontSize: '13px', color: '#374151', lineHeight: '1.4' }}>{item}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                
-                {/* Location */}
-                {selectedExternalMeeting.location && (
+
+                {/* Attendees */}
+                {selectedExternalMeeting.attendees_list && selectedExternalMeeting.attendees_list.length > 0 && (
                   <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                      <FlagIcon style={{ width: '16px', height: '16px', color: '#dc2626' }} />
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#dc2626', textTransform: 'uppercase' }}>Location</span>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Attendees ({selectedExternalMeeting.attendees_list.length})
+                    </h4>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {selectedExternalMeeting.attendees_list.map((attendee, idx) => (
+                        <div 
+                          key={idx}
+                          style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            background: '#f3f4f6',
+                            borderRadius: '20px',
+                          }}
+                        >
+                          <div style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            color: '#fff',
+                          }}>
+                            {attendee.charAt(0).toUpperCase()}
+                          </div>
+                          <span style={{ fontSize: '12px', color: '#374151', fontWeight: '500' }}>{attendee}</span>
+                        </div>
+                      ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedExternalMeeting.notes && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Notes
+                    </h4>
                     <p style={{ 
-                      fontSize: '14px', 
-                      color: '#374151', 
+                      fontSize: '13px', 
+                      color: '#6b7280', 
+                      lineHeight: '1.6',
                       margin: 0,
                       padding: '12px',
-                      background: '#fef2f2',
+                      background: '#fffbeb',
                       borderRadius: '10px',
-                      border: '1px solid #fecaca',
+                      fontStyle: 'italic',
                     }}>
-                      {selectedExternalMeeting.location}
+                      {selectedExternalMeeting.notes}
                     </p>
                   </div>
                 )}
               </div>
               
-              {/* Footer */}
-              <div style={{ 
-                padding: '16px 24px', 
-                borderTop: '1px solid #e5e7eb', 
-                display: 'flex', 
-                gap: '12px',
-                background: '#fafafa',
-                borderRadius: '0 0 20px 20px',
-              }}>
+              {/* Footer Actions */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => {
                     const [h, m] = (selectedExternalMeeting.time || '09:00').split(':').map(Number);
@@ -4084,7 +4039,6 @@ export default function PersonalPage() {
                       endTime: `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`,
                       checklist: [],
                       category: 'Work',
-                      meetingLink: selectedExternalMeeting.meeting_link || '',
                     });
                     setSelectedExternalMeeting(null);
                     setShowAddModal(true);
@@ -4100,7 +4054,6 @@ export default function PersonalPage() {
                     color: '#fff', 
                     cursor: 'pointer', 
                     boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
-                    transition: 'all 0.2s ease',
                   }}
                 >
                   Add to My Calendar
@@ -4116,7 +4069,6 @@ export default function PersonalPage() {
                     background: '#fff', 
                     color: '#374151', 
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
                   }}
                 >
                   Close
