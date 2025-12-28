@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
+import { projectService, taskService, meetingService } from '@/lib/api-compatibility';
+import { supabase } from '@/lib/supabase';
 import {
   PlusIcon,
   ChevronLeftIcon,
@@ -29,8 +31,49 @@ import {
   EnvelopeIcon,
   CheckCircleIcon,
   PencilSquareIcon,
+  BriefcaseIcon,
+  RocketLaunchIcon,
+  UsersIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
+
+// Types for external data integration
+interface ProjectTask {
+  id: number;
+  name: string;
+  description?: string;
+  status: string;
+  priority: string;
+  due_date?: string;
+  project_id: number;
+  project_name?: string;
+  project_color?: string;
+  assignees?: { id: number; name: string }[];
+}
+
+interface TimelineItem {
+  id: number;
+  title: string;
+  description?: string;
+  start_date: string;
+  end_date?: string;
+  status: string;
+  category_name?: string;
+  team_leader_id?: number;
+  team_member_ids?: number[];
+}
+
+interface Meeting {
+  id: number;
+  title: string;
+  description?: string;
+  date: string;
+  time: string;
+  duration: number;
+  project_name?: string;
+  attendees_list?: string[];
+}
 
 // Types
 interface ChecklistItem {
@@ -340,6 +383,13 @@ export default function PersonalPage() {
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  // External data integration - Projects, Tasks, Timeline, Meetings
+  const [projectTasks, setProjectTasks] = useState<ProjectTask[]>([]);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline'>('tasks');
+  const [showRightPanel, setShowRightPanel] = useState(true);
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
   
   // Mobile detection
@@ -538,7 +588,7 @@ export default function PersonalPage() {
     };
   };
 
-  // Auth check
+  // Auth check and data fetching
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) {
@@ -546,7 +596,70 @@ export default function PersonalPage() {
         return;
       }
     fetchBlocks();
+    fetchExternalData();
   }, [isAuthenticated, authLoading, router, user]);
+
+  // Fetch external data - Projects Tasks, Timeline Items, Meetings
+  const fetchExternalData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // Fetch user's assigned project tasks
+      const [tasksData, meetingsData, projectsData] = await Promise.all([
+        taskService.getUserTasks(),
+        meetingService.getMeetings(),
+        projectService.getProjects()
+      ]);
+
+      // Map tasks with project info
+      const tasksWithProjects = (tasksData || []).map((task: any) => {
+        const project = (projectsData || []).find((p: any) => p.id === task.project_id);
+        return {
+          ...task,
+          project_name: project?.name || 'Unknown Project',
+          project_color: project?.color || '#6b7280',
+        };
+      });
+      setProjectTasks(tasksWithProjects);
+
+      // Filter meetings where user is involved
+      const userMeetings = (meetingsData || []).filter((m: any) => {
+        const isCreator = m.created_by?.id === user.id;
+        const isAttendee = m.attendee_ids?.includes(user.id);
+        return isCreator || isAttendee;
+      }).map((m: any) => {
+        const project = (projectsData || []).find((p: any) => p.id === (m.project_id || m.project));
+        return {
+          ...m,
+          project_name: project?.name || 'Unknown Project',
+        };
+      });
+      setMeetings(userMeetings);
+
+      // Fetch timeline items assigned to user
+      const { data: timelineData, error: timelineError } = await supabase
+        .from('timeline_items')
+        .select(`*, timeline_categories (name, color)`)
+        .neq('status', 'cancelled')
+        .order('start_date', { ascending: true });
+
+      if (!timelineError && timelineData) {
+        const userId = parseInt(user.id?.toString() || '0');
+        const userTimeline = timelineData
+          .filter((item: any) => 
+            item.team_leader_id === userId || 
+            (item.team_member_ids || []).includes(userId)
+          )
+          .map((item: any) => ({
+            ...item,
+            category_name: item.timeline_categories?.name
+          }));
+        setTimelineItems(userTimeline);
+      }
+    } catch (err) {
+      console.error('Error fetching external data:', err);
+    }
+  };
 
   const fetchBlocks = async () => {
     try {
@@ -845,9 +958,10 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : '280px',
+          marginRight: isMobile ? '0' : (showRightPanel ? '340px' : '0'),
           background: 'linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%)',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
-          transition: 'margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
         {/* Header */}
@@ -1818,6 +1932,322 @@ export default function PersonalPage() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Right Sidebar - Tasks, Timeline & Meetings */}
+      {!isMobile && showRightPanel && (
+        <motion.aside
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          style={{
+            position: 'fixed',
+            right: 0,
+            top: 0,
+            width: '340px',
+            height: '100vh',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderLeft: '1px solid rgba(0, 0, 0, 0.06)',
+            overflowY: 'auto',
+            zIndex: 50,
+            padding: '24px',
+          }}
+        >
+          {/* Toggle button */}
+          <button
+            onClick={() => setShowRightPanel(false)}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'rgba(0, 0, 0, 0.04)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ChevronRightIcon style={{ width: '14px', height: '14px', color: '#86868b' }} />
+          </button>
+
+          {/* Tasks & Timeline Box */}
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '16px',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              overflow: 'hidden',
+              marginBottom: '16px',
+            }}
+          >
+            {/* Tabs */}
+            <div
+              style={{
+                display: 'flex',
+                borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+              }}
+            >
+              <button
+                onClick={() => setSidebarTab('tasks')}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  border: 'none',
+                  background: sidebarTab === 'tasks' ? '#fff' : 'rgba(0, 0, 0, 0.02)',
+                  color: sidebarTab === 'tasks' ? '#0071e3' : '#86868b',
+                  cursor: 'pointer',
+                  borderBottom: sidebarTab === 'tasks' ? '2px solid #0071e3' : '2px solid transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <BriefcaseIcon style={{ width: '14px', height: '14px' }} />
+                Tasks
+              </button>
+              <button
+                onClick={() => setSidebarTab('timeline')}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  border: 'none',
+                  background: sidebarTab === 'timeline' ? '#fff' : 'rgba(0, 0, 0, 0.02)',
+                  color: sidebarTab === 'timeline' ? '#0071e3' : '#86868b',
+                  cursor: 'pointer',
+                  borderBottom: sidebarTab === 'timeline' ? '2px solid #0071e3' : '2px solid transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <RocketLaunchIcon style={{ width: '14px', height: '14px' }} />
+                Timeline
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '12px', maxHeight: '300px', overflowY: 'auto' }}>
+              {sidebarTab === 'tasks' ? (
+                projectTasks.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
+                    No assigned tasks
+                  </div>
+                ) : (
+                  projectTasks.slice(0, 10).map((task) => {
+                    const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
+                    const isDueToday = task.due_date && formatDate(new Date(task.due_date)) === formatDate(currentDate);
+                    return (
+                      <motion.div
+                        key={task.id}
+                        whileHover={{ scale: 1.02, background: 'rgba(0, 113, 227, 0.04)' }}
+                        onClick={() => {
+                          // Add task to calendar as a time block
+                          setBlockForm({
+                            title: task.name,
+                            description: task.description || `From: ${task.project_name}`,
+                            type: 'project',
+                            startTime: '09:00',
+                            endTime: '10:00',
+                            checklist: [],
+                            category: 'Work',
+                          });
+                          setShowAddModal(true);
+                        }}
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          marginBottom: '6px',
+                          cursor: 'pointer',
+                          borderLeft: `3px solid ${task.project_color || '#6b7280'}`,
+                          background: isDueToday ? 'rgba(0, 113, 227, 0.06)' : 'transparent',
+                        }}
+                      >
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>
+                          {task.name}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#86868b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: task.project_color }}>{task.project_name}</span>
+                          {task.due_date && (
+                            <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#0071e3' : '#86868b' }}>
+                              {isOverdue && <ExclamationTriangleIcon style={{ width: '10px', height: '10px', display: 'inline', marginRight: '2px' }} />}
+                              {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                )
+              ) : (
+                timelineItems.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
+                    No timeline items assigned
+                  </div>
+                ) : (
+                  timelineItems.slice(0, 10).map((item) => {
+                    const isDueToday = item.start_date && formatDate(new Date(item.start_date)) === formatDate(currentDate);
+                    return (
+                      <motion.div
+                        key={item.id}
+                        whileHover={{ scale: 1.02, background: 'rgba(139, 92, 246, 0.04)' }}
+                        onClick={() => {
+                          setBlockForm({
+                            title: item.title,
+                            description: item.description || '',
+                            type: 'goal',
+                            startTime: '09:00',
+                            endTime: '10:00',
+                            checklist: [],
+                            category: item.category_name || '',
+                          });
+                          setShowAddModal(true);
+                        }}
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          marginBottom: '6px',
+                          cursor: 'pointer',
+                          borderLeft: '3px solid #8b5cf6',
+                          background: isDueToday ? 'rgba(139, 92, 246, 0.06)' : 'transparent',
+                        }}
+                      >
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#86868b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {item.category_name && <span style={{ color: '#8b5cf6' }}>{item.category_name}</span>}
+                          <span>
+                            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Meetings Box */}
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '16px',
+              border: '1px solid rgba(0, 0, 0, 0.06)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                padding: '14px 16px',
+                borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <UsersIcon style={{ width: '14px', height: '14px', color: '#0071e3' }} />
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f' }}>Meetings</span>
+              <span style={{ fontSize: '10px', color: '#86868b', marginLeft: 'auto' }}>
+                {meetings.filter(m => formatDate(new Date(m.date)) === formatDate(currentDate)).length} today
+              </span>
+            </div>
+
+            <div style={{ padding: '12px', maxHeight: '200px', overflowY: 'auto' }}>
+              {meetings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px', color: '#86868b', fontSize: '13px' }}>
+                  No upcoming meetings
+                </div>
+              ) : (
+                meetings.slice(0, 8).map((meeting) => {
+                  const isToday = formatDate(new Date(meeting.date)) === formatDate(currentDate);
+                  return (
+                    <motion.div
+                      key={meeting.id}
+                      whileHover={{ scale: 1.02, background: 'rgba(234, 88, 12, 0.04)' }}
+                      onClick={() => {
+                        setBlockForm({
+                          title: meeting.title,
+                          description: meeting.description || `Project: ${meeting.project_name}`,
+                          type: 'meeting',
+                          startTime: meeting.time || '09:00',
+                          endTime: (() => {
+                            const [h, m] = (meeting.time || '09:00').split(':').map(Number);
+                            const endMinutes = h * 60 + m + (meeting.duration || 60);
+                            const endH = Math.floor(endMinutes / 60) % 24;
+                            const endM = endMinutes % 60;
+                            return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+                          })(),
+                          checklist: [],
+                          category: 'Work',
+                        });
+                        setShowAddModal(true);
+                      }}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        marginBottom: '6px',
+                        cursor: 'pointer',
+                        borderLeft: '3px solid #ea580c',
+                        background: isToday ? 'rgba(234, 88, 12, 0.06)' : 'transparent',
+                      }}
+                    >
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>
+                        {meeting.title}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#86868b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#ea580c' }}>{meeting.time}</span>
+                        <span>{meeting.duration}min</span>
+                        <span>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </motion.aside>
+      )}
+
+      {/* Toggle Right Panel Button (when hidden) */}
+      {!isMobile && !showRightPanel && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setShowRightPanel(true)}
+          style={{
+            position: 'fixed',
+            right: '16px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            background: 'rgba(255, 255, 255, 0.9)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+            zIndex: 50,
+          }}
+        >
+          <ChevronLeftIcon style={{ width: '16px', height: '16px', color: '#1d1d1f' }} />
+        </motion.button>
+      )}
 
       {/* Add Block Modal */}
       <AnimatePresence>
