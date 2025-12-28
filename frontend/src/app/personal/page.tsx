@@ -392,6 +392,11 @@ export default function PersonalPage() {
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
   
+  // Detail view modals for external items
+  const [selectedExternalTask, setSelectedExternalTask] = useState<ProjectTask | null>(null);
+  const [selectedExternalTimeline, setSelectedExternalTimeline] = useState<TimelineItem | null>(null);
+  const [selectedExternalMeeting, setSelectedExternalMeeting] = useState<Meeting | null>(null);
+  
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
   
@@ -2098,36 +2103,25 @@ export default function PersonalPage() {
                     return (
                       <motion.div
                         key={task.id}
-                        whileHover={{ scale: 1.02, background: 'rgba(0, 113, 227, 0.04)' }}
-                        onClick={() => {
-                          // Add task to calendar as a time block
-                          setBlockForm({
-                            title: task.name,
-                            description: task.description || `From: ${task.project_name}`,
-                            type: 'project',
-                            startTime: '09:00',
-                            endTime: '10:00',
-                            checklist: [],
-                            category: 'Work',
-                          });
-                          setShowAddModal(true);
-                        }}
+                        whileHover={{ scale: 1.01, background: '#f3f4f6' }}
+                        onClick={() => setSelectedExternalTask(task)}
                         style={{
                           padding: '10px 12px',
-                          borderRadius: '10px',
+                          borderRadius: '8px',
                           marginBottom: '6px',
                           cursor: 'pointer',
                           borderLeft: `3px solid ${task.project_color || '#6b7280'}`,
-                          background: isDueToday ? 'rgba(0, 113, 227, 0.06)' : 'transparent',
+                          background: isDueToday ? 'rgba(59, 130, 246, 0.06)' : '#fff',
+                          transition: 'all 0.15s ease',
                         }}
                       >
-                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
                           {task.name}
                         </div>
-                        <div style={{ fontSize: '10px', color: '#86868b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ color: task.project_color }}>{task.project_name}</span>
                           {task.due_date && (
-                            <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#0071e3' : '#86868b' }}>
+                            <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#6b7280' }}>
                               {isOverdue && <ExclamationTriangleIcon style={{ width: '10px', height: '10px', display: 'inline', marginRight: '2px' }} />}
                               {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
@@ -2148,32 +2142,22 @@ export default function PersonalPage() {
                     return (
                       <motion.div
                         key={item.id}
-                        whileHover={{ scale: 1.02, background: 'rgba(139, 92, 246, 0.04)' }}
-                        onClick={() => {
-                          setBlockForm({
-                            title: item.title,
-                            description: item.description || '',
-                            type: 'goal',
-                            startTime: '09:00',
-                            endTime: '10:00',
-                            checklist: [],
-                            category: item.category_name || '',
-                          });
-                          setShowAddModal(true);
-                        }}
+                        whileHover={{ scale: 1.01, background: '#f3f4f6' }}
+                        onClick={() => setSelectedExternalTimeline(item)}
                         style={{
                           padding: '10px 12px',
-                          borderRadius: '10px',
+                          borderRadius: '8px',
                           marginBottom: '6px',
                           cursor: 'pointer',
                           borderLeft: '3px solid #8b5cf6',
-                          background: isDueToday ? 'rgba(139, 92, 246, 0.06)' : 'transparent',
+                          background: isDueToday ? 'rgba(139, 92, 246, 0.06)' : '#fff',
+                          transition: 'all 0.15s ease',
                         }}
                       >
-                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
                           {item.title}
                         </div>
-                        <div style={{ fontSize: '10px', color: '#86868b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {item.category_name && <span style={{ color: '#8b5cf6' }}>{item.category_name}</span>}
                           <span>
                             {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -2224,38 +2208,22 @@ export default function PersonalPage() {
                   return (
                     <motion.div
                       key={meeting.id}
-                      whileHover={{ scale: 1.02, background: 'rgba(234, 88, 12, 0.04)' }}
-                      onClick={() => {
-                        setBlockForm({
-                          title: meeting.title,
-                          description: meeting.description || `Project: ${meeting.project_name}`,
-                          type: 'meeting',
-                          startTime: meeting.time || '09:00',
-                          endTime: (() => {
-                            const [h, m] = (meeting.time || '09:00').split(':').map(Number);
-                            const endMinutes = h * 60 + m + (meeting.duration || 60);
-                            const endH = Math.floor(endMinutes / 60) % 24;
-                            const endM = endMinutes % 60;
-                            return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
-                          })(),
-                          checklist: [],
-                          category: 'Work',
-                        });
-                        setShowAddModal(true);
-                      }}
+                      whileHover={{ scale: 1.01, background: '#f3f4f6' }}
+                      onClick={() => setSelectedExternalMeeting(meeting)}
                       style={{
                         padding: '10px 12px',
-                        borderRadius: '10px',
+                        borderRadius: '8px',
                         marginBottom: '6px',
                         cursor: 'pointer',
                         borderLeft: '3px solid #ea580c',
-                        background: isToday ? 'rgba(234, 88, 12, 0.06)' : 'transparent',
+                        background: isToday ? 'rgba(234, 88, 12, 0.06)' : '#fff',
+                        transition: 'all 0.15s ease',
                       }}
                     >
-                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
                         {meeting.title}
                       </div>
-                      <div style={{ fontSize: '10px', color: '#86868b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#ea580c' }}>{meeting.time}</span>
                         <span>{meeting.duration}min</span>
                         <span>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
@@ -2270,31 +2238,31 @@ export default function PersonalPage() {
         );
       })()}
 
-      {/* Toggle Right Panel Button (when hidden) */}
+      {/* Toggle Right Panel Button (when hidden) - More subtle */}
       {!isMobile && !showRightPanel && (
         <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.05 }}
           onClick={() => setShowRightPanel(true)}
           style={{
             position: 'fixed',
-            right: '16px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            border: '1px solid rgba(0, 0, 0, 0.1)',
-            background: 'rgba(255, 255, 255, 0.9)',
+            right: '12px',
+            top: '140px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb',
+            background: '#fff',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
             zIndex: 50,
           }}
         >
-          <ChevronLeftIcon style={{ width: '16px', height: '16px', color: '#1d1d1f' }} />
+          <ChevronLeftIcon style={{ width: '14px', height: '14px', color: '#6b7280' }} />
         </motion.button>
       )}
 
@@ -3481,6 +3449,358 @@ export default function PersonalPage() {
                 >
                   Done
                 </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* External Task Detail Modal */}
+      <AnimatePresence>
+        {selectedExternalTask && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedExternalTask(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '480px',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+              }}
+            >
+              <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: selectedExternalTask.project_color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {selectedExternalTask.project_name}
+                    </span>
+                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
+                      {selectedExternalTask.name}
+                    </h2>
+                  </div>
+                  <button onClick={() => setSelectedExternalTask(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                    <XMarkIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ padding: '20px' }}>
+                {selectedExternalTask.description && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Description</label>
+                    <p style={{ fontSize: '14px', color: '#374151', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTask.description}</p>
+                  </div>
+                )}
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  {selectedExternalTask.due_date && (
+                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Due Date</label>
+                      <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                        {new Date(selectedExternalTask.due_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  )}
+                  {selectedExternalTask.priority && (
+                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Priority</label>
+                      <p style={{ fontSize: '13px', color: selectedExternalTask.priority === 'high' ? '#ef4444' : selectedExternalTask.priority === 'medium' ? '#f59e0b' : '#22c55e', marginTop: '4px', fontWeight: '600', textTransform: 'capitalize' }}>
+                        {selectedExternalTask.priority}
+                      </p>
+                    </div>
+                  )}
+                  {selectedExternalTask.status && (
+                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</label>
+                      <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600', textTransform: 'capitalize' }}>
+                        {selectedExternalTask.status?.replace('_', ' ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setBlockForm({
+                      title: selectedExternalTask.name,
+                      description: selectedExternalTask.description || `From: ${selectedExternalTask.project_name}`,
+                      type: 'project',
+                      startTime: '09:00',
+                      endTime: '10:00',
+                      checklist: [],
+                      category: 'Work',
+                    });
+                    setSelectedExternalTask(null);
+                    setShowAddModal(true);
+                  }}
+                  style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}
+                >
+                  Add to Calendar
+                </button>
+                <button
+                  onClick={() => setSelectedExternalTask(null)}
+                  style={{ padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* External Timeline Detail Modal */}
+      <AnimatePresence>
+        {selectedExternalTimeline && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedExternalTimeline(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '480px',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+              }}
+            >
+              <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    {selectedExternalTimeline.category_name && (
+                      <span style={{ fontSize: '10px', fontWeight: '600', color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {selectedExternalTimeline.category_name}
+                      </span>
+                    )}
+                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
+                      {selectedExternalTimeline.title}
+                    </h2>
+                  </div>
+                  <button onClick={() => setSelectedExternalTimeline(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                    <XMarkIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ padding: '20px' }}>
+                {selectedExternalTimeline.description && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Description</label>
+                    <p style={{ fontSize: '14px', color: '#374151', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTimeline.description}</p>
+                  </div>
+                )}
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Start Date</label>
+                    <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                      {new Date(selectedExternalTimeline.start_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                  {selectedExternalTimeline.end_date && (
+                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>End Date</label>
+                      <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                        {new Date(selectedExternalTimeline.end_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setBlockForm({
+                      title: selectedExternalTimeline.title,
+                      description: selectedExternalTimeline.description || '',
+                      type: 'goal',
+                      startTime: '09:00',
+                      endTime: '10:00',
+                      checklist: [],
+                      category: selectedExternalTimeline.category_name || '',
+                    });
+                    setSelectedExternalTimeline(null);
+                    setShowAddModal(true);
+                  }}
+                  style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px', background: '#8b5cf6', color: '#fff', cursor: 'pointer' }}
+                >
+                  Add to Calendar
+                </button>
+                <button
+                  onClick={() => setSelectedExternalTimeline(null)}
+                  style={{ padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* External Meeting Detail Modal */}
+      <AnimatePresence>
+        {selectedExternalMeeting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedExternalMeeting(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '480px',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+              }}
+            >
+              <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: '#ea580c', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {selectedExternalMeeting.project_name || 'Meeting'}
+                    </span>
+                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
+                      {selectedExternalMeeting.title}
+                    </h2>
+                  </div>
+                  <button onClick={() => setSelectedExternalMeeting(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                    <XMarkIcon style={{ width: '20px', height: '20px', color: '#6b7280' }} />
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ padding: '20px' }}>
+                {selectedExternalMeeting.description && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Description</label>
+                    <p style={{ fontSize: '14px', color: '#374151', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalMeeting.description}</p>
+                  </div>
+                )}
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Date</label>
+                    <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                      {new Date(selectedExternalMeeting.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Time</label>
+                    <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                      {selectedExternalMeeting.time} ({selectedExternalMeeting.duration}min)
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedExternalMeeting.meeting_link && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Meeting Link</label>
+                    <a 
+                      href={selectedExternalMeeting.meeting_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ display: 'block', fontSize: '13px', color: '#3b82f6', marginTop: '6px', textDecoration: 'underline' }}
+                    >
+                      Join Meeting
+                    </a>
+                  </div>
+                )}
+              </div>
+              
+              <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    const [h, m] = (selectedExternalMeeting.time || '09:00').split(':').map(Number);
+                    const endMinutes = h * 60 + m + (selectedExternalMeeting.duration || 60);
+                    const endH = Math.floor(endMinutes / 60) % 24;
+                    const endM = endMinutes % 60;
+                    setBlockForm({
+                      title: selectedExternalMeeting.title,
+                      description: selectedExternalMeeting.description || '',
+                      type: 'meeting',
+                      startTime: selectedExternalMeeting.time || '09:00',
+                      endTime: `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`,
+                      checklist: [],
+                      category: 'Work',
+                    });
+                    setSelectedExternalMeeting(null);
+                    setShowAddModal(true);
+                  }}
+                  style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px', background: '#ea580c', color: '#fff', cursor: 'pointer' }}
+                >
+                  Add to Calendar
+                </button>
+                <button
+                  onClick={() => setSelectedExternalMeeting(null)}
+                  style={{ padding: '10px 16px', fontSize: '13px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                >
+                  Close
+                </button>
               </div>
             </motion.div>
           </motion.div>
