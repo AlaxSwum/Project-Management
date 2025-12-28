@@ -228,6 +228,8 @@ interface DbTimeBlock {
   category?: string;
   is_recurring?: boolean;
   recurring_days?: number[];
+  recurring_start_date?: string;
+  recurring_end_date?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -247,6 +249,8 @@ const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
   category: db.category,
   isRecurring: db.is_recurring,
   recurringDays: db.recurring_days,
+  recurringStartDate: db.recurring_start_date,
+  recurringEndDate: db.recurring_end_date,
   created_at: db.created_at,
   updated_at: db.updated_at,
 });
@@ -267,6 +271,8 @@ const mapBlockToDb = (block: TimeBlock, userId?: string | number): DbTimeBlock =
   category: block.category,
   is_recurring: block.isRecurring,
   recurring_days: block.recurringDays,
+  recurring_start_date: block.recurringStartDate,
+  recurring_end_date: block.recurringEndDate,
   created_at: block.created_at,
   updated_at: block.updated_at,
 });
@@ -420,7 +426,7 @@ export default function PersonalPage() {
         if (e.clientX >= rect.left && e.clientX <= rect.right && 
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
           const relativeY = e.clientY - rect.top;
-          const hourHeight = 30; // 30px per hour in week view
+          const hourHeight = 50; // 50px per hour in week view
           const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
           const hour = Math.floor(totalMinutes / 60);
           const minute = Math.round((totalMinutes % 60) / 15) * 15;
@@ -1091,13 +1097,15 @@ export default function PersonalPage() {
               />
             </motion.div>
           ) : (
-            <>
+            <AnimatePresence mode="wait">
               {/* Day View */}
               {viewMode === 'day' && (
                 <motion.div
-                  key="day"
-                  {...fadeInUp}
-                  transition={{ duration: 0.4 }}
+                  key="day-view"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
                     background: '#fff',
                     borderRadius: '16px',
@@ -1316,9 +1324,11 @@ export default function PersonalPage() {
               {/* Week View */}
               {viewMode === 'week' && (
                 <motion.div
-                  key="week"
-                  {...fadeInUp}
-                  transition={{ duration: 0.4 }}
+                  key="week-view"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
                     background: '#fff',
                     borderRadius: '16px',
@@ -1384,9 +1394,8 @@ export default function PersonalPage() {
                   <div
                     style={{ 
                       display: 'grid',
-                      gridTemplateColumns: '60px repeat(7, 1fr)',
-                      minHeight: '720px',
-                      maxHeight: '720px',
+                      gridTemplateColumns: '70px repeat(7, 1fr)',
+                      minHeight: '800px',
                       overflow: 'auto',
                     }}
                   >
@@ -1396,9 +1405,9 @@ export default function PersonalPage() {
                         <div
                           key={hour}
                           style={{
-                            height: '30px',
-                            padding: '2px 6px',
-                            fontSize: '10px',
+                            height: '50px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
                             color: '#86868b',
                             textAlign: 'right',
                             borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
@@ -1423,7 +1432,7 @@ export default function PersonalPage() {
                           const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
                           if (!rect) return;
                           const relativeY = e.clientY - rect.top;
-                          const hourHeight = 30;
+                          const hourHeight = 50; // 50px per hour
                           const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
                           const hour = Math.floor(totalMinutes / 60);
                           const minute = Math.round((totalMinutes % 60) / 15) * 15;
@@ -1440,7 +1449,7 @@ export default function PersonalPage() {
                           <div
                             key={hour}
                             style={{
-                              height: '30px',
+                              height: '50px',
                               borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
                             }}
                           />
@@ -1450,8 +1459,9 @@ export default function PersonalPage() {
                         {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
                           const startMinutes = dragStart.hour * 60 + dragStart.minute;
                           const endMinutes = dragEnd.hour * 60 + dragEnd.minute;
-                          const top = Math.min(startMinutes, endMinutes) / 2;
-                          const height = Math.max(Math.abs(endMinutes - startMinutes) / 2, 15);
+                          const pxPerMinute = 50 / 60; // 50px per hour
+                          const top = Math.min(startMinutes, endMinutes) * pxPerMinute;
+                          const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 20);
                           return (
                             <div
                               style={{
@@ -1473,9 +1483,9 @@ export default function PersonalPage() {
                         {getBlocksForDate(day).map((block) => {
                           const [startHour, startMin] = block.startTime.split(':').map(Number);
                           const [endHour, endMin] = block.endTime.split(':').map(Number);
-                          
-                          const top = (startHour * 60 + startMin) / 2; // 30px per hour = 0.5px per minute
-                          const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) / 2, 15);
+                          const pxPerMinute = 50 / 60; // 50px per hour
+                          const top = (startHour * 60 + startMin) * pxPerMinute;
+                          const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 20);
                           const colors = blockTypeColors[block.type];
                           
                           return (
@@ -1516,9 +1526,11 @@ export default function PersonalPage() {
               {/* Month View */}
               {viewMode === 'month' && (
                 <motion.div
-                  key="month"
-                  {...fadeInUp}
-                  transition={{ duration: 0.4 }}
+                  key="month-view"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
                     background: '#fff',
                     borderRadius: '16px',
@@ -1645,7 +1657,7 @@ export default function PersonalPage() {
             </div>
                 </motion.div>
               )}
-            </>
+            </AnimatePresence>
           )}
         </AnimatePresence>
       </main>
