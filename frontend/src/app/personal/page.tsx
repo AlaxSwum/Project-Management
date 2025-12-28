@@ -2316,6 +2316,7 @@ export default function PersonalPage() {
               </div>
             </div>
           </div>
+        </div>
         </motion.aside>
         );
       })()}
