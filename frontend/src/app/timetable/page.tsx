@@ -253,6 +253,8 @@ export default function TimetablePage() {
         attendees: '',
         attendee_ids: [],
         agenda_items: [],
+        meeting_link: '',
+        reminder_time: 15,
       });
       setShowCreateForm(false);
       setError('');
@@ -3449,6 +3451,8 @@ export default function TimetablePage() {
             attendees: '',
             attendee_ids: [],
             agenda_items: [],
+            meeting_link: '',
+            reminder_time: 15,
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3471,6 +3475,8 @@ export default function TimetablePage() {
                     attendees: '',
                     attendee_ids: [],
                     agenda_items: [],
+                    meeting_link: '',
+                    reminder_time: 15,
                   });
                 }}
                 className="modal-close-btn"
