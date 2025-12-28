@@ -73,6 +73,7 @@ interface Meeting {
   duration: number;
   project_name?: string;
   attendees_list?: string[];
+  meeting_link?: string;
 }
 
 // Types
