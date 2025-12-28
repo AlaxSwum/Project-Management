@@ -194,21 +194,41 @@ const getChecklistProgress = (checklist: ChecklistItem[]): number => {
   return Math.round((completed / checklist.length) * 100);
 };
 
-// Calculate daily progress across all blocks
+// Calculate daily progress across all blocks (including recurring)
 const getDailyProgress = (blocks: TimeBlock[], date: Date): { total: number; completed: number; percentage: number } => {
   const dateStr = formatDate(date);
-  const dayBlocks = blocks.filter(b => b.date === dateStr);
+  const dayOfWeek = date.getDay();
+  
+  // Get blocks for this date (including recurring ones)
+  const dayBlocks = blocks.filter(block => {
+    // Direct date match
+    if (block.date === dateStr) return true;
+    
+    // Recurring block check
+    if (block.isRecurring && block.recurringDays && block.recurringDays.includes(dayOfWeek)) {
+      const startDate = block.recurringStartDate || block.date;
+      const endDate = block.recurringEndDate;
+      if (dateStr >= startDate && (!endDate || dateStr <= endDate)) {
+        return true;
+      }
+    }
+    return false;
+  });
   
   let totalTasks = 0;
   let completedTasks = 0;
   
   dayBlocks.forEach(block => {
+    // Count the main block as 1 task
+    totalTasks += 1;
+    if (block.completed) {
+      completedTasks += 1;
+    }
+    
+    // Also count checklist items
     if (block.checklist && block.checklist.length > 0) {
       totalTasks += block.checklist.length;
       completedTasks += block.checklist.filter(item => item.completed).length;
-        } else {
-      // Count blocks without checklists as single tasks
-      totalTasks += 1;
     }
   });
   
