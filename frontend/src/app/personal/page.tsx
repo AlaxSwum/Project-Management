@@ -884,14 +884,49 @@ export default function PersonalPage() {
       }
 
       // Fetch content posts from calendars the user is a member of
-      // First get companies the user is a member of
-      const { data: membershipData } = await supabase
+      // Check multiple tables to find user's company memberships
+      
+      // 1. First try company_members table (direct membership)
+      const { data: directMembershipData } = await supabase
         .from('company_members')
         .select('company_id')
+        .eq('user_id', user.id?.toString());
+
+      // 2. Also try content_calendar_members (content calendar specific)
+      const { data: ccMembershipData } = await supabase
+        .from('content_calendar_members')
+        .select('id, role')
         .eq('user_id', user.id);
 
-      const companyIds = (membershipData || []).map((m: any) => m.company_id);
-      console.log('📅 Content Calendar - User company memberships:', companyIds);
+      // 3. Try content_calendar_folder_members
+      const { data: folderMembershipData } = await supabase
+        .from('content_calendar_folder_members')
+        .select('id, role')
+        .eq('user_id', user.id);
+
+      console.log('📅 Content Calendar - Direct memberships:', directMembershipData?.length || 0);
+      console.log('📅 Content Calendar - CC memberships:', ccMembershipData?.length || 0);
+      console.log('📅 Content Calendar - Folder memberships:', folderMembershipData?.length || 0);
+
+      // Combine company IDs from direct memberships
+      let companyIds = (directMembershipData || []).map((m: any) => m.company_id);
+      
+      // If user is a content calendar member, fetch ALL companies they might have access to
+      const hasContentCalendarAccess = (ccMembershipData && ccMembershipData.length > 0) || 
+                                        (folderMembershipData && folderMembershipData.length > 0);
+
+      if (hasContentCalendarAccess && companyIds.length === 0) {
+        // User has content calendar access but no direct company membership
+        // Fetch all companies (they likely have broad access)
+        const { data: allCompaniesData } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('is_active', true);
+        companyIds = (allCompaniesData || []).map((c: any) => c.id);
+        console.log('📅 Content Calendar - User has CC access, fetching all companies:', companyIds.length);
+      }
+
+      console.log('📅 Content Calendar - Total company IDs:', companyIds);
 
       if (companyIds.length > 0) {
         // Fetch companies info
@@ -902,8 +937,7 @@ export default function PersonalPage() {
 
         const companyMap = new Map((companiesData || []).map((c: any) => [c.id, c.name]));
 
-        // Fetch ALL posts from user's calendars (not just assigned ones)
-        // This shows all upcoming content the user should be aware of
+        // Fetch ALL posts from user's calendars
         const { data: postsData, error: postsError } = await supabase
           .from('content_posts')
           .select(`*, content_post_targets (platform, platform_status, publish_at)`)
@@ -924,14 +958,14 @@ export default function PersonalPage() {
               company_name: companyMap.get(post.company_id) || 'Unknown Company',
               platforms: (post.content_post_targets || []).map((t: any) => t.platform),
               targets: post.content_post_targets || [],
-              isAssigned, // Track if user is assigned (can be used for highlighting)
+              isAssigned,
             };
           });
           setContentPosts(postsWithCompany);
-          console.log('📅 Content Calendar - Posts with company:', postsWithCompany.length);
+          console.log('📅 Content Calendar - Posts loaded:', postsWithCompany.length);
         }
       } else {
-        console.log('📅 Content Calendar - User is not a member of any company');
+        console.log('📅 Content Calendar - No company access found');
       }
     } catch (err) {
       console.error('Error fetching external data:', err);
