@@ -79,6 +79,35 @@ interface Meeting {
   location?: string;
 }
 
+// Content Calendar Post type
+interface ContentPost {
+  id: string;
+  company_id: string;
+  company_name?: string;
+  title: string;
+  description?: string;
+  content_type: string;
+  category?: string;
+  status: string;
+  planned_date: string;
+  planned_time?: string;
+  owner_id?: string;
+  owner_name?: string;
+  designer_id?: string;
+  designer_name?: string;
+  editor_id?: string;
+  editor_name?: string;
+  hashtags?: string;
+  visual_concept?: string;
+  key_points?: string;
+  platforms?: string[];
+  targets?: {
+    platform: string;
+    platform_status: string;
+    publish_at?: string;
+  }[];
+}
+
 // Types
 interface ChecklistItem {
   id: string;
@@ -388,11 +417,12 @@ export default function PersonalPage() {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  // External data integration - Projects, Tasks, Timeline, Meetings
+  // External data integration - Projects, Tasks, Timeline, Meetings, Content Posts
   const [projectTasks, setProjectTasks] = useState<ProjectTask[]>([]);
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline'>('tasks');
+  const [contentPosts, setContentPosts] = useState<ContentPost[]>([]);
+  const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline' | 'content'>('tasks');
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
   
@@ -400,6 +430,7 @@ export default function PersonalPage() {
   const [selectedExternalTask, setSelectedExternalTask] = useState<ProjectTask | null>(null);
   const [selectedExternalTimeline, setSelectedExternalTimeline] = useState<TimelineItem | null>(null);
   const [selectedExternalMeeting, setSelectedExternalMeeting] = useState<Meeting | null>(null);
+  const [selectedContentPost, setSelectedContentPost] = useState<ContentPost | null>(null);
   
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
@@ -849,6 +880,44 @@ export default function PersonalPage() {
             category_name: item.timeline_categories?.name
           }));
         setTimelineItems(userTimeline);
+      }
+
+      // Fetch content posts assigned to user (as owner, designer, or editor)
+      // First get companies the user is a member of
+      const { data: membershipData } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id);
+
+      const companyIds = (membershipData || []).map((m: any) => m.company_id);
+
+      if (companyIds.length > 0) {
+        // Fetch companies info
+        const { data: companiesData } = await supabase
+          .from('companies')
+          .select('id, name')
+          .in('id', companyIds);
+
+        const companyMap = new Map((companiesData || []).map((c: any) => [c.id, c.name]));
+
+        // Fetch posts where user is assigned
+        const userIdStr = user.id?.toString();
+        const { data: postsData, error: postsError } = await supabase
+          .from('content_posts')
+          .select(`*, content_post_targets (platform, platform_status, publish_at)`)
+          .in('company_id', companyIds)
+          .or(`owner_id.eq.${userIdStr},designer_id.eq.${userIdStr},editor_id.eq.${userIdStr}`)
+          .order('planned_date', { ascending: true });
+
+        if (!postsError && postsData) {
+          const postsWithCompany = postsData.map((post: any) => ({
+            ...post,
+            company_name: companyMap.get(post.company_id) || 'Unknown Company',
+            platforms: (post.content_post_targets || []).map((t: any) => t.platform),
+            targets: post.content_post_targets || [],
+          }));
+          setContentPosts(postsWithCompany);
+        }
       }
     } catch (err) {
       console.error('Error fetching external data:', err);
@@ -2163,9 +2232,28 @@ export default function PersonalPage() {
           return timelineItems; // Month view shows all
         };
 
+        // Filter content posts based on view mode
+        const getFilteredContentPosts = () => {
+          if (viewMode === 'day') {
+            const dateStr = formatDate(currentDate);
+            return contentPosts.filter(post => post.planned_date === dateStr);
+          } else if (viewMode === 'week') {
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return contentPosts.filter(post => {
+              const postDate = new Date(post.planned_date);
+              return postDate >= weekStart && postDate <= weekEnd;
+            });
+          }
+          return contentPosts; // Month view shows all
+        };
+
         const filteredTasks = getFilteredTasks();
         const filteredMeetings = getFilteredMeetings();
         const filteredTimeline = getFilteredTimeline();
+        const filteredContentPosts = getFilteredContentPosts();
 
         const viewLabel = viewMode === 'day' ? 'Today' : viewMode === 'week' ? 'This Week' : 'This Month';
 
@@ -2295,6 +2383,29 @@ export default function PersonalPage() {
                   <RocketLaunchIcon style={{ width: '12px', height: '12px' }} />
                   Timeline
                         </button>
+                        <button
+                  onClick={() => setSidebarTab('content')}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '6px',
+                    background: sidebarTab === 'content' ? '#fff' : 'transparent',
+                    color: sidebarTab === 'content' ? '#ec4899' : '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: sidebarTab === 'content' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  <Squares2X2Icon style={{ width: '12px', height: '12px' }} />
+                  Content
+                        </button>
               </div>
                     
               {/* Content */}
@@ -2348,7 +2459,7 @@ export default function PersonalPage() {
                       })}
                     </div>
                   )
-                ) : (
+                ) : sidebarTab === 'timeline' ? (
                   filteredTimeline.length === 0 ? (
                     <div style={{ 
                       textAlign: 'center', 
@@ -2389,6 +2500,79 @@ export default function PersonalPage() {
                                 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                       </span>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : (
+                  /* Content Posts Tab */
+                  filteredContentPosts.length === 0 ? (
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '24px 16px', 
+                      color: '#ec4899',
+                      background: '#fdf2f8',
+                      borderRadius: '8px',
+                      border: '1px dashed #fbcfe8',
+                    }}>
+                      <Squares2X2Icon style={{ width: '20px', height: '20px', color: '#f9a8d4', margin: '0 auto 8px' }} />
+                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#ec4899' }}>No posts scheduled {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {filteredContentPosts.map((post) => {
+                        const isToday = post.planned_date === formatDate(currentDate);
+                        const platformColors: Record<string, string> = {
+                          facebook: '#1877F2',
+                          instagram: '#E4405F',
+                          tiktok: '#000000',
+                          linkedin: '#0A66C2',
+                        };
+                        return (
+                          <motion.div
+                            key={post.id}
+                            whileHover={{ x: 2 }}
+                            whileTap={{ scale: 0.99 }}
+                            onClick={() => setSelectedContentPost(post)}
+                            style={{ 
+                              padding: '8px 10px',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              borderLeft: '3px solid #ec4899',
+                              background: isToday ? 'rgba(236, 72, 153, 0.06)' : '#f8fafc',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '4px', lineHeight: '1.3' }}>
+                              {post.title}
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                              <span style={{ color: '#ec4899', fontWeight: '500' }}>{post.company_name}</span>
+                              <span style={{ color: '#94a3b8' }}>
+                                {new Date(post.planned_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {post.planned_time && ` at ${post.planned_time}`}
+                              </span>
+                            </div>
+                            {/* Platform badges */}
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                              {(post.platforms || []).map((platform) => (
+                                <span
+                                  key={platform}
+                                  style={{
+                                    fontSize: '9px',
+                                    fontWeight: '600',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    background: platformColors[platform] || '#6b7280',
+                                    color: platform === 'tiktok' ? '#fff' : '#fff',
+                                    textTransform: 'capitalize',
+                                  }}
+                                >
+                                  {platform}
+                                </span>
+                              ))}
                             </div>
                           </motion.div>
                         );
@@ -4245,6 +4429,393 @@ export default function PersonalPage() {
                 </button>
                 <button
                   onClick={() => setSelectedExternalMeeting(null)}
+                  style={{ 
+                    padding: '14px 20px', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '12px', 
+                    background: '#fff', 
+                    color: '#374151', 
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Content Post Detail Modal - View Only */}
+      <AnimatePresence>
+        {selectedContentPost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedContentPost(null)}
+            style={{ 
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '20px',
+                width: '100%',
+                maxWidth: '520px',
+                maxHeight: '85vh',
+                overflowY: 'auto',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.2)',
+              }}
+            >
+              {/* Header with gradient */}
+              <div style={{ 
+                padding: '24px', 
+                background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+                borderRadius: '20px 20px 0 0',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    {selectedContentPost.company_name && (
+                      <span style={{ 
+                        display: 'inline-block',
+                        fontSize: '10px', 
+                        fontWeight: '700', 
+                        color: '#fff', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.5px',
+                        background: '#ec4899',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        marginBottom: '10px',
+                      }}>
+                        {selectedContentPost.company_name}
+                      </span>
+                    )}
+                    <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#831843', margin: 0, lineHeight: '1.3' }}>
+                      {selectedContentPost.title}
+                    </h2>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedContentPost(null)} 
+                    style={{ 
+                      background: 'rgba(255,255,255,0.8)', 
+                      border: 'none', 
+                      cursor: 'pointer', 
+                      padding: '8px',
+                      borderRadius: '10px',
+                      marginLeft: '12px',
+                    }}
+                  >
+                    <XMarkIcon style={{ width: '18px', height: '18px', color: '#831843' }} />
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ padding: '24px' }}>
+                {/* Post Info Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                  <div style={{ padding: '14px', background: '#fdf2f8', borderRadius: '12px', textAlign: 'center' }}>
+                    <CalendarDaysIcon style={{ width: '20px', height: '20px', color: '#db2777', margin: '0 auto 6px' }} />
+                    <p style={{ fontSize: '12px', color: '#9d174d', fontWeight: '600', margin: 0 }}>
+                      {new Date(selectedContentPost.planned_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </p>
+                    {selectedContentPost.planned_time && (
+                      <p style={{ fontSize: '11px', color: '#be185d', margin: '4px 0 0' }}>{selectedContentPost.planned_time}</p>
+                    )}
+                  </div>
+                  <div style={{ padding: '14px', background: '#fdf2f8', borderRadius: '12px', textAlign: 'center' }}>
+                    <TagIcon style={{ width: '20px', height: '20px', color: '#db2777', margin: '0 auto 6px' }} />
+                    <p style={{ fontSize: '12px', color: '#9d174d', fontWeight: '600', margin: 0, textTransform: 'capitalize' }}>
+                      {selectedContentPost.content_type}
+                    </p>
+                    <p style={{ fontSize: '11px', color: '#be185d', margin: '4px 0 0', textTransform: 'capitalize' }}>{selectedContentPost.status}</p>
+                  </div>
+                </div>
+
+                {/* Platforms */}
+                {selectedContentPost.platforms && selectedContentPost.platforms.length > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Platforms
+                    </h4>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {selectedContentPost.platforms.map((platform) => {
+                        const platformColors: Record<string, { bg: string; color: string }> = {
+                          facebook: { bg: '#1877F2', color: '#fff' },
+                          instagram: { bg: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)', color: '#fff' },
+                          tiktok: { bg: '#000000', color: '#fff' },
+                          linkedin: { bg: '#0A66C2', color: '#fff' },
+                        };
+                        const target = selectedContentPost.targets?.find((t) => t.platform === platform);
+                        return (
+                          <div 
+                            key={platform}
+                            style={{ 
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '10px 14px',
+                              background: platformColors[platform]?.bg || '#6b7280',
+                              borderRadius: '10px',
+                              color: '#fff',
+                            }}
+                          >
+                            <span style={{ fontSize: '13px', fontWeight: '600', textTransform: 'capitalize' }}>{platform}</span>
+                            {target && (
+                              <span style={{ 
+                                fontSize: '10px', 
+                                padding: '2px 6px', 
+                                background: 'rgba(255,255,255,0.2)', 
+                                borderRadius: '4px',
+                                textTransform: 'capitalize',
+                              }}>
+                                {target.platform_status}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                {selectedContentPost.description && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Description
+                    </h4>
+                    <p style={{ 
+                      fontSize: '14px', 
+                      color: '#374151', 
+                      lineHeight: '1.6',
+                      margin: 0,
+                      padding: '14px',
+                      background: '#f9fafb',
+                      borderRadius: '10px',
+                      borderLeft: '3px solid #ec4899',
+                    }}>
+                      {selectedContentPost.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Key Points */}
+                {selectedContentPost.key_points && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Key Points
+                    </h4>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: '#374151', 
+                      lineHeight: '1.6',
+                      margin: 0,
+                      padding: '12px',
+                      background: '#f0fdf4',
+                      borderRadius: '10px',
+                      borderLeft: '3px solid #22c55e',
+                    }}>
+                      {selectedContentPost.key_points}
+                    </p>
+                  </div>
+                )}
+
+                {/* Visual Concept */}
+                {selectedContentPost.visual_concept && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Visual Concept
+                    </h4>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: '#374151', 
+                      lineHeight: '1.6',
+                      margin: 0,
+                      padding: '12px',
+                      background: '#faf5ff',
+                      borderRadius: '10px',
+                      borderLeft: '3px solid #a855f7',
+                    }}>
+                      {selectedContentPost.visual_concept}
+                    </p>
+                  </div>
+                )}
+
+                {/* Hashtags */}
+                {selectedContentPost.hashtags && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                      Hashtags
+                    </h4>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: '#3b82f6', 
+                      lineHeight: '1.6',
+                      margin: 0,
+                      padding: '12px',
+                      background: '#eff6ff',
+                      borderRadius: '10px',
+                    }}>
+                      {selectedContentPost.hashtags}
+                    </p>
+                  </div>
+                )}
+
+                {/* Team */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>
+                    Team
+                  </h4>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {selectedContentPost.owner_name && (
+                      <div style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: '#dbeafe',
+                        borderRadius: '20px',
+                      }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: '#3b82f6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: '#fff',
+                        }}>
+                          {selectedContentPost.owner_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: '500' }}>{selectedContentPost.owner_name}</span>
+                          <span style={{ fontSize: '9px', color: '#60a5fa', display: 'block' }}>Owner</span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedContentPost.designer_name && (
+                      <div style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: '#fce7f3',
+                        borderRadius: '20px',
+                      }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: '#ec4899',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: '#fff',
+                        }}>
+                          {selectedContentPost.designer_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '11px', color: '#be185d', fontWeight: '500' }}>{selectedContentPost.designer_name}</span>
+                          <span style={{ fontSize: '9px', color: '#f472b6', display: 'block' }}>Designer</span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedContentPost.editor_name && (
+                      <div style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: '#f3e8ff',
+                        borderRadius: '20px',
+                      }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: '#a855f7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: '#fff',
+                        }}>
+                          {selectedContentPost.editor_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '500' }}>{selectedContentPost.editor_name}</span>
+                          <span style={{ fontSize: '9px', color: '#c084fc', display: 'block' }}>Editor</span>
+                        </div>
+                      </div>
+                    )}
+                    {!selectedContentPost.owner_name && !selectedContentPost.designer_name && !selectedContentPost.editor_name && (
+                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>No team members assigned</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer Actions */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setCurrentDate(new Date(selectedContentPost.planned_date));
+                    setBlockForm({
+                      title: `📱 ${selectedContentPost.title}`,
+                      description: `${selectedContentPost.description || ''}\n\nPlatforms: ${(selectedContentPost.platforms || []).join(', ')}\nCompany: ${selectedContentPost.company_name || 'Unknown'}`,
+                      type: 'project',
+                      startTime: selectedContentPost.planned_time || '09:00',
+                      endTime: selectedContentPost.planned_time ? 
+                        (() => {
+                          const [h, m] = selectedContentPost.planned_time!.split(':').map(Number);
+                          return `${(h + 1).toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                        })() : '10:00',
+                      checklist: [],
+                      category: 'Work',
+                    });
+                    setSelectedContentPost(null);
+                    setShowAddModal(true);
+                  }}
+                  style={{ 
+                    flex: 1, 
+                    padding: '14px 20px', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    border: 'none', 
+                    borderRadius: '12px', 
+                    background: 'linear-gradient(135deg, #ec4899, #db2777)', 
+                    color: '#fff', 
+                    cursor: 'pointer', 
+                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)',
+                  }}
+                >
+                  Add to My Calendar
+                </button>
+                <button
+                  onClick={() => setSelectedContentPost(null)}
                   style={{ 
                     padding: '14px 20px', 
                     fontSize: '14px', 
