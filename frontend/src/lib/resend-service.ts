@@ -43,6 +43,7 @@ interface MeetingReminderParams {
   agendaItems?: string[];
   attendeesList?: string[];
   reminderTime?: number;
+  isFollowUp?: boolean; // Flag to indicate this is a follow-up meeting notification
 }
 
 interface EmailResult {
@@ -878,6 +879,11 @@ Focus Project — Project Management & Productivity
     const failedEmails: string[] = [];
     let sentCount = 0;
 
+    // Customize subject based on whether this is a follow-up or regular reminder
+    const subject = params.isFollowUp
+      ? `🔄 Follow-up Meeting Scheduled: ${params.title}`
+      : `📹 Reminder: ${params.title} - Starting in ${params.reminderTime || 15} minutes`;
+
     for (const email of attendeeEmails) {
       try {
         const response = await fetch(this.apiUrl, {
@@ -889,7 +895,7 @@ Focus Project — Project Management & Productivity
           body: JSON.stringify({
             from: 'Focus Project <support@rothercarepharmacy.co.uk>',
             to: [email],
-            subject: `📹 Reminder: ${params.title} - Starting in ${params.reminderTime || 15} minutes`,
+            subject,
             html,
             text,
           }),
@@ -897,7 +903,7 @@ Focus Project — Project Management & Productivity
 
         if (response.ok) {
           sentCount++;
-          console.log(`✅ Meeting reminder sent to: ${email}`);
+          console.log(`✅ ${params.isFollowUp ? 'Follow-up notification' : 'Meeting reminder'} sent to: ${email}`);
         } else {
           failedEmails.push(email);
           console.error(`❌ Failed to send to: ${email}`);

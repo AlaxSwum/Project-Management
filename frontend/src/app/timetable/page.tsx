@@ -13,6 +13,8 @@ import {
   TrashIcon,
   XMarkIcon,
   CheckIcon,
+  ArrowPathIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
@@ -101,6 +103,22 @@ export default function TimetablePage() {
     reminder_time: 15, // default 15 minutes before
   });
   const [newAgendaItem, setNewAgendaItem] = useState('');
+  
+  // Follow-up meeting modal state
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpMeeting, setFollowUpMeeting] = useState<Meeting | null>(null);
+  const [followUpForm, setFollowUpForm] = useState({
+    date: '',
+    time: '',
+    duration: 60,
+    attendee_ids: [] as number[],
+    agenda_items: [] as string[],
+    meeting_link: '',
+    reminder_time: 15,
+    notes: '',
+  });
+  const [followUpAgendaItem, setFollowUpAgendaItem] = useState('');
+  const [isCreatingFollowUp, setIsCreatingFollowUp] = useState(false);
   
   // Cache for meetings data
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
@@ -412,6 +430,170 @@ export default function TimetablePage() {
     } catch (err: any) {
       setError('Failed to delete meeting');
     }
+  };
+
+  // Open follow-up meeting modal
+  const handleOpenFollowUp = (meeting: Meeting) => {
+    // Set the next day as default date for follow-up
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 7); // Default to 1 week later
+    const dateStr = tomorrow.toISOString().split('T')[0];
+    
+    // Pre-fill with original meeting data
+    setFollowUpMeeting(meeting);
+    setFollowUpForm({
+      date: dateStr,
+      time: meeting.time || '10:00',
+      duration: meeting.duration || 60,
+      attendee_ids: meeting.attendee_ids || [],
+      agenda_items: [`Follow-up from: ${meeting.title}`],
+      meeting_link: meeting.meeting_link || '',
+      reminder_time: meeting.reminder_time || 15,
+      notes: '',
+    });
+    setFollowUpAgendaItem('');
+    
+    // Fetch project members for attendee selection
+    const projectId = meeting.project_id || meeting.project;
+    if (projectId) {
+      fetchProjectMembers(projectId);
+    }
+    
+    setShowFollowUpModal(true);
+  };
+
+  // Create follow-up meeting
+  const handleCreateFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!followUpMeeting || !followUpForm.date || !followUpForm.time) {
+      setError('Please fill in date and time for the follow-up meeting');
+      return;
+    }
+
+    setIsCreatingFollowUp(true);
+    
+    try {
+      const projectId = followUpMeeting.project_id || followUpMeeting.project;
+      
+      const meetingData = {
+        title: `Follow-up: ${followUpMeeting.title}`,
+        description: followUpForm.notes || `Follow-up meeting for: ${followUpMeeting.title}\n\nOriginal meeting date: ${followUpMeeting.date}`,
+        project: projectId,
+        date: followUpForm.date,
+        time: followUpForm.time,
+        duration: followUpForm.duration,
+        attendees: projectMembers
+          .filter(m => followUpForm.attendee_ids.includes(m.user_id))
+          .map(m => m.name || m.email)
+          .join(', '),
+        attendee_ids: followUpForm.attendee_ids.length > 0 ? followUpForm.attendee_ids : undefined,
+        agenda_items: followUpForm.agenda_items.length > 0 ? followUpForm.agenda_items : undefined,
+        meeting_link: followUpForm.meeting_link.trim() || undefined,
+        reminder_time: followUpForm.reminder_time || undefined,
+      };
+
+      const createdMeeting = await meetingService.createMeeting(meetingData);
+      setMeetings([createdMeeting, ...meetings]);
+      
+      // Send email notifications to attendees
+      await sendFollowUpNotifications(createdMeeting, followUpForm.attendee_ids);
+      
+      // Reset and close
+      setShowFollowUpModal(false);
+      setFollowUpMeeting(null);
+      setFollowUpForm({
+        date: '',
+        time: '',
+        duration: 60,
+        attendee_ids: [],
+        agenda_items: [],
+        meeting_link: '',
+        reminder_time: 15,
+        notes: '',
+      });
+      
+      alert('✅ Follow-up meeting created and notifications sent to all attendees!');
+      
+    } catch (err: any) {
+      console.error('Error creating follow-up meeting:', err);
+      setError('Failed to create follow-up meeting');
+    } finally {
+      setIsCreatingFollowUp(false);
+    }
+  };
+
+  // Send email notifications for follow-up meeting
+  const sendFollowUpNotifications = async (meeting: any, attendeeIds: number[]) => {
+    try {
+      // Get attendee emails
+      const attendeeEmails: string[] = [];
+      for (const id of attendeeIds) {
+        const member = projectMembers.find(m => m.user_id === id);
+        if (member?.email) {
+          attendeeEmails.push(member.email);
+        }
+      }
+      
+      // Also add the creator's email
+      if (user?.email) {
+        attendeeEmails.push(user.email);
+      }
+      
+      if (attendeeEmails.length === 0) return;
+
+      // Call the meeting reminders API to send notifications
+      const response = await fetch('/api/meeting-reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          meeting: {
+            ...meeting,
+            project_name: followUpMeeting?.project_name || 'Unknown Project',
+            attendees_list: projectMembers
+              .filter(m => attendeeIds.includes(m.user_id))
+              .map(m => m.name || m.email),
+          },
+          attendeeEmails,
+          isFollowUp: true,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send follow-up notifications');
+      }
+    } catch (err) {
+      console.error('Error sending follow-up notifications:', err);
+    }
+  };
+
+  // Add agenda item to follow-up
+  const addFollowUpAgendaItem = () => {
+    if (followUpAgendaItem.trim()) {
+      setFollowUpForm(prev => ({
+        ...prev,
+        agenda_items: [...prev.agenda_items, followUpAgendaItem.trim()],
+      }));
+      setFollowUpAgendaItem('');
+    }
+  };
+
+  // Remove agenda item from follow-up
+  const removeFollowUpAgendaItem = (index: number) => {
+    setFollowUpForm(prev => ({
+      ...prev,
+      agenda_items: prev.agenda_items.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Toggle attendee in follow-up
+  const toggleFollowUpAttendee = (userId: number) => {
+    setFollowUpForm(prev => ({
+      ...prev,
+      attendee_ids: prev.attendee_ids.includes(userId)
+        ? prev.attendee_ids.filter(id => id !== userId)
+        : [...prev.attendee_ids, userId],
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -2582,6 +2764,17 @@ export default function TimetablePage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              handleOpenFollowUp(meeting);
+                            }}
+                            className="action-btn"
+                            title="Schedule follow-up"
+                            style={{ background: '#dbeafe', color: '#2563eb' }}
+                          >
+                            <ArrowPathIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleEditMeeting(meeting);
                             }}
                             className="action-btn"
@@ -2633,6 +2826,34 @@ export default function TimetablePage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Follow-up button for quick access */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenFollowUp(meeting);
+                        }}
+                        style={{
+                          marginTop: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <ArrowPathIcon style={{ width: '14px', height: '14px' }} />
+                        Schedule Follow-up Meeting
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -2661,6 +2882,17 @@ export default function TimetablePage() {
                           <p className="meeting-project">{meeting.project_name}</p>
                         </div>
                         <div className="meeting-actions">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenFollowUp(meeting);
+                            }}
+                            className="action-btn"
+                            title="Schedule follow-up"
+                            style={{ background: '#dbeafe', color: '#2563eb' }}
+                          >
+                            <ArrowPathIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -2705,6 +2937,34 @@ export default function TimetablePage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Follow-up button for past meetings */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenFollowUp(meeting);
+                        }}
+                        style={{
+                          marginTop: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <ArrowPathIcon style={{ width: '14px', height: '14px' }} />
+                        Schedule Follow-up Meeting
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -3877,6 +4137,413 @@ export default function TimetablePage() {
                     reminder_time: 15,
                   });
                 }} className="btn-secondary">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Follow-Up Meeting Modal */}
+      {showFollowUpModal && followUpMeeting && (
+        <div 
+          className="modal-overlay"
+          onClick={() => setShowFollowUpModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: '16px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+              padding: '20px 24px',
+              color: '#fff',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <ArrowPathIcon style={{ width: '20px', height: '20px' }} />
+                    <span style={{ fontSize: '12px', fontWeight: '600', opacity: 0.9 }}>SCHEDULE FOLLOW-UP</span>
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>
+                    Follow-up: {followUpMeeting.title}
+                  </h2>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', opacity: 0.9 }}>
+                    Original: {formatDate(followUpMeeting.date)} at {formatTime(followUpMeeting.time)}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowFollowUpModal(false)}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <XMarkIcon style={{ width: '20px', height: '20px', color: '#fff' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreateFollowUp} style={{ padding: '24px', overflowY: 'auto', maxHeight: 'calc(90vh - 120px)' }}>
+              {/* Date and Time Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={followUpForm.date}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, date: e.target.value }))}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                    Time *
+                  </label>
+                  <input
+                    type="time"
+                    value={followUpForm.time}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, time: e.target.value }))}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Duration and Reminder Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                    Duration
+                  </label>
+                  <select
+                    value={followUpForm.duration}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value={15}>15 minutes</option>
+                    <option value={30}>30 minutes</option>
+                    <option value={45}>45 minutes</option>
+                    <option value={60}>1 hour</option>
+                    <option value={90}>1.5 hours</option>
+                    <option value={120}>2 hours</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                    <EnvelopeIcon style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
+                    Email Reminder
+                  </label>
+                  <select
+                    value={followUpForm.reminder_time}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, reminder_time: Number(e.target.value) }))}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '2px solid #f59e0b',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#fffbeb',
+                    }}
+                  >
+                    <option value={0}>No reminder</option>
+                    <option value={5}>5 min before</option>
+                    <option value={15}>15 min before</option>
+                    <option value={30}>30 min before</option>
+                    <option value={60}>1 hour before</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Meeting Link */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                  Meeting Link (Zoom/Teams/Meet)
+                </label>
+                <input
+                  type="url"
+                  value={followUpForm.meeting_link}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, meeting_link: e.target.value }))}
+                  placeholder="https://zoom.us/j/..."
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Attendees */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                  <UserGroupIcon style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
+                  Attendees
+                </label>
+                {projectMembers.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
+                    {projectMembers.map((member) => (
+                      <label
+                        key={member.user_id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 10px',
+                          background: followUpForm.attendee_ids.includes(member.user_id) ? '#dbeafe' : '#fff',
+                          border: `2px solid ${followUpForm.attendee_ids.includes(member.user_id) ? '#3b82f6' : '#e5e7eb'}`,
+                          borderRadius: '20px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={followUpForm.attendee_ids.includes(member.user_id)}
+                          onChange={() => toggleFollowUpAttendee(member.user_id)}
+                          style={{ display: 'none' }}
+                        />
+                        <span style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: followUpForm.attendee_ids.includes(member.user_id) ? '#3b82f6' : '#e5e7eb',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                        }}>
+                          {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                        </span>
+                        {member.name || member.email}
+                        {followUpForm.attendee_ids.includes(member.user_id) && (
+                          <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+                    No project members available
+                  </p>
+                )}
+              </div>
+
+              {/* Agenda Items */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                  Meeting Agenda
+                </label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <input
+                    type="text"
+                    value={followUpAgendaItem}
+                    onChange={(e) => setFollowUpAgendaItem(e.target.value)}
+                    placeholder="Add agenda item..."
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFollowUpAgendaItem())}
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addFollowUpAgendaItem}
+                    style={{
+                      padding: '10px 16px',
+                      background: '#3b82f6',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+                {followUpForm.agenda_items.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {followUpForm.agenda_items.map((item, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          background: '#f3f4f6',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                        }}
+                      >
+                        <span>{index + 1}. {item}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFollowUpAgendaItem(index)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            padding: '4px',
+                          }}
+                        >
+                          <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                  Additional Notes
+                </label>
+                <textarea
+                  value={followUpForm.notes}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Any additional context for the follow-up meeting..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
+
+              {/* Email notification info */}
+              <div style={{
+                padding: '12px 16px',
+                background: '#dbeafe',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}>
+                <EnvelopeIcon style={{ width: '20px', height: '20px', color: '#2563eb' }} />
+                <p style={{ margin: 0, fontSize: '13px', color: '#1e40af' }}>
+                  Email notifications will be sent to all selected attendees when this follow-up is created.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="submit"
+                  disabled={isCreatingFollowUp}
+                  style={{
+                    flex: 1,
+                    padding: '12px 24px',
+                    background: isCreatingFollowUp ? '#93c5fd' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: isCreatingFollowUp ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {isCreatingFollowUp ? (
+                    <>
+                      <svg className="animate-spin" style={{ width: '16px', height: '16px' }} fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }} />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style={{ opacity: 0.75 }} />
+                      </svg>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowPathIcon style={{ width: '16px', height: '16px' }} />
+                      Create Follow-up & Send Notifications
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFollowUpModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
                   Cancel
                 </button>
               </div>

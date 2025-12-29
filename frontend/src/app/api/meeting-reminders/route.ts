@@ -22,7 +22,11 @@ interface Meeting {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { meeting, attendeeEmails } = body as { meeting: Meeting; attendeeEmails: string[] };
+    const { meeting, attendeeEmails, isFollowUp } = body as { 
+      meeting: Meeting; 
+      attendeeEmails: string[]; 
+      isFollowUp?: boolean;
+    };
     
     if (!meeting || !attendeeEmails || attendeeEmails.length === 0) {
       return NextResponse.json(
@@ -31,7 +35,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log(`📧 Sending meeting reminder for: ${meeting.title} to ${attendeeEmails.length} attendees`);
+    const emailType = isFollowUp ? 'follow-up meeting notification' : 'meeting reminder';
+    console.log(`📧 Sending ${emailType} for: ${meeting.title} to ${attendeeEmails.length} attendees`);
     
     const result = await resendService.sendMeetingReminder({
       attendeeEmails,
@@ -45,12 +50,13 @@ export async function POST(request: NextRequest) {
       agendaItems: meeting.agenda_items,
       attendeesList: meeting.attendees_list,
       reminderTime: meeting.reminder_time,
+      isFollowUp: isFollowUp || false,
     });
     
     if (result.success) {
       return NextResponse.json({ 
         success: true, 
-        message: `Sent ${result.sentCount}/${attendeeEmails.length} reminder emails`,
+        message: `Sent ${result.sentCount}/${attendeeEmails.length} ${emailType} emails`,
         sentCount: result.sentCount,
         failedEmails: result.failedEmails,
       });
