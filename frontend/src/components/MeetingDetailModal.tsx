@@ -13,7 +13,8 @@ import {
   DocumentTextIcon,
   ClipboardDocumentListIcon,
   ListBulletIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import MeetingNotesModal from './MeetingNotesModal';
 
@@ -42,6 +43,7 @@ interface MeetingDetailModalProps {
   onClose: () => void;
   onUpdate: (meetingData: any) => Promise<void>;
   onDelete: (meetingId: number) => Promise<void>;
+  onFollowUp?: (meeting: Meeting) => void;
   projectMembers?: any[];
   projects?: any[];
   onProjectChange?: (projectId: number) => void;
@@ -52,6 +54,7 @@ export default function MeetingDetailModal({
   onClose,
   onUpdate,
   onDelete,
+  onFollowUp,
   projectMembers = [],
   projects = [],
   onProjectChange
@@ -438,6 +441,30 @@ export default function MeetingDetailModal({
           <div className="modal-actions">
             {!isEditing ? (
               <>
+                {onFollowUp && (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onFollowUp(meeting);
+                    }}
+                    className="action-btn"
+                    title="Schedule follow-up meeting"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    <ArrowPathIcon style={{ width: '14px', height: '14px' }} />
+                    Follow-up
+                  </button>
+                )}
                 <button
                   onClick={() => setIsEditing(true)}
                   className="action-btn edit"
@@ -780,20 +807,64 @@ export default function MeetingDetailModal({
               </div>
             )}
 
-            {/* Meeting Notes Section */}
-            <div className="meeting-notes-section">
-              <div className="notes-header">
-                <div className="notes-title">
-                  <ClipboardDocumentListIcon style={{ width: '20px', height: '20px' }} />
-                  Meeting Notes
-                </div>
+            {/* Follow-up & Meeting Notes Section */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              flexWrap: 'wrap',
+              padding: '16px 0',
+              borderTop: '1px solid #e5e7eb',
+              marginTop: '16px',
+            }}>
+              {/* Follow-up Button */}
+              {onFollowUp && (
                 <button
-                  onClick={() => setShowNotesModal(true)}
-                  className="toggle-notes-btn"
+                  onClick={() => {
+                    onClose();
+                    onFollowUp(meeting);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                  }}
                 >
-                  Meeting Notes
+                  <ArrowPathIcon style={{ width: '18px', height: '18px' }} />
+                  Schedule Follow-up Meeting
                 </button>
-              </div>
+              )}
+              
+              {/* Meeting Notes Button */}
+              <button
+                onClick={() => setShowNotesModal(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <ClipboardDocumentListIcon style={{ width: '18px', height: '18px' }} />
+                Meeting Notes
+              </button>
             </div>
           </div>
         </div>

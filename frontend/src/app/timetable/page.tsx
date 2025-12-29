@@ -3537,6 +3537,11 @@ export default function TimetablePage() {
           }}
           onUpdate={handleUpdateMeetingFromDetail}
           onDelete={handleDeleteMeetingFromDetail}
+          onFollowUp={(meeting) => {
+            setShowMeetingDetail(false);
+            setSelectedMeeting(null);
+            handleOpenFollowUp(meeting as any);
+          }}
           projectMembers={projectMembers}
           projects={projects}
           onProjectChange={(projectId: number) => {
