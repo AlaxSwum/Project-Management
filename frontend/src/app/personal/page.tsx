@@ -106,6 +106,7 @@ interface ContentPost {
     platform_status: string;
     publish_at?: string;
   }[];
+  isAssigned?: boolean; // Whether user is assigned as owner/designer/editor
 }
 
 // Types
@@ -882,7 +883,7 @@ export default function PersonalPage() {
         setTimelineItems(userTimeline);
       }
 
-      // Fetch content posts assigned to user (as owner, designer, or editor)
+      // Fetch content posts from calendars the user is a member of
       // First get companies the user is a member of
       const { data: membershipData } = await supabase
         .from('company_members')
@@ -890,6 +891,7 @@ export default function PersonalPage() {
         .eq('user_id', user.id);
 
       const companyIds = (membershipData || []).map((m: any) => m.company_id);
+      console.log('📅 Content Calendar - User company memberships:', companyIds);
 
       if (companyIds.length > 0) {
         // Fetch companies info
@@ -900,24 +902,36 @@ export default function PersonalPage() {
 
         const companyMap = new Map((companiesData || []).map((c: any) => [c.id, c.name]));
 
-        // Fetch posts where user is assigned
-        const userIdStr = user.id?.toString();
+        // Fetch ALL posts from user's calendars (not just assigned ones)
+        // This shows all upcoming content the user should be aware of
         const { data: postsData, error: postsError } = await supabase
           .from('content_posts')
           .select(`*, content_post_targets (platform, platform_status, publish_at)`)
           .in('company_id', companyIds)
-          .or(`owner_id.eq.${userIdStr},designer_id.eq.${userIdStr},editor_id.eq.${userIdStr}`)
           .order('planned_date', { ascending: true });
 
+        console.log('📅 Content Calendar - Posts found:', postsData?.length || 0, postsError);
+
         if (!postsError && postsData) {
-          const postsWithCompany = postsData.map((post: any) => ({
-            ...post,
-            company_name: companyMap.get(post.company_id) || 'Unknown Company',
-            platforms: (post.content_post_targets || []).map((t: any) => t.platform),
-            targets: post.content_post_targets || [],
-          }));
+          const userIdStr = user.id?.toString();
+          const postsWithCompany = postsData.map((post: any) => {
+            // Check if user is assigned to this post
+            const isAssigned = post.owner_id?.toString() === userIdStr || 
+                              post.designer_id?.toString() === userIdStr || 
+                              post.editor_id?.toString() === userIdStr;
+            return {
+              ...post,
+              company_name: companyMap.get(post.company_id) || 'Unknown Company',
+              platforms: (post.content_post_targets || []).map((t: any) => t.platform),
+              targets: post.content_post_targets || [],
+              isAssigned, // Track if user is assigned (can be used for highlighting)
+            };
+          });
           setContentPosts(postsWithCompany);
+          console.log('📅 Content Calendar - Posts with company:', postsWithCompany.length);
         }
+      } else {
+        console.log('📅 Content Calendar - User is not a member of any company');
       }
     } catch (err) {
       console.error('Error fetching external data:', err);
@@ -2530,6 +2544,16 @@ export default function PersonalPage() {
                           tiktok: '#000000',
                           linkedin: '#0A66C2',
                         };
+                        const statusColors: Record<string, { bg: string; text: string }> = {
+                          idea: { bg: '#F3E8FF', text: '#9333EA' },
+                          draft: { bg: '#F3F4F6', text: '#6B7280' },
+                          design: { bg: '#FEF3C7', text: '#D97706' },
+                          review: { bg: '#DBEAFE', text: '#3B82F6' },
+                          approved: { bg: '#D1FAE5', text: '#10B981' },
+                          scheduled: { bg: '#E0E7FF', text: '#4F46E5' },
+                          published: { bg: '#DCFCE7', text: '#16A34A' },
+                        };
+                        const statusStyle = statusColors[post.status] || { bg: '#F3F4F6', text: '#6B7280' };
                         return (
                           <motion.div
                             key={post.id}
@@ -2540,19 +2564,45 @@ export default function PersonalPage() {
                               padding: '8px 10px',
                               borderRadius: '8px',
                               cursor: 'pointer',
-                              borderLeft: '3px solid #ec4899',
-                              background: isToday ? 'rgba(236, 72, 153, 0.06)' : '#f8fafc',
+                              borderLeft: `3px solid ${post.isAssigned ? '#ec4899' : '#cbd5e1'}`,
+                              background: isToday ? 'rgba(236, 72, 153, 0.06)' : post.isAssigned ? '#fdf2f8' : '#f8fafc',
                               transition: 'all 0.15s ease',
                             }}
                           >
-                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '4px', lineHeight: '1.3' }}>
-                              {post.title}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', lineHeight: '1.3', flex: 1 }}>
+                                {post.title}
+                              </div>
+                              {post.isAssigned && (
+                                <span style={{ 
+                                  fontSize: '8px', 
+                                  fontWeight: '700', 
+                                  padding: '2px 5px', 
+                                  background: '#ec4899', 
+                                  color: '#fff', 
+                                  borderRadius: '4px',
+                                  marginLeft: '6px',
+                                  flexShrink: 0,
+                                }}>
+                                  ASSIGNED
+                                </span>
+                              )}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
                               <span style={{ color: '#ec4899', fontWeight: '500' }}>{post.company_name}</span>
+                              <span style={{ 
+                                fontSize: '9px',
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                                background: statusStyle.bg,
+                                color: statusStyle.text,
+                                fontWeight: '600',
+                                textTransform: 'capitalize',
+                              }}>
+                                {post.status}
+                              </span>
                               <span style={{ color: '#94a3b8' }}>
                                 {new Date(post.planned_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                {post.planned_time && ` at ${post.planned_time}`}
                               </span>
                             </div>
                             {/* Platform badges */}
@@ -2566,7 +2616,7 @@ export default function PersonalPage() {
                                     padding: '2px 6px',
                                     borderRadius: '4px',
                                     background: platformColors[platform] || '#6b7280',
-                                    color: platform === 'tiktok' ? '#fff' : '#fff',
+                                    color: '#fff',
                                     textTransform: 'capitalize',
                                   }}
                                 >
