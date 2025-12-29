@@ -4338,48 +4338,56 @@ export default function TimetablePage() {
                 </label>
                 {projectMembers.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
-                    {projectMembers.map((member) => (
-                      <label
-                        key={member.user_id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '6px 10px',
-                          background: followUpForm.attendee_ids.includes(member.user_id) ? '#dbeafe' : '#fff',
-                          border: `2px solid ${followUpForm.attendee_ids.includes(member.user_id) ? '#3b82f6' : '#e5e7eb'}`,
-                          borderRadius: '20px',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={followUpForm.attendee_ids.includes(member.user_id)}
-                          onChange={() => toggleFollowUpAttendee(member.user_id)}
-                          style={{ display: 'none' }}
-                        />
-                        <span style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          background: followUpForm.attendee_ids.includes(member.user_id) ? '#3b82f6' : '#e5e7eb',
-                          color: '#fff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                        }}>
-                          {(member.name || member.email || '?').charAt(0).toUpperCase()}
-                        </span>
-                        {member.name || member.email}
-                        {followUpForm.attendee_ids.includes(member.user_id) && (
-                          <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
-                        )}
-                      </label>
-                    ))}
+                    {/* Remove duplicates by user_id */}
+                    {projectMembers
+                      .filter((member, index, self) => 
+                        index === self.findIndex(m => m.user_id === member.user_id)
+                      )
+                      .map((member) => {
+                        const isSelected = followUpForm.attendee_ids.includes(member.user_id);
+                        return (
+                          <div
+                            key={member.user_id}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFollowUpAttendee(member.user_id);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 10px',
+                              background: isSelected ? '#dbeafe' : '#fff',
+                              border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
+                              borderRadius: '20px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              transition: 'all 0.2s ease',
+                              userSelect: 'none',
+                            }}
+                          >
+                            <span style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: isSelected ? '#3b82f6' : '#e5e7eb',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                            }}>
+                              {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                            </span>
+                            {member.name || member.email}
+                            {isSelected && (
+                              <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 ) : (
                   <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
