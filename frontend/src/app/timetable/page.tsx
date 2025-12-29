@@ -439,13 +439,13 @@ export default function TimetablePage() {
     tomorrow.setDate(tomorrow.getDate() + 7); // Default to 1 week later
     const dateStr = tomorrow.toISOString().split('T')[0];
     
-    // Pre-fill with original meeting data
+    // Pre-fill with original meeting data but leave attendees empty for selection
     setFollowUpMeeting(meeting);
     setFollowUpForm({
       date: dateStr,
       time: meeting.time || '10:00',
       duration: meeting.duration || 60,
-      attendee_ids: meeting.attendee_ids || [],
+      attendee_ids: [], // Start empty - user must select attendees
       agenda_items: [`Follow-up from: ${meeting.title}`],
       meeting_link: meeting.meeting_link || '',
       reminder_time: meeting.reminder_time || 15,
