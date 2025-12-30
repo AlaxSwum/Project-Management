@@ -386,7 +386,7 @@ function createTray() {
     },
     { type: 'separator' },
     {
-      label: '🔔 Test Notification',
+      label: 'Test Notification',
       click: () => {
         sendTestNotification();
       }
@@ -477,7 +477,7 @@ function showNotification(title, body, options = {}) {
 function sendTestNotification() {
   log.info('Sending test notification...');
   showNotification(
-    '🔔 Test Notification',
+    'Test Notification',
     'If you see this, notifications are working!',
     { urgency: 'normal' }
   );

@@ -713,11 +713,11 @@ export default function PersonalPage() {
             currentMinutes < blockStartMinutes &&
             !sentReminders[blockReminderKey]) {
           
-          console.log(`📧 Sending reminder for: ${block.title}`);
+          console.log(`Sending reminder for: ${block.title}`);
           
-          // Send desktop notification FIRST (most important)
+          // Send desktop notification FIRST - don't depend on API
           showNotification(
-            `⏰ ${block.title} starting soon!`,
+            `${block.title} starting soon`,
             `Your ${block.type} block starts in ${block.notificationTime} minutes at ${block.startTime}`,
             { urgency: 'critical', url: '/personal' }
           );
@@ -725,9 +725,8 @@ export default function PersonalPage() {
           // Mark as sent immediately
           sentReminders[blockReminderKey] = true;
           localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
-          console.log(`✅ Desktop notification sent for: ${block.title}`);
           
-          // Try to send email reminder in background (optional)
+          // Try to send email reminder (optional, don't block on this)
           try {
             fetch('/api/time-block-reminders', {
               method: 'POST',
@@ -748,9 +747,9 @@ export default function PersonalPage() {
                 },
                 userEmail: user.email,
               }),
-            }).catch(() => {/* ignore email errors */});
+            }).catch(() => {});
           } catch (error) {
-            // Ignore email errors - desktop notification already sent
+            // Silently ignore email errors
           }
         }
       }
@@ -803,11 +802,11 @@ export default function PersonalPage() {
             currentMinutes < meetingStartMinutes &&
             !sentReminders[meetingReminderKey]) {
           
-          console.log(`📧 Sending meeting reminder for: ${meeting.title}`);
+          console.log(`Sending meeting reminder for: ${meeting.title}`);
           
-          // Send desktop notification FIRST (most important)
+          // Send desktop notification FIRST - don't depend on API
           showNotification(
-            `📅 Meeting: ${meeting.title}`,
+            `Meeting: ${meeting.title}`,
             `Starting in ${reminderTime} minutes at ${meeting.time}${meeting.project_name ? ` - ${meeting.project_name}` : ''}`,
             { urgency: 'critical', url: '/personal' }
           );
@@ -815,9 +814,8 @@ export default function PersonalPage() {
           // Mark as sent immediately
           sentReminders[meetingReminderKey] = true;
           localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
-          console.log(`✅ Desktop notification sent for meeting: ${meeting.title}`);
           
-          // Try to send email reminder in background (optional)
+          // Try to send email reminder (optional, don't block on this)
           try {
             fetch('/api/meeting-reminders', {
               method: 'POST',
@@ -838,9 +836,9 @@ export default function PersonalPage() {
                 },
                 attendeeEmails: [user.email],
               }),
-            }).catch(() => {/* ignore email errors */});
+            }).catch(() => {});
           } catch (error) {
-            // Ignore email errors - desktop notification already sent
+            // Silently ignore email errors
           }
         }
       }
@@ -885,8 +883,8 @@ export default function PersonalPage() {
         if (!notifiedTasks[taskKey]) {
           // Send desktop notification for deadline today
           showNotification(
-            `⚠️ Task Due Today!`,
-            `"${task.name}" is due today${task.project_name ? ` - ${task.project_name}` : ''}`,
+            `Task Due Today: ${task.name}`,
+            `This task is due today${task.project_name ? ` - Project: ${task.project_name}` : ''}`,
             { urgency: 'critical', url: '/my-tasks' }
           );
           notifiedTasks[taskKey] = true;
@@ -933,8 +931,8 @@ export default function PersonalPage() {
         const itemKey = `${item.id}_${todayStr}`;
         if (!notifiedItems[itemKey]) {
           showNotification(
-            `📅 Timeline Deadline Today!`,
-            `"${item.title}" ends today${item.category_name ? ` - ${item.category_name}` : ''}`,
+            `Timeline Deadline Today: ${item.title}`,
+            `This timeline item ends today${item.category_name ? ` - Category: ${item.category_name}` : ''}`,
             { urgency: 'normal', url: '/timeline' }
           );
           notifiedItems[itemKey] = true;
@@ -1217,14 +1215,6 @@ export default function PersonalPage() {
     };
     
     saveBlock(newBlock);
-    
-    // Send desktop notification for new block creation
-    showNotification(
-      '✅ Task Created!',
-      `"${newBlock.title}" scheduled for ${blockDate} at ${newBlock.startTime}${newBlock.notificationTime ? ` (${newBlock.notificationTime} min reminder)` : ''}`,
-      { urgency: 'normal', url: '/personal' }
-    );
-    
     setShowAddModal(false);
     setBlockForm({
       title: '',
@@ -1328,42 +1318,6 @@ export default function PersonalPage() {
     setCurrentDate(newDate);
   };
 
-  // Convert meetings to time blocks for calendar display
-  const getMeetingsAsBlocks = (date: Date): TimeBlock[] => {
-    const dateStr = formatDate(date);
-    
-    return meetings
-      .filter(meeting => meeting.date === dateStr)
-      .map(meeting => {
-        // Calculate end time from duration
-        const [startHour, startMin] = meeting.time.split(':').map(Number);
-        const totalMinutes = startHour * 60 + startMin + (meeting.duration || 60);
-        const endHour = Math.floor(totalMinutes / 60);
-        const endMin = totalMinutes % 60;
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
-        
-        return {
-          id: `meeting_${meeting.id}`,
-          date: meeting.date,
-          startTime: meeting.time,
-          endTime: endTime,
-          title: `📅 ${meeting.title}`,
-          description: meeting.description || (meeting.project_name ? `Project: ${meeting.project_name}` : ''),
-          type: 'meeting' as const,
-          meetingLink: meeting.meeting_link,
-          notificationTime: 15, // Default 15 min reminder for meetings
-          checklist: meeting.agenda_items?.map((item, i) => ({ id: `agenda_${i}`, text: item, done: false })) || [],
-          category: undefined,
-          isRecurring: false,
-          recurringDays: [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isMeetingBlock: true, // Flag to identify meeting blocks
-          originalMeeting: meeting, // Store original meeting data
-        } as TimeBlock & { isMeetingBlock?: boolean; originalMeeting?: Meeting };
-      });
-  };
-
   const getBlocksForDate = (date: Date): TimeBlock[] => {
     const dateStr = formatDate(date);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -1373,7 +1327,7 @@ export default function PersonalPage() {
       return d1.localeCompare(d2);
     };
     
-    const regularBlocks = blocks.filter(block => {
+    return blocks.filter(block => {
       // Exact date match (non-recurring blocks)
       if (!block.isRecurring && block.date === dateStr) return true;
       
@@ -1397,10 +1351,6 @@ export default function PersonalPage() {
       
       return false;
     });
-    
-    // Combine regular blocks with meeting blocks
-    const meetingBlocks = getMeetingsAsBlocks(date);
-    return [...regularBlocks, ...meetingBlocks];
   };
 
   const getBlockPosition = (block: TimeBlock): { top: number; height: number } => {
@@ -1587,9 +1537,9 @@ export default function PersonalPage() {
               {/* Test Notification Button */}
               <motion.button
                 onClick={() => {
-                  console.log('🔔 Test notification button clicked');
+                  console.log('Test notification button clicked');
                   showNotification(
-                    '🔔 Test Notification',
+                    'Test Notification',
                     'If you see this, notifications are working on your Mac!',
                     { urgency: 'normal' }
                   );
@@ -2027,6 +1977,67 @@ export default function PersonalPage() {
                         </motion.div>
                       );
                     })}
+                    
+                    {/* Meetings on Day View */}
+                    {meetings
+                      .filter(meeting => formatDate(new Date(meeting.date)) === formatDate(currentDate))
+                      .map((meeting) => {
+                        const [startHour, startMin] = meeting.time.split(':').map(Number);
+                        const startMinutes = startHour * 60 + startMin;
+                        const endMinutes = startMinutes + (meeting.duration || 60);
+                        const duration = endMinutes - startMinutes;
+                        const top = (startMinutes / 60) * 60 + 40;
+                        const height = Math.max((duration / 60) * 60, 30);
+                        
+                        return (
+                          <motion.div
+                            key={`meeting-${meeting.id}`}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.01, zIndex: 10 }}
+                            onClick={() => setSelectedExternalMeeting(meeting)}
+                            style={{
+                              position: 'absolute',
+                              top: `${top}px`,
+                              left: '96px',
+                              right: '16px',
+                              height: `${height}px`,
+                              background: 'rgba(251, 191, 36, 0.15)',
+                              borderLeft: '3px solid #f59e0b',
+                              borderRadius: '8px',
+                              padding: '8px 12px',
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              transition: 'all 0.2s ease',
+                              zIndex: 2,
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <VideoCameraIcon style={{ width: '14px', height: '14px', color: '#92400e' }} />
+                              <span
+                                style={{
+                                  fontSize: '13px',
+                                  fontWeight: '600',
+                                  color: '#1d1d1f',
+                                  flex: 1,
+                                }}
+                              >
+                                {meeting.title}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: '#86868b',
+                                marginTop: '4px',
+                              }}
+                            >
+                              {meeting.time} - {meeting.duration} min
+                              {meeting.project_name && ` | ${meeting.project_name}`}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
             </div>
                 </motion.div>
               )}
