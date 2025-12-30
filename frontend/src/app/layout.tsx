@@ -12,11 +12,11 @@ export const metadata: Metadata = {
   description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.png', type: 'image/png', sizes: '16x16' },
     ],
-    apple: [
-      { url: '/favicon.png' },
-    ],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
 };
 
