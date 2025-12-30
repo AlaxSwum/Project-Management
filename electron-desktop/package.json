@@ -1,9 +1,9 @@
 {
-  "name": "project-management-desktop",
+  "name": "focus-desktop",
   "version": "1.0.0",
-  "description": "Project Management Desktop Application with Native Notifications",
+  "description": "Focus - Desktop application for productivity and project management",
   "main": "main/main.js",
-  "author": "Focus Project",
+  "author": "Focus",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -32,7 +32,7 @@
   },
   "build": {
     "appId": "com.focusproject.desktop",
-    "productName": "Focus Project",
+    "productName": "Focus",
     "directories": {
       "output": "dist",
       "buildResources": "resources"

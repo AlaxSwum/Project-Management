@@ -8,7 +8,7 @@ import { ElectronProvider } from "@/components/ElectronProvider";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Focus Project - Project Management",
+  title: "Focus - Project Management",
   description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
   icons: {
     icon: [
