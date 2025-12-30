@@ -20,6 +20,7 @@ import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
 import MobileHeader from '@/components/MobileHeader';
+import { showNotification } from '@/lib/electron-notifications';
 
 interface Project {
   id: number;
@@ -260,6 +261,57 @@ export default function TimetablePage() {
 
       const createdMeeting = await meetingService.createMeeting(meetingData);
       setMeetings([createdMeeting, ...meetings]);
+      
+      // Send notification for newly created meeting
+      showNotification(
+        '📅 Meeting Created!',
+        `"${meetingData.title}" scheduled for ${meetingData.date} at ${meetingData.time}`,
+        { urgency: 'normal', url: '/timetable' }
+      );
+      
+      // Also save meeting to personal page time blocks
+      try {
+        const userEmail = user?.email;
+        if (userEmail) {
+          const personalBlocksKey = `personal_time_blocks_${userEmail}`;
+          const existingBlocksStr = localStorage.getItem(personalBlocksKey);
+          const existingBlocks = existingBlocksStr ? JSON.parse(existingBlocksStr) : [];
+          
+          // Calculate end time from duration
+          const [hours, mins] = meetingData.time.split(':').map(Number);
+          const endMinutes = hours * 60 + mins + meetingData.duration;
+          const endHours = Math.floor(endMinutes / 60);
+          const endMins = endMinutes % 60;
+          const endTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+          
+          // Create a time block for the personal page
+          const meetingBlock = {
+            id: `meeting_${createdMeeting.id}_${Date.now()}`,
+            date: meetingData.date,
+            startTime: meetingData.time,
+            endTime: endTime,
+            title: `📅 ${meetingData.title}`,
+            description: meetingData.description || `Meeting from ${meetingData.project_name || 'Project'}`,
+            type: 'meeting',
+            checklist: [],
+            meetingLink: meetingData.meeting_link || '',
+            notificationTime: meetingData.reminder_time || 15,
+            category: 'meeting',
+            isRecurring: false,
+            recurringDays: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            source: 'timetable',
+            sourceId: createdMeeting.id,
+          };
+          
+          existingBlocks.push(meetingBlock);
+          localStorage.setItem(personalBlocksKey, JSON.stringify(existingBlocks));
+          console.log('Meeting synced to personal page:', meetingBlock.title);
+        }
+      } catch (syncErr) {
+        console.error('Failed to sync meeting to personal page:', syncErr);
+      }
       
       setNewMeeting({
         title: '',

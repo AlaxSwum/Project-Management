@@ -1173,6 +1173,7 @@ export default function PersonalPage() {
   const deleteBlock = async (blockId: string) => {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
+      const blockToDelete = blocks.find(b => b.id === blockId);
       
       await supabase
         .from('time_blocks')
@@ -1184,6 +1185,15 @@ export default function PersonalPage() {
       localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
       setShowPanel(false);
       setSelectedBlock(null);
+      
+      // Send notification for deleted block
+      if (blockToDelete) {
+        showNotification(
+          '🗑️ Block Deleted',
+          `"${blockToDelete.title}" has been removed`,
+          { urgency: 'normal', url: '/personal' }
+        );
+      }
     } catch (err) {
       console.error('Error deleting block:', err);
       const newBlocks = blocks.filter(b => b.id !== blockId);
@@ -1222,6 +1232,14 @@ export default function PersonalPage() {
     
     saveBlock(newBlock);
     setShowAddModal(false);
+    
+    // Send notification for newly created block
+    showNotification(
+      '✅ Block Created!',
+      `"${newBlock.title}" scheduled for ${newBlock.startTime} - ${newBlock.endTime}`,
+      { urgency: 'normal', url: '/personal' }
+    );
+    
     setBlockForm({
       title: '',
       description: '',
@@ -1257,6 +1275,13 @@ export default function PersonalPage() {
     
     saveBlock(updatedBlock);
     setSelectedBlock(updatedBlock);
+    
+    // Send notification for updated block
+    showNotification(
+      '✏️ Block Updated!',
+      `"${updatedBlock.title}" has been updated`,
+      { urgency: 'normal', url: '/personal' }
+    );
   };
 
   const toggleChecklistItem = (itemId: string) => {
