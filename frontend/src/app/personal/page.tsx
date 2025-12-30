@@ -713,10 +713,23 @@ export default function PersonalPage() {
             currentMinutes < blockStartMinutes &&
             !sentReminders[blockReminderKey]) {
           
+          console.log(`📧 Sending reminder for: ${block.title}`);
+          
+          // Send desktop notification FIRST (most important)
+          showNotification(
+            `⏰ ${block.title} starting soon!`,
+            `Your ${block.type} block starts in ${block.notificationTime} minutes at ${block.startTime}`,
+            { urgency: 'critical', url: '/personal' }
+          );
+          
+          // Mark as sent immediately
+          sentReminders[blockReminderKey] = true;
+          localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
+          console.log(`✅ Desktop notification sent for: ${block.title}`);
+          
+          // Try to send email reminder in background (optional)
           try {
-            console.log(`📧 Sending reminder for: ${block.title}`);
-            
-            const response = await fetch('/api/time-block-reminders', {
+            fetch('/api/time-block-reminders', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -735,24 +748,9 @@ export default function PersonalPage() {
                 },
                 userEmail: user.email,
               }),
-            });
-            
-            if (response.ok) {
-              console.log(`✅ Reminder sent for: ${block.title}`);
-              sentReminders[blockReminderKey] = true;
-              localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
-              
-              // Send desktop notification
-              showNotification(
-                `⏰ ${block.title} starting soon!`,
-                `Your ${block.type} block starts in ${block.notificationTime} minutes at ${block.startTime}`,
-                { urgency: 'critical', url: '/personal' }
-              );
-            } else {
-              console.error(`❌ Failed to send reminder for: ${block.title}`);
-            }
+            }).catch(() => {/* ignore email errors */});
           } catch (error) {
-            console.error(`Error sending reminder for ${block.title}:`, error);
+            // Ignore email errors - desktop notification already sent
           }
         }
       }
@@ -805,10 +803,23 @@ export default function PersonalPage() {
             currentMinutes < meetingStartMinutes &&
             !sentReminders[meetingReminderKey]) {
           
+          console.log(`📧 Sending meeting reminder for: ${meeting.title}`);
+          
+          // Send desktop notification FIRST (most important)
+          showNotification(
+            `📅 Meeting: ${meeting.title}`,
+            `Starting in ${reminderTime} minutes at ${meeting.time}${meeting.project_name ? ` - ${meeting.project_name}` : ''}`,
+            { urgency: 'critical', url: '/personal' }
+          );
+          
+          // Mark as sent immediately
+          sentReminders[meetingReminderKey] = true;
+          localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
+          console.log(`✅ Desktop notification sent for meeting: ${meeting.title}`);
+          
+          // Try to send email reminder in background (optional)
           try {
-            console.log(`📧 Sending meeting reminder for: ${meeting.title}`);
-            
-            const response = await fetch('/api/meeting-reminders', {
+            fetch('/api/meeting-reminders', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -825,26 +836,11 @@ export default function PersonalPage() {
                   attendees_list: meeting.attendees_list,
                   reminder_time: reminderTime,
                 },
-                attendeeEmails: [user.email], // Current user's email
+                attendeeEmails: [user.email],
               }),
-            });
-            
-            if (response.ok) {
-              console.log(`✅ Meeting reminder sent for: ${meeting.title}`);
-              sentReminders[meetingReminderKey] = true;
-              localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
-              
-              // Send desktop notification for meeting
-              showNotification(
-                `📅 Meeting: ${meeting.title}`,
-                `Starting in ${reminderTime} minutes at ${meeting.time}${meeting.project_name ? ` - ${meeting.project_name}` : ''}`,
-                { urgency: 'critical', url: '/personal' }
-              );
-            } else {
-              console.error(`❌ Failed to send meeting reminder for: ${meeting.title}`);
-            }
+            }).catch(() => {/* ignore email errors */});
           } catch (error) {
-            console.error(`Error sending meeting reminder for ${meeting.title}:`, error);
+            // Ignore email errors - desktop notification already sent
           }
         }
       }
@@ -1173,7 +1169,6 @@ export default function PersonalPage() {
   const deleteBlock = async (blockId: string) => {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
-      const blockToDelete = blocks.find(b => b.id === blockId);
       
       await supabase
         .from('time_blocks')
@@ -1185,15 +1180,6 @@ export default function PersonalPage() {
       localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
       setShowPanel(false);
       setSelectedBlock(null);
-      
-      // Send notification for deleted block
-      if (blockToDelete) {
-        showNotification(
-          '🗑️ Block Deleted',
-          `"${blockToDelete.title}" has been removed`,
-          { urgency: 'normal', url: '/personal' }
-        );
-      }
     } catch (err) {
       console.error('Error deleting block:', err);
       const newBlocks = blocks.filter(b => b.id !== blockId);
@@ -1231,15 +1217,15 @@ export default function PersonalPage() {
     };
     
     saveBlock(newBlock);
-    setShowAddModal(false);
     
-    // Send notification for newly created block
+    // Send desktop notification for new block creation
     showNotification(
-      '✅ Block Created!',
-      `"${newBlock.title}" scheduled for ${newBlock.startTime} - ${newBlock.endTime}`,
+      '✅ Task Created!',
+      `"${newBlock.title}" scheduled for ${blockDate} at ${newBlock.startTime}${newBlock.notificationTime ? ` (${newBlock.notificationTime} min reminder)` : ''}`,
       { urgency: 'normal', url: '/personal' }
     );
     
+    setShowAddModal(false);
     setBlockForm({
       title: '',
       description: '',
@@ -1275,13 +1261,6 @@ export default function PersonalPage() {
     
     saveBlock(updatedBlock);
     setSelectedBlock(updatedBlock);
-    
-    // Send notification for updated block
-    showNotification(
-      '✏️ Block Updated!',
-      `"${updatedBlock.title}" has been updated`,
-      { urgency: 'normal', url: '/personal' }
-    );
   };
 
   const toggleChecklistItem = (itemId: string) => {
@@ -1349,6 +1328,42 @@ export default function PersonalPage() {
     setCurrentDate(newDate);
   };
 
+  // Convert meetings to time blocks for calendar display
+  const getMeetingsAsBlocks = (date: Date): TimeBlock[] => {
+    const dateStr = formatDate(date);
+    
+    return meetings
+      .filter(meeting => meeting.date === dateStr)
+      .map(meeting => {
+        // Calculate end time from duration
+        const [startHour, startMin] = meeting.time.split(':').map(Number);
+        const totalMinutes = startHour * 60 + startMin + (meeting.duration || 60);
+        const endHour = Math.floor(totalMinutes / 60);
+        const endMin = totalMinutes % 60;
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
+        
+        return {
+          id: `meeting_${meeting.id}`,
+          date: meeting.date,
+          startTime: meeting.time,
+          endTime: endTime,
+          title: `📅 ${meeting.title}`,
+          description: meeting.description || (meeting.project_name ? `Project: ${meeting.project_name}` : ''),
+          type: 'meeting' as const,
+          meetingLink: meeting.meeting_link,
+          notificationTime: 15, // Default 15 min reminder for meetings
+          checklist: meeting.agenda_items?.map((item, i) => ({ id: `agenda_${i}`, text: item, done: false })) || [],
+          category: undefined,
+          isRecurring: false,
+          recurringDays: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          isMeetingBlock: true, // Flag to identify meeting blocks
+          originalMeeting: meeting, // Store original meeting data
+        } as TimeBlock & { isMeetingBlock?: boolean; originalMeeting?: Meeting };
+      });
+  };
+
   const getBlocksForDate = (date: Date): TimeBlock[] => {
     const dateStr = formatDate(date);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -1358,7 +1373,7 @@ export default function PersonalPage() {
       return d1.localeCompare(d2);
     };
     
-    return blocks.filter(block => {
+    const regularBlocks = blocks.filter(block => {
       // Exact date match (non-recurring blocks)
       if (!block.isRecurring && block.date === dateStr) return true;
       
@@ -1382,6 +1397,10 @@ export default function PersonalPage() {
       
       return false;
     });
+    
+    // Combine regular blocks with meeting blocks
+    const meetingBlocks = getMeetingsAsBlocks(date);
+    return [...regularBlocks, ...meetingBlocks];
   };
 
   const getBlockPosition = (block: TimeBlock): { top: number; height: number } => {
