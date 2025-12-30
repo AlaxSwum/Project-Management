@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
+import { showNotification, notificationScheduler } from '@/lib/electron-notifications';
 
 interface PersonalTask {
   id: number;
@@ -121,6 +122,23 @@ export default function PersonalPage() {
       
       if (error) throw error;
       
+      // Show desktop notification for new task
+      const taskData = data?.[0];
+      if (taskData) {
+        showNotification('✅ Task Created', `"${taskForm.title}" has been added to your to-do list`, {
+          urgency: taskForm.priority === 'high' ? 'critical' : 'normal'
+        });
+        
+        // Schedule reminder if due date is set
+        if (taskForm.due_date) {
+          notificationScheduler.scheduleTaskReminder({
+            id: String(taskData.id),
+            title: taskForm.title,
+            dueDate: taskForm.due_date
+          }, 15); // 15 minutes before
+        }
+      }
+      
       // Reset form and close modal
       setTaskForm({
         title: '',
@@ -155,6 +173,18 @@ export default function PersonalPage() {
         .eq('id', taskId);
       
       if (error) throw error;
+      
+      // Show notification for task completion
+      if (newStatus === 'completed') {
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          showNotification('🎉 Task Completed!', `"${task.title}" has been marked as done`, {
+            silent: false
+          });
+          // Cancel any scheduled reminder for this task
+          notificationScheduler.cancelReminder(String(taskId));
+        }
+      }
       
       // Refresh tasks
       await fetchTasks();

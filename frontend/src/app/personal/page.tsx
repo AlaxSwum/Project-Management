@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import { projectService, taskService, meetingService } from '@/lib/api-compatibility';
 import { supabase } from '@/lib/supabase';
+import { showNotification, notificationScheduler } from '@/lib/electron-notifications';
 import {
   PlusIcon,
   ChevronLeftIcon,
@@ -436,11 +437,30 @@ export default function PersonalPage() {
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
   
+  // Sidebar collapsed state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Listen for sidebar collapse changes
+    const handleSidebarChange = (e: CustomEvent) => {
+      setSidebarCollapsed(e.detail.isCollapsed);
+    };
+    window.addEventListener('sidebarCollapsedChange', handleSidebarChange as EventListener);
+    
+    // Check localStorage for initial state
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+      setSidebarCollapsed(true);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('sidebarCollapsedChange', handleSidebarChange as EventListener);
+    };
   }, []);
 
   // Load custom categories from localStorage
@@ -721,6 +741,13 @@ export default function PersonalPage() {
               console.log(`✅ Reminder sent for: ${block.title}`);
               sentReminders[blockReminderKey] = true;
               localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
+              
+              // Send desktop notification
+              showNotification(
+                `⏰ ${block.title} starting soon!`,
+                `Your ${block.type} block starts in ${block.notificationTime} minutes at ${block.startTime}`,
+                { urgency: 'critical', url: '/personal' }
+              );
             } else {
               console.error(`❌ Failed to send reminder for: ${block.title}`);
             }
@@ -806,6 +833,13 @@ export default function PersonalPage() {
               console.log(`✅ Meeting reminder sent for: ${meeting.title}`);
               sentReminders[meetingReminderKey] = true;
               localStorage.setItem(sentRemindersKey, JSON.stringify(sentReminders));
+              
+              // Send desktop notification for meeting
+              showNotification(
+                `📅 Meeting: ${meeting.title}`,
+                `Starting in ${reminderTime} minutes at ${meeting.time}${meeting.project_name ? ` - ${meeting.project_name}` : ''}`,
+                { urgency: 'critical', url: '/personal' }
+              );
             } else {
               console.error(`❌ Failed to send meeting reminder for: ${meeting.title}`);
             }
@@ -824,6 +858,100 @@ export default function PersonalPage() {
     
     return () => clearInterval(interval);
   }, [user?.email, meetings]);
+
+  // Check for today's deadline tasks and send desktop notifications
+  useEffect(() => {
+    if (projectTasks.length === 0) return;
+    
+    const checkDeadlineTasks = () => {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      
+      // Get already notified tasks from localStorage
+      const notifiedKey = 'deadline_notified_tasks';
+      const notifiedStr = localStorage.getItem(notifiedKey) || '{}';
+      const notifiedTasks: Record<string, boolean> = JSON.parse(notifiedStr);
+      
+      // Clean old entries
+      Object.keys(notifiedTasks).forEach(key => {
+        if (!key.includes(todayStr)) delete notifiedTasks[key];
+      });
+      
+      // Check for tasks due today that haven't been notified
+      const todaysTasks = projectTasks.filter(task => {
+        if (!task.due_date) return false;
+        const dueDate = task.due_date.split('T')[0];
+        return dueDate === todayStr && task.status !== 'done';
+      });
+      
+      todaysTasks.forEach(task => {
+        const taskKey = `${task.id}_${todayStr}`;
+        if (!notifiedTasks[taskKey]) {
+          // Send desktop notification for deadline today
+          showNotification(
+            `⚠️ Task Due Today!`,
+            `"${task.name}" is due today${task.project_name ? ` - ${task.project_name}` : ''}`,
+            { urgency: 'critical', url: '/my-tasks' }
+          );
+          notifiedTasks[taskKey] = true;
+        }
+      });
+      
+      localStorage.setItem(notifiedKey, JSON.stringify(notifiedTasks));
+    };
+    
+    // Check immediately
+    checkDeadlineTasks();
+    
+    // Check every 5 minutes for new tasks
+    const interval = setInterval(checkDeadlineTasks, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [projectTasks]);
+
+  // Check for timeline items due today
+  useEffect(() => {
+    if (timelineItems.length === 0) return;
+    
+    const checkTimelineDeadlines = () => {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      
+      const notifiedKey = 'timeline_notified_items';
+      const notifiedStr = localStorage.getItem(notifiedKey) || '{}';
+      const notifiedItems: Record<string, boolean> = JSON.parse(notifiedStr);
+      
+      // Clean old entries
+      Object.keys(notifiedItems).forEach(key => {
+        if (!key.includes(todayStr)) delete notifiedItems[key];
+      });
+      
+      // Check for timeline items ending today
+      const todaysItems = timelineItems.filter(item => {
+        if (!item.end_date) return false;
+        const endDate = item.end_date.split('T')[0];
+        return endDate === todayStr && item.status !== 'completed';
+      });
+      
+      todaysItems.forEach(item => {
+        const itemKey = `${item.id}_${todayStr}`;
+        if (!notifiedItems[itemKey]) {
+          showNotification(
+            `📅 Timeline Deadline Today!`,
+            `"${item.title}" ends today${item.category_name ? ` - ${item.category_name}` : ''}`,
+            { urgency: 'normal', url: '/timeline' }
+          );
+          notifiedItems[itemKey] = true;
+        }
+      });
+      
+      localStorage.setItem(notifiedKey, JSON.stringify(notifiedItems));
+    };
+    
+    checkTimelineDeadlines();
+    const interval = setInterval(checkTimelineDeadlines, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [timelineItems]);
 
   // Fetch external data - Projects Tasks, Timeline Items, Meetings
   const fetchExternalData = async () => {
@@ -1257,6 +1385,7 @@ export default function PersonalPage() {
         <Sidebar 
           projects={[]} 
           onCreateProject={() => {}} 
+          onCollapsedChange={setSidebarCollapsed}
         />
       )}
 
@@ -1268,6 +1397,7 @@ export default function PersonalPage() {
         className="main-content personal-main"
         style={{
           minHeight: '100vh',
+          marginLeft: isMobile ? '0' : (sidebarCollapsed ? '72px' : '256px'),
           marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
           background: '#f8f9fa',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
@@ -1409,6 +1539,37 @@ export default function PersonalPage() {
                   </motion.button>
                 ))}
             </div>
+
+              {/* Test Notification Button */}
+              <motion.button
+                onClick={() => {
+                  console.log('🔔 Test notification button clicked');
+                  showNotification(
+                    '🔔 Test Notification',
+                    'If you see this, notifications are working on your Mac!',
+                    { urgency: 'normal' }
+                  );
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '9px 18px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  border: '1px solid #fbbf24',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <BellIcon style={{ width: '15px', height: '15px' }} />
+                Test Notification
+              </motion.button>
 
               {/* Add Block Button */}
               <motion.button

@@ -3,12 +3,21 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ElectronProvider } from "@/components/ElectronProvider";
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Focus Project - Project Management",
   description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/favicon.png' },
+    ],
+  },
 };
 
 export const viewport = {
@@ -34,11 +43,13 @@ export default function RootLayout({
           src="https://apis.google.com/js/api.js"
           strategy="afterInteractive"
         />
-        <AuthProvider>
-          <div className="min-h-full" style={{ background: '#F5F5ED' }}>
-            {children}
-          </div>
-        </AuthProvider>
+        <ElectronProvider>
+          <AuthProvider>
+            <div className="min-h-full" style={{ background: '#F5F5ED' }}>
+              {children}
+            </div>
+          </AuthProvider>
+        </ElectronProvider>
       </body>
     </html>
   );

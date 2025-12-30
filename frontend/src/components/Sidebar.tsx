@@ -47,6 +47,7 @@ interface Project {
 interface SidebarProps {
   projects: Project[];
   onCreateProject: () => void;
+  onCollapsedChange?: (isCollapsed: boolean) => void;
 }
 
 /*
@@ -86,7 +87,7 @@ HR APPROVAL WORKFLOW:
 5. Employee receives notification via Supabase realtime or email
 */
 
-export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
+export default function Sidebar({ projects, onCreateProject, onCollapsedChange }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -534,20 +535,34 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   };
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
     closeDropdown(); // Close dropdown when toggling sidebar
     
-    // Dynamically adjust content margin
-    setTimeout(() => {
-      const contentElements = document.querySelectorAll('[style*="marginLeft: 256px"]');
-      contentElements.forEach(element => {
-        const htmlElement = element as HTMLElement;
-        if (htmlElement.style.marginLeft) {
-          htmlElement.style.marginLeft = !isCollapsed ? '64px' : '256px';
-        }
-      });
-    }, 0);
+    // Notify parent of collapsed state change
+    if (onCollapsedChange) {
+      onCollapsedChange(newCollapsedState);
+    }
+    
+    // Store the collapsed state in localStorage for persistence
+    localStorage.setItem('sidebarCollapsed', String(newCollapsedState));
+    
+    // Dispatch custom event for components that can't receive props
+    window.dispatchEvent(new CustomEvent('sidebarCollapsedChange', { 
+      detail: { isCollapsed: newCollapsedState } 
+    }));
   };
+  
+  // Restore collapsed state on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+      setIsCollapsed(true);
+      if (onCollapsedChange) {
+        onCollapsedChange(true);
+      }
+    }
+  }, [onCollapsedChange]);
 
   const handleAbsenceForm = async () => {
     console.log('DEBUG: handleAbsenceForm called');
