@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS goal_completions (
     UNIQUE(goal_id, completed_date) -- Only one completion per goal per day
 );
 
--- Create personal_time_blocks table (for tracking time block completions)
-CREATE TABLE IF NOT EXISTS personal_time_blocks (
+-- Create time_blocks table (for personal calendar blocks)
+CREATE TABLE IF NOT EXISTS time_blocks (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
     date DATE NOT NULL,
@@ -65,8 +65,8 @@ CREATE INDEX IF NOT EXISTS idx_personal_goals_is_active ON personal_goals(is_act
 CREATE INDEX IF NOT EXISTS idx_goal_completions_goal_id ON goal_completions(goal_id);
 CREATE INDEX IF NOT EXISTS idx_goal_completions_user_id ON goal_completions(user_id);
 CREATE INDEX IF NOT EXISTS idx_goal_completions_date ON goal_completions(completed_date);
-CREATE INDEX IF NOT EXISTS idx_personal_time_blocks_user_id ON personal_time_blocks(user_id);
-CREATE INDEX IF NOT EXISTS idx_personal_time_blocks_date ON personal_time_blocks(date);
+CREATE INDEX IF NOT EXISTS idx_time_blocks_user_id ON time_blocks(user_id);
+CREATE INDEX IF NOT EXISTS idx_time_blocks_date ON time_blocks(date);
 
 -- Grant permissions (adjust as needed based on your RLS policies)
 -- If you're using Supabase, these tables will work with the anon key
@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_personal_time_blocks_date ON personal_time_blocks
 -- Example RLS policies (optional, enable if you want row-level security)
 -- ALTER TABLE personal_goals ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE goal_completions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE personal_time_blocks ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE time_blocks ENABLE ROW LEVEL SECURITY;
 
 -- CREATE POLICY "Users can view their own goals" ON personal_goals
 --     FOR SELECT USING (user_id = current_user_id());
