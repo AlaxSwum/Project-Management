@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import { projectService, taskService, meetingService } from '@/lib/api-compatibility';
 import { supabase } from '@/lib/supabase';
 import { showNotification, notificationScheduler } from '@/lib/electron-notifications';
+import { goalsService, Goal, GoalCompletion } from '@/lib/goals-service';
 import {
   PlusIcon,
   ChevronLeftIcon,
@@ -424,6 +425,8 @@ export default function PersonalPage() {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [contentPosts, setContentPosts] = useState<ContentPost[]>([]);
+  const [personalGoals, setPersonalGoals] = useState<Goal[]>([]);
+  const [goalCompletions, setGoalCompletions] = useState<GoalCompletion[]>([]);
   const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline' | 'content'>('tasks');
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
@@ -1005,6 +1008,23 @@ export default function PersonalPage() {
         setTimelineItems(userTimeline);
       }
 
+      // Fetch personal goals
+      try {
+        const { data: goalsData } = await goalsService.getGoals(user.id);
+        if (goalsData) {
+          setPersonalGoals(goalsData);
+        }
+        
+        // Fetch today's goal completions
+        const today = new Date().toISOString().split('T')[0];
+        const { data: completionsData } = await goalsService.getCompletions(user.id, undefined, today, today);
+        if (completionsData) {
+          setGoalCompletions(completionsData);
+        }
+      } catch (goalError) {
+        console.log('Goals not available (table may not exist):', goalError);
+      }
+
       // Fetch content posts from calendars the user is a member of
       // Check multiple tables to find user's company memberships
       
@@ -1318,6 +1338,34 @@ export default function PersonalPage() {
     setCurrentDate(newDate);
   };
 
+  // Get goals scheduled for a specific date
+  const getGoalsForDate = (date: Date): Goal[] => {
+    const dateStr = formatDate(date);
+    const dayOfWeek = date.getDay();
+    
+    return personalGoals.filter(goal => {
+      if (!goal.is_active) return false;
+      
+      // Check date range
+      if (goal.start_date && dateStr < goal.start_date) return false;
+      if (goal.end_date && dateStr > goal.end_date) return false;
+      
+      // Check frequency
+      if (goal.target_frequency === 'daily') return true;
+      if (goal.target_frequency === 'weekly' || goal.target_frequency === 'custom') {
+        return goal.target_days?.includes(dayOfWeek) || false;
+      }
+      
+      return false;
+    });
+  };
+
+  // Check if a goal is completed for today
+  const isGoalCompletedToday = (goalId: string): boolean => {
+    const today = new Date().toISOString().split('T')[0];
+    return goalCompletions.some(c => c.goal_id === goalId && c.completed_date === today);
+  };
+
   const getBlocksForDate = (date: Date): TimeBlock[] => {
     const dateStr = formatDate(date);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -1327,7 +1375,8 @@ export default function PersonalPage() {
       return d1.localeCompare(d2);
     };
     
-    return blocks.filter(block => {
+    // Get regular time blocks
+    const regularBlocks = blocks.filter(block => {
       // Exact date match (non-recurring blocks)
       if (!block.isRecurring && block.date === dateStr) return true;
       
@@ -1351,6 +1400,36 @@ export default function PersonalPage() {
       
       return false;
     });
+
+    // Convert goals to blocks for display
+    const goalsAsBlocks: TimeBlock[] = getGoalsForDate(date)
+      .filter(goal => goal.target_time) // Only goals with a time
+      .map(goal => {
+        const endTime = goal.target_time ? 
+          (() => {
+            const [h, m] = goal.target_time!.split(':').map(Number);
+            const endMinutes = h * 60 + m + (goal.duration_minutes || 30);
+            const endH = Math.floor(endMinutes / 60) % 24;
+            const endM = endMinutes % 60;
+            return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+          })() : goal.target_time;
+        
+        return {
+          id: `goal-${goal.id}`,
+          date: dateStr,
+          startTime: goal.target_time || '09:00',
+          endTime: endTime || '09:30',
+          title: goal.title,
+          description: goal.description,
+          type: 'goal' as const,
+          checklist: [],
+          color: goal.color,
+          category: goal.category,
+          completed: isGoalCompletedToday(goal.id),
+        };
+      });
+    
+    return [...regularBlocks, ...goalsAsBlocks];
   };
 
   const getBlockPosition = (block: TimeBlock): { top: number; height: number } => {
