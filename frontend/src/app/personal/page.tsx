@@ -714,7 +714,7 @@ export default function PersonalPage() {
             !sentReminders[blockReminderKey]) {
           
           console.log(`Sending reminder for: ${block.title}`);
-          
+            
           // Send desktop notification FIRST - don't depend on API
           showNotification(
             `${block.title} starting soon`,
@@ -803,7 +803,7 @@ export default function PersonalPage() {
             !sentReminders[meetingReminderKey]) {
           
           console.log(`Sending meeting reminder for: ${meeting.title}`);
-          
+            
           // Send desktop notification FIRST - don't depend on API
           showNotification(
             `Meeting: ${meeting.title}`,
@@ -1565,6 +1565,54 @@ export default function PersonalPage() {
                 Test Notification
               </motion.button>
 
+              {/* Goals Button */}
+              <motion.button
+                onClick={() => router.push('/goals')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(251, 146, 60, 0.08))',
+                  border: '1px solid rgba(239, 68, 68, 0.15)',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  color: '#dc2626',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <FlagIcon style={{ width: '15px', height: '15px' }} />
+                Goals
+              </motion.button>
+
+              {/* Report Button */}
+              <motion.button
+                onClick={() => router.push('/report')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08))',
+                  border: '1px solid rgba(59, 130, 246, 0.15)',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  color: '#2563eb',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <Squares2X2Icon style={{ width: '15px', height: '15px' }} />
+                Report
+              </motion.button>
+
               {/* Add Block Button */}
               <motion.button
                 onClick={() => setShowAddModal(true)}
@@ -2035,9 +2083,9 @@ export default function PersonalPage() {
                               {meeting.time} - {meeting.duration} min
                               {meeting.project_name && ` | ${meeting.project_name}`}
                             </div>
-                          </motion.div>
-                        );
-                      })}
+                        </motion.div>
+                      );
+                    })}
             </div>
                 </motion.div>
               )}

@@ -53,6 +53,45 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('meeting-reminder', meeting);
   },
 
+  /**
+   * Show Rize-style custom notification popup
+   * @param {object} data - Notification data (title, message, type, dueIn, urgent, duration)
+   */
+  showRizeNotification: (data) => {
+    return ipcRenderer.invoke('show-rize-notification', data);
+  },
+
+  /**
+   * Schedule a task reminder for later
+   * @param {object} task - Task object with id, title, dueDate, dueTime
+   */
+  scheduleTaskReminder: (task) => {
+    return ipcRenderer.invoke('schedule-task-reminder', task);
+  },
+
+  /**
+   * Schedule a meeting reminder for later
+   * @param {object} meeting - Meeting object with id, title, startDate, startTime
+   */
+  scheduleMeetingReminder: (meeting) => {
+    return ipcRenderer.invoke('schedule-meeting-reminder', meeting);
+  },
+
+  /**
+   * Clear all pending reminders
+   */
+  clearReminders: () => {
+    return ipcRenderer.invoke('clear-reminders');
+  },
+
+  /**
+   * Listen for task completion events
+   * @param {function} callback - Callback function to handle task completion
+   */
+  onTaskCompleted: (callback) => {
+    ipcRenderer.on('task-completed', (event, data) => callback(data));
+  },
+
   // ==========================================
   // WINDOW MANAGEMENT
   // ==========================================

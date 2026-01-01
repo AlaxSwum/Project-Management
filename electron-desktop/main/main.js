@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Notification, Tray, Menu, ipcMain, nativeImage, shell, clipboard } = require('electron');
+const { app, BrowserWindow, Notification, Tray, Menu, ipcMain, nativeImage, shell, clipboard, screen } = require('electron');
 const path = require('path');
 const log = require('electron-log');
 const Store = require('electron-store');
@@ -9,7 +9,12 @@ const isDev = !app.isPackaged;
 
 // Next.js server configuration
 const NEXT_PORT = 3000;
-const NEXT_URL = isDev ? `http://localhost:${NEXT_PORT}` : null;
+const NEXT_URL = isDev ? `http://localhost:${NEXT_PORT}` : 'https://focus-project.co.uk';
+
+// Notification windows tracking
+let notificationWindows = [];
+let pendingReminders = new Map(); // taskId -> reminder data
+let snoozedTasks = new Map(); // taskId -> snooze timer
 
 /**
  * Setup right-click context menu for a window
@@ -203,10 +208,8 @@ function createWindow() {
     // Open DevTools in development
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    // In production, start the Next.js server and load from it
-    startNextServer().then(() => {
-      mainWindow.loadURL(`http://localhost:${NEXT_PORT}`);
-    });
+    // In production, load from the live website
+    mainWindow.loadURL('https://focus-project.co.uk');
   }
 
   // Setup right-click context menu
@@ -476,11 +479,329 @@ function showNotification(title, body, options = {}) {
 // Test notification function - can be called from menu or IPC
 function sendTestNotification() {
   log.info('Sending test notification...');
-  showNotification(
-    'Test Notification',
-    'If you see this, notifications are working!',
-    { urgency: 'normal' }
-  );
+  
+  // Try Rize-style notification first
+  const rizeWindow = showRizeNotification({
+    title: 'Welcome to Focus',
+    message: 'Your beautiful notifications are now active! Complete tasks and stay productive.',
+    type: 'task',
+    dueIn: 'Test notification',
+    duration: 10000
+  });
+  
+  // If Rize notification failed, use native
+  if (!rizeWindow) {
+    log.info('Rize notification failed, using native notification');
+    showNotification('Focus - Test', 'Notifications are working! This is a native notification.');
+  }
+}
+
+/**
+ * Show Rize-style custom notification popup
+ */
+function showRizeNotification(data) {
+  if (!store.get('notifications')) {
+    log.info('Notifications disabled, skipping Rize notification');
+    return null;
+  }
+
+  log.info('Showing Rize-style notification:', data.title);
+
+  try {
+    // Always use primary display for notifications
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const workArea = primaryDisplay.workArea;
+    
+    // Calculate position (top-right corner with padding)
+    const notificationWidth = 400;
+    const notificationHeight = 280;
+    const padding = 20;
+    const stackOffset = notificationWindows.length * (notificationHeight + 10);
+    
+    // Position in top-right corner of primary display
+    const x = workArea.x + workArea.width - notificationWidth - padding;
+    const y = workArea.y + padding + stackOffset;
+
+    log.info(`Primary display work area: ${JSON.stringify(workArea)}`);
+    log.info(`Creating notification window at position: ${x}, ${y}`);
+
+    // Create notification window
+    const notificationWindow = new BrowserWindow({
+      width: notificationWidth,
+      height: notificationHeight,
+      x,
+      y,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: true,
+      focusable: false,
+      show: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+
+    // Load notification HTML - handle both dev and production paths
+    const fs = require('fs');
+    let notificationPath = path.join(__dirname, '../notification/notification.html');
+    
+    // In production, try multiple paths
+    if (!fs.existsSync(notificationPath)) {
+      const altPaths = [
+        path.join(app.getAppPath(), 'notification/notification.html'),
+        path.join(process.resourcesPath, 'app/notification/notification.html'),
+        path.join(__dirname, 'notification/notification.html')
+      ];
+      
+      for (const altPath of altPaths) {
+        log.info('Trying path:', altPath);
+        if (fs.existsSync(altPath)) {
+          notificationPath = altPath;
+          break;
+        }
+      }
+    }
+    
+    log.info('Loading notification from:', notificationPath);
+    
+    // Check if file exists
+    if (!fs.existsSync(notificationPath)) {
+      log.error('Notification HTML file not found, using native notification');
+      // Fallback to native notification
+      showNotification(data.title, data.message);
+      return null;
+    }
+
+    notificationWindow.loadFile(notificationPath);
+
+    // Handle load errors
+    notificationWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+      log.error('Failed to load notification:', errorCode, errorDescription);
+    });
+
+    // Send data to notification window
+    notificationWindow.webContents.once('did-finish-load', () => {
+      log.info('Notification window loaded, sending data');
+      notificationWindow.webContents.send('notification-data', {
+        ...data,
+        windowId: notificationWindow.id
+      });
+      notificationWindow.showInactive();
+      log.info('Notification window shown');
+    });
+
+    // Track window
+    notificationWindows.push(notificationWindow);
+
+    // Handle window close
+    notificationWindow.on('closed', () => {
+      notificationWindows = notificationWindows.filter(w => w !== notificationWindow);
+      repositionNotifications();
+    });
+
+    return notificationWindow;
+  } catch (error) {
+    log.error('Error showing Rize notification:', error);
+    // Fallback to native notification
+    showNotification(data.title, data.message);
+    return null;
+  }
+}
+
+/**
+ * Reposition notification windows after one closes
+ */
+function repositionNotifications() {
+  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
+  const notificationWidth = 400;
+  const notificationHeight = 280;
+  const padding = 20;
+
+  notificationWindows.forEach((win, index) => {
+    if (win && !win.isDestroyed()) {
+      const x = screenWidth - notificationWidth - padding;
+      const y = padding + index * (notificationHeight + 10);
+      win.setPosition(x, y, true);
+    }
+  });
+}
+
+/**
+ * Handle notification actions (complete, snooze, dismiss)
+ */
+function setupNotificationActions() {
+  ipcMain.on('notification-action', (event, { action, taskId, snoozeMinutes, data }) => {
+    log.info(`Notification action: ${action} for task ${taskId}`);
+    
+    // Find and close the notification window
+    const senderWindow = BrowserWindow.fromWebContents(event.sender);
+    if (senderWindow && !senderWindow.isDestroyed()) {
+      senderWindow.close();
+    }
+
+    switch (action) {
+      case 'complete':
+        handleTaskComplete(taskId, data);
+        break;
+      case 'snooze':
+        handleTaskSnooze(taskId, data, snoozeMinutes || 15);
+        break;
+      case 'dismiss':
+        handleTaskDismiss(taskId, data);
+        break;
+    }
+  });
+}
+
+/**
+ * Handle task completion
+ */
+function handleTaskComplete(taskId, data) {
+  log.info(`Task ${taskId} marked as complete`);
+  
+  // Remove from pending reminders
+  pendingReminders.delete(taskId);
+  
+  // Clear any snooze timers
+  if (snoozedTasks.has(taskId)) {
+    clearTimeout(snoozedTasks.get(taskId));
+    snoozedTasks.delete(taskId);
+  }
+
+  // Send completion to main window
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('task-completed', { taskId, data });
+  }
+
+  // Show completion confirmation
+  showNotification('Task Complete', `"${data.title}" has been marked as done!`, {
+    silent: true
+  });
+}
+
+/**
+ * Handle task snooze - will remind again after snoozeMinutes
+ */
+function handleTaskSnooze(taskId, data, snoozeMinutes) {
+  log.info(`Task ${taskId} snoozed for ${snoozeMinutes} minutes`);
+  
+  // Clear existing snooze timer
+  if (snoozedTasks.has(taskId)) {
+    clearTimeout(snoozedTasks.get(taskId));
+  }
+
+  // Set new reminder
+  const timer = setTimeout(() => {
+    snoozedTasks.delete(taskId);
+    
+    // Show notification again
+    showRizeNotification({
+      ...data,
+      title: data.title,
+      message: `Reminder: This task was snoozed ${snoozeMinutes} minutes ago. Is it complete now?`,
+      dueIn: 'Snoozed reminder',
+      urgent: true,
+      taskId
+    });
+  }, snoozeMinutes * 60 * 1000);
+
+  snoozedTasks.set(taskId, timer);
+
+  // Show snooze confirmation
+  showNotification('Task Snoozed', `Will remind you about "${data.title}" in ${snoozeMinutes} minutes`, {
+    silent: true
+  });
+}
+
+/**
+ * Handle task dismiss (don't remind again for this session)
+ */
+function handleTaskDismiss(taskId, data) {
+  log.info(`Task ${taskId} dismissed`);
+  
+  // Remove from pending reminders for this session
+  pendingReminders.delete(taskId);
+  
+  // Clear any snooze timers
+  if (snoozedTasks.has(taskId)) {
+    clearTimeout(snoozedTasks.get(taskId));
+    snoozedTasks.delete(taskId);
+  }
+}
+
+/**
+ * Schedule a task reminder
+ */
+function scheduleTaskReminder(task) {
+  const { id, title, dueDate, dueTime } = task;
+  
+  if (pendingReminders.has(id)) {
+    return; // Already scheduled
+  }
+
+  const dueDateTime = new Date(`${dueDate}T${dueTime || '09:00'}`);
+  const now = new Date();
+  const timeUntilDue = dueDateTime.getTime() - now.getTime();
+
+  // Remind 15 minutes before due
+  const reminderTime = timeUntilDue - (15 * 60 * 1000);
+
+  if (reminderTime > 0) {
+    const timer = setTimeout(() => {
+      showRizeNotification({
+        taskId: id,
+        title: title,
+        message: 'This task is due soon. Would you like to mark it as complete?',
+        type: 'task',
+        dueIn: 'Due in 15 minutes',
+        duration: 15000
+      });
+    }, reminderTime);
+
+    pendingReminders.set(id, { task, timer });
+  } else if (timeUntilDue > 0) {
+    // Task is due within 15 minutes, remind immediately
+    showRizeNotification({
+      taskId: id,
+      title: title,
+      message: 'This task is due very soon! Is it complete?',
+      type: 'task',
+      dueIn: `Due in ${Math.round(timeUntilDue / 60000)} minutes`,
+      urgent: true,
+      duration: 15000
+    });
+  }
+}
+
+/**
+ * Schedule a meeting reminder
+ */
+function scheduleMeetingReminder(meeting) {
+  const { id, title, startTime, startDate } = meeting;
+  
+  const meetingDateTime = new Date(`${startDate}T${startTime}`);
+  const now = new Date();
+  const timeUntilMeeting = meetingDateTime.getTime() - now.getTime();
+
+  // Remind 5 minutes before meeting
+  const reminderTime = timeUntilMeeting - (5 * 60 * 1000);
+
+  if (reminderTime > 0) {
+    setTimeout(() => {
+      showRizeNotification({
+        taskId: id,
+        title: title,
+        message: 'Your meeting is about to start. Get ready!',
+        type: 'meeting',
+        dueIn: 'Starting in 5 minutes',
+        duration: 60000 // 1 minute notification
+      });
+    }, reminderTime);
+  }
 }
 
 /**
@@ -563,20 +884,57 @@ function setupIPC() {
     }
   });
 
-  // Show task reminder notification
+  // Show Rize-style task reminder notification
   ipcMain.handle('task-reminder', (event, task) => {
-    showNotification('Task Reminder', `${task.title} is due soon!`, {
-      url: `http://localhost:${NEXT_PORT}/my-tasks`,
-      urgency: 'critical'
+    showRizeNotification({
+      taskId: task.id || Date.now().toString(),
+      title: task.title,
+      message: task.message || 'This task is due soon. Would you like to mark it as complete?',
+      type: 'task',
+      dueIn: task.dueIn || 'Due soon',
+      urgent: task.urgent || false,
+      duration: 15000
     });
   });
 
-  // Show meeting reminder notification
+  // Show Rize-style meeting reminder notification
   ipcMain.handle('meeting-reminder', (event, meeting) => {
-    showNotification('Meeting Starting Soon', `${meeting.title} starts in ${meeting.minutesUntil} minutes`, {
-      url: `http://localhost:${NEXT_PORT}/calendar`,
-      urgency: 'critical'
+    showRizeNotification({
+      taskId: meeting.id || Date.now().toString(),
+      title: meeting.title,
+      message: meeting.message || 'Your meeting is about to start!',
+      type: 'meeting',
+      dueIn: `Starts in ${meeting.minutesUntil || 5} minutes`,
+      urgent: meeting.minutesUntil <= 5,
+      duration: 30000
     });
+  });
+
+  // Schedule a task reminder from renderer
+  ipcMain.handle('schedule-task-reminder', (event, task) => {
+    scheduleTaskReminder(task);
+    return true;
+  });
+
+  // Schedule a meeting reminder from renderer
+  ipcMain.handle('schedule-meeting-reminder', (event, meeting) => {
+    scheduleMeetingReminder(meeting);
+    return true;
+  });
+
+  // Show custom Rize notification
+  ipcMain.handle('show-rize-notification', (event, data) => {
+    showRizeNotification(data);
+    return true;
+  });
+
+  // Clear all pending reminders
+  ipcMain.handle('clear-reminders', () => {
+    pendingReminders.forEach(({ timer }) => clearTimeout(timer));
+    pendingReminders.clear();
+    snoozedTasks.forEach(timer => clearTimeout(timer));
+    snoozedTasks.clear();
+    return true;
   });
 }
 
@@ -775,6 +1133,7 @@ app.whenReady().then(() => {
   createTray();
   createMenu();
   setupIPC();
+  setupNotificationActions();
   setupAutoUpdater();
 
   // Check for updates after startup (in production)

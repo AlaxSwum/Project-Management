@@ -44,11 +44,11 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <ElectronProvider>
-          <AuthProvider>
-            <div className="min-h-full" style={{ background: '#F5F5ED' }}>
-              {children}
-            </div>
-          </AuthProvider>
+        <AuthProvider>
+          <div className="min-h-full" style={{ background: '#F5F5ED' }}>
+            {children}
+          </div>
+        </AuthProvider>
         </ElectronProvider>
       </body>
     </html>

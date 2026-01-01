@@ -560,7 +560,7 @@ export default function Sidebar({ projects, onCreateProject, onCollapsedChange }
       setIsCollapsed(true);
       if (onCollapsedChange) {
         onCollapsedChange(true);
-      }
+        }
     }
   }, [onCollapsedChange]);
 

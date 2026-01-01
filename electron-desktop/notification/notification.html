@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Notification</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: transparent;
+      overflow: hidden;
+      -webkit-app-region: drag;
+    }
+
+    .notification-container {
+      width: 380px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 16px;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 40px rgba(99, 102, 241, 0.15);
+      overflow: hidden;
+      animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100px) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .notification-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .notification-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .app-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .app-icon svg {
+      width: 18px;
+      height: 18px;
+      color: white;
+    }
+
+    .app-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: 0.02em;
+    }
+
+    .notification-time {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+
+    .notification-body {
+      padding: 20px;
+    }
+
+    .notification-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .notification-type.task {
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .notification-type.meeting {
+      background: rgba(236, 72, 153, 0.15);
+    }
+
+    .notification-type.reminder {
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .notification-type-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6366f1;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .notification-type.task .notification-type-dot {
+      background: #3b82f6;
+    }
+
+    .notification-type.meeting .notification-type-dot {
+      background: #ec4899;
+    }
+
+    .notification-type.reminder .notification-type-dot {
+      background: #f59e0b;
+    }
+
+    .notification-type-text {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .notification-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .notification-message {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .notification-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-item svg {
+      width: 14px;
+      height: 14px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .meta-item span {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 10px;
+      -webkit-app-region: no-drag;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-dismiss {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      flex: 0;
+      padding: 12px;
+    }
+
+    .btn-dismiss:hover {
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+      width: 100%;
+      transform-origin: left;
+      animation: countdown 10s linear forwards, shimmer 2s linear infinite;
+    }
+
+    @keyframes countdown {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+
+    /* Urgent style */
+    .notification-container.urgent {
+      border-color: rgba(239, 68, 68, 0.3);
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(239, 68, 68, 0.2),
+        0 0 40px rgba(239, 68, 68, 0.2);
+    }
+
+    .notification-container.urgent .notification-type-dot {
+      background: #ef4444;
+    }
+
+    .notification-container.urgent .btn-primary {
+      background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .notification-container.urgent .progress-bar-fill {
+      background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+    }
+
+    /* Close button */
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      -webkit-app-region: no-drag;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .close-btn svg {
+      width: 12px;
+      height: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="notification-container" id="container">
+    <button class="close-btn" onclick="dismissNotification()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    
+    <div class="notification-header">
+      <div class="notification-header-left">
+        <div class="app-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <span class="app-name">Focus</span>
+      </div>
+      <span class="notification-time" id="time">Just now</span>
+    </div>
+    
+    <div class="notification-body">
+      <div class="notification-type task" id="type-badge">
+        <span class="notification-type-dot"></span>
+        <span class="notification-type-text" id="type-text">Task Due</span>
+      </div>
+      
+      <h2 class="notification-title" id="title">Complete project proposal</h2>
+      <p class="notification-message" id="message">This task is due soon. Would you like to mark it as complete?</p>
+      
+      <div class="notification-meta" id="meta">
+        <div class="meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <span id="due-time">Due in 15 minutes</span>
+        </div>
+      </div>
+      
+      <div class="notification-actions">
+        <button class="btn btn-primary" onclick="completeTask()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          Complete
+        </button>
+        <button class="btn btn-secondary" onclick="snoozeTask()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          Snooze
+        </button>
+        <button class="btn btn-dismiss" onclick="dismissNotification()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="progress-bar">
+      <div class="progress-bar-fill" id="progress"></div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    let notificationData = {};
+    let autoCloseTimer = null;
+
+    // Listen for notification data
+    ipcRenderer.on('notification-data', (event, data) => {
+      notificationData = data;
+      updateUI(data);
+    });
+
+    function updateUI(data) {
+      const container = document.getElementById('container');
+      const title = document.getElementById('title');
+      const message = document.getElementById('message');
+      const typeBadge = document.getElementById('type-badge');
+      const typeText = document.getElementById('type-text');
+      const dueTime = document.getElementById('due-time');
+      const progress = document.getElementById('progress');
+      const meta = document.getElementById('meta');
+
+      // Set content
+      title.textContent = data.title || 'Task Reminder';
+      message.textContent = data.message || 'You have a pending task.';
+      
+      // Set type
+      const type = data.type || 'task';
+      typeBadge.className = `notification-type ${type}`;
+      
+      switch(type) {
+        case 'task':
+          typeText.textContent = 'Task Due';
+          break;
+        case 'meeting':
+          typeText.textContent = 'Meeting Soon';
+          break;
+        case 'reminder':
+          typeText.textContent = 'Reminder';
+          break;
+        default:
+          typeText.textContent = 'Notification';
+      }
+
+      // Set urgency
+      if (data.urgent) {
+        container.classList.add('urgent');
+      }
+
+      // Set due time
+      if (data.dueIn) {
+        dueTime.textContent = data.dueIn;
+      } else if (data.dueTime) {
+        dueTime.textContent = `Due at ${data.dueTime}`;
+      } else {
+        meta.style.display = 'none';
+      }
+
+      // Auto-close timer
+      const duration = data.duration || 10000;
+      progress.style.animationDuration = `${duration}ms`;
+      
+      autoCloseTimer = setTimeout(() => {
+        dismissNotification();
+      }, duration);
+    }
+
+    function completeTask() {
+      clearTimeout(autoCloseTimer);
+      ipcRenderer.send('notification-action', {
+        action: 'complete',
+        taskId: notificationData.taskId,
+        data: notificationData
+      });
+    }
+
+    function snoozeTask() {
+      clearTimeout(autoCloseTimer);
+      ipcRenderer.send('notification-action', {
+        action: 'snooze',
+        taskId: notificationData.taskId,
+        snoozeMinutes: 15,
+        data: notificationData
+      });
+    }
+
+    function dismissNotification() {
+      clearTimeout(autoCloseTimer);
+      ipcRenderer.send('notification-action', {
+        action: 'dismiss',
+        taskId: notificationData.taskId,
+        data: notificationData
+      });
+    }
+
+    // Update time display
+    function updateTime() {
+      const timeEl = document.getElementById('time');
+      timeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    updateTime();
+  </script>
+</body>
+</html>
+
+
