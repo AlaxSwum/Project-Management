@@ -225,6 +225,8 @@ export default function GoalsPage() {
       target_time: '',
       duration_minutes: 30,
       color: '#ef4444',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: '',
     });
   };
 
