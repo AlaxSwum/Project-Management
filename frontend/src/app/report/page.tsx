@@ -540,6 +540,12 @@ export default function ReportPage() {
                 color="#ef4444"
               />
               <StatCard
+                icon={ClockIcon}
+                label="Time Blocks"
+                value={`${weeklyReport.total_time_blocks_completed || 0}/${weeklyReport.total_time_blocks}`}
+                color="#f59e0b"
+              />
+              <StatCard
                 icon={CalendarDaysIcon}
                 label="Meetings"
                 value={weeklyReport.total_meetings}
@@ -613,14 +619,13 @@ export default function ReportPage() {
                     </div>
                     <div style={{ 
                       display: 'flex', 
-                      justifyContent: 'center', 
-                      gap: 8,
-                      fontSize: 11,
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 2,
+                      fontSize: 10,
                       color: '#9ca3af',
                     }}>
-                      <span>{day.goals_completed} goals</span>
-                      <span>•</span>
-                      <span>{day.tasks_completed} tasks</span>
+                      <span>{day.goals_completed} goals • {day.time_blocks_completed}/{day.time_blocks_total} blocks</span>
                     </div>
                   </motion.div>
                 );
@@ -686,18 +691,18 @@ export default function ReportPage() {
             {/* Stats */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: 16,
               marginBottom: 32,
             }}>
               <StatCard
-                icon={CheckCircleIconSolid}
+                icon={ChartBarIcon}
                 label="Completion Rate"
                 value={`${monthlyReport.completion_rate}%`}
                 color="#10b981"
               />
               <StatCard
-                icon={CheckCircleIcon}
+                icon={CheckCircleIconSolid}
                 label="Tasks Completed"
                 value={monthlyReport.total_tasks_completed}
                 color="#3b82f6"
@@ -708,7 +713,120 @@ export default function ReportPage() {
                 value={monthlyReport.total_goals_completed}
                 color="#ef4444"
               />
+              <StatCard
+                icon={ClockIcon}
+                label="Time Blocks"
+                value={`${monthlyReport.total_time_blocks_completed || 0}/${monthlyReport.total_time_blocks || 0}`}
+                color="#f59e0b"
+              />
+              <StatCard
+                icon={CalendarDaysIcon}
+                label="Meetings"
+                value={monthlyReport.total_meetings || 0}
+                color="#8b5cf6"
+              />
             </div>
+
+            {/* Daily Calendar View */}
+            {monthlyReport.daily_reports && monthlyReport.daily_reports.length > 0 && (
+              <>
+                <h3 style={{ color: '#111827', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
+                  Daily Breakdown
+                </h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: 8,
+                  marginBottom: 32,
+                }}>
+                  {/* Day headers */}
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} style={{ 
+                      textAlign: 'center', 
+                      fontSize: 12, 
+                      color: '#9ca3af',
+                      fontWeight: 600,
+                      padding: '8px 0',
+                    }}>
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Padding for first day of month */}
+                  {Array.from({ length: new Date(monthlyReport.year, parseInt(monthlyReport.month.split('-')[1]) - 1, 1).getDay() }).map((_, i) => (
+                    <div key={`pad-${i}`} />
+                  ))}
+                  
+                  {/* Days */}
+                  {monthlyReport.daily_reports.map((day, index) => {
+                    const dayNum = new Date(day.date).getDate();
+                    const isToday = day.date === new Date().toISOString().split('T')[0];
+                    const hasActivity = day.goals_total > 0 || day.time_blocks_total > 0;
+                    const scoreColor = day.productivity_score >= 80 ? '#10b981' : 
+                                       day.productivity_score >= 50 ? '#f59e0b' : 
+                                       day.productivity_score > 0 ? '#ef4444' : '#e5e7eb';
+                    
+                    return (
+                      <motion.div
+                        key={day.date}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.01 * index }}
+                        style={{
+                          padding: 8,
+                          background: isToday ? 'rgba(59, 130, 246, 0.15)' : '#fff',
+                          border: `1px solid ${isToday ? 'rgba(59, 130, 246, 0.3)' : '#e5e7eb'}`,
+                          borderRadius: 10,
+                          textAlign: 'center',
+                          minHeight: 70,
+                        }}
+                      >
+                        <div style={{ 
+                          fontSize: 13, 
+                          fontWeight: isToday ? 700 : 500,
+                          color: isToday ? '#3b82f6' : '#111827',
+                          marginBottom: 6,
+                        }}>
+                          {dayNum}
+                        </div>
+                        {hasActivity && (
+                          <>
+                            <div style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              background: `conic-gradient(${scoreColor} ${day.productivity_score * 3.6}deg, #e5e7eb 0deg)`,
+                              margin: '0 auto 4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                              <div style={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: '50%',
+                                background: '#fff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 8,
+                                fontWeight: 700,
+                                color: '#111827',
+                              }}>
+                                {day.productivity_score}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 9, color: '#9ca3af' }}>
+                              {day.goals_completed}g {day.time_blocks_completed}b
+                            </div>
+                          </>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             {/* Goal Streaks */}
             {monthlyReport.goal_streaks.length > 0 && (

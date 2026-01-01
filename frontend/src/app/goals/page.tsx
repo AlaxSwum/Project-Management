@@ -59,6 +59,8 @@ export default function GoalsPage() {
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [completions, setCompletions] = useState<GoalCompletion[]>([]);
+  const [weeklyCompletions, setWeeklyCompletions] = useState<GoalCompletion[]>([]);
+  const [monthlyCompletions, setMonthlyCompletions] = useState<GoalCompletion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -100,9 +102,28 @@ export default function GoalsPage() {
       setGoals(goalsData || []);
 
       // Load today's completions
-      const today = new Date().toISOString().split('T')[0];
-      const { data: completionsData } = await goalsService.getCompletions(user.id, undefined, today, today);
-      setCompletions(completionsData || []);
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Calculate week start (Sunday)
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+      
+      // Calculate month start
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthStartStr = monthStart.toISOString().split('T')[0];
+      
+      // Fetch all completions in parallel
+      const [todayCompletions, weekCompletions, monthCompletions] = await Promise.all([
+        goalsService.getCompletions(user.id, undefined, todayStr, todayStr),
+        goalsService.getCompletions(user.id, undefined, weekStartStr, todayStr),
+        goalsService.getCompletions(user.id, undefined, monthStartStr, todayStr),
+      ]);
+      
+      setCompletions(todayCompletions.data || []);
+      setWeeklyCompletions(weekCompletions.data || []);
+      setMonthlyCompletions(monthCompletions.data || []);
     } catch (error) {
       console.error('Error loading goals:', error);
     } finally {
@@ -252,6 +273,21 @@ export default function GoalsPage() {
 
   const completedToday = todaysGoals.filter(g => isCompletedToday(g.id)).length;
   const totalStreak = goals.reduce((sum, g) => sum + g.streak_current, 0);
+  
+  // Calculate weekly stats
+  const today = new Date();
+  const daysIntoWeek = today.getDay() + 1; // 1-7
+  const expectedWeeklyCompletions = goals.length * daysIntoWeek;
+  const weeklyCompletionRate = expectedWeeklyCompletions > 0 
+    ? Math.round((weeklyCompletions.length / expectedWeeklyCompletions) * 100) 
+    : 0;
+  
+  // Calculate monthly stats
+  const dayOfMonth = today.getDate();
+  const expectedMonthlyCompletions = goals.length * dayOfMonth;
+  const monthlyCompletionRate = expectedMonthlyCompletions > 0 
+    ? Math.round((monthlyCompletions.length / expectedMonthlyCompletions) * 100) 
+    : 0;
 
   if (authLoading || isLoading) {
     return (
@@ -504,6 +540,94 @@ export default function GoalsPage() {
                 <p style={{ color: '#6b7280', fontSize: 13 }}>Active Goals</p>
                 <p style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>{goals.length}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Weekly Completion Rate */}
+          <div style={{
+            padding: 24,
+            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: 'rgba(16, 185, 129, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <ChartBarIcon style={{ width: 24, height: 24, color: '#10b981' }} />
+              </div>
+              <div>
+                <p style={{ color: '#6b7280', fontSize: 13 }}>This Week</p>
+                <p style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>{weeklyCompletionRate}%</p>
+              </div>
+            </div>
+            <div style={{
+              height: 6,
+              background: '#e5e7eb',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${weeklyCompletionRate}%` }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                style={{
+                  height: '100%',
+                  background: weeklyCompletionRate >= 80 ? '#10b981' : weeklyCompletionRate >= 50 ? '#f59e0b' : '#ef4444',
+                  borderRadius: 3,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Monthly Completion Rate */}
+          <div style={{
+            padding: 24,
+            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: 'rgba(251, 146, 60, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CalendarDaysIcon style={{ width: 24, height: 24, color: '#fb923c' }} />
+              </div>
+              <div>
+                <p style={{ color: '#6b7280', fontSize: 13 }}>This Month</p>
+                <p style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>{monthlyCompletionRate}%</p>
+              </div>
+            </div>
+            <div style={{
+              height: 6,
+              background: '#e5e7eb',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${monthlyCompletionRate}%` }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                style={{
+                  height: '100%',
+                  background: monthlyCompletionRate >= 80 ? '#10b981' : monthlyCompletionRate >= 50 ? '#f59e0b' : '#ef4444',
+                  borderRadius: 3,
+                }}
+              />
             </div>
           </div>
         </motion.div>

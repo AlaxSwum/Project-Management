@@ -24,6 +24,7 @@ export interface WeeklyReport {
   total_tasks_completed: number;
   total_goals_completed: number;
   total_time_blocks: number;
+  total_time_blocks_completed?: number;
   total_meetings: number;
   average_productivity: number;
   best_day: string;
@@ -34,8 +35,12 @@ export interface MonthlyReport {
   month: string; // YYYY-MM
   year: number;
   weekly_reports: WeeklyReport[];
+  daily_reports: DailyReport[];
   total_tasks_completed: number;
   total_goals_completed: number;
+  total_time_blocks: number;
+  total_time_blocks_completed: number;
+  total_meetings: number;
   goal_streaks: { goal_id: string; goal_title: string; streak: number }[];
   completion_rate: number;
   trend: 'improving' | 'stable' | 'declining';
@@ -82,6 +87,12 @@ async function getMeetingsInRange(userId: number, startDate: string, endDate: st
   return safeFetch(url);
 }
 
+// Get time blocks in a date range (batch query)
+async function getTimeBlocksInRange(userId: number, startDate: string, endDate: string): Promise<any[]> {
+  const url = `${supabaseUrl}/rest/v1/time_blocks?user_id=eq.${userId}&date=gte.${startDate}&date=lte.${endDate}&select=id,date,title,completed,type`;
+  return safeFetch(url);
+}
+
 // Get goal completions in a date range (batch query)
 async function getGoalCompletionsInRange(userId: number, startDate: string, endDate: string): Promise<GoalCompletion[]> {
   const { data } = await goalsService.getCompletions(userId, undefined, startDate, endDate);
@@ -93,36 +104,39 @@ export const reportService = {
   getDailyReport: async (userId: number, date: string): Promise<{ data: DailyReport | null; error: Error | null }> => {
     try {
       // Run all queries in parallel for speed
-      const [goals, completions, tasks, meetings] = await Promise.all([
+      const [goals, completions, tasks, meetings, timeBlocks] = await Promise.all([
         goalsService.getGoalsForDay(userId, new Date(date).getDay()),
         goalsService.getCompletions(userId, undefined, date, date),
         getTasksCompletedInRange(userId, date, date),
         getMeetingsInRange(userId, date, date),
+        getTimeBlocksInRange(userId, date, date),
       ]);
 
       const goalsCompleted = completions.data?.length || 0;
       const goalsTotal = goals.length;
       const tasksCompleted = tasks.length;
       const meetingsTotal = meetings.length;
+      const blocksTotal = timeBlocks.length;
+      const blocksCompleted = timeBlocks.filter((b: any) => b.completed).length;
 
       // Calculate productivity score
       let productivityScore = 0;
-      let totalWeight = 0;
+      let totalItems = 0;
+      let completedItems = 0;
 
-      if (goalsTotal > 0) {
-        productivityScore += (goalsCompleted / goalsTotal) * 50;
-        totalWeight += 50;
-      }
-      if (tasksCompleted > 0) {
-        productivityScore += Math.min(tasksCompleted * 10, 50);
-        totalWeight += 50;
-      }
+      // Include goals
+      totalItems += goalsTotal;
+      completedItems += goalsCompleted;
 
-      // If no data exists, base score on whether any activity happened
-      if (totalWeight === 0) {
-        productivityScore = (goalsCompleted > 0 || tasksCompleted > 0) ? 50 : 0;
-      } else {
-        productivityScore = Math.round((productivityScore / totalWeight) * 100);
+      // Include time blocks
+      totalItems += blocksTotal;
+      completedItems += blocksCompleted;
+
+      // Calculate score
+      if (totalItems > 0) {
+        productivityScore = Math.round((completedItems / totalItems) * 100);
+      } else if (tasksCompleted > 0) {
+        productivityScore = Math.min(tasksCompleted * 20, 100);
       }
 
       const report: DailyReport = {
@@ -131,8 +145,8 @@ export const reportService = {
         tasks_total: tasksCompleted,
         goals_completed: goalsCompleted,
         goals_total: goalsTotal,
-        time_blocks_completed: 0, // Time blocks not yet implemented
-        time_blocks_total: 0,
+        time_blocks_completed: blocksCompleted,
+        time_blocks_total: blocksTotal,
         meetings_attended: meetingsTotal,
         meetings_total: meetingsTotal,
         productivity_score: productivityScore,
@@ -170,11 +184,12 @@ export const reportService = {
       const endStr = weekEnd.toISOString().split('T')[0];
 
       // Batch fetch all data for the week at once
-      const [goals, allCompletions, tasks, meetings] = await Promise.all([
+      const [goals, allCompletions, tasks, meetings, timeBlocks] = await Promise.all([
         goalsService.getGoals(userId),
         getGoalCompletionsInRange(userId, startStr, endStr),
         getTasksCompletedInRange(userId, startStr, endStr),
         getMeetingsInRange(userId, startStr, endStr),
+        getTimeBlocksInRange(userId, startStr, endStr),
       ]);
 
       // Build daily reports from the batch data
@@ -194,20 +209,26 @@ export const reportService = {
         const dayCompletions = allCompletions.filter(c => c.completed_date === dateStr);
         const dayTasks = tasks.filter(t => t.completed_at?.startsWith(dateStr));
         const dayMeetings = meetings.filter(m => m.date === dateStr);
+        const dayBlocks = timeBlocks.filter((b: any) => b.date === dateStr);
+        const dayBlocksCompleted = dayBlocks.filter((b: any) => b.completed).length;
 
         // Calculate daily productivity
         const goalsCompleted = dayCompletions.length;
         const goalsTotal = dayGoals.length;
         const tasksCompleted = dayTasks.length;
+        const blocksTotal = dayBlocks.length;
+        const blocksCompleted = dayBlocksCompleted;
 
+        // Calculate productivity score based on all items
+        let totalItems = goalsTotal + blocksTotal;
+        let completedItems = goalsCompleted + blocksCompleted;
+        
         let productivityScore = 0;
-        if (goalsTotal > 0) {
-          productivityScore = Math.round((goalsCompleted / goalsTotal) * 80);
+        if (totalItems > 0) {
+          productivityScore = Math.round((completedItems / totalItems) * 100);
+        } else if (tasksCompleted > 0) {
+          productivityScore = Math.min(tasksCompleted * 20, 100);
         }
-        if (tasksCompleted > 0) {
-          productivityScore += Math.min(tasksCompleted * 5, 20);
-        }
-        productivityScore = Math.min(productivityScore, 100);
 
         dailyReports.push({
           date: dateStr,
@@ -215,8 +236,8 @@ export const reportService = {
           tasks_total: tasksCompleted,
           goals_completed: goalsCompleted,
           goals_total: goalsTotal,
-          time_blocks_completed: 0,
-          time_blocks_total: 0,
+          time_blocks_completed: blocksCompleted,
+          time_blocks_total: blocksTotal,
           meetings_attended: dayMeetings.length,
           meetings_total: dayMeetings.length,
           productivity_score: productivityScore,
@@ -226,6 +247,8 @@ export const reportService = {
       // Calculate totals
       const totalTasksCompleted = dailyReports.reduce((sum, r) => sum + r.tasks_completed, 0);
       const totalGoalsCompleted = dailyReports.reduce((sum, r) => sum + r.goals_completed, 0);
+      const totalTimeBlocks = dailyReports.reduce((sum, r) => sum + r.time_blocks_total, 0);
+      const totalTimeBlocksCompleted = dailyReports.reduce((sum, r) => sum + r.time_blocks_completed, 0);
       const totalMeetings = dailyReports.reduce((sum, r) => sum + r.meetings_total, 0);
       
       const averageProductivity = dailyReports.length > 0
@@ -248,7 +271,8 @@ export const reportService = {
         daily_reports: dailyReports,
         total_tasks_completed: totalTasksCompleted,
         total_goals_completed: totalGoalsCompleted,
-        total_time_blocks: 0,
+        total_time_blocks: totalTimeBlocks,
+        total_time_blocks_completed: totalTimeBlocksCompleted,
         total_meetings: totalMeetings,
         average_productivity: averageProductivity,
         best_day: bestDay,
@@ -270,6 +294,7 @@ export const reportService = {
           total_tasks_completed: 0,
           total_goals_completed: 0,
           total_time_blocks: 0,
+          total_time_blocks_completed: 0,
           total_meetings: 0,
           average_productivity: 0,
           best_day: startStr,
@@ -288,14 +313,64 @@ export const reportService = {
       const endStr = lastDay.toISOString().split('T')[0];
 
       // Batch fetch all data for the month
-      const [goals, allCompletions, tasks] = await Promise.all([
+      const [goals, allCompletions, tasks, meetings, timeBlocks] = await Promise.all([
         goalsService.getGoals(userId),
         getGoalCompletionsInRange(userId, startStr, endStr),
         getTasksCompletedInRange(userId, startStr, endStr),
+        getMeetingsInRange(userId, startStr, endStr),
+        getTimeBlocksInRange(userId, startStr, endStr),
       ]);
 
       const totalTasksCompleted = tasks.length;
       const totalGoalsCompleted = allCompletions.length;
+      const totalMeetings = meetings.length;
+      const totalTimeBlocks = timeBlocks.length;
+      const totalTimeBlocksCompleted = timeBlocks.filter((b: any) => b.completed).length;
+
+      // Build daily reports for the month
+      const daysInMonth = lastDay.getDate();
+      const dailyReports: DailyReport[] = [];
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayOfWeek = date.getDay();
+
+        // Filter data for this specific day
+        const dayGoals = (goals.data || []).filter(g => 
+          g.target_frequency === 'daily' || 
+          (g.target_frequency === 'monthly' && g.target_days_of_month?.includes(day)) ||
+          (g.target_days && g.target_days.includes(dayOfWeek))
+        );
+        const dayCompletions = allCompletions.filter(c => c.completed_date === dateStr);
+        const dayTasks = tasks.filter(t => t.completed_at?.startsWith(dateStr));
+        const dayMeetings = meetings.filter(m => m.date === dateStr);
+        const dayBlocks = timeBlocks.filter((b: any) => b.date === dateStr);
+        const dayBlocksCompleted = dayBlocks.filter((b: any) => b.completed).length;
+
+        const goalsCompleted = dayCompletions.length;
+        const goalsTotal = dayGoals.length;
+        const blocksTotal = dayBlocks.length;
+        const blocksCompleted = dayBlocksCompleted;
+
+        // Calculate productivity score
+        let totalItems = goalsTotal + blocksTotal;
+        let completedItems = goalsCompleted + blocksCompleted;
+        let productivityScore = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+        dailyReports.push({
+          date: dateStr,
+          tasks_completed: dayTasks.length,
+          tasks_total: dayTasks.length,
+          goals_completed: goalsCompleted,
+          goals_total: goalsTotal,
+          time_blocks_completed: blocksCompleted,
+          time_blocks_total: blocksTotal,
+          meetings_attended: dayMeetings.length,
+          meetings_total: dayMeetings.length,
+          productivity_score: productivityScore,
+        });
+      }
 
       // Get goal streaks
       const goalStreaks = (goals.data || []).map(goal => ({
@@ -304,34 +379,30 @@ export const reportService = {
         streak: goal.streak_current,
       })).sort((a, b) => b.streak - a.streak);
 
-      // Calculate completion rate
-      const daysInMonth = lastDay.getDate();
-      const expectedCompletions = daysInMonth * (goals.data?.length || 0);
-      const completionRate = expectedCompletions > 0
-        ? Math.round((totalGoalsCompleted / expectedCompletions) * 100)
-        : 0;
+      // Calculate overall completion rate
+      const totalItems = dailyReports.reduce((sum, r) => sum + r.goals_total + r.time_blocks_total, 0);
+      const completedItems = dailyReports.reduce((sum, r) => sum + r.goals_completed + r.time_blocks_completed, 0);
+      const completionRate = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-      // Simple trend calculation
+      // Calculate trend
       const midPoint = Math.floor(daysInMonth / 2);
-      const firstHalfCompletions = allCompletions.filter(c => {
-        const day = new Date(c.completed_date).getDate();
-        return day <= midPoint;
-      }).length;
-      const secondHalfCompletions = allCompletions.filter(c => {
-        const day = new Date(c.completed_date).getDate();
-        return day > midPoint;
-      }).length;
+      const firstHalfScore = dailyReports.slice(0, midPoint).reduce((sum, r) => sum + r.productivity_score, 0);
+      const secondHalfScore = dailyReports.slice(midPoint).reduce((sum, r) => sum + r.productivity_score, 0);
 
       let trend: 'improving' | 'stable' | 'declining' = 'stable';
-      if (secondHalfCompletions > firstHalfCompletions * 1.2) trend = 'improving';
-      else if (secondHalfCompletions < firstHalfCompletions * 0.8) trend = 'declining';
+      if (secondHalfScore > firstHalfScore * 1.2) trend = 'improving';
+      else if (secondHalfScore < firstHalfScore * 0.8) trend = 'declining';
 
       const report: MonthlyReport = {
         month: `${year}-${String(month).padStart(2, '0')}`,
         year,
-        weekly_reports: [], // Not loading weekly reports to avoid nested queries
+        weekly_reports: [],
+        daily_reports: dailyReports,
         total_tasks_completed: totalTasksCompleted,
         total_goals_completed: totalGoalsCompleted,
+        total_time_blocks: totalTimeBlocks,
+        total_time_blocks_completed: totalTimeBlocksCompleted,
+        total_meetings: totalMeetings,
         goal_streaks: goalStreaks,
         completion_rate: completionRate,
         trend,
@@ -345,8 +416,12 @@ export const reportService = {
           month: `${year}-${String(month).padStart(2, '0')}`,
           year,
           weekly_reports: [],
+          daily_reports: [],
           total_tasks_completed: 0,
           total_goals_completed: 0,
+          total_time_blocks: 0,
+          total_time_blocks_completed: 0,
+          total_meetings: 0,
           goal_streaks: [],
           completion_rate: 0,
           trend: 'stable',
