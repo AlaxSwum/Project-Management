@@ -162,7 +162,7 @@ export default function ReportPage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)',
+        background: '#f8f9fa',
       }}>
         <motion.div
           animate={{ rotate: 360 }}
@@ -180,7 +180,7 @@ export default function ReportPage() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
       <Sidebar 
         projects={[]} 
         onCreateProject={() => {}}
@@ -207,10 +207,10 @@ export default function ReportPage() {
                 alignItems: 'center',
                 gap: 8,
                 padding: '8px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
                 borderRadius: 8,
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4b5563',
                 cursor: 'pointer',
                 fontSize: 14,
               }}
@@ -223,7 +223,7 @@ export default function ReportPage() {
           <h1 style={{ 
             fontSize: 36, 
             fontWeight: 700, 
-            color: '#fff',
+            color: '#111827',
             marginBottom: 8,
             display: 'flex',
             alignItems: 'center',
@@ -232,7 +232,7 @@ export default function ReportPage() {
             <ChartBarIcon style={{ width: 40, height: 40, color: '#3b82f6' }} />
             Productivity Report
           </h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 16 }}>
+          <p style={{ color: '#6b7280', fontSize: 16 }}>
             Track your progress and stay on top of your goals
           </p>
         </motion.div>
@@ -254,7 +254,7 @@ export default function ReportPage() {
           {/* View Mode Toggle */}
           <div style={{
             display: 'flex',
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: '#fff',
             borderRadius: 12,
             padding: 4,
           }}>
@@ -288,9 +288,9 @@ export default function ReportPage() {
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.7)',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                color: '#4b5563',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -300,7 +300,7 @@ export default function ReportPage() {
               <ArrowLeftIcon style={{ width: 18, height: 18 }} />
             </button>
 
-            <span style={{ color: '#fff', fontSize: 16, fontWeight: 600, minWidth: 200, textAlign: 'center' }}>
+            <span style={{ color: '#111827', fontSize: 16, fontWeight: 600, minWidth: 200, textAlign: 'center' }}>
               {getDateLabel()}
             </span>
 
@@ -310,9 +310,9 @@ export default function ReportPage() {
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.7)',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                color: '#4b5563',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -348,7 +348,7 @@ export default function ReportPage() {
             transition={{ delay: 0.2 }}
             style={{ marginBottom: 32 }}
           >
-            <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
+            <h2 style={{ color: '#111827', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
               Insights
             </h2>
             <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
@@ -384,7 +384,7 @@ export default function ReportPage() {
                       </div>
                       <h3 style={{ color, fontSize: 15, fontWeight: 600 }}>{insight.title}</h3>
                     </div>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, lineHeight: 1.5 }}>
+                    <p style={{ color: '#4b5563', fontSize: 13, lineHeight: 1.5 }}>
                       {insight.description}
                     </p>
                   </motion.div>
@@ -410,7 +410,7 @@ export default function ReportPage() {
               marginBottom: 24,
               textAlign: 'center',
             }}>
-              <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14, marginBottom: 8 }}>
+              <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 8 }}>
                 Productivity Score
               </p>
               <div style={{ 
@@ -428,7 +428,7 @@ export default function ReportPage() {
                 maxWidth: 400,
                 margin: '0 auto',
                 height: 12,
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: '#e5e7eb',
                 borderRadius: 6,
                 overflow: 'hidden',
               }}>
@@ -520,7 +520,7 @@ export default function ReportPage() {
             </div>
 
             {/* Daily Breakdown */}
-            <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
+            <h3 style={{ color: '#111827', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
               Daily Breakdown
             </h3>
             <div style={{
@@ -573,12 +573,12 @@ export default function ReportPage() {
                         width: 44,
                         height: 44,
                         borderRadius: '50%',
-                        background: '#1a1a2e',
+                        background: '#fff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}>
-                        <span style={{ color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                        <span style={{ color: '#111827', fontSize: 14, fontWeight: 700 }}>
                           {day.productivity_score}
                         </span>
                       </div>
@@ -588,7 +588,7 @@ export default function ReportPage() {
                       justifyContent: 'center', 
                       gap: 8,
                       fontSize: 11,
-                      color: 'rgba(255, 255, 255, 0.5)',
+                      color: '#9ca3af',
                     }}>
                       <span>{day.goals_completed} goals</span>
                       <span>•</span>
@@ -645,7 +645,7 @@ export default function ReportPage() {
                   {monthlyReport.trend === 'improving' ? 'Great Progress!' :
                    monthlyReport.trend === 'declining' ? 'Needs Attention' : 'Steady Performance'}
                 </h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14 }}>
+                <p style={{ color: '#6b7280', fontSize: 14 }}>
                   {monthlyReport.trend === 'improving' 
                     ? 'Your productivity is trending upward this month!'
                     : monthlyReport.trend === 'declining'
@@ -685,7 +685,7 @@ export default function ReportPage() {
             {/* Goal Streaks */}
             {monthlyReport.goal_streaks.length > 0 && (
               <>
-                <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
+                <h3 style={{ color: '#111827', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
                   Top Streaks
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -700,8 +700,8 @@ export default function ReportPage() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: 16,
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        background: '#fff',
+                        border: '1px solid #e5e7eb',
                         borderRadius: 12,
                       }}
                     >
@@ -714,7 +714,7 @@ export default function ReportPage() {
                         }}>
                           #{index + 1}
                         </span>
-                        <span style={{ color: '#fff', fontSize: 15 }}>{streak.goal_title}</span>
+                        <span style={{ color: '#111827', fontSize: 15 }}>{streak.goal_title}</span>
                       </div>
                       <div style={{
                         display: 'flex',
@@ -776,10 +776,10 @@ function StatCard({
           <Icon style={{ width: 22, height: 22, color }} />
         </div>
       </div>
-      <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 13, marginBottom: 4 }}>
+      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 4 }}>
         {label}
       </p>
-      <p style={{ color: '#fff', fontSize: 28, fontWeight: 700 }}>
+      <p style={{ color: '#111827', fontSize: 28, fontWeight: 700 }}>
         {value}
       </p>
     </motion.div>

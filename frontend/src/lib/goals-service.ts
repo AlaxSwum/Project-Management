@@ -48,15 +48,15 @@ export interface GoalStats {
 
 // Goal categories with colors
 export const GOAL_CATEGORIES = [
-  { id: 'fitness', name: 'Fitness', color: '#ef4444', icon: '💪' },
-  { id: 'health', name: 'Health', color: '#10b981', icon: '🧘' },
-  { id: 'learning', name: 'Learning', color: '#8b5cf6', icon: '📚' },
-  { id: 'productivity', name: 'Productivity', color: '#3b82f6', icon: '⚡' },
-  { id: 'creative', name: 'Creative', color: '#f59e0b', icon: '🎨' },
-  { id: 'mindfulness', name: 'Mindfulness', color: '#06b6d4', icon: '🧠' },
-  { id: 'social', name: 'Social', color: '#ec4899', icon: '👥' },
-  { id: 'finance', name: 'Finance', color: '#84cc16', icon: '💰' },
-  { id: 'custom', name: 'Custom', color: '#64748b', icon: '⭐' },
+  { id: 'fitness', name: 'Fitness', color: '#ef4444' },
+  { id: 'health', name: 'Health', color: '#10b981' },
+  { id: 'learning', name: 'Learning', color: '#8b5cf6' },
+  { id: 'productivity', name: 'Productivity', color: '#3b82f6' },
+  { id: 'creative', name: 'Creative', color: '#f59e0b' },
+  { id: 'mindfulness', name: 'Mindfulness', color: '#06b6d4' },
+  { id: 'social', name: 'Social', color: '#ec4899' },
+  { id: 'finance', name: 'Finance', color: '#84cc16' },
+  { id: 'custom', name: 'Custom', color: '#64748b' },
 ];
 
 // Supabase URL and key for direct HTTP requests

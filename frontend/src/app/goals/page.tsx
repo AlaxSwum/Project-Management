@@ -221,7 +221,7 @@ export default function GoalsPage() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)',
+        background: '#f8f9fa',
       }}>
         <motion.div
           animate={{ rotate: 360 }}
@@ -230,8 +230,8 @@ export default function GoalsPage() {
             width: 40,
             height: 40,
             borderRadius: '50%',
-            border: '3px solid rgba(251, 146, 60, 0.2)',
-            borderTopColor: '#fb923c',
+            border: '3px solid rgba(59, 130, 246, 0.2)',
+            borderTopColor: '#3b82f6',
           }}
         />
       </div>
@@ -239,7 +239,7 @@ export default function GoalsPage() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
       <Sidebar 
         projects={[]} 
         onCreateProject={() => {}}
@@ -266,10 +266,10 @@ export default function GoalsPage() {
                 alignItems: 'center',
                 gap: 8,
                 padding: '8px 16px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
                 borderRadius: 8,
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#6b7280',
                 cursor: 'pointer',
                 fontSize: 14,
               }}
@@ -280,18 +280,17 @@ export default function GoalsPage() {
           </div>
 
           <h1 style={{ 
-            fontSize: 36, 
+            fontSize: 28, 
             fontWeight: 700, 
-            color: '#fff',
+            color: '#111827',
             marginBottom: 8,
             display: 'flex',
             alignItems: 'center',
             gap: 12,
           }}>
-            <FireIcon style={{ width: 40, height: 40, color: '#fb923c' }} />
             Goals
           </h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 16 }}>
+          <p style={{ color: '#6b7280', fontSize: 15 }}>
             Build consistency and discipline with daily goals
           </p>
         </motion.div>
@@ -311,32 +310,33 @@ export default function GoalsPage() {
           {/* Today's Progress */}
           <div style={{
             padding: 24,
-            background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(251, 146, 60, 0.05) 100%)',
-            border: '1px solid rgba(251, 146, 60, 0.2)',
+            background: '#fff',
+            border: '1px solid #e5e7eb',
             borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: 'rgba(251, 146, 60, 0.2)',
+                background: 'rgba(59, 130, 246, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-                <CheckCircleIconSolid style={{ width: 24, height: 24, color: '#fb923c' }} />
+                <CheckCircleIconSolid style={{ width: 24, height: 24, color: '#3b82f6' }} />
               </div>
               <div>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 13 }}>Today's Progress</p>
-                <p style={{ color: '#fff', fontSize: 24, fontWeight: 700 }}>
+                <p style={{ color: '#6b7280', fontSize: 13 }}>Today's Progress</p>
+                <p style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>
                   {completedToday} / {todaysGoals.length}
                 </p>
               </div>
             </div>
             <div style={{
               height: 8,
-              background: 'rgba(251, 146, 60, 0.2)',
+              background: '#e5e7eb',
               borderRadius: 4,
               overflow: 'hidden',
             }}>
@@ -346,7 +346,7 @@ export default function GoalsPage() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 style={{
                   height: '100%',
-                  background: 'linear-gradient(90deg, #fb923c, #f97316)',
+                  background: 'linear-gradient(90deg, #3b82f6, #2563eb)',
                   borderRadius: 4,
                 }}
               />
@@ -356,16 +356,17 @@ export default function GoalsPage() {
           {/* Total Streak */}
           <div style={{
             padding: 24,
-            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
+            background: '#fff',
+            border: '1px solid #e5e7eb',
             borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: 'rgba(239, 68, 68, 0.2)',
+                background: 'rgba(239, 68, 68, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -373,8 +374,8 @@ export default function GoalsPage() {
                 <FireIconSolid style={{ width: 24, height: 24, color: '#ef4444' }} />
               </div>
               <div>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 13 }}>Total Streak Days</p>
-                <p style={{ color: '#fff', fontSize: 24, fontWeight: 700 }}>{totalStreak}</p>
+                <p style={{ color: '#6b7280', fontSize: 13 }}>Total Streak Days</p>
+                <p style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>{totalStreak}</p>
               </div>
             </div>
           </div>
@@ -382,16 +383,17 @@ export default function GoalsPage() {
           {/* Active Goals */}
           <div style={{
             padding: 24,
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
-            border: '1px solid rgba(139, 92, 246, 0.2)',
+            background: '#fff',
+            border: '1px solid #e5e7eb',
             borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: 'rgba(139, 92, 246, 0.2)',
+                background: 'rgba(139, 92, 246, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -399,8 +401,8 @@ export default function GoalsPage() {
                 <TrophyIcon style={{ width: 24, height: 24, color: '#8b5cf6' }} />
               </div>
               <div>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 13 }}>Active Goals</p>
-                <p style={{ color: '#fff', fontSize: 24, fontWeight: 700 }}>{goals.length}</p>
+                <p style={{ color: '#6b7280', fontSize: 13 }}>Active Goals</p>
+                <p style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>{goals.length}</p>
               </div>
             </div>
           </div>
@@ -444,7 +446,7 @@ export default function GoalsPage() {
           <h2 style={{ 
             fontSize: 20, 
             fontWeight: 600, 
-            color: '#fff', 
+            color: '#111827', 
             marginBottom: 16,
             display: 'flex',
             alignItems: 'center',
@@ -458,12 +460,12 @@ export default function GoalsPage() {
             <div style={{
               padding: 48,
               textAlign: 'center',
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
               borderRadius: 16,
             }}>
-              <FireIcon style={{ width: 48, height: 48, color: 'rgba(255, 255, 255, 0.2)', margin: '0 auto 16px' }} />
-              <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 16 }}>
+              <FireIcon style={{ width: 48, height: 48, color: '#d1d5db', margin: '0 auto 16px' }} />
+              <p style={{ color: '#9ca3af', fontSize: 16 }}>
                 No goals scheduled for today. Create one to get started!
               </p>
             </div>
@@ -514,7 +516,7 @@ export default function GoalsPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      {completed && <CheckIcon style={{ width: 20, height: 20, color: '#fff' }} />}
+                      {completed && <CheckIcon style={{ width: 20, height: 20, color: '#111827' }} />}
                     </motion.button>
 
                     {/* Goal Info */}
@@ -549,7 +551,7 @@ export default function GoalsPage() {
                         )}
                       </div>
                       <h3 style={{ 
-                        color: '#fff', 
+                        color: '#111827', 
                         fontSize: 16, 
                         fontWeight: 600,
                         textDecoration: completed ? 'line-through' : 'none',
@@ -559,7 +561,7 @@ export default function GoalsPage() {
                       </h3>
                       {goal.target_time && (
                         <p style={{ 
-                          color: 'rgba(255, 255, 255, 0.5)', 
+                          color: '#9ca3af', 
                           fontSize: 13,
                           display: 'flex',
                           alignItems: 'center',
@@ -602,7 +604,7 @@ export default function GoalsPage() {
             <h2 style={{ 
               fontSize: 20, 
               fontWeight: 600, 
-              color: '#fff', 
+              color: '#111827', 
               marginBottom: 16,
             }}>
               All Goals
@@ -626,8 +628,8 @@ export default function GoalsPage() {
                     onClick={() => setSelectedGoal(goal)}
                     style={{
                       padding: 20,
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      background: '#fff',
+                      border: '1px solid #e5e7eb',
                       borderRadius: 16,
                       cursor: 'pointer',
                     }}
@@ -646,10 +648,10 @@ export default function GoalsPage() {
                         <CategoryIcon style={{ width: 24, height: 24, color: goal.color }} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ color: '#fff', fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
+                        <h3 style={{ color: '#111827', fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
                           {goal.title}
                         </h3>
-                        <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}>
+                        <p style={{ color: '#9ca3af', fontSize: 12 }}>
                           {goal.target_frequency === 'daily' ? 'Every day' : 
                            goal.target_days?.map(d => DAYS_OF_WEEK[d].name).join(', ')}
                         </p>
@@ -708,21 +710,21 @@ export default function GoalsPage() {
                 maxWidth: 500,
                 maxHeight: '90vh',
                 overflow: 'auto',
-                background: '#1a1a2e',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
                 borderRadius: 20,
                 padding: 32,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-                <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 700 }}>Create New Goal</h2>
+                <h2 style={{ color: '#111827', fontSize: 24, fontWeight: 700 }}>Create New Goal</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   style={{
                     width: 36,
                     height: 36,
                     borderRadius: 10,
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: '#f3f4f6',
                     border: 'none',
                     cursor: 'pointer',
                     display: 'flex',
@@ -730,13 +732,13 @@ export default function GoalsPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <XMarkIcon style={{ width: 20, height: 20, color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <XMarkIcon style={{ width: 20, height: 20, color: '#9ca3af' }} />
                 </button>
               </div>
 
               {/* Goal Title */}
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                   Goal Title *
                 </label>
                 <input
@@ -747,10 +749,10 @@ export default function GoalsPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#f3f4f6',
+                    border: '1px solid #e5e7eb',
                     borderRadius: 10,
-                    color: '#fff',
+                    color: '#111827',
                     fontSize: 15,
                     outline: 'none',
                   }}
@@ -759,7 +761,7 @@ export default function GoalsPage() {
 
               {/* Description */}
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                   Description (optional)
                 </label>
                 <textarea
@@ -770,10 +772,10 @@ export default function GoalsPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#f3f4f6',
+                    border: '1px solid #e5e7eb',
                     borderRadius: 10,
-                    color: '#fff',
+                    color: '#111827',
                     fontSize: 15,
                     outline: 'none',
                     resize: 'none',
@@ -783,7 +785,7 @@ export default function GoalsPage() {
 
               {/* Category */}
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                   Category
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -801,7 +803,7 @@ export default function GoalsPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      {cat.icon} {cat.name}
+                      {cat.name}
                     </button>
                   ))}
                 </div>
@@ -809,7 +811,7 @@ export default function GoalsPage() {
 
               {/* Frequency */}
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                   Frequency
                 </label>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -838,7 +840,7 @@ export default function GoalsPage() {
               {/* Days Selection (for custom frequency) */}
               {formData.target_frequency === 'custom' && (
                 <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                  <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                     Select Days
                   </label>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -872,7 +874,7 @@ export default function GoalsPage() {
               {/* Time and Duration */}
               <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                  <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                     Target Time (optional)
                   </label>
                   <input
@@ -882,17 +884,17 @@ export default function GoalsPage() {
                     style={{
                       width: '100%',
                       padding: '12px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: '#f3f4f6',
+                      border: '1px solid #e5e7eb',
                       borderRadius: 10,
-                      color: '#fff',
+                      color: '#111827',
                       fontSize: 15,
                       outline: 'none',
                     }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 8 }}>
+                  <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                     Duration (minutes)
                   </label>
                   <input
@@ -904,10 +906,10 @@ export default function GoalsPage() {
                     style={{
                       width: '100%',
                       padding: '12px 16px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: '#f3f4f6',
+                      border: '1px solid #e5e7eb',
                       borderRadius: 10,
-                      color: '#fff',
+                      color: '#111827',
                       fontSize: 15,
                       outline: 'none',
                     }}
@@ -925,7 +927,7 @@ export default function GoalsPage() {
                   background: formData.title ? 'linear-gradient(135deg, #fb923c, #f97316)' : 'rgba(255, 255, 255, 0.1)',
                   border: 'none',
                   borderRadius: 12,
-                  color: '#fff',
+                  color: '#111827',
                   fontSize: 16,
                   fontWeight: 600,
                   cursor: formData.title ? 'pointer' : 'not-allowed',
@@ -968,8 +970,8 @@ export default function GoalsPage() {
                 maxWidth: 500,
                 maxHeight: '90vh',
                 overflow: 'auto',
-                background: '#1a1a2e',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
                 borderRadius: 20,
                 padding: 32,
               }}
@@ -991,7 +993,7 @@ export default function GoalsPage() {
                     })()}
                   </div>
                   <div>
-                    <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700 }}>{selectedGoal.title}</h2>
+                    <h2 style={{ color: '#111827', fontSize: 22, fontWeight: 700 }}>{selectedGoal.title}</h2>
                     <span style={{
                       padding: '2px 8px',
                       background: `${selectedGoal.color}20`,
@@ -1011,7 +1013,7 @@ export default function GoalsPage() {
                     width: 36,
                     height: 36,
                     borderRadius: 10,
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: '#f3f4f6',
                     border: 'none',
                     cursor: 'pointer',
                     display: 'flex',
@@ -1019,7 +1021,7 @@ export default function GoalsPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <XMarkIcon style={{ width: 20, height: 20, color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <XMarkIcon style={{ width: 20, height: 20, color: '#9ca3af' }} />
                 </button>
               </div>
 
@@ -1037,8 +1039,8 @@ export default function GoalsPage() {
                   textAlign: 'center',
                 }}>
                   <FireIconSolid style={{ width: 32, height: 32, color: '#ef4444', margin: '0 auto 8px' }} />
-                  <p style={{ color: '#fff', fontSize: 28, fontWeight: 700 }}>{selectedGoal.streak_current}</p>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}>Current Streak</p>
+                  <p style={{ color: '#111827', fontSize: 28, fontWeight: 700 }}>{selectedGoal.streak_current}</p>
+                  <p style={{ color: '#9ca3af', fontSize: 12 }}>Current Streak</p>
                 </div>
                 <div style={{
                   flex: 1,
@@ -1048,26 +1050,26 @@ export default function GoalsPage() {
                   textAlign: 'center',
                 }}>
                   <TrophyIcon style={{ width: 32, height: 32, color: '#8b5cf6', margin: '0 auto 8px' }} />
-                  <p style={{ color: '#fff', fontSize: 28, fontWeight: 700 }}>{selectedGoal.streak_best}</p>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}>Best Streak</p>
+                  <p style={{ color: '#111827', fontSize: 28, fontWeight: 700 }}>{selectedGoal.streak_best}</p>
+                  <p style={{ color: '#9ca3af', fontSize: 12 }}>Best Streak</p>
                 </div>
               </div>
 
               {/* Stats */}
               {goalStats && (
                 <div style={{ marginBottom: 24 }}>
-                  <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
+                  <h3 style={{ color: '#111827', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
                     Statistics
                   </h3>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14 }}>This Week</span>
+                      <span style={{ color: '#6b7280', fontSize: 14 }}>This Week</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{
                           width: 100,
                           height: 6,
-                          background: 'rgba(255, 255, 255, 0.1)',
+                          background: '#e5e7eb',
                           borderRadius: 3,
                           overflow: 'hidden',
                         }}>
@@ -1078,19 +1080,19 @@ export default function GoalsPage() {
                             borderRadius: 3,
                           }} />
                         </div>
-                        <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>
+                        <span style={{ color: '#111827', fontSize: 14, fontWeight: 600 }}>
                           {Math.round(goalStats.completion_rate_weekly)}%
                         </span>
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14 }}>This Month</span>
+                      <span style={{ color: '#6b7280', fontSize: 14 }}>This Month</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{
                           width: 100,
                           height: 6,
-                          background: 'rgba(255, 255, 255, 0.1)',
+                          background: '#e5e7eb',
                           borderRadius: 3,
                           overflow: 'hidden',
                         }}>
@@ -1101,15 +1103,15 @@ export default function GoalsPage() {
                             borderRadius: 3,
                           }} />
                         </div>
-                        <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>
+                        <span style={{ color: '#111827', fontSize: 14, fontWeight: 600 }}>
                           {Math.round(goalStats.completion_rate_monthly)}%
                         </span>
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 14 }}>All Time</span>
-                      <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>
+                      <span style={{ color: '#6b7280', fontSize: 14 }}>All Time</span>
+                      <span style={{ color: '#111827', fontSize: 14, fontWeight: 600 }}>
                         {goalStats.total_completions} completions
                       </span>
                     </div>
@@ -1120,17 +1122,17 @@ export default function GoalsPage() {
               {/* Schedule Info */}
               <div style={{
                 padding: 16,
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: '#f9fafb',
                 borderRadius: 12,
                 marginBottom: 24,
               }}>
-                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: 13, marginBottom: 8 }}>Schedule</p>
-                <p style={{ color: '#fff', fontSize: 15 }}>
+                <p style={{ color: '#9ca3af', fontSize: 13, marginBottom: 8 }}>Schedule</p>
+                <p style={{ color: '#111827', fontSize: 15 }}>
                   {selectedGoal.target_frequency === 'daily' ? 'Every day' : 
                    selectedGoal.target_days?.map(d => DAYS_OF_WEEK[d].fullName).join(', ')}
                 </p>
                 {selectedGoal.target_time && (
-                  <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 14, marginTop: 4 }}>
+                  <p style={{ color: '#4b5563', fontSize: 14, marginTop: 4 }}>
                     at {selectedGoal.target_time} • {selectedGoal.duration_minutes} minutes
                   </p>
                 )}
