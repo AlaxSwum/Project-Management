@@ -183,7 +183,7 @@ export default function ReportPage() {
     <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)' }}>
       <Sidebar 
         projects={[]} 
-        onCollapseChange={setIsSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
       />
 
       <main style={{
