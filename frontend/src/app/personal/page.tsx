@@ -263,7 +263,12 @@ const getWeekDays = (date: Date): Date[] => {
 };
 
 const generateId = (): string => {
-  return Math.random().toString(36).substr(2, 9);
+  // Generate a proper UUID v4 for database compatibility
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };
 
 // Calculate checklist completion percentage
@@ -1168,14 +1173,18 @@ export default function PersonalPage() {
       const dbRecord = mapBlockToDb(block, user?.id);
       dbRecord.updated_at = new Date().toISOString();
       
+      console.log('Saving block to database:', { id: dbRecord.id, user_id: dbRecord.user_id, title: dbRecord.title });
+      
       const { error } = await supabase
         .from('time_blocks')
         .upsert(dbRecord);
 
       if (error) {
-        console.log('Database save error, using localStorage:', error.message);
+        console.error('Database save error:', error.code, error.message, error.details);
         return;
       }
+      
+      console.log('Block saved successfully:', dbRecord.id);
 
       // Refresh from database
       await fetchBlocks();
