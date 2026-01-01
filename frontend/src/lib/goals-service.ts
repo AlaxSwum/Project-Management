@@ -63,7 +63,37 @@ export const GOAL_CATEGORIES = [
 const supabaseUrl = 'https://bayyefskgflbyyuwrlgm.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM';
 
+// Check if tables exist (caches result to avoid repeated checks)
+let tablesExist: boolean | null = null;
+
+const checkTablesExist = async (): Promise<boolean> => {
+  if (tablesExist !== null) return tablesExist;
+  
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/personal_goals?limit=1`,
+      {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    tablesExist = response.ok || response.status !== 404;
+    return tablesExist;
+  } catch {
+    return false;
+  }
+};
+
 export const goalsService = {
+  // Check if goals feature is available
+  isAvailable: async (): Promise<boolean> => {
+    return await checkTablesExist();
+  },
+
   // Get all goals for a user
   getGoals: async (userId: number): Promise<{ data: Goal[] | null; error: Error | null }> => {
     try {
@@ -79,12 +109,13 @@ export const goalsService = {
         }
       );
 
+      // If table doesn't exist (404) or any other error, return empty array gracefully
       if (!response.ok) {
-        // If table doesn't exist, return empty array
-        if (response.status === 404) {
+        if (response.status === 404 || response.status === 400) {
+          console.warn('Goals table not found - please run the SQL migration');
           return { data: [], error: null };
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return { data: [], error: new Error(`HTTP error: ${response.status}`) };
       }
 
       const data = await response.json();
@@ -119,6 +150,9 @@ export const goalsService = {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          return { data: null, error: new Error('Goals table not found. Please run the SQL migration in Supabase.') };
+        }
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
@@ -151,6 +185,9 @@ export const goalsService = {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          return { data: null, error: new Error('Goals table not found') };
+        }
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
@@ -179,7 +216,7 @@ export const goalsService = {
         }),
       });
 
-      if (!response.ok) {
+      if (!response.ok && response.status !== 404) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -221,11 +258,12 @@ export const goalsService = {
         },
       });
 
+      // Handle missing table gracefully
       if (!response.ok) {
-        if (response.status === 404) {
+        if (response.status === 404 || response.status === 400) {
           return { data: [], error: null };
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return { data: [], error: new Error(`HTTP error: ${response.status}`) };
       }
 
       const data = await response.json();
@@ -288,6 +326,9 @@ export const goalsService = {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          return { data: null, error: new Error('Tables not found. Please run the SQL migration.') };
+        }
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
@@ -321,7 +362,7 @@ export const goalsService = {
         }
       );
 
-      if (!response.ok) {
+      if (!response.ok && response.status !== 404) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -454,26 +495,28 @@ export const goalsService = {
       );
 
       if (!goalResponse.ok) {
-        throw new Error('Failed to fetch goal');
+        return { data: null, error: new Error('Failed to fetch goal') };
       }
 
       const goals = await goalResponse.json();
       const goal = goals?.[0];
 
-      if (!goal || !allCompletions) {
-        throw new Error('Goal not found');
+      if (!goal) {
+        return { data: null, error: new Error('Goal not found') };
       }
 
+      const completions = allCompletions || [];
+
       // Calculate completions for different periods
-      const completionsThisWeek = allCompletions.filter(c => 
+      const completionsThisWeek = completions.filter(c => 
         new Date(c.completed_date) >= startOfWeek
       ).length;
 
-      const completionsThisMonth = allCompletions.filter(c => 
+      const completionsThisMonth = completions.filter(c => 
         new Date(c.completed_date) >= startOfMonth
       ).length;
 
-      const completionsThisYear = allCompletions.filter(c => 
+      const completionsThisYear = completions.filter(c => 
         new Date(c.completed_date) >= startOfYear
       ).length;
 
@@ -499,17 +542,17 @@ export const goalsService = {
       }
 
       const stats: GoalStats = {
-        total_completions: allCompletions.length,
+        total_completions: completions.length,
         current_streak: goal.streak_current || 0,
         best_streak: goal.streak_best || 0,
-        completion_rate_daily: expectedDaily > 0 ? Math.min(100, (allCompletions.length / expectedDaily) * 100) : 0,
+        completion_rate_daily: expectedDaily > 0 ? Math.min(100, (completions.length / expectedDaily) * 100) : 0,
         completion_rate_weekly: expectedWeekly > 0 ? Math.min(100, (completionsThisWeek / expectedWeekly) * 100) : 0,
         completion_rate_monthly: expectedMonthly > 0 ? Math.min(100, (completionsThisMonth / expectedMonthly) * 100) : 0,
         completion_rate_yearly: expectedYearly > 0 ? Math.min(100, (completionsThisYear / expectedYearly) * 100) : 0,
         completions_this_week: completionsThisWeek,
         completions_this_month: completionsThisMonth,
         completions_this_year: completionsThisYear,
-        last_completed: allCompletions[0]?.completed_date,
+        last_completed: completions[0]?.completed_date,
       };
 
       return { data: stats, error: null };
@@ -561,4 +604,3 @@ export const goalsService = {
 };
 
 export default goalsService;
-

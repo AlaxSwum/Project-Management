@@ -394,8 +394,36 @@ export default function ReportPage() {
           </motion.div>
         )}
 
+        {/* No Data State */}
+        {!isLoading && viewMode === 'day' && dailyReport && 
+         dailyReport.tasks_completed === 0 && 
+         dailyReport.goals_completed === 0 && 
+         dailyReport.meetings_total === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: 48,
+              textAlign: 'center',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 20,
+              marginBottom: 32,
+            }}
+          >
+            <ChartBarIcon style={{ width: 64, height: 64, color: '#d1d5db', margin: '0 auto 16px' }} />
+            <h3 style={{ color: '#111827', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+              No Activity Yet
+            </h3>
+            <p style={{ color: '#6b7280', fontSize: 15, maxWidth: 400, margin: '0 auto' }}>
+              Start completing tasks and goals to see your productivity data here. 
+              Check back after you've been productive today!
+            </p>
+          </motion.div>
+        )}
+
         {/* Daily Report */}
-        {viewMode === 'day' && dailyReport && (
+        {viewMode === 'day' && dailyReport && (dailyReport.goals_total > 0 || dailyReport.tasks_completed > 0 || dailyReport.meetings_total > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

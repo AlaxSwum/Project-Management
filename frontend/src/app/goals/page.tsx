@@ -77,13 +77,23 @@ export default function GoalsPage() {
     color: '#ef4444',
   });
 
+  const [setupRequired, setSetupRequired] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
   // Load goals
   const loadGoals = useCallback(async () => {
     if (!user?.id) return;
 
     try {
       setIsLoading(true);
-      const { data: goalsData } = await goalsService.getGoals(user.id);
+      setCreateError(null);
+      const { data: goalsData, error } = await goalsService.getGoals(user.id);
+      
+      // Check if error indicates missing tables
+      if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+        setSetupRequired(true);
+      }
+      
       setGoals(goalsData || []);
 
       // Load today's completions
@@ -152,6 +162,8 @@ export default function GoalsPage() {
   const handleCreateGoal = async () => {
     if (!user?.id || !formData.title) return;
 
+    setCreateError(null);
+
     const goalData: Partial<Goal> = {
       user_id: user.id,
       title: formData.title,
@@ -167,6 +179,16 @@ export default function GoalsPage() {
     };
 
     const { data: newGoal, error } = await goalsService.createGoal(goalData);
+    
+    if (error) {
+      if (error.message?.includes('404') || error.message?.includes('not found') || error.message?.includes('migration')) {
+        setSetupRequired(true);
+        setCreateError('Database tables not set up. Please run the SQL migration in Supabase.');
+      } else {
+        setCreateError(error.message || 'Failed to create goal');
+      }
+      return;
+    }
     
     if (newGoal) {
       setGoals(prev => [newGoal, ...prev]);
@@ -294,6 +316,67 @@ export default function GoalsPage() {
             Build consistency and discipline with daily goals
           </p>
         </motion.div>
+
+        {/* Setup Required Banner */}
+        {setupRequired && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: 20,
+              background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(251, 146, 60, 0.05) 100%)',
+              border: '1px solid rgba(251, 146, 60, 0.3)',
+              borderRadius: 16,
+              marginBottom: 24,
+            }}
+          >
+            <h3 style={{ color: '#fb923c', fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+              Database Setup Required
+            </h3>
+            <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 12 }}>
+              The Goals feature requires database tables to be created. Please run the SQL migration in your Supabase dashboard.
+            </p>
+            <p style={{ color: '#9ca3af', fontSize: 13 }}>
+              Go to Supabase → SQL Editor → Run the contents of <code style={{ background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: 4 }}>supabase_migrations/create_goals_tables.sql</code>
+            </p>
+          </motion.div>
+        )}
+
+        {/* Error Banner */}
+        {createError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: 16,
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: 12,
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <XMarkIcon style={{ width: 20, height: 20, color: '#ef4444' }} />
+            <p style={{ color: '#ef4444', fontSize: 14 }}>{createError}</p>
+            <button
+              onClick={() => setCreateError(null)}
+              style={{
+                marginLeft: 'auto',
+                padding: '4px 8px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                border: 'none',
+                borderRadius: 6,
+                color: '#ef4444',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
 
         {/* Stats Cards */}
         <motion.div
