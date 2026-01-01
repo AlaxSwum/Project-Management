@@ -263,12 +263,7 @@ const getWeekDays = (date: Date): Date[] => {
 };
 
 const generateId = (): string => {
-  // Generate a proper UUID v4 for database compatibility
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  return Math.random().toString(36).substr(2, 9);
 };
 
 // Calculate checklist completion percentage
@@ -1173,18 +1168,14 @@ export default function PersonalPage() {
       const dbRecord = mapBlockToDb(block, user?.id);
       dbRecord.updated_at = new Date().toISOString();
       
-      console.log('Saving block to database:', { id: dbRecord.id, user_id: dbRecord.user_id, title: dbRecord.title });
-      
       const { error } = await supabase
         .from('time_blocks')
         .upsert(dbRecord);
 
       if (error) {
-        console.error('Database save error:', error.code, error.message, error.details);
+        console.log('Database save error, using localStorage:', error.message);
         return;
       }
-      
-      console.log('Block saved successfully:', dbRecord.id);
 
       // Refresh from database
       await fetchBlocks();
@@ -1437,8 +1428,38 @@ export default function PersonalPage() {
           completed: isGoalCompletedToday(goal.id),
         };
       });
+
+    // Convert meetings to blocks for display
+    const meetingsAsBlocks: TimeBlock[] = meetings
+      .filter(meeting => meeting.date === dateStr && meeting.time) // Only meetings for this date with a time
+      .map(meeting => {
+        const startTime = meeting.time; // Format: HH:MM
+        const duration = meeting.duration || 60; // Default 60 minutes
+        
+        // Calculate end time
+        const [h, m] = startTime.split(':').map(Number);
+        const endMinutes = h * 60 + m + duration;
+        const endH = Math.floor(endMinutes / 60) % 24;
+        const endM = endMinutes % 60;
+        const endTime = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+        
+        return {
+          id: `meeting-${meeting.id}`,
+          date: dateStr,
+          startTime: startTime,
+          endTime: endTime,
+          title: meeting.title,
+          description: meeting.description,
+          type: 'meeting' as const,
+          checklist: [],
+          meetingLink: meeting.meeting_link,
+          color: '#8b5cf6', // Purple for meetings
+          category: meeting.project_name,
+          completed: false,
+        };
+      });
     
-    return [...regularBlocks, ...goalsAsBlocks];
+    return [...regularBlocks, ...goalsAsBlocks, ...meetingsAsBlocks];
   };
 
   const getBlockPosition = (block: TimeBlock): { top: number; height: number } => {
