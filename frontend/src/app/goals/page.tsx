@@ -70,8 +70,9 @@ export default function GoalsPage() {
     title: '',
     description: '',
     category: 'fitness',
-    target_frequency: 'daily' as 'daily' | 'weekly' | 'custom',
+    target_frequency: 'daily' as 'daily' | 'weekly' | 'monthly' | 'custom',
     target_days: [] as number[],
+    target_days_of_month: [] as number[], // 1-31 for monthly
     target_time: '',
     duration_minutes: 30,
     color: '#ef4444',
@@ -172,8 +173,12 @@ export default function GoalsPage() {
       description: formData.description,
       category: formData.category,
       target_frequency: formData.target_frequency,
-      target_days: formData.target_frequency === 'custom' ? formData.target_days : 
-                   formData.target_frequency === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : formData.target_days,
+      target_days: formData.target_frequency === 'custom' || formData.target_frequency === 'weekly' 
+                   ? formData.target_days 
+                   : formData.target_frequency === 'daily' 
+                     ? [0, 1, 2, 3, 4, 5, 6] 
+                     : [],
+      target_days_of_month: formData.target_frequency === 'monthly' ? formData.target_days_of_month : undefined,
       target_time: formData.target_time || undefined,
       duration_minutes: formData.duration_minutes,
       start_date: formData.start_date || new Date().toISOString().split('T')[0],
@@ -222,6 +227,7 @@ export default function GoalsPage() {
       category: 'fitness',
       target_frequency: 'daily',
       target_days: [],
+      target_days_of_month: [],
       target_time: '',
       duration_minutes: 30,
       color: '#ef4444',
@@ -232,8 +238,14 @@ export default function GoalsPage() {
 
   // Get goals for today
   const todaysGoals = goals.filter(goal => {
-    const dayOfWeek = new Date().getDay();
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const dayOfMonth = today.getDate();
+    
     if (goal.target_frequency === 'daily') return true;
+    if (goal.target_frequency === 'monthly') {
+      return goal.target_days_of_month && goal.target_days_of_month.includes(dayOfMonth);
+    }
     if (goal.target_days && goal.target_days.includes(dayOfWeek)) return true;
     return false;
   });
@@ -741,7 +753,9 @@ export default function GoalsPage() {
                         </h3>
                         <p style={{ color: '#9ca3af', fontSize: 12 }}>
                           {goal.target_frequency === 'daily' ? 'Every day' : 
-                           goal.target_days?.map(d => DAYS_OF_WEEK[d].name).join(', ')}
+                           goal.target_frequency === 'monthly' 
+                             ? `Monthly: ${goal.target_days_of_month?.sort((a, b) => a - b).join(', ') || 'Not set'}`
+                             : goal.target_days?.map(d => DAYS_OF_WEEK[d].name).join(', ')}
                         </p>
                         {goal.streak_current > 0 && (
                           <div style={{
@@ -902,13 +916,14 @@ export default function GoalsPage() {
                 <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
                   Frequency
                 </label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {['daily', 'weekly', 'custom'].map((freq) => (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['daily', 'weekly', 'monthly', 'custom'].map((freq) => (
                     <button
                       key={freq}
-                      onClick={() => setFormData({ ...formData, target_frequency: freq as any })}
+                      onClick={() => setFormData({ ...formData, target_frequency: freq as any, target_days: [], target_days_of_month: [] })}
                       style={{
-                        flex: 1,
+                        flex: '1 1 auto',
+                        minWidth: 80,
                         padding: '12px',
                         background: formData.target_frequency === freq ? 'rgba(251, 146, 60, 0.15)' : '#f9fafb',
                         border: `1px solid ${formData.target_frequency === freq ? '#fb923c' : '#e5e7eb'}`,
@@ -925,11 +940,11 @@ export default function GoalsPage() {
                 </div>
               </div>
 
-              {/* Days Selection (for custom frequency) */}
-              {formData.target_frequency === 'custom' && (
+              {/* Days of Week Selection (for weekly/custom frequency) */}
+              {(formData.target_frequency === 'weekly' || formData.target_frequency === 'custom') && (
                 <div style={{ marginBottom: 20 }}>
                   <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
-                    Select Days
+                    Select Days of Week
                   </label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {DAYS_OF_WEEK.map((day) => (
@@ -956,6 +971,52 @@ export default function GoalsPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Days of Month Selection (for monthly frequency) */}
+              {formData.target_frequency === 'monthly' && (
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
+                    Select Days of Month
+                  </label>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(7, 1fr)', 
+                    gap: 6,
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                    padding: 4,
+                  }}>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <button
+                        key={day}
+                        onClick={() => {
+                          const days = formData.target_days_of_month.includes(day)
+                            ? formData.target_days_of_month.filter(d => d !== day)
+                            : [...formData.target_days_of_month, day];
+                          setFormData({ ...formData, target_days_of_month: days });
+                        }}
+                        style={{
+                          padding: '8px 4px',
+                          background: formData.target_days_of_month.includes(day) ? 'rgba(251, 146, 60, 0.15)' : '#f9fafb',
+                          border: `1px solid ${formData.target_days_of_month.includes(day) ? '#fb923c' : '#e5e7eb'}`,
+                          borderRadius: 6,
+                          color: formData.target_days_of_month.includes(day) ? '#ea580c' : '#6b7280',
+                          fontSize: 13,
+                          cursor: 'pointer',
+                          fontWeight: formData.target_days_of_month.includes(day) ? 600 : 400,
+                        }}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                  <p style={{ color: '#9ca3af', fontSize: 12, marginTop: 8 }}>
+                    Selected: {formData.target_days_of_month.length > 0 
+                      ? formData.target_days_of_month.sort((a, b) => a - b).join(', ')
+                      : 'None'}
+                  </p>
                 </div>
               )}
 
@@ -1262,7 +1323,11 @@ export default function GoalsPage() {
                 <p style={{ color: '#9ca3af', fontSize: 13, marginBottom: 8 }}>Schedule</p>
                 <p style={{ color: '#111827', fontSize: 15 }}>
                   {selectedGoal.target_frequency === 'daily' ? 'Every day' : 
-                   selectedGoal.target_days?.map(d => DAYS_OF_WEEK[d].fullName).join(', ')}
+                   selectedGoal.target_frequency === 'monthly' 
+                     ? `Monthly on: ${selectedGoal.target_days_of_month?.sort((a, b) => a - b).map(d => 
+                         d === 1 ? '1st' : d === 2 ? '2nd' : d === 3 ? '3rd' : `${d}th`
+                       ).join(', ') || 'Not set'}`
+                     : selectedGoal.target_days?.map(d => DAYS_OF_WEEK[d].fullName).join(', ')}
                 </p>
                 {selectedGoal.target_time && (
                   <p style={{ color: '#4b5563', fontSize: 14, marginTop: 4 }}>

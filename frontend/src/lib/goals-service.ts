@@ -7,8 +7,9 @@ export interface Goal {
   title: string;
   description?: string;
   category: string; // e.g., "fitness", "learning", "health", "productivity"
-  target_frequency: 'daily' | 'weekly' | 'custom';
-  target_days?: number[]; // 0 = Sunday, 1 = Monday, etc.
+  target_frequency: 'daily' | 'weekly' | 'monthly' | 'custom';
+  target_days?: number[]; // 0 = Sunday, 1 = Monday, etc. (for weekly/custom)
+  target_days_of_month?: number[]; // 1-31 (for monthly frequency)
   target_time?: string; // HH:mm format
   duration_minutes?: number; // How long each session should be
   start_date: string;

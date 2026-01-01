@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS personal_goals (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     category VARCHAR(50) DEFAULT 'custom',
-    target_frequency VARCHAR(20) DEFAULT 'daily' CHECK (target_frequency IN ('daily', 'weekly', 'custom')),
-    target_days INTEGER[] DEFAULT ARRAY[0,1,2,3,4,5,6], -- 0 = Sunday, 6 = Saturday
+    target_frequency VARCHAR(20) DEFAULT 'daily' CHECK (target_frequency IN ('daily', 'weekly', 'monthly', 'custom')),
+    target_days INTEGER[] DEFAULT ARRAY[0,1,2,3,4,5,6], -- 0 = Sunday, 6 = Saturday (for weekly/custom)
+    target_days_of_month INTEGER[], -- 1-31 (for monthly frequency)
     target_time TIME,
     duration_minutes INTEGER DEFAULT 30,
     start_date DATE NOT NULL DEFAULT CURRENT_DATE,
