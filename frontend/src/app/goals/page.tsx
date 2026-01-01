@@ -75,6 +75,8 @@ export default function GoalsPage() {
     target_time: '',
     duration_minutes: 30,
     color: '#ef4444',
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: '',
   });
 
   const [setupRequired, setSetupRequired] = useState(false);
@@ -174,7 +176,8 @@ export default function GoalsPage() {
                    formData.target_frequency === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : formData.target_days,
       target_time: formData.target_time || undefined,
       duration_minutes: formData.duration_minutes,
-      start_date: new Date().toISOString().split('T')[0],
+      start_date: formData.start_date || new Date().toISOString().split('T')[0],
+      end_date: formData.end_date || undefined,
       color: formData.color,
     };
 
@@ -572,8 +575,8 @@ export default function GoalsPage() {
                       padding: 20,
                       background: completed 
                         ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)'
-                        : 'rgba(255, 255, 255, 0.02)',
-                      border: `1px solid ${completed ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
+                        : '#fff',
+                      border: `1px solid ${completed ? 'rgba(34, 197, 94, 0.3)' : '#e5e7eb'}`,
                       borderRadius: 12,
                       cursor: 'pointer',
                     }}
@@ -591,8 +594,8 @@ export default function GoalsPage() {
                         width: 40,
                         height: 40,
                         borderRadius: 12,
-                        background: completed ? goal.color : 'rgba(255, 255, 255, 0.05)',
-                        border: `2px solid ${completed ? goal.color : 'rgba(255, 255, 255, 0.1)'}`,
+                        background: completed ? goal.color : '#f3f4f6',
+                        border: `2px solid ${completed ? goal.color : '#d1d5db'}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -878,10 +881,10 @@ export default function GoalsPage() {
                       onClick={() => setFormData({ ...formData, category: cat.id, color: cat.color })}
                       style={{
                         padding: '8px 16px',
-                        background: formData.category === cat.id ? `${cat.color}30` : 'rgba(255, 255, 255, 0.05)',
-                        border: `1px solid ${formData.category === cat.id ? cat.color : 'rgba(255, 255, 255, 0.1)'}`,
+                        background: formData.category === cat.id ? `${cat.color}20` : '#f9fafb',
+                        border: `1px solid ${formData.category === cat.id ? cat.color : '#e5e7eb'}`,
                         borderRadius: 8,
-                        color: formData.category === cat.id ? cat.color : 'rgba(255, 255, 255, 0.7)',
+                        color: formData.category === cat.id ? cat.color : '#6b7280',
                         fontSize: 13,
                         cursor: 'pointer',
                       }}
@@ -905,10 +908,10 @@ export default function GoalsPage() {
                       style={{
                         flex: 1,
                         padding: '12px',
-                        background: formData.target_frequency === freq ? 'rgba(251, 146, 60, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: `1px solid ${formData.target_frequency === freq ? '#fb923c' : 'rgba(255, 255, 255, 0.1)'}`,
+                        background: formData.target_frequency === freq ? 'rgba(251, 146, 60, 0.15)' : '#f9fafb',
+                        border: `1px solid ${formData.target_frequency === freq ? '#fb923c' : '#e5e7eb'}`,
                         borderRadius: 10,
-                        color: formData.target_frequency === freq ? '#fb923c' : 'rgba(255, 255, 255, 0.7)',
+                        color: formData.target_frequency === freq ? '#ea580c' : '#6b7280',
                         fontSize: 14,
                         cursor: 'pointer',
                         textTransform: 'capitalize',
@@ -939,10 +942,10 @@ export default function GoalsPage() {
                         style={{
                           flex: 1,
                           padding: '10px 4px',
-                          background: formData.target_days.includes(day.id) ? 'rgba(251, 146, 60, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                          border: `1px solid ${formData.target_days.includes(day.id) ? '#fb923c' : 'rgba(255, 255, 255, 0.1)'}`,
+                          background: formData.target_days.includes(day.id) ? 'rgba(251, 146, 60, 0.15)' : '#f9fafb',
+                          border: `1px solid ${formData.target_days.includes(day.id) ? '#fb923c' : '#e5e7eb'}`,
                           borderRadius: 8,
-                          color: formData.target_days.includes(day.id) ? '#fb923c' : 'rgba(255, 255, 255, 0.7)',
+                          color: formData.target_days.includes(day.id) ? '#ea580c' : '#6b7280',
                           fontSize: 12,
                           cursor: 'pointer',
                         }}
@@ -953,6 +956,51 @@ export default function GoalsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Date Range */}
+              <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: '#f3f4f6',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 10,
+                      color: '#111827',
+                      fontSize: 15,
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#4b5563', fontSize: 13, marginBottom: 8 }}>
+                    End Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    min={formData.start_date}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: '#f3f4f6',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 10,
+                      color: '#111827',
+                      fontSize: 15,
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
 
               {/* Time and Duration */}
               <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
@@ -1007,10 +1055,10 @@ export default function GoalsPage() {
                 style={{
                   width: '100%',
                   padding: '14px',
-                  background: formData.title ? 'linear-gradient(135deg, #fb923c, #f97316)' : 'rgba(255, 255, 255, 0.1)',
+                  background: formData.title ? 'linear-gradient(135deg, #fb923c, #f97316)' : '#e5e7eb',
                   border: 'none',
                   borderRadius: 12,
-                  color: '#111827',
+                  color: formData.title ? '#fff' : '#9ca3af',
                   fontSize: 16,
                   fontWeight: 600,
                   cursor: formData.title ? 'pointer' : 'not-allowed',

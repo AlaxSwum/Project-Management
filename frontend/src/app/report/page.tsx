@@ -267,7 +267,7 @@ export default function ReportPage() {
                   background: viewMode === mode ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
                   border: 'none',
                   borderRadius: 8,
-                  color: viewMode === mode ? '#3b82f6' : 'rgba(255, 255, 255, 0.6)',
+                  color: viewMode === mode ? '#3b82f6' : '#6b7280',
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -570,14 +570,14 @@ export default function ReportPage() {
                       padding: 16,
                       background: isToday 
                         ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)'
-                        : 'rgba(255, 255, 255, 0.02)',
-                      border: `1px solid ${isToday ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
+                        : '#fff',
+                      border: `1px solid ${isToday ? 'rgba(59, 130, 246, 0.3)' : '#e5e7eb'}`,
                       borderRadius: 16,
                       textAlign: 'center',
                     }}
                   >
                     <p style={{ 
-                      color: isToday ? '#3b82f6' : 'rgba(255, 255, 255, 0.6)', 
+                      color: isToday ? '#3b82f6' : '#6b7280', 
                       fontSize: 13, 
                       fontWeight: 600,
                       marginBottom: 12,
@@ -590,7 +590,7 @@ export default function ReportPage() {
                       borderRadius: '50%',
                       background: `conic-gradient(
                         ${day.productivity_score >= 80 ? '#10b981' : day.productivity_score >= 50 ? '#f59e0b' : '#ef4444'} ${day.productivity_score * 3.6}deg,
-                        rgba(255, 255, 255, 0.1) 0deg
+                        #e5e7eb 0deg
                       )`,
                       margin: '0 auto 12px',
                       display: 'flex',
@@ -735,7 +735,7 @@ export default function ReportPage() {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <span style={{ 
-                          color: 'rgba(255, 255, 255, 0.4)', 
+                          color: '#9ca3af', 
                           fontSize: 16, 
                           fontWeight: 700,
                           width: 24,
