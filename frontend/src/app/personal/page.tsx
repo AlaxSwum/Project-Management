@@ -1247,7 +1247,7 @@ export default function PersonalPage() {
       // Refresh goals list
       if (user) {
         const fetchedGoals = await goalsService.getGoals(user.id);
-        setGoals(fetchedGoals);
+        setPersonalGoals(fetchedGoals);
       }
       setShowPanel(false);
       setSelectedBlock(null);
