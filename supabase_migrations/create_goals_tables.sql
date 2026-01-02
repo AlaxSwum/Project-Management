@@ -1,10 +1,7 @@
 -- Personal Goals & Time Blocks Tables
 -- Run this in Supabase SQL Editor to create the goals and time blocks feature tables
-
--- First, drop existing tables if they have wrong schema (safe to run multiple times)
-DROP TABLE IF EXISTS goal_completions CASCADE;
-DROP TABLE IF EXISTS personal_goals CASCADE;
-DROP TABLE IF EXISTS time_blocks CASCADE;
+-- NOTE: This script is safe to run - it only creates tables if they don't exist
+-- and adds columns if they're missing. It does NOT delete any data.
 
 -- Create personal_goals table
 CREATE TABLE IF NOT EXISTS personal_goals (
