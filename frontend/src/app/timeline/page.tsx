@@ -843,10 +843,10 @@ export default function TimelineRoadmapPage() {
     const start = new Date(currentDate);
 
     if (viewMode === 'day') {
-      // Show 7 days before and 23 days after current date (30 total)
+      // Show 30 days before and 60 days after current date (90 total)
       start.setHours(0, 0, 0, 0);
-      start.setDate(start.getDate() - 7); // Start 7 days before
-      for (let i = 0; i < 30; i++) {
+      start.setDate(start.getDate() - 30); // Start 30 days before
+      for (let i = 0; i < 90; i++) {
         const dayDate = new Date(start);
         dayDate.setDate(start.getDate() + i);
         columns.push({
@@ -855,9 +855,10 @@ export default function TimelineRoadmapPage() {
         });
       }
     } else if (viewMode === 'week') {
+      // Show 8 weeks before and 44 weeks after (52 weeks = 1 year total)
       const weekStart = new Date(start);
-      weekStart.setDate(start.getDate() - start.getDay()); // Start of week
-      for (let i = 0; i < 12; i++) {
+      weekStart.setDate(start.getDate() - start.getDay() - 56); // Start 8 weeks before
+      for (let i = 0; i < 52; i++) {
         const weekDate = new Date(weekStart);
         weekDate.setDate(weekStart.getDate() + (i * 7));
         const weekEnd = new Date(weekDate);
@@ -868,8 +869,10 @@ export default function TimelineRoadmapPage() {
         });
       }
     } else if (viewMode === 'month') {
+      // Show 6 months before and 18 months after (24 months = 2 years total)
       start.setDate(1); // First day of current month
-      for (let i = 0; i < 6; i++) {
+      start.setMonth(start.getMonth() - 6); // Start 6 months before
+      for (let i = 0; i < 24; i++) {
         const monthDate = new Date(start);
         monthDate.setMonth(start.getMonth() + i);
         columns.push({
@@ -878,8 +881,9 @@ export default function TimelineRoadmapPage() {
         });
       }
     } else if (viewMode === 'quarter') {
-      const quarterStart = new Date(start.getFullYear(), Math.floor(start.getMonth() / 3) * 3, 1);
-      for (let i = 0; i < 8; i++) {
+      // Show 4 quarters before and 12 quarters after (16 quarters = 4 years total)
+      const quarterStart = new Date(start.getFullYear(), Math.floor(start.getMonth() / 3) * 3 - 12, 1);
+      for (let i = 0; i < 16; i++) {
         const quarterDate = new Date(quarterStart);
         quarterDate.setMonth(quarterStart.getMonth() + (i * 3));
         const quarter = Math.floor(quarterDate.getMonth() / 3) + 1;
@@ -1682,11 +1686,11 @@ export default function TimelineRoadmapPage() {
                     Gantt Chart
                   </h2>
 
-                  <div style={{ minWidth: viewMode === 'day' ? '1600px' : viewMode === 'week' ? '1200px' : '900px' }}>
+                  <div style={{ minWidth: viewMode === 'day' ? '5400px' : viewMode === 'week' ? '6400px' : viewMode === 'month' ? '3000px' : '1800px' }}>
                     {/* Timeline Header */}
                     <div style={{ 
                       display: 'grid', 
-                      gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '50px' : viewMode === 'week' ? '90px' : '80px'}, 1fr))`, 
+                      gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '55px' : viewMode === 'week' ? '115px' : viewMode === 'month' ? '110px' : '100px'}, 1fr))`, 
                       gap: '0', 
                       marginBottom: '0' 
                     }}>
@@ -1772,7 +1776,7 @@ export default function TimelineRoadmapPage() {
                         return (
                           <div key={category.id} style={{ marginBottom: '0' }}>
                             {/* Category Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '50px' : viewMode === 'week' ? '90px' : '80px'}, 1fr))`, gap: '0', background: '#F1F5F9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '55px' : viewMode === 'week' ? '115px' : viewMode === 'month' ? '110px' : '100px'}, 1fr))`, gap: '0', background: '#F1F5F9' }}>
                               <div style={{ 
                                 background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
                                 padding: '16px', 
@@ -1832,7 +1836,7 @@ export default function TimelineRoadmapPage() {
                             const isCompleted = item.status === 'completed';
                             
                             return (
-                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '50px' : viewMode === 'week' ? '90px' : '80px'}, 1fr))`, gap: '0', marginBottom: '0' }}>
+                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `240px repeat(${timeColumns.length}, minmax(${viewMode === 'day' ? '55px' : viewMode === 'week' ? '115px' : viewMode === 'month' ? '110px' : '100px'}, 1fr))`, gap: '0', marginBottom: '0' }}>
                                 <div style={{ 
                                   background: isCompleted ? '#F3F4F6' : 'white', 
                                   padding: '12px 16px', 
