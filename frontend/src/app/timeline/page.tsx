@@ -843,10 +843,10 @@ export default function TimelineRoadmapPage() {
     const start = new Date(currentDate);
 
     if (viewMode === 'day') {
-      // Show 30 days before and 60 days after current date (90 total)
+      // Show 365 days (full year) - 180 days before and 185 days after
       start.setHours(0, 0, 0, 0);
-      start.setDate(start.getDate() - 30); // Start 30 days before
-      for (let i = 0; i < 90; i++) {
+      start.setDate(start.getDate() - 180); // Start 180 days before (6 months)
+      for (let i = 0; i < 365; i++) {
         const dayDate = new Date(start);
         dayDate.setDate(start.getDate() + i);
         columns.push({
@@ -855,10 +855,10 @@ export default function TimelineRoadmapPage() {
         });
       }
     } else if (viewMode === 'week') {
-      // Show 8 weeks before and 44 weeks after (52 weeks = 1 year total)
+      // Show 104 weeks (2 years) - 52 weeks before and 52 weeks after
       const weekStart = new Date(start);
-      weekStart.setDate(start.getDate() - start.getDay() - 56); // Start 8 weeks before
-      for (let i = 0; i < 52; i++) {
+      weekStart.setDate(start.getDate() - start.getDay() - 364); // Start 52 weeks before
+      for (let i = 0; i < 104; i++) {
         const weekDate = new Date(weekStart);
         weekDate.setDate(weekStart.getDate() + (i * 7));
         const weekEnd = new Date(weekDate);
@@ -869,10 +869,10 @@ export default function TimelineRoadmapPage() {
         });
       }
     } else if (viewMode === 'month') {
-      // Show 6 months before and 18 months after (24 months = 2 years total)
+      // Show 48 months (4 years) - 24 months before and 24 months after
       start.setDate(1); // First day of current month
-      start.setMonth(start.getMonth() - 6); // Start 6 months before
-      for (let i = 0; i < 24; i++) {
+      start.setMonth(start.getMonth() - 24); // Start 24 months before
+      for (let i = 0; i < 48; i++) {
         const monthDate = new Date(start);
         monthDate.setMonth(start.getMonth() + i);
         columns.push({
@@ -881,9 +881,9 @@ export default function TimelineRoadmapPage() {
         });
       }
     } else if (viewMode === 'quarter') {
-      // Show 4 quarters before and 12 quarters after (16 quarters = 4 years total)
-      const quarterStart = new Date(start.getFullYear(), Math.floor(start.getMonth() / 3) * 3 - 12, 1);
-      for (let i = 0; i < 16; i++) {
+      // Show 24 quarters (6 years) - 12 quarters before and 12 quarters after
+      const quarterStart = new Date(start.getFullYear(), Math.floor(start.getMonth() / 3) * 3 - 36, 1);
+      for (let i = 0; i < 24; i++) {
         const quarterDate = new Date(quarterStart);
         quarterDate.setMonth(quarterStart.getMonth() + (i * 3));
         const quarter = Math.floor(quarterDate.getMonth() / 3) + 1;
@@ -1686,7 +1686,7 @@ export default function TimelineRoadmapPage() {
                     Gantt Chart
                   </h2>
 
-                  <div style={{ minWidth: viewMode === 'day' ? '5400px' : viewMode === 'week' ? '6400px' : viewMode === 'month' ? '3000px' : '1800px' }}>
+                  <div style={{ minWidth: viewMode === 'day' ? '22000px' : viewMode === 'week' ? '13000px' : viewMode === 'month' ? '6000px' : '3000px' }}>
                     {/* Timeline Header */}
                     <div style={{ 
                       display: 'grid', 
