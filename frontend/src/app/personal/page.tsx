@@ -1380,6 +1380,79 @@ export default function PersonalPage() {
     return goalCompletions.some(c => c.goal_id === goalId && c.completed_date === today);
   };
 
+  // Calculate overlap positions for blocks that occur at the same time
+  const calculateOverlapPositions = (blocksForDay: TimeBlock[]): Map<string, { column: number; totalColumns: number }> => {
+    const positions = new Map<string, { column: number; totalColumns: number }>();
+    
+    // Convert time to minutes for easier comparison
+    const timeToMinutes = (time: string): number => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    
+    // Sort blocks by start time
+    const sortedBlocks = [...blocksForDay].sort((a, b) => 
+      timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+    );
+    
+    // Track columns: each entry is { blockId, endMinutes }
+    const columns: { blockId: string; endMinutes: number }[] = [];
+    
+    for (const block of sortedBlocks) {
+      const startMin = timeToMinutes(block.startTime);
+      const endMin = timeToMinutes(block.endTime);
+      
+      // Find the first column where this block can fit (no overlap)
+      let columnIndex = 0;
+      while (columnIndex < columns.length && columns[columnIndex].endMinutes > startMin) {
+        columnIndex++;
+      }
+      
+      // Place the block in this column
+      if (columnIndex < columns.length) {
+        columns[columnIndex] = { blockId: block.id, endMinutes: endMin };
+      } else {
+        columns.push({ blockId: block.id, endMinutes: endMin });
+      }
+      
+      positions.set(block.id, { column: columnIndex, totalColumns: 1 }); // totalColumns updated later
+    }
+    
+    // Now find overlapping groups and update totalColumns
+    for (const block of sortedBlocks) {
+      const startMin = timeToMinutes(block.startTime);
+      const endMin = timeToMinutes(block.endTime);
+      
+      // Find all blocks that overlap with this one
+      const overlappingBlocks = sortedBlocks.filter(other => {
+        const otherStart = timeToMinutes(other.startTime);
+        const otherEnd = timeToMinutes(other.endTime);
+        // Check if they overlap
+        return startMin < otherEnd && endMin > otherStart;
+      });
+      
+      // Get the maximum column index among overlapping blocks
+      let maxColumn = 0;
+      for (const overlapping of overlappingBlocks) {
+        const pos = positions.get(overlapping.id);
+        if (pos && pos.column > maxColumn) {
+          maxColumn = pos.column;
+        }
+      }
+      
+      // Update totalColumns for all overlapping blocks
+      const totalColumns = maxColumn + 1;
+      for (const overlapping of overlappingBlocks) {
+        const pos = positions.get(overlapping.id);
+        if (pos) {
+          positions.set(overlapping.id, { ...pos, totalColumns: Math.max(pos.totalColumns, totalColumns) });
+        }
+      }
+    }
+    
+    return positions;
+  };
+
   const getBlocksForDate = (date: Date): TimeBlock[] => {
     const dateStr = formatDate(date);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -1997,11 +2070,22 @@ export default function PersonalPage() {
                     )}
                     
                     {/* Time Blocks */}
-                    {getBlocksForDate(currentDate).map((block) => {
+                    {(() => {
+                      const dayBlocks = getBlocksForDate(currentDate);
+                      const overlapPositions = calculateOverlapPositions(dayBlocks);
+                      
+                      return dayBlocks.map((block) => {
                       const { top, height } = getBlockPosition(block);
                       const colors = blockTypeColors[block.type] || blockTypeColors.focus;
                       const progress = getChecklistProgress(block.checklist);
                       const category = [...DEFAULT_CATEGORIES, ...customCategories].find(c => c.id === block.category);
+                      
+                      // Get overlap positioning
+                      const overlapInfo = overlapPositions.get(block.id);
+                      const column = overlapInfo?.column || 0;
+                      const totalColumns = overlapInfo?.totalColumns || 1;
+                      const widthPercent = 100 / totalColumns;
+                      const leftPercent = column * widthPercent;
                       
                       return (
                         <motion.div
@@ -2014,8 +2098,8 @@ export default function PersonalPage() {
                           style={{
                             position: 'absolute',
                             top: `${top}px`,
-                            left: '96px',
-                            right: '16px',
+                            left: `calc(96px + ${leftPercent}% * (100% - 112px) / 100)`,
+                            width: `calc(${widthPercent}% * (100% - 112px) / 100 - 4px)`,
                             height: `${height}px`,
                             background: colors.bg,
                             borderLeft: `3px solid ${colors.solid}`,
@@ -2024,7 +2108,7 @@ export default function PersonalPage() {
                             cursor: 'pointer',
                             overflow: 'hidden',
                             transition: 'all 0.2s ease',
-                            zIndex: 2,
+                            zIndex: column + 2,
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2147,7 +2231,8 @@ export default function PersonalPage() {
           )}
                         </motion.div>
                       );
-                    })}
+                    });
+                    })()}
                     
                     {/* Meetings on Day View */}
                     {meetings
