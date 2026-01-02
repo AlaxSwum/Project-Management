@@ -344,6 +344,7 @@ interface DbTimeBlock {
   recurring_days?: number[];
   recurring_start_date?: string;
   recurring_end_date?: string;
+  excluded_dates?: string[];
   completed?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -366,6 +367,7 @@ const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
   recurringDays: db.recurring_days,
   recurringStartDate: db.recurring_start_date,
   recurringEndDate: db.recurring_end_date,
+  excludedDates: db.excluded_dates,
   completed: db.completed,
   created_at: db.created_at,
   updated_at: db.updated_at,
@@ -389,6 +391,7 @@ const mapBlockToDb = (block: TimeBlock, userId?: string | number): DbTimeBlock =
   recurring_days: block.recurringDays,
   recurring_start_date: block.recurringStartDate,
   recurring_end_date: block.recurringEndDate,
+  excluded_dates: block.excludedDates,
   completed: block.completed,
   created_at: block.created_at,
   updated_at: block.updated_at,

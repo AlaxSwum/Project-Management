@@ -61,9 +61,18 @@ CREATE TABLE IF NOT EXISTS time_blocks (
     recurring_days INTEGER[],
     recurring_start_date DATE,
     recurring_end_date DATE,
+    excluded_dates TEXT[], -- Dates to skip for recurring blocks (YYYY-MM-DD format)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add excluded_dates column if it doesn't exist (for existing tables)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'time_blocks' AND column_name = 'excluded_dates') THEN
+        ALTER TABLE time_blocks ADD COLUMN excluded_dates TEXT[];
+    END IF;
+END $$;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_personal_goals_user_id ON personal_goals(user_id);
