@@ -135,6 +135,7 @@ interface TimeBlock {
   recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
   recurringStartDate?: string; // Start date for recurring
   recurringEndDate?: string; // End date for recurring
+  excludedDates?: string[]; // Dates to skip for this recurring block (YYYY-MM-DD format)
   completed?: boolean; // Main task completion status
   created_at?: string;
   updated_at?: string;
@@ -405,6 +406,9 @@ export default function PersonalPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetBlock, setDeleteTargetBlock] = useState<TimeBlock | null>(null);
+  const [deleteTargetDate, setDeleteTargetDate] = useState<string>('');
   
   
   // Form state for new/edit block
@@ -1222,6 +1226,45 @@ export default function PersonalPage() {
     }
   };
 
+  // Delete a single occurrence of a recurring block (add date to excluded list)
+  const deleteSingleOccurrence = async (block: TimeBlock, dateToExclude: string) => {
+    const updatedBlock = {
+      ...block,
+      excludedDates: [...(block.excludedDates || []), dateToExclude],
+    };
+    await saveBlock(updatedBlock);
+    setShowDeleteConfirm(false);
+    setDeleteTargetBlock(null);
+    setDeleteTargetDate('');
+    setShowPanel(false);
+    setSelectedBlock(null);
+  };
+
+  // Handler for delete button click - shows confirmation for recurring blocks
+  const handleDeleteClick = (block: TimeBlock) => {
+    if (block.isRecurring) {
+      setDeleteTargetBlock(block);
+      setDeleteTargetDate(formatDate(currentDate));
+      setShowDeleteConfirm(true);
+    } else {
+      deleteBlock(block.id);
+    }
+  };
+
+  // Handler for delete confirmation choice
+  const handleDeleteConfirm = (deleteAll: boolean) => {
+    if (deleteTargetBlock) {
+      if (deleteAll) {
+        deleteBlock(deleteTargetBlock.id);
+      } else {
+        deleteSingleOccurrence(deleteTargetBlock, deleteTargetDate);
+      }
+    }
+    setShowDeleteConfirm(false);
+    setDeleteTargetBlock(null);
+    setDeleteTargetDate('');
+  };
+
   const handleAddBlock = () => {
     // For recurring blocks, use the start date or current date
     const blockDate = blockForm.isRecurring && blockForm.recurringStartDate 
@@ -1471,6 +1514,9 @@ export default function PersonalPage() {
       if (block.isRecurring && block.recurringDays && block.recurringDays.length > 0) {
         // Check if this day of week is selected
         if (!block.recurringDays.includes(dayOfWeek)) return false;
+        
+        // Check if this date is excluded (deleted single occurrence)
+        if (block.excludedDates && block.excludedDates.includes(dateStr)) return false;
         
         // Get the start and end dates for the recurring range
         const startDateStr = block.recurringStartDate || block.date;
@@ -2457,7 +2503,11 @@ export default function PersonalPage() {
                         })()}
                         
                         {/* Blocks for this day */}
-                        {getBlocksForDate(day).map((block) => {
+                        {(() => {
+                          const dayBlocks = getBlocksForDate(day);
+                          const overlapPositions = calculateOverlapPositions(dayBlocks);
+                          
+                          return dayBlocks.map((block) => {
                           const [startHour, startMin] = block.startTime.split(':').map(Number);
                           const [endHour, endMin] = block.endTime.split(':').map(Number);
                           const pxPerMinute = 50 / 60; // 50px per hour
@@ -2465,10 +2515,17 @@ export default function PersonalPage() {
                           const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 20);
                           const colors = blockTypeColors[block.type];
                           
+                          // Get overlap positioning for week view
+                          const overlapInfo = overlapPositions.get(block.id);
+                          const column = overlapInfo?.column || 0;
+                          const totalColumns = overlapInfo?.totalColumns || 1;
+                          const widthPercent = (100 - 4) / totalColumns; // 4px for margins
+                          const leftOffset = 2 + column * widthPercent;
+                          
                           return (
                             <motion.div
                               key={block.id}
-                              whileHover={{ scale: 1.02 }}
+                              whileHover={{ scale: 1.02, zIndex: 10 }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleBlockClick(block);
@@ -2476,14 +2533,14 @@ export default function PersonalPage() {
                               style={{
                                 position: 'absolute',
                                 top: `${top}px`,
-                                left: '2px',
-                                right: '2px',
+                                left: `${leftOffset}%`,
+                                width: `${widthPercent - 1}%`,
                                 height: `${height}px`,
                                 background: colors.bg,
                                 borderLeft: `2px solid ${colors.solid}`,
                                 borderRadius: '4px',
                                 padding: '2px 4px',
-                  cursor: 'pointer',
+                                cursor: 'pointer',
                                 fontSize: '9px',
                                 fontWeight: '500',
                                 color: block.completed ? '#86868b' : '#1d1d1f',
@@ -2491,6 +2548,7 @@ export default function PersonalPage() {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 gap: '3px',
+                                zIndex: column + 1,
                               }}
                             >
                               {/* Quick checkbox */}
@@ -2519,7 +2577,8 @@ export default function PersonalPage() {
                               <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1 }}>{block.title}</span>
                             </motion.div>
                           );
-                        })}
+                        });
+                        })()}
                     </div>
                   ))}
                     </div>
@@ -4134,6 +4193,138 @@ export default function PersonalPage() {
         )}
       </AnimatePresence>
 
+      {/* Delete Confirmation Modal for Recurring Tasks */}
+      <AnimatePresence>
+        {showDeleteConfirm && deleteTargetBlock && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteConfirm(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                padding: '24px',
+                maxWidth: '400px',
+                width: '90%',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <ExclamationTriangleIcon style={{ width: '24px', height: '24px', color: '#ef4444' }} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                    Delete Recurring Task
+                  </h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>
+                    {deleteTargetBlock.title}
+                  </p>
+                </div>
+              </div>
+              
+              <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#4b5563', lineHeight: '1.5' }}>
+                This is a recurring task. Would you like to delete just this occurrence on <strong>{deleteTargetDate}</strong>, or delete all occurrences?
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleDeleteConfirm(false)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: '#f3f4f6',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <CalendarDaysIcon style={{ width: '18px', height: '18px' }} />
+                  Delete This Occurrence Only
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleDeleteConfirm(true)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#dc2626',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <TrashIcon style={{ width: '18px', height: '18px' }} />
+                  Delete All Occurrences
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#6b7280',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Block Details Popup Modal - Clean Minimal Design */}
       <AnimatePresence>
         {showPanel && selectedBlock && (
@@ -4239,7 +4430,7 @@ export default function PersonalPage() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => deleteBlock(selectedBlock.id)}
+                      onClick={() => handleDeleteClick(selectedBlock)}
                       style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.08)', cursor: 'pointer', color: '#ef4444' }}
                     >
                       <TrashIcon style={{ width: '15px', height: '15px' }} />
