@@ -1203,21 +1203,30 @@ export default function PersonalPage() {
   };
 
   const deleteBlock = async (blockId: string) => {
+    console.log('deleteBlock called with id:', blockId);
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       
-      await supabase
+      const { error } = await supabase
         .from('time_blocks')
         .delete()
         .eq('id', blockId);
       
+      if (error) {
+        console.error('Supabase delete error:', error);
+      } else {
+        console.log('Block deleted from database successfully');
+      }
+      
       const newBlocks = blocks.filter(b => b.id !== blockId);
+      console.log('Updating local state, blocks count:', blocks.length, '->', newBlocks.length);
       setBlocks(newBlocks);
       localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
       setShowPanel(false);
       setSelectedBlock(null);
     } catch (err) {
       console.error('Error deleting block:', err);
+      // Still update local state even if database fails
       const newBlocks = blocks.filter(b => b.id !== blockId);
       setBlocks(newBlocks);
       localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
@@ -1277,11 +1286,13 @@ export default function PersonalPage() {
 
   // Handler for delete confirmation choice
   const handleDeleteConfirm = async (deleteAll: boolean) => {
+    console.log('handleDeleteConfirm called:', { deleteAll, deleteTargetBlock });
     if (deleteTargetBlock) {
       if (deleteTargetBlock.type === 'goal') {
         // For goals, deleteAll means delete the goal entirely
         // Otherwise, we don't support single occurrence deletion for goals yet
         if (deleteAll) {
+          console.log('Deleting goal:', deleteTargetBlock.id);
           await deleteGoal(deleteTargetBlock.id);
         } else {
           // For goals, skip today by marking completion as skipped (or just close for now)
@@ -1292,9 +1303,11 @@ export default function PersonalPage() {
         }
       } else {
         if (deleteAll) {
-          deleteBlock(deleteTargetBlock.id);
+          console.log('Deleting all occurrences of block:', deleteTargetBlock.id);
+          await deleteBlock(deleteTargetBlock.id);
         } else {
-          deleteSingleOccurrence(deleteTargetBlock, deleteTargetDate);
+          console.log('Deleting single occurrence:', deleteTargetBlock.id, deleteTargetDate);
+          await deleteSingleOccurrence(deleteTargetBlock, deleteTargetDate);
         }
       }
     }
