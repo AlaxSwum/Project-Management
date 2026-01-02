@@ -1240,9 +1240,31 @@ export default function PersonalPage() {
     setSelectedBlock(null);
   };
 
+  // Delete a goal
+  const deleteGoal = async (goalId: string) => {
+    try {
+      await goalsService.deleteGoal(goalId);
+      // Refresh goals list
+      if (user) {
+        const fetchedGoals = await goalsService.getGoals(user.id);
+        setGoals(fetchedGoals);
+      }
+      setShowPanel(false);
+      setSelectedBlock(null);
+    } catch (err) {
+      console.error('Error deleting goal:', err);
+    }
+  };
+
   // Handler for delete button click - shows confirmation for recurring blocks
   const handleDeleteClick = (block: TimeBlock) => {
-    if (block.isRecurring) {
+    // Check if this is a goal block (type === 'goal')
+    if (block.type === 'goal') {
+      // Goals are always recurring, so show delete confirmation
+      setDeleteTargetBlock(block);
+      setDeleteTargetDate(formatDate(currentDate));
+      setShowDeleteConfirm(true);
+    } else if (block.isRecurring) {
       setDeleteTargetBlock(block);
       setDeleteTargetDate(formatDate(currentDate));
       setShowDeleteConfirm(true);
@@ -1252,12 +1274,26 @@ export default function PersonalPage() {
   };
 
   // Handler for delete confirmation choice
-  const handleDeleteConfirm = (deleteAll: boolean) => {
+  const handleDeleteConfirm = async (deleteAll: boolean) => {
     if (deleteTargetBlock) {
-      if (deleteAll) {
-        deleteBlock(deleteTargetBlock.id);
+      if (deleteTargetBlock.type === 'goal') {
+        // For goals, deleteAll means delete the goal entirely
+        // Otherwise, we don't support single occurrence deletion for goals yet
+        if (deleteAll) {
+          await deleteGoal(deleteTargetBlock.id);
+        } else {
+          // For goals, skip today by marking completion as skipped (or just close for now)
+          // Goals don't have excludedDates, so we'll just close the modal
+          console.log('Single occurrence skip for goals not yet implemented');
+          setShowPanel(false);
+          setSelectedBlock(null);
+        }
       } else {
-        deleteSingleOccurrence(deleteTargetBlock, deleteTargetDate);
+        if (deleteAll) {
+          deleteBlock(deleteTargetBlock.id);
+        } else {
+          deleteSingleOccurrence(deleteTargetBlock, deleteTargetDate);
+        }
       }
     }
     setShowDeleteConfirm(false);
@@ -2130,8 +2166,10 @@ export default function PersonalPage() {
                       const overlapInfo = overlapPositions.get(block.id);
                       const column = overlapInfo?.column || 0;
                       const totalColumns = overlapInfo?.totalColumns || 1;
-                      const widthPercent = 100 / totalColumns;
-                      const leftPercent = column * widthPercent;
+                      // Calculate width: available space is (100% - 112px), divide by totalColumns
+                      // Each column gets equal width with 4px gap
+                      const availableWidth = `calc((100% - 112px) / ${totalColumns} - 4px)`;
+                      const leftOffset = `calc(96px + (100% - 112px) * ${column} / ${totalColumns})`;
                       
                       return (
                         <motion.div
@@ -2144,8 +2182,8 @@ export default function PersonalPage() {
                           style={{
                             position: 'absolute',
                             top: `${top}px`,
-                            left: `calc(96px + ${leftPercent}% * (100% - 112px) / 100)`,
-                            width: `calc(${widthPercent}% * (100% - 112px) / 100 - 4px)`,
+                            left: leftOffset,
+                            width: availableWidth,
                             height: `${height}px`,
                             background: colors.bg,
                             borderLeft: `3px solid ${colors.solid}`,
@@ -4204,11 +4242,11 @@ export default function PersonalPage() {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
+              background: 'rgba(0, 0, 0, 0.6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 1000,
+              zIndex: 9999,
               backdropFilter: 'blur(4px)',
             }}
           >
