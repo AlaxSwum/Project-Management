@@ -1261,20 +1261,9 @@ export default function TimelineRoadmapPage() {
   };
 
   // =============================================
-  // RENDER
+  // GANTT CHART AUTO-SCROLL (hooks must be before conditional returns)
   // =============================================
-
-  if (authLoading || isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#F8FAFC' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
-          <p style={{ color: '#64748B' }}>Loading Timeline & Roadmap...</p>
-        </div>
-      </div>
-    );
-  }
-
+  
   const timeColumns = generateTimeColumns();
   
   // Calculate column width for scrolling
@@ -1336,6 +1325,21 @@ export default function TimelineRoadmapPage() {
       }
     }
   }, [viewMode, timeColumns, getColumnWidth]);
+
+  // =============================================
+  // RENDER
+  // =============================================
+
+  if (authLoading || isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#F8FAFC' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+          <p style={{ color: '#64748B' }}>Loading Timeline & Roadmap...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
