@@ -253,7 +253,9 @@ const getDaysInMonth = (date: Date): Date[] => {
 
 const getWeekDays = (date: Date): Date[] => {
   const day = date.getDay();
-  const diff = date.getDate() - day;
+  // Adjust to start from Monday (day 1), if Sunday (day 0), go back 6 days
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const diff = date.getDate() + mondayOffset;
   const days: Date[] = [];
   
   for (let i = 0; i < 7; i++) {
@@ -1665,7 +1667,8 @@ export default function PersonalPage() {
 
   if (!isAuthenticated) return null;
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weekDaysMap: { [key: number]: string } = { 0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat' };
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   return (
@@ -1984,7 +1987,7 @@ export default function PersonalPage() {
               >
                 {viewMode === 'day' && (
                   <>
-                    {weekDays[currentDate.getDay()]}, {monthNames[currentDate.getMonth()]} {currentDate.getDate()}
+                    {weekDaysMap[currentDate.getDay()]}, {monthNames[currentDate.getMonth()]} {currentDate.getDate()}
                 </>
               )}
                 {viewMode === 'week' && (
@@ -2386,7 +2389,7 @@ export default function PersonalPage() {
                               letterSpacing: '0.5px',
                             }}
                           >
-                            {weekDays[day.getDay()]}
+                            {weekDaysMap[day.getDay()]}
             </div>
                           <div
                             style={{
