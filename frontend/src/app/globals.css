@@ -2356,3 +2356,19 @@ html body .payroll-page [style*="grid"] {
 .personal-page * {
   font-family: 'Mabry Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
+
+/* Apple Calendar style resize handle */
+.resize-handle:hover .resize-indicator,
+.resize-handle:active .resize-indicator {
+  opacity: 1 !important;
+}
+
+/* Block hover effects */
+[data-block="true"]:hover .resize-handle .resize-indicator {
+  opacity: 0.5 !important;
+}
+
+[data-block="true"]:hover .resize-handle:hover .resize-indicator {
+  opacity: 1 !important;
+  background: rgba(0,0,0,0.3) !important;
+}

@@ -536,6 +536,17 @@ export default function PersonalPage() {
   const [dragDate, setDragDate] = useState<Date | null>(null);
   const dayViewRef = React.useRef<HTMLDivElement>(null);
   const weekViewRefs = React.useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Block drag-to-move state (Apple Calendar style)
+  const [movingBlock, setMovingBlock] = useState<TimeBlock | null>(null);
+  const [moveStartY, setMoveStartY] = useState<number>(0);
+  const [moveStartTime, setMoveStartTime] = useState<{ hour: number; minute: number } | null>(null);
+  const [moveCurrentY, setMoveCurrentY] = useState<number>(0);
+  
+  // Block resize state (Apple Calendar style)
+  const [resizingBlock, setResizingBlock] = useState<TimeBlock | null>(null);
+  const [resizeStartY, setResizeStartY] = useState<number>(0);
+  const [resizeStartEndTime, setResizeStartEndTime] = useState<string>('');
 
   // Convert Y position to time
   const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
@@ -652,6 +663,146 @@ export default function PersonalPage() {
       };
     }
   }, [isDragging, handleDragMove, handleDragEnd]);
+
+  // =============================================
+  // BLOCK MOVE HANDLERS (Apple Calendar style)
+  // =============================================
+  
+  const handleBlockMoveStart = (e: React.MouseEvent, block: TimeBlock) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Don't allow moving goals or meetings (only time blocks)
+    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
+    
+    const [h, m] = block.startTime.split(':').map(Number);
+    setMovingBlock(block);
+    setMoveStartY(e.clientY);
+    setMoveCurrentY(e.clientY);
+    setMoveStartTime({ hour: h, minute: m });
+  };
+  
+  const handleBlockMoveMove = useCallback((e: MouseEvent) => {
+    if (!movingBlock) return;
+    setMoveCurrentY(e.clientY);
+  }, [movingBlock]);
+  
+  const handleBlockMoveEnd = useCallback(() => {
+    if (!movingBlock || !moveStartTime) {
+      setMovingBlock(null);
+      return;
+    }
+    
+    // Calculate time difference based on Y movement (60px = 1 hour)
+    const deltaY = moveCurrentY - moveStartY;
+    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
+    
+    // Calculate new start and end times
+    const startMinutes = moveStartTime.hour * 60 + moveStartTime.minute + deltaMinutes;
+    const [endH, endM] = movingBlock.endTime.split(':').map(Number);
+    const duration = (endH * 60 + endM) - (moveStartTime.hour * 60 + moveStartTime.minute);
+    const endMinutes = startMinutes + duration;
+    
+    // Clamp to valid range (0:00 - 23:59)
+    const clampedStart = Math.max(0, Math.min(23 * 60 + 45, startMinutes));
+    const clampedEnd = Math.max(15, Math.min(24 * 60 - 1, clampedStart + duration));
+    
+    const newStartHour = Math.floor(clampedStart / 60);
+    const newStartMin = clampedStart % 60;
+    const newEndHour = Math.floor(clampedEnd / 60);
+    const newEndMin = clampedEnd % 60;
+    
+    const updatedBlock = {
+      ...movingBlock,
+      startTime: `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`,
+      endTime: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
+    };
+    
+    saveBlock(updatedBlock);
+    setMovingBlock(null);
+    setMoveStartTime(null);
+  }, [movingBlock, moveStartTime, moveStartY, moveCurrentY, saveBlock]);
+  
+  // =============================================
+  // BLOCK RESIZE HANDLERS (Apple Calendar style)
+  // =============================================
+  
+  const handleBlockResizeStart = (e: React.MouseEvent, block: TimeBlock) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Don't allow resizing goals or meetings
+    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
+    
+    setResizingBlock(block);
+    setResizeStartY(e.clientY);
+    setResizeStartEndTime(block.endTime);
+  };
+  
+  const handleBlockResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizingBlock) return;
+    
+    // Calculate new end time based on Y movement
+    const deltaY = e.clientY - resizeStartY;
+    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
+    
+    const [endH, endM] = resizeStartEndTime.split(':').map(Number);
+    const newEndMinutes = endH * 60 + endM + deltaMinutes;
+    
+    // Minimum 15 minutes duration
+    const [startH, startM] = resizingBlock.startTime.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const minEnd = startMinutes + 15;
+    const maxEnd = 24 * 60 - 1;
+    
+    const clampedEnd = Math.max(minEnd, Math.min(maxEnd, newEndMinutes));
+    const newEndHour = Math.floor(clampedEnd / 60);
+    const newEndMin = clampedEnd % 60;
+    
+    // Update the block preview (we'll save on mouseup)
+    setResizingBlock({
+      ...resizingBlock,
+      endTime: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
+    });
+  }, [resizingBlock, resizeStartY, resizeStartEndTime]);
+  
+  const handleBlockResizeEnd = useCallback(() => {
+    if (!resizingBlock) return;
+    
+    saveBlock(resizingBlock);
+    setResizingBlock(null);
+    setResizeStartEndTime('');
+  }, [resizingBlock, saveBlock]);
+  
+  // Add global mouse listeners for block move and resize
+  useEffect(() => {
+    if (movingBlock) {
+      window.addEventListener('mousemove', handleBlockMoveMove);
+      window.addEventListener('mouseup', handleBlockMoveEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleBlockMoveMove);
+        window.removeEventListener('mouseup', handleBlockMoveEnd);
+      };
+    }
+  }, [movingBlock, handleBlockMoveMove, handleBlockMoveEnd]);
+  
+  useEffect(() => {
+    if (resizingBlock) {
+      window.addEventListener('mousemove', handleBlockResizeMove);
+      window.addEventListener('mouseup', handleBlockResizeEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleBlockResizeMove);
+        window.removeEventListener('mouseup', handleBlockResizeEnd);
+      };
+    }
+  }, [resizingBlock, handleBlockResizeMove, handleBlockResizeEnd]);
+  
+  // Calculate move preview offset
+  const getMoveOffset = () => {
+    if (!movingBlock) return 0;
+    const deltaY = moveCurrentY - moveStartY;
+    return Math.round((deltaY / 60) * 60 / 15) * 15 / 60 * 60; // Convert to pixels (snapped)
+  };
 
   // Get drag preview position
   const getDragPreview = () => {
@@ -2191,28 +2342,48 @@ export default function PersonalPage() {
                       const availableWidth = `calc((100% - 112px) / ${totalColumns} - 4px)`;
                       const leftOffset = `calc(96px + (100% - 112px) * ${column} / ${totalColumns})`;
                       
+                      // Check if this block is being moved or resized
+                      const isMoving = movingBlock?.id === block.id;
+                      const isResizing = resizingBlock?.id === block.id;
+                      const moveOffset = isMoving ? getMoveOffset() : 0;
+                      const displayBlock = isResizing ? resizingBlock : block;
+                      const displayHeight = isResizing ? (() => {
+                        const [sh, sm] = displayBlock.startTime.split(':').map(Number);
+                        const [eh, em] = displayBlock.endTime.split(':').map(Number);
+                        return Math.max(((eh * 60 + em) - (sh * 60 + sm)) / 60 * 60, 30);
+                      })() : height;
+                      
+                      const canDrag = !block.id.startsWith('goal-') && !block.id.startsWith('meeting-');
+                      
                       return (
                         <motion.div
                           key={block.id}
                           data-block="true"
                           initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ scale: 1.01, zIndex: 10 }}
-                          onClick={() => handleBlockClick(block)}
+                          animate={{ 
+                            opacity: 1, 
+                            scale: 1,
+                            y: moveOffset,
+                          }}
+                          whileHover={{ scale: canDrag ? 1.01 : 1, zIndex: 10 }}
+                          onClick={() => !isMoving && !isResizing && handleBlockClick(block)}
+                          onMouseDown={(e) => canDrag && handleBlockMoveStart(e, block)}
                           style={{
                             position: 'absolute',
                             top: `${top}px`,
                             left: leftOffset,
                             width: availableWidth,
-                            height: `${height}px`,
-                            background: colors.bg,
+                            height: `${displayHeight}px`,
+                            background: isMoving || isResizing ? `${colors.bg}` : colors.bg,
                             borderLeft: `3px solid ${colors.solid}`,
                             borderRadius: '8px',
                             padding: '8px 12px',
-                            cursor: 'pointer',
+                            cursor: isMoving ? 'grabbing' : (canDrag ? 'grab' : 'pointer'),
                             overflow: 'hidden',
-                            transition: 'all 0.2s ease',
-                            zIndex: column + 2,
+                            transition: isMoving || isResizing ? 'none' : 'all 0.2s ease',
+                            zIndex: isMoving || isResizing ? 100 : column + 2,
+                            boxShadow: isMoving ? '0 8px 25px rgba(0,0,0,0.15)' : 'none',
+                            opacity: isMoving ? 0.9 : 1,
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2333,6 +2504,37 @@ export default function PersonalPage() {
               </div>
             </div>
           )}
+                          
+                          {/* Resize Handle - Apple Calendar style */}
+                          {canDrag && (
+                            <div
+                              onMouseDown={(e) => handleBlockResizeStart(e, block)}
+                              style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: '8px',
+                                cursor: 'ns-resize',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderBottomLeftRadius: '8px',
+                                borderBottomRightRadius: '8px',
+                                background: 'transparent',
+                              }}
+                              className="resize-handle"
+                            >
+                              <div style={{
+                                width: '30px',
+                                height: '3px',
+                                borderRadius: '2px',
+                                background: 'rgba(0,0,0,0.15)',
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                              }} className="resize-indicator" />
+                            </div>
+                          )}
                         </motion.div>
                       );
                     });
