@@ -2358,14 +2358,22 @@ export default function PersonalPage() {
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
                     border: '1px solid rgba(0, 0, 0, 0.06)',
                     overflow: 'hidden',
+                    maxHeight: 'calc(100vh - 200px)',
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                 >
-                  {/* Week Header */}
+                  {/* Week Header - Sticky */}
                   <div
                     style={{
                       display: 'grid',
                       gridTemplateColumns: '80px repeat(7, 1fr)',
                       borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                      background: '#fff',
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 20,
+                      flexShrink: 0,
                     }}
                   >
                     <div style={{ padding: '16px' }} />
@@ -2413,13 +2421,14 @@ export default function PersonalPage() {
                     })}
                   </div>
                   
-                  {/* Week Grid */}
+                  {/* Week Grid - Scrollable */}
                   <div
                     style={{ 
                       display: 'grid',
                       gridTemplateColumns: '70px repeat(7, 1fr)',
                       minHeight: '800px',
-                      overflow: 'auto',
+                      overflowY: 'auto',
+                      flex: 1,
                     }}
                   >
                     {/* Time labels column */}
