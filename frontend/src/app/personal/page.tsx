@@ -410,6 +410,7 @@ export default function PersonalPage() {
   const [selectedBlock, setSelectedBlock] = useState<TimeBlock | null>(null);
   const [showPanel, setShowPanel] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null); // Track if editing an existing block
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetBlock, setDeleteTargetBlock] = useState<TimeBlock | null>(null);
@@ -1478,9 +1479,12 @@ export default function PersonalPage() {
       ? blockForm.recurringStartDate 
       : formatDate(currentDate);
     
+    // Check if we're editing an existing block
+    const existingBlock = editingBlockId ? blocks.find(b => b.id === editingBlockId) : null;
+    
     const newBlock: TimeBlock = {
-      id: generateId(),
-      date: blockDate,
+      id: editingBlockId || generateId(), // Use existing ID if editing, otherwise generate new
+      date: existingBlock?.date || blockDate, // Preserve original date if editing
       startTime: blockForm.startTime || '09:00',
       endTime: blockForm.endTime || '10:00',
       title: blockForm.title || 'New Block',
@@ -1494,12 +1498,14 @@ export default function PersonalPage() {
       recurringDays: blockForm.recurringDays || [],
       recurringStartDate: blockForm.isRecurring ? (blockForm.recurringStartDate || formatDate(currentDate)) : undefined,
       recurringEndDate: blockForm.isRecurring ? blockForm.recurringEndDate : undefined,
-      created_at: new Date().toISOString(),
+      excludedDates: existingBlock?.excludedDates, // Preserve excluded dates
+      created_at: existingBlock?.created_at || new Date().toISOString(), // Preserve original created_at
       updated_at: new Date().toISOString(),
     };
     
     saveBlock(newBlock);
     setShowAddModal(false);
+    setEditingBlockId(null); // Clear editing state
     setBlockForm({
       title: '',
       description: '',
@@ -3554,7 +3560,7 @@ export default function PersonalPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowAddModal(false)}
+            onClick={() => { setShowAddModal(false); setEditingBlockId(null); }}
             style={{
               position: 'fixed',
               inset: 0,
@@ -3598,12 +3604,12 @@ export default function PersonalPage() {
                     margin: 0,
                   }}
                 >
-                  New Time Block
+                  {editingBlockId ? 'Edit Time Block' : 'New Time Block'}
               </h3>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => { setShowAddModal(false); setEditingBlockId(null); }}
                   style={{
                     width: '32px',
                     height: '32px',
@@ -4375,7 +4381,7 @@ export default function PersonalPage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => { setShowAddModal(false); setEditingBlockId(null); }}
                     style={{ 
                     flex: 1,
                     padding: '14px',
@@ -4406,7 +4412,7 @@ export default function PersonalPage() {
                     color: '#fff',
                     }}
                   >
-                  Create Block
+                  {editingBlockId ? 'Save Changes' : 'Create Block'}
                 </motion.button>
                   </div>
             </motion.div>
@@ -4627,6 +4633,7 @@ export default function PersonalPage() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setShowPanel(false);
+                        setEditingBlockId(selectedBlock.id); // Track that we're editing this block
                         setBlockForm({
                           title: selectedBlock.title,
                           description: selectedBlock.description,
