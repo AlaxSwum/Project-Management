@@ -439,13 +439,13 @@ export default function TimetablePage() {
     tomorrow.setDate(tomorrow.getDate() + 7); // Default to 1 week later
     const dateStr = tomorrow.toISOString().split('T')[0];
     
-    // Pre-fill with original meeting data but leave attendees empty for selection
+    // Pre-fill with original meeting data and pre-select original attendees
     setFollowUpMeeting(meeting);
     setFollowUpForm({
       date: dateStr,
       time: meeting.time || '10:00',
       duration: meeting.duration || 60,
-      attendee_ids: [], // Start empty - user must select attendees
+      attendee_ids: meeting.attendee_ids || [], // Pre-select original attendees
       agenda_items: [`Follow-up from: ${meeting.title}`],
       meeting_link: meeting.meeting_link || '',
       reminder_time: meeting.reminder_time || 15,
@@ -4330,59 +4330,53 @@ export default function TimetablePage() {
                 />
               </div>
 
-              {/* Attendees */}
+              {/* Attendees - Show original meeting attendees */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
                   <UserGroupIcon style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
-                  Attendees
+                  Attendees (from original meeting)
                 </label>
-                {/* Use all organization users, fallback to project members */}
-                {(users.length > 0 || projectMembers.length > 0) ? (
-                  <div style={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: '8px', 
-                    padding: '12px', 
-                    background: '#f9fafb', 
-                    borderRadius: '8px',
-                    maxHeight: '200px',
-                    overflowY: 'auto'
-                  }}>
-                    {/* Show all organization users first, then project members */}
-                    {(users.length > 0 ? users : projectMembers.map(m => ({ id: m.user_id, name: m.name, email: m.email })))
-                      .filter((member, index, self) => 
-                        index === self.findIndex(m => m.id === member.id)
-                      )
-                      .map((member) => {
-                        const userId = member.id || member.user_id;
-                        const isSelected = followUpForm.attendee_ids.includes(userId);
-                        return (
+                {(() => {
+                  // Get original meeting attendees - from attendee_ids or attendees_list
+                  const originalAttendeeIds = followUpMeeting?.attendee_ids || [];
+                  const originalAttendeeNames = followUpMeeting?.attendees_list || 
+                    (followUpMeeting?.attendees ? followUpMeeting.attendees.split(',').map((a: string) => a.trim()).filter((a: string) => a) : []);
+                  
+                  // Get user objects for original attendees
+                  const originalAttendees = originalAttendeeIds.length > 0
+                    ? users.filter(u => originalAttendeeIds.includes(u.id))
+                    : originalAttendeeNames.map((name: string, idx: number) => ({ id: idx, name, email: '' }));
+                  
+                  if (originalAttendees.length === 0 && originalAttendeeNames.length > 0) {
+                    // Fallback: show names as tags if we can't match to user objects
+                    return (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '8px', 
+                        padding: '12px', 
+                        background: '#f9fafb', 
+                        borderRadius: '8px'
+                      }}>
+                        {originalAttendeeNames.map((name: string, idx: number) => (
                           <div
-                            key={userId}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleFollowUpAttendee(userId);
-                            }}
+                            key={idx}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
                               padding: '6px 10px',
-                              background: isSelected ? '#dbeafe' : '#fff',
-                              border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
+                              background: '#dbeafe',
+                              border: '2px solid #3b82f6',
                               borderRadius: '20px',
-                              cursor: 'pointer',
                               fontSize: '13px',
-                              transition: 'all 0.2s ease',
-                              userSelect: 'none',
                             }}
                           >
                             <span style={{
                               width: '24px',
                               height: '24px',
                               borderRadius: '50%',
-                              background: isSelected ? '#3b82f6' : '#e5e7eb',
+                              background: '#3b82f6',
                               color: '#fff',
                               display: 'flex',
                               alignItems: 'center',
@@ -4390,21 +4384,84 @@ export default function TimetablePage() {
                               fontSize: '11px',
                               fontWeight: '600',
                             }}>
-                              {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                              {name.charAt(0).toUpperCase()}
                             </span>
-                            {member.name || member.email}
-                            {isSelected && (
-                              <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
-                            )}
+                            {name}
+                            <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
                           </div>
-                        );
-                      })}
-                  </div>
-                ) : (
-                  <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
-                    Loading organization members...
-                  </p>
-                )}
+                        ))}
+                      </div>
+                    );
+                  }
+                  
+                  if (originalAttendees.length > 0) {
+                    return (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '8px', 
+                        padding: '12px', 
+                        background: '#f9fafb', 
+                        borderRadius: '8px',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}>
+                        {originalAttendees.map((member: any) => {
+                          const userId = member.id || member.user_id;
+                          const isSelected = followUpForm.attendee_ids.includes(userId);
+                          return (
+                            <div
+                              key={userId}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFollowUpAttendee(userId);
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '6px 10px',
+                                background: isSelected ? '#dbeafe' : '#fff',
+                                border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
+                                borderRadius: '20px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                transition: 'all 0.2s ease',
+                                userSelect: 'none',
+                              }}
+                            >
+                              <span style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                background: isSelected ? '#3b82f6' : '#e5e7eb',
+                                color: '#fff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                              }}>
+                                {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                              </span>
+                              {member.name || member.email}
+                              {isSelected && (
+                                <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+                      No attendees in original meeting
+                    </p>
+                  );
+                })()}
               </div>
 
               {/* Agenda Items */}
