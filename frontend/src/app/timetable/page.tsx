@@ -4336,22 +4336,33 @@ export default function TimetablePage() {
                   <UserGroupIcon style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
                   Attendees
                 </label>
-                {projectMembers.length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
-                    {/* Remove duplicates by user_id */}
-                    {projectMembers
+                {/* Use all organization users, fallback to project members */}
+                {(users.length > 0 || projectMembers.length > 0) ? (
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '8px', 
+                    padding: '12px', 
+                    background: '#f9fafb', 
+                    borderRadius: '8px',
+                    maxHeight: '200px',
+                    overflowY: 'auto'
+                  }}>
+                    {/* Show all organization users first, then project members */}
+                    {(users.length > 0 ? users : projectMembers.map(m => ({ id: m.user_id, name: m.name, email: m.email })))
                       .filter((member, index, self) => 
-                        index === self.findIndex(m => m.user_id === member.user_id)
+                        index === self.findIndex(m => m.id === member.id)
                       )
                       .map((member) => {
-                        const isSelected = followUpForm.attendee_ids.includes(member.user_id);
+                        const userId = member.id || member.user_id;
+                        const isSelected = followUpForm.attendee_ids.includes(userId);
                         return (
                           <div
-                            key={member.user_id}
+                            key={userId}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              toggleFollowUpAttendee(member.user_id);
+                              toggleFollowUpAttendee(userId);
                             }}
                             style={{
                               display: 'flex',
@@ -4391,7 +4402,7 @@ export default function TimetablePage() {
                   </div>
                 ) : (
                   <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
-                    No project members available
+                    Loading organization members...
                   </p>
                 )}
               </div>
