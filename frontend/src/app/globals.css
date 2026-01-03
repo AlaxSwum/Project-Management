@@ -1,6 +1,6 @@
 /* Project Management App Styles - Enhanced Modern Professional Theme */
-/* Note: Custom Mabry Pro font disabled due to loading issues - using Inter instead */
-/* @import url('../font/mabry-pro/mabry-pro-optimized.css'); */
+/* Mabry Pro font for Personal page */
+@import url('../font/mabry-pro/mabry-pro-optimized.css');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
@@ -2349,4 +2349,10 @@ html body .payroll-page [style*="grid"] {
   .personal-main {
     margin-left: 0 !important;
   }
+}
+
+/* Personal page - Use Mabry Pro font */
+.personal-page,
+.personal-page * {
+  font-family: 'Mabry Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }

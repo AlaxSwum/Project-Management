@@ -1687,13 +1687,12 @@ export default function PersonalPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="main-content personal-main"
+        className="main-content personal-main personal-page"
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : (sidebarCollapsed ? '72px' : '256px'),
           marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
           background: '#f8f9fa',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
