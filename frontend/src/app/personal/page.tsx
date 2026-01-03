@@ -664,145 +664,6 @@ export default function PersonalPage() {
     }
   }, [isDragging, handleDragMove, handleDragEnd]);
 
-  // =============================================
-  // BLOCK MOVE HANDLERS (Apple Calendar style)
-  // =============================================
-  
-  const handleBlockMoveStart = (e: React.MouseEvent, block: TimeBlock) => {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    // Don't allow moving goals or meetings (only time blocks)
-    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
-    
-    const [h, m] = block.startTime.split(':').map(Number);
-    setMovingBlock(block);
-    setMoveStartY(e.clientY);
-    setMoveCurrentY(e.clientY);
-    setMoveStartTime({ hour: h, minute: m });
-  };
-  
-  const handleBlockMoveMove = useCallback((e: MouseEvent) => {
-    if (!movingBlock) return;
-    setMoveCurrentY(e.clientY);
-  }, [movingBlock]);
-  
-  const handleBlockMoveEnd = useCallback(() => {
-    if (!movingBlock || !moveStartTime) {
-      setMovingBlock(null);
-      return;
-    }
-    
-    // Calculate time difference based on Y movement (60px = 1 hour)
-    const deltaY = moveCurrentY - moveStartY;
-    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
-    
-    // Calculate new start and end times
-    const startMinutes = moveStartTime.hour * 60 + moveStartTime.minute + deltaMinutes;
-    const [endH, endM] = movingBlock.endTime.split(':').map(Number);
-    const duration = (endH * 60 + endM) - (moveStartTime.hour * 60 + moveStartTime.minute);
-    const endMinutes = startMinutes + duration;
-    
-    // Clamp to valid range (0:00 - 23:59)
-    const clampedStart = Math.max(0, Math.min(23 * 60 + 45, startMinutes));
-    const clampedEnd = Math.max(15, Math.min(24 * 60 - 1, clampedStart + duration));
-    
-    const newStartHour = Math.floor(clampedStart / 60);
-    const newStartMin = clampedStart % 60;
-    const newEndHour = Math.floor(clampedEnd / 60);
-    const newEndMin = clampedEnd % 60;
-    
-    const updatedBlock = {
-      ...movingBlock,
-      startTime: `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`,
-      endTime: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
-    };
-    
-    saveBlock(updatedBlock);
-    setMovingBlock(null);
-    setMoveStartTime(null);
-  }, [movingBlock, moveStartTime, moveStartY, moveCurrentY, saveBlock]);
-  
-  // =============================================
-  // BLOCK RESIZE HANDLERS (Apple Calendar style)
-  // =============================================
-  
-  const handleBlockResizeStart = (e: React.MouseEvent, block: TimeBlock) => {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    // Don't allow resizing goals or meetings
-    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
-    
-    setResizingBlock(block);
-    setResizeStartY(e.clientY);
-    setResizeStartEndTime(block.endTime);
-  };
-  
-  const handleBlockResizeMove = useCallback((e: MouseEvent) => {
-    if (!resizingBlock) return;
-    
-    // Calculate new end time based on Y movement
-    const deltaY = e.clientY - resizeStartY;
-    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
-    
-    const [endH, endM] = resizeStartEndTime.split(':').map(Number);
-    const newEndMinutes = endH * 60 + endM + deltaMinutes;
-    
-    // Minimum 15 minutes duration
-    const [startH, startM] = resizingBlock.startTime.split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-    const minEnd = startMinutes + 15;
-    const maxEnd = 24 * 60 - 1;
-    
-    const clampedEnd = Math.max(minEnd, Math.min(maxEnd, newEndMinutes));
-    const newEndHour = Math.floor(clampedEnd / 60);
-    const newEndMin = clampedEnd % 60;
-    
-    // Update the block preview (we'll save on mouseup)
-    setResizingBlock({
-      ...resizingBlock,
-      endTime: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
-    });
-  }, [resizingBlock, resizeStartY, resizeStartEndTime]);
-  
-  const handleBlockResizeEnd = useCallback(() => {
-    if (!resizingBlock) return;
-    
-    saveBlock(resizingBlock);
-    setResizingBlock(null);
-    setResizeStartEndTime('');
-  }, [resizingBlock, saveBlock]);
-  
-  // Add global mouse listeners for block move and resize
-  useEffect(() => {
-    if (movingBlock) {
-      window.addEventListener('mousemove', handleBlockMoveMove);
-      window.addEventListener('mouseup', handleBlockMoveEnd);
-      return () => {
-        window.removeEventListener('mousemove', handleBlockMoveMove);
-        window.removeEventListener('mouseup', handleBlockMoveEnd);
-      };
-    }
-  }, [movingBlock, handleBlockMoveMove, handleBlockMoveEnd]);
-  
-  useEffect(() => {
-    if (resizingBlock) {
-      window.addEventListener('mousemove', handleBlockResizeMove);
-      window.addEventListener('mouseup', handleBlockResizeEnd);
-      return () => {
-        window.removeEventListener('mousemove', handleBlockResizeMove);
-        window.removeEventListener('mouseup', handleBlockResizeEnd);
-      };
-    }
-  }, [resizingBlock, handleBlockResizeMove, handleBlockResizeEnd]);
-  
-  // Calculate move preview offset
-  const getMoveOffset = () => {
-    if (!movingBlock) return 0;
-    const deltaY = moveCurrentY - moveStartY;
-    return Math.round((deltaY / 60) * 60 / 15) * 15 / 60 * 60; // Convert to pixels (snapped)
-  };
 
   // Get drag preview position
   const getDragPreview = () => {
@@ -1356,6 +1217,145 @@ export default function PersonalPage() {
     } catch (err) {
       console.error('Error saving block:', err);
     }
+  };
+
+  // =============================================
+  // BLOCK MOVE HANDLERS (Apple Calendar style)
+  // =============================================
+  
+  const handleBlockMoveStart = (e: React.MouseEvent, block: TimeBlock) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Don't allow moving goals or meetings (only time blocks)
+    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
+    
+    const [h, m] = block.startTime.split(':').map(Number);
+    setMovingBlock(block);
+    setMoveStartY(e.clientY);
+    setMoveCurrentY(e.clientY);
+    setMoveStartTime({ hour: h, minute: m });
+  };
+  
+  const handleBlockMoveMove = useCallback((e: MouseEvent) => {
+    if (!movingBlock) return;
+    setMoveCurrentY(e.clientY);
+  }, [movingBlock]);
+  
+  const handleBlockMoveEnd = useCallback(() => {
+    if (!movingBlock || !moveStartTime) {
+      setMovingBlock(null);
+      return;
+    }
+    
+    // Calculate time difference based on Y movement (60px = 1 hour)
+    const deltaY = moveCurrentY - moveStartY;
+    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
+    
+    // Calculate new start and end times
+    const startMinutes = moveStartTime.hour * 60 + moveStartTime.minute + deltaMinutes;
+    const [endH, endM] = movingBlock.endTime.split(':').map(Number);
+    const duration = (endH * 60 + endM) - (moveStartTime.hour * 60 + moveStartTime.minute);
+    
+    // Clamp to valid range (0:00 - 23:59)
+    const clampedStart = Math.max(0, Math.min(23 * 60 + 45, startMinutes));
+    const clampedEnd = Math.max(15, Math.min(24 * 60 - 1, clampedStart + duration));
+    
+    const newStartHour = Math.floor(clampedStart / 60);
+    const newStartMin = clampedStart % 60;
+    const newEndHour = Math.floor(clampedEnd / 60);
+    const newEndMin = clampedEnd % 60;
+    
+    const updatedBlock = {
+      ...movingBlock,
+      startTime: `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`,
+      endTime: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
+    };
+    
+    saveBlock(updatedBlock);
+    setMovingBlock(null);
+    setMoveStartTime(null);
+  }, [movingBlock, moveStartTime, moveStartY, moveCurrentY, saveBlock]);
+  
+  // =============================================
+  // BLOCK RESIZE HANDLERS (Apple Calendar style)
+  // =============================================
+  
+  const handleBlockResizeStart = (e: React.MouseEvent, block: TimeBlock) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Don't allow resizing goals or meetings
+    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
+    
+    setResizingBlock(block);
+    setResizeStartY(e.clientY);
+    setResizeStartEndTime(block.endTime);
+  };
+  
+  const handleBlockResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizingBlock) return;
+    
+    // Calculate new end time based on Y movement
+    const deltaY = e.clientY - resizeStartY;
+    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
+    
+    const [endH, endM] = resizeStartEndTime.split(':').map(Number);
+    const newEndMinutes = endH * 60 + endM + deltaMinutes;
+    
+    // Minimum 15 minutes duration
+    const [startH, startM] = resizingBlock.startTime.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const minEnd = startMinutes + 15;
+    const maxEnd = 24 * 60 - 1;
+    
+    const clampedEnd = Math.max(minEnd, Math.min(maxEnd, newEndMinutes));
+    const newEndHour = Math.floor(clampedEnd / 60);
+    const newEndMin = clampedEnd % 60;
+    
+    // Update the block preview (we'll save on mouseup)
+    setResizingBlock({
+      ...resizingBlock,
+      endTime: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
+    });
+  }, [resizingBlock, resizeStartY, resizeStartEndTime]);
+  
+  const handleBlockResizeEnd = useCallback(() => {
+    if (!resizingBlock) return;
+    
+    saveBlock(resizingBlock);
+    setResizingBlock(null);
+    setResizeStartEndTime('');
+  }, [resizingBlock, saveBlock]);
+  
+  // Add global mouse listeners for block move and resize
+  useEffect(() => {
+    if (movingBlock) {
+      window.addEventListener('mousemove', handleBlockMoveMove);
+      window.addEventListener('mouseup', handleBlockMoveEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleBlockMoveMove);
+        window.removeEventListener('mouseup', handleBlockMoveEnd);
+      };
+    }
+  }, [movingBlock, handleBlockMoveMove, handleBlockMoveEnd]);
+  
+  useEffect(() => {
+    if (resizingBlock) {
+      window.addEventListener('mousemove', handleBlockResizeMove);
+      window.addEventListener('mouseup', handleBlockResizeEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleBlockResizeMove);
+        window.removeEventListener('mouseup', handleBlockResizeEnd);
+      };
+    }
+  }, [resizingBlock, handleBlockResizeMove, handleBlockResizeEnd]);
+  
+  // Calculate move preview offset
+  const getMoveOffset = () => {
+    if (!movingBlock) return 0;
+    const deltaY = moveCurrentY - moveStartY;
+    return Math.round((deltaY / 60) * 60 / 15) * 15 / 60 * 60; // Convert to pixels (snapped)
   };
 
   const deleteBlock = async (blockId: string) => {
