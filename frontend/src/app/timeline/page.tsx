@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
@@ -145,6 +145,10 @@ export default function TimelineRoadmapPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showGanttChart, setShowGanttChart] = useState(true);
+  
+  // Ref for Gantt chart auto-scroll to current date
+  const ganttScrollRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToToday = useRef(false);
   const [displayMode, setDisplayMode] = useState<'gantt' | 'calendar'>('gantt');
   
   // Role-based access
@@ -1272,6 +1276,66 @@ export default function TimelineRoadmapPage() {
   }
 
   const timeColumns = generateTimeColumns();
+  
+  // Calculate column width for scrolling
+  const getColumnWidth = useCallback(() => {
+    if (viewMode === 'day') return 60;
+    if (viewMode === 'week') return 105;
+    if (viewMode === 'month') return 110;
+    return 100; // quarter
+  }, [viewMode]);
+  
+  // Auto-scroll to current date when Gantt chart loads or view mode changes
+  useEffect(() => {
+    if (ganttScrollRef.current && timeColumns.length > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Find the index of today (or closest date)
+      let todayIndex = -1;
+      
+      if (viewMode === 'day') {
+        todayIndex = timeColumns.findIndex(col => {
+          const colDate = new Date(col.date);
+          colDate.setHours(0, 0, 0, 0);
+          return colDate.getTime() === today.getTime();
+        });
+      } else if (viewMode === 'week') {
+        todayIndex = timeColumns.findIndex(col => {
+          const colDate = new Date(col.date);
+          const colEnd = new Date(colDate);
+          colEnd.setDate(colEnd.getDate() + 6);
+          return today >= colDate && today <= colEnd;
+        });
+      } else if (viewMode === 'month') {
+        todayIndex = timeColumns.findIndex(col => {
+          const colDate = new Date(col.date);
+          return colDate.getMonth() === today.getMonth() && colDate.getFullYear() === today.getFullYear();
+        });
+      } else if (viewMode === 'quarter') {
+        const todayQuarter = Math.floor(today.getMonth() / 3);
+        todayIndex = timeColumns.findIndex(col => {
+          const colDate = new Date(col.date);
+          const colQuarter = Math.floor(colDate.getMonth() / 3);
+          return colQuarter === todayQuarter && colDate.getFullYear() === today.getFullYear();
+        });
+      }
+      
+      if (todayIndex >= 0) {
+        const columnWidth = getColumnWidth();
+        const labelColumnWidth = 240; // Width of the first column (item names)
+        // Scroll so current date is roughly in the center of the view
+        const scrollPosition = labelColumnWidth + (todayIndex * columnWidth) - (ganttScrollRef.current.clientWidth / 2);
+        
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          if (ganttScrollRef.current) {
+            ganttScrollRef.current.scrollLeft = Math.max(0, scrollPosition);
+          }
+        });
+      }
+    }
+  }, [viewMode, timeColumns, getColumnWidth]);
 
   return (
     <>
@@ -1681,7 +1745,7 @@ export default function TimelineRoadmapPage() {
 
               {/* GANTT CHART */}
               {displayMode === 'gantt' && categories.length > 0 && (
-                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflowX: 'auto' }}>
+                <div ref={ganttScrollRef} style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflowX: 'auto' }}>
                   <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#1F2937' }}>
                     Gantt Chart
                   </h2>
