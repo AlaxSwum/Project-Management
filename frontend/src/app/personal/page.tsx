@@ -2574,7 +2574,20 @@ export default function PersonalPage() {
                               >
                                 {block.completed && <CheckIcon style={{ width: '8px', height: '8px', color: '#fff' }} />}
                               </div>
-                              <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1 }}>{block.title}</span>
+                              <div style={{ flex: 1, overflow: 'hidden' }}>
+                                <span style={{ textDecoration: block.completed ? 'line-through' : 'none', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
+                                <span style={{ fontSize: '8px', color: '#6b7280', display: 'block', marginTop: '1px' }}>
+                                  {(() => {
+                                    const formatTime12 = (time: string) => {
+                                      const [h, m] = time.split(':').map(Number);
+                                      const ampm = h >= 12 ? 'PM' : 'AM';
+                                      const hour12 = h % 12 || 12;
+                                      return `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
+                                    };
+                                    return `${formatTime12(block.startTime)} - ${formatTime12(block.endTime)}`;
+                                  })()}
+                                </span>
+                              </div>
                             </motion.div>
                           );
                         });
