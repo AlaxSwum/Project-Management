@@ -2558,8 +2558,8 @@ export default function PersonalPage() {
                     borderRadius: '16px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
                     border: '1px solid rgba(0, 0, 0, 0.06)',
-                    overflow: 'hidden',
-                    maxHeight: 'calc(100vh - 200px)',
+                    overflow: 'auto',
+                    maxHeight: 'calc(100vh - 180px)',
                     display: 'flex',
                     flexDirection: 'column',
                   }}
@@ -2627,9 +2627,7 @@ export default function PersonalPage() {
                     style={{ 
                       display: 'grid',
                       gridTemplateColumns: '70px repeat(7, 1fr)',
-                      minHeight: '800px',
-                      overflowY: 'auto',
-                      flex: 1,
+                      height: '1200px', // 24 hours × 50px
                     }}
                   >
                     {/* Time labels column */}
