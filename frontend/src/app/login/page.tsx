@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
@@ -313,10 +314,19 @@ export default function LoginPage() {
       
       <div className="login-container">
         <div className="login-card">
-          {/* Title */}
+          {/* Logo & Title */}
           <div className="title-section">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+              <Image 
+                src="/logo.png" 
+                alt="Project Next Logo" 
+                width={64} 
+                height={64}
+                style={{ borderRadius: '12px' }}
+              />
+            </div>
             <h1 className="title">Welcome Back</h1>
-            <p className="subtitle">Sign in to continue to your dashboard</p>
+            <p className="subtitle">Sign in to continue to Project Next</p>
           </div>
 
           {/* Error Message */}

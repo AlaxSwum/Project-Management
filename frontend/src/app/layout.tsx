@@ -8,15 +8,16 @@ import { ElectronProvider } from "@/components/ElectronProvider";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Focus - Project Management",
+  title: "Project Next - Project Management",
   description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
   icons: {
     icon: [
+      { url: '/logo.png', type: 'image/png', sizes: '512x512' },
       { url: '/favicon-32.png', type: 'image/png', sizes: '32x32' },
       { url: '/favicon-16.png', type: 'image/png', sizes: '16x16' },
     ],
-    shortcut: '/favicon-32.png',
-    apple: '/favicon-32.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
 };
 

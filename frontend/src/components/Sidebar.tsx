@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 // Removed NotificationDropdown and WorldClock imports
@@ -2191,7 +2192,16 @@ Your report is now available in the system.`);
             >
               <Bars3Icon style={{ width: '20px', height: '20px' }} />
             </button>
-            <h1 className="sidebar-title">Project</h1>
+            <div className="sidebar-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Image 
+                src="/logo.png" 
+                alt="Project Next Logo" 
+                width={28} 
+                height={28}
+                style={{ borderRadius: '6px' }}
+              />
+              <h1 className="sidebar-title">Project Next</h1>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div className="sidebar-add-container" ref={dropdownRef}>
                 <button

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export default function ResponsiveHomePage() {
@@ -292,12 +293,14 @@ export default function ResponsiveHomePage() {
         <div style={styles.navContent}>
           {/* Logo */}
           <div style={styles.logo}>
-            <div style={styles.logoIcon}>
-              <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div style={styles.logoText}>Focus Project</div>
+            <Image 
+              src="/logo.png" 
+              alt="Project Next Logo" 
+              width={40} 
+              height={40}
+              style={{ borderRadius: '8px' }}
+            />
+            <div style={styles.logoText}>Project Next</div>
           </div>
 
           {/* Desktop Navigation */}
@@ -502,7 +505,7 @@ export default function ResponsiveHomePage() {
                 marginBottom: '1.5rem',
                 lineHeight: '1.6'
               }}>
-                Focus Project is designed to help teams of all sizes manage their projects more effectively. 
+                Project Next is designed to help teams of all sizes manage their projects more effectively. 
                 From startups to enterprise organizations, our platform scales with your needs.
               </p>
               <ul style={{listStyle: 'none', padding: 0}}>
@@ -541,7 +544,7 @@ export default function ResponsiveHomePage() {
                   Ready to get started?
                 </h3>
                 <p style={{color: '#6b7280', marginBottom: '1.5rem'}}>
-                  Join thousands of teams already using Focus Project to manage their work.
+                  Join thousands of teams already using Project Next to manage their work.
                 </p>
                 <Link 
                   href="/login" 
@@ -648,7 +651,7 @@ export default function ResponsiveHomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <span style={{fontSize: '1.125rem', fontWeight: '700', color: '#1f2937'}}>Focus Project</span>
+                <span style={{fontSize: '1.125rem', fontWeight: '700', color: '#1f2937'}}>Project Next</span>
               </div>
               <p style={{color: '#6b7280', fontSize: '0.875rem', lineHeight: '1.6'}}>
                 Professional project management platform for modern teams. Streamline your workflow and deliver exceptional results.
@@ -692,7 +695,7 @@ export default function ResponsiveHomePage() {
             color: '#6b7280',
             fontSize: '0.875rem'
           }}>
-            <p>&copy; 2025 Focus Project. All rights reserved.</p>
+            <p>&copy; 2025 Project Next. All rights reserved.</p>
           </div>
         </div>
       </footer>

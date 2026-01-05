@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export default function ResponsiveHomePage() {
@@ -292,12 +293,14 @@ export default function ResponsiveHomePage() {
         <div style={styles.navContent}>
           {/* Logo */}
           <div style={styles.logo}>
-            <div style={styles.logoIcon}>
-              <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div style={styles.logoText}>Focus Project</div>
+            <Image 
+              src="/logo.png" 
+              alt="Project Next Logo" 
+              width={40} 
+              height={40}
+              style={{ borderRadius: '8px' }}
+            />
+            <div style={styles.logoText}>Project Next</div>
           </div>
 
           {/* Desktop Navigation */}
