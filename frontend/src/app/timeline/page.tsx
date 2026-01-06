@@ -1768,7 +1768,10 @@ export default function TimelineRoadmapPage() {
                         fontWeight: '600', 
                         color: 'white', 
                         borderRadius: '8px 0 0 0',
-                        fontSize: '13px'
+                        fontSize: '13px',
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 20
                       }}>
                         Category / Item
                       </div>
@@ -1856,7 +1859,10 @@ export default function TimelineRoadmapPage() {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                position: 'sticky',
+                                left: 0,
+                                zIndex: 15
                               }}
                               onClick={() => setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)}
                               >
@@ -1915,7 +1921,10 @@ export default function TimelineRoadmapPage() {
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   cursor: 'pointer',
-                                  opacity: isCompleted ? 0.7 : 1
+                                  opacity: isCompleted ? 0.7 : 1,
+                                  position: 'sticky',
+                                  left: 0,
+                                  zIndex: 10
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
