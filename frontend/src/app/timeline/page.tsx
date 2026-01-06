@@ -636,7 +636,7 @@ export default function TimelineRoadmapPage() {
         total_budget: 0,
         currency: 'USD'
       });
-      setSuccessMessage('Timeline folder created successfully!');
+      setSuccessMessage('Project created successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error creating folder:', error);
@@ -1384,7 +1384,7 @@ export default function TimelineRoadmapPage() {
                   }}
                 >
                   <FolderIcon style={{ width: '18px', height: '18px' }} />
-                  New Folder
+                  New Project
                 </button>
                 
                 {selectedFolder && (
@@ -1424,7 +1424,7 @@ export default function TimelineRoadmapPage() {
                       }}
                     >
                       <PlusIcon style={{ width: '18px', height: '18px' }} />
-                      New Timeline Item
+                      Add New Task
                     </button>
                   </>
                 )}
@@ -1680,10 +1680,10 @@ export default function TimelineRoadmapPage() {
             <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', borderRadius: '16px' }}>
               <FolderIcon style={{ width: '64px', height: '64px', color: '#D1D5DB', margin: '0 auto 20px' }} />
               <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1F2937', marginBottom: '12px' }}>
-                No Timeline Folders Yet
+                No Projects Yet
               </h2>
               <p style={{ color: '#64748B', marginBottom: '24px' }}>
-                Create your first timeline folder to start planning and tracking your projects
+                Create your first project to start planning and tracking your tasks
               </p>
               <button
                 onClick={() => setShowFolderModal(true)}
@@ -1699,7 +1699,7 @@ export default function TimelineRoadmapPage() {
                 }}
               >
                 <PlusIcon style={{ width: '20px', height: '20px', display: 'inline-block', marginRight: '8px' }} />
-                Create Timeline Folder
+                Create New Project
               </button>
             </div>
           ) : (
@@ -2221,7 +2221,7 @@ export default function TimelineRoadmapPage() {
       {showFolderModal && (
         <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}} onClick={() => setShowFolderModal(false)}>
           <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '600px', width: '90%'}} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Create Timeline Folder</h3>
+            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Create New Project</h3>
             
             <div style={{marginBottom: '20px'}}>
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Folder Name *</label>
@@ -2311,7 +2311,7 @@ export default function TimelineRoadmapPage() {
           }
         }}>
           <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto'}} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>{isEditingItem ? 'Edit Timeline Item' : 'Create Timeline Item'}</h3>
+            <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>{isEditingItem ? 'Edit Task' : 'Add New Task'}</h3>
             
             <div style={{marginBottom: '20px'}}>
               <label style={{display: 'block', marginBottom: '8px', fontWeight: '600'}}>Title *</label>
