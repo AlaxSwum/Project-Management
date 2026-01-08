@@ -2539,8 +2539,8 @@ export default function PersonalPage() {
                                 opacity: 0,
                                 transition: 'opacity 0.2s',
                               }} className="resize-indicator" />
-                            </div>
-                          )}
+            </div>
+          )}
                         </motion.div>
                       );
                     });
@@ -2754,7 +2754,7 @@ export default function PersonalPage() {
                                 borderLeft: `2px solid ${colors.solid}`,
                                 borderRadius: '4px',
                                 padding: '2px 4px',
-                                cursor: 'pointer',
+                  cursor: 'pointer',
                                 fontSize: '9px',
                                 fontWeight: '500',
                                 color: block.completed ? '#86868b' : '#1d1d1f',
@@ -4546,7 +4546,7 @@ export default function PersonalPage() {
                 >
                   Cancel
                 </motion.button>
-              </div>
+                  </div>
             </motion.div>
           </motion.div>
         )}

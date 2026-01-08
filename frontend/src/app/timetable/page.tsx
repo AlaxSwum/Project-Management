@@ -3925,7 +3925,7 @@ export default function TimetablePage() {
                       onChange={(e) => setNewMeeting({ ...newMeeting, isRecurring: e.target.checked })}
                       style={{ width: '18px', height: '18px', accentColor: '#3B82F6' }}
                     />
-                    <span>🔄 Recurring Meeting</span>
+                    <span>Recurring Meeting</span>
                   </label>
                   
                   {newMeeting.isRecurring && (
@@ -4335,7 +4335,8 @@ export default function TimetablePage() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -4347,8 +4348,8 @@ export default function TimetablePage() {
             onClick={(e) => e.stopPropagation()}
             style={{
               background: '#fff',
-              borderRadius: '16px',
-              maxWidth: '600px',
+              borderRadius: '20px',
+              maxWidth: '560px',
               width: '100%',
               maxHeight: '90vh',
               overflow: 'hidden',
@@ -4357,32 +4358,41 @@ export default function TimetablePage() {
           >
             {/* Header */}
             <div style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-              padding: '20px 24px',
+              background: '#1F2937',
+              padding: '24px',
               color: '#fff',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <ArrowPathIcon style={{ width: '20px', height: '20px' }} />
-                    <span style={{ fontSize: '12px', fontWeight: '600', opacity: 0.9 }}>SCHEDULE FOLLOW-UP</span>
-                  </div>
-                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>
-                    Follow-up: {followUpMeeting.title}
-                  </h2>
-                  <p style={{ margin: '4px 0 0', fontSize: '13px', opacity: 0.9 }}>
-                    Original: {formatDate(followUpMeeting.date)} at {formatTime(followUpMeeting.time)}
+                  <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Schedule Follow-up
                   </p>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>
+                    {followUpMeeting.title.replace(/^(Follow-up:\s*)+/i, '')}
+                  </h2>
+                  <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#9CA3AF' }}>
+                      <CalendarDaysIcon style={{ width: '14px', height: '14px' }} />
+                      {formatDate(followUpMeeting.date)}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#9CA3AF' }}>
+                      <ClockIcon style={{ width: '14px', height: '14px' }} />
+                      {formatTime(followUpMeeting.time)}
+                    </div>
+                  </div>
                 </div>
                 <button 
                   onClick={() => setShowFollowUpModal(false)}
                   style={{
-                    background: 'rgba(255,255,255,0.2)',
+                    background: 'rgba(255,255,255,0.1)',
                     border: 'none',
-                    borderRadius: '8px',
-                    padding: '8px',
+                    borderRadius: '10px',
+                    padding: '10px',
                     cursor: 'pointer',
+                    transition: 'background 0.2s',
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 >
                   <XMarkIcon style={{ width: '20px', height: '20px', color: '#fff' }} />
                 </button>
@@ -4390,12 +4400,12 @@ export default function TimetablePage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateFollowUp} style={{ padding: '24px', overflowY: 'auto', maxHeight: 'calc(90vh - 120px)' }}>
+            <form onSubmit={handleCreateFollowUp} style={{ padding: '24px', overflowY: 'auto', maxHeight: 'calc(90vh - 140px)' }}>
               {/* Date and Time Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                    Date *
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Date
                   </label>
                   <input
                     type="date"
@@ -4404,17 +4414,21 @@ export default function TimetablePage() {
                     required
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
                       fontSize: '14px',
                       outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
                     }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                    Time *
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Time
                   </label>
                   <input
                     type="time"
@@ -4423,20 +4437,20 @@ export default function TimetablePage() {
                     required
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
                       fontSize: '14px',
                       outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
                     }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
-              </div>
-
-              {/* Duration and Reminder Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Duration
                   </label>
                   <select
@@ -4444,74 +4458,81 @@ export default function TimetablePage() {
                     onChange={(e) => setFollowUpForm(prev => ({ ...prev, duration: Number(e.target.value) }))}
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
                       fontSize: '14px',
                       outline: 'none',
+                      background: '#F9FAFB',
+                      cursor: 'pointer',
                     }}
                   >
-                    <option value={15}>15 minutes</option>
-                    <option value={30}>30 minutes</option>
-                    <option value={45}>45 minutes</option>
+                    <option value={15}>15 min</option>
+                    <option value={30}>30 min</option>
+                    <option value={45}>45 min</option>
                     <option value={60}>1 hour</option>
                     <option value={90}>1.5 hours</option>
                     <option value={120}>2 hours</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Meeting Link and Reminder Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '20px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                    <EnvelopeIcon style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
-                    Email Reminder
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Meeting Link
+                  </label>
+                  <input
+                    type="url"
+                    value={followUpForm.meeting_link}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, meeting_link: e.target.value }))}
+                    placeholder="https://zoom.us/j/..."
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Reminder
                   </label>
                   <select
                     value={followUpForm.reminder_time}
                     onChange={(e) => setFollowUpForm(prev => ({ ...prev, reminder_time: Number(e.target.value) }))}
                     style={{
                       width: '100%',
-                      padding: '10px 12px',
-                      border: '2px solid #f59e0b',
-                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
                       fontSize: '14px',
                       outline: 'none',
-                      background: '#fffbeb',
+                      background: '#F9FAFB',
+                      cursor: 'pointer',
                     }}
                   >
-                    <option value={0}>No reminder</option>
-                    <option value={5}>5 min before</option>
-                    <option value={15}>15 min before</option>
-                    <option value={30}>30 min before</option>
-                    <option value={60}>1 hour before</option>
+                    <option value={0}>None</option>
+                    <option value={5}>5 min</option>
+                    <option value={15}>15 min</option>
+                    <option value={30}>30 min</option>
+                    <option value={60}>1 hour</option>
                   </select>
                 </div>
               </div>
 
-              {/* Meeting Link */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                  Meeting Link (Zoom/Teams/Meet)
-                </label>
-                <input
-                  type="url"
-                  value={followUpForm.meeting_link}
-                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, meeting_link: e.target.value }))}
-                  placeholder="https://zoom.us/j/..."
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
               {/* Attendees - Show original meeting attendees */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                  <UserGroupIcon style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
-                  Attendees (from original meeting)
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Attendees
                 </label>
                 {(() => {
                   // Get original meeting attendees - from attendee_ids or attendees_list
@@ -4642,11 +4663,11 @@ export default function TimetablePage() {
               </div>
 
               {/* Agenda Items */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                  Meeting Agenda
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Agenda
                 </label>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                   <input
                     type="text"
                     value={followUpAgendaItem}
@@ -4655,26 +4676,33 @@ export default function TimetablePage() {
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFollowUpAgendaItem())}
                     style={{
                       flex: 1,
-                      padding: '10px 12px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
                       fontSize: '14px',
                       outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
                     }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                   <button
                     type="button"
                     onClick={addFollowUpAgendaItem}
                     style={{
-                      padding: '10px 16px',
-                      background: '#3b82f6',
+                      padding: '12px 20px',
+                      background: '#1F2937',
                       color: '#fff',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: '10px',
                       fontSize: '13px',
                       fontWeight: '600',
                       cursor: 'pointer',
+                      transition: 'background 0.2s',
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#374151'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#1F2937'}
                   >
                     Add
                   </button>
@@ -4715,55 +4743,67 @@ export default function TimetablePage() {
               </div>
 
               {/* Notes */}
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                  Additional Notes
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Notes
                 </label>
                 <textarea
                   value={followUpForm.notes}
                   onChange={(e) => setFollowUpForm(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Any additional context for the follow-up meeting..."
-                  rows={3}
+                  placeholder="Additional context for this follow-up..."
+                  rows={2}
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '8px',
+                    padding: '12px 14px',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '10px',
                     fontSize: '14px',
                     outline: 'none',
-                    resize: 'vertical',
+                    resize: 'none',
+                    background: '#F9FAFB',
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
                   }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
 
-              {/* Email notification info */}
-              <div style={{
-                padding: '12px 16px',
-                background: '#dbeafe',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}>
-                <EnvelopeIcon style={{ width: '20px', height: '20px', color: '#2563eb' }} />
-                <p style={{ margin: 0, fontSize: '13px', color: '#1e40af' }}>
-                  Email notifications will be sent to all selected attendees when this follow-up is created.
-                </p>
-              </div>
-
               {/* Actions */}
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px',
+                paddingTop: '16px',
+                borderTop: '1px solid #E5E7EB'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFollowUpModal(false)}
+                  style={{
+                    padding: '14px 24px',
+                    background: '#F3F4F6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#E5E7EB'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   disabled={isCreatingFollowUp}
                   style={{
                     flex: 1,
-                    padding: '12px 24px',
-                    background: isCreatingFollowUp ? '#93c5fd' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    padding: '14px 24px',
+                    background: isCreatingFollowUp ? '#9CA3AF' : '#1F2937',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '12px',
                     fontSize: '14px',
                     fontWeight: '600',
                     cursor: isCreatingFollowUp ? 'not-allowed' : 'pointer',
@@ -4771,7 +4811,10 @@ export default function TimetablePage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
+                    transition: 'background 0.2s',
                   }}
+                  onMouseEnter={(e) => !isCreatingFollowUp && (e.currentTarget.style.background = '#374151')}
+                  onMouseLeave={(e) => !isCreatingFollowUp && (e.currentTarget.style.background = '#1F2937')}
                 >
                   {isCreatingFollowUp ? (
                     <>
@@ -4782,27 +4825,8 @@ export default function TimetablePage() {
                       Creating...
                     </>
                   ) : (
-                    <>
-                      <ArrowPathIcon style={{ width: '16px', height: '16px' }} />
-                      Create Follow-up & Send Notifications
-                    </>
+                    'Schedule Follow-up'
                   )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowFollowUpModal(false)}
-                  style={{
-                    padding: '12px 24px',
-                    background: '#f3f4f6',
-                    color: '#374151',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
                 </button>
               </div>
             </form>
