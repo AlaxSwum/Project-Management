@@ -101,6 +101,10 @@ export default function TimetablePage() {
     agenda_items: [] as string[],
     meeting_link: '',
     reminder_time: 15, // default 15 minutes before
+    // Recurring meeting options
+    isRecurring: false,
+    endDate: '',
+    repeatDays: [] as number[], // 0=Sun, 1=Mon, 2=Tue, etc.
   });
   const [newAgendaItem, setNewAgendaItem] = useState('');
   
@@ -237,6 +241,22 @@ export default function TimetablePage() {
       return;
     }
 
+    // Validate recurring meeting settings
+    if (newMeeting.isRecurring) {
+      if (!newMeeting.endDate) {
+        setError('Please select an end date for recurring meetings');
+        return;
+      }
+      if (newMeeting.repeatDays.length === 0) {
+        setError('Please select at least one day for recurring meetings');
+        return;
+      }
+      if (new Date(newMeeting.endDate) <= new Date(newMeeting.date)) {
+        setError('End date must be after start date');
+        return;
+      }
+    }
+
     // Check if user has access to the selected project
     if (!accessibleProjectIds.has(newMeeting.project_id)) {
       setError('You do not have access to create meetings for this project');
@@ -244,22 +264,62 @@ export default function TimetablePage() {
     }
 
     try {
-      const meetingData = {
-        title: newMeeting.title.trim(),
-        description: newMeeting.description.trim(),
-        project: newMeeting.project_id,
-        date: newMeeting.date,
-        time: newMeeting.time,
-        duration: newMeeting.duration,
-        attendees: newMeeting.attendees,
-        attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
-        agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
-        meeting_link: newMeeting.meeting_link.trim() || undefined,
-        reminder_time: newMeeting.reminder_time || undefined,
-      };
+      const createdMeetings: Meeting[] = [];
+      
+      if (newMeeting.isRecurring && newMeeting.endDate && newMeeting.repeatDays.length > 0) {
+        // Create multiple meetings for recurring schedule
+        const startDate = new Date(newMeeting.date);
+        const endDate = new Date(newMeeting.endDate);
+        const currentDate = new Date(startDate);
+        
+        while (currentDate <= endDate) {
+          const dayOfWeek = currentDate.getDay();
+          
+          if (newMeeting.repeatDays.includes(dayOfWeek)) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            const meetingData = {
+              title: newMeeting.title.trim(),
+              description: newMeeting.description.trim(),
+              project: newMeeting.project_id,
+              date: dateStr,
+              time: newMeeting.time,
+              duration: newMeeting.duration,
+              attendees: newMeeting.attendees,
+              attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+              agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+              meeting_link: newMeeting.meeting_link.trim() || undefined,
+              reminder_time: newMeeting.reminder_time || undefined,
+            };
 
-      const createdMeeting = await meetingService.createMeeting(meetingData);
-      setMeetings([createdMeeting, ...meetings]);
+            const createdMeeting = await meetingService.createMeeting(meetingData);
+            createdMeetings.push(createdMeeting);
+          }
+          
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        setMeetings([...createdMeetings, ...meetings]);
+        alert(`✅ Created ${createdMeetings.length} recurring meetings!`);
+      } else {
+        // Single meeting creation
+        const meetingData = {
+          title: newMeeting.title.trim(),
+          description: newMeeting.description.trim(),
+          project: newMeeting.project_id,
+          date: newMeeting.date,
+          time: newMeeting.time,
+          duration: newMeeting.duration,
+          attendees: newMeeting.attendees,
+          attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+          agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+          meeting_link: newMeeting.meeting_link.trim() || undefined,
+          reminder_time: newMeeting.reminder_time || undefined,
+        };
+
+        const createdMeeting = await meetingService.createMeeting(meetingData);
+        setMeetings([createdMeeting, ...meetings]);
+      }
       
       setNewMeeting({
         title: '',
@@ -273,6 +333,9 @@ export default function TimetablePage() {
         agenda_items: [],
         meeting_link: '',
         reminder_time: 15,
+        isRecurring: false,
+        endDate: '',
+        repeatDays: [],
       });
       setShowCreateForm(false);
       setError('');
@@ -355,6 +418,9 @@ export default function TimetablePage() {
       agenda_items: agendaItems,
       meeting_link: meeting.meeting_link || '',
       reminder_time: meeting.reminder_time || 15,
+      isRecurring: false,
+      endDate: '',
+      repeatDays: [],
     });
     setNewAgendaItem('');
     setShowCreateForm(true);
@@ -402,6 +468,9 @@ export default function TimetablePage() {
         agenda_items: [],
         meeting_link: '',
         reminder_time: 15,
+        isRecurring: false,
+        endDate: '',
+        repeatDays: [],
       });
       setShowCreateForm(false);
       setError('');
@@ -476,9 +545,12 @@ export default function TimetablePage() {
     try {
       const projectId = followUpMeeting.project_id || followUpMeeting.project;
       
+      // Strip any existing "Follow-up: " prefix to avoid "Follow-up: Follow-up: ..."
+      const baseTitle = followUpMeeting.title.replace(/^(Follow-up:\s*)+/i, '');
+      
       const meetingData = {
-        title: `Follow-up: ${followUpMeeting.title}`,
-        description: followUpForm.notes || `Follow-up meeting for: ${followUpMeeting.title}\n\nOriginal meeting date: ${followUpMeeting.date}`,
+        title: `Follow-up: ${baseTitle}`,
+        description: followUpForm.notes || `Follow-up meeting for: ${baseTitle}\n\nOriginal meeting date: ${followUpMeeting.date}`,
         project: projectId,
         date: followUpForm.date,
         time: followUpForm.time,
@@ -3718,6 +3790,9 @@ export default function TimetablePage() {
             agenda_items: [],
             meeting_link: '',
             reminder_time: 15,
+            isRecurring: false,
+            endDate: '',
+            repeatDays: [],
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3742,6 +3817,9 @@ export default function TimetablePage() {
                     agenda_items: [],
                     meeting_link: '',
                     reminder_time: 15,
+                    isRecurring: false,
+                    endDate: '',
+                    repeatDays: [],
                   });
                 }}
                 className="modal-close-btn"
@@ -3823,6 +3901,102 @@ export default function TimetablePage() {
                   />
                 </div>
               </div>
+
+              {/* Recurring Meeting Options */}
+              {!editingMeeting && (
+                <div style={{
+                  padding: '16px',
+                  background: newMeeting.isRecurring ? '#EFF6FF' : '#F9FAFB',
+                  borderRadius: '12px',
+                  border: newMeeting.isRecurring ? '2px solid #3B82F6' : '1px solid #E5E7EB',
+                  marginBottom: '16px'
+                }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={newMeeting.isRecurring}
+                      onChange={(e) => setNewMeeting({ ...newMeeting, isRecurring: e.target.checked })}
+                      style={{ width: '18px', height: '18px', accentColor: '#3B82F6' }}
+                    />
+                    <span>🔄 Recurring Meeting</span>
+                  </label>
+                  
+                  {newMeeting.isRecurring && (
+                    <div style={{ marginTop: '16px' }}>
+                      {/* End Date */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#374151', fontSize: '14px' }}>
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={newMeeting.endDate}
+                          min={newMeeting.date}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, endDate: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      
+                      {/* Day Selection */}
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151', fontSize: '14px' }}>
+                          Repeat on Days *
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {[
+                            { day: 0, label: 'Sun' },
+                            { day: 1, label: 'Mon' },
+                            { day: 2, label: 'Tue' },
+                            { day: 3, label: 'Wed' },
+                            { day: 4, label: 'Thu' },
+                            { day: 5, label: 'Fri' },
+                            { day: 6, label: 'Sat' },
+                          ].map(({ day, label }) => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => {
+                                const newDays = newMeeting.repeatDays.includes(day)
+                                  ? newMeeting.repeatDays.filter(d => d !== day)
+                                  : [...newMeeting.repeatDays, day];
+                                setNewMeeting({ ...newMeeting, repeatDays: newDays });
+                              }}
+                              style={{
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                border: newMeeting.repeatDays.includes(day) ? '2px solid #3B82F6' : '1px solid #D1D5DB',
+                                background: newMeeting.repeatDays.includes(day) ? '#3B82F6' : 'white',
+                                color: newMeeting.repeatDays.includes(day) ? 'white' : '#374151',
+                                fontWeight: '600',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        {newMeeting.repeatDays.length > 0 && (
+                          <p style={{ marginTop: '8px', fontSize: '13px', color: '#6B7280' }}>
+                            Meeting will repeat every {newMeeting.repeatDays.sort((a, b) => a - b).map(d => 
+                              ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
+                            ).join(', ')} from {newMeeting.date || 'start date'} to {newMeeting.endDate || 'end date'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="form-group">
                 <label className="form-label">Invite Attendees (Optional)</label>
@@ -4140,6 +4314,9 @@ export default function TimetablePage() {
                     agenda_items: [],
                     meeting_link: '',
                     reminder_time: 15,
+                    isRecurring: false,
+                    endDate: '',
+                    repeatDays: [],
                   });
                 }} className="btn-secondary">
                   Cancel
