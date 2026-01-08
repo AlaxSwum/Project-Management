@@ -691,6 +691,36 @@ export default function TimetablePage() {
     });
   };
 
+  // Convert UK time to Myanmar time (Myanmar is UTC+6:30, UK is UTC+0/+1)
+  const convertUKToMyanmar = (ukTime: string): string => {
+    if (!ukTime) return '';
+    const [hours, minutes] = ukTime.split(':').map(Number);
+    
+    // Myanmar is 5:30 hours ahead of UK (GMT) or 4:30 ahead during BST
+    // Using 5:30 as a general offset (UK winter time)
+    let myanmarHours = hours + 5;
+    let myanmarMinutes = minutes + 30;
+    
+    if (myanmarMinutes >= 60) {
+      myanmarMinutes -= 60;
+      myanmarHours += 1;
+    }
+    
+    if (myanmarHours >= 24) {
+      myanmarHours -= 24;
+    }
+    
+    return `${String(myanmarHours).padStart(2, '0')}:${String(myanmarMinutes).padStart(2, '0')}`;
+  };
+
+  // Format time with both UK and Myanmar
+  const formatTimeWithTimezones = (timeString: string) => {
+    const ukTime = formatTime(timeString);
+    const myanmarTimeStr = convertUKToMyanmar(timeString);
+    const myanmarTime = formatTime(myanmarTimeStr);
+    return { uk: ukTime, myanmar: myanmarTime };
+  };
+
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -2872,9 +2902,17 @@ export default function TimetablePage() {
                           <CalendarDaysIcon style={{ width: '16px', height: '16px' }} />
                           <span>{formatDate(meeting.date)}</span>
                         </div>
-                        <div className="detail-item">
-                          <ClockIcon style={{ width: '16px', height: '16px' }} />
-                          <span>{formatTime(meeting.time)} ({formatDuration(meeting.duration)})</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <div className="detail-item">
+                            <ClockIcon style={{ width: '16px', height: '16px' }} />
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
+                            <span>{formatTime(meeting.time)}</span>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
+                          </div>
+                          <div className="detail-item" style={{ paddingLeft: '22px' }}>
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#D97706', minWidth: '24px' }}>MM</span>
+                            <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                          </div>
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
@@ -2983,9 +3021,17 @@ export default function TimetablePage() {
                           <CalendarDaysIcon style={{ width: '16px', height: '16px' }} />
                           <span>{formatDate(meeting.date)}</span>
                         </div>
-                        <div className="detail-item">
-                          <ClockIcon style={{ width: '16px', height: '16px' }} />
-                          <span>{formatTime(meeting.time)} ({formatDuration(meeting.duration)})</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <div className="detail-item">
+                            <ClockIcon style={{ width: '16px', height: '16px' }} />
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
+                            <span>{formatTime(meeting.time)}</span>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
+                          </div>
+                          <div className="detail-item" style={{ paddingLeft: '22px' }}>
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#D97706', minWidth: '24px' }}>MM</span>
+                            <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                          </div>
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
@@ -3878,7 +3924,7 @@ export default function TimetablePage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Time *</label>
+                  <label className="form-label">Time (UK) *</label>
                   <input
                     type="time"
                     required
@@ -3886,6 +3932,22 @@ export default function TimetablePage() {
                     value={newMeeting.time}
                     onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
                   />
+                  {newMeeting.time && (
+                    <div style={{ 
+                      marginTop: '6px', 
+                      padding: '8px 12px', 
+                      background: '#FEF3C7', 
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      color: '#92400E',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <span style={{ fontWeight: '600' }}>Myanmar:</span>
+                      <span>{formatTime(convertUKToMyanmar(newMeeting.time))}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Duration</label>
@@ -4428,7 +4490,7 @@ export default function TimetablePage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Time
+                    Time (UK)
                   </label>
                   <input
                     type="time"
@@ -4448,6 +4510,11 @@ export default function TimetablePage() {
                     onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
                     onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
+                  {followUpForm.time && (
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#D97706', fontWeight: '500' }}>
+                      MM: {formatTime(convertUKToMyanmar(followUpForm.time))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
