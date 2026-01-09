@@ -61,7 +61,7 @@ export default function CompanyCalendarPage() {
   const [company, setCompany] = useState<Company | null>(null)
   const [members, setMembers] = useState<CompanyMember[]>([])
   const [posts, setPosts] = useState<ContentPost[]>([])
-  const [viewMode, setViewMode] = useState<'calendar' | 'sheet' | 'monthsheet'>('calendar')
+  const [viewMode, setViewMode] = useState<'calendar' | 'monthsheet'>('calendar')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   
   // Sheet editing state
@@ -653,9 +653,9 @@ export default function CompanyCalendarPage() {
             </div>
             <div className="cal-actions">
               <div className="cal-toggle">
-                {(['calendar', 'sheet', 'monthsheet'] as const).map(mode => (
+                {(['calendar', 'monthsheet'] as const).map(mode => (
                   <button key={mode} onClick={() => setViewMode(mode)} className={`cal-toggle-btn ${viewMode === mode ? 'active' : ''}`}>
-                    {mode === 'monthsheet' ? 'Month Sheet' : mode}
+                    {mode === 'monthsheet' ? 'Month Sheet' : 'Calendar'}
                   </button>
                 ))}
               </div>
@@ -850,34 +850,7 @@ export default function CompanyCalendarPage() {
                     })}
                   </div>
                 </div>
-              ) : (
-                <div className="cal-sheet">
-                  {posts.length === 0 ? (
-                    <div className="cal-empty">
-                      <div className="cal-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C483D9" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg></div>
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.5rem 0' }}>No posts yet</h3>
-                      <p style={{ color: '#666' }}>Click "+ New Post" to create content</p>
-                    </div>
-                  ) : (
-                    <table className="cal-table">
-                      <thead><tr>{['Title', 'Type', 'Date', 'Platforms', 'Budget', 'Status', 'Owner'].map(h => <th key={h}>{h}</th>)}</tr></thead>
-                      <tbody>
-                        {posts.map(post => (
-                          <tr key={post.id} onClick={() => openPostDetails(post)}>
-                            <td style={{ fontWeight: 500, color: '#1a1a1a' }}>{post.title}</td>
-                            <td style={{ color: '#666' }}>{post.content_type}</td>
-                            <td style={{ color: '#666' }}>{new Date(post.planned_date).toLocaleDateString()}</td>
-                            <td><div style={{ display: 'flex', gap: '4px' }}>{post.targets?.map(t => <span key={t.platform} style={{ width: '10px', height: '10px', borderRadius: '50%', background: PLATFORM_COLORS[t.platform] }} title={t.platform} />)}</div></td>
-                            <td style={{ fontWeight: 600, color: '#10b981' }}>${(post.media_budget || 0).toLocaleString()}</td>
-                            <td><span className="cal-status-badge" style={{ background: STATUS_COLORS[post.status]?.bg, color: STATUS_COLORS[post.status]?.text }}>{post.status}</span></td>
-                            <td style={{ color: '#666' }}>{post.owner_name || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
+              ) : null}
             </div>
 
             {showPostDrawer && (
