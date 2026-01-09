@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from '@/components/Sidebar'
@@ -17,6 +17,38 @@ interface PlatformBudget {
   budget: number
 }
 
+// Row fields for the spreadsheet view - matching the screenshot
+const SHEET_FIELDS = [
+  { key: 'date', label: 'Date', editable: false },
+  { key: 'topic', label: 'Topic', editable: true, multiline: true },
+  { key: 'post_type', label: 'Post Type', editable: true, type: 'select' },
+  { key: 'posting_time', label: 'Posting Time', editable: true, type: 'time' },
+  { key: 'post_link', label: 'Post link', editable: true },
+  { key: 'post_photo', label: 'Post Photo / Screenshot', editable: true },
+  { key: 'platform', label: 'Platform', editable: true },
+  { key: 'visual_concept', label: 'Visual Concept', editable: true, multiline: true },
+  { key: 'views', label: 'Views', editable: true, type: 'number' },
+  { key: 'interactions', label: 'Interactions', editable: true, type: 'number' },
+  { key: 'content_theme', label: 'Content Theme', editable: true },
+] as const
+
+type SheetFieldKey = typeof SHEET_FIELDS[number]['key']
+
+interface SheetCellData {
+  date: string
+  topic: string
+  post_type: string
+  posting_time: string
+  post_link: string
+  post_photo: string
+  platform: string
+  visual_concept: string
+  views: string
+  interactions: string
+  content_theme: string
+  post_id?: string
+}
+
 export default function CompanyCalendarPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
@@ -28,8 +60,13 @@ export default function CompanyCalendarPage() {
   const [company, setCompany] = useState<Company | null>(null)
   const [members, setMembers] = useState<CompanyMember[]>([])
   const [posts, setPosts] = useState<ContentPost[]>([])
-  const [viewMode, setViewMode] = useState<'calendar' | 'sheet'>('calendar')
+  const [viewMode, setViewMode] = useState<'calendar' | 'sheet' | 'monthsheet'>('calendar')
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  
+  // Sheet editing state
+  const [editingCell, setEditingCell] = useState<{ weekIdx: number; dayIdx: number; field: SheetFieldKey } | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const editInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   
   const [showPostDrawer, setShowPostDrawer] = useState(false)
   const [selectedPost, setSelectedPost] = useState<ContentPost | null>(null)
@@ -223,6 +260,167 @@ export default function CompanyCalendarPage() {
 
   const totalBudget = useMemo(() => posts.reduce((sum, p) => sum + (p.media_budget || 0), 0), [posts])
 
+  // Calculate weeks for the month sheet view
+  const monthWeeks = useMemo(() => {
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    
+    // Get Monday of the first week
+    const startDate = new Date(firstDay)
+    const dayOfWeek = startDate.getDay()
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    startDate.setDate(startDate.getDate() - daysFromMonday)
+    
+    const weeks: { weekNum: number; days: Date[] }[] = []
+    let currentDate = new Date(startDate)
+    let weekNum = 1
+    
+    while (currentDate <= lastDay || weeks.length < 5) {
+      const week: Date[] = []
+      for (let i = 0; i < 7; i++) {
+        week.push(new Date(currentDate))
+        currentDate.setDate(currentDate.getDate() + 1)
+      }
+      weeks.push({ weekNum, days: week })
+      weekNum++
+      
+      // Stop if we've covered all days of the month
+      if (currentDate > lastDay && weeks.length >= 4) break
+    }
+    
+    return weeks
+  }, [currentMonth])
+
+  // Get sheet data for a specific day
+  const getSheetDataForDay = useCallback((date: Date): SheetCellData => {
+    const dateStr = date.toDateString()
+    const dayPosts = postsByDate[dateStr] || []
+    const post = dayPosts[0] // Get first post for that day
+    
+    if (post) {
+      return {
+        date: `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`,
+        topic: post.description || post.title || '',
+        post_type: post.content_type || 'Static',
+        posting_time: post.planned_time || '',
+        post_link: post.targets?.[0]?.permalink || '',
+        post_photo: '',
+        platform: post.targets?.map(t => t.platform).join('/') || '',
+        visual_concept: post.visual_concept || '',
+        views: '',
+        interactions: '',
+        content_theme: post.category || '',
+        post_id: post.id
+      }
+    }
+    
+    return {
+      date: `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`,
+      topic: '',
+      post_type: '',
+      posting_time: '',
+      post_link: '',
+      post_photo: '',
+      platform: '',
+      visual_concept: '',
+      views: '',
+      interactions: '',
+      content_theme: ''
+    }
+  }, [postsByDate])
+
+  // Handle cell edit
+  const handleCellClick = (weekIdx: number, dayIdx: number, field: SheetFieldKey, currentValue: string) => {
+    const fieldDef = SHEET_FIELDS.find(f => f.key === field)
+    if (!fieldDef?.editable) return
+    
+    setEditingCell({ weekIdx, dayIdx, field })
+    setEditValue(currentValue)
+    setTimeout(() => editInputRef.current?.focus(), 0)
+  }
+
+  const handleCellBlur = async () => {
+    if (!editingCell) return
+    
+    const { weekIdx, dayIdx, field } = editingCell
+    const week = monthWeeks[weekIdx]
+    if (!week) return
+    
+    const date = week.days[dayIdx]
+    const dateStr = date.toISOString().split('T')[0]
+    const dayPosts = postsByDate[date.toDateString()] || []
+    
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      
+      if (dayPosts.length > 0) {
+        // Update existing post
+        const post = dayPosts[0]
+        const updateData: any = {}
+        
+        switch (field) {
+          case 'topic': updateData.description = editValue; break
+          case 'post_type': updateData.content_type = editValue.toLowerCase(); break
+          case 'posting_time': updateData.planned_time = editValue; break
+          case 'visual_concept': updateData.visual_concept = editValue; break
+          case 'content_theme': updateData.category = editValue; break
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from('content_posts').update(updateData).eq('id', post.id)
+        }
+      } else if (editValue.trim()) {
+        // Create new post if field has value
+        const newPostData: any = {
+          company_id: companyId,
+          title: field === 'topic' ? editValue.substring(0, 50) : 'Untitled Post',
+          planned_date: dateStr,
+          status: 'draft',
+          content_type: 'static',
+          created_by: String(user?.id)
+        }
+        
+        switch (field) {
+          case 'topic': newPostData.description = editValue; break
+          case 'post_type': newPostData.content_type = editValue.toLowerCase(); break
+          case 'posting_time': newPostData.planned_time = editValue; break
+          case 'visual_concept': newPostData.visual_concept = editValue; break
+          case 'content_theme': newPostData.category = editValue; break
+        }
+        
+        const { data: newPost } = await supabase.from('content_posts').insert(newPostData).select().single()
+        
+        // Add default platform target
+        if (newPost) {
+          await supabase.from('content_post_targets').insert({
+            post_id: newPost.id,
+            platform: 'facebook',
+            platform_status: 'planned'
+          })
+        }
+      }
+      
+      fetchPosts()
+    } catch (err) {
+      console.error('Error saving cell:', err)
+    }
+    
+    setEditingCell(null)
+    setEditValue('')
+  }
+
+  const handleCellKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleCellBlur()
+    } else if (e.key === 'Escape') {
+      setEditingCell(null)
+      setEditValue('')
+    }
+  }
+
   if (authLoading || !company) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
       <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
@@ -315,6 +513,33 @@ export default function CompanyCalendarPage() {
         .cal-status-badge { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 20px; }
         .cal-empty { padding: 4rem 1.5rem; text-align: center; }
         .cal-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #f0e6f5 0%, #e6f0ff 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+        
+        /* Month Sheet Styles */
+        .ms-container { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; }
+        .ms-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
+        .ms-month { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin: 0; }
+        .ms-nav { display: flex; gap: 0.5rem; }
+        .ms-nav-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; }
+        .ms-nav-btn:hover { background: #f5f5f5; }
+        .ms-spreadsheet { overflow-x: auto; padding: 1rem; }
+        .ms-week { margin-bottom: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .ms-week-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.95rem; }
+        .ms-row { display: grid; grid-template-columns: 180px repeat(7, 1fr); min-width: 1200px; }
+        .ms-cell { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; font-size: 0.8rem; min-height: 32px; display: flex; align-items: flex-start; }
+        .ms-label-cell { background: #f8f9fa; font-weight: 600; color: #333; position: sticky; left: 0; z-index: 10; border-left: none; }
+        .ms-day-header { font-weight: 600; color: #1a1a1a; justify-content: center; background: #f0f0f0; text-transform: capitalize; }
+        .ms-day-headers .ms-label-cell { background: #e8e8e8; }
+        .ms-weekend { background: #fff9e6 !important; }
+        .ms-weekend.ms-day-header { background: #ffeb99 !important; }
+        .ms-other-month { opacity: 0.5; }
+        .ms-data-cell { background: #fff; cursor: default; word-break: break-word; }
+        .ms-editable { cursor: pointer; }
+        .ms-editable:hover { background: #f0f7ff; }
+        .ms-multiline { min-height: 60px; }
+        .ms-value { line-height: 1.4; white-space: pre-wrap; }
+        .ms-input { width: 100%; border: 2px solid #5884FD; border-radius: 4px; padding: 0.375rem; font-size: 0.8rem; outline: none; font-family: inherit; }
+        textarea.ms-input { min-height: 50px; resize: vertical; }
+        select.ms-input { cursor: pointer; }
       `}} />
 
       <div className="cal-container">
@@ -333,8 +558,10 @@ export default function CompanyCalendarPage() {
             </div>
             <div className="cal-actions">
               <div className="cal-toggle">
-                {(['calendar', 'sheet'] as const).map(mode => (
-                  <button key={mode} onClick={() => setViewMode(mode)} className={`cal-toggle-btn ${viewMode === mode ? 'active' : ''}`}>{mode}</button>
+                {(['calendar', 'sheet', 'monthsheet'] as const).map(mode => (
+                  <button key={mode} onClick={() => setViewMode(mode)} className={`cal-toggle-btn ${viewMode === mode ? 'active' : ''}`}>
+                    {mode === 'monthsheet' ? 'Month Sheet' : mode}
+                  </button>
                 ))}
               </div>
               <button onClick={() => router.push(`/content-calendar/${companyId}/reports`)} className="cal-btn-secondary">Reports</button>
@@ -343,8 +570,108 @@ export default function CompanyCalendarPage() {
           </header>
 
           <div className="cal-content">
-            <div className="cal-left">
-              {viewMode === 'calendar' ? (
+            <div className="cal-left" style={{ flex: viewMode === 'monthsheet' ? 1 : undefined }}>
+              {viewMode === 'monthsheet' ? (
+                // MONTH SHEET VIEW - Excel-like spreadsheet organized by weeks
+                <div className="ms-container">
+                  {/* Month Navigation */}
+                  <div className="ms-header">
+                    <h2 className="ms-month">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
+                    <div className="ms-nav">
+                      <button onClick={() => setCurrentMonth(new Date())} className="ms-nav-btn">Today</button>
+                      <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="ms-nav-btn">Prev</button>
+                      <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="ms-nav-btn">Next</button>
+                    </div>
+                  </div>
+                  
+                  {/* Spreadsheet */}
+                  <div className="ms-spreadsheet">
+                    {monthWeeks.map((week, weekIdx) => (
+                      <div key={weekIdx} className="ms-week">
+                        <div className="ms-week-header">Week {week.weekNum} ({currentMonth.toLocaleString('default', { month: 'long' })})</div>
+                        
+                        {/* Day Headers Row */}
+                        <div className="ms-row ms-day-headers">
+                          <div className="ms-cell ms-label-cell"></div>
+                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, dayIdx) => {
+                            const isWeekend = dayIdx >= 5
+                            return (
+                              <div 
+                                key={day} 
+                                className={`ms-cell ms-day-header ${isWeekend ? 'ms-weekend' : ''}`}
+                              >
+                                {day}
+                              </div>
+                            )
+                          })}
+                        </div>
+                        
+                        {/* Data Rows */}
+                        {SHEET_FIELDS.map(field => (
+                          <div key={field.key} className="ms-row">
+                            <div className="ms-cell ms-label-cell">{field.label}</div>
+                            {week.days.map((date, dayIdx) => {
+                              const cellData = getSheetDataForDay(date)
+                              const value = cellData[field.key]
+                              const isEditing = editingCell?.weekIdx === weekIdx && 
+                                               editingCell?.dayIdx === dayIdx && 
+                                               editingCell?.field === field.key
+                              const isWeekend = dayIdx >= 5
+                              const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
+                              
+                              return (
+                                <div 
+                                  key={dayIdx} 
+                                  className={`ms-cell ms-data-cell ${isWeekend ? 'ms-weekend' : ''} ${!isCurrentMonth ? 'ms-other-month' : ''} ${field.editable ? 'ms-editable' : ''} ${field.multiline ? 'ms-multiline' : ''}`}
+                                  onClick={() => field.editable && handleCellClick(weekIdx, dayIdx, field.key, value)}
+                                >
+                                  {isEditing ? (
+                                    field.multiline ? (
+                                      <textarea
+                                        ref={editInputRef as React.RefObject<HTMLTextAreaElement>}
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onBlur={handleCellBlur}
+                                        onKeyDown={handleCellKeyDown}
+                                        className="ms-input"
+                                      />
+                                    ) : field.type === 'select' ? (
+                                      <select
+                                        ref={editInputRef as any}
+                                        value={editValue}
+                                        onChange={(e) => { setEditValue(e.target.value); setTimeout(handleCellBlur, 100) }}
+                                        onBlur={handleCellBlur}
+                                        className="ms-input"
+                                      >
+                                        <option value="">Select...</option>
+                                        {CONTENT_TYPES.map(t => (
+                                          <option key={t} value={t}>{t}</option>
+                                        ))}
+                                      </select>
+                                    ) : (
+                                      <input
+                                        ref={editInputRef as React.RefObject<HTMLInputElement>}
+                                        type={field.type || 'text'}
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onBlur={handleCellBlur}
+                                        onKeyDown={handleCellKeyDown}
+                                        className="ms-input"
+                                      />
+                                    )
+                                  ) : (
+                                    <span className="ms-value">{value || ''}</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : viewMode === 'calendar' ? (
                 <div className="cal-calendar">
                   <div className="cal-cal-header">
                     <h2 className="cal-month">{monthName}</h2>

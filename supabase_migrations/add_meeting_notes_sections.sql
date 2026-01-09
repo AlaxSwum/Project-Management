@@ -1,7 +1,29 @@
--- Add section columns to meeting_notes table
--- Run this in Supabase SQL Editor to add the new section fields for meeting notes
+-- Meeting Notes Table and Section Columns
+-- Run this in Supabase SQL Editor
 
--- Add discussion_sections column (JSONB for storing array of sections)
+-- First, create the meeting_notes table if it doesn't exist
+CREATE TABLE IF NOT EXISTS meeting_notes (
+    id SERIAL PRIMARY KEY,
+    meeting_id INTEGER NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    attendees TEXT[] DEFAULT '{}',
+    discussion_points TEXT[] DEFAULT '{}',
+    decisions_made TEXT[] DEFAULT '{}',
+    action_items TEXT[] DEFAULT '{}',
+    next_steps TEXT[] DEFAULT '{}',
+    follow_up_date DATE,
+    -- Section columns for organizing notes by person
+    discussion_sections JSONB DEFAULT '[]'::jsonb,
+    decision_sections JSONB DEFAULT '[]'::jsonb,
+    action_sections JSONB DEFAULT '[]'::jsonb,
+    next_step_sections JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add section columns if table already exists but columns are missing
 DO $$ 
 BEGIN 
     IF NOT EXISTS (
@@ -12,7 +34,6 @@ BEGIN
     END IF;
 END $$;
 
--- Add decision_sections column
 DO $$ 
 BEGIN 
     IF NOT EXISTS (
@@ -23,7 +44,6 @@ BEGIN
     END IF;
 END $$;
 
--- Add action_sections column
 DO $$ 
 BEGIN 
     IF NOT EXISTS (
@@ -34,7 +54,6 @@ BEGIN
     END IF;
 END $$;
 
--- Add next_step_sections column
 DO $$ 
 BEGIN 
     IF NOT EXISTS (
@@ -45,11 +64,9 @@ BEGIN
     END IF;
 END $$;
 
--- Create index for better query performance on sections
-CREATE INDEX IF NOT EXISTS idx_meeting_notes_discussion_sections ON meeting_notes USING GIN (discussion_sections);
-CREATE INDEX IF NOT EXISTS idx_meeting_notes_decision_sections ON meeting_notes USING GIN (decision_sections);
-CREATE INDEX IF NOT EXISTS idx_meeting_notes_action_sections ON meeting_notes USING GIN (action_sections);
-CREATE INDEX IF NOT EXISTS idx_meeting_notes_next_step_sections ON meeting_notes USING GIN (next_step_sections);
+-- Create indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_meeting_notes_meeting_id ON meeting_notes (meeting_id);
+CREATE INDEX IF NOT EXISTS idx_meeting_notes_date ON meeting_notes (date);
 
--- Note: This migration is safe to run multiple times - it only adds columns if they don't exist
+-- Note: This migration is safe to run multiple times
 
