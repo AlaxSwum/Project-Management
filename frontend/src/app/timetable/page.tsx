@@ -105,6 +105,8 @@ export default function TimetablePage() {
     isRecurring: false,
     endDate: '',
     repeatDays: [] as number[], // 0=Sun, 1=Mon, 2=Tue, etc.
+    // Timezone selection
+    timezone: 'UK' as 'UK' | 'MM',
   });
   const [newAgendaItem, setNewAgendaItem] = useState('');
   
@@ -266,6 +268,9 @@ export default function TimetablePage() {
     try {
       const createdMeetings: Meeting[] = [];
       
+      // Convert to UK time if entered in Myanmar timezone (always store as UK time)
+      const ukTime = newMeeting.timezone === 'MM' ? convertMyanmarToUK(newMeeting.time) : newMeeting.time;
+      
       if (newMeeting.isRecurring && newMeeting.endDate && newMeeting.repeatDays.length > 0) {
         // Create multiple meetings for recurring schedule
         const startDate = new Date(newMeeting.date);
@@ -283,7 +288,7 @@ export default function TimetablePage() {
               description: newMeeting.description.trim(),
               project: newMeeting.project_id,
               date: dateStr,
-              time: newMeeting.time,
+              time: ukTime,
               duration: newMeeting.duration,
               attendees: newMeeting.attendees,
               attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
@@ -300,7 +305,7 @@ export default function TimetablePage() {
         }
         
         setMeetings([...createdMeetings, ...meetings]);
-        alert(`✅ Created ${createdMeetings.length} recurring meetings!`);
+        alert(`Created ${createdMeetings.length} recurring meetings!`);
       } else {
         // Single meeting creation
         const meetingData = {
@@ -308,7 +313,7 @@ export default function TimetablePage() {
           description: newMeeting.description.trim(),
           project: newMeeting.project_id,
           date: newMeeting.date,
-          time: newMeeting.time,
+          time: ukTime,
           duration: newMeeting.duration,
           attendees: newMeeting.attendees,
           attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
@@ -336,6 +341,7 @@ export default function TimetablePage() {
         isRecurring: false,
         endDate: '',
         repeatDays: [],
+        timezone: 'UK',
       });
       setShowCreateForm(false);
       setError('');
@@ -421,6 +427,7 @@ export default function TimetablePage() {
       isRecurring: false,
       endDate: '',
       repeatDays: [],
+      timezone: 'UK',
     });
     setNewAgendaItem('');
     setShowCreateForm(true);
@@ -471,6 +478,7 @@ export default function TimetablePage() {
         isRecurring: false,
         endDate: '',
         repeatDays: [],
+        timezone: 'UK',
       });
       setShowCreateForm(false);
       setError('');
@@ -713,6 +721,27 @@ export default function TimetablePage() {
     return `${String(myanmarHours).padStart(2, '0')}:${String(myanmarMinutes).padStart(2, '0')}`;
   };
 
+  // Convert Myanmar time to UK time (reverse: Myanmar - 5:30 = UK)
+  const convertMyanmarToUK = (mmTime: string): string => {
+    if (!mmTime) return '';
+    const [hours, minutes] = mmTime.split(':').map(Number);
+    
+    // UK is 5:30 hours behind Myanmar
+    let ukHours = hours - 5;
+    let ukMinutes = minutes - 30;
+    
+    if (ukMinutes < 0) {
+      ukMinutes += 60;
+      ukHours -= 1;
+    }
+    
+    if (ukHours < 0) {
+      ukHours += 24;
+    }
+    
+    return `${String(ukHours).padStart(2, '0')}:${String(ukMinutes).padStart(2, '0')}`;
+  };
+
   // Format time with both UK and Myanmar
   const formatTimeWithTimezones = (timeString: string) => {
     const ukTime = formatTime(timeString);
@@ -809,7 +838,13 @@ export default function TimetablePage() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
-    return meetingsByDate[dateStr] || [];
+    const dayMeetings = meetingsByDate[dateStr] || [];
+    // Sort by time (earliest first)
+    return dayMeetings.sort((a, b) => {
+      const [hoursA, minutesA] = a.time.split(':').map(Number);
+      const [hoursB, minutesB] = b.time.split(':').map(Number);
+      return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB);
+    });
   };
 
   // Helper functions for week and day views
@@ -3301,28 +3336,32 @@ export default function TimetablePage() {
                                 </div>
                                 <div style={{ 
                                   display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  fontSize: '0.65rem'
+                                  flexDirection: 'column',
+                                  gap: '2px',
+                                  fontSize: '0.625rem'
                                 }}>
                                   <div style={{
-                                    fontWeight: '500',
-                                    maxWidth: '60%',
-                                  overflow: 'hidden', 
-                                  textOverflow: 'ellipsis', 
-                                  whiteSpace: 'nowrap',
-                                    color: '#6B7280'
-                                }}>
-                                    {formatTime(meeting.time)}
-                                </div>
-                                  <div style={{ 
                                     display: 'flex',
+                                    justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    gap: '0.125rem',
-                                    color: '#6B7280'
-                                  }}>
-                                    <UserGroupIcon style={{ width: '10px', height: '10px' }} />
-                                    {meeting.created_by.name.split(' ')[0]}
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                      <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '9px' }}>UK</span>
+                                      <span style={{ color: '#0369A1', fontWeight: '500' }}>{formatTime(meeting.time)}</span>
+                                    </div>
+                                    <div style={{ 
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '2px',
+                                      color: '#6B7280'
+                                    }}>
+                                      <UserGroupIcon style={{ width: '9px', height: '9px' }} />
+                                      <span style={{ fontSize: '9px' }}>{meeting.created_by.name.split(' ')[0]}</span>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ fontWeight: '600', color: '#92400E', fontSize: '9px' }}>MM</span>
+                                    <span style={{ color: '#B45309', fontWeight: '500' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
                                   </div>
                                 </div>
                               </div>
@@ -3494,10 +3533,19 @@ export default function TimetablePage() {
                                         {meeting.title}
                                       </div>
                                       <div style={{
-                                        fontSize: '0.75rem',
-                                        color: '#6B7280'
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '2px',
+                                        fontSize: '0.7rem',
                                       }}>
-                                        {formatTime(meeting.time)}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '10px' }}>UK</span>
+                                          <span style={{ color: '#0369A1' }}>{formatTime(meeting.time)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#92400E', fontSize: '10px' }}>MM</span>
+                                          <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                                        </div>
                                       </div>
                                     </div>
                                   ))}
@@ -3616,10 +3664,22 @@ export default function TimetablePage() {
                                       </div>
                                       <div style={{
                                         fontSize: '0.875rem',
-                                        color: '#6B7280',
-                                        marginBottom: '0.25rem'
+                                        marginBottom: '0.25rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
                                       }}>
-                                        {formatTime(meeting.time)} • {meeting.project_name}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '11px' }}>UK</span>
+                                          <span style={{ color: '#0369A1' }}>{formatTime(meeting.time)}</span>
+                                        </div>
+                                        <span style={{ color: '#D1D5DB' }}>|</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#92400E', fontSize: '11px' }}>MM</span>
+                                          <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                                        </div>
+                                        <span style={{ color: '#D1D5DB' }}>•</span>
+                                        <span style={{ color: '#6B7280' }}>{meeting.project_name}</span>
                                       </div>
                                       {meeting.description && (
                                         <div style={{
@@ -3839,6 +3899,7 @@ export default function TimetablePage() {
             isRecurring: false,
             endDate: '',
             repeatDays: [],
+            timezone: 'UK',
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3866,6 +3927,7 @@ export default function TimetablePage() {
                     isRecurring: false,
                     endDate: '',
                     repeatDays: [],
+                    timezone: 'UK',
                   });
                 }}
                 className="modal-close-btn"
@@ -3924,7 +3986,17 @@ export default function TimetablePage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Time (UK) *</label>
+                  <label className="form-label">Timezone</label>
+                  <select
+                    className="form-select"
+                    value={newMeeting.timezone}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, timezone: e.target.value as 'UK' | 'MM' })}
+                    style={{ marginBottom: '8px' }}
+                  >
+                    <option value="UK">UK (GMT/BST)</option>
+                    <option value="MM">Myanmar (MMT)</option>
+                  </select>
+                  <label className="form-label">Time *</label>
                   <input
                     type="time"
                     required
@@ -3934,18 +4006,29 @@ export default function TimetablePage() {
                   />
                   {newMeeting.time && (
                     <div style={{ 
-                      marginTop: '6px', 
-                      padding: '8px 12px', 
-                      background: '#FEF3C7', 
-                      borderRadius: '6px',
+                      marginTop: '8px', 
+                      padding: '10px 12px', 
+                      background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', 
+                      borderRadius: '8px',
+                      border: '1px solid #BAE6FD',
                       fontSize: '12px',
-                      color: '#92400E',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
                     }}>
-                      <span style={{ fontWeight: '600' }}>Myanmar:</span>
-                      <span>{formatTime(convertUKToMyanmar(newMeeting.time))}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: '700', color: '#1E3A5F', fontSize: '11px' }}>UK</span>
+                          <span style={{ color: '#0369A1', fontWeight: '500' }}>
+                            {formatTime(newMeeting.timezone === 'UK' ? newMeeting.time : convertMyanmarToUK(newMeeting.time))}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: '700', color: '#92400E', fontSize: '11px' }}>MM</span>
+                          <span style={{ color: '#B45309', fontWeight: '500' }}>
+                            {formatTime(newMeeting.timezone === 'MM' ? newMeeting.time : convertUKToMyanmar(newMeeting.time))}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -4379,6 +4462,7 @@ export default function TimetablePage() {
                     isRecurring: false,
                     endDate: '',
                     repeatDays: [],
+                    timezone: 'UK',
                   });
                 }} className="btn-secondary">
                   Cancel
