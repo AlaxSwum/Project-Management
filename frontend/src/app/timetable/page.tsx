@@ -308,22 +308,22 @@ export default function TimetablePage() {
         alert(`Created ${createdMeetings.length} recurring meetings!`);
       } else {
         // Single meeting creation
-        const meetingData = {
-          title: newMeeting.title.trim(),
-          description: newMeeting.description.trim(),
-          project: newMeeting.project_id,
-          date: newMeeting.date,
+      const meetingData = {
+        title: newMeeting.title.trim(),
+        description: newMeeting.description.trim(),
+        project: newMeeting.project_id,
+        date: newMeeting.date,
           time: ukTime,
-          duration: newMeeting.duration,
-          attendees: newMeeting.attendees,
-          attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
-          agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
-          meeting_link: newMeeting.meeting_link.trim() || undefined,
-          reminder_time: newMeeting.reminder_time || undefined,
-        };
+        duration: newMeeting.duration,
+        attendees: newMeeting.attendees,
+        attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+        agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+        meeting_link: newMeeting.meeting_link.trim() || undefined,
+        reminder_time: newMeeting.reminder_time || undefined,
+      };
 
-        const createdMeeting = await meetingService.createMeeting(meetingData);
-        setMeetings([createdMeeting, ...meetings]);
+      const createdMeeting = await meetingService.createMeeting(meetingData);
+      setMeetings([createdMeeting, ...meetings]);
       }
       
       setNewMeeting({
@@ -2938,8 +2938,8 @@ export default function TimetablePage() {
                           <span>{formatDate(meeting.date)}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <div className="detail-item">
-                            <ClockIcon style={{ width: '16px', height: '16px' }} />
+                        <div className="detail-item">
+                          <ClockIcon style={{ width: '16px', height: '16px' }} />
                             <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
                             <span>{formatTime(meeting.time)}</span>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
@@ -3057,8 +3057,8 @@ export default function TimetablePage() {
                           <span>{formatDate(meeting.date)}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <div className="detail-item">
-                            <ClockIcon style={{ width: '16px', height: '16px' }} />
+                        <div className="detail-item">
+                          <ClockIcon style={{ width: '16px', height: '16px' }} />
                             <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
                             <span>{formatTime(meeting.time)}</span>
                             <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
@@ -3340,21 +3340,21 @@ export default function TimetablePage() {
                                   gap: '2px',
                                   fontSize: '0.625rem'
                                 }}>
-                                  <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
+                                <div style={{ 
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                       <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '9px' }}>UK</span>
                                       <span style={{ color: '#0369A1', fontWeight: '500' }}>{formatTime(meeting.time)}</span>
-                                    </div>
-                                    <div style={{ 
-                                      display: 'flex',
-                                      alignItems: 'center',
+                                </div>
+                                  <div style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
                                       gap: '2px',
-                                      color: '#6B7280'
-                                    }}>
+                                    color: '#6B7280'
+                                  }}>
                                       <UserGroupIcon style={{ width: '9px', height: '9px' }} />
                                       <span style={{ fontSize: '9px' }}>{meeting.created_by.name.split(' ')[0]}</span>
                                     </div>
@@ -4597,9 +4597,9 @@ export default function TimetablePage() {
                   {followUpForm.time && (
                     <div style={{ marginTop: '4px', fontSize: '11px', color: '#D97706', fontWeight: '500' }}>
                       MM: {formatTime(convertUKToMyanmar(followUpForm.time))}
-                    </div>
-                  )}
                 </div>
+                  )}
+              </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Duration
@@ -4710,7 +4710,7 @@ export default function TimetablePage() {
                         {originalAttendeeNames.map((name: string, idx: number) => (
                           <div
                             key={idx}
-                            style={{
+                  style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
@@ -4737,7 +4737,7 @@ export default function TimetablePage() {
                             </span>
                             {name}
                             <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
-                          </div>
+              </div>
                         ))}
                       </div>
                     );
@@ -4758,57 +4758,57 @@ export default function TimetablePage() {
                         {originalAttendees.map((member: any) => {
                           const userId = member.id || member.user_id;
                           const isSelected = followUpForm.attendee_ids.includes(userId);
-                          return (
-                            <div
+                        return (
+                          <div
                               key={userId}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                                 toggleFollowUpAttendee(userId);
-                              }}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '6px 10px',
-                                background: isSelected ? '#dbeafe' : '#fff',
-                                border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
-                                borderRadius: '20px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                transition: 'all 0.2s ease',
-                                userSelect: 'none',
-                              }}
-                            >
-                              <span style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                background: isSelected ? '#3b82f6' : '#e5e7eb',
-                                color: '#fff',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                              }}>
-                                {(member.name || member.email || '?').charAt(0).toUpperCase()}
-                              </span>
-                              {member.name || member.email}
-                              {isSelected && (
-                                <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 10px',
+                              background: isSelected ? '#dbeafe' : '#fff',
+                              border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
+                              borderRadius: '20px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              transition: 'all 0.2s ease',
+                              userSelect: 'none',
+                            }}
+                          >
+                            <span style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: isSelected ? '#3b82f6' : '#e5e7eb',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                            }}>
+                              {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                            </span>
+                            {member.name || member.email}
+                            {isSelected && (
+                              <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
                     );
                   }
                   
                   return (
-                    <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+                  <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
                       No attendees in original meeting
-                    </p>
+                  </p>
                   );
                 })()}
               </div>
@@ -4920,8 +4920,8 @@ export default function TimetablePage() {
               </div>
 
               {/* Actions */}
-              <div style={{ 
-                display: 'flex', 
+              <div style={{
+                display: 'flex',
                 gap: '12px',
                 paddingTop: '16px',
                 borderTop: '1px solid #E5E7EB'

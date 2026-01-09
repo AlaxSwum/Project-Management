@@ -26,6 +26,7 @@ const SHEET_FIELDS = [
   { key: 'post_link', label: 'Post link', editable: true },
   { key: 'post_photo', label: 'Post Photo / Screenshot', editable: true },
   { key: 'platform', label: 'Platform', editable: true, type: 'multiselect' },
+  { key: 'published', label: 'Published', editable: false, type: 'status' },
   { key: 'visual_concept', label: 'Visual Concept', editable: true, multiline: true },
   { key: 'views', label: 'Views', editable: true, type: 'number' },
   { key: 'interactions', label: 'Interactions', editable: true, type: 'number' },
@@ -43,6 +44,8 @@ interface SheetCellData {
   post_photo: string
   platform: string
   platforms: Platform[]
+  published: string
+  isPublished: boolean
   visual_concept: string
   views: string
   interactions: string
@@ -304,6 +307,7 @@ export default function CompanyCalendarPage() {
     
     if (post) {
       const platforms = (post.targets?.map(t => t.platform) || []) as Platform[]
+      const isPublished = post.status === 'published' || post.targets?.some(t => t.platform_status === 'published') || false
       return {
         date: `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`,
         topic: post.description || post.title || '',
@@ -313,6 +317,8 @@ export default function CompanyCalendarPage() {
         post_photo: '',
         platform: platforms.join('/') || '',
         platforms: platforms,
+        published: isPublished ? 'Yes' : 'No',
+        isPublished: isPublished,
         visual_concept: post.visual_concept || '',
         views: '',
         interactions: '',
@@ -330,6 +336,8 @@ export default function CompanyCalendarPage() {
       post_photo: '',
       platform: '',
       platforms: [],
+      published: '',
+      isPublished: false,
       visual_concept: '',
       views: '',
       interactions: '',
@@ -633,8 +641,15 @@ export default function CompanyCalendarPage() {
         .ms-platform-save { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 600; border: none; border-radius: 4px; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; }
         .ms-platform-cancel { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; color: #666; cursor: pointer; }
         .ms-platform-display { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .ms-platform-badge { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
-        .ms-placeholder { color: #999; font-style: italic; font-size: 0.75rem; }
+        .ms-platform-tag { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; color: #fff; text-transform: capitalize; white-space: nowrap; }
+        .ms-placeholder { color: #999; font-style: italic; font-size: 0.7rem; }
+        
+        /* Published Status Styles */
+        .ms-published-status { display: flex; align-items: center; justify-content: center; width: 100%; }
+        .ms-status-icon { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; }
+        .ms-status-icon.ms-published { background: #dcfce7; color: #16a34a; }
+        .ms-status-icon.ms-not-published { background: #fee2e2; color: #dc2626; }
+        .ms-status-empty { color: #ccc; font-size: 0.8rem; }
       `}} />
 
       <div className="cal-container">
@@ -765,16 +780,39 @@ export default function CompanyCalendarPage() {
                                           cellData.platforms.map(p => (
                                             <span 
                                               key={p} 
-                                              className="ms-platform-badge"
+                                              className="ms-platform-tag"
                                               style={{ background: PLATFORM_COLORS[p] }}
-                                              title={p}
-                                            />
+                                            >
+                                              {p.charAt(0).toUpperCase() + p.slice(1)}
+                                            </span>
                                           ))
                                         ) : (
-                                          <span className="ms-value ms-placeholder">Click to add platforms</span>
+                                          <span className="ms-value ms-placeholder">Click to add</span>
                                         )}
                                       </div>
                                     )
+                                  ) : field.key === 'published' ? (
+                                    /* Published Status with Check/X icons */
+                                    <div className="ms-published-status">
+                                      {cellData.post_id ? (
+                                        cellData.isPublished ? (
+                                          <span className="ms-status-icon ms-published">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                              <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                          </span>
+                                        ) : (
+                                          <span className="ms-status-icon ms-not-published">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                          </span>
+                                        )
+                                      ) : (
+                                        <span className="ms-status-empty">-</span>
+                                      )}
+                                    </div>
                                   ) : isEditing ? (
                                     ('multiline' in field && field.multiline) ? (
                                       <textarea

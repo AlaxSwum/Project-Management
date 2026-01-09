@@ -355,9 +355,9 @@ export default function MeetingNotesModal({
           <h3 className="section-heading">Key Discussion Points</h3>
           {/* General notes without section */}
           {meetingNotes.discussion_points.filter(p => p.trim()).length > 0 && (
-            <ol className="discussion-list">
-              {meetingNotes.discussion_points.filter(p => p.trim()).map((point, index) => (
-                <li key={index} className="discussion-item-doc">{point}</li>
+          <ol className="discussion-list">
+            {meetingNotes.discussion_points.filter(p => p.trim()).map((point, index) => (
+              <li key={index} className="discussion-item-doc">{point}</li>
               ))}
             </ol>
           )}
@@ -371,8 +371,8 @@ export default function MeetingNotesModal({
               <ol className="discussion-list sub-list">
                 {section.notes.filter(n => n.trim()).map((note, idx) => (
                   <li key={idx} className="discussion-item-doc">{note}</li>
-                ))}
-              </ol>
+            ))}
+          </ol>
             </div>
           ))}
         </div>
@@ -382,9 +382,9 @@ export default function MeetingNotesModal({
         <div className="document-section">
           <h3 className="section-heading">Decisions Made</h3>
           {meetingNotes.decisions_made.filter(d => d.trim()).length > 0 && (
-            <ul className="decision-list">
-              {meetingNotes.decisions_made.filter(d => d.trim()).map((decision, index) => (
-                <li key={index} className="decision-item">{decision}</li>
+          <ul className="decision-list">
+            {meetingNotes.decisions_made.filter(d => d.trim()).map((decision, index) => (
+              <li key={index} className="decision-item">{decision}</li>
               ))}
             </ul>
           )}
@@ -397,8 +397,8 @@ export default function MeetingNotesModal({
               <ul className="decision-list sub-list">
                 {section.notes.filter(n => n.trim()).map((note, idx) => (
                   <li key={idx} className="decision-item">{note}</li>
-                ))}
-              </ul>
+            ))}
+          </ul>
             </div>
           ))}
         </div>
@@ -408,11 +408,11 @@ export default function MeetingNotesModal({
         <div className="document-section">
           <h3 className="section-heading">Action Items</h3>
           {meetingNotes.action_items.filter(a => a.trim()).length > 0 && (
-            <ul className="action-list">
-              {meetingNotes.action_items.filter(a => a.trim()).map((item, index) => (
-                <li key={index} className="action-item">
-                  <span className="action-number">A{index + 1}</span>
-                  {item}
+          <ul className="action-list">
+            {meetingNotes.action_items.filter(a => a.trim()).map((item, index) => (
+              <li key={index} className="action-item">
+                <span className="action-number">A{index + 1}</span>
+                {item}
                 </li>
               ))}
             </ul>
@@ -428,9 +428,9 @@ export default function MeetingNotesModal({
                   <li key={idx} className="action-item">
                     <span className="action-number">A{idx + 1}</span>
                     {note}
-                  </li>
-                ))}
-              </ul>
+              </li>
+            ))}
+          </ul>
             </div>
           ))}
         </div>
@@ -440,11 +440,11 @@ export default function MeetingNotesModal({
         <div className="document-section">
           <h3 className="section-heading">Next Steps</h3>
           {meetingNotes.next_steps.filter(n => n.trim()).length > 0 && (
-            <ul className="next-steps-list">
-              {meetingNotes.next_steps.filter(n => n.trim()).map((step, index) => (
-                <li key={index} className="next-step-item">
-                  <span className="step-number">→</span>
-                  {step}
+          <ul className="next-steps-list">
+            {meetingNotes.next_steps.filter(n => n.trim()).map((step, index) => (
+              <li key={index} className="next-step-item">
+                <span className="step-number">→</span>
+                {step}
                 </li>
               ))}
             </ul>
@@ -460,9 +460,9 @@ export default function MeetingNotesModal({
                   <li key={idx} className="next-step-item">
                     <span className="step-number">→</span>
                     {note}
-                  </li>
-                ))}
-              </ul>
+              </li>
+            ))}
+          </ul>
             </div>
           ))}
         </div>
@@ -1229,9 +1229,9 @@ export default function MeetingNotesModal({
               <div className="form-section">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 className="section-title" style={{ marginBottom: 0 }}>
-                    <ListBulletIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                    Key Discussion Points
-                  </h2>
+                  <ListBulletIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                  Key Discussion Points
+                </h2>
                   <button
                     onClick={() => setShowAddSection(prev => ({ ...prev, discussion_sections: !prev.discussion_sections }))}
                     className="add-section-btn"
@@ -1384,9 +1384,9 @@ export default function MeetingNotesModal({
               <div className="form-section">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 className="section-title" style={{ marginBottom: 0 }}>
-                    <CheckCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                    Decisions Made
-                  </h2>
+                  <CheckCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                  Decisions Made
+                </h2>
                   <button
                     onClick={() => setShowAddSection(prev => ({ ...prev, decision_sections: !prev.decision_sections }))}
                     className="add-section-btn"
@@ -1515,9 +1515,9 @@ export default function MeetingNotesModal({
               <div className="form-section">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 className="section-title" style={{ marginBottom: 0 }}>
-                    <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                    Action Items
-                  </h2>
+                  <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                  Action Items
+                </h2>
                   <button
                     onClick={() => setShowAddSection(prev => ({ ...prev, action_sections: !prev.action_sections }))}
                     className="add-section-btn"
@@ -1646,9 +1646,9 @@ export default function MeetingNotesModal({
               <div className="form-section">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 className="section-title" style={{ marginBottom: 0 }}>
-                    <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                    Next Steps
-                  </h2>
+                  <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                  Next Steps
+                </h2>
                   <button
                     onClick={() => setShowAddSection(prev => ({ ...prev, next_step_sections: !prev.next_step_sections }))}
                     className="add-section-btn"
