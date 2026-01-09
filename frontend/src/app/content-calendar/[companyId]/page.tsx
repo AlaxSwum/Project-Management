@@ -25,7 +25,7 @@ const SHEET_FIELDS = [
   { key: 'posting_time', label: 'Posting Time', editable: true, type: 'time' },
   { key: 'post_link', label: 'Post link', editable: true },
   { key: 'post_photo', label: 'Post Photo / Screenshot', editable: true },
-  { key: 'platform', label: 'Platform', editable: true },
+  { key: 'platform', label: 'Platform', editable: true, type: 'multiselect' },
   { key: 'visual_concept', label: 'Visual Concept', editable: true, multiline: true },
   { key: 'views', label: 'Views', editable: true, type: 'number' },
   { key: 'interactions', label: 'Interactions', editable: true, type: 'number' },
@@ -42,6 +42,7 @@ interface SheetCellData {
   post_link: string
   post_photo: string
   platform: string
+  platforms: Platform[]
   visual_concept: string
   views: string
   interactions: string
@@ -66,6 +67,8 @@ export default function CompanyCalendarPage() {
   // Sheet editing state
   const [editingCell, setEditingCell] = useState<{ weekIdx: number; dayIdx: number; field: SheetFieldKey } | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [editPlatforms, setEditPlatforms] = useState<Platform[]>([])
+  const [editingPlatformCell, setEditingPlatformCell] = useState<{ weekIdx: number; dayIdx: number; postId?: string } | null>(null)
   const editInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   
   const [showPostDrawer, setShowPostDrawer] = useState(false)
@@ -300,6 +303,7 @@ export default function CompanyCalendarPage() {
     const post = dayPosts[0] // Get first post for that day
     
     if (post) {
+      const platforms = (post.targets?.map(t => t.platform) || []) as Platform[]
       return {
         date: `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`,
         topic: post.description || post.title || '',
@@ -307,7 +311,8 @@ export default function CompanyCalendarPage() {
         posting_time: post.planned_time || '',
         post_link: post.targets?.[0]?.permalink || '',
         post_photo: '',
-        platform: post.targets?.map(t => t.platform).join('/') || '',
+        platform: platforms.join('/') || '',
+        platforms: platforms,
         visual_concept: post.visual_concept || '',
         views: '',
         interactions: '',
@@ -324,6 +329,7 @@ export default function CompanyCalendarPage() {
       post_link: '',
       post_photo: '',
       platform: '',
+      platforms: [],
       visual_concept: '',
       views: '',
       interactions: '',
@@ -332,13 +338,87 @@ export default function CompanyCalendarPage() {
   }, [postsByDate])
 
   // Handle cell edit
-  const handleCellClick = (weekIdx: number, dayIdx: number, field: SheetFieldKey, currentValue: string) => {
+  const handleCellClick = (weekIdx: number, dayIdx: number, field: SheetFieldKey, currentValue: string, cellData?: SheetCellData) => {
     const fieldDef = SHEET_FIELDS.find(f => f.key === field)
     if (!fieldDef?.editable) return
+    
+    // Handle platform multi-select differently
+    if (field === 'platform' && cellData) {
+      setEditingPlatformCell({ weekIdx, dayIdx, postId: cellData.post_id })
+      setEditPlatforms(cellData.platforms || [])
+      return
+    }
     
     setEditingCell({ weekIdx, dayIdx, field })
     setEditValue(currentValue)
     setTimeout(() => editInputRef.current?.focus(), 0)
+  }
+
+  // Handle platform toggle
+  const handlePlatformToggleInSheet = (platform: Platform) => {
+    setEditPlatforms(prev => 
+      prev.includes(platform) 
+        ? prev.filter(p => p !== platform)
+        : [...prev, platform]
+    )
+  }
+
+  // Save platform changes
+  const handleSavePlatforms = async () => {
+    if (!editingPlatformCell) return
+    
+    const { weekIdx, dayIdx, postId } = editingPlatformCell
+    const week = monthWeeks[weekIdx]
+    if (!week) return
+    
+    const date = week.days[dayIdx]
+    const dateStr = date.toISOString().split('T')[0]
+    
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      
+      if (postId) {
+        // Update existing post's platforms
+        // First delete all existing targets
+        await supabase.from('content_post_targets').delete().eq('post_id', postId)
+        
+        // Then add new targets for selected platforms
+        for (const platform of editPlatforms) {
+          await supabase.from('content_post_targets').insert({
+            post_id: postId,
+            platform,
+            platform_status: 'planned'
+          })
+        }
+      } else if (editPlatforms.length > 0) {
+        // Create new post with selected platforms
+        const { data: newPost } = await supabase.from('content_posts').insert({
+          company_id: companyId,
+          title: 'Untitled Post',
+          planned_date: dateStr,
+          status: 'draft',
+          content_type: 'static',
+          created_by: String(user?.id)
+        }).select().single()
+        
+        if (newPost) {
+          for (const platform of editPlatforms) {
+            await supabase.from('content_post_targets').insert({
+              post_id: newPost.id,
+              platform,
+              platform_status: 'planned'
+            })
+          }
+        }
+      }
+      
+      fetchPosts()
+    } catch (err) {
+      console.error('Error saving platforms:', err)
+    }
+    
+    setEditingPlatformCell(null)
+    setEditPlatforms([])
   }
 
   const handleCellBlur = async () => {
@@ -540,6 +620,21 @@ export default function CompanyCalendarPage() {
         .ms-input { width: 100%; border: 2px solid #5884FD; border-radius: 4px; padding: 0.375rem; font-size: 0.8rem; outline: none; font-family: inherit; }
         textarea.ms-input { min-height: 50px; resize: vertical; }
         select.ms-input { cursor: pointer; }
+        
+        /* Platform Multi-Select Styles */
+        .ms-platform-editor { background: #fff; border: 2px solid #5884FD; border-radius: 8px; padding: 0.5rem; min-width: 140px; }
+        .ms-platform-options { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 0.5rem; }
+        .ms-platform-option { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; padding: 0.25rem; border-radius: 4px; font-size: 0.75rem; }
+        .ms-platform-option:hover { background: #f5f5f5; }
+        .ms-platform-option input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+        .ms-platform-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .ms-platform-name { text-transform: capitalize; color: #333; }
+        .ms-platform-actions { display: flex; gap: 0.375rem; border-top: 1px solid #e8e8e8; padding-top: 0.5rem; }
+        .ms-platform-save { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 600; border: none; border-radius: 4px; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; }
+        .ms-platform-cancel { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; color: #666; cursor: pointer; }
+        .ms-platform-display { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .ms-platform-badge { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+        .ms-placeholder { color: #999; font-style: italic; font-size: 0.75rem; }
       `}} />
 
       <div className="cal-container">
@@ -619,13 +714,68 @@ export default function CompanyCalendarPage() {
                               const isWeekend = dayIdx >= 5
                               const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
                               
+                              const isPlatformEditing = field.key === 'platform' && 
+                                editingPlatformCell?.weekIdx === weekIdx && 
+                                editingPlatformCell?.dayIdx === dayIdx
+                              
                               return (
                                 <div 
                                   key={dayIdx} 
                                   className={`ms-cell ms-data-cell ${isWeekend ? 'ms-weekend' : ''} ${!isCurrentMonth ? 'ms-other-month' : ''} ${field.editable ? 'ms-editable' : ''} ${'multiline' in field && field.multiline ? 'ms-multiline' : ''}`}
-                                  onClick={() => field.editable && handleCellClick(weekIdx, dayIdx, field.key, value)}
+                                  onClick={() => field.editable && handleCellClick(weekIdx, dayIdx, field.key, value, cellData)}
                                 >
-                                  {isEditing ? (
+                                  {/* Platform Multi-Select */}
+                                  {field.key === 'platform' ? (
+                                    isPlatformEditing ? (
+                                      <div className="ms-platform-editor" onClick={(e) => e.stopPropagation()}>
+                                        <div className="ms-platform-options">
+                                          {PLATFORMS.map(p => (
+                                            <label key={p} className="ms-platform-option">
+                                              <input
+                                                type="checkbox"
+                                                checked={editPlatforms.includes(p)}
+                                                onChange={() => handlePlatformToggleInSheet(p)}
+                                              />
+                                              <span 
+                                                className="ms-platform-dot" 
+                                                style={{ background: PLATFORM_COLORS[p] }}
+                                              />
+                                              <span className="ms-platform-name">{p}</span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                        <div className="ms-platform-actions">
+                                          <button 
+                                            className="ms-platform-save"
+                                            onClick={handleSavePlatforms}
+                                          >
+                                            Save
+                                          </button>
+                                          <button 
+                                            className="ms-platform-cancel"
+                                            onClick={() => { setEditingPlatformCell(null); setEditPlatforms([]) }}
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="ms-platform-display">
+                                        {cellData.platforms.length > 0 ? (
+                                          cellData.platforms.map(p => (
+                                            <span 
+                                              key={p} 
+                                              className="ms-platform-badge"
+                                              style={{ background: PLATFORM_COLORS[p] }}
+                                              title={p}
+                                            />
+                                          ))
+                                        ) : (
+                                          <span className="ms-value ms-placeholder">Click to add platforms</span>
+                                        )}
+                                      </div>
+                                    )
+                                  ) : isEditing ? (
                                     ('multiline' in field && field.multiline) ? (
                                       <textarea
                                         ref={editInputRef as React.RefObject<HTMLTextAreaElement>}
