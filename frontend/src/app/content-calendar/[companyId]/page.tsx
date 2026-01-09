@@ -622,11 +622,11 @@ export default function CompanyCalendarPage() {
                               return (
                                 <div 
                                   key={dayIdx} 
-                                  className={`ms-cell ms-data-cell ${isWeekend ? 'ms-weekend' : ''} ${!isCurrentMonth ? 'ms-other-month' : ''} ${field.editable ? 'ms-editable' : ''} ${field.multiline ? 'ms-multiline' : ''}`}
+                                  className={`ms-cell ms-data-cell ${isWeekend ? 'ms-weekend' : ''} ${!isCurrentMonth ? 'ms-other-month' : ''} ${field.editable ? 'ms-editable' : ''} ${'multiline' in field && field.multiline ? 'ms-multiline' : ''}`}
                                   onClick={() => field.editable && handleCellClick(weekIdx, dayIdx, field.key, value)}
                                 >
                                   {isEditing ? (
-                                    field.multiline ? (
+                                    ('multiline' in field && field.multiline) ? (
                                       <textarea
                                         ref={editInputRef as React.RefObject<HTMLTextAreaElement>}
                                         value={editValue}
@@ -635,7 +635,7 @@ export default function CompanyCalendarPage() {
                                         onKeyDown={handleCellKeyDown}
                                         className="ms-input"
                                       />
-                                    ) : field.type === 'select' ? (
+                                    ) : ('type' in field && field.type === 'select') ? (
                                       <select
                                         ref={editInputRef as any}
                                         value={editValue}
@@ -651,7 +651,7 @@ export default function CompanyCalendarPage() {
                                     ) : (
                                       <input
                                         ref={editInputRef as React.RefObject<HTMLInputElement>}
-                                        type={field.type || 'text'}
+                                        type={('type' in field && field.type) || 'text'}
                                         value={editValue}
                                         onChange={(e) => setEditValue(e.target.value)}
                                         onBlur={handleCellBlur}
