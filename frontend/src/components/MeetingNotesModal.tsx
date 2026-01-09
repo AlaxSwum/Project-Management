@@ -10,9 +10,13 @@ import {
   ClipboardDocumentListIcon,
   ListBulletIcon,
   CheckCircleIcon,
-  ArrowUpIcon
+  ArrowUpIcon,
+  FolderPlusIcon,
+  UserCircleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
-import { meetingNotesService, MeetingNote as MeetingNoteType } from '@/lib/meetingNotesService';
+import { meetingNotesService, MeetingNote as MeetingNoteType, NoteSection } from '@/lib/meetingNotesService';
 
 interface Meeting {
   id: number;
@@ -44,6 +48,10 @@ export default function MeetingNotesModal({
     decisions_made: [''],
     action_items: [''],
     next_steps: [''],
+    discussion_sections: [],
+    decision_sections: [],
+    action_sections: [],
+    next_step_sections: [],
     follow_up_date: '',
   });
 
@@ -53,6 +61,11 @@ export default function MeetingNotesModal({
   const [newAttendee, setNewAttendee] = useState('');
   const [activeDiscussionIndex, setActiveDiscussionIndex] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // States for managing sections
+  const [newSectionName, setNewSectionName] = useState<{ [key: string]: string }>({});
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+  const [showAddSection, setShowAddSection] = useState<{ [key: string]: boolean }>({});
 
   // Load existing notes
   useEffect(() => {
@@ -67,6 +80,10 @@ export default function MeetingNotesModal({
             decisions_made: notes.decisions_made.length > 0 ? notes.decisions_made : [''],
             action_items: notes.action_items.length > 0 ? notes.action_items : [''],
             next_steps: notes.next_steps.length > 0 ? notes.next_steps : [''],
+            discussion_sections: notes.discussion_sections || [],
+            decision_sections: notes.decision_sections || [],
+            action_sections: notes.action_sections || [],
+            next_step_sections: notes.next_step_sections || [],
           });
           setIsEditing(false); // Show document view for existing notes
         } else {
@@ -142,15 +159,107 @@ export default function MeetingNotesModal({
     }
   };
 
+  // Section management functions
+  const generateSectionId = () => `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  const addSection = (field: 'discussion_sections' | 'decision_sections' | 'action_sections' | 'next_step_sections', name: string) => {
+    if (!name.trim()) return;
+    
+    const newSection: NoteSection = {
+      id: generateSectionId(),
+      name: name.trim(),
+      notes: ['']
+    };
+    
+    setMeetingNotes(prev => ({
+      ...prev,
+      [field]: [...(prev[field] || []), newSection]
+    }));
+    
+    setNewSectionName(prev => ({ ...prev, [field]: '' }));
+    setShowAddSection(prev => ({ ...prev, [field]: false }));
+    setExpandedSections(prev => ({ ...prev, [newSection.id]: true }));
+  };
+
+  const removeSection = (field: 'discussion_sections' | 'decision_sections' | 'action_sections' | 'next_step_sections', sectionId: string) => {
+    setMeetingNotes(prev => ({
+      ...prev,
+      [field]: (prev[field] || []).filter(s => s.id !== sectionId)
+    }));
+  };
+
+  const addNoteToSection = (field: 'discussion_sections' | 'decision_sections' | 'action_sections' | 'next_step_sections', sectionId: string, noteIndex?: number) => {
+    setMeetingNotes(prev => ({
+      ...prev,
+      [field]: (prev[field] || []).map(section => {
+        if (section.id === sectionId) {
+          const newNotes = [...section.notes];
+          if (noteIndex !== undefined) {
+            newNotes.splice(noteIndex + 1, 0, '');
+          } else {
+            newNotes.push('');
+          }
+          return { ...section, notes: newNotes };
+        }
+        return section;
+      })
+    }));
+  };
+
+  const updateNoteInSection = (field: 'discussion_sections' | 'decision_sections' | 'action_sections' | 'next_step_sections', sectionId: string, noteIndex: number, value: string) => {
+    setMeetingNotes(prev => ({
+      ...prev,
+      [field]: (prev[field] || []).map(section => {
+        if (section.id === sectionId) {
+          const newNotes = [...section.notes];
+          newNotes[noteIndex] = value;
+          return { ...section, notes: newNotes };
+        }
+        return section;
+      })
+    }));
+  };
+
+  const removeNoteFromSection = (field: 'discussion_sections' | 'decision_sections' | 'action_sections' | 'next_step_sections', sectionId: string, noteIndex: number) => {
+    setMeetingNotes(prev => ({
+      ...prev,
+      [field]: (prev[field] || []).map(section => {
+        if (section.id === sectionId) {
+          if (section.notes.length > 1) {
+            return { ...section, notes: section.notes.filter((_, i) => i !== noteIndex) };
+          }
+        }
+        return section;
+      })
+    }));
+  };
+
+  const toggleSectionExpand = (sectionId: string) => {
+    setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
+
   const saveMeetingNotes = async () => {
     setSaving(true);
     try {
+      // Clean up sections - remove empty notes from each section
+      const cleanSections = (sections: NoteSection[] | undefined) => {
+        if (!sections) return [];
+        return sections.map(section => ({
+          ...section,
+          notes: section.notes.filter(n => n.trim())
+        })).filter(section => section.notes.length > 0);
+      };
+
       const cleanedNotes = {
         ...meetingNotes,
         discussion_points: meetingNotes.discussion_points.filter(p => p.trim()),
         decisions_made: meetingNotes.decisions_made.filter(d => d.trim()),
         action_items: meetingNotes.action_items.filter(a => a.trim()),
         next_steps: meetingNotes.next_steps.filter(n => n.trim()),
+        discussion_sections: cleanSections(meetingNotes.discussion_sections),
+        decision_sections: cleanSections(meetingNotes.decision_sections),
+        action_sections: cleanSections(meetingNotes.action_sections),
+        next_step_sections: cleanSections(meetingNotes.next_step_sections),
         follow_up_date: meetingNotes.follow_up_date?.trim() || null,
       };
 
@@ -241,53 +350,121 @@ export default function MeetingNotesModal({
         </div>
       )}
 
-      {meetingNotes.discussion_points.filter(p => p.trim()).length > 0 && (
+      {(meetingNotes.discussion_points.filter(p => p.trim()).length > 0 || (meetingNotes.discussion_sections && meetingNotes.discussion_sections.length > 0)) && (
         <div className="document-section">
           <h3 className="section-heading">Key Discussion Points</h3>
-          <ol className="discussion-list">
-            {meetingNotes.discussion_points.filter(p => p.trim()).map((point, index) => (
-              <li key={index} className="discussion-item-doc">{point}</li>
-            ))}
-          </ol>
+          {/* General notes without section */}
+          {meetingNotes.discussion_points.filter(p => p.trim()).length > 0 && (
+            <ol className="discussion-list">
+              {meetingNotes.discussion_points.filter(p => p.trim()).map((point, index) => (
+                <li key={index} className="discussion-item-doc">{point}</li>
+              ))}
+            </ol>
+          )}
+          {/* Sectioned notes */}
+          {meetingNotes.discussion_sections && meetingNotes.discussion_sections.map((section) => (
+            <div key={section.id} className="sub-section">
+              <h4 className="sub-section-heading">
+                <UserCircleIcon style={{ width: '1rem', height: '1rem' }} />
+                {section.name}
+              </h4>
+              <ol className="discussion-list sub-list">
+                {section.notes.filter(n => n.trim()).map((note, idx) => (
+                  <li key={idx} className="discussion-item-doc">{note}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
         </div>
       )}
 
-      {meetingNotes.decisions_made.filter(d => d.trim()).length > 0 && (
+      {(meetingNotes.decisions_made.filter(d => d.trim()).length > 0 || (meetingNotes.decision_sections && meetingNotes.decision_sections.length > 0)) && (
         <div className="document-section">
           <h3 className="section-heading">Decisions Made</h3>
-          <ul className="decision-list">
-            {meetingNotes.decisions_made.filter(d => d.trim()).map((decision, index) => (
-              <li key={index} className="decision-item">{decision}</li>
-            ))}
-          </ul>
+          {meetingNotes.decisions_made.filter(d => d.trim()).length > 0 && (
+            <ul className="decision-list">
+              {meetingNotes.decisions_made.filter(d => d.trim()).map((decision, index) => (
+                <li key={index} className="decision-item">{decision}</li>
+              ))}
+            </ul>
+          )}
+          {meetingNotes.decision_sections && meetingNotes.decision_sections.map((section) => (
+            <div key={section.id} className="sub-section">
+              <h4 className="sub-section-heading">
+                <UserCircleIcon style={{ width: '1rem', height: '1rem' }} />
+                {section.name}
+              </h4>
+              <ul className="decision-list sub-list">
+                {section.notes.filter(n => n.trim()).map((note, idx) => (
+                  <li key={idx} className="decision-item">{note}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
 
-      {meetingNotes.action_items.filter(a => a.trim()).length > 0 && (
+      {(meetingNotes.action_items.filter(a => a.trim()).length > 0 || (meetingNotes.action_sections && meetingNotes.action_sections.length > 0)) && (
         <div className="document-section">
           <h3 className="section-heading">Action Items</h3>
-          <ul className="action-list">
-            {meetingNotes.action_items.filter(a => a.trim()).map((item, index) => (
-              <li key={index} className="action-item">
-                <span className="action-number">A{index + 1}</span>
-                {item}
-              </li>
-            ))}
-          </ul>
+          {meetingNotes.action_items.filter(a => a.trim()).length > 0 && (
+            <ul className="action-list">
+              {meetingNotes.action_items.filter(a => a.trim()).map((item, index) => (
+                <li key={index} className="action-item">
+                  <span className="action-number">A{index + 1}</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
+          {meetingNotes.action_sections && meetingNotes.action_sections.map((section) => (
+            <div key={section.id} className="sub-section">
+              <h4 className="sub-section-heading">
+                <UserCircleIcon style={{ width: '1rem', height: '1rem' }} />
+                {section.name}
+              </h4>
+              <ul className="action-list sub-list">
+                {section.notes.filter(n => n.trim()).map((note, idx) => (
+                  <li key={idx} className="action-item">
+                    <span className="action-number">A{idx + 1}</span>
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
 
-      {meetingNotes.next_steps.filter(n => n.trim()).length > 0 && (
+      {(meetingNotes.next_steps.filter(n => n.trim()).length > 0 || (meetingNotes.next_step_sections && meetingNotes.next_step_sections.length > 0)) && (
         <div className="document-section">
           <h3 className="section-heading">Next Steps</h3>
-          <ul className="next-steps-list">
-            {meetingNotes.next_steps.filter(n => n.trim()).map((step, index) => (
-              <li key={index} className="next-step-item">
-                <span className="step-number">→</span>
-                {step}
-              </li>
-            ))}
-          </ul>
+          {meetingNotes.next_steps.filter(n => n.trim()).length > 0 && (
+            <ul className="next-steps-list">
+              {meetingNotes.next_steps.filter(n => n.trim()).map((step, index) => (
+                <li key={index} className="next-step-item">
+                  <span className="step-number">→</span>
+                  {step}
+                </li>
+              ))}
+            </ul>
+          )}
+          {meetingNotes.next_step_sections && meetingNotes.next_step_sections.map((section) => (
+            <div key={section.id} className="sub-section">
+              <h4 className="sub-section-heading">
+                <UserCircleIcon style={{ width: '1rem', height: '1rem' }} />
+                {section.name}
+              </h4>
+              <ul className="next-steps-list sub-list">
+                {section.notes.filter(n => n.trim()).map((note, idx) => (
+                  <li key={idx} className="next-step-item">
+                    <span className="step-number">→</span>
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
 
@@ -788,6 +965,145 @@ export default function MeetingNotesModal({
             background: #333333;
             transform: translateY(-1px);
           }
+          /* Sub-section Styles for Document View */
+          .sub-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-left: 1rem;
+          }
+          .sub-section-heading {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .sub-list {
+            margin-left: 0.5rem;
+          }
+          /* Section Management Styles for Edit View */
+          .add-section-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          .add-section-btn:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+          }
+          .add-section-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+          }
+          .add-section-input .form-input {
+            flex: 1;
+          }
+          .cancel-section-btn {
+            padding: 0.75rem 1rem;
+            background: #ffffff;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+          }
+          .cancel-section-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+          }
+          .general-notes-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+            padding-left: 0.5rem;
+          }
+          .section-container {
+            margin-top: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #ffffff;
+          }
+          .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .section-header:hover {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+          }
+          .section-name {
+            font-weight: 700;
+            color: #000000;
+            flex: 1;
+          }
+          .section-count {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+          }
+          .remove-section-btn {
+            padding: 0.375rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 4px;
+            color: #dc2626;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .remove-section-btn:hover {
+            background: #fee2e2;
+            border-color: #f87171;
+          }
+          .section-notes {
+            padding: 1rem;
+            background: #fafafa;
+          }
+          .section-note-item {
+            margin-bottom: 0.75rem;
+          }
+          .section-number {
+            background: #4b5563 !important;
+            font-size: 0.625rem !important;
+            width: 1.5rem !important;
+            height: 1.5rem !important;
+          }
+          .section-input {
+            min-height: 60px !important;
+          }
         `
       }} />
       
@@ -911,11 +1227,49 @@ export default function MeetingNotesModal({
 
               {/* Key Discussion Points - Full Width */}
               <div className="form-section">
-                <h2 className="section-title">
-                  <ListBulletIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                  Key Discussion Points
-                </h2>
-                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h2 className="section-title" style={{ marginBottom: 0 }}>
+                    <ListBulletIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                    Key Discussion Points
+                  </h2>
+                  <button
+                    onClick={() => setShowAddSection(prev => ({ ...prev, discussion_sections: !prev.discussion_sections }))}
+                    className="add-section-btn"
+                    title="Add a new section"
+                  >
+                    <FolderPlusIcon style={{ width: '1rem', height: '1rem' }} />
+                    Add Section
+                  </button>
+                </div>
+
+                {/* Add Section Input */}
+                {showAddSection.discussion_sections && (
+                  <div className="add-section-input">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter section name (e.g., Raminder, John)"
+                      value={newSectionName.discussion_sections || ''}
+                      onChange={(e) => setNewSectionName(prev => ({ ...prev, discussion_sections: e.target.value }))}
+                      onKeyPress={(e) => e.key === 'Enter' && addSection('discussion_sections', newSectionName.discussion_sections || '')}
+                    />
+                    <button
+                      onClick={() => addSection('discussion_sections', newSectionName.discussion_sections || '')}
+                      className="add-btn"
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowAddSection(prev => ({ ...prev, discussion_sections: false }))}
+                      className="cancel-section-btn"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {/* General Notes */}
+                <div className="general-notes-label">General Notes</div>
                 {meetingNotes.discussion_points.map((point, index) => (
                   <div key={index}>
                     {activeDiscussionIndex === index && index > 0 && (
@@ -962,15 +1316,113 @@ export default function MeetingNotesModal({
                     </div>
                   </div>
                 ))}
+
+                {/* Sectioned Notes */}
+                {meetingNotes.discussion_sections && meetingNotes.discussion_sections.map((section) => (
+                  <div key={section.id} className="section-container">
+                    <div 
+                      className="section-header"
+                      onClick={() => toggleSectionExpand(section.id)}
+                    >
+                      {expandedSections[section.id] ? (
+                        <ChevronDownIcon style={{ width: '1rem', height: '1rem' }} />
+                      ) : (
+                        <ChevronRightIcon style={{ width: '1rem', height: '1rem' }} />
+                      )}
+                      <UserCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                      <span className="section-name">{section.name}</span>
+                      <span className="section-count">({section.notes.filter(n => n.trim()).length} notes)</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSection('discussion_sections', section.id);
+                        }}
+                        className="remove-section-btn"
+                        title="Remove section"
+                      >
+                        <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
+                      </button>
+                    </div>
+                    {expandedSections[section.id] && (
+                      <div className="section-notes">
+                        {section.notes.map((note, noteIndex) => (
+                          <div key={noteIndex} className="discussion-item section-note-item">
+                            <div className="discussion-number section-number">{noteIndex + 1}</div>
+                            <textarea
+                              className="discussion-input section-input"
+                              placeholder={`Enter ${section.name}'s note...`}
+                              value={note}
+                              onChange={(e) => updateNoteInSection('discussion_sections', section.id, noteIndex, e.target.value)}
+                            />
+                            <div className="discussion-controls">
+                              <button
+                                onClick={() => addNoteToSection('discussion_sections', section.id, noteIndex)}
+                                className="control-btn add"
+                                title="Add note after this one"
+                              >
+                                <PlusIcon style={{ width: '1rem', height: '1rem' }} />
+                              </button>
+                              {section.notes.length > 1 && (
+                                <button
+                                  onClick={() => removeNoteFromSection('discussion_sections', section.id, noteIndex)}
+                                  className="control-btn"
+                                  title="Remove note"
+                                >
+                                  <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Decisions Made */}
               <div className="form-section">
-                <h2 className="section-title">
-                  <CheckCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                  Decisions Made
-                </h2>
-                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h2 className="section-title" style={{ marginBottom: 0 }}>
+                    <CheckCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                    Decisions Made
+                  </h2>
+                  <button
+                    onClick={() => setShowAddSection(prev => ({ ...prev, decision_sections: !prev.decision_sections }))}
+                    className="add-section-btn"
+                    title="Add a new section"
+                  >
+                    <FolderPlusIcon style={{ width: '1rem', height: '1rem' }} />
+                    Add Section
+                  </button>
+                </div>
+
+                {showAddSection.decision_sections && (
+                  <div className="add-section-input">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter section name (e.g., Raminder, John)"
+                      value={newSectionName.decision_sections || ''}
+                      onChange={(e) => setNewSectionName(prev => ({ ...prev, decision_sections: e.target.value }))}
+                      onKeyPress={(e) => e.key === 'Enter' && addSection('decision_sections', newSectionName.decision_sections || '')}
+                    />
+                    <button
+                      onClick={() => addSection('decision_sections', newSectionName.decision_sections || '')}
+                      className="add-btn"
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowAddSection(prev => ({ ...prev, decision_sections: false }))}
+                      className="cancel-section-btn"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                <div className="general-notes-label">General Notes</div>
                 {meetingNotes.decisions_made.map((decision, index) => (
                   <div key={index} className="discussion-item">
                     <div className="discussion-number">D{index + 1}</div>
@@ -998,15 +1450,110 @@ export default function MeetingNotesModal({
                     </div>
                   </div>
                 ))}
+
+                {meetingNotes.decision_sections && meetingNotes.decision_sections.map((section) => (
+                  <div key={section.id} className="section-container">
+                    <div 
+                      className="section-header"
+                      onClick={() => toggleSectionExpand(section.id)}
+                    >
+                      {expandedSections[section.id] ? (
+                        <ChevronDownIcon style={{ width: '1rem', height: '1rem' }} />
+                      ) : (
+                        <ChevronRightIcon style={{ width: '1rem', height: '1rem' }} />
+                      )}
+                      <UserCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                      <span className="section-name">{section.name}</span>
+                      <span className="section-count">({section.notes.filter(n => n.trim()).length} notes)</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSection('decision_sections', section.id);
+                        }}
+                        className="remove-section-btn"
+                        title="Remove section"
+                      >
+                        <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
+                      </button>
+                    </div>
+                    {expandedSections[section.id] && (
+                      <div className="section-notes">
+                        {section.notes.map((note, noteIndex) => (
+                          <div key={noteIndex} className="discussion-item section-note-item">
+                            <div className="discussion-number section-number">D{noteIndex + 1}</div>
+                            <textarea
+                              className="discussion-input section-input"
+                              placeholder={`Enter ${section.name}'s decision...`}
+                              value={note}
+                              onChange={(e) => updateNoteInSection('decision_sections', section.id, noteIndex, e.target.value)}
+                            />
+                            <div className="discussion-controls">
+                              <button
+                                onClick={() => addNoteToSection('decision_sections', section.id, noteIndex)}
+                                className="control-btn add"
+                              >
+                                <PlusIcon style={{ width: '1rem', height: '1rem' }} />
+                              </button>
+                              {section.notes.length > 1 && (
+                                <button
+                                  onClick={() => removeNoteFromSection('decision_sections', section.id, noteIndex)}
+                                  className="control-btn"
+                                >
+                                  <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Action Items */}
               <div className="form-section">
-                <h2 className="section-title">
-                  <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                  Action Items
-                </h2>
-                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h2 className="section-title" style={{ marginBottom: 0 }}>
+                    <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                    Action Items
+                  </h2>
+                  <button
+                    onClick={() => setShowAddSection(prev => ({ ...prev, action_sections: !prev.action_sections }))}
+                    className="add-section-btn"
+                    title="Add a new section"
+                  >
+                    <FolderPlusIcon style={{ width: '1rem', height: '1rem' }} />
+                    Add Section
+                  </button>
+                </div>
+
+                {showAddSection.action_sections && (
+                  <div className="add-section-input">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter section name (e.g., Raminder, John)"
+                      value={newSectionName.action_sections || ''}
+                      onChange={(e) => setNewSectionName(prev => ({ ...prev, action_sections: e.target.value }))}
+                      onKeyPress={(e) => e.key === 'Enter' && addSection('action_sections', newSectionName.action_sections || '')}
+                    />
+                    <button
+                      onClick={() => addSection('action_sections', newSectionName.action_sections || '')}
+                      className="add-btn"
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowAddSection(prev => ({ ...prev, action_sections: false }))}
+                      className="cancel-section-btn"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                <div className="general-notes-label">General Notes</div>
                 {meetingNotes.action_items.map((item, index) => (
                   <div key={index} className="discussion-item">
                     <div className="discussion-number">A{index + 1}</div>
@@ -1034,15 +1581,110 @@ export default function MeetingNotesModal({
                     </div>
                   </div>
                 ))}
+
+                {meetingNotes.action_sections && meetingNotes.action_sections.map((section) => (
+                  <div key={section.id} className="section-container">
+                    <div 
+                      className="section-header"
+                      onClick={() => toggleSectionExpand(section.id)}
+                    >
+                      {expandedSections[section.id] ? (
+                        <ChevronDownIcon style={{ width: '1rem', height: '1rem' }} />
+                      ) : (
+                        <ChevronRightIcon style={{ width: '1rem', height: '1rem' }} />
+                      )}
+                      <UserCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                      <span className="section-name">{section.name}</span>
+                      <span className="section-count">({section.notes.filter(n => n.trim()).length} notes)</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSection('action_sections', section.id);
+                        }}
+                        className="remove-section-btn"
+                        title="Remove section"
+                      >
+                        <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
+                      </button>
+                    </div>
+                    {expandedSections[section.id] && (
+                      <div className="section-notes">
+                        {section.notes.map((note, noteIndex) => (
+                          <div key={noteIndex} className="discussion-item section-note-item">
+                            <div className="discussion-number section-number">A{noteIndex + 1}</div>
+                            <textarea
+                              className="discussion-input section-input"
+                              placeholder={`Enter ${section.name}'s action item...`}
+                              value={note}
+                              onChange={(e) => updateNoteInSection('action_sections', section.id, noteIndex, e.target.value)}
+                            />
+                            <div className="discussion-controls">
+                              <button
+                                onClick={() => addNoteToSection('action_sections', section.id, noteIndex)}
+                                className="control-btn add"
+                              >
+                                <PlusIcon style={{ width: '1rem', height: '1rem' }} />
+                              </button>
+                              {section.notes.length > 1 && (
+                                <button
+                                  onClick={() => removeNoteFromSection('action_sections', section.id, noteIndex)}
+                                  className="control-btn"
+                                >
+                                  <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Next Steps */}
               <div className="form-section">
-                <h2 className="section-title">
-                  <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                  Next Steps
-                </h2>
-                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h2 className="section-title" style={{ marginBottom: 0 }}>
+                    <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                    Next Steps
+                  </h2>
+                  <button
+                    onClick={() => setShowAddSection(prev => ({ ...prev, next_step_sections: !prev.next_step_sections }))}
+                    className="add-section-btn"
+                    title="Add a new section"
+                  >
+                    <FolderPlusIcon style={{ width: '1rem', height: '1rem' }} />
+                    Add Section
+                  </button>
+                </div>
+
+                {showAddSection.next_step_sections && (
+                  <div className="add-section-input">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter section name (e.g., Raminder, John)"
+                      value={newSectionName.next_step_sections || ''}
+                      onChange={(e) => setNewSectionName(prev => ({ ...prev, next_step_sections: e.target.value }))}
+                      onKeyPress={(e) => e.key === 'Enter' && addSection('next_step_sections', newSectionName.next_step_sections || '')}
+                    />
+                    <button
+                      onClick={() => addSection('next_step_sections', newSectionName.next_step_sections || '')}
+                      className="add-btn"
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowAddSection(prev => ({ ...prev, next_step_sections: false }))}
+                      className="cancel-section-btn"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                <div className="general-notes-label">General Notes</div>
                 {meetingNotes.next_steps.map((step, index) => (
                   <div key={index} className="discussion-item">
                     <div className="discussion-number">N{index + 1}</div>
@@ -1068,6 +1710,65 @@ export default function MeetingNotesModal({
                         </button>
                       )}
                     </div>
+                  </div>
+                ))}
+
+                {meetingNotes.next_step_sections && meetingNotes.next_step_sections.map((section) => (
+                  <div key={section.id} className="section-container">
+                    <div 
+                      className="section-header"
+                      onClick={() => toggleSectionExpand(section.id)}
+                    >
+                      {expandedSections[section.id] ? (
+                        <ChevronDownIcon style={{ width: '1rem', height: '1rem' }} />
+                      ) : (
+                        <ChevronRightIcon style={{ width: '1rem', height: '1rem' }} />
+                      )}
+                      <UserCircleIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+                      <span className="section-name">{section.name}</span>
+                      <span className="section-count">({section.notes.filter(n => n.trim()).length} notes)</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSection('next_step_sections', section.id);
+                        }}
+                        className="remove-section-btn"
+                        title="Remove section"
+                      >
+                        <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
+                      </button>
+                    </div>
+                    {expandedSections[section.id] && (
+                      <div className="section-notes">
+                        {section.notes.map((note, noteIndex) => (
+                          <div key={noteIndex} className="discussion-item section-note-item">
+                            <div className="discussion-number section-number">N{noteIndex + 1}</div>
+                            <textarea
+                              className="discussion-input section-input"
+                              placeholder={`Enter ${section.name}'s next step...`}
+                              value={note}
+                              onChange={(e) => updateNoteInSection('next_step_sections', section.id, noteIndex, e.target.value)}
+                            />
+                            <div className="discussion-controls">
+                              <button
+                                onClick={() => addNoteToSection('next_step_sections', section.id, noteIndex)}
+                                className="control-btn add"
+                              >
+                                <PlusIcon style={{ width: '1rem', height: '1rem' }} />
+                              </button>
+                              {section.notes.length > 1 && (
+                                <button
+                                  onClick={() => removeNoteFromSection('next_step_sections', section.id, noteIndex)}
+                                  className="control-btn"
+                                >
+                                  <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -1,3 +1,10 @@
+// Sub-section for organizing notes by person/topic
+export interface NoteSection {
+  id: string;
+  name: string;
+  notes: string[];
+}
+
 export interface MeetingNote {
   id?: number;
   meeting_id: number;
@@ -9,6 +16,11 @@ export interface MeetingNote {
   decisions_made: string[];
   action_items: string[];
   next_steps: string[];
+  // New sectioned notes - stored as JSON
+  discussion_sections?: NoteSection[];
+  decision_sections?: NoteSection[];
+  action_sections?: NoteSection[];
+  next_step_sections?: NoteSection[];
   follow_up_date?: string | null;
   created_at?: string;
   updated_at?: string;
