@@ -2192,15 +2192,8 @@ Your report is now available in the system.`);
             >
               <Bars3Icon style={{ width: '20px', height: '20px' }} />
             </button>
-            <div className="sidebar-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Image 
-                src="/logo.png" 
-                alt="Project Next Logo" 
-                width={28} 
-                height={28}
-                style={{ borderRadius: '6px' }}
-              />
-              <h1 className="sidebar-title">Project Next</h1>
+<div className="sidebar-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h1 className="sidebar-title">Focus</h1>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div className="sidebar-add-container" ref={dropdownRef}>

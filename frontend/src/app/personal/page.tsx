@@ -2155,37 +2155,6 @@ export default function PersonalPage() {
                 ))}
             </div>
 
-              {/* Test Notification Button */}
-              <motion.button
-                onClick={() => {
-                  console.log('Test notification button clicked');
-                  showNotification(
-                    'Test Notification',
-                    'If you see this, notifications are working on your Mac!',
-                    { urgency: 'normal' }
-                  );
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '9px 18px',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  border: '1px solid #fbbf24',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  background: '#fef3c7',
-                  color: '#92400e',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <BellIcon style={{ width: '15px', height: '15px' }} />
-                Test Notification
-              </motion.button>
-
               {/* Goals Button */}
               <motion.button
                 onClick={() => router.push('/goals')}
