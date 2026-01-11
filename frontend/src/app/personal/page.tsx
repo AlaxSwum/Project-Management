@@ -111,6 +111,21 @@ interface ContentPost {
   isAssigned?: boolean; // Whether user is assigned as owner/designer/editor
 }
 
+// Personal To-Do Item type (quick tasks from conversations)
+interface PersonalTodoItem {
+  id: string;
+  user_id?: string | number;
+  task_name: string;
+  start_date: string;
+  deadline: string;
+  duration: number; // hours
+  description?: string;
+  priority: 'urgent' | 'important' | 'normal';
+  completed: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Types
 interface ChecklistItem {
   id: string;
@@ -444,9 +459,19 @@ export default function PersonalPage() {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [contentPosts, setContentPosts] = useState<ContentPost[]>([]);
+  const [personalTodos, setPersonalTodos] = useState<PersonalTodoItem[]>([]);
+  const [showAddTodoModal, setShowAddTodoModal] = useState(false);
+  const [todoForm, setTodoForm] = useState<Partial<PersonalTodoItem>>({
+    task_name: '',
+    start_date: formatDate(new Date()),
+    deadline: formatDate(new Date()),
+    duration: 1,
+    description: '',
+    priority: 'normal',
+  });
   const [personalGoals, setPersonalGoals] = useState<Goal[]>([]);
   const [goalCompletions, setGoalCompletions] = useState<GoalCompletion[]>([]);
-  const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline' | 'content'>('tasks');
+  const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline' | 'content' | 'todo'>('tasks');
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
   
@@ -1140,6 +1165,34 @@ export default function PersonalPage() {
       } else {
         console.log('📅 Content Calendar - No company access found');
       }
+
+      // Fetch personal todos
+      try {
+        const { data: todosData, error: todosError } = await supabase
+          .from('personal_todos')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('deadline', { ascending: true });
+
+        if (!todosError && todosData) {
+          setPersonalTodos(todosData);
+          console.log('📝 Personal Todos - Loaded:', todosData.length);
+        } else if (todosError?.code === '42P01') {
+          console.log('📝 Personal Todos - Table does not exist yet');
+          // Try localStorage fallback
+          const storedTodos = localStorage.getItem('personalTodos');
+          if (storedTodos) {
+            setPersonalTodos(JSON.parse(storedTodos));
+          }
+        }
+      } catch (todoErr) {
+        console.log('📝 Personal Todos - Error fetching:', todoErr);
+        // Try localStorage fallback
+        const storedTodos = localStorage.getItem('personalTodos');
+        if (storedTodos) {
+          setPersonalTodos(JSON.parse(storedTodos));
+        }
+      }
     } catch (err) {
       console.error('Error fetching external data:', err);
     }
@@ -1218,6 +1271,119 @@ export default function PersonalPage() {
     } catch (err) {
       console.error('Error saving block:', err);
     }
+  };
+
+  // =============================================
+  // PERSONAL TODO CRUD FUNCTIONS
+  // =============================================
+
+  const saveTodo = async (todo: PersonalTodoItem) => {
+    // Update local state first for responsive UI
+    const newTodos = personalTodos.some(t => t.id === todo.id)
+      ? personalTodos.map(t => t.id === todo.id ? todo : t)
+      : [...personalTodos, todo];
+    setPersonalTodos(newTodos);
+    localStorage.setItem('personalTodos', JSON.stringify(newTodos));
+
+    try {
+      const dbRecord = {
+        ...todo,
+        user_id: user?.id,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('personal_todos')
+        .upsert(dbRecord);
+
+      if (error && error.code !== '42P01') {
+        console.error('Database save error for todo:', error);
+      }
+    } catch (err) {
+      console.error('Error saving todo:', err);
+    }
+  };
+
+  const handleAddTodo = async () => {
+    if (!todoForm.task_name?.trim()) return;
+
+    const newTodo: PersonalTodoItem = {
+      id: generateId(),
+      user_id: user?.id,
+      task_name: todoForm.task_name.trim(),
+      start_date: todoForm.start_date || formatDate(new Date()),
+      deadline: todoForm.deadline || formatDate(new Date()),
+      duration: todoForm.duration || 1,
+      description: todoForm.description || '',
+      priority: todoForm.priority || 'normal',
+      completed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await saveTodo(newTodo);
+    
+    // Reset form
+    setTodoForm({
+      task_name: '',
+      start_date: formatDate(new Date()),
+      deadline: formatDate(new Date()),
+      duration: 1,
+      description: '',
+      priority: 'normal',
+    });
+    setShowAddTodoModal(false);
+  };
+
+  const toggleTodoComplete = async (todoId: string) => {
+    const todo = personalTodos.find(t => t.id === todoId);
+    if (!todo) return;
+
+    const updatedTodo = { ...todo, completed: !todo.completed };
+    await saveTodo(updatedTodo);
+  };
+
+  const deleteTodo = async (todoId: string) => {
+    const newTodos = personalTodos.filter(t => t.id !== todoId);
+    setPersonalTodos(newTodos);
+    localStorage.setItem('personalTodos', JSON.stringify(newTodos));
+
+    try {
+      const { error } = await supabase
+        .from('personal_todos')
+        .delete()
+        .eq('id', todoId);
+
+      if (error && error.code !== '42P01') {
+        console.error('Error deleting todo:', error);
+      }
+    } catch (err) {
+      console.error('Error deleting todo:', err);
+    }
+  };
+
+  // Filter todos based on current view and date range
+  const getFilteredTodos = () => {
+    const today = formatDate(currentDate);
+    
+    return personalTodos.filter(todo => {
+      // Show todos where current date falls between start_date and deadline
+      if (viewMode === 'day') {
+        return today >= todo.start_date && today <= todo.deadline;
+      } else if (viewMode === 'week') {
+        const weekDays = getWeekDays(currentDate);
+        const weekStart = formatDate(weekDays[0]);
+        const weekEnd = formatDate(weekDays[6]);
+        // Check if todo date range overlaps with current week
+        return todo.start_date <= weekEnd && todo.deadline >= weekStart;
+      } else {
+        // Month view
+        const monthDays = getDaysInMonth(currentDate);
+        const monthStart = formatDate(monthDays[0]);
+        const monthEnd = formatDate(monthDays[monthDays.length - 1]);
+        return todo.start_date <= monthEnd && todo.deadline >= monthStart;
+      }
+    });
   };
 
   // =============================================
@@ -3212,6 +3378,29 @@ export default function PersonalPage() {
                   <Squares2X2Icon style={{ width: '12px', height: '12px' }} />
                   Content
                         </button>
+                        <button
+                  onClick={() => setSidebarTab('todo')}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '6px',
+                    background: sidebarTab === 'todo' ? '#fff' : 'transparent',
+                    color: sidebarTab === 'todo' ? '#10b981' : '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: sidebarTab === 'todo' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  <ListBulletIcon style={{ width: '12px', height: '12px' }} />
+                  To-Do
+                        </button>
               </div>
                     
               {/* Content */}
@@ -3312,7 +3501,7 @@ export default function PersonalPage() {
                       })}
                     </div>
                   )
-                ) : (
+                ) : sidebarTab === 'content' ? (
                   /* Content Posts Tab */
                   filteredContentPosts.length === 0 ? (
                     <div style={{ 
@@ -3421,7 +3610,176 @@ export default function PersonalPage() {
                       })}
                     </div>
                   )
-                )}
+                ) : sidebarTab === 'todo' ? (
+                  /* To-Do List Tab */
+                  (() => {
+                    const filteredTodos = getFilteredTodos();
+                    return filteredTodos.length === 0 ? (
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '24px 16px', 
+                      color: '#10b981',
+                      background: '#ecfdf5',
+                      borderRadius: '8px',
+                      border: '1px dashed #a7f3d0',
+                    }}>
+                      <ListBulletIcon style={{ width: '20px', height: '20px', color: '#6ee7b7', margin: '0 auto 8px' }} />
+                        <p style={{ fontSize: '11px', fontWeight: '500', margin: '0 0 8px 0', color: '#10b981' }}>No to-dos {viewMode === 'day' ? 'for today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                        <button
+                          onClick={() => setShowAddTodoModal(true)}
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            padding: '6px 12px',
+                            border: 'none',
+                            borderRadius: '6px',
+                            background: '#10b981',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <PlusIcon style={{ width: '10px', height: '10px' }} />
+                          Add To-Do
+                        </button>
+                    </div>
+                  ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {/* Add Todo Button */}
+                        <button
+                          onClick={() => setShowAddTodoModal(true)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 10px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            border: '1px dashed #a7f3d0',
+                            borderRadius: '8px',
+                            background: '#ecfdf5',
+                            color: '#10b981',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            marginBottom: '4px',
+                          }}
+                        >
+                          <PlusIcon style={{ width: '12px', height: '12px' }} />
+                          Add To-Do
+                        </button>
+                        {filteredTodos.map((todo) => {
+                        const isOverdue = new Date(todo.deadline) < new Date() && !todo.completed;
+                        const priorityColors = {
+                          urgent: { bg: '#fef2f2', border: '#fecaca', text: '#dc2626' },
+                          important: { bg: '#fef3c7', border: '#fde68a', text: '#d97706' },
+                          normal: { bg: '#ecfdf5', border: '#a7f3d0', text: '#10b981' },
+                        };
+                        const pColor = priorityColors[todo.priority];
+                        return (
+                          <motion.div
+                            key={todo.id}
+                            whileHover={{ x: 2 }}
+                            whileTap={{ scale: 0.99 }}
+                            style={{ 
+                              padding: '8px 10px',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              borderLeft: `3px solid ${pColor.text}`,
+                              background: todo.completed ? '#f8fafc' : pColor.bg,
+                              transition: 'all 0.15s ease',
+                              opacity: todo.completed ? 0.7 : 1,
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                              {/* Checkbox */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleTodoComplete(todo.id);
+                                }}
+                                style={{
+                                  width: '16px',
+                                  height: '16px',
+                                  borderRadius: '4px',
+                                  border: todo.completed ? 'none' : `2px solid ${pColor.text}`,
+                                  background: todo.completed ? '#10b981' : 'transparent',
+                                  cursor: 'pointer',
+                                  flexShrink: 0,
+                                  marginTop: '2px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {todo.completed && <CheckIcon style={{ width: '10px', height: '10px', color: '#fff' }} />}
+                              </button>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ 
+                                  fontSize: '12px', 
+                                  fontWeight: '500', 
+                                  color: todo.completed ? '#94a3b8' : '#1e293b', 
+                                  marginBottom: '2px', 
+                                  lineHeight: '1.3',
+                                  textDecoration: todo.completed ? 'line-through' : 'none',
+                                }}>
+                                  {todo.task_name}
+                                </div>
+                                <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                  <span style={{ 
+                                    fontSize: '9px',
+                                    padding: '1px 5px',
+                                    borderRadius: '4px',
+                                    background: pColor.bg,
+                                    color: pColor.text,
+                                    fontWeight: '600',
+                                    textTransform: 'capitalize',
+                                    border: `1px solid ${pColor.border}`,
+                                  }}>
+                                    {todo.priority}
+                                  </span>
+                                  <span style={{ color: isOverdue ? '#dc2626' : '#94a3b8' }}>
+                                    Due: {new Date(todo.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </span>
+                                  <span style={{ color: '#94a3b8' }}>
+                                    {todo.duration}h
+                                  </span>
+                                </div>
+                                {todo.description && (
+                                  <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', lineHeight: '1.3' }}>
+                                    {todo.description.substring(0, 60)}{todo.description.length > 60 ? '...' : ''}
+                                  </div>
+                                )}
+                              </div>
+                              {/* Delete button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('Delete this to-do?')) {
+                                    deleteTodo(todo.id);
+                                  }
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: '#dc2626',
+                                  padding: '2px',
+                                  opacity: 0.6,
+                                }}
+                              >
+                                <TrashIcon style={{ width: '12px', height: '12px' }} />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                    );
+                  })()
+                ) : null}
               </div>
             </div>
 
@@ -5803,6 +6161,274 @@ export default function PersonalPage() {
                   }}
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add To-Do Modal */}
+      <AnimatePresence>
+        {showAddTodoModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowAddTodoModal(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '24px',
+            }}
+          >
+            <motion.div
+              {...scaleIn}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '20px',
+                width: '100%',
+                maxWidth: '480px',
+                overflow: 'hidden',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  padding: '24px',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    background: '#10b981',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <ListBulletIcon style={{ width: '20px', height: '20px', color: '#fff' }} />
+                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#065f46', margin: 0 }}>
+                    Add To-Do
+                  </h3>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowAddTodoModal(false)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.04)',
+                    cursor: 'pointer',
+                    color: '#065f46',
+                  }}
+                >
+                  <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                </motion.button>
+              </div>
+
+              {/* Form */}
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Task Name */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                    Task Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={todoForm.task_name || ''}
+                    onChange={(e) => setTodoForm({ ...todoForm, task_name: e.target.value })}
+                    placeholder="What do you need to do?"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      fontSize: '15px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Date Range */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={todoForm.start_date || ''}
+                      onChange={(e) => setTodoForm({ ...todoForm, start_date: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        fontSize: '14px',
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '10px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      Deadline
+                    </label>
+                    <input
+                      type="date"
+                      value={todoForm.deadline || ''}
+                      onChange={(e) => setTodoForm({ ...todoForm, deadline: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        fontSize: '14px',
+                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        borderRadius: '10px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                    Duration (hours to complete)
+                  </label>
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    value={todoForm.duration || 1}
+                    onChange={(e) => setTodoForm({ ...todoForm, duration: parseFloat(e.target.value) || 1 })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                    Priority
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {([
+                      { value: 'urgent', label: 'Urgent', color: '#dc2626', bg: '#fef2f2' },
+                      { value: 'important', label: 'Important', color: '#d97706', bg: '#fef3c7' },
+                      { value: 'normal', label: 'Normal', color: '#10b981', bg: '#ecfdf5' },
+                    ] as const).map((p) => (
+                      <motion.button
+                        key={p.value}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setTodoForm({ ...todoForm, priority: p.value })}
+                        style={{
+                          flex: 1,
+                          padding: '12px 16px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          border: todoForm.priority === p.value ? `2px solid ${p.color}` : '1px solid rgba(0, 0, 0, 0.1)',
+                          borderRadius: '10px',
+                          background: todoForm.priority === p.value ? p.bg : '#fff',
+                          color: todoForm.priority === p.value ? p.color : '#6b7280',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {p.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                    Description (optional)
+                  </label>
+                  <textarea
+                    value={todoForm.description || ''}
+                    onChange={(e) => setTodoForm({ ...todoForm, description: e.target.value })}
+                    placeholder="Add any notes or details..."
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      resize: 'vertical',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(0, 0, 0, 0.06)', display: 'flex', gap: '12px' }}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAddTodo}
+                  disabled={!todoForm.task_name?.trim()}
+                  style={{
+                    flex: 1,
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '12px',
+                    background: todoForm.task_name?.trim() ? 'linear-gradient(135deg, #10b981, #059669)' : '#d1d5db',
+                    color: '#fff',
+                    cursor: todoForm.task_name?.trim() ? 'pointer' : 'not-allowed',
+                    boxShadow: todoForm.task_name?.trim() ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none',
+                  }}
+                >
+                  Add To-Do
+                </motion.button>
+                <button
+                  onClick={() => setShowAddTodoModal(false)}
+                  style={{
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '12px',
+                    background: '#fff',
+                    color: '#374151',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
                 </button>
               </div>
             </motion.div>
