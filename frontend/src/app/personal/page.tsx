@@ -2155,28 +2155,28 @@ export default function PersonalPage() {
                 ))}
             </div>
 
-              {/* Goals Button */}
+              {/* To-Do List Button */}
               <motion.button
-                onClick={() => router.push('/goals')}
+                onClick={() => setShowAddTodoModal(true)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '8px 14px',
-                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(251, 146, 60, 0.08))',
-                  border: '1px solid rgba(239, 68, 68, 0.15)',
-                  borderRadius: '8px',
+                  padding: '9px 18px',
                   fontSize: '13px',
                   fontWeight: '600',
+                  border: '1px solid #10b981',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  color: '#dc2626',
+                  background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                  color: '#065f46',
                   transition: 'all 0.2s ease',
                 }}
               >
-                <FlagIcon style={{ width: '15px', height: '15px' }} />
-                Goals
+                <ListBulletIcon style={{ width: '15px', height: '15px' }} />
+                Add To-Do
               </motion.button>
 
               {/* Report Button */}
