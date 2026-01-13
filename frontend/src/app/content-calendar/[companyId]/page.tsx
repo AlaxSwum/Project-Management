@@ -682,7 +682,7 @@ export default function CompanyCalendarPage() {
         
         /* New Post Modal Styles */
         .cal-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; animation: fadeIn 0.2s ease-out; }
-        .cal-modal { background: #fff; border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .cal-modal { background: #fff; border-radius: 16px; width: 520px; max-width: 90vw; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
         .cal-modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%); }
         .cal-modal-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
         .cal-modal-close { background: #f5f5f5; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.25rem; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
@@ -1034,7 +1034,7 @@ export default function CompanyCalendarPage() {
             {/* Post Details/Edit Modal - Centered Popup */}
             {showPostDrawer && selectedPost && (
               <div className="cal-modal-overlay" onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }}>
-                <div className="cal-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '650px' }}>
+                <div className="cal-modal" onClick={(e) => e.stopPropagation()}>
                   <div className="cal-modal-header">
                     <h3 className="cal-modal-title">
                       {isEditing ? (
