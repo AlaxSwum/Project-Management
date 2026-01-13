@@ -1031,136 +1031,156 @@ export default function CompanyCalendarPage() {
               </div>
             )}
 
-            {/* Post Details/Edit Drawer - Right Sidebar */}
+            {/* Post Details/Edit Modal - Centered Popup */}
             {showPostDrawer && selectedPost && (
-              <div className="cal-drawer">
-                <div className="cal-drawer-header">
-                  <h3 className="cal-drawer-title">{isEditing ? 'Edit Post' : 'Post Details'}</h3>
-                  <button onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }} className="cal-drawer-close">×</button>
-                </div>
-                <div className="cal-drawer-body">
-                  {isEditing ? (
-                    <>
-                      <div className="cal-form-group"><label className="cal-label">Title *</label><input type="text" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} placeholder="Post title" className="cal-input" /></div>
-                      
-                      <div className="cal-form-group">
-                        <label className="cal-label">Platforms & Budget *</label>
-                        <div className="cal-platforms">
-                          {PLATFORMS.map(p => {
-                            const isActive = postForm.platforms.includes(p)
-                            const budget = platformBudgets.find(pb => pb.platform === p)?.budget || 0
-                            return (
-                              <div key={p} className={`cal-platform-row ${isActive ? 'active' : ''}`}>
-                                <div className={`cal-platform-check ${isActive ? 'active' : ''}`} onClick={() => handlePlatformToggle(p)}>
-                                  {isActive && <span style={{ fontSize: '12px' }}>✓</span>}
-                                </div>
-                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: PLATFORM_COLORS[p] }} />
-                                <span className="cal-platform-name">{p}</span>
-                                {isActive && (
-                                  <input type="number" value={budget} onChange={(e) => handleBudgetChange(p, Number(e.target.value))} placeholder="Budget" className="cal-platform-budget" />
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-                        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0fff4', borderRadius: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#166534', fontWeight: 500 }}>Total Ad Budget:</span>
-                          <span style={{ color: '#166534', fontWeight: 700 }}>${platformBudgets.reduce((sum, pb) => sum + pb.budget, 0).toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div className="cal-form-group"><label className="cal-label">Content Type</label><select value={postForm.content_type} onChange={(e) => setPostForm({ ...postForm, content_type: e.target.value as ContentType })} className="cal-input">{CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-                        <div className="cal-form-group"><label className="cal-label">Status</label><select value={postForm.status} onChange={(e) => setPostForm({ ...postForm, status: e.target.value as PostStatus })} className="cal-input">{POST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div className="cal-form-group"><label className="cal-label">Planned Date</label><input type="date" value={postForm.planned_date} onChange={(e) => setPostForm({ ...postForm, planned_date: e.target.value })} className="cal-input" /></div>
-                        <div className="cal-form-group"><label className="cal-label">Planned Time</label><input type="time" value={postForm.planned_time} onChange={(e) => setPostForm({ ...postForm, planned_time: e.target.value })} className="cal-input" /></div>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div className="cal-form-group"><label className="cal-label">Content Owner</label><select value={postForm.owner_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, owner_id: e.target.value, owner_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
-                        <div className="cal-form-group"><label className="cal-label">Designer</label><select value={postForm.designer_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, designer_id: e.target.value, designer_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
-                      </div>
-                      <div className="cal-form-group"><label className="cal-label">Description / Caption</label><textarea value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} placeholder="Post description or caption" rows={4} className="cal-textarea" /></div>
-                      <div className="cal-form-group"><label className="cal-label">Visual Concept</label><textarea value={postForm.visual_concept} onChange={(e) => setPostForm({ ...postForm, visual_concept: e.target.value })} placeholder="Visual concept notes" rows={2} className="cal-textarea" /></div>
-                      <div className="cal-form-group"><label className="cal-label">Hashtags</label><input type="text" value={postForm.hashtags} onChange={(e) => setPostForm({ ...postForm, hashtags: e.target.value })} placeholder="#hashtag1 #hashtag2" className="cal-input" /></div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ marginBottom: '1.5rem' }}>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{selectedPost.title}</h4>
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          <span className="cal-status-badge" style={{ background: STATUS_COLORS[selectedPost.status]?.bg, color: STATUS_COLORS[selectedPost.status]?.text }}>{selectedPost.status}</span>
-                          <span style={{ color: '#10b981', fontWeight: 600 }}>Total: ${(selectedPost.media_budget || 0).toLocaleString()}</span>
-                        </div>
-                      </div>
-                      
-                      {(selectedPost.description || selectedPost.hashtags) && (
-                        <div className="cal-copy-section">
-                          <h5 className="cal-copy-title">Ready to Post</h5>
-                          {selectedPost.description && (
-                            <div className="cal-copy-item">
-                              <div className="cal-copy-item-header">
-                                <span className="cal-copy-item-label">Caption / Content</span>
-                                <button onClick={() => copyToClipboard(selectedPost.description || '', 'caption')} className={`cal-copy-btn ${copiedField === 'caption' ? 'copied' : ''}`}>{copiedField === 'caption' ? 'Copied!' : 'Copy'}</button>
-                              </div>
-                              <div className="cal-copy-content">{selectedPost.description}</div>
-                            </div>
-                          )}
-                          {selectedPost.hashtags && (
-                            <div className="cal-copy-item">
-                              <div className="cal-copy-item-header">
-                                <span className="cal-copy-item-label">Hashtags</span>
-                                <button onClick={() => copyToClipboard(selectedPost.hashtags || '', 'hashtags')} className={`cal-copy-btn ${copiedField === 'hashtags' ? 'copied' : ''}`}>{copiedField === 'hashtags' ? 'Copied!' : 'Copy'}</button>
-                              </div>
-                              <div className="cal-copy-content">{selectedPost.hashtags}</div>
-                            </div>
-                          )}
-                          {selectedPost.description && selectedPost.hashtags && (
-                            <button onClick={() => copyToClipboard(`${selectedPost.description}\n\n${selectedPost.hashtags}`, 'all')} className="cal-copy-btn" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}>{copiedField === 'all' ? 'Copied All!' : 'Copy Caption + Hashtags'}</button>
-                          )}
-                        </div>
+              <div className="cal-modal-overlay" onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }}>
+                <div className="cal-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '650px' }}>
+                  <div className="cal-modal-header">
+                    <h3 className="cal-modal-title">
+                      {isEditing ? (
+                        <>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: '#5884FD' }}>
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                          Edit Post
+                        </>
+                      ) : (
+                        <>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: '#C483D9' }}>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                          </svg>
+                          Post Details
+                        </>
                       )}
-                      
-                      <div style={{ marginBottom: '1.25rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Planned Date</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 500, color: '#1a1a1a' }}>{new Date(selectedPost.planned_date).toLocaleDateString()} {selectedPost.planned_time || ''}</div>
-                      </div>
-                      
-                      <div style={{ marginBottom: '1.5rem' }}>
-                        <h5 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', margin: '0 0 1rem 0' }}>Platform Targets</h5>
-                        {selectedPost.targets?.map(target => (
-                          <div key={target.id} className="cal-target">
-                            <div className="cal-target-header">
-                              <div className="cal-target-platform">
-                                <span className="cal-target-dot" style={{ background: PLATFORM_COLORS[target.platform] }} />
-                                <span className="cal-target-name">{target.platform}</span>
-                                <span className="cal-target-budget">${(target.ad_budget || 0).toLocaleString()}</span>
-                              </div>
-                              <span className="cal-target-status" style={{ background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>{target.platform_status}</span>
-                            </div>
-                            <select value={target.platform_status} onChange={(e) => handleUpdateTarget(target.id, { platform_status: e.target.value as PlatformStatus })} className="cal-target-select">{PLATFORM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select>
-                            <input type="text" value={target.permalink || ''} onChange={(e) => handleUpdateTarget(target.id, { permalink: e.target.value })} placeholder="Enter permalink after posting" className="cal-target-input" />
-                            {target.platform_status !== 'published' && <button onClick={() => handleMarkAsPublished(target)} className="cal-target-publish-btn">Mark as Published</button>}
-                            {target.manual_posted_at && <div className="cal-target-published">Published by {target.manual_posted_by_name} on {new Date(target.manual_posted_at).toLocaleString()}</div>}
+                    </h3>
+                    <button onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }} className="cal-modal-close">×</button>
+                  </div>
+                  <div className="cal-modal-body">
+                    {isEditing ? (
+                      <>
+                        <div className="cal-form-group"><label className="cal-label">Title *</label><input type="text" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} placeholder="Post title" className="cal-input" /></div>
+                        
+                        <div className="cal-form-group">
+                          <label className="cal-label">Platforms & Budget *</label>
+                          <div className="cal-platforms">
+                            {PLATFORMS.map(p => {
+                              const isActive = postForm.platforms.includes(p)
+                              const budget = platformBudgets.find(pb => pb.platform === p)?.budget || 0
+                              return (
+                                <div key={p} className={`cal-platform-row ${isActive ? 'active' : ''}`}>
+                                  <div className={`cal-platform-check ${isActive ? 'active' : ''}`} onClick={() => handlePlatformToggle(p)}>
+                                    {isActive && <span style={{ fontSize: '12px' }}>✓</span>}
+                                  </div>
+                                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: PLATFORM_COLORS[p] }} />
+                                  <span className="cal-platform-name">{p}</span>
+                                  {isActive && (
+                                    <input type="number" value={budget} onChange={(e) => handleBudgetChange(p, Number(e.target.value))} placeholder="Budget" className="cal-platform-budget" />
+                                  )}
+                                </div>
+                              )
+                            })}
                           </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="cal-drawer-footer">
-                  {isEditing ? (
-                    <>
-                      <button onClick={() => setIsEditing(false)} className="cal-btn-secondary" style={{ flex: 1 }}>Cancel</button>
-                      <button onClick={handleSavePost} className="cal-btn-primary" style={{ flex: 1 }}>Save</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => setIsEditing(true)} className="cal-btn-secondary" style={{ flex: 1 }}>Edit</button>
-                      <button onClick={handleDeletePost} style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem', fontWeight: 500, border: '1px solid #fed7d7', borderRadius: '10px', background: '#fff5f5', color: '#c53030', cursor: 'pointer' }}>Delete</button>
-                    </>
-                  )}
+                          <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0fff4', borderRadius: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#166534', fontWeight: 500 }}>Total Ad Budget:</span>
+                            <span style={{ color: '#166534', fontWeight: 700 }}>${platformBudgets.reduce((sum, pb) => sum + pb.budget, 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div className="cal-form-group"><label className="cal-label">Content Type</label><select value={postForm.content_type} onChange={(e) => setPostForm({ ...postForm, content_type: e.target.value as ContentType })} className="cal-input">{CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                          <div className="cal-form-group"><label className="cal-label">Status</label><select value={postForm.status} onChange={(e) => setPostForm({ ...postForm, status: e.target.value as PostStatus })} className="cal-input">{POST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div className="cal-form-group"><label className="cal-label">Planned Date</label><input type="date" value={postForm.planned_date} onChange={(e) => setPostForm({ ...postForm, planned_date: e.target.value })} className="cal-input" /></div>
+                          <div className="cal-form-group"><label className="cal-label">Planned Time</label><input type="time" value={postForm.planned_time} onChange={(e) => setPostForm({ ...postForm, planned_time: e.target.value })} className="cal-input" /></div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div className="cal-form-group"><label className="cal-label">Content Owner</label><select value={postForm.owner_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, owner_id: e.target.value, owner_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
+                          <div className="cal-form-group"><label className="cal-label">Designer</label><select value={postForm.designer_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, designer_id: e.target.value, designer_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
+                        </div>
+                        <div className="cal-form-group"><label className="cal-label">Description / Caption</label><textarea value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} placeholder="Post description or caption" rows={3} className="cal-textarea" /></div>
+                        <div className="cal-form-group"><label className="cal-label">Visual Concept</label><textarea value={postForm.visual_concept} onChange={(e) => setPostForm({ ...postForm, visual_concept: e.target.value })} placeholder="Visual concept notes" rows={2} className="cal-textarea" /></div>
+                        <div className="cal-form-group"><label className="cal-label">Hashtags</label><input type="text" value={postForm.hashtags} onChange={(e) => setPostForm({ ...postForm, hashtags: e.target.value })} placeholder="#hashtag1 #hashtag2" className="cal-input" /></div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{selectedPost.title}</h4>
+                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span className="cal-status-badge" style={{ background: STATUS_COLORS[selectedPost.status]?.bg, color: STATUS_COLORS[selectedPost.status]?.text }}>{selectedPost.status}</span>
+                            <span style={{ color: '#10b981', fontWeight: 600 }}>Budget: ${(selectedPost.media_budget || 0).toLocaleString()}</span>
+                            <span style={{ color: '#666', fontSize: '0.85rem' }}>
+                              {new Date(selectedPost.planned_date).toLocaleDateString()} {selectedPost.planned_time || ''}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {(selectedPost.description || selectedPost.hashtags) && (
+                          <div className="cal-copy-section">
+                            <h5 className="cal-copy-title">Ready to Post</h5>
+                            {selectedPost.description && (
+                              <div className="cal-copy-item">
+                                <div className="cal-copy-item-header">
+                                  <span className="cal-copy-item-label">Caption / Content</span>
+                                  <button onClick={() => copyToClipboard(selectedPost.description || '', 'caption')} className={`cal-copy-btn ${copiedField === 'caption' ? 'copied' : ''}`}>{copiedField === 'caption' ? 'Copied!' : 'Copy'}</button>
+                                </div>
+                                <div className="cal-copy-content">{selectedPost.description}</div>
+                              </div>
+                            )}
+                            {selectedPost.hashtags && (
+                              <div className="cal-copy-item">
+                                <div className="cal-copy-item-header">
+                                  <span className="cal-copy-item-label">Hashtags</span>
+                                  <button onClick={() => copyToClipboard(selectedPost.hashtags || '', 'hashtags')} className={`cal-copy-btn ${copiedField === 'hashtags' ? 'copied' : ''}`}>{copiedField === 'hashtags' ? 'Copied!' : 'Copy'}</button>
+                                </div>
+                                <div className="cal-copy-content">{selectedPost.hashtags}</div>
+                              </div>
+                            )}
+                            {selectedPost.description && selectedPost.hashtags && (
+                              <button onClick={() => copyToClipboard(`${selectedPost.description}\n\n${selectedPost.hashtags}`, 'all')} className="cal-copy-btn" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}>{copiedField === 'all' ? 'Copied All!' : 'Copy Caption + Hashtags'}</button>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div style={{ marginBottom: '1.5rem' }}>
+                          <h5 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a1a', margin: '0 0 1rem 0' }}>Platform Targets</h5>
+                          {selectedPost.targets?.map(target => (
+                            <div key={target.id} className="cal-target">
+                              <div className="cal-target-header">
+                                <div className="cal-target-platform">
+                                  <span className="cal-target-dot" style={{ background: PLATFORM_COLORS[target.platform] }} />
+                                  <span className="cal-target-name">{target.platform}</span>
+                                  <span className="cal-target-budget">${(target.ad_budget || 0).toLocaleString()}</span>
+                                </div>
+                                <span className="cal-target-status" style={{ background: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.bg || '#f0f0f0', color: (PLATFORM_STATUS_COLORS as any)[target.platform_status]?.text || '#666' }}>{target.platform_status}</span>
+                              </div>
+                              <select value={target.platform_status} onChange={(e) => handleUpdateTarget(target.id, { platform_status: e.target.value as PlatformStatus })} className="cal-target-select">{PLATFORM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select>
+                              <input type="text" value={target.permalink || ''} onChange={(e) => handleUpdateTarget(target.id, { permalink: e.target.value })} placeholder="Enter permalink after posting" className="cal-target-input" />
+                              {target.platform_status !== 'published' && <button onClick={() => handleMarkAsPublished(target)} className="cal-target-publish-btn">Mark as Published</button>}
+                              {target.manual_posted_at && <div className="cal-target-published">Published by {target.manual_posted_by_name} on {new Date(target.manual_posted_at).toLocaleString()}</div>}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="cal-modal-footer">
+                    {isEditing ? (
+                      <>
+                        <button onClick={() => setIsEditing(false)} className="cal-btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                        <button onClick={handleSavePost} className="cal-btn-primary" style={{ flex: 1 }}>Save Changes</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => setIsEditing(true)} className="cal-btn-secondary" style={{ flex: 1 }}>Edit</button>
+                        <button onClick={handleDeletePost} style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem', fontWeight: 500, border: '1px solid #fed7d7', borderRadius: '10px', background: '#fff5f5', color: '#c53030', cursor: 'pointer' }}>Delete</button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
