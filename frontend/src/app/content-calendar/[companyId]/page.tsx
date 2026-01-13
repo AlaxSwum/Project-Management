@@ -679,6 +679,18 @@ export default function CompanyCalendarPage() {
         .ms-link-badge.graphic { background: linear-gradient(135deg, #fce7f3, #fdf2f8); color: #be185d; }
         .ms-link-badge.video { background: linear-gradient(135deg, #fee2e2, #fef2f2); color: #dc2626; }
         .ms-link-badge.content { background: linear-gradient(135deg, #dcfce7, #f0fdf4); color: #16a34a; }
+        
+        /* New Post Modal Styles */
+        .cal-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; animation: fadeIn 0.2s ease-out; }
+        .cal-modal { background: #fff; border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .cal-modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%); }
+        .cal-modal-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .cal-modal-close { background: #f5f5f5; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.25rem; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .cal-modal-close:hover { background: #fee2e2; color: #dc2626; }
+        .cal-modal-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+        .cal-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; gap: 0.75rem; background: #fafafa; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}} />
 
       <div className="cal-container">
@@ -953,11 +965,78 @@ export default function CompanyCalendarPage() {
               ) : null}
             </div>
 
-            {showPostDrawer && (
+            {/* New Post Modal - Centered Popup */}
+            {showPostDrawer && isEditing && !selectedPost && (
+              <div className="cal-modal-overlay" onClick={() => setShowPostDrawer(false)}>
+                <div className="cal-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="cal-modal-header">
+                    <h3 className="cal-modal-title">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: '#C483D9' }}>
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      New Post
+                    </h3>
+                    <button onClick={() => setShowPostDrawer(false)} className="cal-modal-close">×</button>
+                  </div>
+                  <div className="cal-modal-body">
+                    <div className="cal-form-group"><label className="cal-label">Title *</label><input type="text" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} placeholder="Post title" className="cal-input" /></div>
+                    
+                    <div className="cal-form-group">
+                      <label className="cal-label">Platforms & Budget *</label>
+                      <div className="cal-platforms">
+                        {PLATFORMS.map(p => {
+                          const isActive = postForm.platforms.includes(p)
+                          const budget = platformBudgets.find(pb => pb.platform === p)?.budget || 0
+                          return (
+                            <div key={p} className={`cal-platform-row ${isActive ? 'active' : ''}`}>
+                              <div className={`cal-platform-check ${isActive ? 'active' : ''}`} onClick={() => handlePlatformToggle(p)}>
+                                {isActive && <span style={{ fontSize: '12px' }}>✓</span>}
+                              </div>
+                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: PLATFORM_COLORS[p] }} />
+                              <span className="cal-platform-name">{p}</span>
+                              {isActive && (
+                                <input type="number" value={budget} onChange={(e) => handleBudgetChange(p, Number(e.target.value))} placeholder="Budget" className="cal-platform-budget" />
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0fff4', borderRadius: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#166534', fontWeight: 500 }}>Total Ad Budget:</span>
+                        <span style={{ color: '#166534', fontWeight: 700 }}>${platformBudgets.reduce((sum, pb) => sum + pb.budget, 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="cal-form-group"><label className="cal-label">Content Type</label><select value={postForm.content_type} onChange={(e) => setPostForm({ ...postForm, content_type: e.target.value as ContentType })} className="cal-input">{CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                      <div className="cal-form-group"><label className="cal-label">Status</label><select value={postForm.status} onChange={(e) => setPostForm({ ...postForm, status: e.target.value as PostStatus })} className="cal-input">{POST_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="cal-form-group"><label className="cal-label">Planned Date</label><input type="date" value={postForm.planned_date} onChange={(e) => setPostForm({ ...postForm, planned_date: e.target.value })} className="cal-input" /></div>
+                      <div className="cal-form-group"><label className="cal-label">Planned Time</label><input type="time" value={postForm.planned_time} onChange={(e) => setPostForm({ ...postForm, planned_time: e.target.value })} className="cal-input" /></div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="cal-form-group"><label className="cal-label">Content Owner</label><select value={postForm.owner_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, owner_id: e.target.value, owner_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
+                      <div className="cal-form-group"><label className="cal-label">Designer</label><select value={postForm.designer_id} onChange={(e) => { const m = members.find(x => x.user_id === e.target.value); setPostForm({ ...postForm, designer_id: e.target.value, designer_name: m?.user_name || '' }) }} className="cal-input"><option value="">Select</option>{members.map(m => <option key={m.id} value={m.user_id}>{m.user_name}</option>)}</select></div>
+                    </div>
+                    <div className="cal-form-group"><label className="cal-label">Description / Caption</label><textarea value={postForm.description} onChange={(e) => setPostForm({ ...postForm, description: e.target.value })} placeholder="Post description or caption" rows={3} className="cal-textarea" /></div>
+                    <div className="cal-form-group"><label className="cal-label">Visual Concept</label><textarea value={postForm.visual_concept} onChange={(e) => setPostForm({ ...postForm, visual_concept: e.target.value })} placeholder="Visual concept notes" rows={2} className="cal-textarea" /></div>
+                    <div className="cal-form-group"><label className="cal-label">Hashtags</label><input type="text" value={postForm.hashtags} onChange={(e) => setPostForm({ ...postForm, hashtags: e.target.value })} placeholder="#hashtag1 #hashtag2" className="cal-input" /></div>
+                  </div>
+                  <div className="cal-modal-footer">
+                    <button onClick={() => setShowPostDrawer(false)} className="cal-btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                    <button onClick={handleSavePost} className="cal-btn-primary" style={{ flex: 1 }}>Create Post</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Post Details/Edit Drawer - Right Sidebar */}
+            {showPostDrawer && selectedPost && (
               <div className="cal-drawer">
                 <div className="cal-drawer-header">
-                  <h3 className="cal-drawer-title">{isEditing ? (selectedPost ? 'Edit Post' : 'New Post') : 'Post Details'}</h3>
-                  <button onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }} className="cal-drawer-close">x</button>
+                  <h3 className="cal-drawer-title">{isEditing ? 'Edit Post' : 'Post Details'}</h3>
+                  <button onClick={() => { setShowPostDrawer(false); setSelectedPost(null); setIsEditing(false) }} className="cal-drawer-close">×</button>
                 </div>
                 <div className="cal-drawer-body">
                   {isEditing ? (
@@ -1006,7 +1085,7 @@ export default function CompanyCalendarPage() {
                       <div className="cal-form-group"><label className="cal-label">Visual Concept</label><textarea value={postForm.visual_concept} onChange={(e) => setPostForm({ ...postForm, visual_concept: e.target.value })} placeholder="Visual concept notes" rows={2} className="cal-textarea" /></div>
                       <div className="cal-form-group"><label className="cal-label">Hashtags</label><input type="text" value={postForm.hashtags} onChange={(e) => setPostForm({ ...postForm, hashtags: e.target.value })} placeholder="#hashtag1 #hashtag2" className="cal-input" /></div>
                     </>
-                  ) : selectedPost ? (
+                  ) : (
                     <>
                       <div style={{ marginBottom: '1.5rem' }}>
                         <h4 style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 0.75rem 0' }}>{selectedPost.title}</h4>
@@ -1068,12 +1147,12 @@ export default function CompanyCalendarPage() {
                         ))}
                       </div>
                     </>
-                  ) : null}
+                  )}
                 </div>
                 <div className="cal-drawer-footer">
                   {isEditing ? (
                     <>
-                      <button onClick={() => { if (selectedPost) setIsEditing(false); else setShowPostDrawer(false) }} className="cal-btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                      <button onClick={() => setIsEditing(false)} className="cal-btn-secondary" style={{ flex: 1 }}>Cancel</button>
                       <button onClick={handleSavePost} className="cal-btn-primary" style={{ flex: 1 }}>Save</button>
                     </>
                   ) : (
