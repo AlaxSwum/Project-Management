@@ -25,6 +25,9 @@ const SHEET_FIELDS = [
   { key: 'posting_time', label: 'Posting Time', editable: true, type: 'time' },
   { key: 'post_link', label: 'Post link', editable: true },
   { key: 'post_photo', label: 'Post Photo / Screenshot', editable: true },
+  { key: 'graphic_link', label: 'Graphic Link', editable: true, type: 'link' },
+  { key: 'video_link', label: 'Video Link', editable: true, type: 'link' },
+  { key: 'content_link', label: 'Content Link', editable: true, type: 'link' },
   { key: 'platform', label: 'Platform', editable: true, type: 'multiselect' },
   { key: 'published', label: 'Published', editable: false, type: 'status' },
   { key: 'visual_concept', label: 'Visual Concept', editable: true, multiline: true },
@@ -42,6 +45,9 @@ interface SheetCellData {
   posting_time: string
   post_link: string
   post_photo: string
+  graphic_link: string
+  video_link: string
+  content_link: string
   platform: string
   platforms: Platform[]
   published: string
@@ -315,6 +321,9 @@ export default function CompanyCalendarPage() {
         posting_time: post.planned_time || '',
         post_link: post.targets?.[0]?.permalink || '',
         post_photo: '',
+        graphic_link: (post as any).graphic_link || '',
+        video_link: (post as any).video_link || '',
+        content_link: (post as any).content_link || '',
         platform: platforms.join('/') || '',
         platforms: platforms,
         published: isPublished ? 'Yes' : 'No',
@@ -334,6 +343,9 @@ export default function CompanyCalendarPage() {
       posting_time: '',
       post_link: '',
       post_photo: '',
+      graphic_link: '',
+      video_link: '',
+      content_link: '',
       platform: '',
       platforms: [],
       published: '',
@@ -454,6 +466,9 @@ export default function CompanyCalendarPage() {
           case 'posting_time': updateData.planned_time = editValue; break
           case 'visual_concept': updateData.visual_concept = editValue; break
           case 'content_theme': updateData.category = editValue; break
+          case 'graphic_link': updateData.graphic_link = editValue; break
+          case 'video_link': updateData.video_link = editValue; break
+          case 'content_link': updateData.content_link = editValue; break
         }
         
         if (Object.keys(updateData).length > 0) {
@@ -476,6 +491,9 @@ export default function CompanyCalendarPage() {
           case 'posting_time': newPostData.planned_time = editValue; break
           case 'visual_concept': newPostData.visual_concept = editValue; break
           case 'content_theme': newPostData.category = editValue; break
+          case 'graphic_link': newPostData.graphic_link = editValue; break
+          case 'video_link': newPostData.video_link = editValue; break
+          case 'content_link': newPostData.content_link = editValue; break
         }
         
         const { data: newPost } = await supabase.from('content_posts').insert(newPostData).select().single()
@@ -650,6 +668,17 @@ export default function CompanyCalendarPage() {
         .ms-status-icon.ms-published { background: #dcfce7; color: #16a34a; }
         .ms-status-icon.ms-not-published { background: #fee2e2; color: #dc2626; }
         .ms-status-empty { color: #ccc; font-size: 0.8rem; }
+        
+        /* Link Field Styles */
+        .ms-link-display { display: flex; align-items: center; gap: 4px; width: 100%; }
+        .ms-link-icon { width: 14px; height: 14px; color: #5884FD; flex-shrink: 0; }
+        .ms-link-text { color: #5884FD; font-size: 0.75rem; text-decoration: underline; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+        .ms-link-text:hover { color: #C483D9; }
+        .ms-link-empty { color: #999; font-size: 0.7rem; font-style: italic; }
+        .ms-link-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; background: linear-gradient(135deg, #e0f2fe, #dbeafe); border-radius: 4px; font-size: 0.65rem; color: #0369a1; }
+        .ms-link-badge.graphic { background: linear-gradient(135deg, #fce7f3, #fdf2f8); color: #be185d; }
+        .ms-link-badge.video { background: linear-gradient(135deg, #fee2e2, #fef2f2); color: #dc2626; }
+        .ms-link-badge.content { background: linear-gradient(135deg, #dcfce7, #f0fdf4); color: #16a34a; }
       `}} />
 
       <div className="cal-container">
@@ -813,6 +842,39 @@ export default function CompanyCalendarPage() {
                                         <span className="ms-status-empty">-</span>
                                       )}
                                     </div>
+                                  ) : ('type' in field && field.type === 'link') ? (
+                                    /* Link Fields with Icons */
+                                    isEditing ? (
+                                      <input
+                                        ref={editInputRef as React.RefObject<HTMLInputElement>}
+                                        type="url"
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onBlur={handleCellBlur}
+                                        onKeyDown={handleCellKeyDown}
+                                        className="ms-input"
+                                        placeholder="Paste Google Drive link..."
+                                      />
+                                    ) : value ? (
+                                      <div className="ms-link-display">
+                                        <a 
+                                          href={value} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className={`ms-link-badge ${field.key === 'graphic_link' ? 'graphic' : field.key === 'video_link' ? 'video' : 'content'}`}
+                                          title={value}
+                                        >
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                          </svg>
+                                          {field.key === 'graphic_link' ? 'Graphic' : field.key === 'video_link' ? 'Video' : 'Content'}
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <span className="ms-link-empty">Add link</span>
+                                    )
                                   ) : isEditing ? (
                                     ('multiline' in field && field.multiline) ? (
                                       <textarea
