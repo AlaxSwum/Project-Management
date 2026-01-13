@@ -116,7 +116,7 @@ export default function MeetingDetailModal({
       await onUpdate({
         ...editedMeeting,
         project: editedMeeting.project_id,
-        attendee_ids: editedMeeting.attendee_ids.length > 0 ? editedMeeting.attendee_ids : undefined,
+        attendee_ids: editedMeeting.attendee_ids, // Always send the array (even if empty to clear attendees)
       });
       setIsEditing(false);
     } catch (error) {

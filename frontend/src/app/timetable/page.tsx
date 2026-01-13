@@ -353,13 +353,18 @@ export default function TimetablePage() {
   const handleMeetingClick = (meeting: Meeting) => {
     setSelectedMeeting(meeting);
     setShowMeetingDetail(true);
+    // Fetch project members for the meeting's project
+    const projectId = meeting.project_id || meeting.project;
+    if (projectId) {
+      fetchProjectMembers(projectId);
+    }
   };
 
   const handleUpdateMeetingFromDetail = async (meetingData: any) => {
     if (!selectedMeeting) return;
 
     // Check if user has access to update this meeting
-    const projectId = selectedMeeting.project_id || selectedMeeting.project;
+    const projectId = meetingData.project || selectedMeeting.project_id || selectedMeeting.project;
     if (!projectId || !accessibleProjectIds.has(projectId)) {
       setError('You do not have access to update this meeting');
       return;
@@ -368,11 +373,13 @@ export default function TimetablePage() {
     try {
       const updatedMeeting = await meetingService.updateMeeting(selectedMeeting.id, {
         title: meetingData.title.trim(),
-        description: meetingData.description.trim(),
+        description: meetingData.description?.trim() || '',
         date: meetingData.date,
         time: meetingData.time,
         duration: meetingData.duration,
+        project: meetingData.project || projectId,
         attendees: meetingData.attendees,
+        attendee_ids: meetingData.attendee_ids,
       });
       
       setMeetings(meetings.map(m => m.id === selectedMeeting.id ? updatedMeeting : m));
@@ -380,6 +387,7 @@ export default function TimetablePage() {
       setError('');
     } catch (err: any) {
       setError('Failed to update meeting');
+      console.error('Update meeting error:', err);
     }
   };
 
