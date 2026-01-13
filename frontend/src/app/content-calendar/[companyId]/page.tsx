@@ -542,8 +542,8 @@ export default function CompanyCalendarPage() {
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg); } }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #F5F5ED; }
-        .cal-container { min-height: 100vh; display: flex; background: #F5F5ED; }
-        .cal-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; display: flex; flex-direction: column; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; }
+        .cal-container { min-height: 100vh; display: flex; background: #F5F5ED; overflow-x: hidden; }
+        .cal-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; display: flex; flex-direction: column; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; max-width: ${isMobile ? '100vw' : 'calc(100vw - 256px)'}; overflow-x: hidden; }
         .cal-header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: #fff; border-bottom: 1px solid #e8e8e8; }
         .cal-nav { display: flex; align-items: center; gap: 1rem; }
         .cal-back { padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; }
@@ -556,9 +556,9 @@ export default function CompanyCalendarPage() {
         .cal-toggle-btn.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
         .cal-btn-secondary { padding: 0.625rem 1.25rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; }
         .cal-btn-primary { padding: 0.625rem 1.5rem; font-size: 0.9rem; font-weight: 500; border-radius: 10px; border: none; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(196, 131, 217, 0.3); }
-        .cal-content { flex: 1; display: flex; overflow: hidden; padding: 1.5rem 2rem; gap: 1.5rem; }
-        .cal-left { flex: ${showPostDrawer ? '0 0 58%' : '1'}; overflow: auto; }
-        .cal-calendar { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; }
+        .cal-content { flex: 1; display: flex; overflow: hidden; padding: 1rem; gap: 1rem; }
+        .cal-left { flex: 1; overflow: auto; max-width: 100%; }
+        .cal-calendar { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; max-width: 100%; }
         .cal-cal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; }
         .cal-month { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
         .cal-cal-nav { display: flex; gap: 0.5rem; }
@@ -621,19 +621,19 @@ export default function CompanyCalendarPage() {
         .cal-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #f0e6f5 0%, #e6f0ff 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
         
         /* Month Sheet Styles */
-        .ms-container { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; }
-        .ms-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
-        .ms-month { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin: 0; }
+        .ms-container { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; max-width: 100%; }
+        .ms-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #f0f0f0; background: #fafafa; flex-wrap: wrap; gap: 0.5rem; }
+        .ms-month { font-size: 1.1rem; font-weight: 600; color: #1a1a1a; margin: 0; }
         .ms-nav { display: flex; gap: 0.5rem; }
-        .ms-nav-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; }
+        .ms-nav-btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; }
         .ms-nav-btn:hover { background: #f5f5f5; }
-        .ms-spreadsheet { overflow-x: auto; padding: 1rem; }
-        .ms-week { margin-bottom: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
-        .ms-week-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.95rem; }
-        .ms-row { display: grid; grid-template-columns: 180px repeat(7, 1fr); min-width: 1200px; }
-        .ms-cell { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; font-size: 0.8rem; min-height: 32px; display: flex; align-items: flex-start; }
-        .ms-label-cell { background: #f8f9fa; font-weight: 600; color: #333; position: sticky; left: 0; z-index: 10; border-left: none; }
-        .ms-day-header { font-weight: 600; color: #1a1a1a; justify-content: center; background: #f0f0f0; text-transform: capitalize; }
+        .ms-spreadsheet { overflow-x: auto; padding: 0.5rem; }
+        .ms-week { margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .ms-week-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; }
+        .ms-row { display: grid; grid-template-columns: 100px repeat(7, minmax(80px, 1fr)); }
+        .ms-cell { padding: 0.35rem 0.5rem; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; font-size: 0.7rem; min-height: 28px; display: flex; align-items: flex-start; }
+        .ms-label-cell { background: #f8f9fa; font-weight: 500; color: #333; position: sticky; left: 0; z-index: 10; border-left: none; font-size: 0.65rem; }
+        .ms-day-header { font-weight: 600; color: #1a1a1a; justify-content: center; background: #f0f0f0; text-transform: capitalize; font-size: 0.7rem; }
         .ms-day-headers .ms-label-cell { background: #e8e8e8; }
         .ms-weekend { background: #fff9e6 !important; }
         .ms-weekend.ms-day-header { background: #ffeb99 !important; }
@@ -641,11 +641,11 @@ export default function CompanyCalendarPage() {
         .ms-data-cell { background: #fff; cursor: default; word-break: break-word; }
         .ms-editable { cursor: pointer; }
         .ms-editable:hover { background: #f0f7ff; }
-        .ms-multiline { min-height: 60px; }
-        .ms-value { line-height: 1.4; white-space: pre-wrap; }
-        .ms-input { width: 100%; border: 2px solid #5884FD; border-radius: 4px; padding: 0.375rem; font-size: 0.8rem; outline: none; font-family: inherit; }
-        textarea.ms-input { min-height: 50px; resize: vertical; }
-        select.ms-input { cursor: pointer; }
+        .ms-multiline { min-height: 45px; }
+        .ms-value { line-height: 1.3; white-space: pre-wrap; font-size: 0.65rem; }
+        .ms-input { width: 100%; border: 2px solid #5884FD; border-radius: 4px; padding: 0.25rem; font-size: 0.7rem; outline: none; font-family: inherit; }
+        textarea.ms-input { min-height: 40px; resize: vertical; }
+        select.ms-input { cursor: pointer; font-size: 0.7rem; }
         
         /* Platform Multi-Select Styles */
         .ms-platform-editor { background: #fff; border: 2px solid #5884FD; border-radius: 8px; padding: 0.5rem; min-width: 140px; }
@@ -658,9 +658,9 @@ export default function CompanyCalendarPage() {
         .ms-platform-actions { display: flex; gap: 0.375rem; border-top: 1px solid #e8e8e8; padding-top: 0.5rem; }
         .ms-platform-save { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 600; border: none; border-radius: 4px; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; }
         .ms-platform-cancel { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; color: #666; cursor: pointer; }
-        .ms-platform-display { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .ms-platform-tag { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; color: #fff; text-transform: capitalize; white-space: nowrap; }
-        .ms-placeholder { color: #999; font-style: italic; font-size: 0.7rem; }
+        .ms-platform-display { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+        .ms-platform-tag { padding: 1px 4px; border-radius: 3px; font-size: 0.55rem; font-weight: 600; color: #fff; text-transform: capitalize; white-space: nowrap; }
+        .ms-placeholder { color: #999; font-style: italic; font-size: 0.6rem; }
         
         /* Published Status Styles */
         .ms-published-status { display: flex; align-items: center; justify-content: center; width: 100%; }
