@@ -574,6 +574,9 @@ export default function PersonalPage() {
   const [resizeStartY, setResizeStartY] = useState<number>(0);
   const [resizeStartEndTime, setResizeStartEndTime] = useState<string>('');
 
+  // Context menu state (right-click menu)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; block: TimeBlock } | null>(null);
+
   // Convert Y position to time
   const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
     const relativeY = y - containerTop;
@@ -1529,18 +1532,18 @@ export default function PersonalPage() {
     console.log('deleteBlock called with id:', blockId);
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
-      
+
       const { error } = await supabase
         .from('time_blocks')
         .delete()
         .eq('id', blockId);
-      
+
       if (error) {
         console.error('Supabase delete error:', error);
       } else {
         console.log('Block deleted from database successfully');
       }
-      
+
       const newBlocks = blocks.filter(b => b.id !== blockId);
       console.log('Updating local state, blocks count:', blocks.length, '->', newBlocks.length);
       setBlocks(newBlocks);
@@ -1557,6 +1560,73 @@ export default function PersonalPage() {
       setSelectedBlock(null);
     }
   };
+
+  // Duplicate a block (Apple Calendar style - double-click to duplicate)
+  const duplicateBlock = async (block: TimeBlock) => {
+    // Don't duplicate goals or meetings
+    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
+    
+    // Calculate new time (shift by 30 minutes or to next available slot)
+    const [startH, startM] = block.startTime.split(':').map(Number);
+    const [endH, endM] = block.endTime.split(':').map(Number);
+    const duration = (endH * 60 + endM) - (startH * 60 + startM);
+    
+    // New block starts 30 minutes after original ends (or shift by 1 hour if that exceeds day)
+    let newStartMinutes = (endH * 60 + endM) + 30;
+    if (newStartMinutes + duration > 24 * 60) {
+      // Shift earlier instead - 1 hour before original start
+      newStartMinutes = Math.max(0, (startH * 60 + startM) - 60);
+    }
+    
+    const newStartH = Math.floor(newStartMinutes / 60);
+    const newStartMin = newStartMinutes % 60;
+    const newEndMinutes = newStartMinutes + duration;
+    const newEndH = Math.floor(newEndMinutes / 60);
+    const newEndMin = newEndMinutes % 60;
+    
+    const duplicatedBlock: TimeBlock = {
+      ...block,
+      id: generateId(),
+      title: `${block.title} (copy)`,
+      startTime: `${newStartH.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`,
+      endTime: `${newEndH.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`,
+      completed: false,
+      isRecurring: false, // Don't duplicate as recurring
+      recurringDays: [],
+    };
+    
+    console.log('Duplicating block:', block.title, '-> New time:', duplicatedBlock.startTime, '-', duplicatedBlock.endTime);
+    
+    await saveBlock(duplicatedBlock);
+    
+    // Open the duplicated block for editing
+    setSelectedBlock(duplicatedBlock);
+    setBlockForm(duplicatedBlock);
+    setShowPanel(true);
+  };
+
+  // Handle right-click context menu
+  const handleContextMenu = (e: React.MouseEvent, block: TimeBlock) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Don't show context menu for goals or meetings
+    if (block.id.startsWith('goal-') || block.id.startsWith('meeting-')) return;
+    setContextMenu({ x: e.clientX, y: e.clientY, block });
+  };
+
+  // Close context menu
+  const closeContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  // Close context menu on outside click
+  React.useEffect(() => {
+    const handleClick = () => closeContextMenu();
+    if (contextMenu) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu]);
 
   // Delete a single occurrence of a recurring block (add date to excluded list)
   const deleteSingleOccurrence = async (block: TimeBlock, dateToExclude: string) => {
@@ -2508,6 +2578,13 @@ export default function PersonalPage() {
                           }}
                           whileHover={{ scale: canDrag ? 1.01 : 1, zIndex: 10 }}
                           onClick={() => !isMoving && !isResizing && handleBlockClick(block)}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            if (!isMoving && !isResizing && canDrag) {
+                              duplicateBlock(block);
+                            }
+                          }}
+                          onContextMenu={(e) => handleContextMenu(e, block)}
                           onMouseDown={(e) => canDrag && handleBlockMoveStart(e, block)}
                           style={{
                             position: 'absolute',
@@ -2879,6 +2956,13 @@ export default function PersonalPage() {
                                 e.stopPropagation();
                                 handleBlockClick(block);
                               }}
+                              onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                if (!block.id.startsWith('goal-') && !block.id.startsWith('meeting-')) {
+                                  duplicateBlock(block);
+                                }
+                              }}
+                              onContextMenu={(e) => handleContextMenu(e, block)}
                               style={{
                                 position: 'absolute',
                                 top: `${top}px`,
@@ -4743,6 +4827,152 @@ export default function PersonalPage() {
                 </motion.button>
                   </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Context Menu (Right-click menu) */}
+      <AnimatePresence>
+        {contextMenu && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.1 }}
+            style={{
+              position: 'fixed',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              background: '#fff',
+              borderRadius: '12px',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
+              padding: '6px',
+              minWidth: '180px',
+              zIndex: 9999,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                handleBlockClick(contextMenu.block);
+                closeContextMenu();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                width: '100%',
+                padding: '10px 12px',
+                border: 'none',
+                background: 'transparent',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: '#1d1d1f',
+                textAlign: 'left',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <PencilSquareIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+              Edit Block
+            </button>
+            
+            <button
+              onClick={() => {
+                duplicateBlock(contextMenu.block);
+                closeContextMenu();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                width: '100%',
+                padding: '10px 12px',
+                border: 'none',
+                background: 'transparent',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: '#1d1d1f',
+                textAlign: 'left',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <DocumentTextIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+              Duplicate
+            </button>
+            
+            <button
+              onClick={() => {
+                const updatedBlock = { ...contextMenu.block, completed: !contextMenu.block.completed };
+                saveBlock(updatedBlock);
+                closeContextMenu();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                width: '100%',
+                padding: '10px 12px',
+                border: 'none',
+                background: 'transparent',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: contextMenu.block.completed ? '#f59e0b' : '#22c55e',
+                textAlign: 'left',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f7')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <CheckCircleIcon style={{ width: '16px', height: '16px' }} />
+              {contextMenu.block.completed ? 'Mark Incomplete' : 'Mark Complete'}
+            </button>
+            
+            <div style={{ height: '1px', background: '#e5e7eb', margin: '6px 0' }} />
+            
+            <button
+              onClick={() => {
+                if (contextMenu.block.isRecurring) {
+                  setDeleteTargetBlock(contextMenu.block);
+                  setDeleteTargetDate(contextMenu.block.date);
+                  setShowDeleteConfirm(true);
+                } else {
+                  deleteBlock(contextMenu.block.id);
+                }
+                closeContextMenu();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                width: '100%',
+                padding: '10px 12px',
+                border: 'none',
+                background: 'transparent',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: '#ef4444',
+                textAlign: 'left',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <TrashIcon style={{ width: '16px', height: '16px' }} />
+              Delete
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
