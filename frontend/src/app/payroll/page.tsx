@@ -321,6 +321,10 @@ export default function PayrollPage() {
     employerPAYEReference: '120/WE94437',
   });
   
+  // Manual gross pay toggle
+  const [useManualGrossPay, setUseManualGrossPay] = useState(false);
+  const [manualGrossPay, setManualGrossPay] = useState('');
+  
   // Myanmar Payroll Form Data
   const [myanmarPayrollData, setMyanmarPayrollData] = useState<MyanmarPayrollData>({
     employeeId: '',
@@ -555,9 +559,18 @@ export default function PayrollPage() {
   }, [hasAccess, user]);
 
   const calculateUKTotals = () => {
-    const hours = parseFloat(ukPayrollData.hours) || 0;
-    const rate = parseFloat(ukPayrollData.rate) || 0;
-    const grossPay = hours * rate;
+    let grossPay: number;
+    
+    if (useManualGrossPay) {
+      // Use manually entered gross pay
+      grossPay = parseFloat(manualGrossPay) || 0;
+    } else {
+      // Calculate from hours x rate
+      const hours = parseFloat(ukPayrollData.hours) || 0;
+      const rate = parseFloat(ukPayrollData.rate) || 0;
+      grossPay = hours * rate;
+    }
+    
     const holidayPay = parseFloat(ukPayrollData.holidayPay) || 0;
     const totalPayments = grossPay + holidayPay;
     
@@ -584,7 +597,7 @@ export default function PayrollPage() {
       calculateUKTotals();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payrollType, ukPayrollData.hours, ukPayrollData.rate, ukPayrollData.holidayPay, ukPayrollData.tax, ukPayrollData.nationalInsurance, ukPayrollData.holidayRepayment]);
+  }, [payrollType, ukPayrollData.hours, ukPayrollData.rate, ukPayrollData.holidayPay, ukPayrollData.tax, ukPayrollData.nationalInsurance, ukPayrollData.holidayRepayment, useManualGrossPay, manualGrossPay]);
 
   const generatePDF = async () => {
     try {
@@ -998,55 +1011,148 @@ export default function PayrollPage() {
                   paddingTop: '1.5rem', 
                   marginTop: '1.5rem' 
                 }}>
-                  <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem', margin: '0 0 0.75rem 0', lineHeight: '1.4' }}>Payments</h3>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
-                    gap: '1rem' 
-                  }}>
-                    <div>
-                      <label style={formStyles.label}>Hours</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: '#111827', margin: '0', lineHeight: '1.4' }}>Payments</h3>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      fontSize: '0.8125rem',
+                      color: '#374151',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}>
                       <input
-                        type="number"
-                        step="0.01"
-                        style={formStyles.input}
-                        value={ukPayrollData.hours}
-                        onChange={(e) => setUkPayrollData({ ...ukPayrollData, hours: e.target.value })}
-                        placeholder="167.25"
+                        type="checkbox"
+                        checked={useManualGrossPay}
+                        onChange={(e) => setUseManualGrossPay(e.target.checked)}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#6366f1',
+                          cursor: 'pointer'
+                        }}
                       />
-                    </div>
-                    <div>
-                      <label style={formStyles.label}>Rate (£)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        style={formStyles.input}
-                        value={ukPayrollData.rate}
-                        onChange={(e) => setUkPayrollData({ ...ukPayrollData, rate: e.target.value })}
-                        placeholder="12.25"
-                      />
-                    </div>
-                    <div>
-                      <label style={formStyles.label}>Holiday Pay (£)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        style={formStyles.input}
-                        value={ukPayrollData.holidayPay}
-                        onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayPay: e.target.value })}
-                        placeholder="196.00"
-                      />
-                    </div>
-                    <div>
-                      <label style={formStyles.label}>Gross Pay (£)</label>
-                      <input
-                        type="text"
-                        style={formStyles.inputReadonly}
-                        value={ukPayrollData.grossPay}
-                        readOnly
-                      />
-                    </div>
+                      Manual Gross Pay (for hourly workers)
+                    </label>
                   </div>
+                  
+                  {!useManualGrossPay ? (
+                    // Calculated mode: Hours x Rate
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', 
+                      gap: '1rem' 
+                    }}>
+                      <div>
+                        <label style={formStyles.label}>Hours</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          style={formStyles.input}
+                          value={ukPayrollData.hours}
+                          onChange={(e) => setUkPayrollData({ ...ukPayrollData, hours: e.target.value })}
+                          placeholder="167.25"
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>Rate (£)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          style={formStyles.input}
+                          value={ukPayrollData.rate}
+                          onChange={(e) => setUkPayrollData({ ...ukPayrollData, rate: e.target.value })}
+                          placeholder="12.25"
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>Holiday Pay (£)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          style={formStyles.input}
+                          value={ukPayrollData.holidayPay}
+                          onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayPay: e.target.value })}
+                          placeholder="196.00"
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>Gross Pay (£) <span style={{ color: '#6b7280', fontWeight: '400' }}>(auto)</span></label>
+                        <input
+                          type="text"
+                          style={formStyles.inputReadonly}
+                          value={ukPayrollData.grossPay}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    // Manual mode: Enter gross pay directly
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+                      gap: '1rem' 
+                    }}>
+                      <div>
+                        <label style={formStyles.label}>Gross Pay (£) *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          style={{
+                            ...formStyles.input,
+                            borderColor: '#6366f1',
+                            backgroundColor: '#f5f3ff'
+                          }}
+                          value={manualGrossPay}
+                          onChange={(e) => setManualGrossPay(e.target.value)}
+                          placeholder="Enter total gross pay"
+                        />
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>
+                          Enter total gross pay amount directly
+                        </div>
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>Holiday Pay (£)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          style={formStyles.input}
+                          value={ukPayrollData.holidayPay}
+                          onChange={(e) => setUkPayrollData({ ...ukPayrollData, holidayPay: e.target.value })}
+                          placeholder="196.00"
+                        />
+                      </div>
+                      <div>
+                        <label style={formStyles.label}>Total Payments (£)</label>
+                        <input
+                          type="text"
+                          style={formStyles.inputReadonly}
+                          value={ukPayrollData.totalPayments}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Info box when manual mode is on */}
+                  {useManualGrossPay && (
+                    <div style={{
+                      marginTop: '1rem',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#f0f9ff',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '8px',
+                      fontSize: '0.8125rem',
+                      color: '#0369a1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <CurrencyDollarIcon style={{ width: '18px', height: '18px', flexShrink: 0 }} />
+                      Manual mode: Enter the total gross pay directly for hourly/variable pay employees.
+                    </div>
+                  )}
                 </div>
 
                 {/* Deductions Section */}
