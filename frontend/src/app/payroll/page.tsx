@@ -1446,10 +1446,15 @@ export default function PayrollPage() {
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
               <button
                 onClick={generatePDF}
-                disabled={!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
-                  (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))}
-                style={(!pdfGenerated && ((payrollType === 'uk' && (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)) ||
-                  (payrollType === 'myanmar' && (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)))) 
+                disabled={
+                  payrollType === 'uk' 
+                    ? (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)
+                    : (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding)
+                }
+                style={
+                  (payrollType === 'uk' 
+                    ? (!ukPayrollData.employeeName || !ukPayrollData.monthEnding)
+                    : (!myanmarPayrollData.employeeName || !myanmarPayrollData.monthEnding))
                   ? formStyles.buttonDisabled 
                   : formStyles.buttonPrimary}
                 onMouseEnter={(e) => {
