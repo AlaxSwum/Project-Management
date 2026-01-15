@@ -1,223 +1,256 @@
-# Project Management Desktop Application
+# Focus Desktop
 
-A native desktop application for the Project Management system with native notifications, system tray integration, and cross-platform support.
+A native macOS desktop application for productivity and meeting management. Built with Electron, featuring a glassmorphism design inspired by Apple's design language.
 
 ## Features
 
-- 🖥️ **Native Desktop App** - Full desktop experience on macOS, Windows, and Linux
-- 🔔 **Native Notifications** - System-level notifications for tasks and meetings
-- 📌 **System Tray** - Quick access from the system tray/menu bar
-- 🚀 **Auto-Updates** - Automatic updates when new versions are available
-- ⌨️ **Keyboard Shortcuts** - Quick navigation with keyboard shortcuts
-- 🌙 **Launch on Startup** - Optionally start the app when you log in
+### Authentication
+- Secure login with email and password
+- Persistent session storage (one-time login)
+- Encrypted credential storage
 
-## Requirements
+### Native macOS Experience
+- Native window vibrancy and transparency
+- Menu bar integration for quick access
+- Background operation when window is closed
+- Launch at login support
+- Native notification system
 
-- Node.js 18+ 
-- npm or yarn
-- For macOS builds: Xcode Command Line Tools
-- For Windows builds: Windows Build Tools
+### Pages
+- **Meeting Schedule**: View and manage your meetings
+- **Personal**: Manage personal tasks and to-do items
+
+### Notifications
+- Glass-style notification popups
+- Actionable notifications with buttons (Done, Snooze, Dismiss)
+- Progress indicator for auto-dismiss
+- Dark mode support
+
+## System Requirements
+
+- macOS 10.15 (Catalina) or later
+- Apple Silicon (M1/M2/M3) or Intel processor
 
 ## Installation
 
-1. **Install dependencies for the desktop app:**
+### From DMG (Recommended)
+1. Download the latest `.dmg` file from Releases
+2. Open the DMG file
+3. Drag Focus to your Applications folder
+4. Launch Focus from Applications
+
+### From Source
 
 ```bash
-cd electron-desktop
+# Clone the repository
+git clone https://github.com/focus-project/focus-desktop.git
+cd focus-desktop
+
+# Install dependencies
 npm install
+
+# Run in development mode
+npm start
 ```
 
-2. **Install dependencies for the frontend (if not already done):**
+## Building
 
-```bash
-cd ../frontend
-npm install
-```
-
-## Development
-
-To run the app in development mode:
-
-```bash
-cd electron-desktop
-npm run dev
-```
-
-This will:
-1. Start the Next.js development server
-2. Wait for it to be ready
-3. Launch the Electron app
-
-## Building for Production
-
-### Build for your current platform:
+### Build for Current Architecture
 
 ```bash
 npm run build
 ```
 
-### Build for specific platforms:
+### Build DMG Only
 
 ```bash
-# macOS
-npm run build:mac
-
-# Windows
-npm run build:win
-
-# Linux
-npm run build:linux
+npm run build:dmg
 ```
 
-Build outputs will be in the `dist/` folder.
-
-## App Icons
-
-Before building, you should add your app icons:
-
-### Required Icon Files:
-
-```
-resources/
-├── icon.png        # 512x512 PNG (used for notifications)
-├── icon.icns       # macOS app icon
-├── icon.ico        # Windows app icon
-├── tray-icon.png   # 16x16 or 32x32 PNG for system tray
-└── icons/          # Linux icons (multiple sizes)
-    ├── 16x16.png
-    ├── 32x32.png
-    ├── 48x48.png
-    ├── 64x64.png
-    ├── 128x128.png
-    ├── 256x256.png
-    └── 512x512.png
-```
-
-### Generate Icons from a Source PNG:
-
-You can use tools like:
-- [electron-icon-builder](https://www.npmjs.com/package/electron-icon-builder)
-- [png2icons](https://github.com/nicbou/png2icons)
-- Online converters
+### Build for Specific Architecture
 
 ```bash
-# Install electron-icon-builder
-npm install -g electron-icon-builder
+# Apple Silicon (M1/M2/M3)
+npm run build:arm64
 
-# Generate icons from a 1024x1024 PNG
-electron-icon-builder --input=./source-icon.png --output=./resources
+# Intel
+npm run build:x64
+
+# Universal (both architectures)
+npm run build:universal
 ```
 
-## Keyboard Shortcuts
+### Output
 
-| Shortcut | Action |
-|----------|--------|
-| `Cmd/Ctrl + 1` | Go to Dashboard |
-| `Cmd/Ctrl + 2` | Go to My Tasks |
-| `Cmd/Ctrl + 3` | Go to Calendar |
-| `Cmd/Ctrl + 4` | Go to Timeline |
-| `Cmd/Ctrl + 5` | Go to Content Calendar |
-| `Cmd/Ctrl + N` | New Task |
-| `Cmd/Ctrl + P` | Password Vault |
-| `Cmd/Ctrl + Q` | Quit (macOS) |
+Built files are located in the `dist/` directory:
+- `Focus-1.0.0-mac-arm64.dmg` - Apple Silicon installer
+- `Focus-1.0.0-mac-x64.dmg` - Intel installer
+- `Focus-1.0.0-mac-arm64.zip` - Apple Silicon archive
+- `Focus-1.0.0-mac-x64.zip` - Intel archive
 
-## System Tray Menu
+## Development
 
-Right-click (or left-click on macOS) the tray icon for quick access to:
-- Open the main window
-- Quick navigation to Dashboard, My Tasks, Calendar
-- Toggle notifications
-- Toggle startup settings
-- Check for updates
-- Quit the application
-
-## Configuration
-
-The app stores its configuration in:
-- **macOS:** `~/Library/Application Support/project-management-desktop/`
-- **Windows:** `%APPDATA%/project-management-desktop/`
-- **Linux:** `~/.config/project-management-desktop/`
-
-## Auto-Updates
-
-The app uses `electron-updater` for automatic updates. To enable auto-updates:
-
-1. Set up a GitHub releases repository
-2. Update the `publish` section in `package.json`:
-
-```json
-"publish": {
-  "provider": "github",
-  "owner": "your-github-username",
-  "repo": "project-management-desktop"
-}
-```
-
-3. Create releases with the built artifacts
-
-## Troubleshooting
-
-### App won't start in development
-
-Make sure the Next.js server is accessible at `http://localhost:3000`. Try running:
-
-```bash
-cd ../frontend
-npm run dev
-```
-
-### Notifications not showing
-
-1. Check if notifications are enabled in the app settings (tray menu)
-2. Check your system notification settings
-3. On macOS, make sure the app has notification permissions
-
-### Build fails on macOS
-
-If you get code signing errors:
-
-```bash
-# Skip code signing for local builds
-export CSC_IDENTITY_AUTO_DISCOVERY=false
-npm run build:mac
-```
-
-### Build fails on Windows
-
-Make sure you have Windows Build Tools installed:
-
-```bash
-npm install --global windows-build-tools
-```
-
-## Project Structure
+### Project Structure
 
 ```
-electron-desktop/
+focus-desktop/
 ├── main/
-│   └── main.js           # Main Electron process
+│   └── main.js              # Main process
 ├── preload/
-│   └── preload.js        # Preload script for IPC
+│   └── preload.js           # Preload script (IPC bridge)
+├── renderer/
+│   └── login.html           # Login page
+├── notification/
+│   └── notification.html    # Notification popup
 ├── resources/
-│   ├── icon.png          # App icon
-│   ├── icon.icns         # macOS icon
-│   ├── icon.ico          # Windows icon
-│   ├── tray-icon.png     # System tray icon
-│   └── entitlements.mac.plist
-├── dist/                 # Build output
+│   ├── icon.png             # Application icon
+│   ├── tray-icon.png        # Menu bar icon
+│   ├── entitlements.mac.plist
+│   └── icons/               # Icon set
+├── scripts/
+│   └── notarize.js          # Notarization script
 ├── package.json
 └── README.md
 ```
 
+### Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm start` | Launch the application |
+| `npm run dev` | Launch in development mode |
+| `npm run build` | Build for macOS |
+| `npm run build:dmg` | Build DMG installer |
+| `npm run build:zip` | Build ZIP archive |
+| `npm run build:universal` | Build universal binary |
+| `npm run build:arm64` | Build for Apple Silicon |
+| `npm run build:x64` | Build for Intel |
+| `npm run clean` | Remove build artifacts |
+| `npm run rebuild` | Clean and rebuild |
+
+### Configuration Storage
+
+Application settings are stored in:
+```
+~/Library/Application Support/focus-desktop/focus-config.json
+```
+
+Settings include:
+- `preferences.notifications` - Enable/disable notifications
+- `preferences.startMinimized` - Start minimized to menu bar
+- `preferences.launchOnStartup` - Launch at system login
+- `navigation.currentPage` - Last viewed page
+- `auth` - Authentication state (encrypted)
+
+## Code Signing and Notarization
+
+For production distribution, set environment variables:
+
+```bash
+export APPLE_ID="your-apple-id@email.com"
+export APPLE_ID_PASSWORD="your-app-specific-password"
+export APPLE_TEAM_ID="your-team-id"
+```
+
+The notarization script (`scripts/notarize.js`) runs automatically during the build process if credentials are configured.
+
+## Auto-Updates
+
+The application supports automatic updates via GitHub Releases:
+1. Checks for updates on startup (10 seconds after launch)
+2. Downloads updates in the background
+3. Prompts user to restart to apply updates
+
+## API Reference
+
+### electronAPI
+
+Available in the renderer process via `window.electronAPI`:
+
+```javascript
+// Authentication
+await electronAPI.login(email, password, rememberMe);
+await electronAPI.logout();
+await electronAPI.checkSavedLogin();
+
+// Notifications
+await electronAPI.showNotification(title, body, options);
+await electronAPI.showActionableNotification(data);
+await electronAPI.taskReminder(task);
+await electronAPI.meetingReminder(meeting);
+
+// Navigation
+await electronAPI.navigate('timetable');
+await electronAPI.navigate('personal');
+
+// Window
+await electronAPI.showWindow();
+await electronAPI.minimizeToTray();
+
+// Settings
+await electronAPI.getSettings();
+await electronAPI.updateSettings(settings);
+
+// Platform
+electronAPI.isElectron // true
+electronAPI.isMac      // true
+electronAPI.platform   // 'darwin'
+```
+
+### FocusApp
+
+Simplified API available via `window.FocusApp`:
+
+```javascript
+// Navigation
+await FocusApp.showMeetingSchedule();
+await FocusApp.showPersonal();
+
+// Notifications
+await FocusApp.notifyTask(title, dueIn, urgent);
+await FocusApp.notifyMeeting(title, startsIn);
+
+// Badge
+await FocusApp.updateBadge(count);
+
+// Auth
+await FocusApp.isLoggedIn();
+```
+
 ## Security
 
-The app uses Electron's security best practices:
+- Credentials are encrypted using electron-store
+- Authentication via Supabase with secure HTTPS
+- Hardened runtime enabled for macOS
 - Context isolation enabled
-- Node integration disabled in renderer
-- Preload scripts for safe IPC
-- Sandboxed renderer processes
+- Remote module disabled
+
+## Troubleshooting
+
+### Application not starting
+1. Ensure macOS 10.15 or later
+2. Check Console.app for error logs
+3. Try removing `~/Library/Application Support/focus-desktop/`
+
+### Notifications not appearing
+1. Check System Preferences > Notifications > Focus
+2. Verify notifications are enabled in the app preferences
+
+### Login issues
+1. Verify internet connection
+2. Check credentials are correct
+3. Try signing out and signing back in
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details.
 
+## Support
+
+For support inquiries:
+- Email: support@focus-project.co.uk
+- Website: https://focus-project.co.uk
+
+---
+
+Focus Desktop - Professional Productivity Management for macOS

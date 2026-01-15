@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Allow JIT compilation for V8 -->
+    <!-- Allow app to run in hardened runtime -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
     
@@ -18,7 +18,7 @@
     <key>com.apple.security.network.client</key>
     <true/>
     
-    <!-- Network server for local Next.js -->
+    <!-- Network server (for local dev) -->
     <key>com.apple.security.network.server</key>
     <true/>
     
@@ -26,11 +26,12 @@
     <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
     
-    <!-- Notifications -->
-    <key>com.apple.security.temporary-exception.apple-events</key>
-    <array>
-        <string>com.apple.notificationcenterui</string>
-    </array>
+    <!-- App Sandbox disabled for full functionality -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    
+    <!-- Automation (for AppleScript if needed) -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
 </dict>
 </plist>
-

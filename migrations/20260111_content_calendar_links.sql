@@ -21,3 +21,4 @@ CREATE INDEX IF NOT EXISTS idx_content_posts_content_link ON content_posts(conte
 -- Grant permissions
 GRANT SELECT, INSERT, UPDATE, DELETE ON content_posts TO authenticated;
 GRANT SELECT ON content_posts TO anon;
+

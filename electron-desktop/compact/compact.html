@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --primary: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --text: #1e293b;
+      --text-2: #64748b;
+      --text-3: #94a3b8;
+      --bg: #ffffff;
+      --bg-2: #f8fafc;
+      --bg-3: #f1f5f9;
+      --border: rgba(0,0,0,0.08);
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text: #f1f5f9;
+        --text-2: #94a3b8;
+        --text-3: #64748b;
+        --bg: #0f172a;
+        --bg-2: #1e293b;
+        --bg-3: #334155;
+        --border: rgba(255,255,255,0.1);
+      }
+    }
+    
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    /* Header - Draggable */
+    .header {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      -webkit-app-region: drag;
+      background: var(--bg);
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo svg { width: 14px; height: 14px; color: white; }
+    
+    .header-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .header-date {
+      font-size: 11px;
+      color: var(--text-2);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .header-btn {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: var(--bg-2);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    
+    .header-btn:hover { background: var(--bg-3); }
+    .header-btn svg { width: 14px; height: 14px; color: var(--text-2); }
+    
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      padding: 8px 10px;
+      gap: 4px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 6px 8px;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-2);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .tab:hover { background: var(--bg-2); }
+    .tab.active { 
+      background: var(--primary); 
+      color: white; 
+    }
+    
+    /* Stats Bar */
+    .stats {
+      display: flex;
+      gap: 6px;
+      padding: 8px 10px;
+      background: var(--bg-2);
+    }
+    
+    .stat {
+      flex: 1;
+      padding: 8px;
+      background: var(--bg);
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .stat-value.green { color: var(--success); }
+    .stat-value.orange { color: var(--warning); }
+    .stat-value.blue { color: var(--blue); }
+    
+    .stat-label {
+      font-size: 9px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    /* Current Task */
+    .current-task {
+      margin: 10px;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border-radius: 10px;
+      color: white;
+    }
+    
+    .current-task.hidden { display: none; }
+    
+    .current-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .current-label::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .current-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .current-time {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+    
+    .current-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    
+    .current-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    
+    .current-btn.done {
+      background: rgba(255,255,255,0.95);
+      color: var(--success);
+    }
+    
+    .current-btn.skip {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    
+    .current-btn:hover { transform: scale(1.02); }
+    .current-btn svg { width: 12px; height: 12px; }
+    
+    /* Task List */
+    .task-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 10px;
+    }
+    
+    .task-group {
+      margin-bottom: 12px;
+    }
+    
+    .task-group-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      padding: 4px 6px;
+      margin-bottom: 4px;
+    }
+    
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: var(--bg-2);
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .task:hover { background: var(--bg-3); }
+    .task.completed { opacity: 0.5; }
+    .task.skipped { opacity: 0.5; }
+    
+    .task-check {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    
+    .task-check:hover { border-color: var(--success); }
+    .task-check.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .task-check svg { width: 10px; height: 10px; color: white; display: none; }
+    .task-check.checked svg { display: block; }
+    
+    .task-content { flex: 1; min-width: 0; }
+    
+    .task-title {
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .task.completed .task-title,
+    .task.skipped .task-title { text-decoration: line-through; }
+    
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    
+    .task-time {
+      font-size: 10px;
+      color: var(--text-3);
+    }
+    
+    .task-tag {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    
+    .task-tag.block { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .task-tag.meeting { background: rgba(139,92,246,0.15); color: var(--purple); }
+    .task-tag.todo { background: rgba(16,185,129,0.15); color: var(--success); }
+    .task-tag.social { background: rgba(236,72,153,0.15); color: var(--pink); }
+    .task-tag.skipped { background: rgba(245,158,11,0.15); color: var(--warning); }
+    
+    .task-color {
+      width: 3px;
+      height: 24px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    
+    .task-skip {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: var(--bg-3);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.15s;
+    }
+    
+    .task:hover .task-skip { opacity: 1; }
+    .task-skip:hover { background: var(--warning); }
+    .task-skip:hover svg { color: white; }
+    .task-skip svg { width: 10px; height: 10px; color: var(--warning); }
+    
+    /* Empty State */
+    .empty {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-3);
+    }
+    
+    .empty svg {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+    
+    .empty-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-2);
+    }
+    
+    .empty-text {
+      font-size: 11px;
+    }
+    
+    /* Skip Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    
+    .modal-overlay.show { display: flex; }
+    
+    .modal {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+      width: 280px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .modal-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 12px;
+      background: var(--bg-2);
+      color: var(--text);
+      resize: none;
+    }
+    
+    .modal-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .modal-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .modal-btn.cancel {
+      background: var(--bg-3);
+      color: var(--text);
+    }
+    
+    .modal-btn.confirm {
+      background: var(--warning);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12,6 12,12 16,14"/>
+          </svg>
+        </div>
+        <div>
+          <div class="header-title">Focus</div>
+          <div class="header-date" id="headerDate">Today</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="refresh()" title="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+        </button>
+        <button class="header-btn" onclick="openFull()" title="Open Full App">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+            <polyline points="15,3 21,3 21,9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="upcoming" onclick="switchTab('upcoming')">Upcoming</button>
+      <button class="tab" data-tab="completed" onclick="switchTab('completed')">Completed</button>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value green" id="doneCount">0</div>
+        <div class="stat-label">Done</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value orange" id="leftCount">0</div>
+        <div class="stat-label">Left</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value blue" id="totalCount">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+    
+    <!-- Current Task -->
+    <div class="current-task hidden" id="currentTask">
+      <div class="current-label">Now</div>
+      <div class="current-title" id="currentTitle">Task Name</div>
+      <div class="current-time" id="currentTime">9:00 AM - 10:00 AM</div>
+      <div class="current-actions">
+        <button class="current-btn done" id="currentDone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20,6 9,17 4,12"/>
+          </svg>
+          Done
+        </button>
+        <button class="current-btn skip" id="currentSkip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5,4 15,12 5,20"/>
+            <line x1="19" y1="5" x2="19" y2="19"/>
+          </svg>
+          Skip
+        </button>
+      </div>
+    </div>
+    
+    <!-- Task List -->
+    <div class="task-list" id="taskList">
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12,6 12,12 16,14"/>
+        </svg>
+        <div class="empty-title">Loading tasks...</div>
+        <div class="empty-text">Fetching your schedule</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Skip Modal -->
+  <div class="modal-overlay" id="skipModal">
+    <div class="modal">
+      <div class="modal-title">Skip Task</div>
+      <textarea class="modal-input" id="skipReason" rows="3" placeholder="Why are you skipping? (optional)"></textarea>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeSkipModal()">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmSkip()">Skip</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    let allTasks = [];
+    let currentTab = 'upcoming';
+    let localDone = new Set();
+    let localSkipped = {};
+    let taskToSkip = null;
+    
+    // Date formatting
+    function formatDate() {
+      const now = new Date();
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      return now.toLocaleDateString('en-US', options);
+    }
+    document.getElementById('headerDate').textContent = formatDate();
+    
+    // Time formatting
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      const [h, m] = timeStr.split(':').map(Number);
+      const period = h >= 12 ? 'PM' : 'AM';
+      const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+    }
+    
+    // Tab switching
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      render();
+    }
+    
+    // Render tasks
+    function render() {
+      const now = new Date();
+      const taskList = document.getElementById('taskList');
+      
+      // Filter today's tasks
+      const todayStr = now.toISOString().split('T')[0];
+      const todayTasks = allTasks.filter(t => {
+        const taskDate = t.date || t.planned_date || t.start_date || '';
+        return taskDate === todayStr || taskDate.startsWith(todayStr);
+      });
+      
+      // Categorize
+      const upcoming = [];
+      const completed = [];
+      const passed = [];
+      let currentTask = null;
+      
+      todayTasks.forEach(t => {
+        const id = String(t.id);
+        const isCompleted = t.completed || localDone.has(id);
+        const isSkipped = localSkipped[id];
+        
+        // Parse time
+        const timeStr = t.start_time || t.time || t.planned_time || '';
+        const endStr = t.end_time || '';
+        let startDate = null, endDate = null;
+        
+        if (timeStr) {
+          const [h, m] = timeStr.split(':').map(Number);
+          startDate = new Date(now);
+          startDate.setHours(h, m, 0, 0);
+          
+          if (endStr) {
+            const [eh, em] = endStr.split(':').map(Number);
+            endDate = new Date(now);
+            endDate.setHours(eh, em, 0, 0);
+          }
+        }
+        
+        const taskData = {
+          ...t,
+          startDate,
+          endDate,
+          isCompleted,
+          isSkipped,
+          timeText: timeStr ? `${formatTime(timeStr)}${endStr ? ' - ' + formatTime(endStr) : ''}` : ''
+        };
+        
+        if (isCompleted || isSkipped) {
+          completed.push(taskData);
+        } else if (startDate && endDate && now >= startDate && now <= endDate) {
+          currentTask = taskData;
+        } else if (startDate && startDate < now) {
+          passed.push(taskData);
+        } else {
+          upcoming.push(taskData);
+        }
+      });
+      
+      // Update stats
+      document.getElementById('doneCount').textContent = completed.length;
+      document.getElementById('leftCount').textContent = upcoming.length + (currentTask ? 1 : 0);
+      document.getElementById('totalCount').textContent = todayTasks.length;
+      
+      // Update current task
+      const currentEl = document.getElementById('currentTask');
+      if (currentTask && currentTab === 'upcoming') {
+        currentEl.classList.remove('hidden');
+        document.getElementById('currentTitle').textContent = currentTask.title || currentTask.task_name || 'Task';
+        document.getElementById('currentTime').textContent = currentTask.timeText;
+        document.getElementById('currentDone').onclick = () => toggleTask(currentTask);
+        document.getElementById('currentSkip').onclick = () => showSkipModal(currentTask);
+      } else {
+        currentEl.classList.add('hidden');
+      }
+      
+      // Render list
+      let html = '';
+      
+      if (currentTab === 'upcoming') {
+        if (upcoming.length > 0) {
+          html += `<div class="task-group"><div class="task-group-title">Coming Up</div>`;
+          upcoming.sort((a, b) => (a.startDate || 0) - (b.startDate || 0));
+          html += upcoming.map(t => taskHTML(t)).join('');
+          html += '</div>';
+        }
+        if (passed.length > 0) {
+          html += `<div class="task-group"><div class="task-group-title">Passed</div>`;
+          html += passed.map(t => taskHTML(t, true)).join('');
+          html += '</div>';
+        }
+        if (!currentTask && upcoming.length === 0 && passed.length === 0) {
+          html = `<div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22,4 12,14.01 9,11.01"/>
+            </svg>
+            <div class="empty-title">All done!</div>
+            <div class="empty-text">No upcoming tasks</div>
+          </div>`;
+        }
+      } else {
+        if (completed.length > 0) {
+          html += completed.map(t => taskHTML(t)).join('');
+        } else {
+          html = `<div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div class="empty-title">No completed tasks</div>
+            <div class="empty-text">Complete tasks to see them here</div>
+          </div>`;
+        }
+      }
+      
+      taskList.innerHTML = html;
+    }
+    
+    // Task HTML
+    function taskHTML(t, isPast = false) {
+      const id = String(t.id);
+      const isChecked = t.isCompleted || localDone.has(id);
+      const isSkipped = t.isSkipped || localSkipped[id];
+      const title = t.title || t.task_name || 'Task';
+      const type = t.source || (t.type === 'meeting' ? 'meeting' : 'block');
+      const color = getTypeColor(type, t.type);
+      
+      let tagClass = type;
+      let tagText = type.charAt(0).toUpperCase() + type.slice(1);
+      if (isSkipped) {
+        tagClass = 'skipped';
+        tagText = 'Skipped';
+      }
+      
+      return `
+        <div class="task ${isChecked ? 'completed' : ''} ${isSkipped ? 'skipped' : ''}" data-id="${id}">
+          <div class="task-color" style="background: ${color}"></div>
+          <div class="task-check ${isChecked ? 'checked' : ''}" onclick="toggleTask(${JSON.stringify(t).replace(/"/g, '&quot;')})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20,6 9,17 4,12"/>
+            </svg>
+          </div>
+          <div class="task-content">
+            <div class="task-title">${title}</div>
+            <div class="task-meta">
+              ${t.timeText ? `<span class="task-time">${t.timeText}</span>` : ''}
+              <span class="task-tag ${tagClass}">${tagText}</span>
+            </div>
+          </div>
+          ${!isChecked && !isSkipped ? `
+            <button class="task-skip" onclick="showSkipModal(${JSON.stringify(t).replace(/"/g, '&quot;')})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5,4 15,12 5,20"/>
+                <line x1="19" y1="5" x2="19" y2="19"/>
+              </svg>
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+    
+    function getTypeColor(source, type) {
+      const colors = {
+        timeblock: '#3b82f6',
+        block: '#3b82f6',
+        meeting: '#8b5cf6',
+        todo: '#10b981',
+        social: '#ec4899'
+      };
+      return colors[source] || colors[type] || '#6366f1';
+    }
+    
+    // Toggle task completion
+    function toggleTask(task) {
+      const id = String(task.id);
+      const wasCompleted = localDone.has(id);
+      
+      if (wasCompleted) {
+        localDone.delete(id);
+      } else {
+        localDone.add(id);
+      }
+      
+      render();
+      
+      ipcRenderer.send('quickview-action', {
+        action: wasCompleted ? 'uncomplete' : 'complete',
+        taskId: task.id,
+        taskType: task.source || 'timeblock'
+      });
+    }
+    
+    // Skip modal
+    function showSkipModal(task) {
+      taskToSkip = task;
+      document.getElementById('skipReason').value = '';
+      document.getElementById('skipModal').classList.add('show');
+    }
+    
+    function closeSkipModal() {
+      document.getElementById('skipModal').classList.remove('show');
+      taskToSkip = null;
+    }
+    
+    function confirmSkip() {
+      if (!taskToSkip) return;
+      const reason = document.getElementById('skipReason').value.trim();
+      const id = String(taskToSkip.id);
+      
+      localSkipped[id] = reason || 'Skipped';
+      render();
+      
+      ipcRenderer.send('quickview-action', {
+        action: 'skip',
+        taskId: taskToSkip.id,
+        taskType: taskToSkip.source || 'timeblock',
+        taskTitle: taskToSkip.title || taskToSkip.task_name,
+        taskDate: taskToSkip.date || taskToSkip.planned_date,
+        reason: reason
+      });
+      
+      closeSkipModal();
+    }
+    
+    // Actions
+    function refresh() {
+      ipcRenderer.send('quickview-action', { action: 'refresh' });
+    }
+    
+    function openFull() {
+      ipcRenderer.send('quickview-action', { action: 'open-full' });
+    }
+    
+    // Listen for task updates
+    ipcRenderer.on('tasks-updated', (event, tasks) => {
+      allTasks = tasks || [];
+      render();
+    });
+    
+    // Close modal on overlay click
+    document.getElementById('skipModal').addEventListener('click', (e) => {
+      if (e.target.id === 'skipModal') closeSkipModal();
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSkipModal();
+    });
+    
+    // Initial render
+    render();
+  </script>
+</body>
+</html>

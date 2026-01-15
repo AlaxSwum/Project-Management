@@ -1,38 +1,73 @@
 {
   "name": "focus-desktop",
   "version": "1.0.0",
-  "description": "Focus - Desktop application for productivity and project management",
+  "description": "Focus Desktop - Native macOS application for productivity and meeting management",
   "main": "main/main.js",
-  "author": "Focus",
+  "author": {
+    "name": "Focus Project",
+    "email": "support@focus-project.co.uk",
+    "url": "https://focus-project.co.uk"
+  },
   "license": "MIT",
+  "homepage": "https://focus-project.co.uk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/focus-project/focus-desktop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/focus-project/focus-desktop/issues"
+  },
+  "keywords": [
+    "productivity",
+    "meeting",
+    "schedule",
+    "task",
+    "management",
+    "macos",
+    "desktop",
+    "electron"
+  ],
   "scripts": {
     "start": "electron .",
-    "dev": "concurrently \"npm run dev:next\" \"wait-on http://localhost:3000 && electron .\"",
-    "dev:next": "cd ../frontend && npm run dev",
-    "build": "npm run build:next && npm run build:electron",
-    "build:next": "cd ../frontend && npm run build",
-    "build:electron": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux",
+    "dev": "NODE_ENV=development electron .",
+    "lint": "eslint main preload --ext .js",
+    "build": "electron-builder --mac",
+    "build:dmg": "electron-builder --mac dmg",
+    "build:zip": "electron-builder --mac zip",
+    "build:universal": "electron-builder --mac --universal",
+    "build:arm64": "electron-builder --mac --arm64",
+    "build:x64": "electron-builder --mac --x64",
     "pack": "electron-builder --dir",
+    "clean": "rm -rf dist out",
+    "rebuild": "npm run clean && npm run build",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "electron-is-dev": "^2.0.0",
     "electron-log": "^5.1.1",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "@electron/notarize": "^2.2.0",
     "electron": "^28.1.0",
-    "electron-builder": "^24.9.1",
-    "wait-on": "^7.2.0"
+    "electron-builder": "^24.9.1"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
   "build": {
     "appId": "com.focusproject.desktop",
     "productName": "Focus",
+    "copyright": "Copyright 2024 Focus Project. All rights reserved.",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist",
       "buildResources": "resources"
@@ -40,73 +75,71 @@
     "files": [
       "main/**/*",
       "preload/**/*",
+      "renderer/**/*",
       "notification/**/*",
-      "resources/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "../frontend/.next",
-        "to": "app/.next"
-      },
-      {
-        "from": "../frontend/public",
-        "to": "app/public"
-      },
-      {
-        "from": "../frontend/package.json",
-        "to": "app/package.json"
-      },
-      {
-        "from": "../frontend/node_modules",
-        "to": "app/node_modules"
-      }
+      "widget/**/*",
+      "quickview/**/*",
+      "resources/**/*",
+      "resources/sounds/**/*",
+      "!**/*.map",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,readme.md}",
+      "!**/node_modules/*/{test,tests,__tests__}/**"
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "resources/icon.png",
+      "icon": "resources/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
+      "darkModeSupport": true,
+      "minimumSystemVersion": "10.15.0",
       "entitlements": "resources/entitlements.mac.plist",
       "entitlementsInherit": "resources/entitlements.mac.plist",
+      "type": "distribution",
+      "extendInfo": {
+        "CFBundleShortVersionString": "1.0.0",
+        "NSCalendarsUsageDescription": "Focus requires calendar access to sync meetings.",
+        "NSRemindersUsageDescription": "Focus requires reminders access for task notifications.",
+        "LSUIElement": false,
+        "NSAppleEventsUsageDescription": "Focus requires automation access for notifications."
+      },
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ]
     },
-    "win": {
+    "dmg": {
+      "sign": false,
       "icon": "resources/icon.png",
-      "target": [
+      "iconSize": 100,
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
         {
-          "target": "nsis",
-          "arch": ["x64"]
+          "x": 130,
+          "y": 180
+        },
+        {
+          "x": 410,
+          "y": 180,
+          "type": "link",
+          "path": "/Applications"
         }
       ]
     },
-    "linux": {
-      "icon": "resources/icons",
-      "category": "Office",
-      "target": [
-        "AppImage",
-        "deb"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "your-github-username",
-      "repo": "focus-project-desktop"
-    }
+"afterSign": "scripts/notarize.js"
   }
 }
-

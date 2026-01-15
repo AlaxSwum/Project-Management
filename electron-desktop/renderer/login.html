@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>Focus - Sign In</title>
+  <style>
+    /**
+     * Focus Desktop - Login Page Styles
+     * Apple-inspired glassmorphism design
+     */
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* System font stack for macOS */
+    :root {
+      --font-system: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      --color-primary: #5856d6;
+      --color-primary-hover: #4745b5;
+      --color-error: #ff3b30;
+      --color-text-primary: #ffffff;
+      --color-text-secondary: rgba(255, 255, 255, 0.7);
+      --color-text-tertiary: rgba(255, 255, 255, 0.5);
+      --color-border: rgba(255, 255, 255, 0.18);
+      --color-input-bg: rgba(255, 255, 255, 0.08);
+      --color-input-bg-focus: rgba(255, 255, 255, 0.12);
+      --radius-large: 20px;
+      --radius-medium: 12px;
+      --radius-small: 8px;
+      --transition-fast: 0.15s ease;
+      --transition-medium: 0.25s ease;
+    }
+
+    body {
+      font-family: var(--font-system);
+      min-height: 100vh;
+      overflow: hidden;
+      -webkit-app-region: drag;
+      user-select: none;
+      background: transparent;
+    }
+
+    /* Animated gradient background */
+    .background {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        #1c1c1e 0%,
+        #2c2c2e 25%,
+        #1c1c1e 50%,
+        #2c2c2e 75%,
+        #1c1c1e 100%
+      );
+      background-size: 400% 400%;
+      animation: gradientAnimation 20s ease infinite;
+    }
+
+    @keyframes gradientAnimation {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Decorative elements */
+    .background-decoration {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .decoration-1 {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(135deg, #5856d6, #af52de);
+      top: -150px;
+      left: -150px;
+    }
+
+    .decoration-2 {
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, #ff9500, #ff375f);
+      bottom: -100px;
+      right: -100px;
+    }
+
+    /* Traffic light area for macOS */
+    .titlebar-drag-region {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      -webkit-app-region: drag;
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 60px 40px 40px;
+    }
+
+    /* Glass card */
+    .login-card {
+      -webkit-app-region: no-drag;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(40px) saturate(150%);
+      -webkit-backdrop-filter: blur(40px) saturate(150%);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-large);
+      padding: 40px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 
+        0 24px 48px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      animation: cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes cardEntrance {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Logo section */
+    .logo-section {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #af52de 100%);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(88, 86, 214, 0.35);
+    }
+
+    .logo-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .logo-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+
+    .logo-subtitle {
+      font-size: 14px;
+      color: var(--color-text-tertiary);
+      font-weight: 400;
+    }
+
+    /* Error message */
+    .error-container {
+      background: rgba(255, 59, 48, 0.15);
+      border: 1px solid rgba(255, 59, 48, 0.25);
+      border-radius: var(--radius-small);
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      display: none;
+      animation: errorShake 0.4s ease;
+    }
+
+    .error-container.visible {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .error-container svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-error);
+      flex-shrink: 0;
+    }
+
+    .error-message {
+      font-size: 13px;
+      color: #ffa5a1;
+      line-height: 1.4;
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: var(--font-system);
+      color: var(--color-text-primary);
+      background: var(--color-input-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-medium);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .form-input::placeholder {
+      color: var(--color-text-tertiary);
+    }
+
+    .form-input:focus {
+      background: var(--color-input-bg-focus);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.25);
+    }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+    }
+
+    /* Submit button */
+    .submit-button {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-system);
+      color: white;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #af52de 100%);
+      border: none;
+      border-radius: var(--radius-medium);
+      cursor: pointer;
+      transition: all var(--transition-medium);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(88, 86, 214, 0.4);
+    }
+
+    .submit-button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .submit-button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .submit-button .button-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .submit-button .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spinAnimation 0.8s linear infinite;
+    }
+
+    .submit-button.loading .spinner {
+      display: block;
+    }
+
+    @keyframes spinAnimation {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--color-text-tertiary);
+    }
+
+    /* Version badge */
+    .version-badge {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      font-size: 11px;
+      color: var(--color-text-tertiary);
+    }
+  </style>
+</head>
+<body>
+  <div class="background">
+    <div class="background-decoration decoration-1"></div>
+    <div class="background-decoration decoration-2"></div>
+  </div>
+
+  <div class="titlebar-drag-region"></div>
+
+  <div class="container">
+    <div class="login-card">
+      <div class="logo-section">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h1 class="logo-title">Focus</h1>
+        <p class="logo-subtitle">Productivity Management</p>
+      </div>
+
+      <div class="error-container" id="errorContainer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span class="error-message" id="errorMessage"></span>
+      </div>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="form-group">
+          <label class="form-label" for="emailInput">Email Address</label>
+          <input 
+            type="email" 
+            class="form-input" 
+            id="emailInput" 
+            name="email"
+            placeholder="Enter your email" 
+            required 
+            autocomplete="email"
+            spellcheck="false"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="passwordInput">Password</label>
+          <input 
+            type="password" 
+            class="form-input" 
+            id="passwordInput" 
+            name="password"
+            placeholder="Enter your password" 
+            required 
+            autocomplete="current-password"
+          >
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" class="checkbox-input" id="rememberCheckbox" checked>
+          <label class="checkbox-label" for="rememberCheckbox">Keep me signed in</label>
+        </div>
+
+        <button type="submit" class="submit-button" id="submitButton">
+          <span class="button-content">
+            <span class="spinner"></span>
+            <span class="button-text">Sign In</span>
+          </span>
+        </button>
+      </form>
+
+      <p class="footer-text">
+        Secure authentication powered by Focus
+      </p>
+    </div>
+  </div>
+
+  <span class="version-badge" id="versionBadge">v1.0.0</span>
+
+  <script>
+    /**
+     * Focus Desktop - Login Page Script
+     * Handles authentication flow and UI interactions
+     */
+    
+    const { ipcRenderer } = require('electron');
+
+    // DOM Elements
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const rememberCheckbox = document.getElementById('rememberCheckbox');
+    const submitButton = document.getElementById('submitButton');
+    const errorContainer = document.getElementById('errorContainer');
+    const errorMessage = document.getElementById('errorMessage');
+    const versionBadge = document.getElementById('versionBadge');
+
+    /**
+     * Initialize the login page
+     */
+    async function initialize() {
+      // Load app version
+      try {
+        const version = await ipcRenderer.invoke('get-app-version');
+        versionBadge.textContent = `v${version}`;
+      } catch (error) {
+        console.error('Failed to get app version:', error);
+      }
+
+      // Load saved credentials if available
+      try {
+        const savedLogin = await ipcRenderer.invoke('check-saved-login');
+        if (savedLogin.hasSavedCredentials && savedLogin.email) {
+          emailInput.value = savedLogin.email;
+          passwordInput.focus();
+        } else {
+          emailInput.focus();
+        }
+      } catch (error) {
+        console.error('Failed to check saved login:', error);
+        emailInput.focus();
+      }
+    }
+
+    /**
+     * Display error message
+     * @param {string} message - Error message to display
+     */
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorContainer.classList.add('visible');
+    }
+
+    /**
+     * Hide error message
+     */
+    function hideError() {
+      errorContainer.classList.remove('visible');
+    }
+
+    /**
+     * Set loading state
+     * @param {boolean} isLoading - Whether form is in loading state
+     */
+    function setLoading(isLoading) {
+      submitButton.disabled = isLoading;
+      submitButton.classList.toggle('loading', isLoading);
+      emailInput.disabled = isLoading;
+      passwordInput.disabled = isLoading;
+      rememberCheckbox.disabled = isLoading;
+    }
+
+    /**
+     * Handle form submission
+     * @param {Event} event - Form submit event
+     */
+    async function handleSubmit(event) {
+      event.preventDefault();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const rememberMe = rememberCheckbox.checked;
+
+      // Validate inputs
+      if (!email) {
+        showError('Please enter your email address.');
+        emailInput.focus();
+        return;
+      }
+
+      if (!password) {
+        showError('Please enter your password.');
+        passwordInput.focus();
+        return;
+      }
+
+      // Hide previous errors
+      hideError();
+
+      // Set loading state
+      setLoading(true);
+
+      try {
+        const result = await ipcRenderer.invoke('login', {
+          email,
+          password,
+          rememberMe
+        });
+
+        if (result.success) {
+          // Update button text on success
+          document.querySelector('.button-text').textContent = 'Welcome';
+          // Main process will handle window transition
+        } else {
+          showError(result.error || 'Authentication failed. Please check your credentials.');
+          setLoading(false);
+          passwordInput.focus();
+          passwordInput.select();
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showError('Connection error. Please check your network and try again.');
+        setLoading(false);
+      }
+    }
+
+    // Event listeners
+    loginForm.addEventListener('submit', handleSubmit);
+
+    // Clear error when user starts typing
+    emailInput.addEventListener('input', hideError);
+    passwordInput.addEventListener('input', hideError);
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', initialize);
+    
+    // Run initialize if DOM is already ready
+    if (document.readyState !== 'loading') {
+      initialize();
+    }
+  </script>
+</body>
+</html>
