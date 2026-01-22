@@ -801,10 +801,50 @@ export default function TimelineRoadmapPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#F8FAFC' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
-          <p style={{ color: '#64748B' }}>Loading Timeline & Roadmap...</p>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+      }}>
+        <div style={{ 
+          textAlign: 'center',
+          padding: '60px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '32px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            border: '6px solid #E5E7EB',
+            borderTop: '6px solid #667eea',
+            borderRadius: '50%',
+            margin: '0 auto 24px',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+          <p style={{ 
+            color: '#374151', 
+            fontSize: '18px',
+            fontWeight: '700',
+            margin: 0
+          }}>
+            Loading Timeline & Roadmap...
+          </p>
+          <p style={{
+            color: '#64748B',
+            fontSize: '14px',
+            marginTop: '8px'
+          }}>
+            Please wait while we load your projects
+          </p>
         </div>
       </div>
     );
@@ -816,25 +856,52 @@ export default function TimelineRoadmapPage() {
     <>
       <MobileHeader title="Timeline & Roadmap" isMobile={isMobile} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', position: 'relative' }}>
+        {/* Background Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '400px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          opacity: 0.95,
+          zIndex: 0
+        }} />
+        
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div style={{
           marginLeft: isMobile ? '0' : '280px',
           flex: 1,
-          padding: isMobile ? '90px 16px 20px' : '32px',
+          padding: isMobile ? '90px 20px 40px' : '40px',
           maxWidth: '100%',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 1
         }}>
           {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ marginBottom: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '20px' }}>
               <div>
-                <h1 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: '800', color: '#1F2937', margin: '0 0 8px 0' }}>
+                <h1 style={{ 
+                  fontSize: isMobile ? '28px' : '40px', 
+                  fontWeight: '900', 
+                  color: 'white', 
+                  margin: '0 0 12px 0',
+                  textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                  letterSpacing: '-0.5px'
+                }}>
                   Timeline & Roadmap
                 </h1>
-                <p style={{ color: '#64748B', margin: 0, fontSize: '16px' }}>
-                  Project timeline, Gantt charts, KPI tracking & team performance
+                <p style={{ 
+                  color: 'rgba(255,255,255,0.95)', 
+                  margin: 0, 
+                  fontSize: '17px',
+                  fontWeight: '500',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}>
+                  Plan, track, and visualize your project timeline with powerful Gantt charts
                 </p>
               </div>
 
@@ -842,19 +909,33 @@ export default function TimelineRoadmapPage() {
                 <button
                   onClick={() => setShowFolderModal(true)}
                   style={{
-                    padding: '12px 20px',
-                    background: '#3B82F6',
+                    padding: '14px 24px',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(10px)',
                     color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '12px',
+                    fontWeight: '700',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '10px',
+                    fontSize: '15px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.35)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <FolderIcon style={{ width: '18px', height: '18px' }} />
+                  <FolderIcon style={{ width: '20px', height: '20px' }} />
                   New Folder
                 </button>
                 
@@ -863,39 +944,63 @@ export default function TimelineRoadmapPage() {
                     <button
                       onClick={() => setShowCategoryModal(true)}
                       style={{
-                        padding: '12px 20px',
-                        background: '#10B981',
+                        padding: '14px 24px',
+                        background: 'rgba(16, 185, 129, 0.9)',
                         color: 'white',
                         border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: '600',
+                        borderRadius: '12px',
+                        fontWeight: '700',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px'
+                        gap: '10px',
+                        fontSize: '15px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#059669';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(16, 185, 129, 0.9)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
                       }}
                     >
-                      <PlusIcon style={{ width: '18px', height: '18px' }} />
+                      <PlusIcon style={{ width: '20px', height: '20px' }} />
                       New Category
                     </button>
                     
                     <button
                       onClick={() => setShowItemModal(true)}
                       style={{
-                        padding: '12px 20px',
-                        background: '#F59E0B',
+                        padding: '14px 24px',
+                        background: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
                         color: 'white',
                         border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: '600',
+                        borderRadius: '12px',
+                        fontWeight: '700',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px'
+                        gap: '10px',
+                        fontSize: '15px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(245, 158, 11, 0.3)';
                       }}
                     >
-                      <PlusIcon style={{ width: '18px', height: '18px' }} />
-                      New Timeline Item
+                      <PlusIcon style={{ width: '20px', height: '20px' }} />
+                      New Item
                     </button>
                   </>
                 )}
@@ -904,7 +1009,19 @@ export default function TimelineRoadmapPage() {
 
             {/* Folder Selector & View Controls */}
             {folders.length > 0 && (
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: '16px', 
+                flexWrap: 'wrap', 
+                alignItems: 'center', 
+                marginBottom: '32px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                padding: '20px',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+              }}>
                 <select
                   value={selectedFolder?.id || ''}
                   onChange={(e) => {
@@ -912,84 +1029,54 @@ export default function TimelineRoadmapPage() {
                     setSelectedFolder(folder || null);
                   }}
                   style={{
-                    padding: '12px 16px',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontSize: '14px',
+                    padding: '14px 20px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '15px',
                     fontWeight: '600',
                     background: 'white',
-                    minWidth: '250px'
+                    minWidth: '280px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    cursor: 'pointer',
+                    color: '#1F2937'
                   }}
                 >
                   {folders.map(folder => (
                     <option key={folder.id} value={folder.id}>
-                      {folder.name}
+                      📁 {folder.name}
                     </option>
                   ))}
                 </select>
 
                 {/* View Mode Selector */}
-                <div style={{ display: 'flex', gap: '4px', background: 'white', padding: '4px', borderRadius: '8px', border: '2px solid #E5E7EB' }}>
-                  <button
-                    onClick={() => setViewMode('day')}
-                    style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'day' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'day' ? 'white' : '#64748B',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Day
-                  </button>
-                  <button
-                    onClick={() => setViewMode('week')}
-                    style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'week' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'week' ? 'white' : '#64748B',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Week
-                  </button>
-                  <button
-                    onClick={() => setViewMode('month')}
-                    style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'month' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'month' ? 'white' : '#64748B',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Month
-                  </button>
-                  <button
-                    onClick={() => setViewMode('quarter')}
-                    style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'quarter' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'quarter' ? 'white' : '#64748B',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Quarter
-                  </button>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '6px', 
+                  background: 'rgba(255, 255, 255, 0.9)', 
+                  padding: '6px', 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                }}>
+                  {(['day', 'week', 'month', 'quarter'] as ViewMode[]).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setViewMode(mode)}
+                      style={{
+                        padding: '10px 20px',
+                        background: viewMode === mode ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                        color: viewMode === mode ? 'white' : '#64748B',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        transition: 'all 0.3s ease',
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      {mode}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Navigation */}
@@ -1004,27 +1091,49 @@ export default function TimelineRoadmapPage() {
                       setCurrentDate(newDate);
                     }}
                     style={{
-                      padding: '8px',
-                      background: 'white',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
-                      cursor: 'pointer'
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.transform = 'scale(1)';
                     }}
                   >
-                    <ChevronLeftIcon style={{ width: '20px', height: '20px', color: '#64748B' }} />
+                    <ChevronLeftIcon style={{ width: '22px', height: '22px', color: '#667eea' }} />
                   </button>
                   
                   <button
                     onClick={() => setCurrentDate(new Date())}
                     style={{
-                      padding: '8px 16px',
-                      background: 'white',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontWeight: '600',
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontWeight: '700',
                       fontSize: '14px',
                       cursor: 'pointer',
-                      color: '#374151'
+                      color: '#667eea',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.transform = 'scale(1)';
                     }}
                   >
                     Today
@@ -1040,34 +1149,61 @@ export default function TimelineRoadmapPage() {
                       setCurrentDate(newDate);
                     }}
                     style={{
-                      padding: '8px',
-                      background: 'white',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
-                      cursor: 'pointer'
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.transform = 'scale(1)';
                     }}
                   >
-                    <ChevronRightIcon style={{ width: '20px', height: '20px', color: '#64748B' }} />
+                    <ChevronRightIcon style={{ width: '22px', height: '22px', color: '#667eea' }} />
                   </button>
                 </div>
+
+                <div style={{ flex: 1 }} />
 
                 {selectedFolder && (
                   <button
                     onClick={() => setShowMembersModal(true)}
                     style={{
                       padding: '12px 20px',
-                      background: 'white',
+                      background: 'rgba(255, 255, 255, 0.9)',
                       color: '#374151',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontWeight: '700',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '10px',
+                      fontSize: '14px',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
                     }}
                   >
-                    <UserGroupIcon style={{ width: '18px', height: '18px' }} />
+                    <UserGroupIcon style={{ width: '20px', height: '20px' }} />
                     Team ({folderMembers.length})
                   </button>
                 )}
@@ -1076,18 +1212,31 @@ export default function TimelineRoadmapPage() {
                   onClick={() => setShowReportsModal(true)}
                   style={{
                     padding: '12px 20px',
-                    background: 'white',
+                    background: 'rgba(255, 255, 255, 0.9)',
                     color: '#374151',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: '700',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '10px',
+                    fontSize: '14px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'white';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
                   }}
                 >
-                  <ChartBarIcon style={{ width: '18px', height: '18px' }} />
+                  <ChartBarIcon style={{ width: '20px', height: '20px' }} />
                   Reports
                 </button>
               </div>
@@ -1096,105 +1245,376 @@ export default function TimelineRoadmapPage() {
 
           {/* Error/Success Messages */}
           {error && (
-            <div style={{ padding: '16px', background: '#FEE2E2', color: '#DC2626', borderRadius: '8px', marginBottom: '20px' }}>
-              {error}
-              <button onClick={() => setError('')} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+            <div style={{ 
+              padding: '20px 24px', 
+              background: 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)', 
+              color: '#DC2626', 
+              borderRadius: '16px', 
+              marginBottom: '24px',
+              boxShadow: '0 4px 16px rgba(220, 38, 38, 0.2)',
+              border: '2px solid #FCA5A5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontWeight: '600',
+              fontSize: '15px'
+            }}>
+              <span>⚠️ {error}</span>
+              <button 
+                onClick={() => setError('')} 
+                style={{ 
+                  background: '#DC2626', 
+                  color: 'white',
+                  border: 'none', 
+                  cursor: 'pointer',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#DC2626';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                ×
+              </button>
             </div>
           )}
           
           {successMessage && (
-            <div style={{ padding: '16px', background: '#D1FAE5', color: '#059669', borderRadius: '8px', marginBottom: '20px' }}>
-              {successMessage}
+            <div style={{ 
+              padding: '20px 24px', 
+              background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)', 
+              color: '#059669', 
+              borderRadius: '16px', 
+              marginBottom: '24px',
+              boxShadow: '0 4px 16px rgba(16, 185, 129, 0.2)',
+              border: '2px solid #6EE7B7',
+              fontWeight: '600',
+              fontSize: '15px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <span>✓</span>
+              <span>{successMessage}</span>
             </div>
           )}
 
           {/* Main Content */}
           {!selectedFolder ? (
-            <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', borderRadius: '16px' }}>
-              <FolderIcon style={{ width: '64px', height: '64px', color: '#D1D5DB', margin: '0 auto 20px' }} />
-              <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1F2937', marginBottom: '12px' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '100px 40px', 
+              background: 'white', 
+              borderRadius: '32px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              <div style={{
+                width: '120px',
+                height: '120px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '30px',
+                margin: '0 auto 32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
+              }}>
+                <FolderIcon style={{ width: '64px', height: '64px', color: 'white' }} />
+              </div>
+              <h2 style={{ 
+                fontSize: '32px', 
+                fontWeight: '900', 
+                color: '#1F2937', 
+                marginBottom: '16px',
+                letterSpacing: '-0.5px'
+              }}>
                 No Timeline Folders Yet
               </h2>
-              <p style={{ color: '#64748B', marginBottom: '24px' }}>
-                Create your first timeline folder to start planning and tracking your projects
+              <p style={{ 
+                color: '#64748B', 
+                marginBottom: '32px',
+                fontSize: '17px',
+                lineHeight: '1.6',
+                maxWidth: '450px',
+                margin: '0 auto 32px'
+              }}>
+                Create your first timeline folder to start planning, tracking, and visualizing your project roadmap with powerful Gantt charts
               </p>
               <button
                 onClick={() => setShowFolderModal(true)}
                 style={{
-                  padding: '16px 32px',
-                  background: '#3B82F6',
+                  padding: '18px 40px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: '600',
+                  borderRadius: '16px',
+                  fontWeight: '700',
                   fontSize: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
+                  transition: 'all 0.3s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(102, 126, 234, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.3)';
                 }}
               >
-                <PlusIcon style={{ width: '20px', height: '20px', display: 'inline-block', marginRight: '8px' }} />
+                <PlusIcon style={{ width: '24px', height: '24px' }} />
                 Create Timeline Folder
               </button>
             </div>
           ) : (
             <>
               {/* KPI Summary Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Project Completion</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#3B82F6' }}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '24px', 
+                marginBottom: '40px' 
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                  padding: '28px', 
+                  borderRadius: '20px', 
+                  boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 15px 50px rgba(102, 126, 234, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3)';
+                }}>
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '-20px', 
+                    right: '-20px', 
+                    width: '100px', 
+                    height: '100px', 
+                    background: 'rgba(255,255,255,0.1)', 
+                    borderRadius: '50%' 
+                  }} />
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Project Completion</div>
+                  <div style={{ fontSize: '42px', fontWeight: '900', color: 'white', marginBottom: '8px', position: 'relative', zIndex: 1 }}>
                     {Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%
                   </div>
-                  <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>
-                    {timelineItems.filter(i => i.status === 'completed').length} of {timelineItems.length} completed
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.95)', fontWeight: '500' }}>
+                    {timelineItems.filter(i => i.status === 'completed').length} of {timelineItems.length} tasks completed
                   </div>
                 </div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Budget Status</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#10B981' }}>
-                    ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                  padding: '28px', 
+                  borderRadius: '20px', 
+                  boxShadow: '0 10px 40px rgba(16, 185, 129, 0.3)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 15px 50px rgba(16, 185, 129, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 10px 40px rgba(16, 185, 129, 0.3)';
+                }}>
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '-20px', 
+                    right: '-20px', 
+                    width: '100px', 
+                    height: '100px', 
+                    background: 'rgba(255,255,255,0.1)', 
+                    borderRadius: '50%' 
+                  }} />
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Budget Status</div>
+                  <div style={{ fontSize: '42px', fontWeight: '900', color: 'white', marginBottom: '8px', position: 'relative', zIndex: 1 }}>
+                    ${(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) / 1000).toFixed(1)}k
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                    of ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()} planned
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.95)', fontWeight: '500' }}>
+                    of ${(timelineItems.reduce((sum, item) => sum + item.planned_budget, 0) / 1000).toFixed(1)}k planned budget
                   </div>
                 </div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Active Items</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#F59E0B' }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)', 
+                  padding: '28px', 
+                  borderRadius: '20px', 
+                  boxShadow: '0 10px 40px rgba(245, 158, 11, 0.3)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 15px 50px rgba(245, 158, 11, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 10px 40px rgba(245, 158, 11, 0.3)';
+                }}>
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '-20px', 
+                    right: '-20px', 
+                    width: '100px', 
+                    height: '100px', 
+                    background: 'rgba(255,255,255,0.1)', 
+                    borderRadius: '50%' 
+                  }} />
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Active Items</div>
+                  <div style={{ fontSize: '42px', fontWeight: '900', color: 'white', marginBottom: '8px', position: 'relative', zIndex: 1 }}>
                     {timelineItems.filter(i => i.status === 'in_progress').length}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                    in progress
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.95)', fontWeight: '500' }}>
+                    tasks currently in progress
                   </div>
                 </div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Timeline Health</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length > 0 ? '#DC2626' : '#10B981' }}>
-                    {timelineItems.filter(i => new Date(i.end_date) >= new Date() || i.status === 'completed').length > timelineItems.length / 2 ? 'On Track' : 'At Risk'}
+                <div style={{ 
+                  background: timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length > 0 
+                    ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
+                    : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', 
+                  padding: '28px', 
+                  borderRadius: '20px', 
+                  boxShadow: timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length > 0
+                    ? '0 10px 40px rgba(239, 68, 68, 0.3)'
+                    : '0 10px 40px rgba(139, 92, 246, 0.3)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  const hasOverdue = timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length > 0;
+                  e.currentTarget.style.boxShadow = hasOverdue 
+                    ? '0 15px 50px rgba(239, 68, 68, 0.4)' 
+                    : '0 15px 50px rgba(139, 92, 246, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  const hasOverdue = timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length > 0;
+                  e.currentTarget.style.boxShadow = hasOverdue
+                    ? '0 10px 40px rgba(239, 68, 68, 0.3)'
+                    : '0 10px 40px rgba(139, 92, 246, 0.3)';
+                }}>
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '-20px', 
+                    right: '-20px', 
+                    width: '100px', 
+                    height: '100px', 
+                    background: 'rgba(255,255,255,0.1)', 
+                    borderRadius: '50%' 
+                  }} />
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Timeline Health</div>
+                  <div style={{ fontSize: '42px', fontWeight: '900', color: 'white', marginBottom: '8px', position: 'relative', zIndex: 1 }}>
+                    {timelineItems.filter(i => new Date(i.end_date) >= new Date() || i.status === 'completed').length > timelineItems.length / 2 ? '✓ On Track' : '⚠ At Risk'}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                    {timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length} overdue
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.95)', fontWeight: '500' }}>
+                    {timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length} overdue tasks
                   </div>
                 </div>
               </div>
 
               {/* GANTT CHART */}
               {categories.length > 0 && (
-                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflowX: 'auto' }}>
-                  <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#1F2937' }}>
-                    Gantt Chart
-                  </h2>
+                <div style={{ 
+                  background: 'white', 
+                  borderRadius: '24px', 
+                  padding: '32px', 
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+                  overflowX: 'auto',
+                  border: '1px solid rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '28px',
+                    paddingBottom: '20px',
+                    borderBottom: '2px solid #F1F5F9'
+                  }}>
+                    <div>
+                      <h2 style={{ 
+                        fontSize: '26px', 
+                        fontWeight: '800', 
+                        marginBottom: '6px', 
+                        color: '#1F2937',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      }}>
+                        Project Gantt Chart
+                      </h2>
+                      <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
+                        Visual timeline of all project tasks and milestones
+                      </p>
+                    </div>
+                  </div>
 
-                  <div style={{ minWidth: '800px' }}>
+                  <div style={{ minWidth: '900px' }}>
                     {/* Timeline Header */}
-                    <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
-                      <div style={{ background: '#F8FAFC', padding: '12px', fontWeight: '700', color: '#374151', borderRadius: '8px 0 0 0' }}>
-                        Category / Item
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: `300px repeat(${timeColumns.length}, 1fr)`, 
+                      gap: '2px', 
+                      marginBottom: '2px' 
+                    }}>
+                      <div style={{ 
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                        padding: '16px 20px', 
+                        fontWeight: '800', 
+                        color: 'white', 
+                        borderRadius: '12px 0 0 0',
+                        fontSize: '14px',
+                        letterSpacing: '0.3px',
+                        textTransform: 'uppercase'
+                      }}>
+                        Category / Task
                       </div>
                       {timeColumns.map((col, idx) => (
-                        <div key={idx} style={{ background: '#F8FAFC', padding: '12px', textAlign: 'center', fontWeight: '600', fontSize: '13px', color: '#64748B' }}>
+                        <div key={idx} style={{ 
+                          background: 'linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)', 
+                          padding: '16px 12px', 
+                          textAlign: 'center', 
+                          fontWeight: '700', 
+                          fontSize: '12px', 
+                          color: '#475569',
+                          borderRadius: idx === timeColumns.length - 1 ? '0 12px 0 0' : '0'
+                        }}>
                           {col.label}
                         </div>
                       ))}
@@ -1207,25 +1627,47 @@ export default function TimelineRoadmapPage() {
                         const indentPadding = level * 20;
                         
                         return (
-                          <div key={category.id} style={{ marginBottom: '2px' }}>
+                          <div key={category.id} style={{ marginBottom: '4px' }}>
                             {/* Category Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', background: '#F1F5F9' }}>
+                            <div style={{ 
+                              display: 'grid', 
+                              gridTemplateColumns: `300px repeat(${timeColumns.length}, 1fr)`, 
+                              gap: '2px', 
+                              background: '#F8FAFC',
+                              borderRadius: '12px',
+                              overflow: 'hidden',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                            }}>
                               <div style={{ 
-                                background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
-                                padding: '16px', 
-                                paddingLeft: `${16 + indentPadding}px`,
-                                fontWeight: '700', 
+                                background: selectedCategoryId === category.id 
+                                  ? `linear-gradient(135deg, ${category.color}40, ${category.color}20)` 
+                                  : `linear-gradient(135deg, ${category.color}30, ${category.color}15)`, 
+                                padding: '20px', 
+                                paddingLeft: `${20 + indentPadding}px`,
+                                fontWeight: '800', 
                                 color: category.color,
-                                borderLeft: `4px solid ${category.color}`,
+                                borderLeft: `5px solid ${category.color}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.3s ease',
+                                fontSize: '15px'
                               }}
                               onClick={() => setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = `linear-gradient(135deg, ${category.color}50, ${category.color}30)`;
+                                e.currentTarget.style.transform = 'translateX(4px)';
+                              }}
+                              onMouseLeave={(e) => {
+                                const isSelected = selectedCategoryId === category.id;
+                                e.currentTarget.style.background = isSelected 
+                                  ? `linear-gradient(135deg, ${category.color}40, ${category.color}20)` 
+                                  : `linear-gradient(135deg, ${category.color}30, ${category.color}15)`;
+                                e.currentTarget.style.transform = 'translateX(0)';
+                              }}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1237,23 +1679,85 @@ export default function TimelineRoadmapPage() {
                                       }
                                       setExpandedCategories(newExpanded);
                                     }}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                    style={{ 
+                                      background: category.color, 
+                                      border: 'none', 
+                                      cursor: 'pointer', 
+                                      padding: '8px', 
+                                      display: 'flex', 
+                                      alignItems: 'center',
+                                      borderRadius: '8px',
+                                      transition: 'all 0.2s ease',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.transform = 'scale(1.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.transform = 'scale(1)';
+                                    }}
                                   >
                                     {expandedCategories.has(category.id) ? (
-                                      <ChevronDownIcon style={{ width: '20px', height: '20px', color: category.color }} />
+                                      <ChevronDownIcon style={{ width: '20px', height: '20px', color: 'white' }} />
                                     ) : (
-                                      <ChevronRightIcon style={{ width: '20px', height: '20px', color: category.color }} />
+                                      <ChevronRightIcon style={{ width: '20px', height: '20px', color: 'white' }} />
                                     )}
                                   </button>
-                                  <span>{level > 0 ? '└ ' : ''}{category.name}</span>
+                                  <span style={{ fontSize: '15px', letterSpacing: '0.2px' }}>
+                                    {level > 0 ? '└ ' : ''}{category.name}
+                                  </span>
                                 </div>
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                  <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                  <span style={{ 
+                                    fontSize: '13px', 
+                                    fontWeight: '800', 
+                                    background: category.color, 
+                                    color: 'white', 
+                                    padding: '6px 14px', 
+                                    borderRadius: '20px',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                    minWidth: '40px',
+                                    textAlign: 'center'
+                                  }}>
                                     {categoryItems.length}
                                   </span>
                                   {selectedCategoryId === category.id && (
-                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete category "${category.name}"?`)) {await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); fetchCategories(); setSelectedCategoryId(null); setSuccessMessage(`"${category.name}" deleted`);}}} style={{ padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                      Delete "{category.name}"
+                                    <button 
+                                      onClick={async (e) => {
+                                        e.stopPropagation(); 
+                                        if (confirm(`Delete category "${category.name}"?`)) {
+                                          await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); 
+                                          fetchCategories(); 
+                                          setSelectedCategoryId(null); 
+                                          setSuccessMessage(`"${category.name}" deleted`);
+                                        }
+                                      }} 
+                                      style={{ 
+                                        padding: '8px 16px', 
+                                        background: '#DC2626', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '10px', 
+                                        cursor: 'pointer', 
+                                        fontSize: '12px', 
+                                        fontWeight: '700', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '6px',
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = '#B91C1C';
+                                        e.currentTarget.style.transform = 'scale(1.05)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = '#DC2626';
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                      }}
+                                    >
+                                      <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                      Delete
                                     </button>
                                   )}
                                 </div>
@@ -1269,75 +1773,222 @@ export default function TimelineRoadmapPage() {
                             const isCompleted = item.status === 'completed';
                             
                             return (
-                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
+                              <div key={item.id} style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: `300px repeat(${timeColumns.length}, 1fr)`, 
+                                gap: '2px', 
+                                marginBottom: '3px',
+                                borderRadius: '10px',
+                                overflow: 'hidden',
+                                boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+                              }}>
                                 <div style={{ 
-                                  background: isCompleted ? '#F3F4F6' : 'white', 
-                                  padding: '12px 16px', 
+                                  background: isCompleted 
+                                    ? 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)' 
+                                    : 'linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%)', 
+                                  padding: '16px 20px', 
                                   fontSize: '14px',
                                   color: isCompleted ? '#9CA3AF' : '#374151',
-                                  borderLeft: `3px solid ${getPriorityColor(item.priority)}`,
+                                  borderLeft: `5px solid ${getPriorityColor(item.priority)}`,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   cursor: 'pointer',
-                                  opacity: isCompleted ? 0.7 : 1
+                                  opacity: isCompleted ? 0.8 : 1,
+                                  transition: 'all 0.2s ease'
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   loadTimelineItemDetails(item);
                                 }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'translateX(3px)';
+                                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'translateX(0)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
                                 >
-                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('timeline_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
+                                  <input 
+                                    type="checkbox" 
+                                    checked={isCompleted} 
+                                    onChange={async (e) => {
+                                      e.stopPropagation(); 
+                                      await supabase.from('timeline_items').update({
+                                        status: isCompleted ? 'in_progress' : 'completed', 
+                                        completion_percentage: isCompleted ? item.completion_percentage : 100
+                                      }).eq('id', item.id); 
+                                      fetchTimelineItems();
+                                    }} 
+                                    style={{
+                                      width: '22px', 
+                                      height: '22px', 
+                                      cursor: 'pointer', 
+                                      marginRight: '12px', 
+                                      flexShrink: 0, 
+                                      accentColor: '#10B981',
+                                      borderRadius: '6px'
+                                    }} 
+                                  />
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: '600', marginBottom: '4px', textDecoration: isCompleted ? 'line-through' : 'none' }}>{item.title}</div>
-                                    <div style={{ fontSize: '11px', color: '#64748B' }}>
-                                      {item.completion_percentage}% • ${item.actual_spending.toLocaleString()}/${item.planned_budget.toLocaleString()}
+                                    <div style={{ 
+                                      fontWeight: '700', 
+                                      marginBottom: '6px', 
+                                      textDecoration: isCompleted ? 'line-through' : 'none',
+                                      fontSize: '15px',
+                                      color: isCompleted ? '#9CA3AF' : '#1F2937'
+                                    }}>
+                                      {item.title}
+                                    </div>
+                                    <div style={{ 
+                                      fontSize: '12px', 
+                                      color: '#64748B',
+                                      display: 'flex',
+                                      gap: '12px',
+                                      alignItems: 'center'
+                                    }}>
+                                      <span style={{ 
+                                        padding: '2px 8px', 
+                                        background: '#EFF6FF', 
+                                        color: '#3B82F6', 
+                                        borderRadius: '6px',
+                                        fontWeight: '600'
+                                      }}>
+                                        {item.completion_percentage}%
+                                      </span>
+                                      <span>💰 ${item.actual_spending.toLocaleString()}/${item.planned_budget.toLocaleString()}</span>
                                     </div>
                                   </div>
-                                  <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                                  <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
                                     <div style={{
-                                      padding: '4px 8px',
+                                      padding: '6px 14px',
                                       background: getStatusColor(item.status) + '20',
                                       color: getStatusColor(item.status),
-                                      borderRadius: '12px',
-                                      fontSize: '11px',
-                                      fontWeight: '600'
+                                      borderRadius: '16px',
+                                      fontSize: '12px',
+                                      fontWeight: '700',
+                                      textTransform: 'capitalize',
+                                      border: `2px solid ${getStatusColor(item.status)}30`
                                     }}>
                                       {item.status.replace('_', ' ')}
                                     </div>
-                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete timeline item "${item.title}"?`)) {await supabase.from('timeline_items').delete().eq('id', item.id); fetchTimelineItems(); setSuccessMessage('Item deleted');}}} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '600'}}>Delete</button>
+                                    <button 
+                                      onClick={async (e) => {
+                                        e.stopPropagation(); 
+                                        if (confirm(`Delete timeline item "${item.title}"?`)) {
+                                          await supabase.from('timeline_items').delete().eq('id', item.id); 
+                                          fetchTimelineItems(); 
+                                          setSuccessMessage('Item deleted');
+                                        }
+                                      }} 
+                                      style={{
+                                        padding: '6px 12px', 
+                                        background: '#DC2626', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '8px', 
+                                        cursor: 'pointer', 
+                                        fontSize: '11px', 
+                                        fontWeight: '700',
+                                        transition: 'all 0.2s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = '#B91C1C';
+                                        e.currentTarget.style.transform = 'scale(1.05)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = '#DC2626';
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                      }}
+                                    >
+                                      <TrashIcon style={{ width: '12px', height: '12px' }} />
+                                      Delete
+                                    </button>
                                   </div>
                                 </div>
 
                                 {/* Gantt Bar */}
                                 {timeColumns.map((_, idx) => (
-                                  <div key={idx} style={{ background: '#F8FAFC', position: 'relative', minHeight: '60px', border: '1px solid #E5E7EB' }}>
+                                  <div key={idx} style={{ 
+                                    background: idx % 2 === 0 ? '#FAFBFC' : '#F8FAFC', 
+                                    position: 'relative', 
+                                    minHeight: '70px', 
+                                    borderRight: '1px solid #E5E7EB',
+                                    transition: 'background 0.2s ease'
+                                  }}>
                                     {idx === startCol && (
                                       <div style={{
                                         position: 'absolute',
-                                        left: '4px',
-                                        right: spanCols > 1 ? 'auto' : '4px',
-                                        width: spanCols > 1 ? `calc(${spanCols * 100}% + ${(spanCols - 1) * 100}% - 8px)` : 'calc(100% - 8px)',
+                                        left: '6px',
+                                        right: spanCols > 1 ? 'auto' : '6px',
+                                        width: spanCols > 1 ? `calc(${spanCols * 100}% + ${(spanCols - 1) * 100}% - 12px)` : 'calc(100% - 12px)',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        background: `linear-gradient(90deg, ${item.color}, ${item.color}dd)`,
-                                        borderRadius: '8px',
-                                        padding: '8px 12px',
+                                        background: `linear-gradient(135deg, ${item.color}, ${item.color}dd, ${item.color}bb)`,
+                                        borderRadius: '12px',
+                                        padding: '12px 16px',
                                         color: 'white',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                        fontSize: '13px',
+                                        fontWeight: '700',
+                                        boxShadow: `0 4px 16px ${item.color}40`,
                                         cursor: 'pointer',
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        transition: 'all 0.3s ease',
+                                        border: '2px solid rgba(255,255,255,0.3)'
                                       }}
                                       onClick={() => {
                                         setSelectedItem(item);
                                         setShowItemModal(true);
                                       }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)';
+                                        e.currentTarget.style.boxShadow = `0 8px 24px ${item.color}50`;
+                                        e.currentTarget.style.zIndex = '20';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                                        e.currentTarget.style.boxShadow = `0 4px 16px ${item.color}40`;
+                                        e.currentTarget.style.zIndex = '10';
+                                      }}
                                       >
-                                        <div>{item.title}</div>
-                                        <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
-                                          {item.completion_percentage}% complete
+                                        <div style={{ marginBottom: '6px', fontSize: '14px' }}>{item.title}</div>
+                                        <div style={{ 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          gap: '8px',
+                                          fontSize: '11px'
+                                        }}>
+                                          <div style={{
+                                            background: 'rgba(255,255,255,0.3)',
+                                            padding: '2px 8px',
+                                            borderRadius: '8px',
+                                            fontWeight: '800'
+                                          }}>
+                                            {item.completion_percentage}%
+                                          </div>
+                                          <div style={{ opacity: 0.95 }}>
+                                            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                          </div>
+                                        </div>
+                                        {/* Progress bar inside gantt */}
+                                        <div style={{
+                                          marginTop: '8px',
+                                          height: '4px',
+                                          background: 'rgba(255,255,255,0.3)',
+                                          borderRadius: '4px',
+                                          overflow: 'hidden'
+                                        }}>
+                                          <div style={{
+                                            width: `${item.completion_percentage}%`,
+                                            height: '100%',
+                                            background: 'rgba(255,255,255,0.9)',
+                                            borderRadius: '4px',
+                                            transition: 'width 0.3s ease'
+                                          }} />
                                         </div>
                                       </div>
                                     )}
@@ -1362,21 +2013,68 @@ export default function TimelineRoadmapPage() {
                   })()}
 
                     {categories.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9CA3AF' }}>
-                        <p>No categories yet. Create your first category to organize timeline items.</p>
+                      <div style={{ 
+                        textAlign: 'center', 
+                        padding: '80px 20px', 
+                        color: '#9CA3AF',
+                        background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
+                        borderRadius: '16px',
+                        border: '2px dashed #D1D5DB'
+                      }}>
+                        <div style={{
+                          width: '80px',
+                          height: '80px',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          borderRadius: '20px',
+                          margin: '0 auto 24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '40px'
+                        }}>
+                          📋
+                        </div>
+                        <h3 style={{ 
+                          fontSize: '22px', 
+                          fontWeight: '700', 
+                          color: '#374151', 
+                          marginBottom: '12px' 
+                        }}>
+                          No Categories Yet
+                        </h3>
+                        <p style={{ 
+                          fontSize: '15px', 
+                          color: '#64748B', 
+                          marginBottom: '24px',
+                          maxWidth: '400px',
+                          margin: '0 auto 24px'
+                        }}>
+                          Create your first category to organize timeline items and start building your project roadmap.
+                        </p>
                         <button
                           onClick={() => setShowCategoryModal(true)}
                           style={{
-                            marginTop: '16px',
-                            padding: '12px 24px',
-                            background: '#10B981',
+                            padding: '16px 32px',
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
-                            cursor: 'pointer'
+                            borderRadius: '12px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            fontSize: '15px',
+                            boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.3)';
                           }}
                         >
+                          <PlusIcon style={{ width: '20px', height: '20px', display: 'inline-block', marginRight: '8px', verticalAlign: 'middle' }} />
                           Create First Category
                         </button>
                       </div>
