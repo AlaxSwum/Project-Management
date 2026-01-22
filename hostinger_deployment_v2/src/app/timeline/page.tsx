@@ -801,10 +801,9 @@ export default function TimelineRoadmapPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#F8FAFC' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'white' }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
-          <p style={{ color: '#64748B' }}>Loading Timeline & Roadmap...</p>
+          <p style={{ color: '#6B7280', fontSize: '13px' }}>Loading...</p>
         </div>
       </div>
     );
@@ -816,54 +815,54 @@ export default function TimelineRoadmapPage() {
     <>
       <MobileHeader title="Timeline & Roadmap" isMobile={isMobile} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'white' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
         <div style={{
           marginLeft: isMobile ? '0' : '280px',
           flex: 1,
-          padding: isMobile ? '90px 20px 40px' : '32px',
+          padding: isMobile ? '90px 16px 20px' : '24px',
           maxWidth: '100%',
           overflow: 'hidden'
         }}>
           {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h1 style={{ 
-                  fontSize: isMobile ? '24px' : '32px', 
-                  fontWeight: '800', 
-                  color: '#1F2937', 
-                  margin: '0 0 8px 0'
+                  fontSize: isMobile ? '20px' : '24px', 
+                  fontWeight: '600', 
+                  color: '#111827', 
+                  margin: '0 0 4px 0'
                 }}>
                   Timeline & Roadmap
                 </h1>
                 <p style={{ 
-                  color: '#64748B', 
+                  color: '#6B7280', 
                   margin: 0, 
-                  fontSize: '16px'
+                  fontSize: '14px'
                 }}>
-                  Project timeline, Gantt charts, KPI tracking & team performance
+                  Project timeline and task management
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setShowFolderModal(true)}
                   style={{
-                    padding: '12px 20px',
-                    background: '#3B82F6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
+                    padding: '8px 16px',
+                    background: 'white',
+                    color: '#374151',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '4px',
+                    fontSize: '14px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '6px'
                   }}
                 >
-                  <FolderIcon style={{ width: '18px', height: '18px' }} />
+                  <FolderIcon style={{ width: '16px', height: '16px' }} />
                   New Folder
                 </button>
                 
@@ -872,39 +871,39 @@ export default function TimelineRoadmapPage() {
                     <button
                       onClick={() => setShowCategoryModal(true)}
                       style={{
-                        padding: '12px 20px',
-                        background: '#10B981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: '600',
+                        padding: '8px 16px',
+                        background: 'white',
+                        color: '#374151',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '4px',
+                        fontSize: '14px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px'
+                        gap: '6px'
                       }}
                     >
-                      <PlusIcon style={{ width: '18px', height: '18px' }} />
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
                       New Category
                     </button>
                     
                     <button
                       onClick={() => setShowItemModal(true)}
                       style={{
-                        padding: '12px 20px',
-                        background: '#F59E0B',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: '600',
+                        padding: '8px 16px',
+                        background: 'white',
+                        color: '#374151',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '4px',
+                        fontSize: '14px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px'
+                        gap: '6px'
                       }}
                     >
-                      <PlusIcon style={{ width: '18px', height: '18px' }} />
-                      New Timeline Item
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      New Item
                     </button>
                   </>
                 )}
@@ -915,10 +914,13 @@ export default function TimelineRoadmapPage() {
             {folders.length > 0 && (
               <div style={{ 
                 display: 'flex', 
-                gap: '16px', 
+                gap: '8px', 
                 flexWrap: 'wrap', 
                 alignItems: 'center', 
-                marginBottom: '20px'
+                marginBottom: '16px',
+                padding: '12px',
+                background: '#F9FAFB',
+                border: '1px solid #E5E7EB'
               }}>
                 <select
                   value={selectedFolder?.id || ''}
@@ -927,13 +929,11 @@ export default function TimelineRoadmapPage() {
                     setSelectedFolder(folder || null);
                   }}
                   style={{
-                    padding: '12px 16px',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
+                    padding: '6px 12px',
+                    border: '1px solid #D1D5DB',
+                    fontSize: '13px',
                     background: 'white',
-                    minWidth: '250px'
+                    minWidth: '200px'
                   }}
                 >
                   {folders.map(folder => (
@@ -944,18 +944,17 @@ export default function TimelineRoadmapPage() {
                 </select>
 
                 {/* View Mode Selector */}
-                <div style={{ display: 'flex', gap: '4px', background: 'white', padding: '4px', borderRadius: '8px', border: '2px solid #E5E7EB' }}>
+                <div style={{ display: 'flex', gap: '0', border: '1px solid #D1D5DB' }}>
                   <button
                     onClick={() => setViewMode('day')}
                     style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'day' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'day' ? 'white' : '#64748B',
+                      padding: '6px 12px',
+                      background: viewMode === 'day' ? '#E5E7EB' : 'white',
+                      color: '#374151',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
+                      borderRight: '1px solid #D1D5DB',
                       cursor: 'pointer',
-                      fontSize: '14px'
+                      fontSize: '13px'
                     }}
                   >
                     Day
@@ -963,14 +962,13 @@ export default function TimelineRoadmapPage() {
                   <button
                     onClick={() => setViewMode('week')}
                     style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'week' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'week' ? 'white' : '#64748B',
+                      padding: '6px 12px',
+                      background: viewMode === 'week' ? '#E5E7EB' : 'white',
+                      color: '#374151',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
+                      borderRight: '1px solid #D1D5DB',
                       cursor: 'pointer',
-                      fontSize: '14px'
+                      fontSize: '13px'
                     }}
                   >
                     Week
@@ -978,14 +976,13 @@ export default function TimelineRoadmapPage() {
                   <button
                     onClick={() => setViewMode('month')}
                     style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'month' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'month' ? 'white' : '#64748B',
+                      padding: '6px 12px',
+                      background: viewMode === 'month' ? '#E5E7EB' : 'white',
+                      color: '#374151',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
+                      borderRight: '1px solid #D1D5DB',
                       cursor: 'pointer',
-                      fontSize: '14px'
+                      fontSize: '13px'
                     }}
                   >
                     Month
@@ -993,14 +990,12 @@ export default function TimelineRoadmapPage() {
                   <button
                     onClick={() => setViewMode('quarter')}
                     style={{
-                      padding: '8px 16px',
-                      background: viewMode === 'quarter' ? '#3B82F6' : 'transparent',
-                      color: viewMode === 'quarter' ? 'white' : '#64748B',
+                      padding: '6px 12px',
+                      background: viewMode === 'quarter' ? '#E5E7EB' : 'white',
+                      color: '#374151',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
                       cursor: 'pointer',
-                      fontSize: '14px'
+                      fontSize: '13px'
                     }}
                   >
                     Quarter
@@ -1008,7 +1003,7 @@ export default function TimelineRoadmapPage() {
                 </div>
 
                 {/* Navigation */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0', border: '1px solid #D1D5DB' }}>
                   <button
                     onClick={() => {
                       const newDate = new Date(currentDate);
@@ -1019,25 +1014,24 @@ export default function TimelineRoadmapPage() {
                       setCurrentDate(newDate);
                     }}
                     style={{
-                      padding: '8px',
+                      padding: '6px 10px',
                       background: 'white',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
+                      border: 'none',
+                      borderRight: '1px solid #D1D5DB',
                       cursor: 'pointer'
                     }}
                   >
-                    <ChevronLeftIcon style={{ width: '20px', height: '20px', color: '#64748B' }} />
+                    <ChevronLeftIcon style={{ width: '16px', height: '16px', color: '#6B7280' }} />
                   </button>
                   
                   <button
                     onClick={() => setCurrentDate(new Date())}
                     style={{
-                      padding: '8px 16px',
+                      padding: '6px 12px',
                       background: 'white',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontWeight: '600',
-                      fontSize: '14px',
+                      border: 'none',
+                      borderRight: '1px solid #D1D5DB',
+                      fontSize: '13px',
                       cursor: 'pointer',
                       color: '#374151'
                     }}
@@ -1055,14 +1049,13 @@ export default function TimelineRoadmapPage() {
                       setCurrentDate(newDate);
                     }}
                     style={{
-                      padding: '8px',
+                      padding: '6px 10px',
                       background: 'white',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
+                      border: 'none',
                       cursor: 'pointer'
                     }}
                   >
-                    <ChevronRightIcon style={{ width: '20px', height: '20px', color: '#64748B' }} />
+                    <ChevronRightIcon style={{ width: '16px', height: '16px', color: '#6B7280' }} />
                   </button>
                 </div>
 
@@ -1070,19 +1063,18 @@ export default function TimelineRoadmapPage() {
                   <button
                     onClick={() => setShowMembersModal(true)}
                     style={{
-                      padding: '12px 20px',
+                      padding: '6px 12px',
                       background: 'white',
                       color: '#374151',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '8px',
-                      fontWeight: '600',
+                      border: '1px solid #D1D5DB',
+                      fontSize: '13px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '4px'
                     }}
                   >
-                    <UserGroupIcon style={{ width: '18px', height: '18px' }} />
+                    <UserGroupIcon style={{ width: '14px', height: '14px' }} />
                     Team ({folderMembers.length})
                   </button>
                 )}
@@ -1090,19 +1082,18 @@ export default function TimelineRoadmapPage() {
                 <button
                   onClick={() => setShowReportsModal(true)}
                   style={{
-                    padding: '12px 20px',
+                    padding: '6px 12px',
                     background: 'white',
                     color: '#374151',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontWeight: '600',
+                    border: '1px solid #D1D5DB',
+                    fontSize: '13px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '4px'
                   }}
                 >
-                  <ChartBarIcon style={{ width: '18px', height: '18px' }} />
+                  <ChartBarIcon style={{ width: '14px', height: '14px' }} />
                   Reports
                 </button>
               </div>
@@ -1111,85 +1102,78 @@ export default function TimelineRoadmapPage() {
 
           {/* Error/Success Messages */}
           {error && (
-            <div style={{ padding: '16px', background: '#FEE2E2', color: '#DC2626', borderRadius: '8px', marginBottom: '20px' }}>
+            <div style={{ padding: '12px', background: '#FAFAFA', color: '#374151', border: '1px solid #D1D5DB', marginBottom: '16px', fontSize: '13px' }}>
               {error}
-              <button onClick={() => setError('')} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+              <button onClick={() => setError('')} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}>×</button>
             </div>
           )}
           
           {successMessage && (
-            <div style={{ padding: '16px', background: '#D1FAE5', color: '#059669', borderRadius: '8px', marginBottom: '20px' }}>
+            <div style={{ padding: '12px', background: '#FAFAFA', color: '#374151', border: '1px solid #D1D5DB', marginBottom: '16px', fontSize: '13px' }}>
               {successMessage}
             </div>
           )}
 
           {/* Main Content */}
           {!selectedFolder ? (
-            <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', borderRadius: '16px' }}>
-              <FolderIcon style={{ width: '64px', height: '64px', color: '#D1D5DB', margin: '0 auto 20px' }} />
-              <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1F2937', marginBottom: '12px' }}>
-                No Timeline Folders Yet
-              </h2>
-              <p style={{ color: '#64748B', marginBottom: '24px' }}>
-                Create your first timeline folder to start planning and tracking your projects
+            <div style={{ textAlign: 'center', padding: '60px 20px', background: '#FAFAFA', border: '1px solid #E5E7EB' }}>
+              <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '16px' }}>
+                No timeline folders yet
               </p>
               <button
                 onClick={() => setShowFolderModal(true)}
                 style={{
-                  padding: '16px 32px',
-                  background: '#3B82F6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: '600',
-                  fontSize: '16px',
+                  padding: '8px 16px',
+                  background: 'white',
+                  color: '#374151',
+                  border: '1px solid #D1D5DB',
+                  fontSize: '13px',
                   cursor: 'pointer'
                 }}
               >
-                <PlusIcon style={{ width: '20px', height: '20px', display: 'inline-block', marginRight: '8px' }} />
-                Create Timeline Folder
+                Create Folder
               </button>
             </div>
           ) : (
             <>
-              {/* KPI Summary Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Project Completion</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#3B82F6' }}>
+              {/* KPI Summary */}
+              <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', padding: '12px', background: '#F9FAFB', border: '1px solid #E5E7EB', flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '2px', textTransform: 'uppercase' }}>Completion</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>
                     {Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%
                   </div>
-                  <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>
-                    {timelineItems.filter(i => i.status === 'completed').length} of {timelineItems.length} completed
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                    {timelineItems.filter(i => i.status === 'completed').length}/{timelineItems.length} tasks
                   </div>
                 </div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Budget Status</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#10B981' }}>
+                <div style={{ borderLeft: '1px solid #E5E7EB', paddingLeft: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '2px', textTransform: 'uppercase' }}>Budget</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>
                     ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                    of ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()} planned
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                    of ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
                   </div>
                 </div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Active Items</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: '#F59E0B' }}>
+                <div style={{ borderLeft: '1px solid #E5E7EB', paddingLeft: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '2px', textTransform: 'uppercase' }}>Active</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>
                     {timelineItems.filter(i => i.status === 'in_progress').length}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>
                     in progress
                   </div>
                 </div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '14px', color: '#64748B', marginBottom: '8px', fontWeight: '600' }}>Timeline Health</div>
-                  <div style={{ fontSize: '32px', fontWeight: '800', color: timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length > 0 ? '#DC2626' : '#10B981' }}>
+                <div style={{ borderLeft: '1px solid #E5E7EB', paddingLeft: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '2px', textTransform: 'uppercase' }}>Status</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>
                     {timelineItems.filter(i => new Date(i.end_date) >= new Date() || i.status === 'completed').length > timelineItems.length / 2 ? 'On Track' : 'At Risk'}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>
                     {timelineItems.filter(i => new Date(i.end_date) < new Date() && i.status !== 'completed').length} overdue
                   </div>
                 </div>
@@ -1197,19 +1181,21 @@ export default function TimelineRoadmapPage() {
 
               {/* GANTT CHART */}
               {categories.length > 0 && (
-                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflowX: 'auto' }}>
-                  <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#1F2937' }}>
-                    Gantt Chart
-                  </h2>
+                <div style={{ background: 'white', border: '1px solid #E5E7EB', overflowX: 'auto' }}>
+                  <div style={{ padding: '12px', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '600', margin: 0, color: '#374151' }}>
+                      Timeline
+                    </h2>
+                  </div>
 
                   <div style={{ minWidth: '800px' }}>
                     {/* Timeline Header */}
-                    <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
-                      <div style={{ background: '#F8FAFC', padding: '12px', fontWeight: '700', color: '#374151', borderRadius: '8px 0 0 0' }}>
-                        Category / Item
+                    <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '0', borderBottom: '2px solid #E5E7EB' }}>
+                      <div style={{ background: '#F9FAFB', padding: '8px 12px', fontWeight: '600', color: '#111827', fontSize: '12px', borderRight: '1px solid #E5E7EB' }}>
+                        Task
                       </div>
                       {timeColumns.map((col, idx) => (
-                        <div key={idx} style={{ background: '#F8FAFC', padding: '12px', textAlign: 'center', fontWeight: '600', fontSize: '13px', color: '#64748B' }}>
+                        <div key={idx} style={{ background: '#F9FAFB', padding: '8px 12px', textAlign: 'center', fontWeight: '500', fontSize: '11px', color: '#6B7280', borderRight: idx < timeColumns.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
                           {col.label}
                         </div>
                       ))}
@@ -1222,25 +1208,25 @@ export default function TimelineRoadmapPage() {
                         const indentPadding = level * 20;
                         
                         return (
-                          <div key={category.id} style={{ marginBottom: '2px' }}>
+                          <div key={category.id}>
                             {/* Category Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', background: '#F1F5F9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '0', borderBottom: '1px solid #E5E7EB' }}>
                               <div style={{ 
-                                background: selectedCategoryId === category.id ? category.color + '30' : category.color + '20', 
-                                padding: '16px', 
-                                paddingLeft: `${16 + indentPadding}px`,
-                                fontWeight: '700', 
-                                color: category.color,
-                                borderLeft: `4px solid ${category.color}`,
+                                background: '#F9FAFB', 
+                                padding: '8px 12px', 
+                                paddingLeft: `${12 + indentPadding}px`,
+                                fontWeight: '600', 
+                                color: '#111827',
+                                fontSize: '13px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                borderRight: '1px solid #E5E7EB'
                               }}
                               onClick={() => setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1252,29 +1238,29 @@ export default function TimelineRoadmapPage() {
                                       }
                                       setExpandedCategories(newExpanded);
                                     }}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center' }}
                                   >
                                     {expandedCategories.has(category.id) ? (
-                                      <ChevronDownIcon style={{ width: '20px', height: '20px', color: category.color }} />
+                                      <ChevronDownIcon style={{ width: '14px', height: '14px', color: '#6B7280' }} />
                                     ) : (
-                                      <ChevronRightIcon style={{ width: '20px', height: '20px', color: category.color }} />
+                                      <ChevronRightIcon style={{ width: '14px', height: '14px', color: '#6B7280' }} />
                                     )}
                                   </button>
                                   <span>{level > 0 ? '└ ' : ''}{category.name}</span>
                                 </div>
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                  <span style={{ fontSize: '12px', fontWeight: '600', background: category.color, color: 'white', padding: '4px 8px', borderRadius: '12px' }}>
-                                    {categoryItems.length}
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '11px', color: '#6B7280' }}>
+                                    ({categoryItems.length})
                                   </span>
                                   {selectedCategoryId === category.id && (
-                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete category "${category.name}"?`)) {await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); fetchCategories(); setSelectedCategoryId(null); setSuccessMessage(`"${category.name}" deleted`);}}} style={{ padding: '6px 12px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                      Delete "{category.name}"
+                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete category "${category.name}"?`)) {await supabase.from('timeline_categories').update({ is_active: false }).eq('id', category.id); fetchCategories(); setSelectedCategoryId(null); setSuccessMessage(`"${category.name}" deleted`);}}} style={{ padding: '2px 8px', background: 'white', color: '#374151', border: '1px solid #D1D5DB', cursor: 'pointer', fontSize: '11px' }}>
+                                      Delete
                                     </button>
                                   )}
                                 </div>
                               </div>
                               {timeColumns.map((_, idx) => (
-                                <div key={idx} style={{ background: 'white', minHeight: '20px' }} />
+                                <div key={idx} style={{ background: '#FAFAFA', minHeight: '20px', borderRight: idx < timeColumns.length - 1 ? '1px solid #E5E7EB' : 'none' }} />
                               ))}
                             </div>
 
@@ -1284,49 +1270,41 @@ export default function TimelineRoadmapPage() {
                             const isCompleted = item.status === 'completed';
                             
                             return (
-                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '1px', marginBottom: '1px' }}>
+                              <div key={item.id} style={{ display: 'grid', gridTemplateColumns: `250px repeat(${timeColumns.length}, 1fr)`, gap: '0', borderBottom: '1px solid #E5E7EB' }}>
                                 <div style={{ 
-                                  background: isCompleted ? '#F3F4F6' : 'white', 
-                                  padding: '12px 16px', 
-                                  fontSize: '14px',
-                                  color: isCompleted ? '#9CA3AF' : '#374151',
-                                  borderLeft: `3px solid ${getPriorityColor(item.priority)}`,
+                                  background: 'white', 
+                                  padding: '8px 12px', 
+                                  fontSize: '13px',
+                                  color: '#374151',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   cursor: 'pointer',
-                                  opacity: isCompleted ? 0.7 : 1
+                                  borderRight: '1px solid #E5E7EB'
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   loadTimelineItemDetails(item);
                                 }}
                                 >
-                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('timeline_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '18px', height: '18px', cursor: 'pointer', marginRight: '8px', flexShrink: 0, accentColor: '#10B981'}} />
+                                  <input type="checkbox" checked={isCompleted} onChange={async (e) => {e.stopPropagation(); await supabase.from('timeline_items').update({status: isCompleted ? 'in_progress' : 'completed', completion_percentage: isCompleted ? item.completion_percentage : 100}).eq('id', item.id); fetchTimelineItems();}} style={{width: '14px', height: '14px', cursor: 'pointer', marginRight: '8px', flexShrink: 0}} />
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: '600', marginBottom: '4px', textDecoration: isCompleted ? 'line-through' : 'none' }}>{item.title}</div>
-                                    <div style={{ fontSize: '11px', color: '#64748B' }}>
-                                      {item.completion_percentage}% • ${item.actual_spending.toLocaleString()}/${item.planned_budget.toLocaleString()}
+                                    <div style={{ fontSize: '13px', textDecoration: isCompleted ? 'line-through' : 'none', color: isCompleted ? '#9CA3AF' : '#111827' }}>{item.title}</div>
+                                    <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
+                                      {item.completion_percentage}% • ${item.actual_spending.toLocaleString()}
                                     </div>
                                   </div>
-                                  <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                                    <div style={{
-                                      padding: '4px 8px',
-                                      background: getStatusColor(item.status) + '20',
-                                      color: getStatusColor(item.status),
-                                      borderRadius: '12px',
-                                      fontSize: '11px',
-                                      fontWeight: '600'
-                                    }}>
+                                  <div style={{display: 'flex', gap: '6px', alignItems: 'center'}}>
+                                    <span style={{ fontSize: '11px', color: '#6B7280' }}>
                                       {item.status.replace('_', ' ')}
-                                    </div>
-                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete timeline item "${item.title}"?`)) {await supabase.from('timeline_items').delete().eq('id', item.id); fetchTimelineItems(); setSuccessMessage('Item deleted');}}} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '600'}}>Delete</button>
+                                    </span>
+                                    <button onClick={async (e) => {e.stopPropagation(); if (confirm(`Delete "${item.title}"?`)) {await supabase.from('timeline_items').delete().eq('id', item.id); fetchTimelineItems(); setSuccessMessage('Deleted');}}} style={{padding: '2px 6px', background: 'white', color: '#6B7280', border: '1px solid #D1D5DB', cursor: 'pointer', fontSize: '10px'}}>×</button>
                                   </div>
                                 </div>
 
                                 {/* Gantt Bar */}
                                 {timeColumns.map((_, idx) => (
-                                  <div key={idx} style={{ background: '#F8FAFC', position: 'relative', minHeight: '60px', border: '1px solid #E5E7EB' }}>
+                                  <div key={idx} style={{ background: 'white', position: 'relative', minHeight: '40px', borderRight: idx < timeColumns.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
                                     {idx === startCol && (
                                       <div style={{
                                         position: 'absolute',
@@ -1335,25 +1313,24 @@ export default function TimelineRoadmapPage() {
                                         width: spanCols > 1 ? `calc(${spanCols * 100}% + ${(spanCols - 1) * 100}% - 8px)` : 'calc(100% - 8px)',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        background: `linear-gradient(90deg, ${item.color}, ${item.color}dd)`,
-                                        borderRadius: '8px',
-                                        padding: '8px 12px',
-                                        color: 'white',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                        background: '#E5E7EB',
+                                        height: '20px',
+                                        border: '1px solid #D1D5DB',
                                         cursor: 'pointer',
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        overflow: 'hidden'
                                       }}
                                       onClick={() => {
                                         setSelectedItem(item);
                                         setShowItemModal(true);
                                       }}
                                       >
-                                        <div>{item.title}</div>
-                                        <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
-                                          {item.completion_percentage}% complete
-                                        </div>
+                                        <div style={{
+                                          height: '100%',
+                                          width: `${item.completion_percentage}%`,
+                                          background: '#9CA3AF',
+                                          transition: 'width 0.3s ease'
+                                        }} />
                                       </div>
                                     )}
                                   </div>
@@ -1377,22 +1354,20 @@ export default function TimelineRoadmapPage() {
                   })()}
 
                     {categories.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9CA3AF' }}>
-                        <p>No categories yet. Create your first category to organize timeline items.</p>
+                      <div style={{ textAlign: 'center', padding: '40px 20px', background: '#FAFAFA', border: '1px solid #E5E7EB' }}>
+                        <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '12px' }}>No categories yet.</p>
                         <button
                           onClick={() => setShowCategoryModal(true)}
                           style={{
-                            marginTop: '16px',
-                            padding: '12px 24px',
-                            background: '#10B981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
+                            padding: '6px 16px',
+                            background: 'white',
+                            color: '#374151',
+                            border: '1px solid #D1D5DB',
+                            fontSize: '13px',
                             cursor: 'pointer'
                           }}
                         >
-                          Create First Category
+                          Create Category
                         </button>
                       </div>
                     )}
@@ -1433,9 +1408,9 @@ export default function TimelineRoadmapPage() {
               </div>
             </div>
             
-            <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
-              <button onClick={() => setShowFolderModal(false)} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Cancel</button>
-              <button onClick={handleCreateFolder} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Create Folder</button>
+            <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowFolderModal(false)} style={{padding: '8px 16px', background: 'white', color: '#374151', border: '1px solid #D1D5DB', fontSize: '13px', cursor: 'pointer'}}>Cancel</button>
+              <button onClick={handleCreateFolder} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Create</button>
             </div>
           </div>
         </div>
@@ -1479,9 +1454,9 @@ export default function TimelineRoadmapPage() {
               </div>
             </div>
             
-            <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
-              <button onClick={() => setShowCategoryModal(false)} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Cancel</button>
-              <button onClick={handleCreateCategory} style={{padding: '12px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Create Category</button>
+            <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowCategoryModal(false)} style={{padding: '8px 16px', background: 'white', color: '#374151', border: '1px solid #D1D5DB', fontSize: '13px', cursor: 'pointer'}}>Cancel</button>
+              <button onClick={handleCreateCategory} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Create</button>
             </div>
           </div>
         </div>
@@ -1601,20 +1576,20 @@ export default function TimelineRoadmapPage() {
               <div style={{border: '2px solid #E5E7EB', borderRadius: '8px', padding: '16px', background: '#F9FAFB'}}>
                 <div style={{display: 'flex', gap: '8px', marginBottom: '12px'}}>
                   <input type="text" value={newChecklistItem} onChange={(e) => setNewChecklistItem(e.target.value)} onKeyPress={(e) => {if (e.key === 'Enter') {e.preventDefault(); if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem]); setNewChecklistItem('');}}}} placeholder="Add checklist item..." style={{flex: 1, padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px'}} />
-                  <button type="button" onClick={() => {if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem]); setNewChecklistItem('');}}} style={{padding: '10px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'}}>Add</button>
+                  <button type="button" onClick={() => {if (newChecklistItem.trim()) {setChecklistItems([...checklistItems, newChecklistItem]); setNewChecklistItem('');}}} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Add</button>
                 </div>
                 {checklistItems.map((item, idx) => (
                   <div key={idx} style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', background: 'white', borderRadius: '6px', marginBottom: '8px'}}>
                     <span style={{flex: 1, fontSize: '14px'}}>{idx + 1}. {item}</span>
-                    <button onClick={() => setChecklistItems(checklistItems.filter((_, i) => i !== idx))} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'}}>Remove</button>
+                    <button onClick={() => setChecklistItems(checklistItems.filter((_, i) => i !== idx))} style={{padding: '2px 8px', background: 'white', color: '#6B7280', border: '1px solid #D1D5DB', fontSize: '11px', cursor: 'pointer'}}>×</button>
                   </div>
                 ))}
               </div>
             </div>
             
-            <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
-              <button onClick={() => {setShowItemModal(false); resetItemForm();}} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Cancel</button>
-              <button onClick={handleCreateTimelineItem} style={{padding: '12px 24px', background: '#F59E0B', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Create Item</button>
+            <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+              <button onClick={() => {setShowItemModal(false); resetItemForm();}} style={{padding: '8px 16px', background: 'white', color: '#374151', border: '1px solid #D1D5DB', fontSize: '13px', cursor: 'pointer'}}>Cancel</button>
+              <button onClick={handleCreateTimelineItem} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Create</button>
             </div>
           </div>
         </div>
@@ -1665,7 +1640,7 @@ export default function TimelineRoadmapPage() {
                       }
                     }
                   }}
-                  style={{padding: '12px 20px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}
+                  style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}
                 >
                   Add
                 </button>
@@ -1675,13 +1650,13 @@ export default function TimelineRoadmapPage() {
             <div>
               <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>Current Members</h4>
               {folderMembers.map(member => (
-                <div key={member.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#F9FAFB', borderRadius: '8px', marginBottom: '8px'}}>
+                <div key={member.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', background: '#FAFAFA', border: '1px solid #E5E7EB', marginBottom: '4px'}}>
                   <div>
-                    <div style={{fontWeight: '600', fontSize: '14px'}}>{member.user_name}</div>
-                    <div style={{fontSize: '12px', color: '#64748B'}}>{member.user_email}</div>
+                    <div style={{fontSize: '13px', color: '#111827'}}>{member.user_name}</div>
+                    <div style={{fontSize: '11px', color: '#6B7280'}}>{member.user_email}</div>
                   </div>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                    <span style={{padding: '4px 12px', background: member.role === 'owner' ? '#3B82F6' : member.role === 'manager' ? '#10B981' : '#6B7280', color: 'white', borderRadius: '12px', fontSize: '12px', fontWeight: '600'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <span style={{fontSize: '11px', color: '#6B7280'}}>
                       {member.role}
                     </span>
                     {member.role !== 'owner' && (
@@ -1690,8 +1665,8 @@ export default function TimelineRoadmapPage() {
                           await supabase.from('timeline_folder_members').delete().eq('id', member.id);
                           fetchFolderMembers();
                         }
-                      }} style={{padding: '4px 8px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer'}}>
-                        Remove
+                      }} style={{padding: '2px 8px', background: 'white', color: '#6B7280', border: '1px solid #D1D5DB', fontSize: '11px', cursor: 'pointer'}}>
+                        ×
                       </button>
                     )}
                   </div>
@@ -1700,7 +1675,7 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{marginTop: '24px', display: 'flex', justifyContent: 'flex-end'}}>
-              <button onClick={() => setShowMembersModal(false)} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Done</button>
+              <button onClick={() => setShowMembersModal(false)} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Done</button>
             </div>
           </div>
         </div>
@@ -1713,38 +1688,35 @@ export default function TimelineRoadmapPage() {
             <h3 style={{fontSize: '24px', fontWeight: '700', marginBottom: '24px'}}>Visual Reports & Analytics</h3>
             
             {/* Overall Progress */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Overall Project Completion</h4>
-              <div style={{background: '#F1F5F9', borderRadius: '12px', padding: '20px'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                  <span style={{fontWeight: '600'}}>Total Progress</span>
-                  <span style={{fontWeight: '700', color: '#3B82F6'}}>{Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%</span>
-                </div>
-                <div style={{width: '100%', height: '24px', background: '#E5E7EB', borderRadius: '12px', overflow: 'hidden'}}>
-                  <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #10B981)', transition: 'width 0.3s ease'}} />
-                </div>
+            <div style={{marginBottom: '24px', padding: '16px', background: '#FAFAFA', border: '1px solid #E5E7EB'}}>
+              <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#374151'}}>Total Progress</div>
+              <div style={{fontSize: '24px', fontWeight: '700', color: '#111827', marginBottom: '8px'}}>
+                {Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%
+              </div>
+              <div style={{width: '100%', height: '8px', background: '#E5E7EB'}}>
+                <div style={{width: `${Math.round(timelineItems.reduce((sum, item) => sum + item.completion_percentage, 0) / (timelineItems.length || 1))}%`, height: '100%', background: '#6B7280'}} />
               </div>
             </div>
 
             {/* Budget Overview */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Budget Analysis</h4>
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
-                <div style={{background: '#EFF6FF', padding: '16px', borderRadius: '8px'}}>
-                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Planned Budget</div>
-                  <div style={{fontSize: '24px', fontWeight: '700', color: '#3B82F6'}}>
+            <div style={{marginBottom: '24px'}}>
+              <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: '#374151'}}>Budget</div>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px'}}>
+                <div style={{padding: '12px', background: '#FAFAFA', border: '1px solid #E5E7EB'}}>
+                  <div style={{fontSize: '11px', color: '#6B7280', marginBottom: '4px'}}>Planned</div>
+                  <div style={{fontSize: '18px', fontWeight: '600', color: '#111827'}}>
                     ${timelineItems.reduce((sum, item) => sum + item.planned_budget, 0).toLocaleString()}
                   </div>
                 </div>
-                <div style={{background: '#ECFDF5', padding: '16px', borderRadius: '8px'}}>
-                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Actual Spending</div>
-                  <div style={{fontSize: '24px', fontWeight: '700', color: '#10B981'}}>
+                <div style={{padding: '12px', background: '#FAFAFA', border: '1px solid #E5E7EB'}}>
+                  <div style={{fontSize: '11px', color: '#6B7280', marginBottom: '4px'}}>Actual</div>
+                  <div style={{fontSize: '18px', fontWeight: '600', color: '#111827'}}>
                     ${timelineItems.reduce((sum, item) => sum + item.actual_spending, 0).toLocaleString()}
                   </div>
                 </div>
-                <div style={{background: '#FEF3C7', padding: '16px', borderRadius: '8px'}}>
-                  <div style={{fontSize: '12px', color: '#64748B', marginBottom: '4px'}}>Variance</div>
-                  <div style={{fontSize: '24px', fontWeight: '700', color: '#F59E0B'}}>
+                <div style={{padding: '12px', background: '#FAFAFA', border: '1px solid #E5E7EB'}}>
+                  <div style={{fontSize: '11px', color: '#6B7280', marginBottom: '4px'}}>Variance</div>
+                  <div style={{fontSize: '18px', fontWeight: '600', color: '#111827'}}>
                     ${Math.abs(timelineItems.reduce((sum, item) => sum + item.actual_spending, 0) - timelineItems.reduce((sum, item) => sum + item.planned_budget, 0)).toLocaleString()}
                   </div>
                 </div>
@@ -1752,23 +1724,23 @@ export default function TimelineRoadmapPage() {
             </div>
 
             {/* Category Breakdown */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Progress by Category</h4>
+            <div style={{marginBottom: '24px'}}>
+              <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: '#374151'}}>By Category</div>
               {categories.map(category => {
                 const categoryItems = timelineItems.filter(item => item.category_id === category.id);
                 const avgCompletion = categoryItems.length > 0 ? Math.round(categoryItems.reduce((sum, item) => sum + item.completion_percentage, 0) / categoryItems.length) : 0;
                 
                 return (
-                  <div key={category.id} style={{marginBottom: '16px'}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                      <span style={{fontWeight: '600', color: category.color}}>{category.name}</span>
-                      <span style={{fontWeight: '600'}}>{avgCompletion}%</span>
+                  <div key={category.id} style={{marginBottom: '12px', padding: '8px', background: '#FAFAFA', border: '1px solid #E5E7EB'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px'}}>
+                      <span style={{fontSize: '12px', color: '#374151'}}>{category.name}</span>
+                      <span style={{fontSize: '12px', fontWeight: '600', color: '#111827'}}>{avgCompletion}%</span>
                     </div>
-                    <div style={{width: '100%', height: '16px', background: '#E5E7EB', borderRadius: '8px', overflow: 'hidden'}}>
-                      <div style={{width: `${avgCompletion}%`, height: '100%', background: category.color, transition: 'width 0.3s ease'}} />
+                    <div style={{width: '100%', height: '6px', background: '#E5E7EB'}}>
+                      <div style={{width: `${avgCompletion}%`, height: '100%', background: '#9CA3AF'}} />
                     </div>
-                    <div style={{fontSize: '12px', color: '#64748B', marginTop: '4px'}}>
-                      {categoryItems.filter(i => i.status === 'completed').length} of {categoryItems.length} items completed
+                    <div style={{fontSize: '10px', color: '#6B7280', marginTop: '4px'}}>
+                      {categoryItems.filter(i => i.status === 'completed').length}/{categoryItems.length} completed
                     </div>
                   </div>
                 );
@@ -1776,15 +1748,15 @@ export default function TimelineRoadmapPage() {
             </div>
 
             {/* Status Distribution */}
-            <div style={{marginBottom: '32px'}}>
-              <h4 style={{fontSize: '18px', fontWeight: '600', marginBottom: '16px'}}>Status Distribution</h4>
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px'}}>
+            <div style={{marginBottom: '24px'}}>
+              <div style={{fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: '#374151'}}>Status</div>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '8px'}}>
                 {['not_started', 'in_progress', 'completed', 'on_hold', 'delayed'].map(status => {
                   const count = timelineItems.filter(i => i.status === status).length;
                   return (
-                    <div key={status} style={{padding: '12px', background: getStatusColor(status as TimelineItem['status']) + '20', borderRadius: '8px', textAlign: 'center'}}>
-                      <div style={{fontSize: '24px', fontWeight: '700', color: getStatusColor(status as TimelineItem['status'])}}>{count}</div>
-                      <div style={{fontSize: '11px', color: '#64748B', marginTop: '4px', textTransform: 'capitalize'}}>{status.replace('_', ' ')}</div>
+                    <div key={status} style={{padding: '8px', background: '#FAFAFA', border: '1px solid #E5E7EB', textAlign: 'center'}}>
+                      <div style={{fontSize: '18px', fontWeight: '600', color: '#111827'}}>{count}</div>
+                      <div style={{fontSize: '10px', color: '#6B7280', marginTop: '2px', textTransform: 'capitalize'}}>{status.replace('_', ' ')}</div>
                     </div>
                   );
                 })}
@@ -1792,7 +1764,7 @@ export default function TimelineRoadmapPage() {
             </div>
             
             <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-              <button onClick={() => setShowReportsModal(false)} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
+              <button onClick={() => setShowReportsModal(false)} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Close</button>
             </div>
           </div>
         </div>
@@ -1822,19 +1794,19 @@ export default function TimelineRoadmapPage() {
               </div>
               <div>
                 <span style={{fontWeight: '600', color: '#64748B', fontSize: '14px'}}>Completion: </span>
-                <span style={{fontSize: '14px', fontWeight: '700', color: '#3B82F6'}}>{selectedItem.completion_percentage}%</span>
+                <span style={{fontSize: '14px', fontWeight: '600', color: '#111827'}}>{selectedItem.completion_percentage}%</span>
               </div>
             </div>
 
             {/* Team Members */}
             {selectedItem.team_member_ids && selectedItem.team_member_ids.length > 0 && (
               <div style={{marginBottom: '24px'}}>
-                <h4 style={{fontSize: '16px', fontWeight: '600', marginBottom: '12px'}}>Assigned Team Members</h4>
-                <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                <h4 style={{fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#374151'}}>Team Members</h4>
+                <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap'}}>
                   {selectedItem.team_member_ids.map(memberId => {
                     const member = availableTeamMembers.find(m => m.id === memberId);
                     return member ? (
-                      <div key={memberId} style={{padding: '6px 12px', background: '#EFF6FF', color: '#3B82F6', borderRadius: '16px', fontSize: '13px', fontWeight: '500'}}>
+                      <div key={memberId} style={{padding: '4px 10px', background: '#FAFAFA', color: '#374151', border: '1px solid #E5E7EB', fontSize: '12px'}}>
                         {member.name}
                       </div>
                     ) : null;
@@ -1882,8 +1854,8 @@ export default function TimelineRoadmapPage() {
                         {idx + 1}. {item.item_text}
                       </span>
                       {item.is_completed && item.completed_at && (
-                        <span style={{fontSize: '11px', color: '#10B981', fontWeight: '600'}}>
-                          Completed
+                        <span style={{fontSize: '11px', color: '#6B7280'}}>
+                          Done
                         </span>
                       )}
                     </div>
@@ -1896,8 +1868,8 @@ export default function TimelineRoadmapPage() {
               )}
             </div>
             
-            <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end'}}>
-              <button onClick={() => setShowItemDetailsModal(false)} style={{padding: '12px 24px', background: '#6B7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Close</button>
+            <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setShowItemDetailsModal(false)} style={{padding: '8px 16px', background: 'white', color: '#374151', border: '1px solid #D1D5DB', fontSize: '13px', cursor: 'pointer'}}>Close</button>
               <button onClick={() => {
                 // Load existing item data into form
                 setNewItem({
@@ -1920,7 +1892,7 @@ export default function TimelineRoadmapPage() {
                 setIsEditingItem(true);
                 setShowItemDetailsModal(false);
                 setShowItemModal(true);
-              }} style={{padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'}}>Edit Item</button>
+              }} style={{padding: '8px 16px', background: '#111827', color: 'white', border: 'none', fontSize: '13px', cursor: 'pointer'}}>Edit</button>
             </div>
           </div>
         </div>
