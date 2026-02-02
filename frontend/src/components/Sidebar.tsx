@@ -257,14 +257,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   </div>
                 </div>
 
-        {/* Messages Section - Only Real Team Members */}
-        {teamMembers.length > 0 && (
-          <div style={{ marginTop: '1.5rem' }}>
-            <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-                </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {teamMembers.map((member, i) => (
+        {/* Messages Section - Always Visible */}
+        <div style={{ marginTop: '1.5rem' }}>
+          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            {teamMembers.length > 0 ? teamMembers.map((member, i) => (
                 <Link
                   key={member.id}
                   href={`/messages?user=${member.id}`}
@@ -285,10 +284,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             </div>
           </div>
                 </Link>
-              ))}
-                  </div>
-                </div>
-        )}
+            )) : (
+              <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem' }}>
+                No team members yet
+              </div>
+            )}
+          </div>
+        </div>
       </nav>
 
       {/* Bottom Section */}
