@@ -112,20 +112,53 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const todoCount = projects.reduce((acc, p) => acc + (p.task_count || 0) - (p.completed_task_count || 0), 0);
   const completedCount = projects.reduce((acc, p) => acc + (p.completed_task_count || 0), 0);
   
-  // Get unique team members from all projects (real people, not dummy data)
-  const teamMembers = React.useMemo(() => {
-    const membersMap = new Map();
-    projects.forEach(project => {
-      if (project.members) {
-        project.members.forEach(member => {
-          if (!membersMap.has(member.id) && member.id !== user?.id) {
-            membersMap.set(member.id, member);
-          }
+  // Get team members you've actually worked with on tasks
+  const [teamMembers, setTeamMembers] = React.useState<any[]>([]);
+  
+  React.useEffect(() => {
+    const fetchCoworkers = async () => {
+      if (!user?.id) return;
+      
+      try {
+        // Get all tasks where current user is assigned
+        const { data: myTasks } = await supabase
+          .from('projects_task')
+          .select('assignee_ids, project_id')
+          .contains('assignee_ids', [user.id]);
+        
+        if (!myTasks || myTasks.length === 0) {
+          setTeamMembers([]);
+          return;
+        }
+        
+        // Get unique user IDs from tasks where we worked together
+        const coworkerIds = new Set<number>();
+        myTasks.forEach(task => {
+          task.assignee_ids?.forEach((id: number) => {
+            if (id !== user.id) coworkerIds.add(id);
+          });
         });
+        
+        if (coworkerIds.size === 0) {
+          setTeamMembers([]);
+          return;
+        }
+        
+        // Fetch coworker details
+        const { data: coworkers } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role')
+          .in('id', Array.from(coworkerIds))
+          .limit(6);
+        
+        setTeamMembers(coworkers || []);
+      } catch (error) {
+        setTeamMembers([]);
       }
-    });
-    return Array.from(membersMap.values()).slice(0, 4); // Show max 4 team members
-  }, [projects, user]);
+    };
+    
+    fetchCoworkers();
+  }, [user, projects]);
 
   return (
     <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', background: '#0D0D0D', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', zIndex: 40 }}>
@@ -353,7 +386,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           <div style={{ marginTop: '1.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-            </div>
+              </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {teamMembers.map((member, i) => (
                 <Link
@@ -368,7 +401,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   >
                     {member.name.charAt(0).toUpperCase()}
                     <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', background: '#10B981', border: '2px solid #0D0D0D', borderRadius: '50%' }} />
-                  </div>
+                        </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -377,8 +410,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   </div>
                 </Link>
               ))}
-            </div>
-          </div>
+                    </div>
+                  </div>
         )}
       </nav>
 

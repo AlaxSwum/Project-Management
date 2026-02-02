@@ -75,8 +75,32 @@ export default function DashboardPage() {
 
   const fetchProjects = async () => {
     try {
+      if (!user?.id) {
+        setProjects([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get all tasks where user is assigned
+      const { data: myTasks } = await supabase
+        .from('projects_task')
+        .select('project_id')
+        .contains('assignee_ids', [user.id]);
+      
+      if (!myTasks || myTasks.length === 0) {
+        setProjects([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get unique project IDs
+      const projectIds = [...new Set(myTasks.map(t => t.project_id))];
+      
+      // Fetch only projects where user is assigned
       const data = await projectService.getProjects();
-      setProjects(data || []);
+      const assignedProjects = data.filter(p => projectIds.includes(p.id));
+      
+      setProjects(assignedProjects || []);
     } catch (err: any) {
       setProjects([]);
     } finally {
