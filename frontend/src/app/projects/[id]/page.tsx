@@ -57,7 +57,8 @@ interface Task {
   assignees: User[];
   assignee?: User | null;
   created_by: User;
-  tags_list: string[];
+  tags_list?: string[];
+  tags?: string;
   created_at: string;
   updated_at: string;
   project_id: number;
