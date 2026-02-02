@@ -11,8 +11,11 @@ import {
   EllipsisHorizontalIcon,
   PaperClipIcon,
   ChatBubbleLeftIcon,
-  UserGroupIcon,
-  XMarkIcon
+  XMarkIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+  CalendarIcon as CalIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 
@@ -40,8 +43,6 @@ interface Task {
   created_at: string;
   updated_at: string;
   project_id: number;
-  subtasks_total?: number;
-  subtasks_completed?: number;
 }
 
 interface Project {
@@ -59,35 +60,32 @@ interface Project {
 }
 
 const TASK_STATUSES = [
-  { value: 'todo', label: 'To Do', color: '#71717A' },
-  { value: 'in_progress', label: 'In Progress', color: '#F59E0B' },
-  { value: 'review', label: 'Review', color: '#F97316' },
-  { value: 'done', label: 'Complete', color: '#10B981' },
+  { value: 'todo', label: 'To Do', color: '#EF4444', count: 3 },
+  { value: 'in_progress', label: 'In Progress', color: '#3B82F6', count: 3 },
+  { value: 'review', label: 'Review', color: '#F59E0B', count: 3 },
+  { value: 'done', label: 'Complete', color: '#10B981', count: 2 },
 ];
 
-const TAG_COLORS: Record<string, { bg: string; text: string }> = {
-  'design': { bg: '#EC489920', text: '#EC4899' },
-  'ui/ux': { bg: '#EC489920', text: '#EC4899' },
-  'frontend': { bg: '#10B98120', text: '#10B981' },
-  'backend': { bg: '#8B5CF620', text: '#8B5CF6' },
-  'api': { bg: '#3B82F620', text: '#3B82F6' },
-  'qa': { bg: '#06B6D420', text: '#06B6D4' },
-  'auth': { bg: '#EF444420', text: '#EF4444' },
-  'database': { bg: '#6366F120', text: '#6366F1' },
-  'media': { bg: '#A855F720', text: '#A855F7' },
-  'performance': { bg: '#14B8A620', text: '#14B8A6' },
-  'research': { bg: '#F59E0B20', text: '#F59E0B' },
-  'default': { bg: '#71717A20', text: '#A1A1AA' },
+const TAG_COLORS: Record<string, string> = {
+  'design': '#EC4899',
+  'ui/ux': '#EC4899',
+  'frontend': '#3B82F6',
+  'backend': '#8B5CF6',
+  'api': '#3B82F6',
+  'qa': '#06B6D4',
+  'auth': '#EF4444',
+  'database': '#6366F1',
+  'media': '#A855F7',
+  'performance': '#14B8A6',
+  'research': '#EF4444',
 };
 
-function getTagColor(tag: string) {
+function getTagColor(tag: string): string {
   const normalizedTag = tag.toLowerCase();
-  for (const key of Object.keys(TAG_COLORS)) {
-    if (normalizedTag.includes(key)) {
-      return TAG_COLORS[key];
-    }
+  for (const [key, color] of Object.entries(TAG_COLORS)) {
+    if (normalizedTag.includes(key)) return color;
   }
-  return TAG_COLORS.default;
+  return '#71717A';
 }
 
 export default function ProjectDetailPage() {
@@ -102,7 +100,7 @@ export default function ProjectDetailPage() {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [selectedView, setSelectedView] = useState('kanban');
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
@@ -155,8 +153,9 @@ export default function ProjectDetailPage() {
       setTasks([...tasks, createdTask]);
       setNewTask({ name: '', description: '', priority: 'medium', tags: '', assignee_ids: [] });
       setShowCreateTask(false);
+      fetchProject();
     } catch (err) {
-      // Failed to create task
+      // Error creating task
     }
   };
 
@@ -184,7 +183,7 @@ export default function ProjectDetailPage() {
       await taskService.updateTask(draggedTask.id, { status: newStatus });
       setTasks(tasks.map(t => t.id === draggedTask.id ? { ...t, status: newStatus } : t));
     } catch (err) {
-      // Failed to update task
+      // Error updating task
     }
     setDraggedTask(null);
   };
@@ -197,7 +196,7 @@ export default function ProjectDetailPage() {
   if (authLoading || isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
       </div>
     );
@@ -211,105 +210,129 @@ export default function ProjectDetailPage() {
       <Sidebar projects={allProjects} onCreateProject={() => {}} />
       
       {/* Main Content */}
-      <div className="flex-1 ml-[280px] flex flex-col">
-        {/* Top Header */}
-        <header className="h-14 bg-[#0D0D0D] border-b border-[#1F1F1F] flex items-center justify-between px-6">
-          <div className="flex items-center gap-2 text-sm text-[#71717A]">
-            <span>Project</span>
-            <span className="text-[#3D3D3D]">&gt;</span>
-            <span className="text-white">{project.name}</span>
+      <div style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
+        {/* Top Breadcrumb Header */}
+        <div style={{ height: '56px', background: '#0D0D0D', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+            <span style={{ color: '#71717A' }}>Project</span>
+            <span style={{ color: '#3D3D3D' }}>&gt;</span>
+            <span style={{ color: '#71717A' }}>Website</span>
+            <span style={{ color: '#3D3D3D' }}>&gt;</span>
+            <span style={{ color: '#FFFFFF' }}>{project.name}</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {project.members?.slice(0, 3).map((member, i) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '-0.5rem' }}>
+              {project.members?.slice(0, 4).map((member, i) => (
                 <div 
                   key={member.id}
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-[#0D0D0D] flex items-center justify-center text-xs font-medium text-white"
+                  style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], marginLeft: i > 0 ? '-8px' : '0' }}
                   title={member.name}
                 >
                   {member.name.charAt(0)}
                 </div>
               ))}
-              {project.members?.length > 3 && (
-                <div className="w-8 h-8 rounded-full bg-[#1A1A1A] border-2 border-[#0D0D0D] flex items-center justify-center text-xs text-[#71717A]">
-                  +{project.members.length - 3}
+              {project.members && project.members.length > 4 && (
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: '#FFFFFF', backgroundColor: '#2D2D2D', marginLeft: '-8px' }}>
+                  +{project.members.length - 4}
                 </div>
               )}
             </div>
-            <button 
-              onClick={() => setShowMembersModal(true)}
-              className="text-[#71717A] hover:text-white transition-colors"
-            >
-              <UserGroupIcon className="w-5 h-5" />
+            <button style={{ width: '32px', height: '32px', background: 'none', border: 'none', borderRadius: '0.5rem', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+              <svg style={{ width: '20px', height: '20px' }} fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
             </button>
           </div>
-        </header>
+        </div>
 
-        {/* Project Header */}
-        <div className="px-6 py-5 border-b border-[#1F1F1F]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#1A1A1A] flex items-center justify-center">
-                <span className="text-lg">📁</span>
+        {/* Project Title Header */}
+        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #1F1F1F' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '0.5rem', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                📁
               </div>
-              <h1 className="text-2xl font-bold text-white">{project.name}</h1>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{project.name}</h1>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {project.members?.slice(0, 4).map((member, i) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '-0.5rem' }}>
+                {project.members?.slice(0, 5).map((member, i) => (
                   <div 
                     key={member.id}
-                    className="w-8 h-8 rounded-full border-2 border-[#0D0D0D] flex items-center justify-center text-xs font-medium text-white"
-                    style={{ backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4] }}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], marginLeft: i > 0 ? '-8px' : '0' }}
                   >
                     {member.name.charAt(0)}
                   </div>
                 ))}
-                {project.members?.length > 4 && (
-                  <div className="w-8 h-8 rounded-full bg-[#2D2D2D] border-2 border-[#0D0D0D] flex items-center justify-center text-xs text-white font-medium">
-                    +{project.members.length - 4}
-                  </div>
-                )}
               </div>
               <button
                 onClick={() => setShowCreateTask(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium text-sm transition-colors"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#3B82F6', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#2563EB'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#3B82F6'}
               >
-                <PlusIcon className="w-4 h-4" />
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
                 New Task
               </button>
             </div>
           </div>
           
-          {/* Tabs and Search */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 bg-[#1A1A1A] rounded-lg p-1">
-              <button className="px-4 py-2 bg-[#2D2D2D] text-white text-sm font-medium rounded-md flex items-center gap-2">
-                <span>📋</span> Kanban
-              </button>
-              <button className="px-4 py-2 text-[#71717A] hover:text-white text-sm font-medium rounded-md flex items-center gap-2 transition-colors">
-                <span>📊</span> Board
-              </button>
-              <button className="px-4 py-2 text-[#71717A] hover:text-white text-sm font-medium rounded-md flex items-center gap-2 transition-colors">
-                <span>📝</span> List
-              </button>
-              <button className="px-4 py-2 text-[#71717A] hover:text-white text-sm font-medium rounded-md flex items-center gap-2 transition-colors">
-                <span>📅</span> Calendar
-              </button>
+          {/* View Tabs and Search */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem' }}>
+              {[
+                { id: 'kanban', label: 'Kanban', icon: '📋' },
+                { id: 'board', label: 'Board', icon: '📊' },
+                { id: 'list', label: 'List', icon: '📝' },
+                { id: 'calendar', label: 'Calendar', icon: '📅' }
+              ].map((view) => (
+                <button
+                  key={view.id}
+                  onClick={() => setSelectedView(view.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: selectedView === view.id ? '#2D2D2D' : 'transparent',
+                    color: selectedView === view.id ? '#FFFFFF' : '#71717A',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedView !== view.id) e.currentTarget.style.color = '#FFFFFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedView !== view.id) e.currentTarget.style.color = '#71717A';
+                  }}
+                >
+                  <span>{view.icon}</span>
+                  {view.label}
+                </button>
+              ))}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#52525B]" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ position: 'relative' }}>
+                <MagnifyingGlassIcon style={{ width: '16px', height: '16px', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#52525B', pointerEvents: 'none' }} />
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-48 pl-9 pr-4 py-2 bg-[#1A1A1A] border border-[#2D2D2D] rounded-lg text-sm text-white placeholder-[#52525B] focus:outline-none focus:border-[#3D3D3D]"
+                  style={{ width: '200px', paddingLeft: '2.25rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none', transition: 'border 0.2s' }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                 />
               </div>
-              <button className="flex items-center gap-2 px-3 py-2 bg-[#1A1A1A] border border-[#2D2D2D] rounded-lg text-sm text-[#A1A1AA] hover:text-white transition-colors">
-                <AdjustmentsHorizontalIcon className="w-4 h-4" />
+              <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: '#A1A1AA', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
+              >
+                <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
                 Filter
               </button>
             </div>
@@ -317,123 +340,134 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Kanban Board */}
-        <div className="flex-1 p-6 overflow-x-auto">
-          <div className="flex gap-5 min-w-max">
+        <div style={{ flex: 1, padding: '1.5rem', overflowX: 'auto', background: '#0D0D0D' }}>
+          <div style={{ display: 'flex', gap: '1.25rem', minWidth: 'max-content' }}>
             {TASK_STATUSES.map((status) => {
               const statusTasks = filteredTasks.filter(t => t.status === status.value);
               
               return (
                 <div
                   key={status.value}
-                  className={`w-[300px] flex flex-col rounded-xl transition-all ${
-                    dragOverColumn === status.value ? 'ring-2 ring-emerald-500/50' : ''
-                  }`}
+                  style={{ width: '300px', display: 'flex', flexDirection: 'column', transition: 'all 0.2s', borderRadius: '0.75rem', border: dragOverColumn === status.value ? '2px solid #10B981' : '2px solid transparent' }}
                   onDragOver={(e) => handleDragOver(e, status.value)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, status.value)}
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: status.color }}
-                      />
-                      <span className="text-white font-medium text-sm">{status.label}</span>
-                      <span className="px-2 py-0.5 bg-[#2D2D2D] rounded-md text-xs text-[#A1A1AA] font-medium">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', padding: '0 0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: status.color }} />
+                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
+                      <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
                         {statusTasks.length}
                       </span>
                     </div>
-                    <button className="text-[#52525B] hover:text-white transition-colors">
-                      <PlusIcon className="w-5 h-5" />
+                    <button 
+                      onClick={() => setShowCreateTask(true)}
+                      style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.25rem', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#52525B'}
+                    >
+                      <PlusIcon style={{ width: '20px', height: '20px' }} />
                     </button>
                   </div>
 
                   {/* Tasks */}
-                  <div className="flex flex-col gap-3 min-h-[200px]">
-                    {statusTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, task)}
-                        className="bg-[#1A1A1A] border border-[#2D2D2D] rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-[#3D3D3D] transition-all group"
-                      >
-                        {/* Tags */}
-                        {task.tags_list && task.tags_list.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mb-3">
-                            {task.tags_list.slice(0, 3).map((tag, i) => {
-                              const tagColor = getTagColor(tag);
-                              return (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 rounded text-xs font-medium"
-                                  style={{ backgroundColor: tagColor.bg, color: tagColor.text }}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '200px' }}>
+                    {statusTasks.map((task) => {
+                      const taskTags = task.tags_list || [];
+                      const subtasksTotal = 4;
+                      const subtasksCompleted = Math.floor(Math.random() * 5);
+                      const progress = (subtasksCompleted / subtasksTotal) * 100;
+                      
+                      return (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
+                          style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '1rem', cursor: 'grab', transition: 'all 0.2s', position: 'relative' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                        >
+                          {/* Tags */}
+                          {taskTags.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.75rem' }}>
+                              {taskTags.slice(0, 3).map((tag, i) => {
+                                const tagColor = getTagColor(tag);
+                                return (
+                                  <span
+                                    key={i}
+                                    style={{ padding: '0.25rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}
+                                  >
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Title and Menu */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <h3 style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.9375rem', lineHeight: 1.4, margin: 0, flex: 1 }}>{task.name}</h3>
+                            <button style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', opacity: 0, transition: 'opacity 0.2s' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.opacity = '1'; }}
+                            >
+                              <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
+                            </button>
+                          </div>
+
+                          {/* Description */}
+                          {task.description && (
+                            <p style={{ color: '#71717A', fontSize: '0.8125rem', marginBottom: '1rem', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{task.description}</p>
+                          )}
+
+                          {/* Progress */}
+                          <div style={{ marginBottom: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                              <span style={{ color: '#71717A', fontSize: '0.75rem' }}>Progress</span>
+                              <span style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 500 }}>
+                                {subtasksCompleted}/{subtasksTotal}
+                              </span>
+                            </div>
+                            <div style={{ height: '4px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${progress}%`, backgroundColor: status.color, borderRadius: '9999px', transition: 'width 0.3s' }} />
+                            </div>
+                          </div>
+
+                          {/* Footer */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid #2D2D2D' }}>
+                            {/* Avatars */}
+                            <div style={{ display: 'flex', gap: '-0.375rem' }}>
+                              {(task.assignees || []).slice(0, 2).map((assignee, i) => (
+                                <div
+                                  key={assignee.id}
+                                  style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899'][i % 2], marginLeft: i > 0 ? '-6px' : '0' }}
                                 >
-                                  {tag}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Title and Menu */}
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="text-white font-medium text-sm leading-snug">{task.name}</h3>
-                          <button className="text-[#52525B] hover:text-white opacity-0 group-hover:opacity-100 transition-all">
-                            <EllipsisHorizontalIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-
-                        {/* Description */}
-                        {task.description && (
-                          <p className="text-[#71717A] text-xs mb-4 line-clamp-2">{task.description}</p>
-                        )}
-
-                        {/* Progress */}
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between text-xs mb-1.5">
-                            <span className="text-[#71717A]">Progress</span>
-                            <span className="text-[#A1A1AA]">
-                              {task.subtasks_completed || 0}/{task.subtasks_total || 4}
-                            </span>
-                          </div>
-                          <div className="h-1 bg-[#2D2D2D] rounded-full overflow-hidden">
-                            <div 
-                              className="h-full rounded-full transition-all"
-                              style={{ 
-                                width: `${((task.subtasks_completed || 0) / (task.subtasks_total || 4)) * 100}%`,
-                                backgroundColor: status.color
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="flex items-center justify-between pt-3 border-t border-[#2D2D2D]">
-                          {/* Toggle Switch */}
-                          <div className="w-10 h-5 bg-[#2D2D2D] rounded-full relative cursor-pointer">
-                            <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-[#52525B] rounded-full transition-transform" />
-                          </div>
-                          
-                          {/* Attachments and Comments */}
-                          <div className="flex items-center gap-3 text-[#71717A] text-xs">
-                            <div className="flex items-center gap-1">
-                              <PaperClipIcon className="w-3.5 h-3.5" />
-                              <span>{Math.floor(Math.random() * 5) + 1}</span>
+                                  {assignee.name.charAt(0)}
+                                </div>
+                              ))}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <ChatBubbleLeftIcon className="w-3.5 h-3.5" />
-                              <span>{Math.floor(Math.random() * 20) + 1}</span>
+                            
+                            {/* Counts */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
+                                <PaperClipIcon style={{ width: '14px', height: '14px' }} />
+                                <span>{Math.floor(Math.random() * 5) + 1}</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
+                                <ChatBubbleLeftIcon style={{ width: '14px', height: '14px' }} />
+                                <span>{Math.floor(Math.random() * 20) + 1}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Empty State */}
                     {statusTasks.length === 0 && (
-                      <div className="flex-1 flex items-center justify-center min-h-[150px] border-2 border-dashed border-[#2D2D2D] rounded-xl">
-                        <span className="text-[#52525B] text-sm">No tasks yet</span>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '150px', border: '2px dashed #2D2D2D', borderRadius: '0.75rem', background: 'transparent' }}>
+                        <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks</span>
                       </div>
                     )}
                   </div>
@@ -446,116 +480,99 @@ export default function ProjectDetailPage() {
 
       {/* Create Task Modal */}
       {showCreateTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#1A1A1A] border border-[#2D2D2D] rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between p-5 border-b border-[#2D2D2D]">
-              <h2 className="text-lg font-semibold text-white">Create New Task</h2>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Create New Task</h2>
               <button
                 onClick={() => setShowCreateTask(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#2D2D2D] text-[#71717A] hover:text-white transition-colors"
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', fontSize: '1.5rem', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
               >
-                <XMarkIcon className="w-5 h-5" />
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
               </button>
             </div>
             
-            <form onSubmit={handleCreateTask} className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Task Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={newTask.name}
-                  onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white placeholder-[#52525B] focus:outline-none focus:border-emerald-500 transition-colors"
-                  placeholder="Enter task name..."
-                />
+            <form onSubmit={handleCreateTask} style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Task Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newTask.name}
+                    onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
+                    placeholder="Enter task name..."
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Description</label>
+                  <textarea
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', resize: 'none', transition: 'border 0.2s' }}
+                    rows={3}
+                    placeholder="Describe the task..."
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Tags (comma separated)</label>
+                  <input
+                    type="text"
+                    value={newTask.tags}
+                    onChange={(e) => setNewTask({ ...newTask, tags: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
+                    placeholder="Design, Frontend, API..."
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Priority</label>
+                  <select
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Description</label>
-                <textarea
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white placeholder-[#52525B] focus:outline-none focus:border-emerald-500 transition-colors resize-none"
-                  rows={3}
-                  placeholder="Describe the task..."
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Tags (comma separated)</label>
-                <input
-                  type="text"
-                  value={newTask.tags}
-                  onChange={(e) => setNewTask({ ...newTask, tags: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white placeholder-[#52525B] focus:outline-none focus:border-emerald-500 transition-colors"
-                  placeholder="Design, Frontend, API..."
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Priority</label>
-                <select
-                  value={newTask.priority}
-                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              
-              <div className="flex gap-3 pt-4">
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateTask(false)}
-                  className="flex-1 px-4 py-3 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#A1A1AA] rounded-xl font-medium transition-colors"
+                  style={{ flex: 1, padding: '0.75rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors"
+                  style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
                 >
                   Create Task
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Members Modal */}
-      {showMembersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#1A1A1A] border border-[#2D2D2D] rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between p-5 border-b border-[#2D2D2D]">
-              <h2 className="text-lg font-semibold text-white">Team Members</h2>
-              <button
-                onClick={() => setShowMembersModal(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#2D2D2D] text-[#71717A] hover:text-white transition-colors"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-5 space-y-3 max-h-[400px] overflow-y-auto">
-              {project.members?.map((member) => (
-                <div key={member.id} className="flex items-center gap-3 p-3 bg-[#0D0D0D] rounded-xl">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-medium">
-                    {member.name.charAt(0)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-white font-medium">{member.name}</div>
-                    <div className="text-[#71717A] text-sm">{member.email}</div>
-                  </div>
-                  <span className="px-2 py-1 bg-[#2D2D2D] rounded-md text-xs text-[#A1A1AA]">
-                    {member.role || 'Member'}
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}

@@ -317,7 +317,7 @@ export default function DashboardPage() {
 
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem 0' }}>
-              <div style={{ width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.2)', borderTopColor: '#10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
             </div>
           ) : (projects.length === 0 && timelineFolders.length === 0) ? (
@@ -411,68 +411,63 @@ export default function DashboardPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#1F1F1F'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <ChartBarIcon className="w-4 h-4 text-[#71717A]" />
-                      <span className="text-xs text-[#71717A] uppercase tracking-wider font-medium">Timeline</span>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <ChartBarIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
+                      <span style={{ fontSize: '0.75rem', color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Timeline</span>
                     </div>
                   </div>
                   
-                  <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '0.5rem' }}>
                     {folder.name}
                   </h3>
                   
-                  <div className="flex flex-wrap gap-2 mb-4">
-                          {folder.categories && folder.categories.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                    {folder.categories && folder.categories.length > 0 ? (
                       folder.categories.slice(0, 3).map(cat => (
-                              <span 
-                                key={cat.id} 
-                          className="px-2.5 py-1 text-xs rounded-lg font-medium"
-                                style={{ 
-                            backgroundColor: `${cat.color}20`, 
-                                  color: cat.color 
-                                }}
-                              >
-                                {cat.name}
-                              </span>
-                            ))
-                          ) : (
-                      <span className="px-2.5 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-lg font-medium">
-                              Project
-                            </span>
-                          )}
-                    </div>
-                    
-                  <p className="text-[#71717A] text-sm mb-4 line-clamp-2">
-                      {folder.description || 'Project with tasks and timeline'}
-                    </p>
-                    
-                    {(folder.item_count || 0) > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs text-[#71717A] mb-2">
-                          <span>Progress</span>
-                        <span>{folder.completed_count || 0}/{folder.item_count || 0}</span>
-                        </div>
-                      <div className="h-1.5 bg-[#2D2D2D] rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
-                          style={{ width: `${((folder.completed_count || 0) / (folder.item_count || 1)) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                  <div className="flex items-center justify-between pt-4 border-t border-[#2D2D2D]">
-                    <div className="flex items-center gap-1.5 text-[#71717A] text-sm">
-                      <CalendarIcon className="w-4 h-4" />
-                      <span>{folder.item_count || 0} tasks</span>
-                      </div>
-                      {folder.end_date && (
-                      <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-lg">
-                          Due {new Date(folder.end_date).toLocaleDateString()}
+                        <span 
+                          key={cat.id}
+                          style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', borderRadius: '0.5rem', fontWeight: 500, backgroundColor: `${cat.color}20`, color: cat.color }}
+                        >
+                          {cat.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ padding: '0.25rem 0.625rem', background: 'rgba(139, 92, 246, 0.2)', color: '#8B5CF6', fontSize: '0.75rem', borderRadius: '0.5rem', fontWeight: 500 }}>
+                        Project
                       </span>
-                      )}
+                    )}
+                  </div>
+                  
+                  <p style={{ color: '#71717A', fontSize: '0.875rem', marginBottom: '1rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {folder.description || 'Project with tasks and timeline'}
+                  </p>
+                    
+                  {(folder.item_count || 0) > 0 && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#71717A', marginBottom: '0.5rem' }}>
+                        <span>Progress</span>
+                        <span>{folder.completed_count || 0}/{folder.item_count || 0}</span>
+                      </div>
+                      <div style={{ height: '6px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
+                        <div 
+                          style={{ height: '100%', background: 'linear-gradient(90deg, #10B981, #34D399)', borderRadius: '9999px', transition: 'width 0.5s', width: `${((folder.completed_count || 0) / (folder.item_count || 1)) * 100}%` }}
+                        />
+                      </div>
                     </div>
+                  )}
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid #2D2D2D' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#71717A', fontSize: '0.875rem' }}>
+                      <CalendarIcon style={{ width: '16px', height: '16px' }} />
+                      <span>{folder.item_count || 0} tasks</span>
+                    </div>
+                    {folder.end_date && (
+                      <span style={{ fontSize: '0.75rem', color: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)', padding: '0.25rem 0.5rem', borderRadius: '0.5rem' }}>
+                        Due {new Date(folder.end_date).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                   </div>
                 ))}
                   </div>
