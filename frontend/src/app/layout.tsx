@@ -34,8 +34,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full dark">
-      <body className={`${inter.className} h-full antialiased`} style={{ background: '#0D0D0D' }}>
+    <html lang="en" className="h-full dark" style={{ background: '#0D0D0D', minHeight: '100vh' }}>
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: `
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          html, body { background: #0D0D0D !important; min-height: 100vh !important; color: #FFFFFF !important; }
+          #__next { background: #0D0D0D !important; min-height: 100vh !important; }
+        `}} />
+      </head>
+      <body className={`${inter.className} h-full antialiased`} style={{ background: '#0D0D0D', minHeight: '100vh', color: '#FFFFFF' }}>
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"
@@ -46,7 +53,7 @@ export default function RootLayout({
         />
         <ElectronProvider>
         <AuthProvider>
-          <div className="min-h-full" style={{ background: '#0D0D0D' }}>
+          <div className="min-h-full" style={{ background: '#0D0D0D', minHeight: '100vh', color: '#FFFFFF' }}>
             {children}
           </div>
         </AuthProvider>

@@ -196,8 +196,9 @@ export default function ProjectDetailPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+      <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '2.5rem', height: '2.5rem', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
       </div>
     );
   }
@@ -205,7 +206,7 @@ export default function ProjectDetailPage() {
   if (!isAuthenticated || !project) return null;
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] flex">
+    <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
       {/* Sidebar */}
       <Sidebar projects={allProjects} onCreateProject={() => {}} />
       

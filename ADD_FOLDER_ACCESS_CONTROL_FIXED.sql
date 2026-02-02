@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS password_vault_folder_access (
 );
 
 -- Disable RLS
+
 ALTER TABLE password_vault_folder_access DISABLE ROW LEVEL SECURITY;
 
 -- Grant permissions
