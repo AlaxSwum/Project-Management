@@ -19,7 +19,8 @@ import {
   Squares2X2Icon,
   ClipboardDocumentListIcon,
   BellIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
 interface Project {
