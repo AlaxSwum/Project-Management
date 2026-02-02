@@ -291,93 +291,96 @@ export default function DashboardPage() {
             <div className="flex justify-center py-20">
               <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
               </div>
-            ) : (projects.length === 0 && timelineFolders.length === 0) ? (
-            <div className="text-center py-20">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-full flex items-center justify-center">
-                <SparklesIcon className="w-12 h-12 text-emerald-400" />
-                </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Ready to start something amazing?</h3>
-              <p className="text-[#71717A] max-w-md mx-auto mb-8">
+          ) : (projects.length === 0 && timelineFolders.length === 0) ? (
+            <div style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+              <div style={{ width: '96px', height: '96px', margin: '0 auto 1.5rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <SparklesIcon style={{ width: '48px', height: '48px', color: '#10B981' }} />
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.5rem' }}>Ready to start something amazing?</h3>
+              <p style={{ color: '#71717A', maxWidth: '28rem', margin: '0 auto 2rem', fontSize: '1rem' }}>
                 Create your first project and begin organizing your work with our powerful project management tools.
               </p>
-                  <button
-                    onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25"
+              <button
+                onClick={() => setShowCreateForm(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '1rem 2rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: '#FFFFFF', border: 'none', borderRadius: '0.75rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.25)' }}
               >
-                <PlusIcon className="w-5 h-5" />
+                <PlusIcon style={{ width: '20px', height: '20px' }} />
                 Create Your First Project
-                  </button>
-              </div>
+              </button>
+            </div>
             ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {/* Projects */}
-                {(viewMode === 'all' || viewMode === 'projects') && projects.map((project) => (
-                  <div
-                    key={`project-${project.id}`}
+              {(viewMode === 'all' || viewMode === 'projects') && projects.map((project) => (
+                <div
+                  key={`project-${project.id}`}
                   onClick={() => router.push(`/projects/${project.id}`)}
-                  className="group bg-[#1A1A1A] hover:bg-[#1F1F1F] border border-[#2D2D2D] hover:border-[#3D3D3D] rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1"
+                  style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', padding: '1.25rem', cursor: 'pointer', transition: 'all 0.3s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1F1F1F'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <FolderIcon className="w-4 h-4 text-[#71717A]" />
-                      <span className="text-xs text-[#71717A] uppercase tracking-wider font-medium">Project</span>
-                        </div>
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color || '#10B981' }} />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <FolderIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
+                      <span style={{ fontSize: '0.75rem', color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Project</span>
+                    </div>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: project.color || '#10B981' }} />
                   </div>
                   
-                  <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '0.5rem' }}>
                     {project.name}
                   </h3>
                   
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-2.5 py-1 bg-pink-500/20 text-pink-400 text-xs rounded-lg font-medium">
-                            {project.project_type?.replace('_', ' ') || 'General'}
-                          </span>
-                    <span className="px-2.5 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-lg font-medium">
-                            {project.status || 'Active'}
-                          </span>
-                    </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <span style={{ padding: '0.25rem 0.625rem', background: 'rgba(236, 72, 153, 0.2)', color: '#EC4899', fontSize: '0.75rem', borderRadius: '0.5rem', fontWeight: 500 }}>
+                      {project.project_type?.replace('_', ' ') || 'General'}
+                    </span>
+                    <span style={{ padding: '0.25rem 0.625rem', background: 'rgba(59, 130, 246, 0.2)', color: '#3B82F6', fontSize: '0.75rem', borderRadius: '0.5rem', fontWeight: 500 }}>
+                      {project.status || 'Active'}
+                    </span>
+                  </div>
+                  
+                  <p style={{ color: '#71717A', fontSize: '0.875rem', marginBottom: '1rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {project.description || 'No description provided'}
+                  </p>
                     
-                  <p className="text-[#71717A] text-sm mb-4 line-clamp-2">
-                      {project.description || 'No description provided'}
-                    </p>
-                    
-                    {(project.task_count && project.task_count > 0) && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs text-[#71717A] mb-2">
-                          <span>Progress</span>
+                  {(project.task_count && project.task_count > 0) && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#71717A', marginBottom: '0.5rem' }}>
+                        <span>Progress</span>
                         <span>{project.completed_task_count || 0}/{project.task_count}</span>
-                        </div>
-                      <div className="h-1.5 bg-[#2D2D2D] rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500"
-                          style={{ width: `${((project.completed_task_count || 0) / project.task_count) * 100}%` }}
-                          />
-                        </div>
                       </div>
-                    )}
-                    
-                  <div className="flex items-center justify-between pt-4 border-t border-[#2D2D2D]">
-                    <div className="flex items-center gap-4 text-[#71717A] text-sm">
-                      <div className="flex items-center gap-1.5">
-                        <UsersIcon className="w-4 h-4" />
-                        <span>{project.members?.length || 0}</span>
-                        </div>
-                      <div className="flex items-center gap-1.5">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>{project.task_count || 0} tasks</span>
-                        </div>
+                      <div style={{ height: '6px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
+                        <div 
+                          style={{ height: '100%', background: 'linear-gradient(90deg, #3B82F6, #60A5FA)', borderRadius: '9999px', transition: 'width 0.5s', width: `${((project.completed_task_count || 0) / project.task_count) * 100}%` }}
+                        />
                       </div>
                     </div>
+                  )}
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid #2D2D2D' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#71717A', fontSize: '0.875rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <UsersIcon style={{ width: '16px', height: '16px' }} />
+                        <span>{project.members?.length || 0}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <CalendarIcon style={{ width: '16px', height: '16px' }} />
+                        <span>{project.task_count || 0} tasks</span>
+                      </div>
+                    </div>
+                  </div>
                   </div>
                 ))}
                 
               {/* Timeline Folders */}
-                {(viewMode === 'all' || viewMode === 'timeline') && timelineFolders.map((folder) => (
-                  <div
-                    key={`timeline-${folder.id}`}
+              {(viewMode === 'all' || viewMode === 'timeline') && timelineFolders.map((folder) => (
+                <div
+                  key={`timeline-${folder.id}`}
                   onClick={() => router.push('/timeline')}
-                  className="group bg-[#1A1A1A] hover:bg-[#1F1F1F] border border-[#2D2D2D] hover:border-[#3D3D3D] rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1"
+                  style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', padding: '1.25rem', cursor: 'pointer', transition: 'all 0.3s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1F1F1F'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2">
