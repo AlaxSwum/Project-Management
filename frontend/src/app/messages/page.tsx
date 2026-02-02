@@ -62,16 +62,40 @@ export default function MessagesPage() {
     fetchProjects();
   }, [isAuthenticated, authLoading, router]);
 
-  // Auto-select conversation from URL
+  // Auto-select or create conversation from URL
   useEffect(() => {
     const userId = searchParams?.get('user');
-    if (userId && conversations.length > 0 && !selectedConversation) {
-      const conv = conversations.find(c => 
-        c.other_participants?.some(p => p.user_id === parseInt(userId))
+    if (userId && user?.id) {
+      const targetUserId = parseInt(userId);
+      
+      // Check if conversation exists
+      const existingConv = conversations.find(c => 
+        c.other_participants?.some(p => p.user_id === targetUserId)
       );
-      if (conv) setSelectedConversation(conv.conversation_id);
+      
+      if (existingConv) {
+        setSelectedConversation(existingConv.conversation_id);
+      } else {
+        // Create new conversation
+        const createConversation = async () => {
+          try {
+            const { data: convId } = await supabase.rpc('get_or_create_direct_conversation', {
+              user1_id: user.id,
+              user2_id: targetUserId
+            });
+            
+            if (convId) {
+              setSelectedConversation(convId);
+              fetchConversations(); // Refresh list
+            }
+          } catch (error) {
+            // Error creating conversation
+          }
+        };
+        createConversation();
+      }
     }
-  }, [searchParams, conversations]);
+  }, [searchParams, conversations, user]);
 
   // Refresh messages every 1 second
   useEffect(() => {

@@ -76,8 +76,8 @@ export default function DashboardPage() {
   const fetchProjects = async () => {
     try {
       if (!user?.id) {
-        setProjects([]);
-        setIsLoading(false);
+      setProjects([]);
+      setIsLoading(false);
         return;
       }
       

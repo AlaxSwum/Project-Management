@@ -94,8 +94,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   }, [user]);
 
   const handleLogout = async () => {
-    await logout();
-    router.push('/login');
+      await logout();
+      router.push('/login');
   };
 
   // Task counts for categories
@@ -109,10 +109,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     const fetchTeamMembers = async () => {
       if (!user?.id || !projects || projects.length === 0) {
         setTeamMembers([]);
-        return;
-      }
-      
-      try {
+      return;
+    }
+    
+    try {
         // Get all unique members from all assigned projects
         const allMembersMap = new Map();
         
@@ -128,7 +128,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         
         const members = Array.from(allMembersMap.values()).slice(0, 10);
         setTeamMembers(members);
-      } catch (error) {
+    } catch (error) {
         setTeamMembers([]);
       }
     };
@@ -156,7 +156,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-      {/* Navigation */}
+        {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
         {/* Projects Dropdown */}
         <div style={{ marginBottom: '1rem' }}>
@@ -193,7 +193,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <FolderIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
               <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Projects</span>
-            </div>
+                </div>
             <ChevronDownIcon style={{ width: '16px', height: '16px', transform: isProjectsDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </button>
 
@@ -229,7 +229,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   }}
                 >
                   <div
-                    style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
+                    style={{ width: '10px', height: '10px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
                   />
                   <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                     {project.name}
@@ -244,7 +244,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
               )}
             </div>
           )}
-        </div>
+          </div>
 
         {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -255,10 +255,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
                   padding: '0.625rem 0.75rem',
                   borderRadius: '0.5rem',
                   background: isActive ? '#10B981' : 'transparent',
@@ -266,14 +266,14 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   textDecoration: 'none',
                   transition: 'all 0.2s',
                   position: 'relative'
-                }}
-                onMouseEnter={(e) => {
+            }} 
+            onMouseEnter={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = '#1A1A1A';
                     e.currentTarget.style.color = '#FFFFFF';
                   }
-                }}
-                onMouseLeave={(e) => {
+            }} 
+            onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = '#A1A1AA';
@@ -345,15 +345,15 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 </Link>
               );
             })}
-          </div>
-        </div>
+                  </div>
+                </div>
 
         {/* Messages Section - Only Real Team Members */}
         {teamMembers.length > 0 && (
           <div style={{ marginTop: '1.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-              </div>
+                </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {teamMembers.map((member, i) => (
                 <Link
@@ -368,17 +368,17 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   >
                     {member.name.charAt(0).toUpperCase()}
                     <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', background: '#10B981', border: '2px solid #0D0D0D', borderRadius: '50%' }} />
-                        </div>
+                </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {member.role || 'Team Member'}
-                    </div>
-                  </div>
+            </div>
+          </div>
                 </Link>
               ))}
-                    </div>
                   </div>
+                </div>
         )}
       </nav>
 
@@ -419,12 +419,12 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             <span style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.875rem' }}>
               {user?.name?.charAt(0) || 'U'}
             </span>
-                </div>
+                        </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
             <div style={{ color: '#52525B', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
-            </div>
-              <button
+                    </div>
+                            <button
             onClick={handleLogout}
             style={{ padding: '0.375rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
             title="Logout"
@@ -432,9 +432,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
           >
             <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px' }} />
-              </button>
-            </div>
-                </div>
+                            </button>
+                        </div>
+                    </div>
     </aside>
   );
 }
