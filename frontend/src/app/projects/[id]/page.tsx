@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, taskService } from '@/lib/api-compatibility';
@@ -357,9 +357,163 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Kanban Board */}
+        {/* Main Content - Kanban or Table View */}
         <div style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem', overflowX: 'auto', background: '#0D0D0D' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(280px, 1fr))', gap: '1.25rem', maxWidth: '100%' }}>
+          {selectedView === 'list' ? (
+            // Table View (Monday.com style)
+            <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #2D2D2D' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '40px' }}>
+                      <input type="checkbox" style={{ cursor: 'pointer' }} />
+                    </th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', minWidth: '250px' }}>Task</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '120px' }}>Owner</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '130px' }}>Status</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '120px' }}>Due Date</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '200px' }}>Notes</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '100px' }}>Files</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '150px' }}>Timeline</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '130px' }}>Last Updated</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', background: '#141414', width: '50px' }}>
+                      <button style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Add column">
+                        <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Group by status */}
+                  {TASK_STATUSES.map((status) => {
+                    const statusTasks = filteredTasks.filter(t => t.status === status.value);
+                    if (statusTasks.length === 0) return null;
+                    
+                    return (
+                      <React.Fragment key={status.value}>
+                        <tr style={{ background: '#0D0D0D' }}>
+                          <td colSpan={10} style={{ padding: '0.75rem 1rem', borderTop: '1px solid #2D2D2D', borderBottom: '1px solid #2D2D2D' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
+                              <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
+                              <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA' }}>
+                                {statusTasks.length}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                        {statusTasks.map((task) => (
+                          <tr 
+                            key={task.id}
+                            onClick={() => setSelectedTask(task)}
+                            style={{ borderBottom: '1px solid #1F1F1F', cursor: 'pointer', transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <td style={{ padding: '1rem' }}>
+                              <input type="checkbox" style={{ cursor: 'pointer' }} onClick={(e) => e.stopPropagation()} />
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{task.name}</span>
+                              </div>
+                              {task.tags_list && task.tags_list.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.375rem' }}>
+                                  {task.tags_list.slice(0, 2).map((tag, i) => {
+                                    const tagColor = getTagColor(tag);
+                                    return (
+                                      <span key={i} style={{ padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontSize: '0.6875rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}>
+                                        {tag}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              {task.assignees && task.assignees.length > 0 ? (
+                                <div style={{ display: 'flex', gap: '-0.25rem' }}>
+                                  {task.assignees.slice(0, 2).map((assignee, i) => (
+                                    <div 
+                                      key={assignee.id}
+                                      style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899'][i % 2], marginLeft: i > 0 ? '-6px' : '0' }}
+                                      title={assignee.name}
+                                    >
+                                      {assignee.name.charAt(0)}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#52525B', fontSize: '0.875rem' }}>-</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              <span style={{ 
+                                padding: '0.375rem 0.75rem', 
+                                borderRadius: '0.375rem', 
+                                fontSize: '0.8125rem', 
+                                fontWeight: 500,
+                                backgroundColor: task.status === 'done' ? '#10B98120' : task.status === 'in_progress' ? '#3B82F620' : task.status === 'review' ? '#F59E0B20' : '#71717A20',
+                                color: task.status === 'done' ? '#10B981' : task.status === 'in_progress' ? '#3B82F6' : task.status === 'review' ? '#F59E0B' : '#71717A',
+                                textTransform: 'capitalize',
+                                display: 'inline-block'
+                              }}>
+                                {task.status.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem', color: task.due_date ? '#FFFFFF' : '#52525B', fontSize: '0.875rem' }}>
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}
+                            </td>
+                            <td style={{ padding: '1rem', color: '#71717A', fontSize: '0.875rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {task.description || '-'}
+                            </td>
+                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                              <span style={{ color: '#71717A', fontSize: '0.875rem' }}>
+                                {Math.floor(Math.random() * 5)}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ height: '4px', flex: 1, background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden', minWidth: '60px' }}>
+                                  <div style={{ height: '100%', width: '40%', backgroundColor: status.color, borderRadius: '9999px' }} />
+                                </div>
+                                <span style={{ color: '#71717A', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>40%</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '1rem', color: '#71717A', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                              {new Date(task.updated_at).toLocaleDateString()}
+                            </td>
+                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                              <button style={{ background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', padding: '0.25rem' }} onClick={(e) => { e.stopPropagation(); }}>
+                                <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+                  
+                  {/* Add Task Row */}
+                  <tr style={{ borderTop: '1px solid #2D2D2D' }}>
+                    <td colSpan={10} style={{ padding: '1rem' }}>
+                      <button
+                        onClick={() => setShowCreateTask(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, transition: 'color 0.2s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
+                      >
+                        <PlusIcon style={{ width: '16px', height: '16px' }} />
+                        Add task
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            // Kanban Board View
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(280px, 1fr))', gap: '1.25rem', maxWidth: '100%' }}>
             {TASK_STATUSES.map((status) => {
               const statusTasks = filteredTasks.filter(t => t.status === status.value);
               
@@ -493,7 +647,8 @@ export default function ProjectDetailPage() {
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
