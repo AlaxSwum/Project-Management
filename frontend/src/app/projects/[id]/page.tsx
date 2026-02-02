@@ -142,6 +142,8 @@ export default function ProjectDetailPage() {
     start_date: '',
     due_date: '',
   });
+  const [newTaskSubtasks, setNewTaskSubtasks] = useState<string[]>([]);
+  const [tempSubtask, setTempSubtask] = useState('');
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -194,13 +196,40 @@ export default function ProjectDetailPage() {
       };
       
       const createdTask = await taskService.createTask(Number(params?.id), taskData);
+      
+      // Create subtasks if any
+      if (newTaskSubtasks.length > 0) {
+        const { supabase } = await import('@/lib/supabase');
+        const subtasksToCreate = newTaskSubtasks.map((title, index) => ({
+          task_id: createdTask.id,
+          title,
+          position: index,
+          created_by_id: user?.id
+        }));
+        
+        await supabase.from('task_subtasks').insert(subtasksToCreate);
+      }
+      
       setTasks([...tasks, createdTask]);
       setNewTask({ name: '', description: '', priority: 'medium', tags: '', assignee_ids: [], report_to_ids: [], start_date: '', due_date: '' });
+      setNewTaskSubtasks([]);
+      setTempSubtask('');
       setShowCreateTask(false);
       fetchProject();
     } catch (err) {
       // Error creating task
     }
+  };
+
+  const addTempSubtask = () => {
+    if (tempSubtask.trim()) {
+      setNewTaskSubtasks([...newTaskSubtasks, tempSubtask.trim()]);
+      setTempSubtask('');
+    }
+  };
+
+  const removeTempSubtask = (index: number) => {
+    setNewTaskSubtasks(newTaskSubtasks.filter((_, i) => i !== index));
   };
 
   const handleDragStart = (e: React.DragEvent, task: Task) => {
@@ -979,22 +1008,65 @@ export default function ProjectDetailPage() {
                       {newTask.report_to_ids.map(id => {
                         const member = project.members?.find(m => m.id === id);
                         return member ? (
-                          <span key={id} style={{ padding: '0.25rem 0.625rem', background: '#8B5CF6', color: '#FFFFFF', fontSize: '0.75rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                          <span key={id} style={{ padding: '0.375rem 0.75rem', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.75rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
                             {member.name}
                             <button
                               type="button"
                               onClick={() => setNewTask({ ...newTask, report_to_ids: newTask.report_to_ids.filter(rid => rid !== id) })}
                               style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', padding: 0, display: 'flex' }}
                             >
-                              <XMarkIcon style={{ width: '12px', height: '12px' }} />
+                              <XMarkIcon style={{ width: '14px', height: '14px' }} />
                             </button>
-                                     </span>
+                          </span>
                         ) : null;
                       })}
-                               </div>
-                              )}
-                            </div>
-                               </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Subtasks Section */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Subtasks</label>
+                  {newTaskSubtasks.length > 0 && (
+                    <div style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {newTaskSubtasks.map((subtask, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                          <span style={{ width: '16px', height: '16px', border: '2px solid #52525B', borderRadius: '0.25rem', flexShrink: 0 }} />
+                          <span style={{ flex: 1, color: '#FFFFFF', fontSize: '0.875rem' }}>{subtask}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeTempSubtask(index)}
+                            style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: 0 }}
+                          >
+                            <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={tempSubtask}
+                      onChange={(e) => setTempSubtask(e.target.value)}
+                      onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTempSubtask(); } }}
+                      placeholder="Add a subtask..."
+                      style={{ flex: 1, padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                    />
+                    <button
+                      type="button"
+                      onClick={addTempSubtask}
+                      style={{ padding: '0.75rem 1.25rem', background: '#2D2D2D', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
               
               <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', gap: '0.75rem' }}>
                 <button
@@ -1008,7 +1080,7 @@ export default function ProjectDetailPage() {
                 </button>
                 <button
                   type="submit"
-                  style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
+                  style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
                   onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
                 >
