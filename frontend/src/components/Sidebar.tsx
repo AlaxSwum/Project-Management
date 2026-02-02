@@ -237,49 +237,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 </Link>
               ))}
 
-              {/* Divider */}
-              {projects.length > 0 && teamMembers.length > 0 && (
-                <div style={{ height: '1px', background: '#2D2D2D', margin: '0.5rem 0' }} />
-              )}
-
-              {/* Team Members I've Worked With */}
-              {teamMembers.map((member, i) => (
-                <Link
-                  key={member.id}
-                  href={`/messages?user=${member.id}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    background: 'transparent',
-                    color: '#A1A1AA',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#1A1A1A';
-                    e.currentTarget.style.color = '#FFFFFF';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#A1A1AA';
-                  }}
-                >
-                  <div
-                    style={{ width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], position: 'relative' }}
-                  >
-                    {member.name.charAt(0).toUpperCase()}
-                    <div style={{ position: 'absolute', bottom: -1, right: -1, width: '6px', height: '6px', background: '#10B981', border: '1.5px solid #0D0D0D', borderRadius: '50%' }} />
-                  </div>
-                  <span style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                    {member.name}
-                  </span>
-                </Link>
-              ))}
-
-              {projects.length === 0 && teamMembers.length === 0 && (
+              {projects.length === 0 && (
                 <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem' }}>
                   No assigned projects yet
                 </div>
