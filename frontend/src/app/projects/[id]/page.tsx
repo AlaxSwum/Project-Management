@@ -181,7 +181,7 @@ export default function ProjectDetailPage() {
     if (!draggedTask || draggedTask.status === newStatus) return;
     
     try {
-      await taskService.updateTask(draggedTask.project_id, draggedTask.id, { status: newStatus });
+      await taskService.updateTask(draggedTask.id, { status: newStatus });
       setTasks(tasks.map(t => t.id === draggedTask.id ? { ...t, status: newStatus } : t));
     } catch (err) {
       console.error('Failed to update task:', err);
