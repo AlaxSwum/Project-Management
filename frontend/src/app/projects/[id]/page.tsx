@@ -122,6 +122,20 @@ export default function ProjectDetailPage() {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedView, setSelectedView] = useState('kanban');
+  const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filters, setFilters] = useState({
+    status: [] as string[],
+    priority: [] as string[],
+    assignee: [] as number[],
+    tags: [] as string[],
+  });
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [newColumn, setNewColumn] = useState({
+    name: '',
+    type: 'text',
+    width: 150
+  });
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
@@ -262,10 +276,51 @@ export default function ProjectDetailPage() {
     setDraggedTask(null);
   };
 
-  const filteredTasks = tasks.filter(task => 
-    task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Apply search and filters
+  const filteredTasks = tasks.filter(task => {
+    // Search filter
+    const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Status filter
+    const matchesStatus = filters.status.length === 0 || filters.status.includes(task.status);
+    
+    // Priority filter
+    const matchesPriority = filters.priority.length === 0 || filters.priority.includes(task.priority);
+    
+    // Assignee filter
+    const matchesAssignee = filters.assignee.length === 0 || 
+      (task.assignees && task.assignees.some(a => filters.assignee.includes(a.id)));
+    
+    // Tags filter
+    const taskTagsArray = task.tags_list || (task.tags ? task.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+    const matchesTags = filters.tags.length === 0 ||
+      taskTagsArray.some((tag: string) => filters.tags.includes(tag));
+    
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesTags;
+  });
+
+  // Group tasks by month for table view
+  const tasksByMonth = React.useMemo(() => {
+    const groups: Record<string, typeof filteredTasks> = {};
+    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    
+    filteredTasks.forEach(task => {
+      let monthKey = 'No Due Date';
+      if (task.due_date) {
+        monthKey = new Date(task.due_date).toLocaleString('default', { month: 'long', year: 'numeric' });
+      }
+      if (!groups[monthKey]) groups[monthKey] = [];
+      groups[monthKey].push(task);
+    });
+    
+    // Auto-expand current month
+    if (expandedMonths.length === 0 && groups[currentMonth]) {
+      setExpandedMonths([currentMonth]);
+    }
+    
+    return groups;
+  }, [filteredTasks]);
 
   // Fetch subtasks, attachments, comments and activity when task is selected
   useEffect(() => {
@@ -491,8 +546,7 @@ export default function ProjectDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
               {[
                 { id: 'kanban', label: 'Kanban', icon: Squares2X2Icon },
-                { id: 'board', label: 'Board', icon: ChartBarIcon },
-                { id: 'list', label: 'List', icon: ListBulletIcon },
+                { id: 'list', label: 'Table', icon: ListBulletIcon },
                 { id: 'calendar', label: 'Calendar', icon: CalIcon }
               ].map((view) => (
                   <button
@@ -537,17 +591,115 @@ export default function ProjectDetailPage() {
                   onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                 />
               </div>
-              <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: '#A1A1AA', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
+              <button 
+                onClick={() => setShowFilterPanel(!showFilterPanel)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: showFilterPanel ? '#10B981' : '#1A1A1A', border: '1px solid', borderColor: showFilterPanel ? '#10B981' : '#2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: showFilterPanel ? '#FFFFFF' : '#A1A1AA', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
               >
                 <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
                 {!isMobile && 'Filter'}
-                  </button>
+                {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
+                  <span style={{ width: '18px', height: '18px', background: '#EF4444', color: '#FFFFFF', fontSize: '0.7rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                    {filters.status.length + filters.priority.length + filters.assignee.length + filters.tags.length}
+                  </span>
+                )}
+              </button>
+                </div>
+          </div>
+
+          {/* Filter Panel */}
+          {showFilterPanel && (
+            <div style={{ margin: '1rem 1.5rem 0', padding: '1.25rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                {/* Status Filter */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                    {TASK_STATUSES.map(status => (
+                      <label key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={filters.status.includes(status.value)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, status: [...filters.status, status.value] });
+                            } else {
+                              setFilters({ ...filters, status: filters.status.filter(s => s !== status.value) });
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }}
+                        />
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>{status.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Priority Filter */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priority</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                    {['low', 'medium', 'high', 'urgent'].map(priority => (
+                      <label key={priority} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={filters.priority.includes(priority)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, priority: [...filters.priority, priority] });
+                            } else {
+                              setFilters({ ...filters, priority: filters.priority.filter(p => p !== priority) });
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981' }}
+                        />
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF', textTransform: 'capitalize' }}>{priority}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Assignee Filter */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assignee</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', maxHeight: '150px', overflowY: 'auto' }}>
+                    {project.members?.map((member, i) => (
+                      <label key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={filters.assignee.includes(member.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, assignee: [...filters.assignee, member.id] });
+                            } else {
+                              setFilters({ ...filters, assignee: filters.assignee.filter(a => a !== member.id) });
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3B82F6' }}
+                        />
+                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600 }}>
+                          {member.name.charAt(0)}
+                        </div>
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>{member.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
+
+              {/* Clear Filters Button */}
+              {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
+                <button
+                  onClick={() => setFilters({ status: [], priority: [], assignee: [], tags: [] })}
+                  style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#2D2D2D', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Clear All Filters
+                </button>
+              )}
             </div>
-            
+          )}
+        </div>
+
         {/* Main Content - Kanban or Table View */}
         <div style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem', overflowX: 'auto', background: '#0D0D0D' }}>
           {selectedView === 'list' ? (
@@ -568,32 +720,58 @@ export default function ProjectDetailPage() {
                     <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '150px' }}>Timeline</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '130px' }}>Last Updated</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', background: '#141414', width: '50px' }}>
-                      <button style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Add column">
+                      <button 
+                        onClick={() => setShowAddColumnModal(true)}
+                        style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }} 
+                        title="Add column"
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
+                      >
                         <PlusIcon style={{ width: '16px', height: '16px' }} />
                       </button>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Group by status */}
-                  {TASK_STATUSES.map((status) => {
-                    const statusTasks = filteredTasks.filter(t => t.status === status.value);
-                    if (statusTasks.length === 0) return null;
+                  {/* Group by month */}
+                  {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
+                    // Sort: Current month first, then by date
+                    const now = new Date();
+                    const currentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    if (monthA === currentMonth) return -1;
+                    if (monthB === currentMonth) return 1;
+                    if (monthA === 'No Due Date') return 1;
+                    if (monthB === 'No Due Date') return -1;
+                    return new Date(monthA).getTime() - new Date(monthB).getTime();
+                  }).map(([month, monthTasks]) => {
+                    const isExpanded = expandedMonths.includes(month);
                     
                     return (
-                      <React.Fragment key={status.value}>
+                      <React.Fragment key={month}>
                         <tr style={{ background: '#0D0D0D' }}>
                           <td colSpan={10} style={{ padding: '0.75rem 1rem', borderTop: '1px solid #2D2D2D', borderBottom: '1px solid #2D2D2D' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
-                              <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
-                              <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA' }}>
-                                {statusTasks.length}
+                            <button
+                              onClick={() => {
+                                if (isExpanded) {
+                                  setExpandedMonths(expandedMonths.filter(m => m !== month));
+                                } else {
+                                  setExpandedMonths([...expandedMonths, month]);
+                                }
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
+                            >
+                              <svg style={{ width: '16px', height: '16px', color: '#71717A', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              </svg>
+                              <CalIcon style={{ width: '16px', height: '16px', color: '#3B82F6' }} />
+                              <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{month}</span>
+                              <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
+                                {monthTasks.length}
                               </span>
-              </div>
+                            </button>
                           </td>
                         </tr>
-                        {statusTasks.map((task) => (
+                        {isExpanded && monthTasks.map((task) => (
                           <tr 
                             key={task.id}
                             onClick={() => setSelectedTask(task)}
@@ -1522,9 +1700,108 @@ export default function ProjectDetailPage() {
                 </div>
         </div>
         </div>
-      </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Column Modal */}
+      {showAddColumnModal && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}
+          onClick={() => setShowAddColumnModal(false)}
+        >
+          <div 
+            style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Add Custom Column</h3>
+              <button
+                onClick={() => setShowAddColumnModal(false)}
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Name</label>
+                  <input
+                    type="text"
+                    value={newColumn.name}
+                    onChange={(e) => setNewColumn({ ...newColumn, name: e.target.value })}
+                    placeholder="e.g., Budget, Phase, Designer"
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Type</label>
+                  <select
+                    value={newColumn.type}
+                    onChange={(e) => setNewColumn({ ...newColumn, type: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer' }}
+                  >
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="status">Status</option>
+                    <option value="person">Person</option>
+                    <option value="dropdown">Dropdown</option>
+                    <option value="checkbox">Checkbox</option>
+                    <option value="url">URL</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Width (px)</label>
+                  <input
+                    type="number"
+                    value={newColumn.width}
+                    onChange={(e) => setNewColumn({ ...newColumn, width: parseInt(e.target.value) || 150 })}
+                    min="100"
+                    max="400"
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button
+                  onClick={() => setShowAddColumnModal(false)}
+                  style={{ flex: 1, padding: '0.75rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!newColumn.name.trim()) return;
+                    try {
+                      const { supabase } = await import('@/lib/supabase');
+                      await supabase.rpc('add_project_custom_column', {
+                        p_project_id: project.id,
+                        p_column_name: newColumn.name.trim(),
+                        p_column_type: newColumn.type,
+                        p_column_width: newColumn.width
+                      });
+                      setNewColumn({ name: '', type: 'text', width: 150 });
+                      setShowAddColumnModal(false);
+                      fetchProject();
+                    } catch (error) {
+                      // Error adding column
+                    }
+                  }}
+                  style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
+                >
+                  Add Column
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
-} 
+}
