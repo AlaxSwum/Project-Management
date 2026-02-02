@@ -239,7 +239,28 @@ CREATE TRIGGER trigger_notify_task_update
     FOR EACH ROW
     EXECUTE FUNCTION notify_task_update();
 
--- Step 5: Create table for task comments (to track comment notifications)
+-- Step 5: Create subtasks table
+CREATE TABLE IF NOT EXISTS task_subtasks (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES projects_task(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    completed_by_id INTEGER REFERENCES auth_user(id) ON DELETE SET NULL,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    position INTEGER DEFAULT 0,
+    created_by_id INTEGER REFERENCES auth_user(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_subtasks_task ON task_subtasks(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_subtasks_position ON task_subtasks(task_id, position);
+
+ALTER TABLE task_subtasks DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON task_subtasks TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE task_subtasks_id_seq TO authenticated;
+
+-- Step 6: Create table for task comments (to track comment notifications)
 CREATE TABLE IF NOT EXISTS task_comments (
     id BIGSERIAL PRIMARY KEY,
     task_id BIGINT NOT NULL REFERENCES projects_task(id) ON DELETE CASCADE,
@@ -253,7 +274,28 @@ CREATE TABLE IF NOT EXISTS task_comments (
 CREATE INDEX IF NOT EXISTS idx_task_comments_task ON task_comments(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_comments_created ON task_comments(created_at DESC);
 
--- Step 6: Create function to notify on comments
+-- Step 7: Create task activity log table
+CREATE TABLE IF NOT EXISTS task_activity_log (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES projects_task(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
+    user_name TEXT NOT NULL,
+    activity_type VARCHAR(50) NOT NULL,
+    -- Types: 'created', 'updated', 'status_changed', 'comment_added', 'subtask_completed', 'assigned', 'due_date_changed', etc.
+    description TEXT NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_activity_log_task ON task_activity_log(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_activity_log_created ON task_activity_log(created_at DESC);
+
+ALTER TABLE task_activity_log DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON task_activity_log TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE task_activity_log_id_seq TO authenticated;
+
+-- Step 8: Create function to notify on comments
 CREATE OR REPLACE FUNCTION notify_task_comment()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -340,30 +382,9 @@ CREATE TRIGGER trigger_notify_task_comment
     EXECUTE FUNCTION notify_task_comment();
 
 -- Step 7: Grant permissions
-ALTER TABLE projects_task ENABLE ROW LEVEL SECURITY;
-ALTER TABLE task_notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE task_comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
-
--- Allow users to see their own notifications
-CREATE POLICY IF NOT EXISTS "Users can view their own notifications"
-    ON task_notifications FOR SELECT
-    USING (recipient_id = current_setting('app.current_user_id')::INTEGER);
-
--- Allow users to update their notifications (mark as read)
-CREATE POLICY IF NOT EXISTS "Users can update their own notifications"
-    ON task_notifications FOR UPDATE
-    USING (recipient_id = current_setting('app.current_user_id')::INTEGER);
-
--- Allow authenticated users to create comments
-CREATE POLICY IF NOT EXISTS "Authenticated users can create comments"
-    ON task_comments FOR INSERT
-    WITH CHECK (true);
-
--- Allow users to view comments on tasks they have access to
-CREATE POLICY IF NOT EXISTS "Users can view task comments"
-    ON task_comments FOR SELECT
-    USING (true);
+ALTER TABLE task_notifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE task_comments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_preferences DISABLE ROW LEVEL SECURITY;
 
 -- Grant permissions to authenticated users
 GRANT ALL ON projects_task TO authenticated;

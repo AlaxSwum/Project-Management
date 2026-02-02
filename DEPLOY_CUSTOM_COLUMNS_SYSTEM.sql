@@ -155,27 +155,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION update_task_custom_field(BIGINT, BIGINT, TEXT) TO authenticated;
 
 -- Step 7: Grant permissions
-ALTER TABLE project_custom_columns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE task_custom_field_values ENABLE ROW LEVEL SECURITY;
-
--- Allow all authenticated users to view and manage custom columns
-CREATE POLICY IF NOT EXISTS "Users can view custom columns"
-    ON project_custom_columns FOR SELECT
-    USING (true);
-
-CREATE POLICY IF NOT EXISTS "Users can manage custom columns"
-    ON project_custom_columns FOR ALL
-    USING (true)
-    WITH CHECK (true);
-
-CREATE POLICY IF NOT EXISTS "Users can view custom field values"
-    ON task_custom_field_values FOR SELECT
-    USING (true);
-
-CREATE POLICY IF NOT EXISTS "Users can manage custom field values"
-    ON task_custom_field_values FOR ALL
-    USING (true)
-    WITH CHECK (true);
+ALTER TABLE project_custom_columns DISABLE ROW LEVEL SECURITY;
+ALTER TABLE task_custom_field_values DISABLE ROW LEVEL SECURITY;
 
 GRANT ALL ON project_custom_columns TO authenticated;
 GRANT ALL ON task_custom_field_values TO authenticated;

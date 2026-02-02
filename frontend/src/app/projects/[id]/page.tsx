@@ -16,7 +16,8 @@ import {
   ListBulletIcon,
   CalendarIcon as CalIcon,
   ChartBarIcon,
-  FolderIcon
+  FolderIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 
@@ -25,6 +26,22 @@ interface User {
   name: string;
   email: string;
   role: string;
+}
+
+interface Subtask {
+  id: number;
+  title: string;
+  is_completed: boolean;
+  completed_by_id?: number;
+  completed_at?: string;
+}
+
+interface ActivityLog {
+  id: number;
+  user_name: string;
+  activity_type: string;
+  description: string;
+  created_at: string;
 }
 
 interface Task {
@@ -44,6 +61,8 @@ interface Task {
   created_at: string;
   updated_at: string;
   project_id: number;
+  subtasks?: Subtask[];
+  activity?: ActivityLog[];
 }
 
 interface Project {
@@ -104,6 +123,9 @@ export default function ProjectDetailPage() {
   const [selectedView, setSelectedView] = useState('kanban');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
+  const [newSubtask, setNewSubtask] = useState('');
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
@@ -208,6 +230,90 @@ export default function ProjectDetailPage() {
     task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Fetch subtasks and activity when task is selected
+  useEffect(() => {
+    const fetchTaskDetails = async () => {
+      if (!selectedTask) {
+        setSubtasks([]);
+        setActivityLog([]);
+        return;
+      }
+
+      try {
+        // Import supabase
+        const { supabase } = await import('@/lib/supabase');
+        
+        // Fetch subtasks
+        const { data: subtasksData } = await supabase
+          .from('task_subtasks')
+          .select('*')
+          .eq('task_id', selectedTask.id)
+          .order('position');
+        
+        setSubtasks(subtasksData || []);
+
+        // Fetch activity log
+        const { data: activityData } = await supabase
+          .from('task_activity_log')
+          .select('*')
+          .eq('task_id', selectedTask.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        
+        setActivityLog(activityData || []);
+      } catch (error) {
+        // Error fetching task details
+      }
+    };
+
+    fetchTaskDetails();
+  }, [selectedTask]);
+
+  const addSubtask = async () => {
+    if (!newSubtask.trim() || !selectedTask) return;
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('task_subtasks')
+        .insert([{
+          task_id: selectedTask.id,
+          title: newSubtask.trim(),
+          created_by_id: user?.id,
+          position: subtasks.length
+        }])
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setSubtasks([...subtasks, data]);
+        setNewSubtask('');
+      }
+    } catch (error) {
+      // Error adding subtask
+    }
+  };
+
+  const toggleSubtask = async (subtaskId: number, isCompleted: boolean) => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase
+        .from('task_subtasks')
+        .update({ 
+          is_completed: !isCompleted,
+          completed_by_id: !isCompleted ? user?.id : null,
+          completed_at: !isCompleted ? new Date().toISOString() : null
+        })
+        .eq('id', subtaskId);
+      
+      setSubtasks(subtasks.map(st => 
+        st.id === subtaskId ? { ...st, is_completed: !isCompleted } : st
+      ));
+    } catch (error) {
+      // Error toggling subtask
+    }
+  };
 
   if (authLoading || isLoading) {
     return (
@@ -859,119 +965,282 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {/* Task Detail Modal */}
+      {/* Task Detail Modal - Redesigned */}
       {selectedTask && (
         <div 
           style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}
           onClick={() => setSelectedTask(null)}
         >
           <div 
-            style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '48rem', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}
+            style={{ background: '#FFFFFF', borderRadius: '1rem', width: '100%', maxWidth: '75rem', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', borderBottom: '1px solid #2D2D2D' }}>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: '0 0 0.5rem 0' }}>{selectedTask.name}</h2>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {selectedTask.tags_list?.map((tag, i) => {
-                    const tagColor = getTagColor(tag);
-                    return (
-                      <span
-                        key={i}
-                        style={{ padding: '0.25rem 0.625rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}
-                      >
-                        {tag}
-                      </span>
-                    );
-                  })}
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #E5E7EB' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button style={{ padding: '0.375rem', background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}>
+                  <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1F2937', margin: 0 }}>Task Detail</h2>
               </div>
-              <button
-                onClick={() => setSelectedTask(null)}
-                style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-              >
-                <XMarkIcon style={{ width: '24px', height: '24px' }} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <button style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', borderRadius: '0.375rem', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <svg style={{ width: '20px', height: '20px' }} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setSelectedTask(null)}
+                  style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', borderRadius: '0.375rem', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
-            <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: isMobile ? '1.5rem' : '2rem' }}>
-                {/* Left Column - Main Content */}
-                <div>
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Description</h3>
-                    <p style={{ color: '#FFFFFF', fontSize: '0.9375rem', lineHeight: 1.6 }}>{selectedTask.description || 'No description provided'}</p>
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+              {/* Left Panel - Task Details */}
+              <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', borderRight: '1px solid #E5E7EB' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1F2937', marginBottom: '1rem' }}>{selectedTask.name}</h1>
+                
+                <p style={{ color: '#6B7280', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                  {selectedTask.description || 'No description provided'}
+                </p>
+
+                {/* Task Properties Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#6B7280', marginBottom: '0.5rem' }}>Status</label>
+                    <select 
+                      value={selectedTask.status}
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', background: TASK_STATUSES.find(s => s.value === selectedTask.status)?.value === 'in_progress' ? '#FEF3C7' : '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#1F2937', cursor: 'pointer', fontWeight: 500 }}
+                    >
+                      {TASK_STATUSES.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Activity</h3>
-                    <div style={{ padding: '1rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
-                      <p style={{ color: '#71717A', fontSize: '0.875rem' }}>No recent activity</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column - Details */}
-                <div>
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', marginBottom: '0.75rem' }}>Status</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
-                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem' }}>
-                        {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', marginBottom: '0.75rem' }}>Priority</h3>
-                    <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
-                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', textTransform: 'capitalize' }}>{selectedTask.priority}</span>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', marginBottom: '0.75rem' }}>Assignees</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {(selectedTask.assignees || []).map((assignee) => (
-                        <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#6B7280', marginBottom: '0.5rem' }}>Assigned to</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {(selectedTask.assignees || []).map((assignee, i) => (
+                        <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#F3F4F6', borderRadius: '0.375rem' }}>
+                          <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: ['#8B5CF6', '#F59E0B', '#EC4899'][i % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600 }}>
                             {assignee.name.charAt(0)}
                           </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>{assignee.name}</div>
-                            <div style={{ color: '#71717A', fontSize: '0.75rem' }}>{assignee.email}</div>
-                          </div>
+                          <span style={{ fontSize: '0.8125rem', color: '#374151', fontWeight: 500 }}>{assignee.name}</span>
                         </div>
                       ))}
                       {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
-                        <p style={{ color: '#71717A', fontSize: '0.875rem', padding: '1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', textAlign: 'center' }}>No assignees</p>
+                        <span style={{ fontSize: '0.875rem', color: '#9CA3AF' }}>No assignees</span>
                       )}
                     </div>
                   </div>
 
+                  {selectedTask.start_date && (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#6B7280', marginBottom: '0.5rem' }}>Start date</label>
+                      <input 
+                        type="text"
+                        value={new Date(selectedTask.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        readOnly
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#1F2937' }}
+                      />
+                    </div>
+                  )}
+
                   {selectedTask.due_date && (
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', marginBottom: '0.75rem' }}>Due Date</h3>
-                      <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
-                        <span style={{ color: '#FFFFFF', fontSize: '0.875rem' }}>
-                          {new Date(selectedTask.due_date).toLocaleDateString()}
-                        </span>
-                      </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#6B7280', marginBottom: '0.5rem' }}>Due date</label>
+                      <input 
+                        type="text"
+                        value={new Date(selectedTask.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        readOnly
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#1F2937' }}
+                      />
                     </div>
                   )}
 
                   <div>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#A1A1AA', marginBottom: '0.75rem' }}>Created</h3>
-                    <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
-                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem' }}>
-                        {new Date(selectedTask.created_at).toLocaleDateString()}
-                      </span>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#6B7280', marginBottom: '0.5rem' }}>Priority</label>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', background: selectedTask.priority === 'low' ? '#D1FAE5' : '#FFFFFF', borderRadius: '9999px', border: '1px solid #E5E7EB' }}>
+                      <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'low' ? '#059669' : '#1F2937', fontWeight: 500 }}>+ {selectedTask.priority.charAt(0).toUpperCase() + selectedTask.priority.slice(1)}</span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Subtasks Section */}
+                <div style={{ marginTop: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1F2937', margin: 0 }}>Subtask</h3>
+                    <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>{subtasks.filter(s => s.is_completed).length}/{subtasks.length}</span>
+                  </div>
+
+                  {/* Tabs */}
+                  <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #E5E7EB', marginBottom: '1rem' }}>
+                    <button style={{ padding: '0.75rem 0', fontSize: '0.875rem', fontWeight: 500, color: '#3B82F6', borderBottom: '2px solid #3B82F6', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Subtask
+                    </button>
+                    <button style={{ padding: '0.75rem 0', fontSize: '0.875rem', fontWeight: 500, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Attachment
+                    </button>
+                    <button style={{ padding: '0.75rem 0', fontSize: '0.875rem', fontWeight: 500, color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Comments
+                    </button>
+                  </div>
+
+                  {/* Subtasks List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                    {subtasks.map((subtask) => (
+                      <div key={subtask.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#F9FAFB', borderRadius: '0.5rem', border: '1px solid #E5E7EB' }}>
+                        <input 
+                          type="checkbox"
+                          checked={subtask.is_completed}
+                          onChange={() => toggleSubtask(subtask.id, subtask.is_completed)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
+                        />
+                        <span style={{ flex: 1, color: subtask.is_completed ? '#9CA3AF' : '#1F2937', fontSize: '0.9375rem', textDecoration: subtask.is_completed ? 'line-through' : 'none' }}>
+                          {subtask.title}
+                        </span>
+                        <button style={{ padding: '0.25rem', background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}>
+                          <EllipsisHorizontalIcon style={{ width: '18px', height: '18px' }} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Subtask */}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={newSubtask}
+                      onChange={(e) => setNewSubtask(e.target.value)}
+                      onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSubtask(); } }}
+                      placeholder="+ Add subtask"
+                      style={{ flex: 1, padding: '0.625rem 0.875rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#1F2937', outline: 'none' }}
+                    />
+                    <button
+                      onClick={addSubtask}
+                      type="button"
+                      style={{ padding: '0.625rem 1rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* Created by */}
+                <div style={{ marginTop: '2rem', padding: '1rem', background: '#F9FAFB', borderRadius: '0.5rem', border: '1px solid #E5E7EB' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#6B7280', marginBottom: '0.25rem' }}>Created by</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600 }}>
+                      {selectedTask.created_by?.name?.charAt(0) || 'U'}
+                    </div>
+                    <span style={{ fontSize: '0.875rem', color: '#1F2937', fontWeight: 500 }}>
+                      {selectedTask.created_by?.name || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel - Project Status & Activities */}
+              <div style={{ width: '380px', background: '#F9FAFB', padding: '1.5rem', overflowY: 'auto', borderLeft: '1px solid #E5E7EB' }}>
+                {/* Project Status */}
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#6B7280', marginBottom: '1rem' }}>Project Status</h3>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '0.375rem', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ClockIcon style={{ width: '16px', height: '16px', color: '#FFFFFF' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1F2937' }}>Time Remaining</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>4d</div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                      <span style={{ fontSize: '0.8125rem', color: '#6B7280' }}>Progress</span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#3B82F6' }}>60%</span>
+                    </div>
+                    <div style={{ height: '8px', background: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                      <div style={{ width: '60%', height: '100%', background: '#3B82F6', borderRadius: '9999px' }} />
+                    </div>
+                  </div>
+
+                  <button style={{ width: '100%', padding: '0.5rem', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.375rem', fontSize: '0.8125rem', color: '#6B7280', cursor: 'pointer', marginTop: '0.75rem', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#FFFFFF'}
+                  >
+                    Activate reminder
+                  </button>
+                </div>
+
+                {/* Activities */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#6B7280', margin: 0 }}>Activities</h3>
+                    <button style={{ padding: '0.25rem', background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}>
+                      <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {activityLog.map((activity) => (
+                      <div key={activity.id} style={{ display: 'flex', gap: '0.75rem' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600, flexShrink: 0 }}>
+                          {activity.user_name.charAt(0)}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ marginBottom: '0.25rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1F2937' }}>{activity.user_name} </span>
+                            <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>{activity.description}</span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
+                            {new Date(activity.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(activity.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          {activity.activity_type === 'status_changed' && (
+                            <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ padding: '0.25rem 0.5rem', background: '#FEF2F2', color: '#991B1B', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>To Do</span>
+                              <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>→</span>
+                              <span style={{ padding: '0.25rem 0.5rem', background: '#FEF3C7', color: '#92400E', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>In Progress</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Default activity entries if none exist */}
+                    {activityLog.length === 0 && (
+                      <>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600 }}>
+                            {selectedTask.created_by?.name?.charAt(0) || 'U'}
+                          </div>
+                          <div>
+                            <div style={{ marginBottom: '0.25rem' }}>
+                              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1F2937' }}>{selectedTask.created_by?.name || 'User'} </span>
+                              <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>created task</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
+                              {new Date(selectedTask.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(selectedTask.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
