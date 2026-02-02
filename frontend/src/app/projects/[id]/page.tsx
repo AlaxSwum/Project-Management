@@ -847,10 +847,10 @@ export default function ProjectDetailPage() {
                             <td style={{ padding: '1rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <div style={{ height: '4px', flex: 1, background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden', minWidth: '60px' }}>
-                                  <div style={{ height: '100%', width: '40%', backgroundColor: status.color, borderRadius: '9999px' }} />
-                </div>
+                                  <div style={{ height: '100%', width: '40%', backgroundColor: TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A', borderRadius: '9999px' }} />
+                                </div>
                                 <span style={{ color: '#71717A', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>40%</span>
-              </div>
+                              </div>
                             </td>
                             <td style={{ padding: '1rem', color: '#71717A', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                               {new Date(task.updated_at).toLocaleDateString()}
