@@ -563,9 +563,9 @@ export default function ProjectDetailPage() {
                 { id: 'gantt', label: 'Gantt', icon: ChartBarIcon },
                 { id: 'calendar', label: 'Calendar', icon: CalIcon }
               ].map((view) => (
-                  <button
+                <button
                   key={view.id}
-                  onClick={() => setSelectedView(view.id)}
+                  onClick={() => setSelectedView(view.id as any)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
