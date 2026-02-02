@@ -60,10 +60,10 @@ interface Project {
 }
 
 const TASK_STATUSES = [
-  { value: 'todo', label: 'To Do', color: '#EF4444', count: 3 },
-  { value: 'in_progress', label: 'In Progress', color: '#3B82F6', count: 3 },
-  { value: 'review', label: 'Review', color: '#F59E0B', count: 3 },
-  { value: 'done', label: 'Complete', color: '#10B981', count: 2 },
+  { value: 'todo', label: 'To Do', color: '#EF4444' },
+  { value: 'in_progress', label: 'In Progress', color: '#3B82F6' },
+  { value: 'review', label: 'Review', color: '#F59E0B' },
+  { value: 'done', label: 'Complete', color: '#10B981' },
 ];
 
 const TAG_COLORS: Record<string, string> = {

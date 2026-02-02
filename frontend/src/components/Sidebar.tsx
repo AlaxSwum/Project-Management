@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,8 +61,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [expandedProjects, setExpandedProjects] = useState<number[]>([]);
 
   const handleLogout = async () => {
-      await logout();
-      router.push('/login');
+    await logout();
+    router.push('/login');
   };
 
   const toggleProjectExpand = (projectId: number) => {
@@ -76,6 +76,21 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   // Task counts for categories
   const todoCount = projects.reduce((acc, p) => acc + (p.task_count || 0) - (p.completed_task_count || 0), 0);
   const completedCount = projects.reduce((acc, p) => acc + (p.completed_task_count || 0), 0);
+  
+  // Get unique team members from all projects (real people, not dummy data)
+  const teamMembers = React.useMemo(() => {
+    const membersMap = new Map();
+    projects.forEach(project => {
+      if (project.members) {
+        project.members.forEach(member => {
+          if (!membersMap.has(member.id) && member.id !== user?.id) {
+            membersMap.set(member.id, member);
+          }
+        });
+      }
+    });
+    return Array.from(membersMap.values()).slice(0, 4); // Show max 4 team members
+  }, [projects, user]);
 
   return (
     <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', background: '#0D0D0D', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', zIndex: 40 }}>
@@ -307,34 +322,36 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-        {/* Messages Section */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            {['Michael Anderson', 'Sophia Carter', 'Daniel Johnson', 'James Wilson'].map((name, i) => (
-              <div
-                key={name}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; }}
-              >
+        {/* Messages Section - Only Real Team Members */}
+        {teamMembers.length > 0 && (
+          <div style={{ marginTop: '1.5rem' }}>
+            <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {teamMembers.map((member, i) => (
                 <div
-                  style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i] }}
+                  key={member.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; }}
                 >
-                  {name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {['UI/UX Designer', 'Graphic Designer', 'Frontend Developer', 'Backend Programmer'][i]}
+                  <div
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4] }}
+                  >
+                    {member.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {member.role || 'Team Member'}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Bottom Section */}
