@@ -8,8 +8,8 @@ import { ElectronProvider } from "@/components/ElectronProvider";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Project Next - Project Management",
-  description: "Streamline your workflow with modern project management tools. Plan, track, and deliver projects efficiently.",
+  title: "Syncboard - Modern Project Management",
+  description: "The modern project management platform that brings your team together. Collaborate in real-time, track progress effortlessly, and deliver exceptional results.",
   icons: {
     icon: [
       { url: '/logo.png', type: 'image/png', sizes: '512x512' },
@@ -34,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} h-full antialiased`} style={{ background: '#F5F5ED' }}>
+    <html lang="en" className="h-full dark">
+      <body className={`${inter.className} h-full antialiased`} style={{ background: '#0D0D0D' }}>
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"
@@ -46,7 +46,7 @@ export default function RootLayout({
         />
         <ElectronProvider>
         <AuthProvider>
-          <div className="min-h-full" style={{ background: '#F5F5ED' }}>
+          <div className="min-h-full" style={{ background: '#0D0D0D' }}>
             {children}
           </div>
         </AuthProvider>

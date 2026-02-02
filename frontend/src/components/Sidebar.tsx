@@ -1137,26 +1137,26 @@ Your report is now available in the system.`);
     <div>
       <style dangerouslySetInnerHTML={{
         __html: `
-          /* Professional Sidebar Theme */
+          /* Dark Theme Sidebar */
           .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 260px;
+            width: 280px;
             height: 100vh;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            border-right: 1px solid #e2e8f0;
+            background: linear-gradient(180deg, #141414 0%, #1A1A1A 100%);
+            border-right: 1px solid #2D2D2D;
             display: flex;
             flex-direction: column;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 100;
-            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
             overflow: hidden;
           }
           
           .sidebar.collapsed {
             width: 72px;
-            background: #fff;
+            background: #141414;
           }
           
           .sidebar.collapsed::before {
@@ -1169,9 +1169,9 @@ Your report is now available in the system.`);
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b);
-            opacity: 0.9;
+            height: 2px;
+            background: linear-gradient(90deg, #10B981, #3B82F6, #8B5CF6, #EC4899);
+            opacity: 0.8;
           }
           
           @keyframes shimmer {
@@ -1181,8 +1181,8 @@ Your report is now available in the system.`);
           
           .sidebar-header {
             padding: 1.25rem 1rem;
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
+            background: #141414;
+            border-bottom: 1px solid #2D2D2D;
             transition: all 0.3s ease;
             position: relative;
           }
@@ -1194,7 +1194,7 @@ Your report is now available in the system.`);
           
           .sidebar.collapsed .sidebar-header {
             padding: 1rem 0.5rem;
-            background: #fff;
+            background: #141414;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1219,7 +1219,7 @@ Your report is now available in the system.`);
           .sidebar-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #FFFFFF;
             margin: 0;
             transition: all 0.3s ease;
             letter-spacing: -0.02em;
@@ -1233,26 +1233,26 @@ Your report is now available in the system.`);
           
           .sidebar-toggle {
             padding: 0.625rem;
-            background: #f1f5f9;
+            background: #2D2D2D;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #64748b;
+            color: #A1A1AA;
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             min-width: 44px;
             min-height: 44px;
           }
           
           .sidebar-toggle:hover {
-            background: rgba(255, 179, 51, 0.2);
-            border-color: rgba(255, 179, 51, 0.4);
+            background: #3D3D3D;
+            color: #10B981;
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 16px rgba(255, 179, 51, 0.2);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
           }
           
           .sidebar-toggle:active {
@@ -1273,12 +1273,12 @@ Your report is now available in the system.`);
           .sidebar-add-btn {
             padding: 0.625rem;
             color: #fff;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, #10B981, #059669);
             border: none;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1287,13 +1287,13 @@ Your report is now available in the system.`);
           }
           
           .sidebar-add-btn:hover {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            background: linear-gradient(135deg, #059669, #047857);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
           }
           
           .sidebar-add-btn.active {
-            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            background: linear-gradient(135deg, #047857, #065f46);
             transform: translateY(0);
           }
           
@@ -1302,10 +1302,10 @@ Your report is now available in the system.`);
             top: 120px;
             right: 20px;
             z-index: 99999;
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
+            background: #1A1A1A;
+            border: 1px solid #2D2D2D;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             min-width: 200px;
             padding: 0.75rem;
             opacity: 0;
@@ -1335,7 +1335,7 @@ Your report is now available in the system.`);
             gap: 0.75rem;
             padding: 0.875rem 1rem;
             font-size: 0.875rem;
-            color: #374151;
+            color: #A1A1AA;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             border: none;
@@ -1355,17 +1355,17 @@ Your report is now available in the system.`);
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(90deg, #FFB333, #C483D9);
+            background: linear-gradient(90deg, #10B981, #3B82F6);
             opacity: 0;
             transition: opacity 0.2s ease;
           }
           
           .dropdown-item:hover::before {
-            opacity: 0.1;
+            opacity: 0.15;
           }
           
           .dropdown-item:hover {
-            color: #FFB333;
+            color: #FFFFFF;
             transform: translateX(4px);
           }
           
@@ -1376,14 +1376,14 @@ Your report is now available in the system.`);
           .dropdown-icon {
             width: 18px;
             height: 18px;
-            color: #6B7280;
+            color: #71717A;
             transition: all 0.2s ease;
             position: relative;
             z-index: 1;
           }
           
           .dropdown-item:hover .dropdown-icon {
-            color: #FFB333;
+            color: #10B981;
           }
           
 
@@ -1394,7 +1394,7 @@ Your report is now available in the system.`);
             overflow-y: auto;
             overflow-x: hidden;
             scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 transparent;
+            scrollbar-color: #3D3D3D transparent;
           }
           
           .sidebar-nav::-webkit-scrollbar {
@@ -1406,12 +1406,12 @@ Your report is now available in the system.`);
           }
           
           .sidebar-nav::-webkit-scrollbar-thumb {
-            background: rgba(196, 131, 217, 0.3);
+            background: #3D3D3D;
             border-radius: 3px;
           }
           
           .sidebar-nav::-webkit-scrollbar-thumb:hover {
-            background: rgba(196, 131, 217, 0.5);
+            background: #4D4D4D;
           }
           
           .nav-section {
@@ -1422,12 +1422,12 @@ Your report is now available in the system.`);
             padding: 0.5rem 1rem;
             margin-bottom: 0.75rem;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-bottom: 1px solid rgba(196, 131, 217, 0.2);
+            border-bottom: 1px solid #2D2D2D;
           }
           
           .nav-section-header span {
             font-size: 0.75rem;
-            color: #9CA3AF;
+            color: #71717A;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
@@ -1452,20 +1452,20 @@ Your report is now available in the system.`);
             border-radius: 10px;
             transition: all 0.2s ease;
             cursor: pointer;
-            color: #475569;
+            color: #A1A1AA;
             text-decoration: none;
             margin-bottom: 0.25rem;
             position: relative;
           }
           
           .nav-item:hover {
-            color: #3b82f6;
-            background: #f1f5f9;
+            color: #FFFFFF;
+            background: #2D2D2D;
           }
           
           .nav-item.active {
-            color: #3b82f6;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            color: #10B981;
+            background: rgba(16, 185, 129, 0.1);
             font-weight: 600;
           }
           
@@ -1477,7 +1477,7 @@ Your report is now available in the system.`);
             transform: translateY(-50%);
             width: 3px;
             height: 20px;
-            background: linear-gradient(180deg, #3b82f6, #60a5fa);
+            background: linear-gradient(180deg, #10B981, #34D399);
             border-radius: 0 4px 4px 0;
           }
           
@@ -1532,17 +1532,17 @@ Your report is now available in the system.`);
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
             font-weight: 600;
-            color: #374151;
+            color: #A1A1AA;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             border-radius: 12px;
             margin: 0.5rem 0 1rem 0;
             position: relative;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            background: #1F1F1F;
+            border: 1px solid #2D2D2D;
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           }
           
           .projects-toggle::before {
@@ -1552,20 +1552,20 @@ Your report is now available in the system.`);
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #FFB333, #F87239);
+            background: linear-gradient(135deg, #10B981, #3B82F6);
             opacity: 0;
             transition: opacity 0.3s ease;
           }
           
           .projects-toggle:hover::before {
-            opacity: 0.08;
+            opacity: 0.1;
           }
           
           .projects-toggle:hover {
-            color: #F87239;
-            background: rgba(255, 255, 255, 0.8);
+            color: #FFFFFF;
+            background: #242424;
             transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(255, 179, 51, 0.15);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
           }
           
           .projects-toggle span {
@@ -1602,7 +1602,7 @@ Your report is now available in the system.`);
             align-items: center;
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
-            color: #6B7280;
+            color: #A1A1AA;
             border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             cursor: pointer;
@@ -1618,7 +1618,7 @@ Your report is now available in the system.`);
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #5884FD, #C483D9);
+            background: linear-gradient(135deg, #10B981, #3B82F6);
             opacity: 0;
             transition: opacity 0.3s ease;
           }
@@ -1628,14 +1628,14 @@ Your report is now available in the system.`);
           }
           
           .project-item:hover {
-            color: #5884FD;
+            color: #FFFFFF;
             transform: translateX(4px);
           }
           
           .project-item.active {
-            color: #5884FD;
-            background: rgba(88, 132, 253, 0.1);
-            border-left: 3px solid #5884FD;
+            color: #10B981;
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid #10B981;
             transform: translateX(3px);
           }
           
@@ -1675,8 +1675,8 @@ Your report is now available in the system.`);
           
           .project-count {
             font-size: 0.75rem;
-            color: #9CA3AF;
-            background: rgba(156, 163, 175, 0.1);
+            color: #71717A;
+            background: #2D2D2D;
             padding: 0.25rem 0.5rem;
             border-radius: 6px;
             font-weight: 600;
@@ -1691,8 +1691,8 @@ Your report is now available in the system.`);
           
           .sidebar-footer {
             padding: 1rem;
-            border-top: 1px solid #e2e8f0;
-            background: #fff;
+            border-top: 1px solid #2D2D2D;
+            background: #141414;
             margin-top: auto;
           }
           
@@ -1702,8 +1702,8 @@ Your report is now available in the system.`);
             gap: 0.75rem;
             padding: 0.75rem;
             border-radius: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: #1F1F1F;
+            border: 1px solid #2D2D2D;
             transition: all 0.2s ease;
             cursor: pointer;
             position: relative;
@@ -1718,7 +1718,7 @@ Your report is now available in the system.`);
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #FFB333, #C483D9);
+            background: linear-gradient(135deg, #10B981, #3B82F6);
             opacity: 0;
             transition: opacity 0.3s ease;
           }
@@ -1729,19 +1729,19 @@ Your report is now available in the system.`);
           
           .user-profile:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(196, 131, 217, 0.2);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
           }
           
           .user-avatar {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #10B981, #059669);
             border: none;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
             transition: all 0.2s ease;
             position: relative;
             z-index: 1;
@@ -1749,7 +1749,7 @@ Your report is now available in the system.`);
           
           .user-avatar:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(255, 179, 51, 0.4);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
           }
           
           .user-avatar-text {
@@ -1787,7 +1787,7 @@ Your report is now available in the system.`);
           .user-name {
             font-size: 0.875rem;
             font-weight: 600;
-            color: #374151;
+            color: #FFFFFF;
             margin: 0;
             word-wrap: break-word;
             overflow-wrap: break-word;
