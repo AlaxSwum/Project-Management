@@ -102,52 +102,38 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const todoCount = projects.reduce((acc, p) => acc + (p.task_count || 0) - (p.completed_task_count || 0), 0);
   const completedCount = projects.reduce((acc, p) => acc + (p.completed_task_count || 0), 0);
   
-  // Get team members you've actually worked with on tasks
+  // Get all team members from assigned projects
   const [teamMembers, setTeamMembers] = React.useState<any[]>([]);
   
   React.useEffect(() => {
-    const fetchCoworkers = async () => {
-      if (!user?.id) return;
+    const fetchTeamMembers = async () => {
+      if (!user?.id || !projects || projects.length === 0) {
+        setTeamMembers([]);
+        return;
+      }
       
       try {
-        // Get all tasks where current user is assigned
-        const { data: myTasks } = await supabase
-          .from('projects_task')
-          .select('assignee_ids, project_id')
-          .contains('assignee_ids', [user.id]);
+        // Get all unique members from all assigned projects
+        const allMembersMap = new Map();
         
-        if (!myTasks || myTasks.length === 0) {
-          setTeamMembers([]);
-      return;
-    }
-    
-        // Get unique user IDs from tasks where we worked together
-        const coworkerIds = new Set<number>();
-        myTasks.forEach(task => {
-          task.assignee_ids?.forEach((id: number) => {
-            if (id !== user.id) coworkerIds.add(id);
-          });
+        projects.forEach(project => {
+          if (project.members && Array.isArray(project.members)) {
+            project.members.forEach(member => {
+              if (member.id !== user.id && !allMembersMap.has(member.id)) {
+                allMembersMap.set(member.id, member);
+              }
+            });
+          }
         });
         
-        if (coworkerIds.size === 0) {
-          setTeamMembers([]);
-      return;
-    }
-
-        // Fetch coworker details
-        const { data: coworkers } = await supabase
-          .from('auth_user')
-          .select('id, name, email, role')
-          .in('id', Array.from(coworkerIds))
-          .limit(6);
-        
-        setTeamMembers(coworkers || []);
-    } catch (error) {
+        const members = Array.from(allMembersMap.values()).slice(0, 10);
+        setTeamMembers(members);
+      } catch (error) {
         setTeamMembers([]);
       }
     };
     
-    fetchCoworkers();
+    fetchTeamMembers();
   }, [user, projects]);
 
   return (
