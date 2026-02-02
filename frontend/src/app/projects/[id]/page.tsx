@@ -941,85 +941,145 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-              <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Assign To (Hold Ctrl/Cmd for multiple)</label>
-                  <select
-                    multiple
-                    value={newTask.assignee_ids.map(String)}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
-                      setNewTask({ ...newTask, assignee_ids: selected });
-                    }}
-                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s', minHeight: '100px' }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
-                  >
-                    {project.members?.map(member => (
-                      <option key={member.id} value={member.id} style={{ padding: '0.5rem', background: '#0D0D0D', color: '#FFFFFF' }}>
-                        {member.name} ({member.email})
-                      </option>
-                    ))}
-                  </select>
-                  {newTask.assignee_ids.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {newTask.assignee_ids.map(id => {
-                        const member = project.members?.find(m => m.id === id);
-                        return member ? (
-                          <span key={id} style={{ padding: '0.25rem 0.625rem', background: '#2D2D2D', color: '#FFFFFF', fontSize: '0.75rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                            {member.name}
-                <button
-                              type="button"
-                              onClick={() => setNewTask({ ...newTask, assignee_ids: newTask.assignee_ids.filter(aid => aid !== id) })}
-                              style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: 0, display: 'flex' }}
-                            >
-                              <XMarkIcon style={{ width: '12px', height: '12px' }} />
-                </button>
-                          </span>
-                        ) : null;
-                      })}
-              </div>
-                  )}
-            </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>Assign To</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
+                    {project.members?.map((member, i) => {
+                      const isSelected = newTask.assignee_ids.includes(member.id);
+                      return (
+                        <label
+                          key={member.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.75rem',
+                            background: isSelected ? '#1A1A1A' : 'transparent',
+                            border: '1px solid',
+                            borderColor: isSelected ? '#3D3D3D' : '#2D2D2D',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
+                          onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewTask({ ...newTask, assignee_ids: [...newTask.assignee_ids, member.id] });
+                              } else {
+                                setNewTask({ ...newTask, assignee_ids: newTask.assignee_ids.filter(id => id !== member.id) });
+                              }
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
+                          />
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
+                            {member.name.charAt(0)}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.name}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.email}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                    {(!project.members || project.members.length === 0) && (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
+                        No team members available
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-              <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Report To (Hold Ctrl/Cmd for multiple)</label>
-                  <select
-                    multiple
-                    value={newTask.report_to_ids.map(String)}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
-                      setNewTask({ ...newTask, report_to_ids: selected });
-                    }}
-                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s', minHeight: '100px' }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
-                  >
-                    {project.members?.map(member => (
-                      <option key={member.id} value={member.id} style={{ padding: '0.5rem', background: '#0D0D0D', color: '#FFFFFF' }}>
-                        {member.name} ({member.email})
-                      </option>
-                    ))}
-                  </select>
-                  <p style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.5rem' }}>
-                    Users selected here will receive notifications when this task is updated, status changes, or comments are added.
-                  </p>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>
+                    Report To
+                    <span style={{ fontSize: '0.75rem', color: '#71717A', fontWeight: 400, marginLeft: '0.5rem' }}>
+                      (These users will receive notifications)
+                    </span>
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
+                    {project.members?.map((member, i) => {
+                      const isSelected = newTask.report_to_ids.includes(member.id);
+                      return (
+                        <label
+                          key={member.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.75rem',
+                            background: isSelected ? '#1A1A1A' : 'transparent',
+                            border: '1px solid',
+                            borderColor: isSelected ? '#3B82F6' : '#2D2D2D',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            position: 'relative'
+                          }}
+                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
+                          onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewTask({ ...newTask, report_to_ids: [...newTask.report_to_ids, member.id] });
+                              } else {
+                                setNewTask({ ...newTask, report_to_ids: newTask.report_to_ids.filter(id => id !== member.id) });
+                              }
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3B82F6' }}
+                          />
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
+                            {member.name.charAt(0)}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.name}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.email}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', width: '6px', height: '6px', background: '#3B82F6', borderRadius: '50%', boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }} />
+                          )}
+                        </label>
+                      );
+                    })}
+                    {(!project.members || project.members.length === 0) && (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
+                        No team members available
+                      </div>
+                    )}
+                  </div>
                   {newTask.report_to_ids.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {newTask.report_to_ids.map(id => {
-                        const member = project.members?.find(m => m.id === id);
-                        return member ? (
-                          <span key={id} style={{ padding: '0.375rem 0.75rem', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.75rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
-                            {member.name}
-                            <button
-                              type="button"
-                              onClick={() => setNewTask({ ...newTask, report_to_ids: newTask.report_to_ids.filter(rid => rid !== id) })}
-                              style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', padding: 0, display: 'flex' }}
-                            >
-                              <XMarkIcon style={{ width: '14px', height: '14px' }} />
-                            </button>
-                          </span>
-                        ) : null;
-                      })}
+                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '0.5rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#71717A', marginBottom: '0.5rem' }}>
+                        {newTask.report_to_ids.length} {newTask.report_to_ids.length === 1 ? 'user' : 'users'} will be notified
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
+                        {newTask.report_to_ids.map(id => {
+                          const member = project.members?.find(m => m.id === id);
+                          return member ? (
+                            <span key={id} style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: 500 }}>
+                              {member.name}
+                            </span>
+                          ) : null;
+                        }).reduce((prev: any, curr: any, i: number) => {
+                          if (i === 0) return [curr];
+                          return [...prev, <span key={`sep-${i}`} style={{ color: '#71717A' }}>,</span>, curr];
+                        }, [])}
+                      </div>
                     </div>
                   )}
                 </div>
