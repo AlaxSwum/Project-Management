@@ -353,30 +353,32 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           <div style={{ marginTop: '1.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-              </div>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {teamMembers.map((member, i) => (
-                <div
+                <Link
                   key={member.id}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                  href={`/messages?user=${member.id}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; }}
                 >
                   <div
-                    style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4] }}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], position: 'relative' }}
                   >
                     {member.name.charAt(0).toUpperCase()}
-                        </div>
+                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', background: '#10B981', border: '2px solid #0D0D0D', borderRadius: '50%' }} />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {member.role || 'Team Member'}
                     </div>
                   </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </nav>
 
