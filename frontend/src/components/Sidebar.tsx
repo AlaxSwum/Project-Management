@@ -7,13 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   HomeIcon,
-  FolderIcon,
-  ChartBarIcon,
   CalendarIcon,
   CalendarDaysIcon,
-  PlusIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   ArrowRightOnRectangleIcon,
   InboxIcon,
   DocumentTextIcon,
@@ -24,6 +19,7 @@ import {
   Squares2X2Icon,
   ClipboardDocumentListIcon,
   BellIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -47,6 +43,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Personal', href: '/personal', icon: UserCircleIcon },
   { name: 'My Tasks', href: '/my-tasks', icon: ClipboardDocumentListIcon },
   { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
@@ -65,7 +62,6 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [isProjectsDropdownOpen, setIsProjectsDropdownOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Fetch unread notification count
@@ -156,105 +152,17 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-        {/* Navigation */}
+      {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
-        {/* Projects Dropdown */}
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            onClick={() => setIsProjectsDropdownOpen(!isProjectsDropdownOpen)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-              padding: '0.625rem 0.75rem',
-              borderRadius: '0.5rem',
-              background: isProjectsDropdownOpen ? '#10B981' : 'transparent',
-              color: isProjectsDropdownOpen ? '#FFFFFF' : '#A1A1AA',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              textDecoration: 'none'
-            }}
-            onMouseEnter={(e) => {
-              if (!isProjectsDropdownOpen) {
-                e.currentTarget.style.background = '#1A1A1A';
-                e.currentTarget.style.color = '#FFFFFF';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isProjectsDropdownOpen) {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#A1A1AA';
-              }
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <FolderIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Projects</span>
-                </div>
-            <ChevronDownIcon style={{ width: '16px', height: '16px', transform: isProjectsDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-          </button>
-
-          {isProjectsDropdownOpen && (
-            <div style={{ marginTop: '0.5rem', marginLeft: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {/* My Projects */}
-              {projects.map((project) => (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    background: pathname === `/projects/${project.id}` ? '#1A1A1A' : 'transparent',
-                    color: pathname === `/projects/${project.id}` ? '#FFFFFF' : '#A1A1AA',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (pathname !== `/projects/${project.id}`) {
-                      e.currentTarget.style.background = '#1A1A1A';
-                      e.currentTarget.style.color = '#FFFFFF';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== `/projects/${project.id}`) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#A1A1AA';
-                    }
-                  }}
-                >
-                  <div
-                    style={{ width: '10px', height: '10px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
-                  />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                    {project.name}
-                  </span>
-                </Link>
-              ))}
-
-              {projects.length === 0 && (
-                <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem' }}>
-                  No assigned projects yet
-                </div>
-              )}
-            </div>
-          )}
-          </div>
-
         {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             const showBadge = item.badge && unreadNotifications > 0;
             return (
-              <Link
-                key={item.name}
-                href={item.href}
+                  <Link
+                    key={item.name}
+                    href={item.href}
             style={{
               display: 'flex',
               alignItems: 'center',
