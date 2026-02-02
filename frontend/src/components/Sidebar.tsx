@@ -94,16 +94,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   }, [user]);
 
   const handleLogout = async () => {
-      await logout();
-      router.push('/login');
-  };
-
-  const toggleProjectExpand = (projectId: number) => {
-    setExpandedProjects(prev => 
-      prev.includes(projectId) 
-        ? prev.filter(id => id !== projectId)
-        : [...prev, projectId]
-    );
+    await logout();
+    router.push('/login');
   };
 
   // Task counts for categories
