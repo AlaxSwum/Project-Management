@@ -110,6 +110,9 @@ export default function ProjectDetailPage() {
     priority: 'medium',
     tags: '',
     assignee_ids: [] as number[],
+    report_to_ids: [] as number[],
+    start_date: '',
+    due_date: '',
   });
 
   useEffect(() => {
@@ -156,12 +159,15 @@ export default function ProjectDetailPage() {
         priority: newTask.priority,
         status: 'todo',
         assignee_ids: newTask.assignee_ids,
+        report_to_ids: newTask.report_to_ids,
         tags_list: newTask.tags.split(',').map(t => t.trim()).filter(Boolean),
+        start_date: newTask.start_date || null,
+        due_date: newTask.due_date || null,
       };
       
       const createdTask = await taskService.createTask(Number(params?.id), taskData);
       setTasks([...tasks, createdTask]);
-      setNewTask({ name: '', description: '', priority: 'medium', tags: '', assignee_ids: [] });
+      setNewTask({ name: '', description: '', priority: 'medium', tags: '', assignee_ids: [], report_to_ids: [], start_date: '', due_date: '' });
       setShowCreateTask(false);
       fetchProject();
     } catch (err) {
@@ -494,7 +500,7 @@ export default function ProjectDetailPage() {
       {/* Create Task Modal */}
       {showCreateTask && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '40rem', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Create New Task</h2>
               <button
@@ -507,8 +513,8 @@ export default function ProjectDetailPage() {
               </button>
             </div>
             
-            <form onSubmit={handleCreateTask} style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Task Name *</label>
                   <input
@@ -564,9 +570,117 @@ export default function ProjectDetailPage() {
                     <option value="urgent">Urgent</option>
                   </select>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Start Date</label>
+                    <input
+                      type="date"
+                      value={newTask.start_date}
+                      onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Due Date</label>
+                    <input
+                      type="date"
+                      value={newTask.due_date}
+                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Assign To (Hold Ctrl/Cmd for multiple)</label>
+                  <select
+                    multiple
+                    value={newTask.assignee_ids.map(String)}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
+                      setNewTask({ ...newTask, assignee_ids: selected });
+                    }}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s', minHeight: '100px' }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  >
+                    {project.members?.map(member => (
+                      <option key={member.id} value={member.id} style={{ padding: '0.5rem', background: '#0D0D0D', color: '#FFFFFF' }}>
+                        {member.name} ({member.email})
+                      </option>
+                    ))}
+                  </select>
+                  {newTask.assignee_ids.length > 0 && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {newTask.assignee_ids.map(id => {
+                        const member = project.members?.find(m => m.id === id);
+                        return member ? (
+                          <span key={id} style={{ padding: '0.25rem 0.625rem', background: '#2D2D2D', color: '#FFFFFF', fontSize: '0.75rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            {member.name}
+                            <button
+                              type="button"
+                              onClick={() => setNewTask({ ...newTask, assignee_ids: newTask.assignee_ids.filter(aid => aid !== id) })}
+                              style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: 0, display: 'flex' }}
+                            >
+                              <XMarkIcon style={{ width: '12px', height: '12px' }} />
+                            </button>
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Report To (Hold Ctrl/Cmd for multiple)</label>
+                  <select
+                    multiple
+                    value={newTask.report_to_ids.map(String)}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
+                      setNewTask({ ...newTask, report_to_ids: selected });
+                    }}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s', minHeight: '100px' }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  >
+                    {project.members?.map(member => (
+                      <option key={member.id} value={member.id} style={{ padding: '0.5rem', background: '#0D0D0D', color: '#FFFFFF' }}>
+                        {member.name} ({member.email})
+                      </option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.5rem' }}>
+                    Users selected here will receive notifications when this task is updated, status changes, or comments are added.
+                  </p>
+                  {newTask.report_to_ids.length > 0 && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {newTask.report_to_ids.map(id => {
+                        const member = project.members?.find(m => m.id === id);
+                        return member ? (
+                          <span key={id} style={{ padding: '0.25rem 0.625rem', background: '#8B5CF6', color: '#FFFFFF', fontSize: '0.75rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            {member.name}
+                            <button
+                              type="button"
+                              onClick={() => setNewTask({ ...newTask, report_to_ids: newTask.report_to_ids.filter(rid => rid !== id) })}
+                              style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', padding: 0, display: 'flex' }}
+                            >
+                              <XMarkIcon style={{ width: '12px', height: '12px' }} />
+                            </button>
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
               
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', gap: '0.75rem' }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateTask(false)}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import {
   HomeIcon,
   FolderIcon,
@@ -22,6 +23,7 @@ import {
   UserCircleIcon,
   Squares2X2Icon,
   ClipboardDocumentListIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -48,6 +50,7 @@ const NAV_ITEMS = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
   { name: 'Personal', href: '/personal', icon: UserCircleIcon },
   { name: 'My Tasks', href: '/my-tasks', icon: ClipboardDocumentListIcon },
+  { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
   { name: 'Invoices & Expenses', href: '/expenses', icon: CurrencyDollarIcon },
   { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
   { name: 'Meeting Schedule', href: '/calendar', icon: CalendarIcon },
@@ -65,6 +68,32 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const { user, logout } = useAuth();
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
   const [expandedProjects, setExpandedProjects] = useState<number[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { count } = await supabase
+          .from('task_notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .eq('is_read', false);
+        
+        setUnreadNotifications(count || 0);
+      } catch (error) {
+        // Error fetching notifications
+      }
+    };
+
+    fetchNotificationCount();
+    
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -124,6 +153,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
+            const showBadge = item.badge && unreadNotifications > 0;
             return (
               <Link
                 key={item.name}
@@ -137,7 +167,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   background: isActive ? '#10B981' : 'transparent',
                   color: isActive ? '#FFFFFF' : '#A1A1AA',
                   textDecoration: 'none',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  position: 'relative'
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -153,7 +184,24 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 }}
               >
                 <item.icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{item.name}</span>
+                {showBadge && (
+                  <span style={{ 
+                    minWidth: '20px', 
+                    height: '20px', 
+                    background: '#EF4444', 
+                    color: '#FFFFFF', 
+                    fontSize: '0.75rem', 
+                    fontWeight: 600, 
+                    borderRadius: '10px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    padding: '0 0.375rem'
+                  }}>
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </span>
+                )}
               </Link>
             );
           })}
