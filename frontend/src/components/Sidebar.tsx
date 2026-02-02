@@ -353,7 +353,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           <div style={{ marginTop: '1.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-                        </div>
+              </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {teamMembers.map((member, i) => (
                 <div
@@ -384,29 +384,29 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       <div style={{ borderTop: '1px solid #1F1F1F', padding: '0.75rem' }}>
         {/* Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  <button
+                            <button
             style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
           >
             <Squares2X2Icon style={{ width: '20px', height: '20px' }} />
-                  </button>
-                  <button
+                            </button>
+                      <button
             style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
                   >
             <ChartBarIcon style={{ width: '20px', height: '20px' }} />
-                  </button>
-              <button
+                      </button>
+                            <button
             style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
           >
             <Cog6ToothIcon style={{ width: '20px', height: '20px' }} />
-              </button>
-            </div>
-            
+                            </button>
+                </div>
+
         {/* User Profile */}
         <div 
           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
@@ -417,12 +417,12 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             <span style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.875rem' }}>
               {user?.name?.charAt(0) || 'U'}
             </span>
-                      </div>
+                </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
             <div style={{ color: '#52525B', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
-                        </div>
-          <button
+            </div>
+              <button
             onClick={handleLogout}
             style={{ padding: '0.375rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
             title="Logout"
@@ -430,9 +430,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
           >
             <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px' }} />
-          </button>
-                      </div>
-                    </div>
+              </button>
+            </div>
+                </div>
     </aside>
   );
 }

@@ -136,6 +136,7 @@ export default function ProjectDetailPage() {
     type: 'text',
     width: 150
   });
+  const [ganttMonth, setGanttMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
@@ -754,47 +755,139 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           ) : selectedView === 'gantt' ? (
-            // Gantt Chart View
+            // Gantt Chart View - Daily Timeline
             <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid #2D2D2D' }}>
-                <div style={{ width: '300px', padding: '1rem', background: '#141414', borderRight: '1px solid #2D2D2D' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase' }}>Task</div>
-                </div>
-                <div style={{ flex: 1, display: 'flex', overflowX: 'auto' }}>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const month = new Date(new Date().getFullYear(), i, 1).toLocaleDateString('en-US', { month: 'short' });
-                    return (
-                      <div key={i} style={{ minWidth: '100px', padding: '1rem', background: '#141414', borderRight: '1px solid #2D2D2D', textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A' }}>{month}</div>
-                      </div>
-                    );
-                  })}
+              {/* Gantt Header with Month Navigation */}
+              <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                  {ganttMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => {
+                      const newMonth = new Date(ganttMonth);
+                      newMonth.setMonth(newMonth.getMonth() - 1);
+                      setGanttMonth(newMonth);
+                    }}
+                    style={{ padding: '0.5rem 0.75rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                  >
+                    ← Previous
+                  </button>
+                  <button
+                    onClick={() => setGanttMonth(new Date())}
+                    style={{ padding: '0.5rem 0.75rem', background: '#3B82F6', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => {
+                      const newMonth = new Date(ganttMonth);
+                      newMonth.setMonth(newMonth.getMonth() + 1);
+                      setGanttMonth(newMonth);
+                    }}
+                    style={{ padding: '0.5rem 0.75rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                  >
+                    Next →
+                  </button>
                 </div>
               </div>
+
+              <div style={{ display: 'flex', borderBottom: '1px solid #2D2D2D' }}>
+                <div style={{ width: '280px', padding: '0.75rem 1rem', background: '#141414', borderRight: '1px solid #2D2D2D' }}>
+                  <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em' }}>Task</div>
+                </div>
+                <div style={{ flex: 1, display: 'flex', overflowX: 'auto', background: '#141414' }}>
+                  {(() => {
+                    const daysInMonth = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth() + 1, 0).getDate();
+                    return Array.from({ length: daysInMonth }, (_, i) => {
+                      const day = i + 1;
+                      const date = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth(), day);
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      
+                      return (
+                        <div key={day} style={{ minWidth: '32px', padding: '0.75rem 0.5rem', background: isToday ? '#10B98120' : '#141414', borderRight: '1px solid #2D2D2D', textAlign: 'center', borderLeft: isToday ? '2px solid #10B981' : 'none' }}>
+                          <div style={{ fontSize: '0.6875rem', fontWeight: isToday ? 700 : 600, color: isToday ? '#10B981' : '#71717A' }}>{day}</div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+              
               <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                {filteredTasks.filter(t => t.start_date && t.due_date).map((task, index) => (
-                  <div key={task.id} style={{ display: 'flex', borderBottom: '1px solid #1F1F1F' }}>
-                    <div style={{ width: '300px', padding: '1rem', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', borderRight: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === task.status)?.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: '0.875rem', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                {filteredTasks.filter(t => t.start_date && t.due_date).map((task, index) => {
+                  const taskStart = new Date(task.start_date!);
+                  const taskEnd = new Date(task.due_date!);
+                  const monthStart = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth(), 1);
+                  const daysInMonth = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth() + 1, 0).getDate();
+                  
+                  // Only show tasks that overlap with current month
+                  const monthEnd = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth(), daysInMonth);
+                  if (taskEnd < monthStart || taskStart > monthEnd) return null;
+                  
+                  // Calculate position and width in days
+                  const startDay = taskStart <= monthStart ? 1 : taskStart.getDate();
+                  const endDay = taskEnd >= monthEnd ? daysInMonth : taskEnd.getDate();
+                  const dayWidth = 32; // px per day
+                  const startOffset = (startDay - 1) * dayWidth;
+                  const widthInDays = (endDay - startDay + 1) * dayWidth;
+                  
+                  const isCompleted = task.status === 'done';
+                  const barColor = isCompleted ? '#10B981' : TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A';
+                  
+                  return (
+                    <div key={task.id} style={{ display: 'flex', borderBottom: '1px solid #1F1F1F' }}>
+                      <div style={{ width: '280px', padding: '1rem', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', borderRight: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: barColor, flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                      </div>
+                      <div style={{ flex: 1, position: 'relative', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', padding: '1rem 0', minHeight: '52px' }}>
+                        <div 
+                          onClick={() => setSelectedTask(task)}
+                          style={{ 
+                            position: 'absolute', 
+                            top: '50%', 
+                            transform: 'translateY(-50%)', 
+                            left: `${startOffset}px`, 
+                            width: `${widthInDays}px`, 
+                            height: '16px', 
+                            background: barColor, 
+                            borderRadius: '8px', 
+                            minWidth: '20px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: isCompleted ? '0 0 8px rgba(16, 185, 129, 0.4)' : 'none'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'; e.currentTarget.style.boxShadow = `0 4px 12px ${barColor}60`; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; e.currentTarget.style.boxShadow = isCompleted ? '0 0 8px rgba(16, 185, 129, 0.4)' : 'none'; }}
+                        >
+                          <div style={{ position: 'absolute', top: '-20px', left: '0', fontSize: '0.7rem', color: '#A1A1AA', whiteSpace: 'nowrap' }}>
+                            {taskStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                          <div style={{ position: 'absolute', top: '-20px', right: '0', fontSize: '0.7rem', color: '#A1A1AA', whiteSpace: 'nowrap' }}>
+                            {taskEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, position: 'relative', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', padding: '1rem 0' }}>
-                      {(() => {
-                        const yearStart = new Date(new Date().getFullYear(), 0, 1);
-                        const yearEnd = new Date(new Date().getFullYear(), 11, 31);
-                        const taskStart = new Date(task.start_date!);
-                        const taskEnd = new Date(task.due_date!);
-                        const totalDays = (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24);
-                        const startOffset = ((taskStart.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) / totalDays * 100;
-                        const duration = ((taskEnd.getTime() - taskStart.getTime()) / (1000 * 60 * 60 * 24)) / totalDays * 100;
-                        
-                        return (
-                          <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: `${startOffset}%`, width: `${duration}%`, height: '12px', background: TASK_STATUSES.find(s => s.value === task.status)?.color, borderRadius: '6px', minWidth: '20px' }} />
-                        );
-                      })()}
-                    </div>
+                  );
+                })}
+                {filteredTasks.filter(t => t.start_date && t.due_date).filter(t => {
+                  const taskStart = new Date(t.start_date!);
+                  const taskEnd = new Date(t.due_date!);
+                  const monthStart = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth(), 1);
+                  const daysInMonth = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth() + 1, 0).getDate();
+                  const monthEnd = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth(), daysInMonth);
+                  return taskEnd >= monthStart && taskStart <= monthEnd;
+                }).length === 0 && (
+                  <div style={{ padding: '3rem', textAlign: 'center', color: '#71717A' }}>
+                    No tasks with dates in this month
                   </div>
-                ))}
+                )}
               </div>
             </div>
           ) : selectedView === 'list' ? (
@@ -1040,10 +1133,22 @@ export default function ProjectDetailPage() {
                       return (
                         <div
                           key={task.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, task)}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
                           onClick={() => setSelectedTask(task)}
-                          style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '1rem', cursor: 'pointer', transition: 'all 0.2s', position: 'relative' }}
+                          style={{ 
+                            background: '#1A1A1A', 
+                            border: '1px solid #2D2D2D', 
+                            borderRadius: '0.75rem', 
+                            padding: '1rem', 
+                            cursor: 'pointer', 
+                            transition: 'all 0.2s', 
+                            position: 'relative',
+                            minHeight: '220px',
+                            maxHeight: '220px',
+                            display: 'flex',
+                            flexDirection: 'column'
+                          }}
                           onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.transform = 'translateY(0)'; }}
                         >
@@ -1076,11 +1181,14 @@ export default function ProjectDetailPage() {
             
                           {/* Description */}
                           {task.description && (
-                            <p style={{ color: '#71717A', fontSize: '0.8125rem', marginBottom: '1rem', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{task.description}</p>
+                            <p style={{ color: '#71717A', fontSize: '0.8125rem', marginBottom: '1rem', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', flex: '0 0 auto' }}>{task.description}</p>
                           )}
 
+                          {/* Spacer to push footer to bottom */}
+                          <div style={{ flex: 1 }} />
+
                           {/* Progress */}
-                          <div style={{ marginBottom: '1rem' }}>
+                          <div style={{ marginBottom: '1rem', flex: '0 0 auto' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
                               <span style={{ color: '#71717A', fontSize: '0.75rem' }}>Progress</span>
                               <span style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 500 }}>
@@ -1093,7 +1201,7 @@ export default function ProjectDetailPage() {
                 </div>
                 
                           {/* Footer */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid #2D2D2D' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid #2D2D2D', flex: '0 0 auto' }}>
                             {/* Avatars */}
                             <div style={{ display: 'flex', gap: '-0.375rem' }}>
                               {(task.assignees || []).slice(0, 2).map((assignee, i) => (
