@@ -179,14 +179,29 @@ export default function ProjectDetailPage() {
 
   const fetchProject = async () => {
     try {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
       const [projectData, tasksData, projectsData] = await Promise.all([
         projectService.getProject(Number(params?.id)),
         taskService.getProjectTasks(Number(params?.id)),
         projectService.getProjects()
       ]);
+      
+      // Filter projects to only show where user is assigned to tasks
+      const { data: myTasks } = await supabase
+        .from('projects_task')
+        .select('project_id')
+        .contains('assignee_ids', [user.id]);
+      
+      const assignedProjectIds = new Set(myTasks?.map(t => t.project_id) || []);
+      const assignedProjects = projectsData.filter(p => assignedProjectIds.has(p.id));
+      
       setProject(projectData);
       setTasks(tasksData);
-      setAllProjects(projectsData);
+      setAllProjects(assignedProjects); // Only assigned projects
     } catch (err: any) {
       if (err.response?.status === 404) {
         router.push('/dashboard');
