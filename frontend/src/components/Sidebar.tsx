@@ -73,9 +73,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   // Fetch unread notification count
   useEffect(() => {
     const fetchNotificationCount = async () => {
-      if (!user?.id) return;
-      
-      try {
+    if (!user?.id) return;
+    
+    try {
         const { count } = await supabase
           .from('task_notifications')
           .select('*', { count: 'exact', head: true })
@@ -83,7 +83,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           .eq('is_read', false);
         
         setUnreadNotifications(count || 0);
-      } catch (error) {
+    } catch (error) {
         // Error fetching notifications
       }
     };
@@ -96,8 +96,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   }, [user]);
 
   const handleLogout = async () => {
-    await logout();
-    router.push('/login');
+      await logout();
+      router.push('/login');
   };
 
   const toggleProjectExpand = (projectId: number) => {
@@ -137,19 +137,19 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         >
           <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '1.125rem' }}>F</span>
-          </div>
+            </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ color: '#FFFFFF', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Focus</span>
               <ChevronDownIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
+              </div>
             </div>
           </div>
         </div>
-        </div>
 
-      {/* Navigation */}
+        {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
-        {/* Main Navigation */}
+          {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
@@ -186,7 +186,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 <item.icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                 <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{item.name}</span>
                 {showBadge && (
-                  <span style={{ 
+                <span style={{
                     minWidth: '20px', 
                     height: '20px', 
                     background: '#EF4444', 
@@ -194,24 +194,24 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                     fontSize: '0.75rem', 
                     fontWeight: 600, 
                     borderRadius: '10px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                     padding: '0 0.375rem'
-                  }}>
+                }}>
                     {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                  </span>
-                )}
-              </Link>
+                </span>
+              )}
+                  </Link>
             );
           })}
-        </div>
+              </div>
 
         {/* Personal Section */}
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Personal</span>
-          </div>
+              </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {PERSONAL_ITEMS.map((item) => {
               const isActive = pathname === item.href;
@@ -219,24 +219,24 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
                     padding: '0.625rem 0.75rem',
                     borderRadius: '0.5rem',
                     background: isActive ? '#10B981' : 'transparent',
                     color: isActive ? '#FFFFFF' : '#A1A1AA',
                     textDecoration: 'none',
                     transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
+            }} 
+            onMouseEnter={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background = '#1A1A1A';
                       e.currentTarget.style.color = '#FFFFFF';
                     }
-                  }}
-                  onMouseLeave={(e) => {
+            }} 
+            onMouseLeave={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
                       e.currentTarget.style.color = '#A1A1AA';
@@ -263,9 +263,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Projects & Companies</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
                   onCreateProject();
                 }}
                 style={{ padding: '0.25rem', background: 'transparent', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', transition: 'background 0.2s' }}
@@ -287,36 +287,36 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 return (
                   <div key={project.id}>
                     <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
+            style={{
+              display: 'flex',
+              alignItems: 'center',
                         gap: '0.5rem',
                         padding: '0.5rem 0.75rem',
                         borderRadius: '0.5rem',
-                        cursor: 'pointer',
+              cursor: 'pointer',
                         background: isActive ? '#1A1A1A' : 'transparent',
                         color: isActive ? '#FFFFFF' : '#A1A1AA',
                         transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
+            }} 
+            onMouseEnter={(e) => {
                         if (!isActive) {
                           e.currentTarget.style.background = '#1A1A1A';
                           e.currentTarget.style.color = '#FFFFFF';
                         }
-                      }}
-                      onMouseLeave={(e) => {
+            }} 
+            onMouseLeave={(e) => {
                         if (!isActive) {
                           e.currentTarget.style.background = 'transparent';
                           e.currentTarget.style.color = '#A1A1AA';
                         }
                       }}
                     >
-                      <button
+              <button
                         onClick={() => toggleProjectExpand(project.id)}
                         style={{ padding: '0.125rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
-                      >
+              >
                         <ChevronRightIcon style={{ width: '12px', height: '12px', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
-                      </button>
+              </button>
                       <div
                         style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
                       />
@@ -326,8 +326,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                       >
                         {project.name}
                       </Link>
-                    </div>
                   </div>
+                </div>
                 );
               })}
 
@@ -344,15 +344,15 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   </button>
                 </div>
               )}
-            </div>
-          )}
+        </div>
+      )}
             </div>
             
         {/* Categories Section */}
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Categories</span>
-          </div>
+              </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {[
               { name: 'To Do', color: '#EF4444', count: todoCount || 0 },
@@ -369,19 +369,19 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: category.color }} />
                   <span style={{ fontSize: '0.875rem' }}>{category.name}</span>
-                </div>
+                  </div>
                 <span style={{ fontSize: '0.75rem', background: '#2D2D2D', padding: '0.125rem 0.5rem', borderRadius: '0.25rem' }}>{category.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
 
         {/* Messages Section - Only Real Team Members */}
         {teamMembers.length > 0 && (
           <div style={{ marginTop: '1.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-            </div>
+                        </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {teamMembers.map((member, i) => (
                 <div
@@ -394,17 +394,17 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                     style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4] }}
                   >
                     {member.name.charAt(0).toUpperCase()}
-                  </div>
+                        </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {member.role || 'Team Member'}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
         )}
       </nav>
 
@@ -412,29 +412,29 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       <div style={{ borderTop: '1px solid #1F1F1F', padding: '0.75rem' }}>
         {/* Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <button 
+                  <button
             style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
           >
             <Squares2X2Icon style={{ width: '20px', height: '20px' }} />
-          </button>
-          <button 
+                  </button>
+                  <button
             style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-          >
+                  >
             <ChartBarIcon style={{ width: '20px', height: '20px' }} />
-          </button>
-          <button 
+                  </button>
+              <button
             style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
           >
             <Cog6ToothIcon style={{ width: '20px', height: '20px' }} />
-          </button>
-        </div>
-
+              </button>
+            </div>
+            
         {/* User Profile */}
         <div 
           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
@@ -445,11 +445,11 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             <span style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.875rem' }}>
               {user?.name?.charAt(0) || 'U'}
             </span>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
             <div style={{ color: '#52525B', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
-          </div>
+                        </div>
           <button
             onClick={handleLogout}
             style={{ padding: '0.375rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
@@ -459,8 +459,8 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           >
             <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px' }} />
           </button>
-        </div>
-      </div>
+                      </div>
+                    </div>
     </aside>
   );
 }

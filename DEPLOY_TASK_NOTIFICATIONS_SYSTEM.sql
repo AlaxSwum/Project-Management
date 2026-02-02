@@ -266,6 +266,7 @@ CREATE TABLE IF NOT EXISTS task_comments (
     task_id BIGINT NOT NULL REFERENCES projects_task(id) ON DELETE CASCADE,
     project_id BIGINT NOT NULL REFERENCES projects_project(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
+    user_name TEXT NOT NULL,
     comment_text TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -273,6 +274,26 @@ CREATE TABLE IF NOT EXISTS task_comments (
 
 CREATE INDEX IF NOT EXISTS idx_task_comments_task ON task_comments(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_comments_created ON task_comments(created_at DESC);
+
+-- Step 6b: Create table for task attachment links (URLs instead of file uploads)
+CREATE TABLE IF NOT EXISTS task_attachment_links (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES projects_task(id) ON DELETE CASCADE,
+    project_id BIGINT NOT NULL REFERENCES projects_project(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
+    user_name TEXT NOT NULL,
+    attachment_url TEXT NOT NULL,
+    attachment_name TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_attachment_links_task ON task_attachment_links(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_attachment_links_created ON task_attachment_links(created_at DESC);
+
+ALTER TABLE task_attachment_links DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON task_attachment_links TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE task_attachment_links_id_seq TO authenticated;
 
 -- Step 7: Create task activity log table
 CREATE TABLE IF NOT EXISTS task_activity_log (
@@ -295,7 +316,56 @@ ALTER TABLE task_activity_log DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON task_activity_log TO authenticated;
 GRANT USAGE, SELECT ON SEQUENCE task_activity_log_id_seq TO authenticated;
 
--- Step 8: Create function to notify on comments
+-- Step 8a: Create function to notify on attachment links
+CREATE OR REPLACE FUNCTION notify_task_attachment()
+RETURNS TRIGGER AS $$
+DECLARE
+    recipient_id_var INTEGER;
+    task_record RECORD;
+BEGIN
+    -- Get task information
+    SELECT id, name, project_id, report_to_ids, assignee_ids INTO task_record
+    FROM projects_task
+    WHERE id = NEW.task_id;
+
+    -- Notify report_to users
+    IF task_record.report_to_ids IS NOT NULL THEN
+        FOREACH recipient_id_var IN ARRAY task_record.report_to_ids
+        LOOP
+            IF recipient_id_var != NEW.user_id THEN
+                INSERT INTO task_notifications (
+                    task_id,
+                    project_id,
+                    recipient_id,
+                    sender_id,
+                    notification_type,
+                    message,
+                    task_name
+                ) VALUES (
+                    NEW.task_id,
+                    NEW.project_id,
+                    recipient_id_var,
+                    NEW.user_id,
+                    'attachment_added',
+                    NEW.user_name || ' added an attachment link to: ' || task_record.name,
+                    task_record.name
+                );
+            END IF;
+        END LOOP;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_notify_task_attachment ON task_attachment_links;
+
+CREATE TRIGGER trigger_notify_task_attachment
+    AFTER INSERT ON task_attachment_links
+    FOR EACH ROW
+    EXECUTE FUNCTION notify_task_attachment();
+
+-- Step 8b: Create function to notify on comments
 CREATE OR REPLACE FUNCTION notify_task_comment()
 RETURNS TRIGGER AS $$
 DECLARE
