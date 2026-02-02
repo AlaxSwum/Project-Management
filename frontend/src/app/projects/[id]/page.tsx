@@ -511,7 +511,7 @@ export default function ProjectDetailPage() {
             <span style={{ color: '#71717A' }}>Website</span>
             <span style={{ color: '#3D3D3D' }}>&gt;</span>
             <span style={{ color: '#FFFFFF' }}>{project.name}</span>
-          </div>
+              </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ display: 'flex', gap: '-0.5rem' }}>
               {project.members?.slice(0, 4).map((member, i) => (
@@ -580,7 +580,7 @@ export default function ProjectDetailPage() {
                 { id: 'gantt', label: 'Gantt', icon: ChartBarIcon },
                 { id: 'calendar', label: 'Calendar', icon: CalIcon }
               ].map((view) => (
-                <button
+                  <button
                   key={view.id}
                   onClick={() => setSelectedView(view.id as any)}
                   style={{
@@ -622,7 +622,7 @@ export default function ProjectDetailPage() {
                   onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                 />
               </div>
-              <button 
+                  <button
                 onClick={() => setShowFilterPanel(!showFilterPanel)}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: showFilterPanel ? '#10B981' : '#1A1A1A', border: '1px solid', borderColor: showFilterPanel ? '#10B981' : '#2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: showFilterPanel ? '#FFFFFF' : '#A1A1AA', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
               >
@@ -633,7 +633,7 @@ export default function ProjectDetailPage() {
                     {filters.status.length + filters.priority.length + filters.assignee.length + filters.tags.length}
                   </span>
                 )}
-              </button>
+                  </button>
                 </div>
           </div>
 
@@ -720,12 +720,12 @@ export default function ProjectDetailPage() {
 
               {/* Clear Filters Button */}
               {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
-                <button
+                  <button
                   onClick={() => setFilters({ status: [], priority: [], assignee: [], tags: [] })}
                   style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#2D2D2D', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
-                >
+                  >
                   Clear All Filters
-                </button>
+                  </button>
               )}
             </div>
           )}
@@ -815,7 +815,7 @@ export default function ProjectDetailPage() {
               <div style={{ display: 'flex', borderBottom: '1px solid #2D2D2D' }}>
                 <div style={{ width: '280px', padding: '0.75rem 1rem', background: '#141414', borderRight: '1px solid #2D2D2D' }}>
                   <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em' }}>Task</div>
-                </div>
+            </div>
                 <div style={{ flex: 1, display: 'flex', overflowX: 'auto', background: '#141414' }}>
                   {(() => {
                     const daysInMonth = new Date(ganttMonth.getFullYear(), ganttMonth.getMonth() + 1, 0).getDate();
@@ -827,7 +827,7 @@ export default function ProjectDetailPage() {
                       return (
                         <div key={day} style={{ minWidth: '32px', padding: '0.75rem 0.5rem', background: isToday ? '#10B98120' : '#141414', borderRight: '1px solid #2D2D2D', textAlign: 'center', borderLeft: isToday ? '2px solid #10B981' : 'none' }}>
                           <div style={{ fontSize: '0.6875rem', fontWeight: isToday ? 700 : 600, color: isToday ? '#10B981' : '#71717A' }}>{day}</div>
-                        </div>
+              </div>
                       );
                     });
                   })()}
@@ -883,7 +883,7 @@ export default function ProjectDetailPage() {
                         >
                           <div style={{ position: 'absolute', top: '-20px', left: '0', fontSize: '0.7rem', color: '#A1A1AA', whiteSpace: 'nowrap' }}>
                             {taskStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </div>
+                    </div>
                           <div style={{ position: 'absolute', top: '-20px', right: '0', fontSize: '0.7rem', color: '#A1A1AA', whiteSpace: 'nowrap' }}>
                             {taskEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </div>
@@ -902,10 +902,10 @@ export default function ProjectDetailPage() {
                 }).length === 0 && (
                   <div style={{ padding: '3rem', textAlign: 'center', color: '#71717A' }}>
                     No tasks with dates in this month
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
           ) : selectedView === 'list' ? (
             // Table View (Monday.com style - Improved)
             <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}>
@@ -976,7 +976,7 @@ export default function ProjectDetailPage() {
                                 <span style={{ padding: '0.25rem 0.625rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
                                   {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
                                 </span>
-                              </div>
+            </div>
 
                               {/* Status breakdown */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -986,9 +986,9 @@ export default function ProjectDetailPage() {
                                     <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
                                       {status.count} {status.label}
                                     </span>
-                                  </div>
+          </div>
                                 ))}
-                              </div>
+        </div>
                             </button>
                           </td>
                         </tr>
@@ -1053,7 +1053,7 @@ export default function ProjectDetailPage() {
                                 display: 'inline-block'
                               }}>
                                 {task.status === 'done' ? 'Done' : task.status === 'in_progress' ? 'In Progress' : task.status.replace('_', ' ')}
-                              </div>
+            </div>
                             </td>
                             <td style={{ padding: '1rem', color: task.due_date ? '#FFFFFF' : '#52525B', fontSize: '0.875rem' }}>
                               {task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}
@@ -1149,8 +1149,8 @@ export default function ProjectDetailPage() {
                       return (
                         <div
                           key={task.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, task)}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, task)}
                           onClick={() => setSelectedTask(task)}
                           style={{ 
                             background: '#1A1A1A', 
@@ -1182,7 +1182,7 @@ export default function ProjectDetailPage() {
                                   </span>
                                 );
                               })}
-                            </div>
+                          </div>
                           )}
                               
                           {/* Title and Menu */}
@@ -1193,7 +1193,7 @@ export default function ProjectDetailPage() {
                             >
                               <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
                             </button>
-            </div>
+                                            </div>
             
                           {/* Description */}
                           {task.description && (
@@ -1226,23 +1226,23 @@ export default function ProjectDetailPage() {
                                   style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899'][i % 2], marginLeft: i > 0 ? '-6px' : '0' }}
                                 >
                                   {assignee.name.charAt(0)}
-                </div>
-                              ))}
-            </div>
+                                          </div>
+                                        ))}
+                                          </div>
 
                             {/* Counts */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
                                 <PaperClipIcon style={{ width: '14px', height: '14px' }} />
                                 <span>{Math.floor(Math.random() * 5) + 1}</span>
-              </div>
+                                      </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
                                 <ChatBubbleLeftIcon style={{ width: '14px', height: '14px' }} />
                                 <span>{Math.floor(Math.random() * 20) + 1}</span>
-                  </div>
-                                      </div>
-                                      </div>
+                                  </div>
                                 </div>
+                                      </div>
+                        </div>
                       );
                     })}
 
@@ -1251,13 +1251,13 @@ export default function ProjectDetailPage() {
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '150px', border: '2px dashed #2D2D2D', borderRadius: '0.75rem', background: 'transparent' }}>
                         <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks</span>
                                 </div>
-                              )}
-                                </div>
-                        </div>
-                      );
-            })}
-            </div>
                         )}
+                  </div>
+                </div>
+              );
+            })}
+                                </div>
+                              )}
                   </div>
             </div>
             
@@ -1275,7 +1275,7 @@ export default function ProjectDetailPage() {
               >
                 <XMarkIcon style={{ width: '20px', height: '20px' }} />
               </button>
-                </div>
+              </div>
             
             <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
               <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -1291,8 +1291,8 @@ export default function ProjectDetailPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
-                  </div>
-                
+                                    </div>
+            
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Description</label>
                   <textarea
@@ -1304,7 +1304,7 @@ export default function ProjectDetailPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
-                  </div>
+                </div>
                 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Tags (comma separated)</label>
@@ -1317,7 +1317,7 @@ export default function ProjectDetailPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
-                  </div>
+                </div>
                 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Priority</label>
@@ -1333,8 +1333,8 @@ export default function ProjectDetailPage() {
                     <option value="high">High</option>
                     <option value="urgent">Urgent</option>
                   </select>
-                  </div>
-
+                </div>
+                
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Start Date</label>
@@ -1365,7 +1365,7 @@ export default function ProjectDetailPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
                     {project.members?.map((member, i) => {
                       const isSelected = newTask.assignee_ids.includes(member.id);
-                      return (
+                    return (
                         <label
                           key={member.id}
                           style={{
@@ -1377,7 +1377,7 @@ export default function ProjectDetailPage() {
                             border: '1px solid',
                             borderColor: isSelected ? '#3D3D3D' : '#2D2D2D',
                             borderRadius: '0.5rem',
-                            cursor: 'pointer',
+                        cursor: 'pointer',
                             transition: 'all 0.2s'
                           }}
                           onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
@@ -1397,14 +1397,14 @@ export default function ProjectDetailPage() {
                           />
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
                             {member.name.charAt(0)}
-                          </div>
+                                      </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.name}
-                            </div>
+                                      </div>
                             <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.email}
-                            </div>
+                                </div>
                           </div>
                         </label>
                       );
@@ -1414,8 +1414,8 @@ export default function ProjectDetailPage() {
                         No team members available
                       </div>
                     )}
-                  </div>
-                </div>
+                          </div>
+                                </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>
@@ -1431,8 +1431,8 @@ export default function ProjectDetailPage() {
                         <label
                           key={member.id}
                           style={{
-                            display: 'flex',
-                            alignItems: 'center',
+                              display: 'flex',
+                              alignItems: 'center',
                             gap: '0.75rem',
                             padding: '0.75rem',
                             background: isSelected ? '#1A1A1A' : 'transparent',
@@ -1441,8 +1441,8 @@ export default function ProjectDetailPage() {
                             borderRadius: '0.5rem',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
-                            position: 'relative'
-                          }}
+                                position: 'relative'
+                              }}
                           onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
                           onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
                         >
@@ -1460,14 +1460,14 @@ export default function ProjectDetailPage() {
                           />
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
                             {member.name.charAt(0)}
-                          </div>
+                            </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.name}
-                            </div>
+                              </div>
                             <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.email}
-                            </div>
+                                </div>
                           </div>
                           {isSelected && (
                             <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', width: '6px', height: '6px', background: '#3B82F6', borderRadius: '50%', boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }} />
@@ -1478,14 +1478,14 @@ export default function ProjectDetailPage() {
                     {(!project.members || project.members.length === 0) && (
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
                         No team members available
-                      </div>
+                            </div>
                     )}
-                  </div>
+                          </div>
                   {newTask.report_to_ids.length > 0 && (
                     <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '0.5rem' }}>
                       <div style={{ fontSize: '0.75rem', color: '#71717A', marginBottom: '0.5rem' }}>
                         {newTask.report_to_ids.length} {newTask.report_to_ids.length === 1 ? 'user' : 'users'} will be notified
-                      </div>
+                                </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
                         {newTask.report_to_ids.map(id => {
                           const member = project.members?.find(m => m.id === id);
@@ -1498,11 +1498,11 @@ export default function ProjectDetailPage() {
                           if (i === 0) return [curr];
                           return [...prev, <span key={`sep-${i}`} style={{ color: '#71717A' }}>,</span>, curr];
                         }, [])}
-                      </div>
+                        </div>
                     </div>
-                  )}
-                </div>
-
+                        )}
+            </div>
+            
                 {/* Subtasks Section */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Subtasks</label>
@@ -1519,9 +1519,9 @@ export default function ProjectDetailPage() {
                           >
                             <XMarkIcon style={{ width: '16px', height: '16px' }} />
                           </button>
-                        </div>
+                </div>
                       ))}
-                    </div>
+                  </div>
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <input
@@ -1544,8 +1544,8 @@ export default function ProjectDetailPage() {
                       Add
                     </button>
                   </div>
-                </div>
-              </div>
+                  </div>
+                  </div>
               
               <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', gap: '0.75rem' }}>
                 <button
@@ -1565,11 +1565,11 @@ export default function ProjectDetailPage() {
                 >
                   Create Task
                 </button>
-                               </div>
+                </div>
             </form>
-              </div>
-              </div>
-            )}
+            </div>
+          </div>
+        )}
 
       {/* Task Detail Modal - Dark Theme */}
       {selectedTask && (
@@ -1584,14 +1584,14 @@ export default function ProjectDetailPage() {
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Task Detail</h2>
-              <button
+                <button
                 onClick={() => setSelectedTask(null)}
                 style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
               >
                 <XMarkIcon style={{ width: '20px', height: '20px' }} />
-              </button>
+                </button>
             </div>
 
             {/* Modal Body */}
@@ -1613,8 +1613,8 @@ export default function ProjectDetailPage() {
                       <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
                         {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
                       </span>
-                    </div>
-                  </div>
+                </div>
+              </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
@@ -1623,9 +1623,9 @@ export default function ProjectDetailPage() {
                         <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                           <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: ['#8B5CF6', '#F59E0B', '#EC4899'][i % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600 }}>
                             {assignee.name.charAt(0)}
-                          </div>
+            </div>
                           <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
-                        </div>
+                </div>
                       ))}
                       {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
                         <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>
@@ -1639,9 +1639,9 @@ export default function ProjectDetailPage() {
                       <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                         <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
                           {new Date(selectedTask.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>
+                                     </span>
+                               </div>
+                               </div>
                   )}
 
                   {selectedTask.due_date && (
@@ -1650,9 +1650,9 @@ export default function ProjectDetailPage() {
                       <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                         <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
                           {new Date(selectedTask.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>
+                                 </span>
+                               </div>
+                               </div>
                   )}
 
                   <div>
@@ -1661,9 +1661,9 @@ export default function ProjectDetailPage() {
                       <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'low' ? '#10B981' : '#FFFFFF', fontWeight: 500, textTransform: 'capitalize' }}>
                         {selectedTask.priority}
                       </span>
-                    </div>
-                  </div>
                 </div>
+              </div>
+              </div>
 
                 {/* Tabs and Content Section */}
                 <div style={{ marginTop: '2rem' }}>
@@ -1682,23 +1682,23 @@ export default function ProjectDetailPage() {
                       { id: 'attachment', label: 'Attachment', count: attachments.length },
                       { id: 'comments', label: 'Comments', count: comments.length }
                     ].map((tab) => (
-                      <button
+                    <button 
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        style={{
+                      style={{
                           padding: '0.75rem 0',
                           fontSize: '0.875rem',
                           fontWeight: 500,
                           color: activeTab === tab.id ? '#10B981' : '#71717A',
                           borderBottom: activeTab === tab.id ? '2px solid #10B981' : 'none',
                           background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
+                        border: 'none',
+                        cursor: 'pointer',
                           transition: 'color 0.2s'
                         }}
                       >
                         {tab.label}
-                      </button>
+                    </button>
                     ))}
                   </div>
 
@@ -1718,7 +1718,7 @@ export default function ProjectDetailPage() {
                               />
                               <span style={{ flex: 1, color: subtask.is_completed ? '#52525B' : '#FFFFFF', fontSize: '0.9375rem', textDecoration: subtask.is_completed ? 'line-through' : 'none' }}>
                                 {subtask.title}
-                              </span>
+                    </span>
                             </div>
                           ))}
                         </div>
@@ -1731,15 +1731,15 @@ export default function ProjectDetailPage() {
                             placeholder="+ Add subtask"
                             style={{ flex: 1, padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none' }}
                           />
-                          <button
+                    <button 
                             onClick={addSubtask}
                             type="button"
                             style={{ padding: '0.625rem 1rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
                           >
                             Add
-                          </button>
-                        </div>
-                      </div>
+                    </button>
+                  </div>
+                </div>
                     )}
 
                     {/* Attachments Tab */}
@@ -1758,13 +1758,13 @@ export default function ProjectDetailPage() {
                                 >
                                   {attachment.attachment_name}
                                 </a>
-                              </div>
+                            </div>
                               <div style={{ fontSize: '0.75rem', color: '#71717A', marginLeft: '1.75rem' }}>
                                 Added by {attachment.user_name} • {new Date(attachment.created_at).toLocaleDateString()}
-                              </div>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                    ))}
+                  </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <input
                             type="text"
@@ -1791,9 +1791,9 @@ export default function ProjectDetailPage() {
                             </button>
                           </div>
                         </div>
-                      </div>
-                    )}
-
+                                      </div>
+                                    )}
+                                    
                     {/* Comments Tab */}
                     {activeTab === 'comments' && (
                       <div>
@@ -1803,7 +1803,7 @@ export default function ProjectDetailPage() {
                               <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem' }}>
                                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
                                   {comment.user_name?.charAt(0) || 'U'}
-                                </div>
+                                  </div>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ marginBottom: '0.5rem' }}>
                                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{comment.user_name || 'User'}</span>
@@ -1818,7 +1818,7 @@ export default function ProjectDetailPage() {
                               </div>
                             </div>
                           ))}
-                        </div>
+                  </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <textarea
                             value={newComment}
@@ -1834,11 +1834,11 @@ export default function ProjectDetailPage() {
                           >
                             Send
                           </button>
-                        </div>
+                </div>
                       </div>
                     )}
-                  </div>
-                </div>
+              </div>
+            </div>
 
                 {/* Created by */}
                 <div style={{ marginTop: '2rem', padding: '1rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
@@ -1846,13 +1846,13 @@ export default function ProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600 }}>
                       {selectedTask.created_by?.name?.charAt(0) || 'U'}
-                    </div>
+                  </div>
                     <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
                       {selectedTask.created_by?.name || 'Unknown'}
                     </span>
                   </div>
-                </div>
-              </div>
+                  </div>
+                  </div>
               
               {/* Right Panel - Project Status & Activities */}
               <div style={{ width: '380px', background: '#0D0D0D', padding: '1.5rem', overflowY: 'auto', borderLeft: '1px solid #2D2D2D' }}>
@@ -1863,13 +1863,13 @@ export default function ProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', padding: '0.75rem', background: '#1A1A1A', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
                     <div style={{ width: '28px', height: '28px', borderRadius: '0.375rem', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ClockIcon style={{ width: '16px', height: '16px', color: '#FFFFFF' }} />
-                    </div>
+                </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>Time Remaining</div>
                       <div style={{ fontSize: '0.75rem', color: '#71717A' }}>
                         {selectedTask.due_date ? Math.max(0, Math.ceil((new Date(selectedTask.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 'd' : 'No due date'}
-                      </div>
-                    </div>
+              </div>
+                  </div>
                   </div>
 
                   <div style={{ marginBottom: '0.75rem' }}>
@@ -1878,42 +1878,42 @@ export default function ProjectDetailPage() {
                       <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#10B981' }}>
                         {subtasks.length > 0 ? Math.round((subtasks.filter(s => s.is_completed).length / subtasks.length) * 100) : 0}%
                       </span>
-                    </div>
+                  </div>
                     <div style={{ height: '8px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
                       <div style={{ width: `${subtasks.length > 0 ? (subtasks.filter(s => s.is_completed).length / subtasks.length) * 100 : 0}%`, height: '100%', background: '#10B981', borderRadius: '9999px', transition: 'width 0.3s' }} />
-                    </div>
                   </div>
                 </div>
-
+              </div>
+              
                 {/* Activities */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                     <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#71717A', margin: 0 }}>Activities</h3>
-                  </div>
+                    </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {activityLog.map((activity) => (
                       <div key={activity.id} style={{ display: 'flex', gap: '0.75rem' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600, flexShrink: 0 }}>
                           {activity.user_name.charAt(0)}
-                        </div>
+                  </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ marginBottom: '0.25rem' }}>
                             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{activity.user_name} </span>
                             <span style={{ fontSize: '0.875rem', color: '#A1A1AA' }}>{activity.description}</span>
-                          </div>
+                  </div>
                           <div style={{ fontSize: '0.75rem', color: '#71717A' }}>
                             {new Date(activity.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(activity.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
+                </div>
                           {activity.activity_type === 'status_changed' && (
                             <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>To Do</span>
                               <span style={{ fontSize: '0.75rem', color: '#71717A' }}>→</span>
                               <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(245, 158, 11, 0.2)', color: '#F59E0B', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>In Progress</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              </div>
+            )}
+          </div>
+            </div>
                     ))}
 
                     {/* Default activity - task created */}
@@ -1921,25 +1921,25 @@ export default function ProjectDetailPage() {
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600 }}>
                           {selectedTask.created_by?.name?.charAt(0) || 'U'}
-                        </div>
+            </div>
                         <div>
                           <div style={{ marginBottom: '0.25rem' }}>
                             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{selectedTask.created_by?.name || 'User'} </span>
                             <span style={{ fontSize: '0.875rem', color: '#A1A1AA' }}>created task</span>
-                          </div>
+          </div>
                           <div style={{ fontSize: '0.75rem', color: '#71717A' }}>
                             {new Date(selectedTask.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(selectedTask.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              </div>
+                    </div>
+                    )}
+                          </div>
+                              </div>
+                      </div>
+                          </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-        </div>
-        </div>
-          </div>
-        </div>
-      )}
+                      )}
 
       {/* Add Column Modal */}
       {showAddColumnModal && (
@@ -1959,20 +1959,20 @@ export default function ProjectDetailPage() {
               >
                 <XMarkIcon style={{ width: '20px', height: '20px' }} />
               </button>
-            </div>
+                </div>
 
             <div style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Name</label>
-                  <input
+                      <input
                     type="text"
                     value={newColumn.name}
                     onChange={(e) => setNewColumn({ ...newColumn, name: e.target.value })}
                     placeholder="e.g., Budget, Phase, Designer"
                     style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
-                  />
-                </div>
+                      />
+                    </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Type</label>
@@ -1990,29 +1990,29 @@ export default function ProjectDetailPage() {
                     <option value="checkbox">Checkbox</option>
                     <option value="url">URL</option>
                   </select>
-                </div>
+              </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Width (px)</label>
-                  <input
+                <input
                     type="number"
                     value={newColumn.width}
                     onChange={(e) => setNewColumn({ ...newColumn, width: parseInt(e.target.value) || 150 })}
                     min="100"
                     max="400"
                     style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
-                  />
-                </div>
+                />
+              </div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                <button
+              <button
                   onClick={() => setShowAddColumnModal(false)}
                   style={{ flex: 1, padding: '0.75rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}
-                >
-                  Cancel
-                </button>
-                <button
+              >
+                Cancel
+              </button>
+              <button
                   onClick={async () => {
                     if (!newColumn.name.trim()) return;
                     try {
@@ -2033,7 +2033,7 @@ export default function ProjectDetailPage() {
                   style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
                 >
                   Add Column
-                </button>
+              </button>
               </div>
             </div>
           </div>
@@ -2041,4 +2041,4 @@ export default function ProjectDetailPage() {
       )}
     </div>
   );
-}
+} 

@@ -47,7 +47,6 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { name: 'Home', href: '/dashboard', icon: HomeIcon },
   { name: 'Personal', href: '/personal', icon: UserCircleIcon },
   { name: 'My Tasks', href: '/my-tasks', icon: ClipboardDocumentListIcon },
   { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
@@ -66,8 +65,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
-  const [expandedProjects, setExpandedProjects] = useState<number[]>([]);
+  const [isProjectsDropdownOpen, setIsProjectsDropdownOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Fetch unread notification count
@@ -128,9 +126,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         
         if (!myTasks || myTasks.length === 0) {
           setTeamMembers([]);
-          return;
-        }
-        
+      return;
+    }
+    
         // Get unique user IDs from tasks where we worked together
         const coworkerIds = new Set<number>();
         myTasks.forEach(task => {
@@ -141,9 +139,9 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         
         if (coworkerIds.size === 0) {
           setTeamMembers([]);
-          return;
-        }
-        
+      return;
+    }
+
         // Fetch coworker details
         const { data: coworkers } = await supabase
           .from('auth_user')
@@ -152,7 +150,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           .limit(6);
         
         setTeamMembers(coworkers || []);
-      } catch (error) {
+    } catch (error) {
         setTeamMembers([]);
       }
     };
@@ -180,9 +178,139 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-        {/* Navigation */}
+      {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
-          {/* Main Navigation */}
+        {/* Projects Dropdown */}
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            onClick={() => setIsProjectsDropdownOpen(!isProjectsDropdownOpen)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem',
+              padding: '0.625rem 0.75rem',
+              borderRadius: '0.5rem',
+              background: isProjectsDropdownOpen ? '#10B981' : 'transparent',
+              color: isProjectsDropdownOpen ? '#FFFFFF' : '#A1A1AA',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (!isProjectsDropdownOpen) {
+                e.currentTarget.style.background = '#1A1A1A';
+                e.currentTarget.style.color = '#FFFFFF';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isProjectsDropdownOpen) {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = '#A1A1AA';
+              }
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <FolderIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Projects</span>
+            </div>
+            <ChevronDownIcon style={{ width: '16px', height: '16px', transform: isProjectsDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </button>
+
+          {isProjectsDropdownOpen && (
+            <div style={{ marginTop: '0.5rem', marginLeft: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {/* My Projects */}
+              {projects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    background: pathname === `/projects/${project.id}` ? '#1A1A1A' : 'transparent',
+                    color: pathname === `/projects/${project.id}` ? '#FFFFFF' : '#A1A1AA',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pathname !== `/projects/${project.id}`) {
+                      e.currentTarget.style.background = '#1A1A1A';
+                      e.currentTarget.style.color = '#FFFFFF';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== `/projects/${project.id}`) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#A1A1AA';
+                    }
+                  }}
+                >
+                  <div
+                    style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
+                  />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {project.name}
+                  </span>
+                </Link>
+              ))}
+
+              {/* Divider */}
+              {projects.length > 0 && teamMembers.length > 0 && (
+                <div style={{ height: '1px', background: '#2D2D2D', margin: '0.5rem 0' }} />
+              )}
+
+              {/* Team Members I've Worked With */}
+              {teamMembers.map((member, i) => (
+                <Link
+                  key={member.id}
+                  href={`/messages?user=${member.id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    background: 'transparent',
+                    color: '#A1A1AA',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#1A1A1A';
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#A1A1AA';
+                  }}
+                >
+                  <div
+                    style={{ width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], position: 'relative' }}
+                  >
+                    {member.name.charAt(0).toUpperCase()}
+                    <div style={{ position: 'absolute', bottom: -1, right: -1, width: '6px', height: '6px', background: '#10B981', border: '1.5px solid #0D0D0D', borderRadius: '50%' }} />
+                  </div>
+                  <span style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {member.name}
+                  </span>
+                </Link>
+              ))}
+
+              {projects.length === 0 && teamMembers.length === 0 && (
+                <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem' }}>
+                  No assigned projects yet
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
@@ -284,103 +412,6 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-        {/* Projects Section */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <button
-            onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Projects & Companies</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-                  onCreateProject();
-                }}
-                style={{ padding: '0.25rem', background: 'transparent', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', transition: 'background 0.2s' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <PlusIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
-              </button>
-              <ChevronDownIcon style={{ width: '16px', height: '16px', color: '#71717A', transform: isProjectsExpanded ? 'none' : 'rotate(-90deg)', transition: 'transform 0.2s' }} />
-            </div>
-          </button>
-
-          {isProjectsExpanded && (
-            <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-              {projects.map((project) => {
-                const isExpanded = expandedProjects.includes(project.id);
-                const isActive = pathname === `/projects/${project.id}`;
-                
-                return (
-                  <div key={project.id}>
-                    <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '0.5rem',
-              cursor: 'pointer',
-                        background: isActive ? '#1A1A1A' : 'transparent',
-                        color: isActive ? '#FFFFFF' : '#A1A1AA',
-                        transition: 'all 0.2s'
-            }} 
-            onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = '#1A1A1A';
-                          e.currentTarget.style.color = '#FFFFFF';
-                        }
-            }} 
-            onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = '#A1A1AA';
-                        }
-                      }}
-                    >
-              <button
-                        onClick={() => toggleProjectExpand(project.id)}
-                        style={{ padding: '0.125rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
-              >
-                        <ChevronRightIcon style={{ width: '12px', height: '12px', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
-              </button>
-                      <div
-                        style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
-                      />
-                      <Link
-                        href={`/projects/${project.id}`}
-                        style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none', color: 'inherit' }}
-                      >
-                        {project.name}
-                      </Link>
-                  </div>
-                </div>
-                );
-              })}
-
-              {projects.length === 0 && (
-                <div style={{ padding: '1rem 0.75rem', textAlign: 'center' }}>
-                  <p style={{ color: '#52525B', fontSize: '0.875rem' }}>No projects yet</p>
-                  <button
-                    onClick={onCreateProject}
-                    style={{ marginTop: '0.5rem', color: '#10B981', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#34D399'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#10B981'}
-                  >
-                    Create your first project
-                  </button>
-                </div>
-              )}
-        </div>
-      )}
-            </div>
-            
         {/* Messages Section - Only Real Team Members */}
         {teamMembers.length > 0 && (
           <div style={{ marginTop: '1.5rem' }}>

@@ -53,10 +53,31 @@ export default function NotificationsPage() {
 
   const fetchProjects = async () => {
     try {
-      const { data } = await supabase.from('projects_project').select('*');
+      if (!user?.id) {
+        setProjects([]);
+        return;
+      }
+      
+      // Get only assigned projects
+      const { data: myTasks } = await supabase
+        .from('projects_task')
+        .select('project_id')
+        .contains('assignee_ids', [user.id]);
+      
+      if (!myTasks || myTasks.length === 0) {
+        setProjects([]);
+        return;
+      }
+      
+      const projectIds = [...new Set(myTasks.map(t => t.project_id))];
+      const { data } = await supabase
+        .from('projects_project')
+        .select('*')
+        .in('id', projectIds);
+      
       setProjects(data || []);
     } catch (error) {
-      // Error fetching projects
+      setProjects([]);
     }
   };
 
