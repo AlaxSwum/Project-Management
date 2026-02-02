@@ -69,10 +69,10 @@ interface Project {
 }
 
 const TASK_STATUSES = [
-  { value: 'todo', label: 'To Do', color: '#f3f4f6', icon: '' },
-  { value: 'in_progress', label: 'In Progress', color: '#dbeafe', icon: '' },
-  { value: 'review', label: 'Review', color: '#fef3c7', icon: '' },
-  { value: 'done', label: 'Done', color: '#d1fae5', icon: '' },
+  { value: 'todo', label: 'To Do', color: '#71717A', icon: '' },
+  { value: 'in_progress', label: 'In Progress', color: '#3B82F6', icon: '' },
+  { value: 'review', label: 'Review', color: '#F59E0B', icon: '' },
+  { value: 'done', label: 'Done', color: '#10B981', icon: '' },
 ];
 
 const PRIORITY_LEVELS = [
@@ -612,7 +612,7 @@ export default function ProjectDetailPage() {
           body {
             margin: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #F5F5ED;
+            background: #0D0D0D;
             overflow-x: hidden;
             max-width: 100vw;
           }
@@ -620,7 +620,7 @@ export default function ProjectDetailPage() {
           .project-container {
             min-height: 100vh;
             display: flex;
-            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            background: #0D0D0D;
             overflow-x: hidden;
             max-width: 100vw;
             position: relative;
@@ -634,19 +634,19 @@ export default function ProjectDetailPage() {
             right: 0;
             bottom: 0;
             background: 
-              radial-gradient(circle at 20% 80%, rgba(255, 179, 51, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(196, 131, 217, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 40% 40%, rgba(88, 132, 253, 0.05) 0%, transparent 50%);
+              radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
           }
           
           .main-content {
             flex: 1;
-            margin-left: ${isMobile ? '0' : '256px'};
+            margin-left: ${isMobile ? '0' : '280px'};
             background: transparent;
             overflow-x: hidden;
-            max-width: ${isMobile ? '100vw' : 'calc(100vw - 256px)'};
+            max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
             position: relative;
             z-index: 1;
             padding-top: ${isMobile ? '70px' : '0'};
@@ -655,16 +655,15 @@ export default function ProjectDetailPage() {
           }
           
           .header {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(13, 13, 13, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 179, 51, 0.2);
+            border-bottom: 1px solid #2D2D2D;
             padding: 2rem 3rem;
             position: sticky;
             top: 0;
             z-index: 20;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border-radius: 0 0 24px 24px;
-            margin: 0 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin: 0;
           }
           .header-content {
             display: flex;
@@ -676,7 +675,7 @@ export default function ProjectDetailPage() {
           .header-title {
             font-size: 2rem;
             font-weight: 700;
-            color: #FFB333;
+            color: #FFFFFF;
             margin: 0;
             letter-spacing: -0.025em;
             line-height: 1.2;
@@ -685,7 +684,7 @@ export default function ProjectDetailPage() {
           }
           
           .header-title:hover {
-            color: #F87239;
+            color: #10B981;
             transform: translateX(8px);
           }
           
@@ -696,18 +695,18 @@ export default function ProjectDetailPage() {
             left: 0;
             width: 60px;
             height: 3px;
-            background: #C483D9;
+            background: #10B981;
             border-radius: 2px;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
           }
           
           .header-title:hover::after {
             width: 120px;
-            background: #5884FD;
+            background: #3B82F6;
           }
           
           .header-subtitle {
-            color: #6B7280;
+            color: #71717A;
             text-transform: capitalize;
             font-size: 1rem;
             font-weight: 500;
@@ -741,14 +740,18 @@ export default function ProjectDetailPage() {
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             font-size: 0.875rem;
             position: relative;
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid transparent;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background: #1A1A1A;
+            border: 1px solid #2D2D2D;
+            color: #A1A1AA;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
           }
           
           .action-btn:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            background: #242424;
+            color: #FFFFFF;
+            border-color: #3D3D3D;
           }
           
           .action-btn:active {
@@ -757,11 +760,11 @@ export default function ProjectDetailPage() {
           .view-toggle {
             display: flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.95);
+            background: #1A1A1A;
             border-radius: 12px;
             padding: 0.5rem;
-            border: 2px solid #F5F5ED;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #2D2D2D;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
           }
           
           .todo-view {
@@ -1790,8 +1793,8 @@ export default function ProjectDetailPage() {
           }
           
           .status-column {
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid #F5F5ED;
+            background: #141414;
+            border: 1px solid #2D2D2D;
             border-radius: 16px;
             padding: 1.5rem;
             min-height: 600px;
@@ -1814,26 +1817,26 @@ export default function ProjectDetailPage() {
           }
           
           .status-column:nth-child(2)::before {
-            background: #5884FD;
+            background: #3B82F6;
           }
           
           .status-column:nth-child(3)::before {
-            background: #F87239;
+            background: #F59E0B;
           }
           
           .status-column:nth-child(4)::before {
-            background: #C483D9;
+            background: #10B981;
           }
           
           .status-column:hover {
             transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
-            border-color: rgba(255, 179, 51, 0.3);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+            border-color: #3D3D3D;
           }
           
           .status-column.drag-over {
-            border-color: #FFB333;
-            background: rgba(255, 179, 51, 0.05);
+            border-color: #10B981;
+            background: rgba(16, 185, 129, 0.05);
             transform: translateY(-4px) scale(1.02);
             box-shadow: 0 20px 60px rgba(255, 179, 51, 0.2);
           }
@@ -1843,7 +1846,7 @@ export default function ProjectDetailPage() {
             justify-content: space-between;
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid rgba(245, 245, 237, 0.6);
+            border-bottom: 1px solid #2D2D2D;
             position: relative;
             z-index: 1;
           }
@@ -1861,20 +1864,20 @@ export default function ProjectDetailPage() {
           
           .status-title {
             font-weight: 700;
-            color: #374151;
+            color: #FFFFFF;
             font-size: 1.1rem;
             letter-spacing: -0.025em;
             transition: all 0.3s ease;
           }
           
           .status-count {
-            background: rgba(255, 179, 51, 0.1);
-            border: 2px solid #FFB333;
+            background: #2D2D2D;
+            border: 1px solid #3D3D3D;
             padding: 0.375rem 0.75rem;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 700;
-            color: #FFB333;
+            color: #A1A1AA;
             min-width: 24px;
             text-align: center;
             transition: all 0.3s ease;
@@ -1886,8 +1889,8 @@ export default function ProjectDetailPage() {
             min-height: 400px;
           }
           .task-card {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid rgba(245, 245, 237, 0.8);
+            background: #1A1A1A;
+            border: 1px solid #2D2D2D;
             border-radius: 12px;
             padding: 1.25rem;
             cursor: grab;
@@ -1896,7 +1899,7 @@ export default function ProjectDetailPage() {
             overflow: hidden;
             min-height: 80px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
           }
           
           .task-card::before {
@@ -1935,7 +1938,7 @@ export default function ProjectDetailPage() {
           }
           .task-title {
             font-weight: 600 !important;
-            color: #374151 !important;
+            color: #FFFFFF !important;
             font-size: 1rem !important;
             line-height: 1.4 !important;
             flex: 1 !important;
@@ -1952,7 +1955,7 @@ export default function ProjectDetailPage() {
           }
           
           .task-card:hover .task-title {
-            color: #FFB333;
+            color: #10B981;
           }
           .task-actions {
             display: flex;
