@@ -189,7 +189,8 @@ BEGIN
                         recipient_id_var,
                         NEW.created_by_id,
                         'task_created',
-                        sender_user_record.name || ' created a new task: ' || NEW.name,
+                        sender_user_record.name || ' created a new task: ' || NEW.name || 
+                        CASE WHEN NEW.due_date IS NOT NULL THEN ' (Due: ' || TO_CHAR(NEW.due_date, 'Mon DD, YYYY') || ')' ELSE '' END,
                         NEW.name,
                         NEW.status
                     );
@@ -197,7 +198,7 @@ BEGIN
             END LOOP;
         END IF;
 
-        -- Notify assignees about new assignment
+        -- Notify assignees about new assignment with deadline info
         IF NEW.assignee_ids IS NOT NULL THEN
             FOREACH recipient_id_var IN ARRAY NEW.assignee_ids
             LOOP
@@ -217,7 +218,9 @@ BEGIN
                         recipient_id_var,
                         NEW.created_by_id,
                         'assigned',
-                        sender_user_record.name || ' assigned you to: ' || NEW.name,
+                        sender_user_record.name || ' assigned you to task: ' || NEW.name || 
+                        CASE WHEN NEW.due_date IS NOT NULL THEN ' • Deadline: ' || TO_CHAR(NEW.due_date, 'Mon DD, YYYY') ELSE '' END ||
+                        CASE WHEN NEW.priority IS NOT NULL THEN ' • Priority: ' || UPPER(NEW.priority) ELSE '' END,
                         NEW.name,
                         NEW.status
                     );

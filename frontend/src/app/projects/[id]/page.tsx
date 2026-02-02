@@ -190,7 +190,7 @@ export default function ProjectDetailPage() {
         status: 'todo',
         assignee_ids: newTask.assignee_ids,
         report_to_ids: newTask.report_to_ids,
-        tags_list: newTask.tags.split(',').map(t => t.trim()).filter(Boolean),
+        tags: newTask.tags.trim(), // Database column is 'tags', not 'tags_list'
         start_date: newTask.start_date || null,
         due_date: newTask.due_date || null,
       };
@@ -607,18 +607,21 @@ export default function ProjectDetailPage() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{task.name}</span>
                               </div>
-                              {task.tags_list && task.tags_list.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.375rem' }}>
-                                  {task.tags_list.slice(0, 2).map((tag, i) => {
-                                    const tagColor = getTagColor(tag);
-                                    return (
-                                      <span key={i} style={{ padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontSize: '0.6875rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}>
-                                        {tag}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              )}
+                              {(() => {
+                                const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
+                                return tags.length > 0 && (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.375rem' }}>
+                                    {tags.slice(0, 2).map((tag: string, i: number) => {
+                                      const tagColor = getTagColor(tag);
+                                      return (
+                                        <span key={i} style={{ padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontSize: '0.6875rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}>
+                                          {tag}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td style={{ padding: '1rem' }}>
                               {task.assignees && task.assignees.length > 0 ? (
@@ -737,7 +740,7 @@ export default function ProjectDetailPage() {
                   {/* Tasks */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '200px' }}>
                     {statusTasks.map((task) => {
-                      const taskTags = task.tags_list || [];
+                      const taskTags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
                       const subtasksTotal = 4;
                       const subtasksCompleted = Math.floor(Math.random() * 5);
                       const progress = (subtasksCompleted / subtasksTotal) * 100;
@@ -755,7 +758,7 @@ export default function ProjectDetailPage() {
                           {/* Tags */}
                           {taskTags.length > 0 && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.75rem' }}>
-                              {taskTags.slice(0, 3).map((tag, i) => {
+                              {taskTags.slice(0, 3).map((tag: string, i: number) => {
                                 const tagColor = getTagColor(tag);
                                 return (
                                   <span
@@ -763,11 +766,11 @@ export default function ProjectDetailPage() {
                                     style={{ padding: '0.25rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}
                                   >
                                     {tag}
-                                          </span>
-              );
-            })}
-                                </div>
-                              )}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                               
                           {/* Title and Menu */}
                           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
