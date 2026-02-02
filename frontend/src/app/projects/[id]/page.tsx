@@ -121,7 +121,7 @@ export default function ProjectDetailPage() {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedView, setSelectedView] = useState('kanban');
+  const [selectedView, setSelectedView] = useState<'kanban' | 'list' | 'calendar' | 'gantt'>('kanban');
   const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filters, setFilters] = useState({
@@ -276,8 +276,21 @@ export default function ProjectDetailPage() {
     setDraggedTask(null);
   };
 
+  // Filter for Kanban: hide completed tasks older than 2 weeks
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  
+  const kanbanTasks = tasks.filter(task => {
+    // Hide completed tasks older than 2 weeks in Kanban view
+    if (selectedView === 'kanban' && task.status === 'done') {
+      const updatedDate = new Date(task.updated_at);
+      if (updatedDate < twoWeeksAgo) return false;
+    }
+    return true;
+  });
+
   // Apply search and filters
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = (selectedView === 'kanban' ? kanbanTasks : tasks).filter(task => {
     // Search filter
     const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -547,6 +560,7 @@ export default function ProjectDetailPage() {
               {[
                 { id: 'kanban', label: 'Kanban', icon: Squares2X2Icon },
                 { id: 'list', label: 'Table', icon: ListBulletIcon },
+                { id: 'gantt', label: 'Gantt', icon: ChartBarIcon },
                 { id: 'calendar', label: 'Calendar', icon: CalIcon }
               ].map((view) => (
                   <button
@@ -700,34 +714,115 @@ export default function ProjectDetailPage() {
           )}
         </div>
 
-        {/* Main Content - Kanban or Table View */}
+        {/* Main Content - Multiple Views */}
         <div style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem', overflowX: 'auto', background: '#0D0D0D' }}>
-          {selectedView === 'list' ? (
-            // Table View (Monday.com style)
+          {selectedView === 'calendar' ? (
+            // Calendar View
+            <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '1.5rem' }}>
+              <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                  {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button style={{ padding: '0.5rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer' }}>←</button>
+                  <button style={{ padding: '0.5rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer' }}>→</button>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: '#2D2D2D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} style={{ padding: '0.75rem', background: '#141414', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#71717A' }}>
+                    {day}
+                  </div>
+                ))}
+                {Array.from({ length: 35 }, (_, i) => {
+                  const dayTasks = filteredTasks.filter(t => {
+                    if (!t.due_date) return false;
+                    const taskDate = new Date(t.due_date).getDate();
+                    return taskDate === i - 2; // Sample - needs proper calendar logic
+                  });
+                  return (
+                    <div key={i} style={{ minHeight: '100px', padding: '0.5rem', background: '#1A1A1A', borderTop: i > 6 ? '1px solid #2D2D2D' : 'none' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#71717A', marginBottom: '0.375rem' }}>{i + 1}</div>
+                      {dayTasks.slice(0, 2).map(task => (
+                        <div key={task.id} style={{ fontSize: '0.75rem', color: '#FFFFFF', background: '#0D0D0D', padding: '0.25rem 0.375rem', borderRadius: '0.25rem', marginBottom: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderLeft: '2px solid', borderLeftColor: TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A' }}>
+                          {task.name}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : selectedView === 'gantt' ? (
+            // Gantt Chart View
             <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #2D2D2D' }}>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '40px' }}>
-                      <input type="checkbox" style={{ cursor: 'pointer' }} />
+              <div style={{ display: 'flex', borderBottom: '1px solid #2D2D2D' }}>
+                <div style={{ width: '300px', padding: '1rem', background: '#141414', borderRight: '1px solid #2D2D2D' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase' }}>Task</div>
+                </div>
+                <div style={{ flex: 1, display: 'flex', overflowX: 'auto' }}>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const month = new Date(new Date().getFullYear(), i, 1).toLocaleDateString('en-US', { month: 'short' });
+                    return (
+                      <div key={i} style={{ minWidth: '100px', padding: '1rem', background: '#141414', borderRight: '1px solid #2D2D2D', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A' }}>{month}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                {filteredTasks.filter(t => t.start_date && t.due_date).map((task, index) => (
+                  <div key={task.id} style={{ display: 'flex', borderBottom: '1px solid #1F1F1F' }}>
+                    <div style={{ width: '300px', padding: '1rem', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', borderRight: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === task.status)?.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.875rem', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', padding: '1rem 0' }}>
+                      {(() => {
+                        const yearStart = new Date(new Date().getFullYear(), 0, 1);
+                        const yearEnd = new Date(new Date().getFullYear(), 11, 31);
+                        const taskStart = new Date(task.start_date!);
+                        const taskEnd = new Date(task.due_date!);
+                        const totalDays = (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24);
+                        const startOffset = ((taskStart.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) / totalDays * 100;
+                        const duration = ((taskEnd.getTime() - taskStart.getTime()) / (1000 * 60 * 60 * 24)) / totalDays * 100;
+                        
+                        return (
+                          <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: `${startOffset}%`, width: `${duration}%`, height: '12px', background: TASK_STATUSES.find(s => s.value === task.status)?.color, borderRadius: '6px', minWidth: '20px' }} />
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : selectedView === 'list' ? (
+            // Table View (Monday.com style - Improved)
+            <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                  <tr>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '40px', borderBottom: '2px solid #2D2D2D' }}>
+                      <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981' }} />
                     </th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', minWidth: '250px' }}>Task</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '120px' }}>Owner</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '130px' }}>Status</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '120px' }}>Due Date</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '200px' }}>Notes</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '100px' }}>Files</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '150px' }}>Timeline</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#141414', width: '130px' }}>Last Updated</th>
-                    <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', background: '#141414', width: '50px' }}>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', minWidth: '280px', borderBottom: '2px solid #2D2D2D' }}>Task</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '140px', borderBottom: '2px solid #2D2D2D' }}>Owner</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '150px', borderBottom: '2px solid #2D2D2D' }}>Status</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '130px', borderBottom: '2px solid #2D2D2D' }}>Due Date</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '220px', borderBottom: '2px solid #2D2D2D' }}>Notes</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'center', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '80px', borderBottom: '2px solid #2D2D2D' }}>Files</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '160px', borderBottom: '2px solid #2D2D2D' }}>Timeline</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '140px', borderBottom: '2px solid #2D2D2D' }}>Last Updated</th>
+                    <th style={{ padding: '0.875rem 1rem', textAlign: 'center', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', background: '#141414', width: '50px', borderBottom: '2px solid #2D2D2D' }}>
                       <button 
                         onClick={() => setShowAddColumnModal(true)}
-                        style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }} 
+                        style={{ width: '24px', height: '24px', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} 
                         title="Add column"
-                        onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
                       >
-                        <PlusIcon style={{ width: '16px', height: '16px' }} />
+                        <PlusIcon style={{ width: '14px', height: '14px' }} />
                       </button>
                     </th>
                   </tr>
@@ -788,16 +883,16 @@ export default function ProjectDetailPage() {
                             </button>
                           </td>
                         </tr>
-                        {isExpanded && monthTasks.map((task) => (
+                        {isExpanded && monthTasks.map((task, idx) => (
                           <tr 
                             key={task.id}
                             onClick={() => setSelectedTask(task)}
-                            style={{ borderBottom: '1px solid #1F1F1F', cursor: 'pointer', transition: 'background 0.2s' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            style={{ background: idx % 2 === 0 ? '#1A1A1A' : 'transparent', borderBottom: '1px solid #1F1F1F', cursor: 'pointer', transition: 'all 0.15s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = idx % 2 === 0 ? '#1A1A1A' : 'transparent'; }}
                           >
-                            <td style={{ padding: '1rem' }}>
-                              <input type="checkbox" style={{ cursor: 'pointer' }} onClick={(e) => e.stopPropagation()} />
+                            <td style={{ padding: '0.875rem 1rem' }}>
+                              <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981' }} onClick={(e) => e.stopPropagation()} />
                             </td>
                             <td style={{ padding: '1rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -836,19 +931,20 @@ export default function ProjectDetailPage() {
                                 <span style={{ color: '#52525B', fontSize: '0.875rem' }}>-</span>
                               )}
                             </td>
-                            <td style={{ padding: '1rem' }}>
-                              <span style={{ 
-                                padding: '0.375rem 0.75rem', 
-                                borderRadius: '0.375rem', 
+                            <td style={{ padding: '0.875rem 1rem' }}>
+                              <div style={{ 
+                                padding: '0.5rem 1rem', 
+                                borderRadius: '0.5rem', 
                                 fontSize: '0.8125rem', 
-                                fontWeight: 500,
-                                backgroundColor: task.status === 'done' ? '#10B98120' : task.status === 'in_progress' ? '#3B82F620' : task.status === 'review' ? '#F59E0B20' : '#71717A20',
-                                color: task.status === 'done' ? '#10B981' : task.status === 'in_progress' ? '#3B82F6' : task.status === 'review' ? '#F59E0B' : '#71717A',
+                                fontWeight: 600,
+                                backgroundColor: task.status === 'done' ? '#10B981' : task.status === 'in_progress' ? '#F59E0B' : task.status === 'review' ? '#F97316' : '#71717A',
+                                color: '#FFFFFF',
                                 textTransform: 'capitalize',
+                                textAlign: 'center',
                                 display: 'inline-block'
                               }}>
-                                {task.status.replace('_', ' ')}
-                              </span>
+                                {task.status === 'done' ? 'Done' : task.status === 'in_progress' ? 'In Progress' : task.status.replace('_', ' ')}
+                              </div>
                             </td>
                             <td style={{ padding: '1rem', color: task.due_date ? '#FFFFFF' : '#52525B', fontSize: '0.875rem' }}>
                               {task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}
