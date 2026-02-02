@@ -137,7 +137,11 @@ export default function ProjectDetailPage() {
     type: 'text',
     width: 150
   });
-  const [ganttMonth, setGanttMonth] = useState(new Date());
+  const [ganttStartDate, setGanttStartDate] = useState(() => {
+    // Start from beginning of current month
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
