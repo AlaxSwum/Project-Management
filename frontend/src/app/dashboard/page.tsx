@@ -6,12 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { projectService } from '@/lib/api-compatibility';
 import { PlusIcon, UsersIcon, CalendarIcon, SparklesIcon, FolderIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/lib/supabase';
 
 interface Project {
   id: number;
