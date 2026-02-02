@@ -348,34 +348,6 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       )}
             </div>
             
-        {/* Categories Section */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Categories</span>
-              </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            {[
-              { name: 'To Do', color: '#EF4444', count: todoCount || 0 },
-              { name: 'In Progress', color: '#F59E0B', count: 0 },
-              { name: 'Review', color: '#F97316', count: 0 },
-              { name: 'Completed', color: '#10B981', count: completedCount || 0 }
-            ].map((category) => (
-              <div
-                key={category.name}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: category.color }} />
-                  <span style={{ fontSize: '0.875rem' }}>{category.name}</span>
-                  </div>
-                <span style={{ fontSize: '0.75rem', background: '#2D2D2D', padding: '0.125rem 0.5rem', borderRadius: '0.25rem' }}>{category.count}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
         {/* Messages Section - Only Real Team Members */}
         {teamMembers.length > 0 && (
           <div style={{ marginTop: '1.5rem' }}>
