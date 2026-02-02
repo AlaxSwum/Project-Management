@@ -62,14 +62,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        console.log('Starting auth initialization...');
-        
         // Small delay to ensure localStorage is fully available
         await new Promise(resolve => setTimeout(resolve, 50));
         
         const { user: currentUser, error } = await supabaseAuth.getUser();
-        
-        console.log('Auth result:', { currentUser, error });
         
         if (currentUser && !error) {
           const userData: User = {
@@ -82,21 +78,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             date_joined: new Date().toISOString()
           };
           setUser(userData);
-          console.log('User set:', userData);
-        } else {
-          console.log('No user found or error occurred');
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        // Silent error handling
       } finally {
-        console.log('Setting isLoading to false');
         setIsLoading(false);
       }
     };
 
     // Set a maximum timeout for auth initialization
     const timeoutId = setTimeout(() => {
-      console.warn('Auth initialization timeout, proceeding without auth');
       setIsLoading(false);
     }, 3000);
 
@@ -115,11 +106,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Attempting login for:', email);
       const { user: authUser, error } = await supabaseAuth.signIn(email, password);
       
       if (error) {
-        console.error('Login error:', error);
         throw new Error(error instanceof Error ? error.message : 'Login failed');
       }
 
@@ -134,10 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           date_joined: new Date().toISOString()
         };
         setUser(userData);
-        console.log('Login successful:', userData);
       }
     } catch (error: any) {
-      console.error('Login failed:', error);
       throw new Error(error.message || 'Login failed');
     }
   };

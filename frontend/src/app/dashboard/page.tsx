@@ -78,7 +78,6 @@ export default function DashboardPage() {
       const data = await projectService.getProjects();
       setProjects(data || []);
     } catch (err: any) {
-      console.log('Projects table not available');
       setProjects([]);
     } finally {
       setIsLoading(false);
@@ -135,7 +134,7 @@ export default function DashboardPage() {
       
       setTimelineFolders(foldersWithCounts);
     } catch (error) {
-      console.error('Error fetching timeline folders:', error);
+      // Error fetching timeline folders
     }
   };
 
@@ -174,18 +173,17 @@ export default function DashboardPage() {
         
         fetchTimelineFolders();
       } else {
-    try {
-      const project = await projectService.createProject(newProject);
-      setProjects([project, ...projects]);
+        try {
+          const project = await projectService.createProject(newProject);
+          setProjects([project, ...projects]);
         } catch (projectErr) {
-          console.log('Projects table not available, skipping');
+          // Projects table not available
         }
       }
       
       setNewProject({ name: '', description: '', project_type: 'general', color: '#10B981' });
       setShowCreateForm(false);
     } catch (err: any) {
-      console.error('Error creating project:', err);
       setError('Failed to create project');
     }
   };
@@ -218,79 +216,110 @@ export default function DashboardPage() {
       <div style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', background: '#0D0D0D' }}>
         {/* Header */}
         <header style={{ position: 'sticky', top: 0, zIndex: 20, background: 'rgba(13, 13, 13, 0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #2D2D2D' }}>
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex items-center justify-between">
+          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h1 className="text-3xl font-bold text-white mb-1">
+                <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.25rem' }}>
                   Welcome back, {user?.name || 'User'}
                 </h1>
-                <p className="text-[#71717A]">Manage your projects with style and efficiency</p>
+                <p style={{ color: '#71717A', fontSize: '0.875rem' }}>Manage your projects with style and efficiency</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {(projects.length > 0 || timelineFolders.length > 0) && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1A] border border-[#2D2D2D] rounded-xl">
-                    <SparklesIcon className="w-4 h-4 text-emerald-400" />
-                    <span className="text-[#A1A1AA] text-sm font-medium">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem' }}>
+                    <SparklesIcon style={{ width: '16px', height: '16px', color: '#10B981' }} />
+                    <span style={{ color: '#A1A1AA', fontSize: '0.875rem', fontWeight: 500 }}>
                       {projects.length + timelineFolders.length} Active Items
                     </span>
                   </div>
                 )}
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: '#FFFFFF', border: 'none', borderRadius: '0.75rem', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.25)', transition: 'all 0.3s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 15px 35px rgba(16, 185, 129, 0.35)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 10px 25px rgba(16, 185, 129, 0.25)'; }}
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon style={{ width: '20px', height: '20px' }} />
                   Create Project
                 </button>
               </div>
             </div>
             
             {/* View Mode Tabs */}
-            <div className="flex gap-2 mt-6">
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
               {[
                 { id: 'all', label: 'All', icon: SparklesIcon },
                 { id: 'projects', label: 'Projects', icon: FolderIcon, count: projects.length },
                 { id: 'timeline', label: 'Timeline', icon: ChartBarIcon, count: timelineFolders.length }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setViewMode(tab.id as any)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                    viewMode === tab.id 
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25' 
-                      : 'bg-[#1A1A1A] text-[#A1A1AA] hover:bg-[#242424] hover:text-white border border-[#2D2D2D]'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`px-2 py-0.5 rounded-lg text-xs ${
-                      viewMode === tab.id ? 'bg-white/20' : 'bg-[#2D2D2D]'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
+              ].map((tab) => {
+                const isActive = viewMode === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setViewMode(tab.id as any)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.625rem 1rem',
+                      borderRadius: '0.75rem',
+                      border: isActive ? 'none' : '1px solid #2D2D2D',
+                      background: isActive ? 'linear-gradient(135deg, #10B981, #059669)' : '#1A1A1A',
+                      color: isActive ? '#FFFFFF' : '#A1A1AA',
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: isActive ? '0 4px 12px rgba(16, 185, 129, 0.25)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = '#242424';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = '#1A1A1A';
+                        e.currentTarget.style.color = '#A1A1AA';
+                      }
+                    }}
+                  >
+                    <tab.icon style={{ width: '16px', height: '16px' }} />
+                    {tab.label}
+                    {tab.count !== undefined && tab.count > 0 && (
+                      <span style={{
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.75rem',
+                        background: isActive ? 'rgba(255,255,255,0.2)' : '#2D2D2D'
+                      }}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            </div>
-          </header>
+          </div>
+        </header>
 
         {/* Main Content Area */}
-        <main className="max-w-7xl mx-auto px-6 py-8">
-            {error && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 mb-6">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {error}
-              </div>
-            )}
+        <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+          {error && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.75rem', color: '#EF4444', marginBottom: '1.5rem' }}>
+              <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
 
-            {isLoading ? (
-            <div className="flex justify-center py-20">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-              </div>
+          {isLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem 0' }}>
+              <div style={{ width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
+            </div>
           ) : (projects.length === 0 && timelineFolders.length === 0) ? (
             <div style={{ textAlign: 'center', padding: '5rem 1rem' }}>
               <div style={{ width: '96px', height: '96px', margin: '0 auto 1.5rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -453,49 +482,57 @@ export default function DashboardPage() {
 
       {/* Create Project Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1A1A1A] border border-[#2D2D2D] rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-[#2D2D2D]">
-              <h2 className="text-xl font-bold text-white">Create New Project</h2>
-                    <button
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#FFFFFF' }}>Create New Project</h2>
+              <button
                 onClick={() => setShowCreateForm(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#71717A] hover:text-white transition-colors"
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: '#2D2D2D', color: '#71717A', border: 'none', cursor: 'pointer', fontSize: '1.5rem', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#71717A'; }}
               >
                 ×
-                    </button>
-                  </div>
+              </button>
+            </div>
             
-            <form onSubmit={handleCreateProject} className="p-6">
-              <div className="space-y-5">
+            <form onSubmit={handleCreateProject} style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Project Name *</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Project Name *</label>
                   <input
                     type="text"
                     required
                     value={newProject.name}
                     onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white placeholder-[#52525B] focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.75rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
                     placeholder="Enter project name..."
-                  />
-      </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Description</label>
-                  <textarea
-                    value={newProject.description}
-                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white placeholder-[#52525B] focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors resize-none"
-                    rows={3}
-                    placeholder="What is this project about?"
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Project Type</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Description</label>
+                  <textarea
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.75rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', resize: 'none', transition: 'border 0.2s' }}
+                    rows={3}
+                    placeholder="What is this project about?"
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Project Type</label>
                   <select
                     value={newProject.project_type}
                     onChange={(e) => setNewProject({ ...newProject, project_type: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2D2D2D] rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.75rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   >
                     <option value="general">General Project</option>
                     <option value="timeline">Timeline Project</option>
@@ -504,43 +541,52 @@ export default function DashboardPage() {
                     <option value="product">Product Development</option>
                     <option value="design">Design</option>
                   </select>
-              </div>
-              
+                </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Color</label>
-                  <div className="flex gap-3">
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Color</label>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
                     {['#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#EF4444'].map((color) => (
                       <button
                         key={color}
                         type="button"
                         onClick={() => setNewProject({ ...newProject, color })}
-                        className={`w-10 h-10 rounded-xl transition-all ${
-                          newProject.color === color 
-                            ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1A1A1A] scale-110' 
-                            : 'hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: color }}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '0.75rem',
+                          border: newProject.color === color ? '2px solid #FFFFFF' : 'none',
+                          backgroundColor: color,
+                          cursor: 'pointer',
+                          transform: newProject.color === color ? 'scale(1.1)' : 'scale(1)',
+                          transition: 'all 0.2s',
+                          boxShadow: newProject.color === color ? `0 0 0 4px ${color}40` : 'none'
+                        }}
+                        onMouseEnter={(e) => { if (newProject.color !== color) e.currentTarget.style.transform = 'scale(1.05)'; }}
+                        onMouseLeave={(e) => { if (newProject.color !== color) e.currentTarget.style.transform = 'scale(1)'; }}
                       />
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-              <div className="flex gap-3 mt-8">
-                  <button
+              
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem' }}>
+                <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="flex-1 px-4 py-3 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#A1A1AA] rounded-xl font-medium transition-colors"
+                  style={{ flex: 1, padding: '0.75rem 1rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.75rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-medium transition-all"
+                  style={{ flex: 1, padding: '0.75rem 1rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: '#FFFFFF', border: 'none', borderRadius: '0.75rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'all 0.2s' }}
                 >
                   Create Project
-                  </button>
-                </div>
+                </button>
+              </div>
             </form>
                       </div>
                 </div>

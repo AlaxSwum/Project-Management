@@ -156,7 +156,7 @@ export default function ProjectDetailPage() {
       setNewTask({ name: '', description: '', priority: 'medium', tags: '', assignee_ids: [] });
       setShowCreateTask(false);
     } catch (err) {
-      console.error('Failed to create task:', err);
+      // Failed to create task
     }
   };
 
@@ -184,7 +184,7 @@ export default function ProjectDetailPage() {
       await taskService.updateTask(draggedTask.id, { status: newStatus });
       setTasks(tasks.map(t => t.id === draggedTask.id ? { ...t, status: newStatus } : t));
     } catch (err) {
-      console.error('Failed to update task:', err);
+      // Failed to update task
     }
     setDraggedTask(null);
   };

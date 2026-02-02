@@ -17,7 +17,6 @@ import {
   InboxIcon,
   DocumentTextIcon,
   KeyIcon,
-  BuildingOfficeIcon,
   CurrencyDollarIcon,
   Cog6ToothIcon,
   UserCircleIcon,
@@ -79,96 +78,139 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const completedCount = projects.reduce((acc, p) => acc + (p.completed_task_count || 0), 0);
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-[#0D0D0D] border-r border-[#1F1F1F] flex flex-col z-40">
+    <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', background: '#0D0D0D', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', zIndex: 40 }}>
       {/* Workspace Header */}
-      <div className="p-4 border-b border-[#1F1F1F]">
-        <div className="flex items-center gap-3 p-2 hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">F</span>
-            </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-white font-semibold truncate">Focus</span>
-              <ChevronDownIcon className="w-4 h-4 text-[#71717A]" />
-              </div>
+      <div style={{ padding: '1rem', borderBottom: '1px solid #1F1F1F' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '1.125rem' }}>F</span>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#FFFFFF', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Focus</span>
+              <ChevronDownIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
             </div>
           </div>
         </div>
+        </div>
 
-        {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
-          {/* Main Navigation */}
-        <div className="space-y-1">
+      {/* Navigation */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
+        {/* Main Navigation */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                  isActive
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A]'
-                }`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.625rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  background: isActive ? '#10B981' : 'transparent',
+                  color: isActive ? '#FFFFFF' : '#A1A1AA',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = '#1A1A1A';
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#A1A1AA';
+                  }
+                }}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium truncate">{item.name}</span>
+                <item.icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
               </Link>
             );
           })}
-                </div>
+        </div>
 
         {/* Personal Section */}
-        <div className="mt-6">
-          <div className="px-3 mb-2">
-            <span className="text-xs font-semibold text-[#52525B] uppercase tracking-wider">Personal</span>
-                </div>
-          <div className="space-y-1">
+        <div style={{ marginTop: '1.5rem' }}>
+          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Personal</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {PERSONAL_ITEMS.map((item) => {
               const isActive = pathname === item.href;
               return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-emerald-500 text-white'
-                      : 'text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A]'
-                  }`}
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.625rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    background: isActive ? '#10B981' : 'transparent',
+                    color: isActive ? '#FFFFFF' : '#A1A1AA',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = '#1A1A1A';
+                      e.currentTarget.style.color = '#FFFFFF';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#A1A1AA';
+                    }
+                  }}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-medium truncate">{item.name}</span>
-                  </Link>
+                  <item.icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                </Link>
               );
             })}
-              </div>
           </div>
+        </div>
 
         {/* Projects Section */}
-        <div className="mt-6">
-          <button 
+        <div style={{ marginTop: '1.5rem' }}>
+          <button
             onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-            className="w-full flex items-center justify-between px-3 py-2 hover:bg-[#1A1A1A] rounded-lg transition-colors"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-[#52525B] uppercase tracking-wider">Projects & Companies</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Projects & Companies</span>
             </div>
-            <div className="flex items-center gap-2">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
                   onCreateProject();
                 }}
-                className="p-1 hover:bg-[#2D2D2D] rounded transition-colors"
+                style={{ padding: '0.25rem', background: 'transparent', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                <PlusIcon className="w-4 h-4 text-[#71717A] hover:text-white" />
-          </button>
-              <ChevronDownIcon className={`w-4 h-4 text-[#71717A] transition-transform ${isProjectsExpanded ? '' : '-rotate-90'}`} />
+                <PlusIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
+              </button>
+              <ChevronDownIcon style={{ width: '16px', height: '16px', color: '#71717A', transform: isProjectsExpanded ? 'none' : 'rotate(-90deg)', transition: 'transform 0.2s' }} />
             </div>
           </button>
 
           {isProjectsExpanded && (
-            <div className="mt-1 space-y-0.5">
+            <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
               {projects.map((project) => {
                 const isExpanded = expandedProjects.includes(project.id);
                 const isActive = pathname === `/projects/${project.id}`;
@@ -176,147 +218,178 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                 return (
                   <div key={project.id}>
                     <div
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${
-                        isActive ? 'bg-[#1A1A1A] text-white' : 'text-[#A1A1AA] hover:bg-[#1A1A1A] hover:text-white'
-                      }`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        background: isActive ? '#1A1A1A' : 'transparent',
+                        color: isActive ? '#FFFFFF' : '#A1A1AA',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = '#1A1A1A';
+                          e.currentTarget.style.color = '#FFFFFF';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = '#A1A1AA';
+                        }
+                      }}
                     >
-              <button
+                      <button
                         onClick={() => toggleProjectExpand(project.id)}
-                        className="p-0.5"
-              >
-                        <ChevronRightIcon className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-              </button>
+                        style={{ padding: '0.125rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+                      >
+                        <ChevronRightIcon style={{ width: '12px', height: '12px', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                      </button>
                       <div
-                        className="w-2 h-2 rounded-sm flex-shrink-0"
-                        style={{ backgroundColor: project.color || '#71717A' }}
+                        style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }}
                       />
                       <Link
                         href={`/projects/${project.id}`}
-                        className="flex-1 text-sm font-medium truncate"
+                        style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none', color: 'inherit' }}
                       >
                         {project.name}
                       </Link>
+                    </div>
                   </div>
-                </div>
                 );
               })}
 
               {projects.length === 0 && (
-                <div className="px-3 py-4 text-center">
-                  <p className="text-[#52525B] text-sm">No projects yet</p>
+                <div style={{ padding: '1rem 0.75rem', textAlign: 'center' }}>
+                  <p style={{ color: '#52525B', fontSize: '0.875rem' }}>No projects yet</p>
                   <button
                     onClick={onCreateProject}
-                    className="mt-2 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
+                    style={{ marginTop: '0.5rem', color: '#10B981', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#34D399'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#10B981'}
                   >
                     Create your first project
                   </button>
                 </div>
               )}
-        </div>
-      )}
+            </div>
+          )}
             </div>
             
         {/* Categories Section */}
-        <div className="mt-6">
-          <div className="px-3 mb-2">
-            <span className="text-xs font-semibold text-[#52525B] uppercase tracking-wider">Categories</span>
+        <div style={{ marginTop: '1.5rem' }}>
+          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Categories</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            {[
+              { name: 'To Do', color: '#EF4444', count: todoCount || 0 },
+              { name: 'In Progress', color: '#F59E0B', count: 0 },
+              { name: 'Review', color: '#F97316', count: 0 },
+              { name: 'Completed', color: '#10B981', count: completedCount || 0 }
+            ].map((category) => (
+              <div
+                key={category.name}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: category.color }} />
+                  <span style={{ fontSize: '0.875rem' }}>{category.name}</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', background: '#2D2D2D', padding: '0.125rem 0.5rem', borderRadius: '0.25rem' }}>{category.count}</span>
               </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between px-3 py-2 text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-[#EF4444]" />
-                <span className="text-sm">To Do</span>
-                  </div>
-              <span className="text-xs bg-[#2D2D2D] px-2 py-0.5 rounded">{todoCount || 0}</span>
-                </div>
-            <div className="flex items-center justify-between px-3 py-2 text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-                <span className="text-sm">In Progress</span>
-                        </div>
-              <span className="text-xs bg-[#2D2D2D] px-2 py-0.5 rounded">0</span>
-                    </div>
-            <div className="flex items-center justify-between px-3 py-2 text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-[#F97316]" />
-                <span className="text-sm">Review</span>
-                  </div>
-              <span className="text-xs bg-[#2D2D2D] px-2 py-0.5 rounded">0</span>
-                </div>
-            <div className="flex items-center justify-between px-3 py-2 text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-[#10B981]" />
-                <span className="text-sm">Completed</span>
-                        </div>
-              <span className="text-xs bg-[#2D2D2D] px-2 py-0.5 rounded">{completedCount || 0}</span>
-            </div>
-                    </div>
-                  </div>
+            ))}
+          </div>
+        </div>
 
         {/* Messages Section */}
-        <div className="mt-6">
-          <div className="px-3 mb-2">
-            <span className="text-xs font-semibold text-[#52525B] uppercase tracking-wider">Messages</span>
-                        </div>
-          <div className="space-y-1">
+        <div style={{ marginTop: '1.5rem' }}>
+          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {['Michael Anderson', 'Sophia Carter', 'Daniel Johnson', 'James Wilson'].map((name, i) => (
               <div
                 key={name}
-                className="flex items-center gap-3 px-3 py-2 text-[#A1A1AA] hover:text-white hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-all"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; }}
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                  style={{ backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i] }}
+                  style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i] }}
                 >
                   {name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{name}</div>
-                  <div className="text-xs text-[#52525B] truncate">
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {['UI/UX Designer', 'Graphic Designer', 'Frontend Developer', 'Backend Programmer'][i]}
                   </div>
                 </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </nav>
 
       {/* Bottom Section */}
-      <div className="border-t border-[#1F1F1F] p-3">
+      <div style={{ borderTop: '1px solid #1F1F1F', padding: '0.75rem' }}>
         {/* Action Buttons */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <button className="p-2 text-[#71717A] hover:text-white hover:bg-[#1A1A1A] rounded-lg transition-colors">
-            <Squares2X2Icon className="w-5 h-5" />
-                            </button>
-          <button className="p-2 text-[#71717A] hover:text-white hover:bg-[#1A1A1A] rounded-lg transition-colors">
-            <ChartBarIcon className="w-5 h-5" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <button 
+            style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+          >
+            <Squares2X2Icon style={{ width: '20px', height: '20px' }} />
           </button>
-          <button className="p-2 text-[#71717A] hover:text-white hover:bg-[#1A1A1A] rounded-lg transition-colors">
-            <Cog6ToothIcon className="w-5 h-5" />
-                      </button>
-                </div>
+          <button 
+            style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+          >
+            <ChartBarIcon style={{ width: '20px', height: '20px' }} />
+          </button>
+          <button 
+            style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+          >
+            <Cog6ToothIcon style={{ width: '20px', height: '20px' }} />
+          </button>
+        </div>
 
         {/* User Profile */}
-        <div className="flex items-center gap-3 p-2 hover:bg-[#1A1A1A] rounded-lg cursor-pointer transition-colors">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-            <span className="text-white font-medium text-sm">
+        <div 
+          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.875rem' }}>
               {user?.name?.charAt(0) || 'U'}
             </span>
-                  </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-medium truncate">{user?.name || 'User'}</div>
-            <div className="text-[#52525B] text-xs truncate">{user?.email || ''}</div>
-                </div>
-                  <button
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
+            <div style={{ color: '#52525B', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
+          </div>
+          <button
             onClick={handleLogout}
-            className="p-1.5 text-[#71717A] hover:text-red-400 transition-colors"
+            style={{ padding: '0.375rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
             title="Logout"
+            onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
           >
-            <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                  </button>
-                </div>
-            </div>
+            <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px' }} />
+          </button>
+        </div>
+      </div>
     </aside>
   );
 }
