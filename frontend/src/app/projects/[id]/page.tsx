@@ -733,23 +733,26 @@ export default function ProjectDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Group by month */}
+                  {/* Group by month - Latest first */}
                   {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
-                    // Sort: Current month first, then by date
-                    const now = new Date();
-                    const currentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-                    if (monthA === currentMonth) return -1;
-                    if (monthB === currentMonth) return 1;
+                    // Sort: Latest months first, then No Due Date last
                     if (monthA === 'No Due Date') return 1;
                     if (monthB === 'No Due Date') return -1;
-                    return new Date(monthA).getTime() - new Date(monthB).getTime();
+                    // Sort by date descending (newest first)
+                    return new Date(monthB).getTime() - new Date(monthA).getTime();
                   }).map(([month, monthTasks]) => {
                     const isExpanded = expandedMonths.includes(month);
+                    
+                    // Calculate status breakdown for this month
+                    const statusCounts = TASK_STATUSES.map(status => ({
+                      ...status,
+                      count: monthTasks.filter(t => t.status === status.value).length
+                    })).filter(s => s.count > 0);
                     
                     return (
                       <React.Fragment key={month}>
                         <tr style={{ background: '#0D0D0D' }}>
-                          <td colSpan={10} style={{ padding: '0.75rem 1rem', borderTop: '1px solid #2D2D2D', borderBottom: '1px solid #2D2D2D' }}>
+                          <td colSpan={10} style={{ padding: '1rem 1.25rem', borderTop: '1px solid #2D2D2D', borderBottom: '1px solid #2D2D2D' }}>
                             <button
                               onClick={() => {
                                 if (isExpanded) {
@@ -758,16 +761,30 @@ export default function ProjectDetailPage() {
                                   setExpandedMonths([...expandedMonths, month]);
                                 }
                               }}
-                              style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
+                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
                             >
-                              <svg style={{ width: '16px', height: '16px', color: '#71717A', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                              </svg>
-                              <CalIcon style={{ width: '16px', height: '16px', color: '#3B82F6' }} />
-                              <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{month}</span>
-                              <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
-                                {monthTasks.length}
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <svg style={{ width: '18px', height: '18px', color: '#A1A1AA', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                </svg>
+                                <CalIcon style={{ width: '18px', height: '18px', color: '#3B82F6' }} />
+                                <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600 }}>{month}</span>
+                                <span style={{ padding: '0.25rem 0.625rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
+                                  {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
+                                </span>
+                              </div>
+
+                              {/* Status breakdown */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                {statusCounts.map(status => (
+                                  <div key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
+                                    <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
+                                      {status.count} {status.label}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
                             </button>
                           </td>
                         </tr>
