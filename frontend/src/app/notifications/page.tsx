@@ -58,24 +58,18 @@ export default function NotificationsPage() {
         return;
       }
       
-      // Get only assigned projects
-      const { data: myTasks } = await supabase
-        .from('projects_task')
-        .select('project_id')
-        .contains('assignee_ids', [user.id]);
-      
-      if (!myTasks || myTasks.length === 0) {
-        setProjects([]);
-        return;
-      }
-      
-      const projectIds = [...new Set(myTasks.map(t => t.project_id))];
-      const { data } = await supabase
+      // Get all projects with members
+      const { data: allProjects } = await supabase
         .from('projects_project')
-        .select('*')
-        .in('id', projectIds);
+        .select('*');
       
-      setProjects(data || []);
+      // Filter to only show projects where user is a member
+      const myProjects = (allProjects || []).filter((project: any) => {
+        return project.members && Array.isArray(project.members) && 
+               project.members.some((m: any) => m.id === user.id);
+      });
+      
+      setProjects(myProjects);
     } catch (error) {
       setProjects([]);
     }

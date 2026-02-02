@@ -191,18 +191,14 @@ export default function ProjectDetailPage() {
         projectService.getProjects()
       ]);
       
-      // Filter projects to only show where user is assigned to tasks
-      const { data: myTasks } = await supabase
-        .from('projects_task')
-        .select('project_id')
-        .contains('assignee_ids', [user.id]);
-      
-      const assignedProjectIds = new Set(myTasks?.map(t => t.project_id) || []);
-      const assignedProjects = projectsData.filter(p => assignedProjectIds.has(p.id));
+      // Filter to only show projects where user is a member
+      const myProjects = projectsData.filter(project => {
+        return project.members && project.members.some((m: any) => m.id === user.id);
+      });
       
       setProject(projectData);
       setTasks(tasksData);
-      setAllProjects(assignedProjects); // Only assigned projects
+      setAllProjects(myProjects); // Only projects where user is member
     } catch (err: any) {
       if (err.response?.status === 404) {
         router.push('/dashboard');

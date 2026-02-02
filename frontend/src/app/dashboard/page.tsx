@@ -81,26 +81,16 @@ export default function DashboardPage() {
         return;
       }
       
-      // Get all tasks where user is assigned
-      const { data: myTasks } = await supabase
-        .from('projects_task')
-        .select('project_id')
-        .contains('assignee_ids', [user.id]);
+      // Get all projects
+      const allData = await projectService.getProjects();
       
-      if (!myTasks || myTasks.length === 0) {
-        setProjects([]);
-        setIsLoading(false);
-        return;
-      }
+      // Filter to only show projects where user is a member
+      const myProjects = allData.filter(project => {
+        // Check if user is in the project's members array
+        return project.members && project.members.some((m: any) => m.id === user.id);
+      });
       
-      // Get unique project IDs
-      const projectIds = [...new Set(myTasks.map(t => t.project_id))];
-      
-      // Fetch only projects where user is assigned
-      const data = await projectService.getProjects();
-      const assignedProjects = data.filter(p => projectIds.includes(p.id));
-      
-      setProjects(assignedProjects || []);
+      setProjects(myProjects || []);
     } catch (err: any) {
       setProjects([]);
     } finally {
