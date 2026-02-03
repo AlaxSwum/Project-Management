@@ -185,88 +185,54 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           }}
         >
           <HomeIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Dashboard</span>
-              </Link>
+          <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>Dashboard</span>
+        </Link>
 
-        {/* Projects Dropdown */}
+        {/* Projects Section under Dashboard */}
         {projects.length > 0 && (
-          <div style={{ marginBottom: '1rem' }}>
-            <button
-              onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.625rem 0.75rem',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '0.5rem',
-                color: '#A1A1AA',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                fontFamily: 'Mabry Pro, sans-serif'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#1A1A1A';
-                e.currentTarget.style.color = '#FFFFFF';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#A1A1AA';
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <FolderIcon style={{ width: '20px', height: '20px' }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Projects</span>
-              </div>
-              <svg style={{ width: '16px', height: '16px', transform: isProjectsExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-
-            {isProjectsExpanded && (
-              <div style={{ marginTop: '0.25rem', marginLeft: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                {projects.map((project) => {
-                  const isActive = pathname === `/projects/${project.id}`;
-                  return (
-                    <Link
-                      key={project.id}
-                      href={`/projects/${project.id}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '0.5rem',
-                        background: isActive ? '#1A1A1A' : 'transparent',
-                        color: isActive ? '#FFFFFF' : '#A1A1AA',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s',
-                        fontFamily: 'Mabry Pro, sans-serif'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = '#1A1A1A';
-                          e.currentTarget.style.color = '#FFFFFF';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = '#A1A1AA';
-                        }
-                      }}
-                    >
-                      <div style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }} />
-                      <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                        {project.name}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+          <div style={{ marginBottom: '0.5rem' }}>
+            <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>Projects</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {projects.map((project) => {
+                const isActive = pathname === `/projects/${project.id}`;
+                return (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.id}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '0.5rem',
+                      background: isActive ? '#1A1A1A' : 'transparent',
+                      color: isActive ? '#FFFFFF' : '#A1A1AA',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = '#1A1A1A';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#A1A1AA';
+                      }
+                    }}
+                  >
+                    <div style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }} />
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontFamily: 'Mabry Pro, sans-serif' }}>
+                      {project.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
 
