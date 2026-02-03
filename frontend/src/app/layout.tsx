@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ElectronProvider } from "@/components/ElectronProvider";
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Focus - Project Management",
@@ -42,7 +39,7 @@ export default function RootLayout({
           #__next { background: #0D0D0D !important; min-height: 100vh !important; }
         `}} />
       </head>
-      <body className={`${inter.className} h-full antialiased`} style={{ background: '#0D0D0D', minHeight: '100vh', color: '#FFFFFF' }}>
+      <body className="h-full antialiased" style={{ background: '#0D0D0D', minHeight: '100vh', color: '#FFFFFF', fontFamily: 'Mabry Pro, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}>
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"

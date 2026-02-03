@@ -1,7 +1,6 @@
 /* Project Management App Styles - Enhanced Modern Professional Theme */
-/* Mabry Pro font for Personal page */
+/* Mabry Pro font - PRIMARY font for entire website */
 @import url('../font/mabry-pro/mabry-pro-optimized.css');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
