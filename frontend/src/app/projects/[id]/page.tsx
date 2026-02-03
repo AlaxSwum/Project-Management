@@ -297,15 +297,15 @@ export default function ProjectDetailPage() {
     setDraggedTask(null);
   };
 
-  // Filter for Kanban: hide completed tasks older than 2 weeks
-  const twoWeeksAgo = new Date();
-  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  // Filter for Kanban: only show tasks within 1 month
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
   
   const kanbanTasks = tasks.filter(task => {
-    // Hide completed tasks older than 2 weeks in Kanban view
-    if (selectedView === 'kanban' && task.status === 'done') {
+    // Only show tasks updated within 1 month in Kanban view
+    if (selectedView === 'kanban') {
       const updatedDate = new Date(task.updated_at);
-      if (updatedDate < twoWeeksAgo) return false;
+      if (updatedDate < oneMonthAgo) return false;
     }
     return true;
   });
@@ -1177,13 +1177,16 @@ export default function ProjectDetailPage() {
                               
                           {/* Title and Menu */}
                           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <h3 style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.9375rem', lineHeight: 1.4, margin: 0, flex: 1 }}>{task.name}</h3>
-                            <button style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', opacity: 0, transition: 'opacity 0.2s' }}
-                              onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.opacity = '1'; }}
+                            <h3 style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.9375rem', lineHeight: 1.4, margin: 0, flex: 1, fontFamily: 'Mabry Pro, sans-serif' }}>{task.name}</h3>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); }}
+                              style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s', opacity: 1 }}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; }}
                             >
                               <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
                             </button>
-                        </div>
+                          </div>
             
                           {/* Description */}
                           {task.description && (
