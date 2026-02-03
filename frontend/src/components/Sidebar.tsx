@@ -59,12 +59,29 @@ const PERSONAL_ITEMS = [
   { name: 'Daily Reports', href: '/daily-reports', icon: DocumentTextIcon },
 ];
 
-export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
+export default function Sidebar({ projects: propsProjects, onCreateProject }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
+  const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
+
+  // Fetch projects for sidebar
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (!user?.id) return;
+      try {
+        const { data: allProjects } = await supabase.from('projects_project').select('*');
+        const filtered = (allProjects || []).filter((p: any) => 
+          p.members && Array.isArray(p.members) && p.members.some((m: any) => m.id === user.id)
+        );
+        setMyProjects(filtered);
+      } catch (error) {
+        setMyProjects(propsProjects || []);
+      }
+    };
+    fetchProjects();
+  }, [user, propsProjects]);
 
   // Fetch unread notification count
   useEffect(() => {
@@ -96,25 +113,21 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
       router.push('/login');
   };
 
-  // Task counts for categories
-  const todoCount = projects.reduce((acc, p) => acc + (p.task_count || 0) - (p.completed_task_count || 0), 0);
-  const completedCount = projects.reduce((acc, p) => acc + (p.completed_task_count || 0), 0);
-  
   // Get all team members from assigned projects
   const [teamMembers, setTeamMembers] = React.useState<any[]>([]);
   
   React.useEffect(() => {
     const fetchTeamMembers = async () => {
-      if (!user?.id || !projects || projects.length === 0) {
+      if (!user?.id || !myProjects || myProjects.length === 0) {
         setTeamMembers([]);
-      return;
-    }
-    
-    try {
+        return;
+      }
+      
+      try {
         // Get all unique members from all assigned projects
         const allMembersMap = new Map();
         
-        projects.forEach(project => {
+        myProjects.forEach(project => {
           if (project.members && Array.isArray(project.members)) {
             project.members.forEach(member => {
               if (member.id !== user.id && !allMembersMap.has(member.id)) {
@@ -132,7 +145,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
     };
     
     fetchTeamMembers();
-  }, [user, projects]);
+  }, [user, myProjects]);
 
   return (
     <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', background: '#0D0D0D', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', zIndex: 40 }}>
@@ -189,13 +202,13 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
               </Link>
 
         {/* Projects Section under Dashboard */}
-        {projects.length > 0 && (
+        {myProjects.length > 0 && (
           <div style={{ marginBottom: '0.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>Projects</span>
-                </div>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {projects.map((project) => {
+              {myProjects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
                 return (
                   <Link
