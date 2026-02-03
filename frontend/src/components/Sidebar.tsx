@@ -130,8 +130,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
     const fetchTeamMembers = async () => {
       if (!user?.id || !projects || projects.length === 0) {
         setTeamMembers([]);
-      return;
-    }
+        return;
+      }
     
     try {
         // Get all unique members from all assigned projects
