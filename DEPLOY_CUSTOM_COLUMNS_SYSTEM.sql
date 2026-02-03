@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS project_custom_columns (
 CREATE INDEX IF NOT EXISTS idx_custom_columns_project ON project_custom_columns(project_id);
 CREATE INDEX IF NOT EXISTS idx_custom_columns_order ON project_custom_columns(project_id, column_order);
 
--- Step 2: Create custom_field_values table to store actual values
+-- Step 2: Create custom_fiÙeld_values table to store actual values
 CREATE TABLE IF NOT EXISTS task_custom_field_values (
     id BIGSERIAL PRIMARY KEY,
     task_id BIGINT NOT NULL REFERENCES projects_task(id) ON DELETE CASCADE,
