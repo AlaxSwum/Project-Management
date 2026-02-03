@@ -66,20 +66,35 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
 
-  // Fetch projects for sidebar - show ALL projects user can access
+  // Fetch projects where user has tasks assigned
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user?.id) return;
       try {
-        // For now, show all projects - will filter by access later
-        const { data: allProjects } = await supabase
+        // Get all tasks where user is assigned
+        const { data: myTasks } = await supabase
+          .from('projects_task')
+          .select('project_id')
+          .contains('assignee_ids', [user.id]);
+        
+        if (!myTasks || myTasks.length === 0) {
+          setMyProjects([]);
+          return;
+        }
+        
+        // Get unique project IDs
+        const projectIds = [...new Set(myTasks.map(t => t.project_id))];
+        
+        // Fetch those projects
+        const { data: assignedProjects } = await supabase
           .from('projects_project')
           .select('*')
+          .in('id', projectIds)
           .order('name');
         
-        setMyProjects(allProjects || []);
+        setMyProjects(assignedProjects || []);
       } catch (error) {
-        setMyProjects(propsProjects || []);
+        setMyProjects([]);
       }
     };
     fetchProjects();
