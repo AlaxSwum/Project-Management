@@ -258,15 +258,15 @@ export const supabaseDb = {
     try {
       // First check if user has access to this project
       const { data: membership, error: membershipError } = await supabase
-//         .from('projects_project_members')
-//         .select('id')
-//         .eq('project_id', id)
-//         .eq('user_id', userId)
-//         .single()
-// 
-//       // Skip membership check for now - allow all users
-//       // if (membershipError || !membership) {
-//       //   return { data: null, error: new Error('Access denied: You are not a member of this project') }
+        .from('projects_project_members')
+        .select('id')
+        .eq('project_id', id)
+        .eq('user_id', userId)
+        .single()
+
+      // Skip membership check for now - allow all users
+      // if (membershipError || !membership) {
+      //   return { data: null, error: new Error('Access denied: You are not a member of this project') }
       // }
 
       // Fetch the project
