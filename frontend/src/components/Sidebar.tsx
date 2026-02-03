@@ -59,12 +59,35 @@ const PERSONAL_ITEMS = [
   { name: 'Daily Reports', href: '/daily-reports', icon: DocumentTextIcon },
 ];
 
-export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
+export default function Sidebar({ projects: propsProjects, onCreateProject }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
+  const [projects, setProjects] = useState<any[]>(propsProjects || []);
+
+  // Fetch projects directly in Sidebar so it works on ALL pages
+  useEffect(() => {
+    const fetchMyProjects = async () => {
+      if (!user?.id) {
+        setProjects([]);
+        return;
+      }
+
+      try {
+        const { data: allProjects } = await supabase.from('projects_project').select('*');
+        const myProjects = (allProjects || []).filter((p: any) => 
+          p.members && p.members.some((m: any) => m.id === user.id)
+        );
+        setProjects(myProjects);
+      } catch (error) {
+        setProjects([]);
+      }
+    };
+
+    fetchMyProjects();
+  }, [user]);
 
   // Fetch unread notification count
   useEffect(() => {
@@ -188,12 +211,12 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>Dashboard</span>
               </Link>
 
-        {/* Projects Section under Dashboard */}
-        {projects.length > 0 && (
-          <div style={{ marginBottom: '0.5rem' }}>
-            <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>Projects</span>
-                </div>
+        {/* Projects Section under Dashboard - ALWAYS SHOW */}
+        <div style={{ marginBottom: '0.5rem' }}>
+          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>Projects</span>
+          </div>
+          {projects.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {projects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
@@ -230,11 +253,14 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                       {project.name}
                     </span>
                   </Link>
-                );
-              })}
-                </div>
-          </div>
-        )}
+                  );
+                })}
+          ) : (
+            <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem', fontFamily: 'Mabry Pro, sans-serif' }}>
+              Loading projects...
+            </div>
+          )}
+        </div>
 
         {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
