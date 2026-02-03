@@ -186,14 +186,14 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         >
           <HomeIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
           <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>Dashboard</span>
-        </Link>
+              </Link>
 
         {/* Projects Section under Dashboard */}
         {projects.length > 0 && (
           <div style={{ marginBottom: '0.5rem' }}>
             <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>Projects</span>
-            </div>
+                </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {projects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
@@ -232,7 +232,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
                   </Link>
                 );
               })}
-            </div>
+                </div>
           </div>
         )}
 

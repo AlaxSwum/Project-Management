@@ -551,7 +551,7 @@ export default function ProjectDetailPage() {
               <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{project.name}</h1>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
-              {!isMobile && (
+      {!isMobile && (
                 <button
                   onClick={() => setShowProjectMembers(true)}
                   style={{ display: 'flex', gap: '-0.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -583,8 +583,8 @@ export default function ProjectDetailPage() {
                 New Task
                   </button>
             </div>
-                </div>
-
+              </div>
+              
           {/* View Tabs and Search */}
           <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0.75rem' : '0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
@@ -746,7 +746,7 @@ export default function ProjectDetailPage() {
               )}
             </div>
           )}
-        </div>
+                </div>
 
         {/* Main Content - Multiple Views */}
         <div style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem', overflowX: 'auto', background: '#0D0D0D' }}>
@@ -914,7 +914,7 @@ export default function ProjectDetailPage() {
                     <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '160px', borderBottom: '2px solid #2D2D2D' }}>Timeline</th>
                     <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '140px', borderBottom: '2px solid #2D2D2D' }}>Last Updated</th>
                     <th style={{ padding: '0.875rem 1rem', textAlign: 'center', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', background: '#141414', width: '50px', borderBottom: '2px solid #2D2D2D' }}>
-                      <button 
+                  <button
                         onClick={() => setShowAddColumnModal(true)}
                         style={{ width: '24px', height: '24px', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} 
                         title="Add column"
@@ -922,7 +922,7 @@ export default function ProjectDetailPage() {
                         onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
                       >
                         <PlusIcon style={{ width: '14px', height: '14px' }} />
-                      </button>
+                  </button>
                     </th>
                   </tr>
                 </thead>
@@ -947,7 +947,7 @@ export default function ProjectDetailPage() {
                       <React.Fragment key={month}>
                         <tr style={{ background: '#0D0D0D' }}>
                           <td colSpan={10} style={{ padding: '1rem 1.25rem', borderTop: '1px solid #2D2D2D', borderBottom: '1px solid #2D2D2D' }}>
-                            <button
+                  <button
                               onClick={() => {
                                 if (isExpanded) {
                                   setExpandedMonths(expandedMonths.filter(m => m !== month));
@@ -966,7 +966,7 @@ export default function ProjectDetailPage() {
                                 <span style={{ padding: '0.25rem 0.625rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
                                   {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
                                 </span>
-            </div>
+                </div>
 
                               {/* Status breakdown */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -976,9 +976,9 @@ export default function ProjectDetailPage() {
                                     <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
                                       {status.count} {status.label}
                                     </span>
-          </div>
+              </div>
                                 ))}
-        </div>
+            </div>
                             </button>
                           </td>
                         </tr>
@@ -996,7 +996,7 @@ export default function ProjectDetailPage() {
                             <td style={{ padding: '1rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{task.name}</span>
-                              </div>
+              </div>
                               {(() => {
                                 const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
                                 return tags.length > 0 && (
@@ -1043,7 +1043,7 @@ export default function ProjectDetailPage() {
                                 display: 'inline-block'
                               }}>
                                 {task.status === 'done' ? 'Done' : task.status === 'in_progress' ? 'In Progress' : task.status.replace('_', ' ')}
-            </div>
+                </div>
                             </td>
                             <td style={{ padding: '1rem', color: task.due_date ? '#FFFFFF' : '#52525B', fontSize: '0.875rem' }}>
                               {task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}
@@ -1060,9 +1060,9 @@ export default function ProjectDetailPage() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <div style={{ height: '4px', flex: 1, background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden', minWidth: '60px' }}>
                                   <div style={{ height: '100%', width: '40%', backgroundColor: TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A', borderRadius: '9999px' }} />
-                                </div>
+              </div>
                                 <span style={{ color: '#71717A', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>40%</span>
-                              </div>
+            </div>
                             </td>
                             <td style={{ padding: '1rem', color: '#71717A', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                               {new Date(task.updated_at).toLocaleDateString()}
@@ -1149,10 +1149,10 @@ export default function ProjectDetailPage() {
                             padding: '1rem', 
                             cursor: 'pointer', 
                             transition: 'all 0.2s', 
-                            position: 'relative',
+                                              position: 'relative',
                             minHeight: '220px',
                             maxHeight: '220px',
-                            display: 'flex',
+                                            display: 'flex',
                             flexDirection: 'column'
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
@@ -1169,11 +1169,11 @@ export default function ProjectDetailPage() {
                                     style={{ padding: '0.25rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}
                                   >
                                     {tag}
-                                  </span>
+                                          </span>
                                 );
                               })}
-                          </div>
-                          )}
+                                </div>
+                              )}
                               
                           {/* Title and Menu */}
                           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -1183,7 +1183,7 @@ export default function ProjectDetailPage() {
                             >
                               <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
                             </button>
-                                            </div>
+                        </div>
             
                           {/* Description */}
                           {task.description && (
@@ -1200,11 +1200,11 @@ export default function ProjectDetailPage() {
                               <span style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 500 }}>
                                 {subtasksCompleted}/{subtasksTotal}
                               </span>
-                                    </div>
+                  </div>
                             <div style={{ height: '4px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
                               <div style={{ height: '100%', width: `${progress}%`, backgroundColor: status.color, borderRadius: '9999px', transition: 'width 0.3s' }} />
                 </div>
-                </div>
+          </div>
                 
                           {/* Footer */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid #2D2D2D', flex: '0 0 auto' }}>
@@ -1218,21 +1218,21 @@ export default function ProjectDetailPage() {
                                   {assignee.name.charAt(0)}
                                           </div>
                                         ))}
-                                          </div>
-
+            </div>
+            
                             {/* Counts */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
                                 <PaperClipIcon style={{ width: '14px', height: '14px' }} />
                                 <span>{Math.floor(Math.random() * 5) + 1}</span>
-                                      </div>
+              </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
                                 <ChatBubbleLeftIcon style={{ width: '14px', height: '14px' }} />
                                 <span>{Math.floor(Math.random() * 20) + 1}</span>
-                                  </div>
-                                </div>
-                                      </div>
-                        </div>
+            </div>
+          </div>
+                                    </div>
+                </div>
                       );
                     })}
 
@@ -1240,7 +1240,7 @@ export default function ProjectDetailPage() {
                     {statusTasks.length === 0 && (
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '150px', border: '2px dashed #2D2D2D', borderRadius: '0.75rem', background: 'transparent' }}>
                         <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks</span>
-                      </div>
+                </div>
                     )}
 
                     {/* Add New Task Button */}
@@ -1249,14 +1249,14 @@ export default function ProjectDetailPage() {
                         setNewTaskColumn(status.value);
                         setShowCreateTask(true);
                       }}
-                      style={{
+                    style={{
                         width: '100%',
                         padding: '0.75rem',
                         background: 'transparent',
                         border: '1px dashed #2D2D2D',
                         borderRadius: '0.5rem',
                         color: '#71717A',
-                        cursor: 'pointer',
+                  cursor: 'pointer',
                         fontSize: '0.875rem',
                         fontWeight: 500,
                         transition: 'all 0.2s',
@@ -1265,13 +1265,13 @@ export default function ProjectDetailPage() {
                         justifyContent: 'center',
                         gap: '0.5rem',
                         marginTop: '0.5rem'
-                      }}
-                      onMouseEnter={(e) => {
+                }}
+                onMouseEnter={(e) => {
                         e.currentTarget.style.background = '#1A1A1A';
                         e.currentTarget.style.borderColor = '#3D3D3D';
                         e.currentTarget.style.color = '#FFFFFF';
-                      }}
-                      onMouseLeave={(e) => {
+                }}
+                onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent';
                         e.currentTarget.style.borderColor = '#2D2D2D';
                         e.currentTarget.style.color = '#71717A';
@@ -1280,15 +1280,15 @@ export default function ProjectDetailPage() {
                       <PlusIcon style={{ width: '16px', height: '16px' }} />
                       Add New Task
                     </button>
-                  </div>
+                </div>
                 </div>
               );
             })}
                                 </div>
                               )}
-                  </div>
+              </div>
             </div>
-            
+
       {/* Create Task Modal */}
       {showCreateTask && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
@@ -1304,7 +1304,7 @@ export default function ProjectDetailPage() {
                 <XMarkIcon style={{ width: '20px', height: '20px' }} />
               </button>
               </div>
-            
+              
             <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
               <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
@@ -1319,7 +1319,7 @@ export default function ProjectDetailPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
-                                    </div>
+                  </div>
             
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Description</label>
@@ -1332,7 +1332,7 @@ export default function ProjectDetailPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
-                </div>
+                                      </div>
                 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Tags (comma separated)</label>
@@ -1345,7 +1345,7 @@ export default function ProjectDetailPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                   />
-                </div>
+                                      </div>
                 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Priority</label>
@@ -1361,7 +1361,7 @@ export default function ProjectDetailPage() {
                     <option value="high">High</option>
                     <option value="urgent">Urgent</option>
                   </select>
-                </div>
+                                </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
@@ -1385,8 +1385,8 @@ export default function ProjectDetailPage() {
                       onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                     />
-              </div>
-            </div>
+                          </div>
+                                </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>Assign To</label>
@@ -1397,8 +1397,8 @@ export default function ProjectDetailPage() {
                         <label
                           key={member.id}
                           style={{
-                            display: 'flex',
-                            alignItems: 'center',
+                              display: 'flex',
+                              alignItems: 'center',
                             gap: '0.75rem',
                             padding: '0.75rem',
                             background: isSelected ? '#1A1A1A' : 'transparent',
@@ -1425,15 +1425,15 @@ export default function ProjectDetailPage() {
                           />
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
                             {member.name.charAt(0)}
-                                      </div>
+                            </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.name}
-                                      </div>
+                              </div>
                             <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.email}
                                 </div>
-                          </div>
+                            </div>
                         </label>
                       );
                     })}
@@ -1441,10 +1441,10 @@ export default function ProjectDetailPage() {
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
                         No team members available
                       </div>
-                    )}
-                          </div>
-                                </div>
-
+                        )}
+                  </div>
+            </div>
+            
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>
                     Report To
@@ -1459,9 +1459,9 @@ export default function ProjectDetailPage() {
                         <label
                           key={member.id}
                           style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                            gap: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
                             padding: '0.75rem',
                             background: isSelected ? '#1A1A1A' : 'transparent',
                             border: '1px solid',
@@ -1488,15 +1488,15 @@ export default function ProjectDetailPage() {
                           />
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
                             {member.name.charAt(0)}
-                            </div>
+                </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.name}
-                              </div>
+                  </div>
                             <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.email}
-                                </div>
-                          </div>
+                  </div>
+                  </div>
                           {isSelected && (
                             <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', width: '6px', height: '6px', background: '#3B82F6', borderRadius: '50%', boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }} />
                           )}
@@ -1506,14 +1506,14 @@ export default function ProjectDetailPage() {
                     {(!project.members || project.members.length === 0) && (
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
                         No team members available
-                            </div>
+                  </div>
                     )}
-                          </div>
+                </div>
                   {newTask.report_to_ids.length > 0 && (
                     <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '0.5rem' }}>
                       <div style={{ fontSize: '0.75rem', color: '#71717A', marginBottom: '0.5rem' }}>
                         {newTask.report_to_ids.length} {newTask.report_to_ids.length === 1 ? 'user' : 'users'} will be notified
-                                </div>
+              </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
                         {newTask.report_to_ids.map(id => {
                           const member = project.members?.find(m => m.id === id);
@@ -1526,11 +1526,11 @@ export default function ProjectDetailPage() {
                           if (i === 0) return [curr];
                           return [...prev, <span key={`sep-${i}`} style={{ color: '#71717A' }}>,</span>, curr];
                         }, [])}
-                        </div>
-                    </div>
-                        )}
             </div>
-            
+          </div>
+        )}
+              </div>
+              
                 {/* Subtasks Section */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Subtasks</label>
@@ -1540,13 +1540,13 @@ export default function ProjectDetailPage() {
                         <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                           <span style={{ width: '16px', height: '16px', border: '2px solid #52525B', borderRadius: '0.25rem', flexShrink: 0 }} />
                           <span style={{ flex: 1, color: '#FFFFFF', fontSize: '0.875rem' }}>{subtask}</span>
-                          <button
+                <button
                             type="button"
                             onClick={() => removeTempSubtask(index)}
                             style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: 0 }}
                           >
                             <XMarkIcon style={{ width: '16px', height: '16px' }} />
-                          </button>
+                </button>
                 </div>
                       ))}
                   </div>
@@ -1562,7 +1562,7 @@ export default function ProjectDetailPage() {
                       onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                     />
-                    <button
+                <button
                       type="button"
                       onClick={addTempSubtask}
                       style={{ padding: '0.75rem 1.25rem', background: '#2D2D2D', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
@@ -1570,9 +1570,9 @@ export default function ProjectDetailPage() {
                       onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
                     >
                       Add
-                    </button>
-                  </div>
-                  </div>
+                </button>
+              </div>
+            </div>
                   </div>
               
               <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', gap: '0.75rem' }}>
@@ -1595,8 +1595,8 @@ export default function ProjectDetailPage() {
                 </button>
                 </div>
             </form>
+              </div>
             </div>
-          </div>
         )}
 
       {/* Task Detail Modal - Dark Theme */}
@@ -1640,9 +1640,9 @@ export default function ProjectDetailPage() {
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
                       <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
                         {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
-                      </span>
-                </div>
-              </div>
+                                     </span>
+                               </div>
+                               </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
@@ -1651,15 +1651,15 @@ export default function ProjectDetailPage() {
                         <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                           <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: ['#8B5CF6', '#F59E0B', '#EC4899'][i % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600 }}>
                             {assignee.name.charAt(0)}
-            </div>
+                                </div>
                           <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
                 </div>
                       ))}
                       {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
                         <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>
-                      )}
-                    </div>
-                  </div>
+                              )}
+                            </div>
+                               </div>
 
                   {selectedTask.start_date && (
                     <div>
@@ -1667,9 +1667,9 @@ export default function ProjectDetailPage() {
                       <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                         <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
                           {new Date(selectedTask.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                     </span>
+                                 </span>
                                </div>
-                               </div>
+                          </div>
                   )}
 
                   {selectedTask.due_date && (
@@ -1679,11 +1679,11 @@ export default function ProjectDetailPage() {
                         <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
                           {new Date(selectedTask.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                  </span>
-                               </div>
-                               </div>
-                  )}
+              </div>
+              </div>
+            )}
 
-                  <div>
+              <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Priority</label>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', background: selectedTask.priority === 'low' ? 'rgba(16, 185, 129, 0.2)' : '#0D0D0D', borderRadius: '9999px', border: '1px solid #2D2D2D' }}>
                       <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'low' ? '#10B981' : '#FFFFFF', fontWeight: 500, textTransform: 'capitalize' }}>
