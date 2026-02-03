@@ -20,7 +20,8 @@ import {
   ClipboardDocumentListIcon,
   BellIcon,
   ChartBarIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  FolderIcon
 } from '@heroicons/react/24/outline';
 
 interface Project {
