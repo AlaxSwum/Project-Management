@@ -201,14 +201,15 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>Dashboard</span>
               </Link>
 
-        {/* Projects Section under Dashboard */}
-        {myProjects.length > 0 && (
-          <div style={{ marginBottom: '0.5rem' }}>
-            <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>Projects</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {myProjects.map((project) => {
+        {/* Projects Section under Dashboard - ALWAYS SHOW */}
+        <div style={{ marginBottom: '0.5rem' }}>
+          <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>
+              Projects ({myProjects.length})
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            {myProjects.length > 0 ? myProjects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
                 return (
                   <Link
@@ -244,10 +245,13 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                     </span>
                   </Link>
                 );
-              })}
+              }) : (
+                <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: '#52525B', fontFamily: 'Mabry Pro, sans-serif' }}>
+                  Loading projects...
                 </div>
+              )}
           </div>
-        )}
+        </div>
 
         {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
