@@ -167,7 +167,7 @@ export default function ProjectDetailPage() {
   const [tempSubtask, setTempSubtask] = useState('');
   const [showProjectMembers, setShowProjectMembers] = useState(false);
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'dashboard' | 'kanban' | 'list' | 'gantt' | 'calendar'>('dashboard');
+  const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
   const [enteredTags, setEnteredTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -589,7 +589,6 @@ export default function ProjectDetailPage() {
           <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0.75rem' : '0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
               {[
-                { id: 'dashboard', label: 'Dashboard', icon: ChartBarIcon },
                 { id: 'kanban', label: 'Kanban', icon: Squares2X2Icon },
                 { id: 'list', label: 'Table', icon: ListBulletIcon },
                 { id: 'gantt', label: 'Gantt', icon: ChartBarIcon },

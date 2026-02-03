@@ -44,7 +44,6 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Personal', href: '/personal', icon: UserCircleIcon },
   { name: 'My Tasks', href: '/my-tasks', icon: ClipboardDocumentListIcon },
   { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
@@ -153,9 +152,89 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-        {/* Navigation */}
+      {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
-          {/* Main Navigation */}
+        {/* Dashboard Link */}
+        <Link
+          href="/dashboard"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.625rem 0.75rem',
+            borderRadius: '0.5rem',
+            background: pathname === '/dashboard' ? '#10B981' : 'transparent',
+            color: pathname === '/dashboard' ? '#FFFFFF' : '#A1A1AA',
+            textDecoration: 'none',
+            transition: 'all 0.2s',
+            marginBottom: '0.5rem'
+          }}
+          onMouseEnter={(e) => {
+            if (pathname !== '/dashboard') {
+              e.currentTarget.style.background = '#1A1A1A';
+              e.currentTarget.style.color = '#FFFFFF';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (pathname !== '/dashboard') {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#A1A1AA';
+            }
+          }}
+        >
+          <HomeIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Dashboard</span>
+        </Link>
+
+        {/* Projects Section */}
+        {projects.length > 0 && (
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Projects</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {projects.map((project) => {
+                const isActive = pathname === `/projects/${project.id}`;
+                return (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.id}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '0.5rem',
+                      background: isActive ? '#1A1A1A' : 'transparent',
+                      color: isActive ? '#FFFFFF' : '#A1A1AA',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = '#1A1A1A';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#A1A1AA';
+                      }
+                    }}
+                  >
+                    <div style={{ width: '8px', height: '8px', borderRadius: '0.125rem', flexShrink: 0, backgroundColor: project.color || '#71717A' }} />
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {project.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
