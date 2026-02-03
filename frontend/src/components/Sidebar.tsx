@@ -153,17 +153,17 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           </div>
         </div>
 
-      {/* Navigation */}
+        {/* Navigation */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem' }}>
-        {/* Main Navigation */}
+          {/* Main Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             const showBadge = item.badge && unreadNotifications > 0;
             return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
+              <Link
+                key={item.name}
+                href={item.href}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -261,7 +261,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
-          </div>
+                </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {teamMembers.length > 0 ? teamMembers.map((member, i) => (
                 <Link
@@ -287,10 +287,10 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
             )) : (
               <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem' }}>
                 No team members yet
-              </div>
-            )}
-          </div>
         </div>
+      )}
+            </div>
+              </div>
       </nav>
 
       {/* Bottom Section */}
@@ -318,7 +318,7 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
           >
             <Cog6ToothIcon style={{ width: '20px', height: '20px' }} />
                             </button>
-                </div>
+                  </div>
 
         {/* User Profile */}
         <div 
