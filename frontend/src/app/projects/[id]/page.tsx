@@ -165,6 +165,8 @@ export default function ProjectDetailPage() {
   });
   const [newTaskSubtasks, setNewTaskSubtasks] = useState<string[]>([]);
   const [tempSubtask, setTempSubtask] = useState('');
+  const [showProjectMembers, setShowProjectMembers] = useState(false);
+  const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -548,16 +550,26 @@ export default function ProjectDetailPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
               {!isMobile && (
-                <div style={{ display: 'flex', gap: '-0.5rem' }}>
+                <button
+                  onClick={() => setShowProjectMembers(true)}
+                  style={{ display: 'flex', gap: '-0.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
                   {project.members?.slice(0, 5).map((member, i) => (
                     <div 
                       key={member.id}
-                      style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], marginLeft: i > 0 ? '-8px' : '0' }}
+                      style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], marginLeft: i > 0 ? '-8px' : '0', transition: 'transform 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                       {member.name.charAt(0)}
                     </div>
                   ))}
-                </div>
+                  {project.members && project.members.length > 5 && (
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: '#FFFFFF', backgroundColor: '#2D2D2D', marginLeft: '-8px' }}>
+                      +{project.members.length - 5}
+                    </div>
+                  )}
+                </button>
               )}
                   <button
                     onClick={() => setShowCreateTask(true)}
@@ -1223,8 +1235,46 @@ export default function ProjectDetailPage() {
                     {statusTasks.length === 0 && (
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '150px', border: '2px dashed #2D2D2D', borderRadius: '0.75rem', background: 'transparent' }}>
                         <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks</span>
-                                </div>
-                        )}
+                      </div>
+                    )}
+
+                    {/* Add New Task Button */}
+                    <button
+                      onClick={() => {
+                        setNewTaskColumn(status.value);
+                        setShowCreateTask(true);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: 'transparent',
+                        border: '1px dashed #2D2D2D',
+                        borderRadius: '0.5rem',
+                        color: '#71717A',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        marginTop: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#1A1A1A';
+                        e.currentTarget.style.borderColor = '#3D3D3D';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = '#2D2D2D';
+                        e.currentTarget.style.color = '#71717A';
+                      }}
+                    >
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      Add New Task
+                    </button>
                   </div>
                 </div>
               );
