@@ -66,16 +66,18 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
 
-  // Fetch projects for sidebar
+  // Fetch projects for sidebar - show ALL projects user can access
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user?.id) return;
       try {
-        const { data: allProjects } = await supabase.from('projects_project').select('*');
-        const filtered = (allProjects || []).filter((p: any) => 
-          p.members && Array.isArray(p.members) && p.members.some((m: any) => m.id === user.id)
-        );
-        setMyProjects(filtered);
+        // For now, show all projects - will filter by access later
+        const { data: allProjects } = await supabase
+          .from('projects_project')
+          .select('*')
+          .order('name');
+        
+        setMyProjects(allProjects || []);
       } catch (error) {
         setMyProjects(propsProjects || []);
       }
