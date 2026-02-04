@@ -1,65 +1,65 @@
 -- ========================================
 -- ADD AVATAR SUPPORT TO AUTH_USER TABLE
 -- ========================================
--- Run this SQL to add avatar_url column to store user profile pictures
 
--- Step 1: Add avatar_url column to auth_user table
+-- STEP 1: Run this SQL in Supabase SQL Editor
+-- ========================================
 ALTER TABLE auth_user ADD COLUMN IF NOT EXISTS avatar_url TEXT;
-
--- Step 2: Create avatars storage bucket (if it doesn't exist)
--- First, ensure the bucket exists
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'avatars',
-  'avatars',
-  true,
-  5242880, -- 5MB
-  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-)
-ON CONFLICT (id) DO UPDATE SET
-  public = true,
-  file_size_limit = 5242880,
-  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
--- Step 3: Completely disable RLS for avatars bucket to allow all uploads
-ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
-
--- Step 4: Grant ALL permissions on storage.objects
-GRANT ALL ON storage.objects TO authenticated;
-GRANT ALL ON storage.objects TO anon;
-
--- Step 5: Grant permissions on auth_user
 GRANT SELECT, UPDATE ON auth_user TO authenticated;
 
 -- ========================================
--- ALTERNATIVE: If you want to keep RLS enabled, use this instead:
+-- STEP 2: Create Storage Bucket via Supabase Dashboard
 -- ========================================
--- Uncomment the following lines and comment out Step 3 above:
+-- Go to: Supabase Dashboard > Storage > Create a new bucket
+-- 
+-- Settings:
+-- - Name: avatars
+-- - Public bucket: YES (toggle ON)
+-- - File size limit: 5MB
+-- - Allowed MIME types: image/jpeg, image/png, image/gif, image/webp
+-- - Restrict file upload size: 5242880 bytes
+--
+-- In the bucket settings, make sure "Public bucket" is enabled!
+-- This allows files to be publicly accessible without authentication.
+--
+-- ========================================
+-- ALTERNATIVE: Create bucket via SQL (if dashboard doesn't work)
+-- ========================================
+-- Only run this if you haven't created the bucket via dashboard:
 
--- ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
--- 
--- DROP POLICY IF EXISTS "Public avatar access" ON storage.objects;
--- DROP POLICY IF EXISTS "Authenticated avatar upload" ON storage.objects;
--- 
--- CREATE POLICY "Public avatar access"
--- ON storage.objects FOR ALL
--- USING (bucket_id = 'avatars');
--- 
--- CREATE POLICY "Authenticated avatar upload"
--- ON storage.objects FOR ALL
--- TO authenticated
--- USING (bucket_id = 'avatars')
--- WITH CHECK (bucket_id = 'avatars');
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- ========================================
--- USAGE INSTRUCTIONS
+-- STEP 3: Disable RLS on storage.objects (CRITICAL!)
 -- ========================================
--- After running this SQL:
--- 1. Users can upload profile pictures in Settings > Edit profile
--- 2. Images are stored in Supabase Storage 'avatars' bucket
--- 3. avatar_url in auth_user table stores the public URL
--- 4. Images are publicly accessible
+-- Run this in Supabase SQL Editor with POSTGRES role:
+-- Note: You might need to contact Supabase support or use service role key
+
+-- For now, use the Supabase Dashboard instead:
+-- 1. Go to: Storage > avatars bucket
+-- 2. Click "Policies" tab
+-- 3. Click "New Policy" 
+-- 4. Select "Get started quickly" > "Allow all operations"
+-- 5. This will create policies that allow all operations
+
+-- ========================================
+-- SIMPLE WORKAROUND: Just make bucket public
+-- ========================================
+-- The easiest solution is to ensure the bucket is PUBLIC
+-- This is set when you create it via dashboard or via the UPDATE above
+
+UPDATE storage.buckets 
+SET public = true 
+WHERE id = 'avatars';
 
 -- ========================================
 -- SUCCESS!
+-- ========================================
+-- After completing the above:
+-- 1. Users can upload profile pictures in Settings > Edit profile
+-- 2. Images are stored in Supabase Storage 'avatars' bucket
+-- 3. Images are publicly accessible
+-- 4. avatar_url in auth_user table stores the public URL
 -- ========================================
