@@ -176,6 +176,10 @@ export default function ProjectDetailPage() {
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [editingMemberRole, setEditingMemberRole] = useState<string>('');
   const [customRoleInput, setCustomRoleInput] = useState<string>('');
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [newMemberRole, setNewMemberRole] = useState<string>('Member');
   const [ganttViewMode, setGanttViewMode] = useState<'week' | 'month'>('month');
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
@@ -703,6 +707,103 @@ export default function ProjectDetailPage() {
       due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : ''
     });
     setIsEditingTask(true);
+  };
+
+  // Fetch available users to add as members
+  const fetchAvailableUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email')
+        .order('name');
+      
+      if (!error && data) {
+        // Filter out users who are already members
+        const currentMemberIds = project.members?.map(m => m.id) || [];
+        const available = data.filter(u => !currentMemberIds.includes(u.id));
+        setAvailableUsers(available);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  // Add member to project
+  const addMember = async () => {
+    if (!selectedUserId || !project) return;
+    
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: project.id,
+          user_id: selectedUserId,
+          role: newMemberRole
+        });
+      
+      if (error) throw error;
+      
+      // Fetch updated project
+      await fetchProject();
+      setShowAddMemberModal(false);
+      setSelectedUserId(null);
+      setNewMemberRole('Member');
+    } catch (err) {
+      console.error('Error adding member:', err);
+      alert('Failed to add member. Please try again.');
+    }
+  };
+
+  // Remove member from project
+  const removeMember = async (userId: number) => {
+    if (!project) return;
+    
+    if (!confirm('Remove this member from the project?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', project.id)
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setProject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: prev.members?.filter(m => m.id !== userId)
+        };
+      });
+    } catch (err) {
+      console.error('Error removing member:', err);
+      alert('Failed to remove member. Please try again.');
+    }
+  };
+
+  // Leave project (current user)
+  const leaveProject = async () => {
+    if (!project || !user) return;
+    
+    if (!confirm('Are you sure you want to leave this project?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', project.id)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('Error leaving project:', err);
+      alert('Failed to leave project. Please try again.');
+    }
   };
 
   if (authLoading || isLoading) {
@@ -2548,6 +2649,33 @@ n              {/* Team Members Button - Avatar Style */}
                               <PencilIcon style={{ width: '14px', height: '14px' }} />
                               Edit
                             </button>
+                            {member.id !== user?.id && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeMember(member.id);
+                                }}
+                                style={{ 
+                                  padding: '0.5rem 0.875rem', 
+                                  background: '#2D2D2D', 
+                                  border: 'none', 
+                                  borderRadius: '0.5rem', 
+                                  color: '#A1A1AA', 
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.375rem'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                              >
+                                <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                Remove
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2682,6 +2810,9 @@ n              {/* Team Members Button - Avatar Style */}
                                     };
                                   });
                                   
+                                  // Refresh project data to get updated members
+                                  await fetchProject();
+                                  
                                   setEditingMemberId(null);
                                   setEditingMemberRole('');
                                   setCustomRoleInput('');
@@ -2718,6 +2849,10 @@ n              {/* Team Members Button - Avatar Style */}
             {/* Footer */}
             <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button
+                onClick={() => {
+                  fetchAvailableUsers();
+                  setShowAddMemberModal(true);
+                }}
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -2739,6 +2874,27 @@ n              {/* Team Members Button - Avatar Style */}
                 Add Member
               </button>
               <button
+                onClick={leaveProject}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  padding: '0.625rem 1rem', 
+                  background: 'transparent', 
+                  border: '1px solid #EF4444', 
+                  borderRadius: '0.5rem', 
+                  color: '#EF4444', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#EF4444'; }}
+              >
+                Leave Project
+              </button>
+              <button
                 onClick={() => setShowProjectMembers(false)}
                 style={{ 
                   padding: '0.625rem 1.25rem', 
@@ -2755,6 +2911,124 @@ n              {/* Team Members Button - Avatar Style */}
                 onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }} onClick={() => setShowAddMemberModal(false)}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Add Team Member</h2>
+              <p style={{ fontSize: '0.8125rem', color: '#71717A', margin: '0.25rem 0 0' }}>Select a user to add to this project</p>
+            </div>
+            
+            {/* Content */}
+            <div style={{ padding: '1.5rem' }}>
+              {/* User Selection */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Select User
+                </label>
+                <select
+                  value={selectedUserId || ''}
+                  onChange={(e) => setSelectedUserId(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: '#141414',
+                    border: '1px solid #3D3D3D',
+                    borderRadius: '0.5rem',
+                    color: '#FFFFFF',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                >
+                  <option value="">Select a user...</option>
+                  {availableUsers.map(user => (
+                    <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Role Selection */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Assign Role
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {['Admin', 'Manager', 'Member', 'Developer', 'Designer', 'QA', 'Viewer'].map(role => (
+                    <button
+                      key={role}
+                      onClick={() => setNewMemberRole(role)}
+                      style={{
+                        padding: '0.5rem 0.875rem',
+                        background: newMemberRole === role ? '#3B82F6' : '#2D2D2D',
+                        border: newMemberRole === role ? '1px solid #3B82F6' : '1px solid #3D3D3D',
+                        borderRadius: '0.5rem',
+                        color: newMemberRole === role ? '#FFFFFF' : '#A1A1AA',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                onClick={() => {
+                  setShowAddMemberModal(false);
+                  setSelectedUserId(null);
+                  setNewMemberRole('Member');
+                }}
+                style={{
+                  padding: '0.625rem 1.25rem',
+                  background: 'transparent',
+                  border: '1px solid #3D3D3D',
+                  borderRadius: '0.5rem',
+                  color: '#A1A1AA',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#A1A1AA'; }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addMember}
+                disabled={!selectedUserId}
+                style={{
+                  padding: '0.625rem 1.5rem',
+                  background: selectedUserId ? '#10B981' : '#2D2D2D',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: selectedUserId ? '#FFFFFF' : '#52525B',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: selectedUserId ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { if (selectedUserId) e.currentTarget.style.background = '#059669'; }}
+                onMouseLeave={(e) => { if (selectedUserId) e.currentTarget.style.background = '#10B981'; }}
+              >
+                Add Member
               </button>
             </div>
           </div>
