@@ -210,20 +210,44 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      const [projectData, tasksData, projectsData] = await Promise.all([
-        projectService.getProject(Number(params?.id)),
-        taskService.getProjectTasks(Number(params?.id)),
-        projectService.getProjects()
-      ]);
+      // First check if user is a member of this project
+      const { data: memberCheck, error: memberError } = await supabase
+        .from('project_members')
+        .select('id')
+        .eq('project_id', Number(params?.id))
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      // Filter to only show projects where user is a member
-      const myProjects = projectsData.filter(project => {
-        return project.members && project.members.some((m: any) => m.id === user.id);
-      });
+      // If user is not a member, redirect to dashboard
+      if (!memberCheck && !memberError) {
+        router.push('/dashboard');
+        return;
+      }
+
+      // Fetch only projects where user is a member (from project_members table)
+      const { data: userProjectIds } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', user.id);
+      
+      const projectIds = userProjectIds?.map(p => p.project_id) || [];
+      
+      // Get full project data for user's projects
+      const { data: myProjectsData } = await supabase
+        .from('projects_project')
+        .select('*')
+        .in('id', projectIds)
+        .order('name');
+      
+      // Fetch current project and tasks
+      const [projectData, tasksData] = await Promise.all([
+        projectService.getProject(Number(params?.id)),
+        taskService.getProjectTasks(Number(params?.id))
+      ]);
       
       setProject(projectData);
       setTasks(tasksData);
-      setAllProjects(myProjects); // Only projects where user is member
+      setAllProjects(myProjectsData || []);
     } catch (err: any) {
       if (err.response?.status === 404) {
         router.push('/dashboard');

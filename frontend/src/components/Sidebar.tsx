@@ -64,60 +64,45 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
 
-  // Fetch projects where user is a member or has tasks assigned
+  // Fetch projects where user is a member (from project_members table)
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user?.id) return;
       try {
-        // Method 1: Get projects where user is in the members array
-        const { data: memberProjects } = await supabase
-          .from('projects_project')
-          .select('*')
-          .order('name');
-        
-        // Filter projects where user is a member
-        const projectsWithMembership = (memberProjects || []).filter(project => {
-          if (project.members && Array.isArray(project.members)) {
-            return project.members.some((member: any) => member.id === user.id);
-          }
-          // Also include projects where user is the creator
-          if (project.created_by === user.id) {
-            return true;
-          }
-          return false;
-        });
-        
-        // Method 2: Get projects where user has tasks assigned
-        const { data: myTasks } = await supabase
-          .from('projects_task')
+        // Get project IDs where user is a member from project_members table
+        const { data: userProjectIds, error: memberError } = await supabase
+          .from('project_members')
           .select('project_id')
-          .contains('assignee_ids', [user.id]);
+          .eq('user_id', user.id);
         
-        const taskProjectIds = myTasks ? [...new Set(myTasks.map(t => t.project_id))] : [];
-        
-        // Fetch projects from task assignments
-        let taskProjects: any[] = [];
-        if (taskProjectIds.length > 0) {
-          const { data: assignedProjects } = await supabase
-            .from('projects_project')
-            .select('*')
-            .in('id', taskProjectIds);
-          taskProjects = assignedProjects || [];
+        if (memberError) {
+          console.error('Error fetching project memberships:', memberError);
+          setMyProjects([]);
+          return;
         }
         
-        // Combine both sources (deduplicate by id)
-        const allProjectsMap = new Map();
-        [...projectsWithMembership, ...taskProjects].forEach(project => {
-          if (!allProjectsMap.has(project.id)) {
-            allProjectsMap.set(project.id, project);
-          }
-        });
+        const projectIds = userProjectIds?.map(p => p.project_id) || [];
         
-        const combinedProjects = Array.from(allProjectsMap.values()).sort((a, b) => 
-          a.name.localeCompare(b.name)
-        );
+        // If user has no projects, return empty
+        if (projectIds.length === 0) {
+          setMyProjects([]);
+          return;
+        }
         
-        setMyProjects(combinedProjects);
+        // Fetch full project data for these projects
+        const { data: projects, error: projectError } = await supabase
+          .from('projects_project')
+          .select('*')
+          .in('id', projectIds)
+          .order('name');
+        
+        if (projectError) {
+          console.error('Error fetching projects:', projectError);
+          setMyProjects([]);
+          return;
+        }
+        
+        setMyProjects(projects || []);
       } catch (error) {
         console.error('Error fetching projects:', error);
         setMyProjects([]);
