@@ -15,11 +15,21 @@ import {
   ExclamationTriangleIcon,
   UserIcon,
   TagIcon,
-
+  XMarkIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  ListBulletIcon,
+  LinkIcon,
+  BellIcon,
+  ArrowPathIcon,
+  FolderIcon,
+  VideoCameraIcon,
+  ClipboardDocumentListIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
-import TaskDetailModal from '@/components/TaskDetailModal';
+import MeetingDetailModal from '@/components/MeetingDetailModal';
 import MobileHeader from '@/components/MobileHeader';
 
 interface User {
@@ -69,20 +79,27 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
 
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [showMeetingDetail, setShowMeetingDetail] = useState(false);
   const [showDayTasks, setShowDayTasks] = useState(false);
   const [selectedDayTasks, setSelectedDayTasks] = useState<Task[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [showCreateMeeting, setShowCreateMeeting] = useState(false);
   const [newMeeting, setNewMeeting] = useState({
-    name: '',
+    title: '',
     description: '',
     start_date: '',
-    start_time: '',
-    end_time: '',
-    priority: 'medium',
+    start_time: '09:00',
+    duration: 60,
+    project_id: null as number | null,
+    attendee_ids: [] as number[],
+    agenda_items: [] as string[],
+    meeting_link: '',
+    reminder_time: '15',
+    recurring: false,
   });
+  const [newAgendaItem, setNewAgendaItem] = useState('');
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
   
   // Calendar view state
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
@@ -114,35 +131,36 @@ export default function CalendarPage() {
       setError(null);
       console.log('Calendar: Fetching meetings for user:', user?.id);
       
-      // Fetch meetings from projects_meeting table
-      const { data: meetingsData, error: meetingsError } = await supabase
-        .from('projects_meeting')
-        .select('*')
-        .order('date', { ascending: true });
+      // Fetch both meetings and projects
+      const [meetingsData, projectsData] = await Promise.all([
+        supabase.from('projects_meeting').select('*').order('date', { ascending: true }),
+        projectService.getProjects()
+      ]);
       
-      if (meetingsError) {
-        console.error('Error fetching meetings:', meetingsError);
+      if (meetingsData.error) {
+        console.error('Error fetching meetings:', meetingsData.error);
         setTasks([]);
+        setProjects(projectsData || []);
         setIsLoading(false);
         return;
       }
       
-      console.log('Calendar: Fetched meetings:', meetingsData?.length || 0);
+      console.log('Calendar: Fetched meetings:', meetingsData.data?.length || 0);
       
       // Transform meetings to task format for calendar display
-      const transformedMeetings = (meetingsData || []).map((meeting: any) => {
-        // Combine date and time for start_date
+      const transformedMeetings = (meetingsData.data || []).map((meeting: any) => {
         const startDateTime = meeting.date && meeting.time 
           ? `${meeting.date}T${meeting.time}`
           : meeting.date;
         
-        // Calculate end time based on duration (in minutes)
         let dueDateTime = startDateTime;
         if (meeting.duration && startDateTime) {
           const start = new Date(startDateTime);
           start.setMinutes(start.getMinutes() + meeting.duration);
           dueDateTime = start.toISOString();
         }
+        
+        const project = projectsData?.find((p: any) => p.id === meeting.project_id);
         
         return {
           id: meeting.id,
@@ -161,13 +179,15 @@ export default function CalendarPage() {
           created_at: meeting.created_at,
           updated_at: meeting.updated_at,
           project_id: meeting.project_id,
-          project_name: 'Meeting',
-          project_color: '#3B82F6',
+          project_name: project?.name || 'Personal',
+          project_color: project?.color || '#3B82F6',
           is_important: false,
+          // Keep original meeting data
+          _meetingData: meeting
         };
       });
       
-      setProjects([]);
+      setProjects(projectsData || []);
       setTasks(transformedMeetings || []);
       console.log('Calendar: Meetings loaded successfully');
     } catch (err) {
@@ -252,34 +272,64 @@ export default function CalendarPage() {
   const handleDayClick = (date: Date) => {
     setSelectedDayDate(date);
     setNewMeeting({
-      ...newMeeting,
-      start_date: date.toISOString().split('T')[0]
+      title: '',
+      description: '',
+      start_date: date.toISOString().split('T')[0],
+      start_time: '09:00',
+      duration: 60,
+      project_id: null,
+      attendee_ids: [],
+      agenda_items: [],
+      meeting_link: '',
+      reminder_time: '15',
+      recurring: false,
     });
+    setNewAgendaItem('');
+    setProjectMembers([]);
     setShowCreateMeeting(true);
   };
 
+  const handleProjectChange = async (projectId: number | null) => {
+    setNewMeeting({ ...newMeeting, project_id: projectId, attendee_ids: [] });
+    
+    if (projectId) {
+      const project = projects.find(p => p.id === projectId);
+      if (project && project.members) {
+        setProjectMembers(project.members);
+      } else {
+        setProjectMembers([]);
+      }
+    } else {
+      setProjectMembers([]);
+    }
+  };
+
+  const handleMeetingClick = (task: any) => {
+    if (task._meetingData) {
+      setSelectedMeeting(task._meetingData);
+      setShowMeetingDetail(true);
+    }
+  };
+
   const createMeeting = async () => {
-    if (!newMeeting.name.trim() || !newMeeting.start_date) return;
+    if (!newMeeting.title.trim() || !newMeeting.start_date) return;
     
     try {
-      // Calculate duration in minutes
-      const startTime = newMeeting.start_time || '09:00';
-      const endTime = newMeeting.end_time || '10:00';
-      const [startHour, startMin] = startTime.split(':').map(Number);
-      const [endHour, endMin] = endTime.split(':').map(Number);
-      const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
-      
-      // Insert into projects_meeting table
+      // Insert into projects_meeting table with all fields
       const { error } = await supabase
         .from('projects_meeting')
         .insert({
-          title: newMeeting.name.trim(),
+          title: newMeeting.title.trim(),
           description: newMeeting.description.trim(),
           date: newMeeting.start_date,
-          time: startTime,
-          duration: durationMinutes > 0 ? durationMinutes : 60,
+          time: newMeeting.start_time,
+          duration: newMeeting.duration,
+          project_id: newMeeting.project_id,
           created_by_id: user?.id,
-          attendee_ids: [user?.id],
+          attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : [user?.id],
+          agenda_items: newMeeting.agenda_items,
+          meeting_link: newMeeting.meeting_link.trim() || null,
+          reminder_time: newMeeting.reminder_time ? parseInt(newMeeting.reminder_time) : null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -295,13 +345,19 @@ export default function CalendarPage() {
       
       // Reset form
       setNewMeeting({
-        name: '',
+        title: '',
         description: '',
         start_date: '',
-        start_time: '',
-        end_time: '',
-        priority: 'medium',
+        start_time: '09:00',
+        duration: 60,
+        project_id: null,
+        attendee_ids: [],
+        agenda_items: [],
+        meeting_link: '',
+        reminder_time: '15',
+        recurring: false,
       });
+      setNewAgendaItem('');
       setShowCreateMeeting(false);
     } catch (err) {
       console.error('Error creating meeting:', err);
@@ -361,9 +417,8 @@ export default function CalendarPage() {
   };
 
   const handleTaskModalOpen = (task: Task) => {
-    if (showTaskModal) return; // Prevent multiple modals
-    setSelectedTask(task);
-    setShowTaskModal(true);
+    if (showMeetingDetail) return; // Prevent multiple modals
+    handleMeetingClick(task);
   };
 
   const handleCloseTaskDetail = () => {
@@ -2901,7 +2956,7 @@ export default function CalendarPage() {
               </div>
             )}
 
-            {/* Create Meeting Modal */}
+            {/* Schedule Meeting Modal */}
             {showCreateMeeting && (
               <div 
                 style={{
@@ -2920,250 +2975,754 @@ export default function CalendarPage() {
               >
                 <div
                   style={{
-                    background: '#1A1A1A',
+                    background: '#FFFFFF',
                     borderRadius: '16px',
-                    padding: '24px',
-                    width: '500px',
+                    width: '600px',
                     maxWidth: '90vw',
-                    border: '1px solid #2D2D2D',
+                    maxHeight: '90vh',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 style={{ 
-                    color: '#FFFFFF', 
-                    fontSize: '1.25rem', 
-                    fontWeight: 600, 
-                    marginBottom: '20px' 
+                  {/* Header with gradient */}
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, #FF9A6C 0%, #C77DFF 100%)',
+                    padding: '24px',
+                    position: 'relative',
                   }}>
-                    Add Meeting
+                    <button
+                      onClick={() => setShowCreateMeeting(false)}
+                      style={{
+                        position: 'absolute',
+                        top: '16px',
+                        right: '16px',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#FFFFFF',
+                        cursor: 'pointer',
+                        padding: '4px',
+                      }}
+                    >
+                      <XMarkIcon style={{ width: '24px', height: '24px' }} />
+                    </button>
+                    <h3 style={{ 
+                      color: '#FFFFFF', 
+                      fontSize: '1.5rem', 
+                      fontWeight: 700, 
+                      marginBottom: '4px',
+                      marginTop: 0,
+                    }}>
+                      Schedule Meeting
+                    </h3>
                     {selectedDayDate && (
                       <div style={{ 
                         fontSize: '0.875rem', 
-                        fontWeight: 400, 
-                        color: '#71717A', 
-                        marginTop: '4px' 
+                        color: '#FFFFFF', 
+                        opacity: 0.9,
                       }}>
                         {selectedDayDate.toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          month: 'long', 
+                          month: 'short', 
                           day: 'numeric', 
                           year: 'numeric' 
                         })}
                       </div>
                     )}
-                  </h3>
-                  
-                  {/* Meeting Name */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ 
-                      display: 'block', 
-                      color: '#A1A1AA', 
-                      fontSize: '0.875rem', 
-                      marginBottom: '8px' 
-                    }}>
-                      Meeting Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={newMeeting.name}
-                      onChange={(e) => setNewMeeting({ ...newMeeting, name: e.target.value })}
-                      placeholder="Enter meeting name"
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        background: '#141414',
-                        border: '1px solid #3D3D3D',
-                        borderRadius: '8px',
-                        color: '#FFFFFF',
-                        fontSize: '0.9375rem',
-                        outline: 'none',
-                      }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
-                    />
                   </div>
-                  
-                  {/* Description */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ 
-                      display: 'block', 
-                      color: '#A1A1AA', 
-                      fontSize: '0.875rem', 
-                      marginBottom: '8px' 
-                    }}>
-                      Description
-                    </label>
-                    <textarea
-                      value={newMeeting.description}
-                      onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
-                      placeholder="Add description..."
-                      rows={3}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        background: '#141414',
-                        border: '1px solid #3D3D3D',
-                        borderRadius: '8px',
-                        color: '#FFFFFF',
-                        fontSize: '0.9375rem',
-                        outline: 'none',
-                        resize: 'vertical',
-                      }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
-                    />
-                  </div>
-                  
-                  {/* Time Fields */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                    <div>
+
+                  {/* Body - scrollable */}
+                  <div style={{ 
+                    padding: '24px',
+                    overflowY: 'auto',
+                    flex: 1,
+                    background: '#F9FAFB',
+                  }}>
+                    {/* Meeting Title */}
+                    <div style={{ marginBottom: '20px' }}>
                       <label style={{ 
-                        display: 'block', 
-                        color: '#A1A1AA', 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
                         fontSize: '0.875rem', 
+                        fontWeight: 600,
                         marginBottom: '8px' 
                       }}>
-                        Start Time
+                        <DocumentTextIcon style={{ width: '18px', height: '18px', color: '#FF9A6C' }} />
+                        Meeting Title *
                       </label>
                       <input
-                        type="time"
-                        value={newMeeting.start_time}
-                        onChange={(e) => setNewMeeting({ ...newMeeting, start_time: e.target.value })}
+                        type="text"
+                        value={newMeeting.title}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, title: e.target.value })}
+                        placeholder="Enter meeting title"
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#141414',
-                          border: '1px solid #3D3D3D',
+                          background: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
                           borderRadius: '8px',
-                          color: '#FFFFFF',
+                          color: '#111827',
                           fontSize: '0.9375rem',
                           outline: 'none',
-                          colorScheme: 'dark',
                         }}
-                        onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       />
                     </div>
-                    <div>
+
+                    {/* Project */}
+                    <div style={{ marginBottom: '20px' }}>
                       <label style={{ 
-                        display: 'block', 
-                        color: '#A1A1AA', 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
                         fontSize: '0.875rem', 
+                        fontWeight: 600,
                         marginBottom: '8px' 
                       }}>
-                        End Time
+                        <FolderIcon style={{ width: '18px', height: '18px', color: '#FF9A6C' }} />
+                        Project
                       </label>
-                      <input
-                        type="time"
-                        value={newMeeting.end_time}
-                        onChange={(e) => setNewMeeting({ ...newMeeting, end_time: e.target.value })}
+                      <select
+                        value={newMeeting.project_id || ''}
+                        onChange={(e) => handleProjectChange(e.target.value ? parseInt(e.target.value) : null)}
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#141414',
-                          border: '1px solid #3D3D3D',
+                          background: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
                           borderRadius: '8px',
-                          color: '#FFFFFF',
+                          color: '#111827',
                           fontSize: '0.9375rem',
                           outline: 'none',
-                          colorScheme: 'dark',
+                          cursor: 'pointer',
                         }}
-                        onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                      >
+                        <option value="">Select a project</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Description */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                        marginBottom: '8px' 
+                      }}>
+                        <ListBulletIcon style={{ width: '18px', height: '18px', color: '#FF9A6C' }} />
+                        Description
+                      </label>
+                      <textarea
+                        value={newMeeting.description}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
+                        placeholder="Add meeting description..."
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
+                          borderRadius: '8px',
+                          color: '#111827',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          resize: 'vertical',
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       />
                     </div>
-                  </div>
-                  
-                  {/* Priority */}
-                  <div style={{ marginBottom: '24px' }}>
-                    <label style={{ 
-                      display: 'block', 
-                      color: '#A1A1AA', 
-                      fontSize: '0.875rem', 
-                      marginBottom: '8px' 
+
+                    {/* Date, Time, Duration Row */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                      <div>
+                        <label style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#374151', 
+                          fontSize: '0.875rem', 
+                          fontWeight: 600,
+                          marginBottom: '8px' 
+                        }}>
+                          <CalendarIcon style={{ width: '16px', height: '16px', color: '#C77DFF' }} />
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={newMeeting.start_date}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, start_date: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            background: '#FFFFFF',
+                            border: '1px solid #D1D5DB',
+                            borderRadius: '8px',
+                            color: '#111827',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#374151', 
+                          fontSize: '0.875rem', 
+                          fontWeight: 600,
+                          marginBottom: '8px' 
+                        }}>
+                          <ClockIcon style={{ width: '16px', height: '16px', color: '#C77DFF' }} />
+                          Time
+                        </label>
+                        <input
+                          type="time"
+                          value={newMeeting.start_time}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, start_time: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            background: '#FFFFFF',
+                            border: '1px solid #D1D5DB',
+                            borderRadius: '8px',
+                            color: '#111827',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#374151', 
+                          fontSize: '0.875rem', 
+                          fontWeight: 600,
+                          marginBottom: '8px' 
+                        }}>
+                          <ClockIcon style={{ width: '16px', height: '16px', color: '#C77DFF' }} />
+                          Duration
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="number"
+                            value={newMeeting.duration}
+                            onChange={(e) => setNewMeeting({ ...newMeeting, duration: parseInt(e.target.value) || 60 })}
+                            min="15"
+                            step="15"
+                            style={{
+                              width: '100%',
+                              padding: '12px 14px',
+                              paddingRight: '45px',
+                              background: '#FFFFFF',
+                              border: '1px solid #D1D5DB',
+                              borderRadius: '8px',
+                              color: '#111827',
+                              fontSize: '0.875rem',
+                              outline: 'none',
+                            }}
+                            onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                            onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                          />
+                          <span style={{
+                            position: 'absolute',
+                            right: '14px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: '#6B7280',
+                            fontSize: '0.875rem',
+                            pointerEvents: 'none',
+                          }}>
+                            min
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recurring Meeting Toggle */}
+                    <div style={{ 
+                      marginBottom: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      background: '#FFFFFF',
+                      border: '1px solid #D1D5DB',
+                      borderRadius: '8px',
                     }}>
-                      Priority
-                    </label>
-                    <select
-                      value={newMeeting.priority}
-                      onChange={(e) => setNewMeeting({ ...newMeeting, priority: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        background: '#141414',
-                        border: '1px solid #3D3D3D',
+                      <label style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                      }}>
+                        <ArrowPathIcon style={{ width: '18px', height: '18px', color: '#FF9A6C' }} />
+                        Recurring Meeting
+                      </label>
+                      <div
+                        onClick={() => setNewMeeting({ ...newMeeting, recurring: !newMeeting.recurring })}
+                        style={{
+                          width: '48px',
+                          height: '24px',
+                          background: newMeeting.recurring ? '#C77DFF' : '#D1D5DB',
+                          borderRadius: '12px',
+                          position: 'relative',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                        }}
+                      >
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          background: '#FFFFFF',
+                          borderRadius: '50%',
+                          position: 'absolute',
+                          top: '2px',
+                          left: newMeeting.recurring ? '26px' : '2px',
+                          transition: 'left 0.2s',
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* Attendees Section */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                        marginBottom: '12px' 
+                      }}>
+                        <UserGroupIcon style={{ width: '18px', height: '18px', color: '#C77DFF' }} />
+                        Attendees
+                      </label>
+                      <div style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #D1D5DB',
                         borderRadius: '8px',
-                        color: '#FFFFFF',
-                        fontSize: '0.9375rem',
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
+                        padding: '12px',
+                      }}>
+                        {!newMeeting.project_id ? (
+                          <p style={{ 
+                            color: '#6B7280', 
+                            fontSize: '0.875rem',
+                            margin: 0,
+                            fontStyle: 'italic',
+                          }}>
+                            Select a project first to see team members
+                          </p>
+                        ) : projectMembers.length === 0 ? (
+                          <p style={{ 
+                            color: '#6B7280', 
+                            fontSize: '0.875rem',
+                            margin: 0,
+                            fontStyle: 'italic',
+                          }}>
+                            No team members found for this project
+                          </p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {projectMembers.map((member) => (
+                              <label 
+                                key={member.id}
+                                style={{ 
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  cursor: 'pointer',
+                                  padding: '8px',
+                                  borderRadius: '6px',
+                                  transition: 'background 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={newMeeting.attendee_ids.includes(member.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setNewMeeting({
+                                        ...newMeeting,
+                                        attendee_ids: [...newMeeting.attendee_ids, member.id]
+                                      });
+                                    } else {
+                                      setNewMeeting({
+                                        ...newMeeting,
+                                        attendee_ids: newMeeting.attendee_ids.filter(id => id !== member.id)
+                                      });
+                                    }
+                                  }}
+                                  style={{
+                                    width: '18px',
+                                    height: '18px',
+                                    cursor: 'pointer',
+                                  }}
+                                />
+                                <div style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  background: '#C77DFF',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#FFFFFF',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                }}>
+                                  {member.name?.charAt(0)?.toUpperCase() || member.email?.charAt(0)?.toUpperCase() || 'U'}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ 
+                                    color: '#111827', 
+                                    fontSize: '0.875rem',
+                                    fontWeight: 500,
+                                  }}>
+                                    {member.name || 'Unknown User'}
+                                  </div>
+                                  <div style={{ 
+                                    color: '#6B7280', 
+                                    fontSize: '0.75rem',
+                                  }}>
+                                    {member.email}
+                                  </div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Meeting Agenda Section */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                        marginBottom: '12px' 
+                      }}>
+                        <ClipboardDocumentListIcon style={{ width: '18px', height: '18px', color: '#3B82F6' }} />
+                        Meeting Agenda
+                      </label>
+                      
+                      {/* Info banner */}
+                      <div style={{
+                        background: '#FEF3C7',
+                        border: '1px solid #FCD34D',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        marginBottom: '12px',
+                        fontSize: '0.875rem',
+                        color: '#92400E',
+                      }}>
+                        💡 Add agenda items to keep your meeting focused
+                      </div>
+
+                      {/* Add agenda item */}
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                        <input
+                          type="text"
+                          value={newAgendaItem}
+                          onChange={(e) => setNewAgendaItem(e.target.value)}
+                          placeholder="Add an agenda item..."
+                          style={{
+                            flex: 1,
+                            padding: '10px 12px',
+                            background: '#FFFFFF',
+                            border: '1px solid #D1D5DB',
+                            borderRadius: '8px',
+                            color: '#111827',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newAgendaItem.trim()) {
+                              setNewMeeting({
+                                ...newMeeting,
+                                agenda_items: [...newMeeting.agenda_items, newAgendaItem.trim()]
+                              });
+                              setNewAgendaItem('');
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            if (newAgendaItem.trim()) {
+                              setNewMeeting({
+                                ...newMeeting,
+                                agenda_items: [...newMeeting.agenda_items, newAgendaItem.trim()]
+                              });
+                              setNewAgendaItem('');
+                            }
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            background: '#C77DFF',
+                            border: 'none',
+                            borderRadius: '8px',
+                            color: '#FFFFFF',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#B366FF'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#C77DFF'}
+                        >
+                          Add
+                        </button>
+                      </div>
+
+                      {/* Agenda items list */}
+                      {newMeeting.agenda_items.length > 0 && (
+                        <div style={{
+                          background: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
+                          borderRadius: '8px',
+                          padding: '8px',
+                        }}>
+                          {newMeeting.agenda_items.map((item, index) => (
+                            <div 
+                              key={index}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px',
+                                borderRadius: '6px',
+                                background: '#F9FAFB',
+                                marginBottom: index < newMeeting.agenda_items.length - 1 ? '6px' : 0,
+                              }}
+                            >
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                background: '#E0E7FF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#4F46E5',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                flexShrink: 0,
+                              }}>
+                                {index + 1}
+                              </div>
+                              <span style={{ 
+                                flex: 1,
+                                color: '#374151',
+                                fontSize: '0.875rem',
+                              }}>
+                                {item}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setNewMeeting({
+                                    ...newMeeting,
+                                    agenda_items: newMeeting.agenda_items.filter((_, i) => i !== index)
+                                  });
+                                }}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#EF4444',
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <TrashIcon style={{ width: '16px', height: '16px' }} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Meeting Link */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                        marginBottom: '8px' 
+                      }}>
+                        <VideoCameraIcon style={{ width: '18px', height: '18px', color: '#10B981' }} />
+                        Meeting Link
+                      </label>
+                      <input
+                        type="url"
+                        value={newMeeting.meeting_link}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, meeting_link: e.target.value })}
+                        placeholder="https://zoom.us/j/... or meet.google.com/..."
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
+                          borderRadius: '8px',
+                          color: '#111827',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                      />
+                    </div>
+
+                    {/* Email Reminder */}
+                    <div style={{ marginBottom: '8px' }}>
+                      <label style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: '#374151', 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600,
+                        marginBottom: '8px' 
+                      }}>
+                        <BellIcon style={{ width: '18px', height: '18px', color: '#F59E0B' }} />
+                        Email Reminder
+                      </label>
+                      <select
+                        value={newMeeting.reminder_time}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, reminder_time: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
+                          borderRadius: '8px',
+                          color: '#111827',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          cursor: 'pointer',
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                      >
+                        <option value="15">15 min before</option>
+                        <option value="30">30 min before</option>
+                        <option value="60">1 hour before</option>
+                        <option value="1440">1 day before</option>
+                      </select>
+                    </div>
                   </div>
-                  
-                  {/* Actions */}
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+
+                  {/* Footer Buttons */}
+                  <div style={{ 
+                    padding: '16px 24px',
+                    background: '#F9FAFB',
+                    borderTop: '1px solid #E5E7EB',
+                    display: 'flex', 
+                    gap: '12px', 
+                    justifyContent: 'flex-end' 
+                  }}>
                     <button
                       onClick={() => setShowCreateMeeting(false)}
                       style={{
                         padding: '10px 20px',
-                        background: 'transparent',
-                        border: '1px solid #3D3D3D',
+                        background: '#FFFFFF',
+                        border: '1px solid #D1D5DB',
                         borderRadius: '8px',
-                        color: '#A1A1AA',
+                        color: '#374151',
                         fontSize: '0.875rem',
-                        fontWeight: 500,
+                        fontWeight: 600,
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#2D2D2D';
-                        e.currentTarget.style.color = '#FFFFFF';
+                        e.currentTarget.style.background = '#F3F4F6';
+                        e.currentTarget.style.borderColor = '#9CA3AF';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = '#A1A1AA';
+                        e.currentTarget.style.background = '#FFFFFF';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
                       }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={createMeeting}
-                      disabled={!newMeeting.name.trim()}
+                      disabled={!newMeeting.title.trim()}
                       style={{
-                        padding: '10px 20px',
-                        background: newMeeting.name.trim() ? '#3B82F6' : '#3D3D3D',
+                        padding: '10px 24px',
+                        background: newMeeting.title.trim() 
+                          ? 'linear-gradient(135deg, #FF9A6C 0%, #C77DFF 100%)' 
+                          : '#D1D5DB',
                         border: 'none',
                         borderRadius: '8px',
                         color: '#FFFFFF',
                         fontSize: '0.875rem',
-                        fontWeight: 500,
-                        cursor: newMeeting.name.trim() ? 'pointer' : 'not-allowed',
+                        fontWeight: 600,
+                        cursor: newMeeting.title.trim() ? 'pointer' : 'not-allowed',
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        if (newMeeting.name.trim()) {
-                          e.currentTarget.style.background = '#2563EB';
+                        if (newMeeting.title.trim()) {
+                          e.currentTarget.style.opacity = '0.9';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (newMeeting.name.trim()) {
-                          e.currentTarget.style.background = '#3B82F6';
+                        if (newMeeting.title.trim()) {
+                          e.currentTarget.style.opacity = '1';
                         }
                       }}
                     >
-                      Add Meeting
+                      Schedule Meeting
                     </button>
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Meeting Detail Modal */}
+            {showMeetingDetail && selectedMeeting && (
+              <MeetingDetailModal
+                meeting={selectedMeeting}
+                onClose={() => {
+                  setShowMeetingDetail(false);
+                  setSelectedMeeting(null);
+                }}
+                onUpdate={fetchData}
+              />
             )}
           </main>
         </div>
