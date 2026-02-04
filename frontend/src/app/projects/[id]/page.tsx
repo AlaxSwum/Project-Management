@@ -1044,78 +1044,131 @@ n              {/* Team Members Button - Avatar Style */}
                       </div>
                     </div>
                   ) : ganttViewMode === 'month' ? (
-                    // Month View - Calendar grid
-                    <div style={{ padding: '1rem' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
-                        {/* Day Headers */}
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                          <div key={day} style={{ padding: '0.75rem', textAlign: 'center', color: '#71717A', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>{day}</div>
-                        ))}
-                        
-                        {/* Calendar Days */}
-                        {(() => {
-                          const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
-                          const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
-                          const startDay = monthStart.getDay();
-                          const daysInMonth = monthEnd.getDate();
+                    // Month View - Days as rows, dates as columns (Hometender style)
+                    <div style={{ display: 'flex', minHeight: '100%' }}>
+                      {/* Day Labels Column */}
+                      <div style={{ width: '100px', flexShrink: 0, background: '#141414', borderRight: '1px solid #2D2D2D' }}>
+                        <div style={{ height: '48px', borderBottom: '1px solid #2D2D2D' }} />
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
                           const today = new Date();
+                          const todayDayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+                          const isToday = todayDayOfWeek === i && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
                           
-                          return Array.from({ length: 42 }, (_, i) => {
-                            const dayNum = i - startDay + 1;
-                            const isValidDay = dayNum > 0 && dayNum <= daysInMonth;
-                            const date = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), dayNum);
-                            const isToday = isValidDay && date.toDateString() === today.toDateString();
-                            const dayTasks = isValidDay ? filteredTasks.filter(t => {
-                              if (!t.due_date) return false;
-                              const taskDate = new Date(t.due_date);
-                              return taskDate.getDate() === dayNum && taskDate.getMonth() === date.getMonth() && taskDate.getFullYear() === date.getFullYear();
-                            }) : [];
-                            
-                            return (
-                              <div key={i} style={{
-                                minHeight: '100px',
-                                padding: '0.5rem',
-                                background: isToday ? '#3B82F615' : isValidDay ? '#141414' : '#0D0D0D',
-                                borderRadius: '0.5rem',
-                                border: isToday ? '2px solid #3B82F6' : '1px solid #2D2D2D'
-                              }}>
-                                {isValidDay && (
-                                  <>
-                                    <div style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: isToday ? 700 : 500, marginBottom: '0.5rem' }}>{dayNum}</div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                      {dayTasks.slice(0, 3).map((task, idx) => {
-                                        const colors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981'];
-                                        return (
-                                          <div
-                                            key={task.id}
-                                            onClick={() => setSelectedTask(task)}
-                                            style={{
-                                              padding: '0.25rem 0.5rem',
-                                              background: colors[idx % colors.length],
-                                              borderRadius: '0.25rem',
-                                              fontSize: '0.625rem',
-                                              color: '#FFFFFF',
-                                              fontWeight: 500,
-                                              cursor: 'pointer',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis',
-                                              whiteSpace: 'nowrap'
-                                            }}
-                                          >
-                                            {task.name}
-                                          </div>
-                                        );
-                                      })}
-                                      {dayTasks.length > 3 && (
-                                        <span style={{ fontSize: '0.625rem', color: '#71717A' }}>+{dayTasks.length - 3} more</span>
-                                      )}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            );
+                          // Find the date for this day of week in the current week
+                          const weekStart = new Date(ganttStartDate);
+                          weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
+                          const dayDate = new Date(weekStart);
+                          dayDate.setDate(dayDate.getDate() + i);
+                          
+                          return (
+                            <div key={i} style={{ height: '80px', padding: '0.75rem', borderBottom: '1px solid #2D2D2D', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: isToday ? '#3B82F610' : 'transparent' }}>
+                              <span style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{day}</span>
+                              <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem' }}>{dayDate.getDate()}/{dayDate.getMonth() + 1}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Date Grid with Tasks */}
+                      <div style={{ flex: 1, minWidth: '800px', overflowX: 'auto' }}>
+                        {/* Date Headers - Show dates in month */}
+                        <div style={{ display: 'flex', height: '48px', borderBottom: '1px solid #2D2D2D', background: '#141414' }}>
+                          {(() => {
+                            const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                            const today = new Date();
+                            return Array.from({ length: Math.min(daysInMonth, 31) }, (_, i) => {
+                              const dayNum = i + 1;
+                              const isToday = dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                              return (
+                                <div key={i} style={{ minWidth: '50px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #2D2D2D', background: isToday ? '#3B82F620' : 'transparent' }}>
+                                  <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem', fontWeight: isToday ? 700 : 500 }}>{dayNum}</span>
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                        
+                        {/* Day Rows with Task Bars */}
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, dayIdx) => {
+                          const today = new Date();
+                          const todayDayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+                          const isToday = todayDayOfWeek === dayIdx && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                          
+                          // Get tasks that fall on this day of week in this month
+                          const dayTasks = filteredTasks.filter(t => {
+                            if (!t.due_date && !t.start_date) return false;
+                            const taskDate = t.due_date ? new Date(t.due_date) : new Date(t.start_date!);
+                            const taskDayOfWeek = taskDate.getDay() === 0 ? 6 : taskDate.getDay() - 1;
+                            return taskDayOfWeek === dayIdx && taskDate.getMonth() === ganttStartDate.getMonth() && taskDate.getFullYear() === ganttStartDate.getFullYear();
                           });
-                        })()}
+                          
+                          const barColors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'];
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          
+                          return (
+                            <div key={dayIdx} style={{ display: 'flex', height: '80px', borderBottom: '1px solid #2D2D2D', position: 'relative', background: isToday ? '#3B82F608' : 'transparent' }}>
+                              {/* Grid lines */}
+                              {Array.from({ length: Math.min(daysInMonth, 31) }, (_, i) => {
+                                const dayNum = i + 1;
+                                const isTodayCol = dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                                return (
+                                  <div key={i} style={{ minWidth: '50px', flex: 1, borderRight: '1px solid #1F1F1F', background: isTodayCol ? '#3B82F610' : 'transparent' }} />
+                                );
+                              })}
+                              
+                              {/* Task bars */}
+                              {dayTasks.slice(0, 3).map((task, taskIdx) => {
+                                const barColor = barColors[taskIdx % barColors.length];
+                                const taskDate = task.due_date ? new Date(task.due_date) : new Date(task.start_date!);
+                                const dayNum = taskDate.getDate();
+                                const startDate = task.start_date ? new Date(task.start_date) : new Date(taskDate);
+                                startDate.setDate(startDate.getDate() - 3); // Default 3 day span if no start
+                                const startDay = Math.max(1, startDate.getDate());
+                                const endDay = dayNum;
+                                const leftPos = ((startDay - 1) / daysInMonth) * 100;
+                                const width = Math.max(((endDay - startDay + 1) / daysInMonth) * 100, 8);
+                                
+                                return (
+                                  <div
+                                    key={task.id}
+                                    onClick={() => setSelectedTask(task)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: `${15 + taskIdx * 22}px`,
+                                      left: `${leftPos}%`,
+                                      width: `${width}%`,
+                                      height: '36px',
+                                      background: barColor,
+                                      borderRadius: '1rem',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      padding: '0 0.75rem',
+                                      gap: '0.5rem',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                      zIndex: taskIdx + 1,
+                                      transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.zIndex = '100'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.zIndex = String(taskIdx + 1); }}
+                                  >
+                                    {task.assignees?.[0] && (
+                                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#FFFFFF', border: `2px solid ${barColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, color: barColor, flexShrink: 0 }}>
+                                        {task.assignees[0].name.charAt(0)}
+                                      </div>
+                                    )}
+                                    <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                                  </div>
+                                );
+                              })}
+                              
+                              {/* Today indicator */}
+                              {isToday && (
+                                <div style={{ position: 'absolute', left: `${((today.getDate() - 0.5) / daysInMonth) * 100}%`, top: 0, bottom: 0, width: '2px', background: '#EF4444', zIndex: 50 }} />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
@@ -2040,9 +2093,30 @@ n              {/* Team Members Button - Avatar Style */}
                   </div>
                 </div>
 
-                {/* Team Member Progress Cards */}
+                {/* Team Member Timeline with Progress Bars */}
                 <div style={{ flex: 1, background: '#141414', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #1F1F1F', overflow: 'auto' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                  {/* Week Headers */}
+                  <div style={{ display: 'flex', marginBottom: '1.25rem', paddingLeft: '200px' }}>
+                    {['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'].map((week, i) => {
+                      const today = new Date();
+                      const weekOfMonth = Math.ceil(today.getDate() / 7);
+                      const isCurrentWeek = i + 1 === weekOfMonth && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                      
+                      return (
+                        <div key={week} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
+                          <span style={{ color: isCurrentWeek ? '#10B981' : '#52525B', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{week}</span>
+                          {isCurrentWeek && (
+                            <div style={{ position: 'absolute', top: '1.75rem', left: '50%', transform: 'translateX(-50%)', width: '2px', height: 'calc(100vh - 400px)', background: 'linear-gradient(180deg, #EF4444 0%, transparent 100%)', zIndex: 10 }}>
+                              <div style={{ position: 'absolute', top: '-0.625rem', left: '50%', transform: 'translateX(-50%)', padding: '0.25rem 0.5rem', background: '#10B981', borderRadius: '0.25rem', color: '#FFF', fontSize: '0.5625rem', fontWeight: 600, whiteSpace: 'nowrap', textTransform: 'uppercase' }}>Today</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Team Member Rows with Progress */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {project.members?.map((member, memberIdx) => {
                       const memberColors = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16'];
                       const memberColor = memberColors[memberIdx % memberColors.length];
@@ -2050,85 +2124,69 @@ n              {/* Team Members Button - Avatar Style */}
                       // Get all tasks for this member
                       const allMemberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
                       const completedTasks = allMemberTasks.filter(t => t.status === 'done').length;
-                      const inProgressTasks = allMemberTasks.filter(t => t.status === 'in_progress').length;
-                      const todoTasks = allMemberTasks.filter(t => t.status === 'todo').length;
                       const totalTasks = allMemberTasks.length;
                       const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
                       
                       return (
-                        <div 
-                          key={member.id}
-                          style={{ 
-                            background: '#1A1A1A',
-                            borderRadius: '0.875rem',
-                            padding: '1.25rem',
-                            border: '1px solid #2D2D2D',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = memberColor; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                        >
-                          {/* Member Header */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', marginBottom: '1rem' }}>
-                            <div style={{ 
-                              width: '48px', 
-                              height: '48px', 
-                              borderRadius: '50%', 
-                              backgroundColor: memberColor,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              boxShadow: `0 0 0 3px ${memberColor}30`
-                            }}>
-                              <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF' }}>{member.name.charAt(0)}</span>
+                        <div key={member.id} style={{ display: 'flex', alignItems: 'center', padding: '0.75rem 0', borderBottom: memberIdx < (project.members?.length || 0) - 1 ? '1px solid #1F1F1F' : 'none' }}>
+                          {/* Member info */}
+                          <div style={{ width: '200px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', paddingRight: '1rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: memberColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#FFFFFF' }}>{member.name.charAt(0)}</span>
                             </div>
-                            <div style={{ flex: 1 }}>
-                              <h4 style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, margin: 0 }}>{member.name}</h4>
-                              <p style={{ color: '#71717A', fontSize: '0.75rem', margin: '0.125rem 0 0', textTransform: 'capitalize' }}>{member.role || 'Member'}</p>
-                            </div>
-                            {/* Completion Badge */}
-                            <div style={{ 
-                              background: completionPercent >= 80 ? '#10B98120' : completionPercent >= 50 ? '#F59E0B20' : '#EF444420',
-                              padding: '0.375rem 0.75rem',
-                              borderRadius: '1rem',
-                              color: completionPercent >= 80 ? '#10B981' : completionPercent >= 50 ? '#F59E0B' : '#EF4444',
-                              fontSize: '0.75rem',
-                              fontWeight: 600
-                            }}>
-                              {completionPercent}%
+                            <div style={{ overflow: 'hidden' }}>
+                              <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {member.name.length > 12 ? member.name.substring(0, 12) + '...' : member.name}
+                              </span>
+                              <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{completedTasks}/{totalTasks} done</span>
                             </div>
                           </div>
                           
-                          {/* Progress Bar */}
-                          <div style={{ marginBottom: '1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
-                              <span style={{ color: '#71717A', fontSize: '0.6875rem' }}>Task Completion</span>
-                              <span style={{ color: '#A1A1AA', fontSize: '0.6875rem' }}>{completedTasks}/{totalTasks}</span>
-                            </div>
-                            <div style={{ height: '8px', background: '#2D2D2D', borderRadius: '4px', overflow: 'hidden' }}>
+                          {/* Progress Bar - Full width like previous UI */}
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ flex: 1, height: '32px', background: '#1F1F1F', borderRadius: '0.5rem', overflow: 'hidden', position: 'relative' }}>
+                              {/* Filled Progress */}
                               <div style={{ 
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
                                 height: '100%', 
                                 width: `${completionPercent}%`, 
-                                background: `linear-gradient(90deg, ${memberColor} 0%, ${memberColor}CC 100%)`,
-                                borderRadius: '4px',
+                                background: `linear-gradient(90deg, ${memberColor} 0%, ${memberColor}AA 100%)`,
+                                borderRadius: '0.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                paddingLeft: '0.75rem',
                                 transition: 'width 0.5s ease'
-                              }} />
+                              }}>
+                                {completionPercent > 15 && (
+                                  <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600 }}>{completionPercent}% Complete</span>
+                                )}
+                              </div>
+                              {/* Show percentage outside if bar is too small */}
+                              {completionPercent <= 15 && completionPercent > 0 && (
+                                <span style={{ position: 'absolute', left: `calc(${completionPercent}% + 0.5rem)`, top: '50%', transform: 'translateY(-50%)', color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 500 }}>{completionPercent}%</span>
+                              )}
+                              {completionPercent === 0 && (
+                                <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#52525B', fontSize: '0.75rem' }}>No tasks completed</span>
+                              )}
                             </div>
-                          </div>
-                          
-                          {/* Task Stats */}
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <div style={{ flex: 1, background: '#141414', padding: '0.625rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                              <div style={{ color: '#10B981', fontSize: '1rem', fontWeight: 700 }}>{completedTasks}</div>
-                              <div style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Done</div>
-                            </div>
-                            <div style={{ flex: 1, background: '#141414', padding: '0.625rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                              <div style={{ color: '#3B82F6', fontSize: '1rem', fontWeight: 700 }}>{inProgressTasks}</div>
-                              <div style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active</div>
-                            </div>
-                            <div style={{ flex: 1, background: '#141414', padding: '0.625rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                              <div style={{ color: '#EF4444', fontSize: '1rem', fontWeight: 700 }}>{todoTasks}</div>
-                              <div style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Do</div>
+                            
+                            {/* Percentage Badge */}
+                            <div style={{ 
+                              minWidth: '48px',
+                              padding: '0.375rem 0.625rem',
+                              background: completionPercent >= 80 ? '#10B98120' : completionPercent >= 50 ? '#F59E0B20' : completionPercent > 0 ? '#3B82F620' : '#2D2D2D',
+                              borderRadius: '0.5rem',
+                              textAlign: 'center'
+                            }}>
+                              <span style={{ 
+                                color: completionPercent >= 80 ? '#10B981' : completionPercent >= 50 ? '#F59E0B' : completionPercent > 0 ? '#3B82F6' : '#52525B',
+                                fontSize: '0.8125rem',
+                                fontWeight: 700
+                              }}>
+                                {completionPercent}%
+                              </span>
                             </div>
                           </div>
                         </div>
