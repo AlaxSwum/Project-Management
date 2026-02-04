@@ -63,11 +63,17 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const { user, logout } = useAuth();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   // Fetch projects where user is a member (from project_members table)
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        setLoadingProjects(false);
+        return;
+      }
+      
+      setLoadingProjects(true);
       try {
         // Get project IDs where user is a member from project_members table
         const { data: userProjectIds, error: memberError } = await supabase
@@ -78,6 +84,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         if (memberError) {
           console.error('Error fetching project memberships:', memberError);
           setMyProjects([]);
+          setLoadingProjects(false);
           return;
         }
         
@@ -86,6 +93,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         // If user has no projects, return empty
         if (projectIds.length === 0) {
           setMyProjects([]);
+          setLoadingProjects(false);
           return;
         }
         
@@ -99,13 +107,16 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         if (projectError) {
           console.error('Error fetching projects:', projectError);
           setMyProjects([]);
+          setLoadingProjects(false);
           return;
         }
         
         setMyProjects(projects || []);
+        setLoadingProjects(false);
       } catch (error) {
         console.error('Error fetching projects:', error);
         setMyProjects([]);
+        setLoadingProjects(false);
       }
     };
     fetchProjects();
@@ -237,7 +248,11 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            {myProjects.length > 0 ? myProjects.map((project) => {
+            {loadingProjects ? (
+                <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: '#52525B', fontFamily: 'Mabry Pro, sans-serif' }}>
+                  Loading projects...
+                </div>
+              ) : myProjects.length > 0 ? myProjects.map((project) => {
                 const isActive = pathname === `/projects/${project.id}`;
                 return (
                   <Link
@@ -275,7 +290,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 );
               }) : (
                 <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: '#52525B', fontFamily: 'Mabry Pro, sans-serif' }}>
-                  Loading projects...
+                  No projects yet
                 </div>
               )}
           </div>
