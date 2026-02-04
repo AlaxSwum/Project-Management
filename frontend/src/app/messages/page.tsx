@@ -97,16 +97,51 @@ export default function MessagesPage() {
     }
   }, [searchParams, conversations, user]);
 
-  // Refresh messages every 1 second
+  // Real-time messaging with Supabase subscriptions
   useEffect(() => {
     if (!selectedConversation) return;
     
+    // Initial fetch
     fetchMessages(selectedConversation);
-    const interval = setInterval(() => {
-      fetchMessages(selectedConversation);
-    }, 1000);
     
-    return () => clearInterval(interval);
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation}`
+        },
+        async (payload) => {
+          // Handle new message
+          const newMessage = payload.new as any;
+          
+          // Fetch sender name
+          const { data: sender } = await supabase
+            .from('auth_user')
+            .select('name')
+            .eq('id', newMessage.sender_id)
+            .single();
+          
+          // Add to messages state immediately
+          setMessages(prev => [...prev, {
+            ...newMessage,
+            sender_name: sender?.name || 'User'
+          }]);
+          
+          // Refresh conversations list to update last message
+          fetchConversations();
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription on unmount or conversation change
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedConversation]);
 
   // Scroll to bottom when messages change
@@ -191,8 +226,7 @@ export default function MessagesPage() {
       });
       
       setNewMessage('');
-      fetchMessages(selectedConversation);
-      fetchConversations();
+      // Real-time subscription will handle adding the message
     } catch (error) {
       // Error
     }

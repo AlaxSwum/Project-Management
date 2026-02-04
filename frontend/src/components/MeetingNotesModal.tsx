@@ -577,17 +577,19 @@ export default function MeetingNotesModal({
             top: 1rem;
             right: 1rem;
             padding: 0.75rem;
-            border: 2px solid #3D3D3D;
-            border-radius: 8px;
-            background: #141414;
+            border: 2px solid #FFFFFF;
+            border-radius: 50%;
+            background: #FFFFFF;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #71717A;
+            color: #374151;
+            box-shadow: 0 2px 8px rgba(255,255,255,0.2);
           }
           .close-btn:hover {
-            border-color: #FFFFFF;
-            color: #FFFFFF;
-            transform: translateY(-1px);
+            background: #F3F4F6;
+            color: #EF4444;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.3);
           }
           .notes-content {
             padding: 2rem;

@@ -497,30 +497,37 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
 
       {/* Bottom Section */}
       <div style={{ borderTop: '1px solid #1F1F1F', padding: '0.75rem' }}>
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                            <button
-            style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-          >
-            <Squares2X2Icon style={{ width: '20px', height: '20px' }} />
-                            </button>
-                      <button
-            style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-                  >
-            <ChartBarIcon style={{ width: '20px', height: '20px' }} />
-                      </button>
-                            <button
-            style={{ padding: '0.5rem', color: '#71717A', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-          >
-            <Cog6ToothIcon style={{ width: '20px', height: '20px' }} />
-                            </button>
-                  </div>
+        {/* Settings Link */}
+        <Link
+          href="/settings"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.625rem 0.75rem',
+            borderRadius: '0.5rem',
+            background: pathname === '/settings' ? '#10B981' : 'transparent',
+            color: pathname === '/settings' ? '#FFFFFF' : '#A1A1AA',
+            textDecoration: 'none',
+            transition: 'all 0.2s',
+            marginBottom: '0.75rem'
+          }}
+          onMouseEnter={(e) => {
+            if (pathname !== '/settings') {
+              e.currentTarget.style.background = '#1A1A1A';
+              e.currentTarget.style.color = '#FFFFFF';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (pathname !== '/settings') {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#A1A1AA';
+            }
+          }}
+        >
+          <Cog6ToothIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Settings</span>
+        </Link>
 
         {/* User Profile */}
         <div 
