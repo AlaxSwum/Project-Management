@@ -2286,12 +2286,11 @@ export default function CalendarPage() {
                 {/* Calendar View Toggle */}
                 <div style={{
                   display: 'flex',
-                  background: '#ffffff',
+                  background: '#1A1A1A',
                   borderRadius: '8px',
                   padding: '4px',
-                  border: '2px solid #e5e7eb',
-                  gap: '2px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  border: '1px solid #2D2D2D',
+                  gap: '2px'
                 }}>
                   {[
                     { key: 'month', label: 'Month' },
@@ -2306,13 +2305,25 @@ export default function CalendarPage() {
                         padding: '8px 16px',
                         borderRadius: '6px',
                         border: 'none',
-                        background: calendarView === key ? '#3b82f6' : 'transparent',
-                        color: calendarView === key ? '#ffffff' : '#6b7280',
+                        background: calendarView === key ? '#3B82F6' : 'transparent',
+                        color: calendarView === key ? '#FFFFFF' : '#71717A',
                         fontSize: '0.875rem',
                         fontWeight: '600',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         minWidth: '70px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (calendarView !== key) {
+                          e.currentTarget.style.background = '#2D2D2D';
+                          e.currentTarget.style.color = '#FFFFFF';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (calendarView !== key) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = '#71717A';
+                        }
                       }}
                     >
                       {label}
@@ -2380,6 +2391,7 @@ export default function CalendarPage() {
           </header>
 
           <main className="calendar-content">
+            {calendarView === 'month' ? (
             <div className="calendar-grid">
               <div className="calendar-header">
                 {daysOfWeek.map((day) => (
@@ -2472,8 +2484,22 @@ export default function CalendarPage() {
                 })}
               </div>
             </div>
-
-
+            ) : calendarView === 'week' ? (
+              <div style={{ padding: '1rem', color: '#FFFFFF' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Week View</h3>
+                <p style={{ color: '#71717A' }}>Week view coming soon...</p>
+              </div>
+            ) : calendarView === 'day' ? (
+              <div style={{ padding: '1rem', color: '#FFFFFF' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Day View</h3>
+                <p style={{ color: '#71717A' }}>Day view coming soon...</p>
+              </div>
+            ) : (
+              <div style={{ padding: '1rem', color: '#FFFFFF' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>15 Min View</h3>
+                <p style={{ color: '#71717A' }}>15 minute view coming soon...</p>
+              </div>
+            )}
 
             {/* Task Detail Modal */}
             {showTaskModal && selectedTask && (
