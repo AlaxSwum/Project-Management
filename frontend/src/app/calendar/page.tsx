@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { projectService, taskService } from '@/lib/api-compatibility';
+import { projectService } from '@/lib/api-compatibility';
+import { supabase } from '@/lib/supabase';
 import { 
   CalendarIcon, 
   ChevronLeftIcon, 
@@ -111,61 +112,66 @@ export default function CalendarPage() {
   const fetchData = async () => {
     try {
       setError(null);
-      console.log('Calendar: Fetching data for user:', user?.id);
+      console.log('Calendar: Fetching meetings for user:', user?.id);
       
-      const [projectsData, tasksData] = await Promise.all([
-        projectService.getProjects(),
-        taskService.getUserTasks()
-      ]);
+      // Fetch meetings from projects_meeting table
+      const { data: meetingsData, error: meetingsError } = await supabase
+        .from('projects_meeting')
+        .select('*')
+        .order('date', { ascending: true });
       
-      console.log('Calendar: Fetched projects:', projectsData?.length || 0);
-      console.log('Calendar: Fetched tasks:', tasksData?.length || 0);
+      if (meetingsError) {
+        console.error('Error fetching meetings:', meetingsError);
+        setTasks([]);
+        setIsLoading(false);
+        return;
+      }
       
-      // Filter tasks to only show those assigned to the user or created by the user
-      const userTasks = tasksData.filter((task: Task) => {
-        // Check if user is in assignees array (multiple assignee support)
-        const isAssignee = task.assignees && task.assignees.some(assignee => assignee.id === user?.id);
-        // Check if user is the single assignee (backward compatibility)
-        const isSingleAssignee = task.assignee?.id === user?.id;
-        // Check if user created the task
-        const isCreator = task.created_by?.id === user?.id;
+      console.log('Calendar: Fetched meetings:', meetingsData?.length || 0);
+      
+      // Transform meetings to task format for calendar display
+      const transformedMeetings = (meetingsData || []).map((meeting: any) => {
+        // Combine date and time for start_date
+        const startDateTime = meeting.date && meeting.time 
+          ? `${meeting.date}T${meeting.time}`
+          : meeting.date;
         
-        return isAssignee || isSingleAssignee || isCreator;
-      });
-      
-      console.log('Calendar: Filtered user tasks:', userTasks?.length || 0);
-      
-      // Add project info to tasks
-      const tasksWithProjectInfo = userTasks.map((task: Task) => {
-        const project = projectsData.find((p: Project) => p.id === task.project_id);
+        // Calculate end time based on duration (in minutes)
+        let dueDateTime = startDateTime;
+        if (meeting.duration && startDateTime) {
+          const start = new Date(startDateTime);
+          start.setMinutes(start.getMinutes() + meeting.duration);
+          dueDateTime = start.toISOString();
+        }
+        
         return {
-          ...task,
-          project_name: project?.name || 'Personal',
-          project_color: project?.color || '#6b7280',
-          is_important: task.priority === 'urgent' || task.priority === 'high',
-          tags_list: task.tags_list || [], // Ensure tags_list is always an array
-          assignee: task.assignee || null // Ensure assignee is properly handled
+          id: meeting.id,
+          name: meeting.title,
+          description: meeting.description || '',
+          status: 'todo',
+          priority: 'medium',
+          due_date: dueDateTime,
+          start_date: startDateTime,
+          estimated_hours: meeting.duration ? meeting.duration / 60 : null,
+          actual_hours: null,
+          assignees: [],
+          assignee: null,
+          created_by: { id: meeting.created_by_id, name: '', email: '' },
+          tags_list: [],
+          created_at: meeting.created_at,
+          updated_at: meeting.updated_at,
+          project_id: meeting.project_id,
+          project_name: 'Meeting',
+          project_color: '#3B82F6',
+          is_important: false,
         };
       });
       
-      // Filter to only show meetings (tasks with time component in start_date)
-      const meetings = tasksWithProjectInfo.filter((task: Task) => {
-        // Check if task has a time component (meetings have times, regular tasks don't)
-        if (task.start_date && task.start_date.includes('T')) {
-          const timePart = task.start_date.split('T')[1];
-          // If it's not just 00:00:00, it's a meeting
-          return timePart && timePart !== '00:00:00' && timePart !== '00:00:00.000Z';
-        }
-        return false;
-      });
-      
-      console.log('Calendar: Filtered to meetings only:', meetings?.length || 0);
-      
-      setProjects(projectsData || []);
-      setTasks(meetings || []);
-      console.log('Calendar: Data loaded successfully');
+      setProjects([]);
+      setTasks(transformedMeetings || []);
+      console.log('Calendar: Meetings loaded successfully');
     } catch (err) {
-      console.error('Calendar: Failed to fetch data:', err);
+      console.error('Calendar: Failed to fetch meetings:', err);
       setError(err instanceof Error ? err.message : 'Failed to load calendar data');
     } finally {
       setIsLoading(false);
@@ -256,26 +262,35 @@ export default function CalendarPage() {
     if (!newMeeting.name.trim() || !newMeeting.start_date) return;
     
     try {
-      // Combine date and time for start and due dates
-      const startDateTime = `${newMeeting.start_date}T${newMeeting.start_time || '09:00'}:00`;
-      const endDateTime = `${newMeeting.start_date}T${newMeeting.end_time || '10:00'}:00`;
+      // Calculate duration in minutes
+      const startTime = newMeeting.start_time || '09:00';
+      const endTime = newMeeting.end_time || '10:00';
+      const [startHour, startMin] = startTime.split(':').map(Number);
+      const [endHour, endMin] = endTime.split(':').map(Number);
+      const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
       
-      const taskData = {
-        name: newMeeting.name.trim(),
-        description: newMeeting.description.trim(),
-        priority: newMeeting.priority,
-        status: 'todo',
-        start_date: startDateTime,
-        due_date: endDateTime,
-        assignee_ids: [user?.id],
-      };
+      // Insert into projects_meeting table
+      const { error } = await supabase
+        .from('projects_meeting')
+        .insert({
+          title: newMeeting.name.trim(),
+          description: newMeeting.description.trim(),
+          date: newMeeting.start_date,
+          time: startTime,
+          duration: durationMinutes > 0 ? durationMinutes : 60,
+          created_by_id: user?.id,
+          attendee_ids: [user?.id],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
       
-      // Create task without a project (personal meeting)
-      // If there's a project, use the first one, otherwise use 0 as placeholder
-      const projectId = projects.length > 0 ? projects[0].id : 0;
-      await taskService.createTask(projectId, taskData as any);
+      if (error) {
+        console.error('Error creating meeting:', error);
+        alert('Failed to create meeting: ' + error.message);
+        return;
+      }
       
-      // Refresh tasks
+      // Refresh meetings
       await fetchData();
       
       // Reset form
