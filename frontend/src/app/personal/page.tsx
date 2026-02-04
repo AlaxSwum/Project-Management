@@ -2053,8 +2053,8 @@ export default function PersonalPage() {
     const duration = endMinutes - startMinutes;
     
     return {
-      top: (startMinutes / 60) * 60 + 40, // 60px per hour + header offset
-      height: Math.max((duration / 60) * 60, 30), // minimum 30px
+      top: (startMinutes / 60) * 80 + 40, // 80px per hour + header offset
+      height: Math.max((duration / 60) * 80, 40), // minimum 40px
     };
   };
 
@@ -2391,7 +2391,7 @@ export default function PersonalPage() {
         </motion.header>
 
       {/* Main Content */}
-      <main style={{ padding: '32px 40px', maxWidth: '1400px', margin: '0 auto' }}>
+      <main style={{ padding: '32px 48px', maxWidth: '1800px', margin: '0 auto' }}>
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -2452,7 +2452,7 @@ export default function PersonalPage() {
                         style={{
                           display: 'flex',
                           borderBottom: '1px solid #2D2D2D',
-                          minHeight: '60px',
+                          minHeight: '80px',
                         }}
                       >
                         <div

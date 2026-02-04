@@ -46,13 +46,13 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { name: 'Personal', href: '/personal', icon: UserCircleIcon },
-  { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
   { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
   { name: 'Meeting Schedule', href: '/calendar', icon: CalendarIcon },
   { name: 'Content Calendar', href: '/content-calendar', icon: CalendarDaysIcon },
 ];
 
 const PERSONAL_ITEMS = [
+  { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
   { name: 'Inbox', href: '/inbox', icon: InboxIcon },
   { name: 'Daily Reports', href: '/daily-reports', icon: DocumentTextIcon },
 ];
@@ -362,6 +362,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {PERSONAL_ITEMS.map((item) => {
               const isActive = pathname === item.href;
+              const showBadge = item.badge && unreadNotifications > 0;
               return (
                 <Link
                   key={item.name}
@@ -375,7 +376,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                     background: isActive ? '#10B981' : 'transparent',
                     color: isActive ? '#FFFFFF' : '#A1A1AA',
                     textDecoration: 'none',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    position: 'relative'
             }} 
             onMouseEnter={(e) => {
                     if (!isActive) {
@@ -391,7 +393,24 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                   }}
                 >
                   <item.icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{item.name}</span>
+                  {showBadge && (
+                    <span style={{ 
+                      fontSize: '0.6875rem', 
+                      fontWeight: 700, 
+                      color: '#FFFFFF', 
+                      background: '#EF4444',
+                      minWidth: '20px',
+                      height: '20px',
+                      borderRadius: '10px', 
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0 0.375rem'
+                    }}>
+                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    </span>
+                  )}
                 </Link>
               );
             })}

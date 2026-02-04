@@ -299,11 +299,69 @@ export default function ProjectDetailPage() {
     
     if (!draggedTask || draggedTask.status === newStatus) return;
     
+    const oldStatus = draggedTask.status;
+    
     try {
       await taskService.updateTask(draggedTask.id, { status: newStatus });
       setTasks(tasks.map(t => t.id === draggedTask.id ? { ...t, status: newStatus } : t));
+      
+      // Send notification for status change
+      if (user?.id && draggedTask) {
+        const { supabase } = await import('@/lib/supabase');
+        
+        // Get task details to find who to notify
+        const { data: taskData } = await supabase
+          .from('projects_task')
+          .select('assignee_ids, report_to_ids, name, project_id')
+          .eq('id', draggedTask.id)
+          .single();
+        
+        if (taskData) {
+          const notifyUserIds = new Set<number>();
+          
+          // Add assignees
+          if (taskData.assignee_ids && Array.isArray(taskData.assignee_ids)) {
+            taskData.assignee_ids.forEach((id: number) => {
+              if (id !== user.id) notifyUserIds.add(id);
+            });
+          }
+          
+          // Add report_to users
+          if (taskData.report_to_ids && Array.isArray(taskData.report_to_ids)) {
+            taskData.report_to_ids.forEach((id: number) => {
+              if (id !== user.id) notifyUserIds.add(id);
+            });
+          }
+          
+          // Create notifications
+          const statusMessages: Record<string, string> = {
+            'backlog': 'moved to backlog',
+            'in_progress': 'started working on',
+            'done': 'completed',
+            'archived': 'archived'
+          };
+          const action = statusMessages[newStatus] || `changed status to ${newStatus}`;
+          
+          const notifications = Array.from(notifyUserIds).map(recipientId => ({
+            task_id: draggedTask.id,
+            project_id: taskData.project_id,
+            recipient_id: recipientId,
+            sender_id: user.id,
+            notification_type: 'status_changed',
+            message: `${user?.name || 'Someone'} ${action} task: ${taskData.name}`,
+            task_name: taskData.name,
+            task_status: newStatus,
+            old_status: oldStatus,
+            new_status: newStatus,
+          }));
+          
+          if (notifications.length > 0) {
+            await supabase.from('task_notifications').insert(notifications);
+          }
+        }
+      }
     } catch (err) {
-      // Error updating task
+      console.error('Error updating task:', err);
     }
     setDraggedTask(null);
   };
@@ -499,6 +557,50 @@ export default function ProjectDetailPage() {
     }
   };
 
+  // Create notification for task updates
+  const createNotification = async (taskId: number, type: string, message: string, oldStatus?: string, newStatus?: string) => {
+    if (!user?.id || !selectedTask) return;
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      
+      // Get all users who should be notified (assignees + report_to)
+      const notifyUserIds = new Set<number>();
+      
+      // Add assignees
+      (selectedTask.assignees || []).forEach((assignee: any) => {
+        if (assignee.id !== user.id) notifyUserIds.add(assignee.id);
+      });
+      
+      // Add report_to users
+      if (selectedTask.report_to_ids && Array.isArray(selectedTask.report_to_ids)) {
+        selectedTask.report_to_ids.forEach((id: number) => {
+          if (id !== user.id) notifyUserIds.add(id);
+        });
+      }
+      
+      // Create notifications for each user
+      const notifications = Array.from(notifyUserIds).map(recipientId => ({
+        task_id: taskId,
+        project_id: selectedTask.project_id,
+        recipient_id: recipientId,
+        sender_id: user.id,
+        notification_type: type,
+        message: message,
+        task_name: selectedTask.name,
+        task_status: newStatus || selectedTask.status,
+        old_status: oldStatus,
+        new_status: newStatus,
+      }));
+      
+      if (notifications.length > 0) {
+        await supabase.from('task_notifications').insert(notifications);
+      }
+    } catch (error) {
+      console.error('Error creating notification:', error);
+    }
+  };
+
   const addComment = async () => {
     if (!newComment.trim() || !selectedTask) return;
     
@@ -517,6 +619,13 @@ export default function ProjectDetailPage() {
       if (!error && data) {
         setComments([{ ...data, user_name: user?.name || 'User' }, ...comments]);
         setNewComment('');
+        
+        // Send notification
+        await createNotification(
+          selectedTask.id,
+          'comment_added',
+          `${user?.name || 'Someone'} commented on task: ${selectedTask.name}`
+        );
       } else {
         console.error('Comment error:', error);
       }
@@ -527,6 +636,9 @@ export default function ProjectDetailPage() {
 
   const saveTaskEdit = async () => {
     if (!selectedTask || !editTaskForm.name.trim()) return;
+    
+    const oldStatus = selectedTask.status;
+    const newStatus = editTaskForm.status;
     
     try {
       await taskService.updateTask(selectedTask.id, {
@@ -555,6 +667,24 @@ export default function ProjectDetailPage() {
         status: editTaskForm.status,
         due_date: editTaskForm.due_date || null
       });
+      
+      // Send notification if status changed
+      if (oldStatus !== newStatus) {
+        const statusMessages: Record<string, string> = {
+          'backlog': 'moved to backlog',
+          'in_progress': 'started working on',
+          'done': 'completed',
+          'archived': 'archived'
+        };
+        const action = statusMessages[newStatus] || `changed status to ${newStatus}`;
+        await createNotification(
+          selectedTask.id,
+          'status_changed',
+          `${user?.name || 'Someone'} ${action} task: ${selectedTask.name}`,
+          oldStatus,
+          newStatus
+        );
+      }
       
       setIsEditingTask(false);
     } catch (error) {
@@ -1544,8 +1674,8 @@ n              {/* Team Members Button - Avatar Style */}
                                     
                                     return (
                                       <div 
-                                        key={task.id}
-                                        onClick={() => setSelectedTask(task)}
+                            key={task.id}
+                            onClick={() => setSelectedTask(task)}
                                         style={{ 
                                           display: 'grid', 
                                           gridTemplateColumns: '1.5fr 1.5fr 160px 120px 100px 80px 80px',
@@ -1565,7 +1695,7 @@ n              {/* Team Members Button - Avatar Style */}
                                           <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {task.name}
                                           </span>
-                                        </div>
+              </div>
 
                                         {/* Description */}
                                         <div style={{ color: '#71717A', fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1592,16 +1722,16 @@ n              {/* Team Members Button - Avatar Style */}
                                             color: typeColor
                                           }}>
                                             {taskType}
-                                          </span>
-                                        </div>
+                                        </span>
+                                  </div>
 
                                         {/* Assignee */}
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                                          {task.assignees && task.assignees.length > 0 ? (
+                              {task.assignees && task.assignees.length > 0 ? (
                                             <div style={{ display: 'flex' }}>
                                               {task.assignees.slice(0, 3).map((assignee, i) => (
-                                                <div 
-                                                  key={assignee.id}
+                                    <div 
+                                      key={assignee.id}
                                                   style={{ 
                                                     width: '28px', 
                                                     height: '28px', 
@@ -1618,16 +1748,16 @@ n              {/* Team Members Button - Avatar Style */}
                                                     position: 'relative',
                                                     zIndex: 3 - i
                                                   }}
-                                                  title={assignee.name}
-                                                >
+                                      title={assignee.name}
+                                    >
                                                   {assignee.name.charAt(0).toUpperCase()}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          ) : (
+                    </div>
+                  ))}
+                    </div>
+                              ) : (
                                             <span style={{ color: '#52525B', fontSize: '0.8125rem' }}>-</span>
                                           )}
-                                        </div>
+                </div>
 
                                         {/* Priority */}
                                         <div>
@@ -1652,8 +1782,8 @@ n              {/* Team Members Button - Avatar Style */}
                                                                task.priority === 'medium' ? '#F59E0B' : '#22C55E'
                                             }} />
                                             {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Low'}
-                                          </span>
-                                        </div>
+                              </span>
+              </div>
 
                                         {/* Edit & Delete Buttons */}
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.375rem' }}>
@@ -1680,7 +1810,7 @@ n              {/* Team Members Button - Avatar Style */}
                                             title="Edit task"
                                           >
                                             <PencilIcon style={{ width: '14px', height: '14px' }} />
-                                          </button>
+                              </button>
                                           <button
                                             onClick={async (e) => {
                                               e.stopPropagation();
@@ -1816,8 +1946,8 @@ n              {/* Team Members Button - Avatar Style */}
                       return (
                         <div
                           key={task.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, task)}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, task)}
                           onClick={() => setSelectedTask(task)}
                           style={{ 
                             background: taskColor.bg,
@@ -1826,10 +1956,10 @@ n              {/* Team Members Button - Avatar Style */}
                             padding: '14px 16px', 
                             cursor: 'pointer', 
                             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
-                            position: 'relative',
+                                              position: 'relative',
                             minHeight: '150px',
                             maxHeight: '150px',
-                            display: 'flex',
+                                            display: 'flex',
                             flexDirection: 'column',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
                           }}
@@ -1874,7 +2004,7 @@ n              {/* Team Members Button - Avatar Style */}
                               WebkitBoxOrient: 'vertical',
                             }}>{task.name}</h3>
                           </div>
-
+            
                           {/* Date */}
                           {task.due_date && (
                             <div style={{ 
@@ -1905,7 +2035,7 @@ n              {/* Team Members Button - Avatar Style */}
                               }}>
                                 {task.priority} priority
                               </span>
-                            </div>
+                  </div>
                           )}
 
                           {/* Spacer */}
@@ -1934,11 +2064,11 @@ n              {/* Team Members Button - Avatar Style */}
                                   }}
                                 >
                                   {assignee.name.charAt(0)}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                                          </div>
+                                        ))}
+            </div>
+                                    </div>
+                </div>
                       );
                     })}
 
@@ -2957,7 +3087,7 @@ n              {/* Team Members Button - Avatar Style */}
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {!isEditingTask ? (
-                  <button
+                <button
                     onClick={startEditingTask}
                     style={{ padding: '0.5rem 1rem', background: '#3B82F6', border: 'none', color: '#FFFFFF', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.375rem', transition: 'all 0.2s' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#2563EB'}
@@ -2988,11 +3118,11 @@ n              {/* Team Members Button - Avatar Style */}
                 )}
                 <button
                   onClick={() => { setSelectedTask(null); setIsEditingTask(false); }}
-                  style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-                >
-                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
                 </button>
               </div>
             </div>
@@ -3020,10 +3150,10 @@ n              {/* Team Members Button - Avatar Style */}
                   </>
                 ) : (
                   <>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '1rem' }}>{selectedTask.name}</h1>
-                    <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-                      {selectedTask.description || 'No description provided'}
-                    </p>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '1rem' }}>{selectedTask.name}</h1>
+                <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                  {selectedTask.description || 'No description provided'}
+                </p>
                   </>
                 )}
 
@@ -3042,14 +3172,14 @@ n              {/* Team Members Button - Avatar Style */}
                         ))}
                       </select>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
-                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
-                          {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
-                        </span>
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
+                      <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
+                        {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
+                                     </span>
+                               </div>
                     )}
-                  </div>
+                               </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
@@ -3079,8 +3209,8 @@ n              {/* Team Members Button - Avatar Style */}
                           </div>
                   )}
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Due date</label>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Due date</label>
                     {isEditingTask ? (
                       <input
                         type="date"
@@ -3092,16 +3222,16 @@ n              {/* Team Members Button - Avatar Style */}
                       <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                         <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
                           {new Date(selectedTask.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
+                                 </span>
+              </div>
                     ) : (
                       <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                         <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No due date</span>
-                      </div>
-                    )}
+              </div>
+            )}
                   </div>
 
-                  <div>
+              <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Priority</label>
                     {isEditingTask ? (
                       <select
@@ -3117,11 +3247,11 @@ n              {/* Team Members Button - Avatar Style */}
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', background: selectedTask.priority === 'high' ? 'rgba(239, 68, 68, 0.2)' : selectedTask.priority === 'medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)', borderRadius: '9999px', border: '1px solid #2D2D2D' }}>
                         <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'high' ? '#EF4444' : selectedTask.priority === 'medium' ? '#F59E0B' : '#10B981', fontWeight: 500, textTransform: 'capitalize' }}>
                           {selectedTask.priority || 'Low'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                      </span>
                 </div>
+                    )}
+              </div>
+              </div>
 
                 {/* Tabs and Content Section */}
                 <div style={{ marginTop: '2rem' }}>
