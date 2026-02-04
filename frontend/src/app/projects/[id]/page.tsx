@@ -1162,7 +1162,7 @@ n              {/* Team Members Button - Avatar Style */}
                                   minWidth: '80px',
                                   height: '44px',
                                   background: barColor,
-                                  borderRadius: '0.75rem',
+                                  borderRadius: '9999px',
                                   display: 'flex',
                                   alignItems: 'center',
                                   padding: '0 0.75rem',
