@@ -24,21 +24,33 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Step 3: Set up RLS policies for avatars bucket
-CREATE POLICY "Avatar uploads are publicly accessible"
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Avatar uploads are publicly accessible" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can upload" ON storage.objects;
+
+-- Create new policies
+CREATE POLICY "Public Access"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'avatars');
 
-CREATE POLICY "Users can upload their own avatar"
+CREATE POLICY "Authenticated users can upload"
 ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+TO authenticated
+WITH CHECK (bucket_id = 'avatars');
 
-CREATE POLICY "Users can update their own avatar"
+CREATE POLICY "Authenticated users can update"
 ON storage.objects FOR UPDATE
-USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+TO authenticated
+USING (bucket_id = 'avatars');
 
-CREATE POLICY "Users can delete their own avatar"
+CREATE POLICY "Authenticated users can delete"
 ON storage.objects FOR DELETE
-USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+TO authenticated
+USING (bucket_id = 'avatars');
 
 -- Step 4: Grant permissions
 GRANT SELECT, UPDATE ON auth_user TO authenticated;
