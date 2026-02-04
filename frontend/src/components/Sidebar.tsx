@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { projectService } from '@/lib/api-compatibility';
 import {
   HomeIcon,
   CalendarIcon,
@@ -70,7 +71,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
   const [creatingProject, setCreatingProject] = useState(false);
 
-  // Fetch projects where user is a member (from project_members table)
+  // Fetch projects using the API service (includes members)
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user?.id) {
@@ -82,61 +83,9 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
       try {
         console.log('Fetching projects for user:', user.id);
         
-        // First, let's see ALL entries in project_members for debugging
-        const { data: allMembers, error: allMembersError } = await supabase
-          .from('project_members')
-          .select('*')
-          .limit(10);
-        console.log('All project_members (sample):', allMembers, 'Error:', allMembersError);
-        
-        // Get project IDs where user is a member from project_members table
-        const { data: userProjectIds, error: memberError } = await supabase
-          .from('project_members')
-          .select('project_id')
-          .eq('user_id', user.id);
-        
-        console.log('User project IDs query result:', userProjectIds, 'Error:', memberError);
-        
-        if (memberError) {
-          console.error('Error fetching project memberships:', memberError);
-          setMyProjects([]);
-          setLoadingProjects(false);
-          return;
-        }
-        
-        const projectIds = userProjectIds?.map(p => p.project_id) || [];
-        console.log('Project IDs to fetch:', projectIds);
-        
-        // Also check all projects in database
-        const { data: allProjects, error: allProjectsError } = await supabase
-          .from('projects_project')
-          .select('id, name')
-          .limit(10);
-        console.log('All projects (sample):', allProjects, 'Error:', allProjectsError);
-        
-        // If user has no projects, return empty
-        if (projectIds.length === 0) {
-          console.log('No projects found for user');
-          setMyProjects([]);
-          setLoadingProjects(false);
-          return;
-        }
-        
-        // Fetch full project data for these projects
-        const { data: projects, error: projectError } = await supabase
-          .from('projects_project')
-          .select('*')
-          .in('id', projectIds)
-          .order('name');
-        
-        console.log('Fetched projects:', projects, 'Error:', projectError);
-        
-        if (projectError) {
-          console.error('Error fetching projects:', projectError);
-          setMyProjects([]);
-          setLoadingProjects(false);
-          return;
-        }
+        // Use the projectService which calls the Django API and includes members
+        const projects = await projectService.getProjects();
+        console.log('Fetched projects from API:', projects);
         
         setMyProjects(projects || []);
         setLoadingProjects(false);
@@ -219,7 +168,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
     
     setCreatingProject(true);
     try {
-      // Create the project with required fields
+      // Create the project with all required fields
       const { data: newProject, error: projectError } = await supabase
         .from('projects_project')
         .insert({
@@ -227,6 +176,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           description: '',
           color: newProjectColor,
           created_by_id: user.id,
+          is_archived: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -241,22 +191,20 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         return;
       }
       
-      // Add creator as a member with 'owner' role
-      const { error: memberError } = await supabase
-        .from('project_members')
-        .insert({
-          project_id: newProject.id,
-          user_id: user.id,
-          role: 'owner',
+      // Add creator as a member with 'owner' role using the RPC function
+      try {
+        await supabase.rpc('add_project_member', {
+          p_project_id: newProject.id,
+          p_user_id: user.id,
+          p_role: 'owner'
         });
-      
-      if (memberError) {
+      } catch (memberError) {
         console.error('Error adding member:', memberError);
       }
       
-      // Update local state with the color we selected (even if not saved to DB)
-      const projectWithColor = { ...newProject, color: newProjectColor };
-      setMyProjects(prev => [...prev, projectWithColor]);
+      // Refresh projects list
+      const projects = await projectService.getProjects();
+      setMyProjects(projects || []);
       setNewProjectName('');
       setShowCreateProject(false);
       
