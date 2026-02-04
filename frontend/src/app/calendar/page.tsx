@@ -2986,7 +2986,7 @@ export default function CalendarPage() {
               >
                 <div
                   style={{
-                    background: '#FFFFFF',
+                    background: '#1A1A1A',
                     borderRadius: '16px',
                     width: '600px',
                     maxWidth: '90vw',
@@ -3047,7 +3047,7 @@ export default function CalendarPage() {
                     padding: '24px',
                     overflowY: 'auto',
                     flex: 1,
-                    background: '#F9FAFB',
+                    background: '#141414',
                   }}>
                     {/* Meeting Title */}
                     <div style={{ marginBottom: '20px' }}>
@@ -3055,7 +3055,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '8px' 
@@ -3071,15 +3071,15 @@ export default function CalendarPage() {
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#FFFFFF',
-                          border: '1px solid #D1D5DB',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '8px',
-                          color: '#111827',
+                          color: '#FFFFFF',
                           fontSize: '0.9375rem',
                           outline: 'none',
                         }}
                         onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                       />
                     </div>
 
@@ -3089,7 +3089,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '8px' 
@@ -3103,16 +3103,16 @@ export default function CalendarPage() {
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#FFFFFF',
-                          border: '1px solid #D1D5DB',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '8px',
-                          color: '#111827',
+                          color: '#FFFFFF',
                           fontSize: '0.9375rem',
                           outline: 'none',
                           cursor: 'pointer',
                         }}
                         onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                       >
                         <option value="">Select a project</option>
                         {projects.map((project) => (
@@ -3129,7 +3129,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '8px' 
@@ -3145,16 +3145,16 @@ export default function CalendarPage() {
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#FFFFFF',
-                          border: '1px solid #D1D5DB',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '8px',
-                          color: '#111827',
+                          color: '#FFFFFF',
                           fontSize: '0.9375rem',
                           outline: 'none',
                           resize: 'vertical',
                         }}
                         onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                       />
                     </div>
 
@@ -3165,7 +3165,7 @@ export default function CalendarPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          color: '#374151', 
+                          color: '#E4E4E7', 
                           fontSize: '0.875rem', 
                           fontWeight: 600,
                           marginBottom: '8px' 
@@ -3180,15 +3180,15 @@ export default function CalendarPage() {
                           style={{
                             width: '100%',
                             padding: '12px 14px',
-                            background: '#FFFFFF',
-                            border: '1px solid #D1D5DB',
+                            background: '#141414',
+                            border: '1px solid #3D3D3D',
                             borderRadius: '8px',
-                            color: '#111827',
+                            color: '#FFFFFF',
                             fontSize: '0.875rem',
                             outline: 'none',
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                         />
                       </div>
                       <div>
@@ -3196,7 +3196,7 @@ export default function CalendarPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          color: '#374151', 
+                          color: '#E4E4E7', 
                           fontSize: '0.875rem', 
                           fontWeight: 600,
                           marginBottom: '8px' 
@@ -3211,15 +3211,15 @@ export default function CalendarPage() {
                           style={{
                             width: '100%',
                             padding: '12px 14px',
-                            background: '#FFFFFF',
-                            border: '1px solid #D1D5DB',
+                            background: '#141414',
+                            border: '1px solid #3D3D3D',
                             borderRadius: '8px',
-                            color: '#111827',
+                            color: '#FFFFFF',
                             fontSize: '0.875rem',
                             outline: 'none',
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                         />
                       </div>
                       <div>
@@ -3227,7 +3227,7 @@ export default function CalendarPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          color: '#374151', 
+                          color: '#E4E4E7', 
                           fontSize: '0.875rem', 
                           fontWeight: 600,
                           marginBottom: '8px' 
@@ -3246,22 +3246,22 @@ export default function CalendarPage() {
                               width: '100%',
                               padding: '12px 14px',
                               paddingRight: '45px',
-                              background: '#FFFFFF',
-                              border: '1px solid #D1D5DB',
+                              background: '#141414',
+                              border: '1px solid #3D3D3D',
                               borderRadius: '8px',
-                              color: '#111827',
+                              color: '#FFFFFF',
                               fontSize: '0.875rem',
                               outline: 'none',
                             }}
                             onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                            onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                            onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                           />
                           <span style={{
                             position: 'absolute',
                             right: '14px',
                             top: '50%',
                             transform: 'translateY(-50%)',
-                            color: '#6B7280',
+                            color: '#71717A',
                             fontSize: '0.875rem',
                             pointerEvents: 'none',
                           }}>
@@ -3278,15 +3278,15 @@ export default function CalendarPage() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '12px 14px',
-                      background: '#FFFFFF',
-                      border: '1px solid #D1D5DB',
+                      background: '#141414',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '8px',
                     }}>
                       <label style={{ 
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                       }}>
@@ -3298,7 +3298,7 @@ export default function CalendarPage() {
                         style={{
                           width: '48px',
                           height: '24px',
-                          background: newMeeting.recurring ? '#C77DFF' : '#D1D5DB',
+                          background: newMeeting.recurring ? '#C77DFF' : '#3D3D3D',
                           borderRadius: '12px',
                           position: 'relative',
                           cursor: 'pointer',
@@ -3324,7 +3324,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '12px' 
@@ -3333,14 +3333,14 @@ export default function CalendarPage() {
                         Attendees
                       </label>
                       <div style={{
-                        background: '#FFFFFF',
-                        border: '1px solid #D1D5DB',
+                        background: '#141414',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         padding: '12px',
                       }}>
                         {!newMeeting.project_id ? (
                           <p style={{ 
-                            color: '#6B7280', 
+                            color: '#71717A', 
                             fontSize: '0.875rem',
                             margin: 0,
                             fontStyle: 'italic',
@@ -3349,7 +3349,7 @@ export default function CalendarPage() {
                           </p>
                         ) : projectMembers.length === 0 ? (
                           <p style={{ 
-                            color: '#6B7280', 
+                            color: '#71717A', 
                             fontSize: '0.875rem',
                             margin: 0,
                             fontStyle: 'italic',
@@ -3370,7 +3370,7 @@ export default function CalendarPage() {
                                   borderRadius: '6px',
                                   transition: 'background 0.2s',
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
                                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                               >
                                 <input
@@ -3411,14 +3411,14 @@ export default function CalendarPage() {
                                 </div>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ 
-                                    color: '#111827', 
+                                    color: '#FFFFFF', 
                                     fontSize: '0.875rem',
                                     fontWeight: 500,
                                   }}>
                                     {member.name || 'Unknown User'}
                                   </div>
                                   <div style={{ 
-                                    color: '#6B7280', 
+                                    color: '#71717A', 
                                     fontSize: '0.75rem',
                                   }}>
                                     {member.email}
@@ -3437,7 +3437,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '12px' 
@@ -3448,13 +3448,13 @@ export default function CalendarPage() {
                       
                       {/* Info banner */}
                       <div style={{
-                        background: '#FEF3C7',
+                        background: 'rgba(251, 191, 36, 0.1)',
                         border: '1px solid #FCD34D',
                         borderRadius: '8px',
                         padding: '12px',
                         marginBottom: '12px',
                         fontSize: '0.875rem',
-                        color: '#92400E',
+                        color: '#FCD34D',
                       }}>
                         💡 Add agenda items to keep your meeting focused
                       </div>
@@ -3469,15 +3469,15 @@ export default function CalendarPage() {
                           style={{
                             flex: 1,
                             padding: '10px 12px',
-                            background: '#FFFFFF',
-                            border: '1px solid #D1D5DB',
+                            background: '#141414',
+                            border: '1px solid #3D3D3D',
                             borderRadius: '8px',
-                            color: '#111827',
+                            color: '#FFFFFF',
                             fontSize: '0.875rem',
                             outline: 'none',
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && newAgendaItem.trim()) {
                               setNewMeeting({
@@ -3519,8 +3519,8 @@ export default function CalendarPage() {
                       {/* Agenda items list */}
                       {newMeeting.agenda_items.length > 0 && (
                         <div style={{
-                          background: '#FFFFFF',
-                          border: '1px solid #D1D5DB',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '8px',
                           padding: '8px',
                         }}>
@@ -3533,7 +3533,7 @@ export default function CalendarPage() {
                                 gap: '8px',
                                 padding: '8px',
                                 borderRadius: '6px',
-                                background: '#F9FAFB',
+                                background: '#2D2D2D',
                                 marginBottom: index < newMeeting.agenda_items.length - 1 ? '6px' : 0,
                               }}
                             >
@@ -3554,7 +3554,7 @@ export default function CalendarPage() {
                               </div>
                               <span style={{ 
                                 flex: 1,
-                                color: '#374151',
+                                color: '#E4E4E7',
                                 fontSize: '0.875rem',
                               }}>
                                 {item}
@@ -3590,7 +3590,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '8px' 
@@ -3606,15 +3606,15 @@ export default function CalendarPage() {
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#FFFFFF',
-                          border: '1px solid #D1D5DB',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '8px',
-                          color: '#111827',
+                          color: '#FFFFFF',
                           fontSize: '0.9375rem',
                           outline: 'none',
                         }}
                         onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                       />
                     </div>
 
@@ -3624,7 +3624,7 @@ export default function CalendarPage() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        color: '#374151', 
+                        color: '#E4E4E7', 
                         fontSize: '0.875rem', 
                         fontWeight: 600,
                         marginBottom: '8px' 
@@ -3638,16 +3638,16 @@ export default function CalendarPage() {
                         style={{
                           width: '100%',
                           padding: '12px 14px',
-                          background: '#FFFFFF',
-                          border: '1px solid #D1D5DB',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '8px',
-                          color: '#111827',
+                          color: '#FFFFFF',
                           fontSize: '0.9375rem',
                           outline: 'none',
                           cursor: 'pointer',
                         }}
                         onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                       >
                         <option value="15">15 min before</option>
                         <option value="30">30 min before</option>
@@ -3660,8 +3660,8 @@ export default function CalendarPage() {
                   {/* Footer Buttons */}
                   <div style={{ 
                     padding: '16px 24px',
-                    background: '#F9FAFB',
-                    borderTop: '1px solid #E5E7EB',
+                    background: '#141414',
+                    borderTop: '1px solid #2D2D2D',
                     display: 'flex', 
                     gap: '12px', 
                     justifyContent: 'flex-end' 
@@ -3670,22 +3670,22 @@ export default function CalendarPage() {
                       onClick={() => setShowCreateMeeting(false)}
                       style={{
                         padding: '10px 20px',
-                        background: '#FFFFFF',
-                        border: '1px solid #D1D5DB',
+                        background: '#141414',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
-                        color: '#374151',
+                        color: '#E4E4E7',
                         fontSize: '0.875rem',
                         fontWeight: 600,
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#F3F4F6';
-                        e.currentTarget.style.borderColor = '#9CA3AF';
+                        e.currentTarget.style.background = '#2D2D2D';
+                        e.currentTarget.style.borderColor = '#71717A';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#FFFFFF';
-                        e.currentTarget.style.borderColor = '#D1D5DB';
+                        e.currentTarget.style.background = '#141414';
+                        e.currentTarget.style.borderColor = '#3D3D3D';
                       }}
                     >
                       Cancel
@@ -3697,7 +3697,7 @@ export default function CalendarPage() {
                         padding: '10px 24px',
                         background: newMeeting.title.trim() 
                           ? 'linear-gradient(135deg, #FF9A6C 0%, #C77DFF 100%)' 
-                          : '#D1D5DB',
+                          : '#3D3D3D',
                         border: 'none',
                         borderRadius: '8px',
                         color: '#FFFFFF',
