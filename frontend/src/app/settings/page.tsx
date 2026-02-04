@@ -103,36 +103,49 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB');
+      return;
+    }
+    
     setUploadingAvatar(true);
     try {
-      // Upload to Supabase storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
       
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file);
+      reader.onload = async () => {
+        const base64Image = reader.result as string;
+        
+        try {
+          // Update user profile with base64 image
+          const { error } = await supabase
+            .from('auth_user')
+            .update({ avatar_url: base64Image })
+            .eq('id', user.id);
+          
+          if (error) throw error;
+          
+          setProfileData({ ...profileData, avatar_url: base64Image });
+          alert('Avatar updated successfully!');
+        } catch (error) {
+          console.error('Error saving avatar:', error);
+          alert('Failed to save avatar');
+        }
+        setUploadingAvatar(false);
+      };
       
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-      
-      // Update user profile
-      await supabase
-        .from('auth_user')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-      
-      setProfileData({ ...profileData, avatar_url: publicUrl });
-      alert('Avatar updated successfully!');
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Failed to read image file');
+        setUploadingAvatar(false);
+      };
     } catch (error) {
       console.error('Error uploading avatar:', error);
       alert('Failed to upload avatar');
+      setUploadingAvatar(false);
     }
-    setUploadingAvatar(false);
   };
 
   const handleSaveProfile = async () => {
