@@ -397,13 +397,27 @@ export default function ProjectDetailPage() {
           supabase.from('task_subtasks').select('*').eq('task_id', selectedTask.id).order('position'),
           supabase.from('task_activity_log').select('*').eq('task_id', selectedTask.id).order('created_at', { ascending: false }).limit(20),
           supabase.from('task_attachment_links').select('*').eq('task_id', selectedTask.id).order('created_at', { ascending: false }),
-          supabase.from('task_comments').select('*').eq('task_id', selectedTask.id).order('created_at', { ascending: false })
+          supabase.from('task_comments').select(`
+            id,
+            task_id,
+            user_id,
+            comment,
+            created_at,
+            auth_user!task_comments_user_id_fkey(name)
+          `).eq('task_id', selectedTask.id).order('created_at', { ascending: false })
         ]);
         
         setSubtasks(subtasksRes.data || []);
         setActivityLog(activityRes.data || []);
         setAttachments(attachmentsRes.data || []);
-        setComments(commentsRes.data || []);
+        
+        // Transform comments to include user_name
+        const transformedComments = (commentsRes.data || []).map(c => ({
+          ...c,
+          user_name: c.auth_user?.name || 'User',
+          comment_text: c.comment
+        }));
+        setComments(transformedComments);
       } catch (error) {
         // Error fetching task details
       }
@@ -492,22 +506,22 @@ export default function ProjectDetailPage() {
       const { supabase } = await import('@/lib/supabase');
       const { data, error } = await supabase
         .from('task_comments')
-        .insert([{
+        .insert({
           task_id: selectedTask.id,
-          project_id: selectedTask.project_id,
           user_id: user?.id,
-          user_name: user?.name || 'User',
-          comment_text: newComment.trim()
-        }])
+          comment: newComment.trim()
+        })
         .select()
         .single();
       
       if (!error && data) {
-        setComments([data, ...comments]);
+        setComments([{ ...data, user_name: user?.name || 'User' }, ...comments]);
         setNewComment('');
+      } else {
+        console.error('Comment error:', error);
       }
     } catch (error) {
-      // Error adding comment
+      console.error('Error adding comment:', error);
     }
   };
 

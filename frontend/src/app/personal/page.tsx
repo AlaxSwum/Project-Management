@@ -197,11 +197,11 @@ const CATEGORY_COLORS = [
 
 // Color palette for block types
 const blockTypeColors: Record<string, { bg: string; border: string; text: string; solid: string }> = {
-  focus: { bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.2)', text: '#3b82f6', solid: '#3b82f6' },
-  meeting: { bg: 'rgba(168, 85, 247, 0.08)', border: 'rgba(168, 85, 247, 0.2)', text: '#a855f7', solid: '#a855f7' },
-  personal: { bg: 'rgba(34, 197, 94, 0.08)', border: 'rgba(34, 197, 94, 0.2)', text: '#22c55e', solid: '#22c55e' },
-  goal: { bg: 'rgba(251, 146, 60, 0.08)', border: 'rgba(251, 146, 60, 0.2)', text: '#fb923c', solid: '#fb923c' },
-  project: { bg: 'rgba(236, 72, 153, 0.08)', border: 'rgba(236, 72, 153, 0.2)', text: '#ec4899', solid: '#ec4899' },
+  focus: { bg: 'linear-gradient(135deg, #3B82F6, #2563EB)', border: '#3B82F6', text: '#FFFFFF', solid: '#3b82f6' },
+  meeting: { bg: 'linear-gradient(135deg, #A855F7, #9333EA)', border: '#A855F7', text: '#FFFFFF', solid: '#a855f7' },
+  personal: { bg: 'linear-gradient(135deg, #10B981, #059669)', border: '#10B981', text: '#FFFFFF', solid: '#22c55e' },
+  goal: { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', border: '#F59E0B', text: '#FFFFFF', solid: '#fb923c' },
+  project: { bg: 'linear-gradient(135deg, #EC4899, #DB2777)', border: '#EC4899', text: '#FFFFFF', solid: '#ec4899' },
 };
 
 // Hours for the day view
@@ -2252,31 +2252,6 @@ export default function PersonalPage() {
                 Add To-Do
               </motion.button>
 
-              {/* Report Button */}
-              <motion.button
-                onClick={() => router.push('/report')}
-                whileHover={{ scale: 1.03, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 20px',
-                  background: '#1F1F1F',
-                  border: '1px solid #3B82F6',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  color: '#3B82F6',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-              >
-                <Squares2X2Icon style={{ width: '16px', height: '16px' }} />
-                Report
-              </motion.button>
-
               {/* Add Block Button */}
               <motion.button
                 onClick={() => setShowAddModal(true)}
@@ -2602,15 +2577,15 @@ export default function PersonalPage() {
                             left: leftOffset,
                             width: availableWidth,
                             height: `${displayHeight}px`,
-                            background: isMoving || isResizing ? `${colors.bg}` : colors.bg,
-                            borderLeft: `3px solid ${colors.solid}`,
-                            borderRadius: '8px',
-                            padding: '8px 12px',
+                            background: colors.bg,
+                            borderLeft: `5px solid ${colors.border}`,
+                            borderRadius: '12px',
+                            padding: '10px 14px',
                             cursor: isMoving ? 'grabbing' : (canDrag ? 'grab' : 'pointer'),
                             overflow: 'hidden',
                             transition: isMoving || isResizing ? 'none' : 'all 0.2s ease',
                             zIndex: isMoving || isResizing ? 100 : column + 2,
-                            boxShadow: isMoving ? '0 8px 25px rgba(0,0,0,0.15)' : 'none',
+                            boxShadow: isMoving ? '0 8px 25px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.2)',
                             opacity: isMoving ? 0.9 : 1,
                           }}
                         >
@@ -2625,30 +2600,31 @@ export default function PersonalPage() {
                                 saveBlock(updatedBlock);
                               }}
                               style={{
-                                width: '18px',
-                                height: '18px',
-                                borderRadius: '5px',
-                                border: block.completed ? 'none' : '2px solid rgba(0, 0, 0, 0.2)',
-                                background: block.completed ? '#22c55e' : 'transparent',
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '6px',
+                                border: block.completed ? 'none' : '2.5px solid rgba(255,255,255,0.8)',
+                                background: block.completed ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.15)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
                                 flexShrink: 0,
+                                boxShadow: block.completed ? '0 2px 6px rgba(0,0,0,0.2)' : 'none',
                               }}
                             >
-                              {block.completed && <CheckIcon style={{ width: '12px', height: '12px', color: '#fff' }} />}
+                              {block.completed && <CheckIcon style={{ width: '13px', height: '13px', color: '#10B981', strokeWidth: 3 }} />}
                             </motion.div>
-                            {block.type === 'focus' && <SparklesIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
-                            {block.type === 'meeting' && <VideoCameraIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
-                            {block.type === 'personal' && <UserIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
-                            {block.type === 'goal' && <FlagIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
-                            {block.type === 'project' && <FolderIcon style={{ width: '14px', height: '14px', color: colors.text }} />}
+                            {block.type === 'focus' && <SparklesIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
+                            {block.type === 'meeting' && <VideoCameraIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
+                            {block.type === 'personal' && <UserIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
+                            {block.type === 'goal' && <FlagIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
+                            {block.type === 'project' && <FolderIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
                             <span
                               style={{
-                                fontSize: '13px',
+                                fontSize: '14px',
                                 fontWeight: '600',
-                                color: block.completed ? '#86868b' : '#1d1d1f',
+                                color: block.completed ? 'rgba(255,255,255,0.5)' : '#FFFFFF',
                                 textDecoration: block.completed ? 'line-through' : 'none',
                                 flex: 1,
                               }}
@@ -2658,30 +2634,35 @@ export default function PersonalPage() {
                             {category && (
                               <div 
                                 style={{ 
-                                  width: '8px', 
-                                  height: '8px', 
-                                  borderRadius: '50%', 
-                                  background: category.color,
+                                  padding: '3px 8px',
+                                  borderRadius: '6px', 
+                                  background: 'rgba(255,255,255,0.2)',
+                                  fontSize: '10px',
+                                  fontWeight: 600,
+                                  color: '#FFFFFF',
                                   flexShrink: 0,
                                 }} 
                                 title={category.name}
-                              />
+                              >
+                                {category.name}
+                              </div>
                             )}
                             {block.checklist.length > 0 && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: block.checklist.filter(i => i.completed).length === block.checklist.length ? '#22c55e' : '#86868b' }}>
-                                <ListBulletIcon style={{ width: '12px', height: '12px' }} />
-                                <span style={{ fontSize: '10px', fontWeight: '600' }}>{block.checklist.filter(i => i.completed).length}/{block.checklist.length}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'rgba(255,255,255,0.85)' }}>
+                                <ListBulletIcon style={{ width: '14px', height: '14px' }} />
+                                <span style={{ fontSize: '11px', fontWeight: '600' }}>{block.checklist.filter(i => i.completed).length}/{block.checklist.length}</span>
                   </div>
                             )}
                             {block.isRecurring && (
-                              <ArrowPathIcon style={{ width: '12px', height: '12px', color: '#8b5cf6' }} />
+                              <ArrowPathIcon style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.85)' }} />
               )}
             </div>
                           <div
                             style={{
-                              fontSize: '11px',
-                              color: '#86868b',
-                              marginTop: '4px',
+                              fontSize: '12px',
+                              color: 'rgba(255,255,255,0.75)',
+                              marginTop: '6px',
+                              fontWeight: 500,
                             }}
                           >
                             {formatTime(block.startTime)} - {formatTime(block.endTime)}
@@ -3175,20 +3156,22 @@ export default function PersonalPage() {
                                   handleBlockClick(block);
                                 }}
                                 style={{ 
-                                  fontSize: '10px',
-                                  padding: '2px 6px',
-                                  marginBottom: '2px',
+                                  fontSize: '11px',
+                                  padding: '6px 8px',
+                                  marginBottom: '4px',
                                   background: colors.bg,
-                                  borderLeft: `2px solid ${colors.solid}`,
-                                  borderRadius: '3px',
-                                  color: block.completed ? '#86868b' : '#1d1d1f',
-                                  fontWeight: '500',
+                                  borderLeft: `3px solid ${colors.border}`,
+                                  borderRadius: '6px',
+                                  color: block.completed ? 'rgba(255,255,255,0.5)' : '#FFFFFF',
+                                  fontWeight: '600',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '4px',
+                                  gap: '6px',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                                  cursor: 'pointer',
                                 }}
                               >
                                 <div
@@ -3198,11 +3181,11 @@ export default function PersonalPage() {
                                     saveBlock(updatedBlock);
                                   }}
                                   style={{
-                                    width: '10px',
-                                    height: '10px',
-                                    borderRadius: '2px',
-                                    border: block.completed ? 'none' : '1.5px solid rgba(0, 0, 0, 0.25)',
-                                    background: block.completed ? '#22c55e' : 'transparent',
+                                    width: '12px',
+                                    height: '12px',
+                                    borderRadius: '3px',
+                                    border: block.completed ? 'none' : '2px solid rgba(255,255,255,0.8)',
+                                    background: block.completed ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.15)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -3210,7 +3193,7 @@ export default function PersonalPage() {
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {block.completed && <CheckIcon style={{ width: '6px', height: '6px', color: '#fff' }} />}
+                                  {block.completed && <CheckIcon style={{ width: '7px', height: '7px', color: '#10B981', strokeWidth: 3 }} />}
                       </div>
                                 <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
                     </div>
@@ -3220,9 +3203,10 @@ export default function PersonalPage() {
                           {dayBlocks.length > 3 && (
                             <div
                         style={{ 
-                                fontSize: '10px',
-                                color: '#86868b',
-                                fontWeight: '500',
+                                fontSize: '11px',
+                                color: 'rgba(255,255,255,0.6)',
+                                fontWeight: '600',
+                                marginTop: '2px',
                               }}
                             >
                               +{dayBlocks.length - 3} more
