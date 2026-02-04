@@ -747,18 +747,38 @@ export default function ProjectDetailPage() {
     if (!selectedUserId || !project) return;
     
     try {
-      const { error } = await supabase
-        .from('project_members')
-        .insert({
-          project_id: project.id,
-          user_id: selectedUserId,
+      // Find the user to add from availableUsers
+      const userToAdd = availableUsers.find(u => u.id === selectedUserId);
+      if (!userToAdd) {
+        alert('User not found');
+        return;
+      }
+      
+      // Add the new member to the members array
+      const updatedMembers = [
+        ...(project.members || []),
+        {
+          id: userToAdd.id,
+          name: userToAdd.name,
+          email: userToAdd.email,
           role: newMemberRole
-        });
+        }
+      ];
       
-      if (error) throw error;
+      // Update the project with the new members array
+      await projectService.updateProject(project.id, {
+        members: updatedMembers
+      });
       
-      // Fetch updated project
-      await fetchProject();
+      // Update local state
+      setProject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: updatedMembers
+        };
+      });
+      
       setShowAddMemberModal(false);
       setSelectedUserId(null);
       setNewMemberRole('Member');
@@ -776,24 +796,20 @@ export default function ProjectDetailPage() {
     if (!confirm('Remove this member from the project?')) return;
     
     try {
-      // Delete from project_members table
-      const { error } = await supabase
-        .from('project_members')
-        .delete()
-        .eq('project_id', project.id)
-        .eq('user_id', userId);
+      // Filter out the member from the members array
+      const updatedMembers = (project.members || []).filter(m => m.id !== userId);
       
-      if (error) {
-        console.error('Error deleting from project_members:', error);
-        throw error;
-      }
+      // Update the project with the new members array
+      await projectService.updateProject(project.id, {
+        members: updatedMembers
+      });
       
       // Update local state immediately
       setProject(prev => {
         if (!prev) return prev;
         return {
           ...prev,
-          members: (prev.members || []).filter(m => m.id !== userId)
+          members: updatedMembers
         };
       });
       
@@ -810,13 +826,13 @@ export default function ProjectDetailPage() {
     if (!confirm('Are you sure you want to leave this project?')) return;
     
     try {
-      const { error } = await supabase
-        .from('project_members')
-        .delete()
-        .eq('project_id', project.id)
-        .eq('user_id', user.id);
+      // Filter out the current user from the members array
+      const updatedMembers = (project.members || []).filter(m => m.id !== user.id);
       
-      if (error) throw error;
+      // Update the project with the new members array
+      await projectService.updateProject(project.id, {
+        members: updatedMembers
+      });
       
       // Redirect to dashboard
       router.push('/dashboard');
@@ -2884,28 +2900,24 @@ n              {/* Team Members Button - Avatar Style */}
                             <button
                               onClick={async () => {
                                 try {
-                                  // Update member role via API
-                                  const { error } = await supabase
-                                    .from('project_members')
-                                    .update({ role: editingMemberRole })
-                                    .eq('project_id', project.id)
-                                    .eq('user_id', member.id);
+                                  // Update the member's role in the members array
+                                  const updatedMembers = (project.members || []).map(m => 
+                                    m.id === member.id ? { ...m, role: editingMemberRole } : m
+                                  );
                                   
-                                  if (error) throw error;
+                                  // Update the project with the new members array
+                                  await projectService.updateProject(project.id, {
+                                    members: updatedMembers
+                                  });
                                   
                                   // Update local state
                                   setProject(prev => {
                                     if (!prev) return prev;
                                     return {
                                       ...prev,
-                                      members: prev.members?.map(m => 
-                                        m.id === member.id ? { ...m, role: editingMemberRole } : m
-                                      )
+                                      members: updatedMembers
                                     };
                                   });
-                                  
-                                  // Refresh project data to get updated members
-                                  await fetchProject();
                                   
                                   setEditingMemberId(null);
                                   setEditingMemberRole('');
