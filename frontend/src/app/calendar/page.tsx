@@ -140,7 +140,7 @@ export default function CalendarPage() {
         const project = projectsData.find((p: Project) => p.id === task.project_id);
         return {
           ...task,
-          project_name: project?.name || 'Unknown Project',
+          project_name: project?.name || 'Personal',
           project_color: project?.color || '#6b7280',
           is_important: task.priority === 'urgent' || task.priority === 'high',
           tags_list: task.tags_list || [], // Ensure tags_list is always an array
@@ -148,8 +148,21 @@ export default function CalendarPage() {
         };
       });
       
+      // Filter to only show meetings (tasks with time component in start_date)
+      const meetings = tasksWithProjectInfo.filter((task: Task) => {
+        // Check if task has a time component (meetings have times, regular tasks don't)
+        if (task.start_date && task.start_date.includes('T')) {
+          const timePart = task.start_date.split('T')[1];
+          // If it's not just 00:00:00, it's a meeting
+          return timePart && timePart !== '00:00:00' && timePart !== '00:00:00.000Z';
+        }
+        return false;
+      });
+      
+      console.log('Calendar: Filtered to meetings only:', meetings?.length || 0);
+      
       setProjects(projectsData || []);
-      setTasks(tasksWithProjectInfo || []);
+      setTasks(meetings || []);
       console.log('Calendar: Data loaded successfully');
     } catch (err) {
       console.error('Calendar: Failed to fetch data:', err);
@@ -2347,7 +2360,7 @@ export default function CalendarPage() {
             <div className="header-content">
               <h1 className="header-title">
                 <CalendarIcon style={{ width: '32px', height: '32px' }} />
-                Calendar
+                Meeting Schedule
               </h1>
               
               <div className="header-controls">
@@ -2435,23 +2448,35 @@ export default function CalendarPage() {
             
             <div className="calendar-stats">
               <div className="stat-item">
-                <span className="stat-label">Total Tasks</span>
+                <span className="stat-label">Total Meetings</span>
                 <span className="stat-value">{tasks.length}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">In Progress</span>
-                <span className="stat-value">{tasks.filter(t => t.status === 'in_progress').length}</span>
+                <span className="stat-label">This Week</span>
+                <span className="stat-value">
+                  {tasks.filter(t => {
+                    const taskDate = new Date(t.due_date || t.start_date || '');
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    return taskDate >= weekStart && taskDate <= weekEnd;
+                  }).length}
+                </span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Due Today</span>
+                <span className="stat-label">Today</span>
                 <span className="stat-value">
                   {getTasksForDate(today).length}
                 </span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Overdue</span>
-                <span className="stat-value overdue">
-                  {tasks.filter(t => isOverdue(t.due_date)).length}
+                <span className="stat-label">Upcoming</span>
+                <span className="stat-value">
+                  {tasks.filter(t => {
+                    const taskDate = new Date(t.due_date || t.start_date || '');
+                    return taskDate > today;
+                  }).length}
                 </span>
               </div>
             </div>
@@ -2710,7 +2735,7 @@ export default function CalendarPage() {
                   }}
                 >
                   <PlusIcon style={{ width: '18px', height: '18px' }} />
-                  Add Task
+                  Add Meeting
                 </button>
               </div>
             ) : (
@@ -2895,7 +2920,7 @@ export default function CalendarPage() {
                     fontWeight: 600, 
                     marginBottom: '20px' 
                   }}>
-                    Create Meeting
+                    Add Meeting
                     {selectedDayDate && (
                       <div style={{ 
                         fontSize: '0.875rem', 
@@ -3119,7 +3144,7 @@ export default function CalendarPage() {
                         }
                       }}
                     >
-                      Create Meeting
+                      Add Meeting
                     </button>
                   </div>
                 </div>
