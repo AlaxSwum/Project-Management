@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { projectService } from '@/lib/api-compatibility';
+import { projectService, taskService } from '@/lib/api-compatibility';
 import { supabase } from '@/lib/supabase';
 import { 
   CalendarIcon, 
