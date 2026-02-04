@@ -538,8 +538,8 @@ export default function ProjectDetailPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
 n              {/* Team Members Button - Avatar Style */}
-              <button
-                onClick={() => setShowProjectMembers(true)}
+                <button
+                  onClick={() => setShowProjectMembers(true)}
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -591,7 +591,7 @@ n              {/* Team Members Button - Avatar Style */}
                     </div>
                   )}
                 </div>
-              </button>
+                </button>
                   <button
                     onClick={() => setShowCreateTask(true)}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#3B82F6', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', transition: 'background 0.2s', width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}
@@ -805,12 +805,12 @@ n              {/* Team Members Button - Avatar Style */}
 
               {/* Clear Filters Button */}
               {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
-                <button
+                  <button
                   onClick={() => setFilters({ status: [], priority: [], assignee: [], tags: [] })}
                   style={{ marginTop: '1.25rem', padding: '0.625rem 1.25rem', background: '#EF4444', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', transition: 'background 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = '#DC2626'}
                   onMouseLeave={(e) => e.currentTarget.style.background = '#EF4444'}
-                >
+                  >
                   Clear All Filters
                   </button>
               )}
@@ -863,7 +863,7 @@ n              {/* Team Members Button - Avatar Style */}
               {/* Main Gantt Area */}
               <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {/* Gantt Header */}
-                <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {/* View Mode Toggle */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D0D', padding: '0.25rem', borderRadius: '0.5rem' }}>
                     {(['week', 'month'] as const).map(mode => (
@@ -890,8 +890,8 @@ n              {/* Team Members Button - Avatar Style */}
 
                   {/* Navigation */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => {
+                  <button
+                    onClick={() => {
                         const d = new Date(ganttStartDate);
                         if (ganttViewMode === 'week') d.setDate(d.getDate() - 7);
                         else d.setMonth(d.getMonth() - 1);
@@ -902,17 +902,17 @@ n              {/* Team Members Button - Avatar Style */}
                       onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
                     >
                       <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                    </button>
-                    <button
-                      onClick={() => setGanttStartDate(new Date())}
+                  </button>
+                  <button
+                    onClick={() => setGanttStartDate(new Date())}
                       style={{ padding: '0.5rem 1rem', background: '#10B981', border: 'none', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                       onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
-                    >
-                      Today
-                    </button>
-                    <button
-                      onClick={() => {
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => {
                         const d = new Date(ganttStartDate);
                         if (ganttViewMode === 'week') d.setDate(d.getDate() + 7);
                         else d.setMonth(d.getMonth() + 1);
@@ -923,14 +923,14 @@ n              {/* Team Members Button - Avatar Style */}
                       onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
                     >
                       <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                    </button>
+                  </button>
                     <div style={{ padding: '0.5rem 1rem', background: '#2D2D2D', borderRadius: '0.5rem', marginLeft: '0.5rem' }}>
                       <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>
                         {ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                       </span>
                     </div>
-                  </div>
                 </div>
+              </div>
 
                 {/* Gantt Content */}
                 <div style={{ flex: 1, overflow: 'auto' }}>
@@ -949,10 +949,10 @@ n              {/* Team Members Button - Avatar Style */}
                             <div key={i} style={{ height: '80px', padding: '0.75rem', borderBottom: '1px solid #2D2D2D', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: isToday ? '#3B82F610' : 'transparent' }}>
                               <span style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{dayNames[i]}</span>
                               <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem' }}>{date.getDate()}/{date.getMonth() + 1}</span>
-                            </div>
+                  </div>
                           );
                         })}
-                      </div>
+                </div>
                       
                       {/* Time Grid */}
                       <div style={{ flex: 1, minWidth: '800px' }}>
@@ -960,13 +960,13 @@ n              {/* Team Members Button - Avatar Style */}
                         <div style={{ display: 'flex', height: '48px', borderBottom: '1px solid #2D2D2D', background: '#141414' }}>
                           {Array.from({ length: 12 }, (_, i) => {
                             const hour = 7 + i;
-                            return (
+                      return (
                               <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #2D2D2D' }}>
                                 <span style={{ color: '#71717A', fontSize: '0.75rem', fontWeight: 500 }}>{hour}:00</span>
-                              </div>
-                            );
-                          })}
                         </div>
+                      );
+                    })}
+                  </div>
                         
                         {/* Day Rows with Tasks */}
                         {Array.from({ length: 7 }, (_, dayIdx) => {
@@ -981,7 +981,7 @@ n              {/* Team Members Button - Avatar Style */}
                           
                           const barColors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'];
                           
-                          return (
+                      return (
                             <div key={dayIdx} style={{ display: 'flex', height: '80px', borderBottom: '1px solid #2D2D2D', position: 'relative', background: isToday ? '#3B82F608' : 'transparent' }}>
                               {Array.from({ length: 12 }, (_, i) => (
                                 <div key={i} style={{ flex: 1, borderRight: '1px solid #1F1F1F' }} />
@@ -1024,20 +1024,20 @@ n              {/* Team Members Button - Avatar Style */}
                                       </div>
                                     )}
                                     <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
-                                  </div>
-                                );
-                              })}
+                        </div>
+                      );
+                    })}
                               
                               {/* Today indicator line */}
                               {isToday && (
                                 <div style={{ position: 'absolute', left: `${((new Date().getHours() - 7) / 12) * 100}%`, top: 0, bottom: 0, width: '2px', background: '#EF4444', zIndex: 50 }}>
                                   <div style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444' }} />
-                                </div>
+                  </div>
                               )}
-                            </div>
+                </div>
                           );
                         })}
-                      </div>
+              </div>
                     </div>
                   ) : (
                     // Month View - Elux Space Timeline Style (dates horizontal, tasks floating)
@@ -1199,8 +1199,8 @@ n              {/* Team Members Button - Avatar Style */}
                                       }}
                                     >
                                       {assignee.name.charAt(0)}
-                                    </div>
-                                  ))}
+                    </div>
+                  ))}
                                 </div>
                               </div>
                             );
@@ -1216,8 +1216,8 @@ n              {/* Team Members Button - Avatar Style */}
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks this month</span>
                           </div>
-                        )}
-                      </div>
+                  )}
+                </div>
                     </div>
                   )}
                 </div>
@@ -1255,7 +1255,7 @@ n              {/* Team Members Button - Avatar Style */}
                         const isValid = dayNum > 0 && dayNum <= daysInMonth;
                         const isToday = isValid && dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
                         
-                        return (
+                    return (
                           <div key={i} style={{
                             width: '28px',
                             height: '28px',
@@ -1289,10 +1289,10 @@ n              {/* Team Members Button - Avatar Style */}
                           <div style={{ flex: 1 }}>
                             <div style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>{task.name.length > 20 ? task.name.substring(0, 20) + '...' : task.name}</div>
                             <div style={{ color: '#71717A', fontSize: '0.6875rem' }}>{new Date(task.due_date!).toLocaleDateString()}</div>
-                          </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })}
                   </div>
                 </div>
               </div>
@@ -1300,31 +1300,31 @@ n              {/* Team Members Button - Avatar Style */}
           ) : selectedView === 'list' ? (
             // List View - Grouped by Month, then by Status within each month
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
-                // Sort: Latest months first, then No Due Date last
-                if (monthA === 'No Due Date') return 1;
-                if (monthB === 'No Due Date') return -1;
-                return new Date(monthB).getTime() - new Date(monthA).getTime();
+                  {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
+                    // Sort: Latest months first, then No Due Date last
+                    if (monthA === 'No Due Date') return 1;
+                    if (monthB === 'No Due Date') return -1;
+                    return new Date(monthB).getTime() - new Date(monthA).getTime();
               }).map(([month, monthTasks], monthIndex) => {
                 const isMonthExpanded = expandedMonths.includes(month);
-                
+                    
                 // Status breakdown for this month
-                const statusCounts = TASK_STATUSES.map(status => ({
-                  ...status,
-                  count: monthTasks.filter(t => t.status === status.value).length
-                })).filter(s => s.count > 0);
-                
-                return (
+                    const statusCounts = TASK_STATUSES.map(status => ({
+                      ...status,
+                      count: monthTasks.filter(t => t.status === status.value).length
+                    })).filter(s => s.count > 0);
+                    
+                    return (
                   <div key={month} style={{ background: '#1A1A1A', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #2D2D2D' }}>
                     {/* Month Header */}
                     <div 
-                      onClick={() => {
+                              onClick={() => {
                         if (isMonthExpanded) {
-                          setExpandedMonths(expandedMonths.filter(m => m !== month));
-                        } else {
-                          setExpandedMonths([...expandedMonths, month]);
-                        }
-                      }}
+                                  setExpandedMonths(expandedMonths.filter(m => m !== month));
+                                } else {
+                                  setExpandedMonths([...expandedMonths, month]);
+                                }
+                              }}
                       style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
@@ -1334,13 +1334,13 @@ n              {/* Team Members Button - Avatar Style */}
                         borderBottom: isMonthExpanded ? '1px solid #2D2D2D' : 'none',
                         background: '#141414'
                       }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <svg style={{ width: '18px', height: '18px', color: '#71717A', transform: isMonthExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
+                                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                </svg>
                         <CalIcon style={{ width: '20px', height: '20px', color: '#3B82F6' }} />
-                        <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600 }}>{month}</span>
+                                <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600 }}>{month}</span>
                         <span style={{ 
                           padding: '0.25rem 0.625rem', 
                           background: '#2D2D2D', 
@@ -1349,21 +1349,21 @@ n              {/* Team Members Button - Avatar Style */}
                           color: '#A1A1AA', 
                           fontWeight: 600 
                         }}>
-                          {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
-                        </span>
-                      </div>
-                      
+                                  {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
+                                </span>
+                </div>
+
                       {/* Status breakdown badges */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {statusCounts.map(status => (
-                          <div key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
-                            <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
-                              {status.count} {status.label}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                {statusCounts.map(status => (
+                                  <div key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
+                                    <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
+                                      {status.count} {status.label}
+                                    </span>
+              </div>
+                                ))}
+            </div>
                     </div>
 
                     {/* Expanded Month Content - Status Groups */}
@@ -1431,7 +1431,7 @@ n              {/* Team Members Button - Avatar Style */}
                                   onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
                                 >
                                   <PlusIcon style={{ width: '14px', height: '14px' }} />
-                                </button>
+                            </button>
                               </div>
 
                               {/* Status Tasks Table */}
@@ -1440,15 +1440,12 @@ n              {/* Team Members Button - Avatar Style */}
                                   {/* Table Header */}
                                   <div style={{ 
                                     display: 'grid', 
-                                    gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
-                                    padding: '0.625rem 1.25rem 0.625rem 2.5rem',
+                                    gridTemplateColumns: '1.5fr 1.5fr 160px 120px 100px 80px 80px',
+                                    padding: '0.75rem 1.5rem',
                                     background: '#0A0A0A',
                                     borderBottom: '1px solid #1F1F1F',
-                                    gap: '0.5rem'
+                                    gap: '1rem'
                                   }}>
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                      <input type="checkbox" style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: status.color }} />
-                                    </div>
                                     <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
                                       Task Name
                                     </div>
@@ -1456,18 +1453,20 @@ n              {/* Team Members Button - Avatar Style */}
                                       Description
                                     </div>
                                     <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                                      Estimation
+                                      Due Date
                                     </div>
                                     <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
                                       Type
                                     </div>
                                     <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                                      People
+                                      Assignee
                                     </div>
                                     <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
                                       Priority
                                     </div>
-                                    <div></div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      Actions
+                                    </div>
                                   </div>
 
                                   {/* Task Rows */}
@@ -1484,29 +1483,23 @@ n              {/* Team Members Button - Avatar Style */}
                                         onClick={() => setSelectedTask(task)}
                                         style={{ 
                                           display: 'grid', 
-                                          gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
-                                          padding: '0.75rem 1.25rem 0.75rem 2.5rem',
+                                          gridTemplateColumns: '1.5fr 1.5fr 160px 120px 100px 80px 80px',
+                                          padding: '0.875rem 1.5rem',
                                           borderBottom: '1px solid #1F1F1F',
                                           cursor: 'pointer',
-                                          transition: 'background 0.15s',
-                                          gap: '0.5rem',
+                                          transition: 'all 0.15s',
+                                          gap: '1rem',
                                           alignItems: 'center'
                                         }}
                                         onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                                       >
-                                        {/* Checkbox */}
-                                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                                          <input 
-                                            type="checkbox" 
-                                            style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: status.color }} 
-                                            onClick={(e) => e.stopPropagation()} 
-                                          />
-                                        </div>
-
                                         {/* Task Name */}
-                                        <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                          {task.name}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color, flexShrink: 0 }} />
+                                          <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {task.name}
+                                          </span>
                                         </div>
 
                                         {/* Description */}
@@ -1514,33 +1507,30 @@ n              {/* Team Members Button - Avatar Style */}
                                           {task.description || '-'}
                                         </div>
 
-                                        {/* Estimation */}
+                                        {/* Due Date */}
                                         <div style={{ color: '#A1A1AA', fontSize: '0.8125rem' }}>
-                                          {task.start_date && task.due_date ? (
-                                            `${new Date(task.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                                          ) : task.due_date ? (
+                                          {task.due_date ? (
                                             new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                           ) : (
-                                            '-'
+                                            <span style={{ color: '#52525B' }}>No date</span>
                                           )}
                                         </div>
 
                                         {/* Type */}
                                         <div>
                                           <span style={{ 
-                                            padding: '0.1875rem 0.5rem', 
-                                            borderRadius: '0.25rem', 
+                                            padding: '0.25rem 0.625rem', 
+                                            borderRadius: '9999px', 
                                             fontSize: '0.6875rem', 
                                             fontWeight: 500,
                                             backgroundColor: `${typeColor}20`,
-                                            color: typeColor,
-                                            border: `1px solid ${typeColor}40`
+                                            color: typeColor
                                           }}>
                                             {taskType}
                                           </span>
                                         </div>
 
-                                        {/* People */}
+                                        {/* Assignee */}
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
                                           {task.assignees && task.assignees.length > 0 ? (
                                             <div style={{ display: 'flex' }}>
@@ -1548,18 +1538,18 @@ n              {/* Team Members Button - Avatar Style */}
                                                 <div 
                                                   key={assignee.id}
                                                   style={{ 
-                                                    width: '24px', 
-                                                    height: '24px', 
+                                                    width: '28px', 
+                                                    height: '28px', 
                                                     borderRadius: '50%', 
                                                     border: '2px solid #0D0D0D', 
                                                     display: 'flex', 
                                                     alignItems: 'center', 
                                                     justifyContent: 'center', 
-                                                    fontSize: '0.625rem', 
+                                                    fontSize: '0.6875rem', 
                                                     fontWeight: 600, 
                                                     color: '#FFFFFF', 
                                                     backgroundColor: ['#3B82F6', '#EC4899', '#8B5CF6'][i % 3], 
-                                                    marginLeft: i > 0 ? '-6px' : '0',
+                                                    marginLeft: i > 0 ? '-8px' : '0',
                                                     position: 'relative',
                                                     zIndex: 3 - i
                                                   }}
@@ -1577,11 +1567,15 @@ n              {/* Team Members Button - Avatar Style */}
                                         {/* Priority */}
                                         <div>
                                           <span style={{ 
-                                            display: 'flex',
+                                            display: 'inline-flex',
                                             alignItems: 'center',
-                                            gap: '0.25rem',
-                                            fontSize: '0.75rem',
+                                            gap: '0.375rem',
+                                            padding: '0.25rem 0.5rem',
+                                            borderRadius: '9999px',
+                                            fontSize: '0.6875rem',
                                             fontWeight: 500,
+                                            backgroundColor: task.priority === 'high' ? '#EF444420' : 
+                                                             task.priority === 'medium' ? '#F59E0B20' : '#22C55E20',
                                             color: task.priority === 'high' ? '#EF4444' : 
                                                    task.priority === 'medium' ? '#F59E0B' : '#22C55E'
                                           }}>
@@ -1597,30 +1591,30 @@ n              {/* Team Members Button - Avatar Style */}
                                         </div>
 
                                         {/* Edit & Delete Buttons */}
-                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.25rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.375rem' }}>
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               setSelectedTask(task);
                                             }}
                                             style={{ 
-                                              width: '28px', 
-                                              height: '28px', 
-                                              background: 'transparent', 
-                                              border: 'none', 
-                                              color: '#52525B', 
+                                              width: '30px', 
+                                              height: '30px', 
+                                              background: '#1F1F1F', 
+                                              border: '1px solid #2D2D2D', 
+                                              color: '#71717A', 
                                               cursor: 'pointer',
                                               display: 'flex',
                                               alignItems: 'center',
                                               justifyContent: 'center',
-                                              borderRadius: '0.25rem',
+                                              borderRadius: '0.5rem',
                                               transition: 'all 0.2s'
                                             }}
-                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.background = '#3B82F620'; }}
-                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.borderColor = '#3B82F6'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; e.currentTarget.style.borderColor = '#2D2D2D'; }}
                                             title="Edit task"
                                           >
-                                            <PencilIcon style={{ width: '16px', height: '16px' }} />
+                                            <PencilIcon style={{ width: '14px', height: '14px' }} />
                                           </button>
                                           <button
                                             onClick={async (e) => {
@@ -1636,23 +1630,23 @@ n              {/* Team Members Button - Avatar Style */}
                                               }
                                             }}
                                             style={{ 
-                                              width: '28px', 
-                                              height: '28px', 
-                                              background: 'transparent', 
-                                              border: 'none', 
-                                              color: '#52525B', 
+                                              width: '30px', 
+                                              height: '30px', 
+                                              background: '#1F1F1F', 
+                                              border: '1px solid #2D2D2D', 
+                                              color: '#71717A', 
                                               cursor: 'pointer',
                                               display: 'flex',
                                               alignItems: 'center',
                                               justifyContent: 'center',
-                                              borderRadius: '0.25rem',
+                                              borderRadius: '0.5rem',
                                               transition: 'all 0.2s'
                                             }}
-                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#EF444420'; }}
-                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#EF4444'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; e.currentTarget.style.borderColor = '#2D2D2D'; }}
                                             title="Delete task"
                                           >
-                                            <TrashIcon style={{ width: '16px', height: '16px' }} />
+                                            <TrashIcon style={{ width: '14px', height: '14px' }} />
                                           </button>
                                         </div>
                                       </div>
@@ -1661,13 +1655,13 @@ n              {/* Team Members Button - Avatar Style */}
                                 </>
                               )}
                             </div>
-                          );
-                        })}
-                        
+                    );
+                  })}
+                  
                         {/* Add Task Button */}
                         <div style={{ padding: '0.75rem 1.25rem 0.75rem 2.5rem', background: '#0D0D0D' }}>
-                          <button
-                            onClick={() => setShowCreateTask(true)}
+                      <button
+                        onClick={() => setShowCreateTask(true)}
                             style={{ 
                               display: 'flex', 
                               alignItems: 'center', 
@@ -1680,13 +1674,13 @@ n              {/* Team Members Button - Avatar Style */}
                               fontWeight: 500,
                               transition: 'color 0.2s'
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
                             onMouseLeave={(e) => e.currentTarget.style.color = '#52525B'}
-                          >
+                      >
                             <PlusIcon style={{ width: '14px', height: '14px' }} />
-                            Add task
-                          </button>
-                        </div>
+                        Add task
+                      </button>
+          </div>
                       </div>
                     )}
                   </div>
@@ -1805,42 +1799,42 @@ n              {/* Team Members Button - Avatar Style */}
                               >
                                 Edit
                               </button>
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  if (confirm('Delete this task?')) {
-                                    try {
-                                      await taskService.deleteTask(task.id);
-                                      setTasks(tasks.filter(t => t.id !== task.id));
-                                      fetchProject();
-                                    } catch (error) {
-                                      alert('Error deleting task');
-                                    }
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (confirm('Delete this task?')) {
+                                  try {
+                                    await taskService.deleteTask(task.id);
+                                    setTasks(tasks.filter(t => t.id !== task.id));
+                                    fetchProject();
+                                  } catch (error) {
+                                    alert('Error deleting task');
                                   }
-                                }}
-                                style={{
-                                  padding: '0.25rem 0.5rem',
-                                  background: 'transparent',
-                                  border: '1px solid #EF4444',
-                                  borderRadius: '0.375rem',
-                                  color: '#EF4444',
-                                  cursor: 'pointer',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  transition: 'all 0.2s',
-                                  fontFamily: 'Mabry Pro, sans-serif'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = '#EF4444';
-                                  e.currentTarget.style.color = '#FFFFFF';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.color = '#EF4444';
-                                }}
-                              >
-                                Delete
-                              </button>
+                                }
+                              }}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                background: 'transparent',
+                                border: '1px solid #EF4444',
+                                borderRadius: '0.375rem',
+                                color: '#EF4444',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s',
+                                fontFamily: 'Mabry Pro, sans-serif'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#EF4444';
+                                e.currentTarget.style.color = '#FFFFFF';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = '#EF4444';
+                              }}
+                            >
+                              Delete
+                            </button>
                             </div>
                           </div>
             
@@ -1971,10 +1965,10 @@ n              {/* Team Members Button - Avatar Style */}
                     {project.members && project.members.length > 4 && (
                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A1A1AA', fontSize: '0.5625rem', fontWeight: 600, border: '2px solid #141414' }}>
                         +{project.members.length - 4}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                                </div>
+                              )}
+              </div>
+            </div>
 
                 {/* In Progress Section */}
                 {(() => {
