@@ -169,6 +169,7 @@ export default function ProjectDetailPage() {
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
   const [enteredTags, setEnteredTags] = useState<string[]>([]);
+  const [taskMenuOpen, setTaskMenuOpen] = useState<number | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -1178,16 +1179,73 @@ export default function ProjectDetailPage() {
                               )}
                               
                           {/* Title and Menu */}
-                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem', position: 'relative' }}>
                             <h3 style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.9375rem', lineHeight: 1.4, margin: 0, flex: 1, fontFamily: 'Mabry Pro, sans-serif' }}>{task.name}</h3>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); }}
-                              style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s', opacity: 1 }}
-                              onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; }}
-                            >
-                              <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
-                            </button>
+                            <div style={{ position: 'relative' }}>
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setTaskMenuOpen(taskMenuOpen === task.id ? null : task.id);
+                                }}
+                                style={{ width: '24px', height: '24px', background: taskMenuOpen === task.id ? '#2D2D2D' : 'none', border: 'none', borderRadius: '0.25rem', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; if (taskMenuOpen !== task.id) e.currentTarget.style.background = '#2D2D2D'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; if (taskMenuOpen !== task.id) e.currentTarget.style.background = 'none'; }}
+                              >
+                                <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
+                              </button>
+
+                              {taskMenuOpen === task.id && (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: '100%',
+                                    marginTop: '0.25rem',
+                                    background: '#1A1A1A',
+                                    border: '1px solid #2D2D2D',
+                                    borderRadius: '0.5rem',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                                    padding: '0.375rem',
+                                    minWidth: '140px',
+                                    zIndex: 50
+                                  }}
+                                >
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (confirm('Delete this task?')) {
+                                        try {
+                                          await taskService.deleteTask(task.id);
+                                          setTasks(tasks.filter(t => t.id !== task.id));
+                                          setTaskMenuOpen(null);
+                                        } catch (error) {
+                                          // Error deleting
+                                        }
+                                      }
+                                    }}
+                                    style={{
+                                      width: '100%',
+                                      padding: '0.5rem 0.75rem',
+                                      background: 'none',
+                                      border: 'none',
+                                      borderRadius: '0.375rem',
+                                      color: '#EF4444',
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                      textAlign: 'left',
+                                      transition: 'background 0.2s',
+                                      fontFamily: 'Mabry Pro, sans-serif',
+                                      fontWeight: 500
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
             
                           {/* Description */}
