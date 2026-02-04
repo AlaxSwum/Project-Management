@@ -1644,45 +1644,67 @@ n              {/* Team Members Button - Avatar Style */}
                 </div>
 
                 {/* In Progress Section */}
-                <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.625rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
-                      <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>In Progress</span>
-                    </div>
-                    <span style={{ color: '#3B82F6', fontSize: '0.75rem', fontWeight: 600 }}>{tasks.filter(t => t.status === 'in_progress').length}</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                    {tasks.filter(t => t.status === 'in_progress').slice(0, 2).map(task => (
-                      <div key={task.id} onClick={() => setSelectedTask(task)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem', borderRadius: '0.375rem', cursor: 'pointer', background: '#1A1A1A', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#252525'} onMouseLeave={(e) => e.currentTarget.style.background = '#1A1A1A'}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '0.375rem', background: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', color: '#A1A1AA' }}>{task.name.charAt(0)}</div>
-                        <span style={{ color: '#A1A1AA', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.name}</span>
+                {(() => {
+                  const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                  const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                  const isTaskInMonth = (t: Task) => {
+                    const due = t.due_date ? new Date(t.due_date) : null;
+                    const start = t.start_date ? new Date(t.start_date) : null;
+                    if (due && due >= monthStart && due <= monthEnd) return true;
+                    if (start && start >= monthStart && start <= monthEnd) return true;
+                    if (start && due && start <= monthEnd && due >= monthStart) return true;
+                    return false;
+                  };
+                  const monthInProgress = tasks.filter(t => t.status === 'in_progress' && isTaskInMonth(t));
+                  const monthCompleted = tasks.filter(t => t.status === 'done' && isTaskInMonth(t));
+                  const monthTodo = tasks.filter(t => t.status === 'todo' && isTaskInMonth(t));
+                  
+                  return (
+                    <>
+                      <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: monthInProgress.length > 0 ? '0.625rem' : 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>In Progress</span>
+                          </div>
+                          <span style={{ color: '#3B82F6', fontSize: '0.75rem', fontWeight: 600 }}>{monthInProgress.length}</span>
+                        </div>
+                        {monthInProgress.length > 0 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                            {monthInProgress.slice(0, 2).map(task => (
+                              <div key={task.id} onClick={() => setSelectedTask(task)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem', borderRadius: '0.375rem', cursor: 'pointer', background: '#1A1A1A', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#252525'} onMouseLeave={(e) => e.currentTarget.style.background = '#1A1A1A'}>
+                                <div style={{ width: '24px', height: '24px', borderRadius: '0.375rem', background: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', color: '#A1A1AA' }}>{task.name.charAt(0)}</div>
+                                <span style={{ color: '#A1A1AA', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Completed Section */}
-                <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
-                      <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>Completed</span>
-                    </div>
-                    <span style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>{tasks.filter(t => t.status === 'done').length}</span>
-                  </div>
-                </div>
+                      {/* Completed Section */}
+                      <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>Completed</span>
+                          </div>
+                          <span style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>{monthCompleted.length}</span>
+                        </div>
+                      </div>
 
-                {/* To Do Section */}
-                <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
-                      <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>To Do</span>
-                    </div>
-                    <span style={{ color: '#EF4444', fontSize: '0.75rem', fontWeight: 600 }}>{tasks.filter(t => t.status === 'todo').length}</span>
-                  </div>
-                </div>
+                      {/* To Do Section */}
+                      <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>To Do</span>
+                          </div>
+                          <span style={{ color: '#EF4444', fontSize: '0.75rem', fontWeight: 600 }}>{monthTodo.length}</span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Main Growth Map Timeline */}
@@ -1754,8 +1776,38 @@ n              {/* Team Members Button - Avatar Style */}
                     {project.members?.map((member, memberIdx) => {
                       const memberColors = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16'];
                       const memberColor = memberColors[memberIdx % memberColors.length];
-                      const memberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
                       const barColors = ['#86EFAC', '#FDE047', '#FDA4AF', '#A5B4FC', '#F9A8D4', '#93C5FD', '#FCA5A5', '#A7F3D0'];
+                      
+                      // Get month boundaries
+                      const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                      const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                      
+                      // Filter tasks for this member that fall within the selected month
+                      const memberTasks = tasks.filter(t => {
+                        if (!t.assignees?.some(a => a.id === member.id)) return false;
+                        
+                        const taskDue = t.due_date ? new Date(t.due_date) : null;
+                        const taskStart = t.start_date ? new Date(t.start_date) : null;
+                        
+                        // Check if task falls within month (has due date or start date in this month)
+                        if (taskDue) {
+                          const dueInMonth = taskDue >= monthStart && taskDue <= monthEnd;
+                          if (dueInMonth) return true;
+                        }
+                        if (taskStart) {
+                          const startInMonth = taskStart >= monthStart && taskStart <= monthEnd;
+                          if (startInMonth) return true;
+                        }
+                        // Also include tasks that span across the month
+                        if (taskStart && taskDue) {
+                          const spansMonth = taskStart <= monthEnd && taskDue >= monthStart;
+                          if (spansMonth) return true;
+                        }
+                        return false;
+                      });
+                      
+                      // Count total tasks for this member (regardless of month)
+                      const totalMemberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id)).length;
                       
                       return (
                         <div key={member.id} style={{ display: 'flex', alignItems: 'flex-start', minHeight: '48px', paddingBottom: '0.5rem', borderBottom: memberIdx < (project.members?.length || 0) - 1 ? '1px solid #1F1F1F' : 'none' }}>
@@ -1768,7 +1820,7 @@ n              {/* Team Members Button - Avatar Style */}
                               <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {member.name.length > 14 ? member.name.substring(0, 14) + '...' : member.name}
                               </span>
-                              <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{memberTasks.length} tasks</span>
+                              <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{memberTasks.length} this month</span>
                             </div>
                           </div>
                           
@@ -1781,13 +1833,35 @@ n              {/* Team Members Button - Avatar Style */}
                               let startPos = (taskIdx * 15) + 5;
                               let width = 25 + (taskIdx % 2) * 15;
                               
-                              if (taskStartDate && taskDueDate) {
-                                const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
-                                const totalDays = monthEnd.getDate();
-                                const startDay = Math.max(1, Math.min(totalDays, taskStartDate.getDate()));
-                                const endDay = Math.max(1, Math.min(totalDays, taskDueDate.getDate()));
-                                startPos = ((startDay - 1) / totalDays) * 100;
-                                width = Math.max(12, ((endDay - startDay + 1) / totalDays) * 100);
+                              const totalDays = monthEnd.getDate();
+                              
+                              if (taskStartDate || taskDueDate) {
+                                // Calculate start position
+                                let effectiveStart = 1;
+                                if (taskStartDate) {
+                                  if (taskStartDate < monthStart) {
+                                    effectiveStart = 1;
+                                  } else {
+                                    effectiveStart = taskStartDate.getDate();
+                                  }
+                                } else if (taskDueDate) {
+                                  effectiveStart = Math.max(1, taskDueDate.getDate() - 7); // Default 7 day duration
+                                }
+                                
+                                // Calculate end position
+                                let effectiveEnd = totalDays;
+                                if (taskDueDate) {
+                                  if (taskDueDate > monthEnd) {
+                                    effectiveEnd = totalDays;
+                                  } else {
+                                    effectiveEnd = taskDueDate.getDate();
+                                  }
+                                } else if (taskStartDate) {
+                                  effectiveEnd = Math.min(totalDays, taskStartDate.getDate() + 7);
+                                }
+                                
+                                startPos = ((effectiveStart - 1) / totalDays) * 100;
+                                width = Math.max(10, ((effectiveEnd - effectiveStart + 1) / totalDays) * 100);
                               }
                               
                               const barColor = barColors[taskIdx % barColors.length];
@@ -1828,7 +1902,7 @@ n              {/* Team Members Button - Avatar Style */}
                             })}
                             {memberTasks.length === 0 && (
                               <div style={{ height: '28px', display: 'flex', alignItems: 'center' }}>
-                                <span style={{ color: '#3D3D3D', fontSize: '0.6875rem', fontStyle: 'italic' }}>No tasks assigned</span>
+                                <span style={{ color: '#3D3D3D', fontSize: '0.6875rem', fontStyle: 'italic' }}>No tasks this month</span>
                               </div>
                             )}
                           </div>
