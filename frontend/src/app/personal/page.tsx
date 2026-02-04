@@ -2229,73 +2229,75 @@ export default function PersonalPage() {
               {/* To-Do List Button */}
               <motion.button
                 onClick={() => setShowAddTodoModal(true)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.97 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '9px 18px',
+                  gap: '8px',
+                  padding: '10px 20px',
                   fontSize: '13px',
                   fontWeight: '600',
-                  border: '1px solid #10b981',
-                  borderRadius: '8px',
+                  border: 'none',
+                  borderRadius: '10px',
                   cursor: 'pointer',
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10B981',
-                  transition: 'all 0.2s ease',
+                  background: 'linear-gradient(135deg, #10B981, #059669)',
+                  color: '#FFFFFF',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
-                <ListBulletIcon style={{ width: '15px', height: '15px' }} />
+                <ListBulletIcon style={{ width: '16px', height: '16px' }} />
                 Add To-Do
               </motion.button>
 
               {/* Report Button */}
               <motion.button
                 onClick={() => router.push('/report')}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.97 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08))',
-                  border: '1px solid rgba(59, 130, 246, 0.15)',
-                  borderRadius: '8px',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  background: '#1F1F1F',
+                  border: '1px solid #3B82F6',
+                  borderRadius: '10px',
                   fontSize: '13px',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  color: '#2563eb',
-                  transition: 'all 0.2s ease',
+                  color: '#3B82F6',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
-                <Squares2X2Icon style={{ width: '15px', height: '15px' }} />
+                <Squares2X2Icon style={{ width: '16px', height: '16px' }} />
                 Report
               </motion.button>
 
               {/* Add Block Button */}
               <motion.button
                 onClick={() => setShowAddModal(true)}
-                whileHover={{ scale: 1.02, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03, y: -1, boxShadow: '0 8px 20px rgba(59, 130, 246, 0.4)' }}
+                whileTap={{ scale: 0.97 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '9px 18px',
-                  fontSize: '13px',
+                  gap: '8px',
+                  padding: '10px 24px',
+                  fontSize: '14px',
                   fontWeight: '600',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                  color: '#fff',
-                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-                  transition: 'all 0.2s ease',
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                  color: '#FFFFFF',
+                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
-                <PlusIcon style={{ width: '15px', height: '15px' }} />
+                <PlusIcon style={{ width: '18px', height: '18px', strokeWidth: 2.5 }} />
                 Add Block
               </motion.button>
             </div>
@@ -2312,39 +2314,42 @@ export default function PersonalPage() {
               borderTop: '1px solid #2D2D2D',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <motion.button
                 onClick={() => navigate('prev')}
-                whileHover={{ scale: 1.05, background: '#2D2D2D' }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.08, background: 'linear-gradient(135deg, #2D2D2D, #1F1F1F)', borderColor: '#3B82F6' }}
+                whileTap={{ scale: 0.92 }}
                 style={{
-                  width: '32px',
-                  height: '32px',
-              display: 'flex', 
-            alignItems: 'center', 
+                  width: '38px',
+                  height: '38px',
+                  display: 'flex', 
+                  alignItems: 'center', 
                   justifyContent: 'center',
                   border: '1px solid #2D2D2D',
-                  borderRadius: '8px',
-                  background: '#1F1F1F',
+                  borderRadius: '10px',
+                  background: '#1A1A1A',
                   cursor: 'pointer',
-                  color: '#A1A1AA',
-                  transition: 'background 0.15s ease',
+                  color: '#E4E4E7',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                 }}
               >
-                <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
+                <ChevronLeftIcon style={{ width: '18px', height: '18px', strokeWidth: 2.5 }} />
               </motion.button>
               
               <motion.h2
                 key={currentDate.toISOString()}
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
                 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
+                  fontSize: '17px',
+                  fontWeight: '700',
                   color: '#FFFFFF',
                   margin: 0,
-                  minWidth: '180px',
+                  minWidth: '200px',
                   textAlign: 'center',
+                  letterSpacing: '0.01em',
                 }}
               >
                 {viewMode === 'day' && (
@@ -2366,39 +2371,42 @@ export default function PersonalPage() {
               
               <motion.button
                 onClick={() => navigate('next')}
-                whileHover={{ scale: 1.05, background: '#2D2D2D' }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.08, background: 'linear-gradient(135deg, #2D2D2D, #1F1F1F)', borderColor: '#3B82F6' }}
+                whileTap={{ scale: 0.92 }}
                 style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '38px',
+                  height: '38px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: '1px solid #2D2D2D',
-                  borderRadius: '8px',
-                  background: '#1F1F1F',
+                  borderRadius: '10px',
+                  background: '#1A1A1A',
                   cursor: 'pointer',
-                  color: '#A1A1AA',
-                  transition: 'background 0.15s ease',
+                  color: '#E4E4E7',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                 }}
               >
-                <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
+                <ChevronRightIcon style={{ width: '18px', height: '18px', strokeWidth: 2.5 }} />
               </motion.button>
             </div>
 
             <motion.button
               onClick={() => setCurrentDate(new Date())}
-              whileHover={{ scale: 1.02, background: '#2D2D2D' }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.03, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}
+              whileTap={{ scale: 0.97 }}
               style={{
-                padding: '7px 14px',
-                fontSize: '12px',
-                fontWeight: '500',
-                border: '1px solid #2D2D2D',
-                borderRadius: '6px',
-                background: '#10B981',
+                padding: '9px 18px',
+                fontSize: '13px',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
                 cursor: 'pointer',
                 color: '#FFFFFF',
+                boxShadow: '0 3px 10px rgba(16, 185, 129, 0.2)',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               Today
@@ -2773,9 +2781,9 @@ export default function PersonalPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
-                    background: '#141414',
-                    borderRadius: '20px',
-                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
+                    background: 'linear-gradient(180deg, #1A1A1A 0%, #141414 100%)',
+                    borderRadius: '24px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
                     border: '1px solid #2D2D2D',
                     overflow: 'auto',
                     maxHeight: 'calc(100vh - 180px)',
@@ -2803,38 +2811,42 @@ export default function PersonalPage() {
                       const isToday = formatDate(day) === formatDate(new Date());
                       const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
                       return (
-                        <div
+                        <motion.div
                           key={index}
+                          whileHover={{ scale: 1.02 }}
                           style={{
-                            padding: '16px 8px 20px',
+                            padding: '18px 10px 22px',
                             textAlign: 'center',
                             borderLeft: '1px solid #2D2D2D',
-                            background: isToday ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                            background: isToday ? 'linear-gradient(180deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)' : 'transparent',
+                            borderRadius: isToday ? '12px 12px 0 0' : '0',
+                            transition: 'all 0.2s ease',
                           }}
                         >
                           <div
                             style={{
                               fontSize: '13px',
-                              fontWeight: '500',
+                              fontWeight: '600',
                               color: isToday ? '#3B82F6' : '#71717A',
                               textTransform: 'lowercase',
-                              letterSpacing: '0.5px',
-                              marginBottom: '8px',
+                              letterSpacing: '0.8px',
+                              marginBottom: '10px',
                             }}
                           >
                             {dayNames[day.getDay()]}
                           </div>
                           <div
                             style={{
-                              fontSize: '32px',
-                              fontWeight: '700',
+                              fontSize: '36px',
+                              fontWeight: '800',
                               color: isToday ? '#3B82F6' : '#FFFFFF',
                               lineHeight: 1,
+                              textShadow: isToday ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none',
                             }}
                           >
                             {day.getDate()}
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -2987,48 +2999,53 @@ export default function PersonalPage() {
                                     left: `${leftOffset}%`,
                                     width: `${widthPercent - 2}%`,
                                     height: `${height}px`,
-                                    background: colors.bg,
-                                    borderLeft: `4px solid ${colors.border}`,
-                                    borderRadius: '8px',
-                                    padding: '8px 10px',
+                                    background: `linear-gradient(135deg, ${colors.bg} 0%, ${colors.bg}DD 100%)`,
+                                    borderLeft: `5px solid ${colors.border}`,
+                                    borderRadius: '12px',
+                                    padding: '10px 12px',
                                     cursor: 'pointer',
                                     overflow: 'hidden',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: '4px',
+                                    gap: '6px',
                                     zIndex: column + 1,
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    backdropFilter: 'blur(8px)',
                                   }}
                                 >
-                                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                                    <div
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                    <motion.div
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         const updatedBlock = { ...block, completed: !block.completed };
                                         saveBlock(updatedBlock);
                                       }}
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
                                       style={{
-                                        width: '16px',
-                                        height: '16px',
-                                        borderRadius: '4px',
-                                        border: block.completed ? 'none' : `2px solid ${colors.border}`,
-                                        background: block.completed ? '#10B981' : 'rgba(255,255,255,0.8)',
+                                        width: '18px',
+                                        height: '18px',
+                                        borderRadius: '6px',
+                                        border: block.completed ? 'none' : `2.5px solid ${colors.border}`,
+                                        background: block.completed ? `linear-gradient(135deg, #10B981, #059669)` : 'rgba(255,255,255,0.9)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         cursor: 'pointer',
                                         flexShrink: 0,
+                                        boxShadow: block.completed ? '0 2px 6px rgba(16, 185, 129, 0.3)' : 'none',
+                                        transition: 'all 0.2s ease',
                                       }}
                                     >
-                                      {block.completed && <CheckIcon style={{ width: '10px', height: '10px', color: '#fff' }} />}
-                                    </div>
+                                      {block.completed && <CheckIcon style={{ width: '11px', height: '11px', color: '#fff', strokeWidth: 3 }} />}
+                                    </motion.div>
                                     <span style={{ 
-                                      fontSize: '12px', 
-                                      fontWeight: 600, 
+                                      fontSize: '13px', 
+                                      fontWeight: 700, 
                                       color: colors.text,
                                       textDecoration: block.completed ? 'line-through' : 'none',
-                                      lineHeight: 1.3,
+                                      lineHeight: 1.4,
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
                                       display: '-webkit-box',
@@ -3036,7 +3053,7 @@ export default function PersonalPage() {
                                       WebkitBoxOrient: 'vertical',
                                     }}>{block.title}</span>
                                   </div>
-                                  <span style={{ fontSize: '10px', color: colors.text, opacity: 0.7, fontWeight: 500 }}>
+                                  <span style={{ fontSize: '11px', color: colors.text, opacity: 0.75, fontWeight: 600 }}>
                                     {(() => {
                                       const formatTime12 = (time: string) => {
                                         const [h, m] = time.split(':').map(Number);
@@ -3067,9 +3084,9 @@ export default function PersonalPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
-                    background: '#1A1A1A',
-                    borderRadius: '16px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    background: 'linear-gradient(180deg, #1A1A1A 0%, #141414 100%)',
+                    borderRadius: '24px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
                     border: '1px solid #2D2D2D',
                     overflow: 'hidden',
                   }}
