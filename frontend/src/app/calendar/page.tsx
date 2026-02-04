@@ -73,6 +73,15 @@ export default function CalendarPage() {
   const [showDayTasks, setShowDayTasks] = useState(false);
   const [selectedDayTasks, setSelectedDayTasks] = useState<Task[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
+  const [showCreateMeeting, setShowCreateMeeting] = useState(false);
+  const [newMeeting, setNewMeeting] = useState({
+    name: '',
+    description: '',
+    start_date: '',
+    start_time: '',
+    end_time: '',
+    priority: 'medium',
+  });
   
   // Calendar view state
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
@@ -218,6 +227,55 @@ export default function CalendarPage() {
       ));
     } catch (err) {
       console.error('Failed to update task importance:', err);
+    }
+  };
+
+  const handleDayClick = (date: Date) => {
+    setSelectedDayDate(date);
+    setNewMeeting({
+      ...newMeeting,
+      start_date: date.toISOString().split('T')[0]
+    });
+    setShowCreateMeeting(true);
+  };
+
+  const createMeeting = async () => {
+    if (!newMeeting.name.trim() || !newMeeting.start_date) return;
+    
+    try {
+      // Combine date and time for start and due dates
+      const startDateTime = `${newMeeting.start_date}T${newMeeting.start_time || '09:00'}:00`;
+      const endDateTime = `${newMeeting.start_date}T${newMeeting.end_time || '10:00'}:00`;
+      
+      const taskData = {
+        name: newMeeting.name.trim(),
+        description: newMeeting.description.trim(),
+        priority: newMeeting.priority,
+        status: 'todo',
+        start_date: startDateTime,
+        due_date: endDateTime,
+        project_id: null, // Meeting not tied to specific project
+        assignee_ids: [user?.id],
+      };
+      
+      await taskService.createTask(taskData as any);
+      
+      // Refresh tasks
+      await fetchData();
+      
+      // Reset form
+      setNewMeeting({
+        name: '',
+        description: '',
+        start_date: '',
+        start_time: '',
+        end_time: '',
+        priority: 'medium',
+      });
+      setShowCreateMeeting(false);
+    } catch (err) {
+      console.error('Error creating meeting:', err);
+      alert('Failed to create meeting');
     }
   };
 
@@ -2409,18 +2467,10 @@ export default function CalendarPage() {
               </div>
               
               <div className="calendar-body">
-                {/* Empty cells for days before the first day of the month */}
-                {Array.from({ length: firstDay }, (_, index) => {
-                  const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
-                  const prevMonthDays = getDaysInMonth(prevMonth);
-                  const dayNumber = prevMonthDays - firstDay + index + 1;
-                  
-                  return (
-                    <div key={`prev-${index}`} className="calendar-cell other-month">
-                      <div className="day-number">{dayNumber}</div>
-                    </div>
-                  );
-                })}
+                {/* Empty cells for alignment only - no content */}
+                {Array.from({ length: firstDay }, (_, index) => (
+                  <div key={`empty-${index}`} style={{ minHeight: '140px' }} />
+                ))}
                 
                 {/* Days of the current month */}
                 {Array.from({ length: daysInMonth }, (_, index) => {
@@ -2433,15 +2483,21 @@ export default function CalendarPage() {
                   const dayTasks = getTasksForDate(cellDate);
                   
                   return (
-                    <div key={dayNumber} className={`calendar-cell ${isToday ? 'today' : ''}`}>
+                    <div 
+                      key={dayNumber} 
+                      className={`calendar-cell ${isToday ? 'today' : ''}`}
+                      onClick={() => handleDayClick(cellDate)}
+                    >
                       <div className="day-number">{dayNumber}</div>
                       <div className="events-container">
                         {(dayTasks || []).slice(0, 3).map((task) => (
                           <div
                             key={task.id}
                             className={`task-item ${task.is_important ? 'important' : ''} ${isOverdue(task.due_date) ? 'overdue' : ''}`}
-                            style={{ borderLeft: `3px solid ${getStatusColor(task.status)}` }}
-                            onClick={() => handleTaskModalOpen(task)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTaskModalOpen(task);
+                            }}
                           >
                             <div className="task-header">
                               <span className="task-name">{task.name}</span>
@@ -2478,17 +2534,6 @@ export default function CalendarPage() {
                     </div>
                   );
                 })}
-                
-                {/* Fill remaining cells with next month's days */}
-                {Array.from({ length: 42 - (firstDay + daysInMonth) }, (_, index) => {
-                  const dayNumber = index + 1;
-                  
-                  return (
-                    <div key={`next-${index}`} className="calendar-cell other-month">
-                      <div className="day-number">{dayNumber}</div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
             ) : calendarView === 'week' ? (
@@ -2511,6 +2556,7 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={dayIndex}
+                        onClick={() => handleDayClick(weekStart)}
                         style={{
                           background: '#141414',
                           borderRadius: '24px',
@@ -2520,6 +2566,13 @@ export default function CalendarPage() {
                           transition: 'all 0.3s ease',
                           display: 'flex',
                           flexDirection: 'column',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isToday) e.currentTarget.style.borderColor = '#3D3D3D';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isToday) e.currentTarget.style.borderColor = '#2D2D2D';
                         }}
                       >
                         {/* Day name */}
@@ -2549,7 +2602,10 @@ export default function CalendarPage() {
                           {dayTasks.slice(0, 4).map((task) => (
                             <div
                               key={task.id}
-                              onClick={() => handleTaskModalOpen(task)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTaskModalOpen(task);
+                              }}
                               style={{
                                 background: task.priority === 'high' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' :
                                            task.priority === 'urgent' ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' :
@@ -2602,7 +2658,10 @@ export default function CalendarPage() {
                               padding: '0.5rem',
                               cursor: 'pointer'
                             }}
-                            onClick={() => handleShowMoreTasks(weekStart, dayTasks)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShowMoreTasks(weekStart, dayTasks);
+                            }}
                             >
                               +{dayTasks.length - 4} more
                             </div>
@@ -2616,7 +2675,12 @@ export default function CalendarPage() {
                 {/* Add Task Button */}
                 <button
                   onClick={() => {
-                    // Handle add task
+                    setSelectedDayDate(new Date());
+                    setNewMeeting({ 
+                      ...newMeeting, 
+                      start_date: new Date().toISOString().split('T')[0] 
+                    });
+                    setShowCreateMeeting(true);
                   }}
                   style={{
                     background: '#3B82F6',
@@ -2790,6 +2854,271 @@ export default function CalendarPage() {
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Create Meeting Modal */}
+            {showCreateMeeting && (
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'rgba(0,0,0,0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 100,
+                }}
+                onClick={() => setShowCreateMeeting(false)}
+              >
+                <div
+                  style={{
+                    background: '#1A1A1A',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    width: '500px',
+                    maxWidth: '90vw',
+                    border: '1px solid #2D2D2D',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 style={{ 
+                    color: '#FFFFFF', 
+                    fontSize: '1.25rem', 
+                    fontWeight: 600, 
+                    marginBottom: '20px' 
+                  }}>
+                    Create Meeting
+                    {selectedDayDate && (
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: 400, 
+                        color: '#71717A', 
+                        marginTop: '4px' 
+                      }}>
+                        {selectedDayDate.toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          month: 'long', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </div>
+                    )}
+                  </h3>
+                  
+                  {/* Meeting Name */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      color: '#A1A1AA', 
+                      fontSize: '0.875rem', 
+                      marginBottom: '8px' 
+                    }}>
+                      Meeting Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newMeeting.name}
+                      onChange={(e) => setNewMeeting({ ...newMeeting, name: e.target.value })}
+                      placeholder="Enter meeting name"
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        background: '#141414',
+                        border: '1px solid #3D3D3D',
+                        borderRadius: '8px',
+                        color: '#FFFFFF',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    />
+                  </div>
+                  
+                  {/* Description */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      color: '#A1A1AA', 
+                      fontSize: '0.875rem', 
+                      marginBottom: '8px' 
+                    }}>
+                      Description
+                    </label>
+                    <textarea
+                      value={newMeeting.description}
+                      onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
+                      placeholder="Add description..."
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        background: '#141414',
+                        border: '1px solid #3D3D3D',
+                        borderRadius: '8px',
+                        color: '#FFFFFF',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        resize: 'vertical',
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    />
+                  </div>
+                  
+                  {/* Time Fields */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        color: '#A1A1AA', 
+                        fontSize: '0.875rem', 
+                        marginBottom: '8px' 
+                      }}>
+                        Start Time
+                      </label>
+                      <input
+                        type="time"
+                        value={newMeeting.start_time}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, start_time: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
+                          borderRadius: '8px',
+                          color: '#FFFFFF',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          colorScheme: 'dark',
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        color: '#A1A1AA', 
+                        fontSize: '0.875rem', 
+                        marginBottom: '8px' 
+                      }}>
+                        End Time
+                      </label>
+                      <input
+                        type="time"
+                        value={newMeeting.end_time}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, end_time: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
+                          borderRadius: '8px',
+                          color: '#FFFFFF',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          colorScheme: 'dark',
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Priority */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      color: '#A1A1AA', 
+                      fontSize: '0.875rem', 
+                      marginBottom: '8px' 
+                    }}>
+                      Priority
+                    </label>
+                    <select
+                      value={newMeeting.priority}
+                      onChange={(e) => setNewMeeting({ ...newMeeting, priority: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        background: '#141414',
+                        border: '1px solid #3D3D3D',
+                        borderRadius: '8px',
+                        color: '#FFFFFF',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => setShowCreateMeeting(false)}
+                      style={{
+                        padding: '10px 20px',
+                        background: 'transparent',
+                        border: '1px solid #3D3D3D',
+                        borderRadius: '8px',
+                        color: '#A1A1AA',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#2D2D2D';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#A1A1AA';
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={createMeeting}
+                      disabled={!newMeeting.name.trim()}
+                      style={{
+                        padding: '10px 20px',
+                        background: newMeeting.name.trim() ? '#3B82F6' : '#3D3D3D',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#FFFFFF',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        cursor: newMeeting.name.trim() ? 'pointer' : 'not-allowed',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (newMeeting.name.trim()) {
+                          e.currentTarget.style.background = '#2563EB';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (newMeeting.name.trim()) {
+                          e.currentTarget.style.background = '#3B82F6';
+                        }
+                      }}
+                    >
+                      Create Meeting
+                    </button>
                   </div>
                 </div>
               </div>
