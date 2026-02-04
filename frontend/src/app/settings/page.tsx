@@ -199,12 +199,7 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'edit-profile', label: 'Edit profile', icon: UserCircleIcon },
     { id: 'password', label: 'Password', icon: KeyIcon },
-    { id: 'notifications', label: 'Notifications', icon: BellIcon },
-    { id: 'chat-export', label: 'Chat export', icon: ChatBubbleLeftRightIcon },
     { id: 'sessions', label: 'Sessions', icon: ComputerDesktopIcon },
-    { id: 'applications', label: 'Applications', icon: Squares2X2Icon },
-    { id: 'team', label: 'Team', icon: UserGroupIcon },
-    { id: 'appearance', label: 'Appearance', icon: PaintBrushIcon },
   ];
 
   if (authLoading) {
@@ -726,61 +721,6 @@ export default function SettingsPage() {
                 >
                   Sign out all devices
                 </button>
-              </div>
-            )}
-
-            {activeTab === 'notifications' && (
-              <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '2rem' }}>
-                  Notifications
-                </h2>
-                <p style={{ color: '#71717A', marginBottom: '2rem' }}>
-                  Coming soon - notification preferences
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'chat-export' && (
-              <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '2rem' }}>
-                  Chat export
-                </h2>
-                <p style={{ color: '#71717A', marginBottom: '2rem' }}>
-                  Coming soon - export your chat history
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'applications' && (
-              <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '2rem' }}>
-                  Applications
-                </h2>
-                <p style={{ color: '#71717A', marginBottom: '2rem' }}>
-                  Coming soon - manage connected applications
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'team' && (
-              <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '2rem' }}>
-                  Team
-                </h2>
-                <p style={{ color: '#71717A', marginBottom: '2rem' }}>
-                  Coming soon - team settings
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'appearance' && (
-              <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '2rem' }}>
-                  Appearance
-                </h2>
-                <p style={{ color: '#71717A', marginBottom: '2rem' }}>
-                  Currently using dark theme
-                </p>
               </div>
             )}
           </div>

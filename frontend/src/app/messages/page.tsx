@@ -218,17 +218,38 @@ export default function MessagesPage() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user?.id) return;
     
+    const messageText = newMessage.trim();
+    setNewMessage(''); // Clear input immediately
+    
     try {
+      // Add optimistic message immediately
+      const optimisticMessage = {
+        id: Date.now(), // Temporary ID
+        conversation_id: selectedConversation,
+        sender_id: user.id,
+        sender_name: user.name || 'You',
+        message_text: messageText,
+        created_at: new Date().toISOString(),
+        is_deleted: false,
+        deleted_for_everyone: false,
+        deleted_by_user_ids: []
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      
+      // Send to database
       await supabase.rpc('send_message', {
         conversation_id_param: selectedConversation,
         sender_id_param: user.id,
-        message_text_param: newMessage.trim()
+        message_text_param: messageText
       });
       
-      setNewMessage('');
-      // Real-time subscription will handle adding the message
+      // Refresh to get actual message with correct ID
+      setTimeout(() => fetchMessages(selectedConversation), 500);
     } catch (error) {
-      // Error
+      console.error('Error sending message:', error);
+      // Remove optimistic message on error
+      fetchMessages(selectedConversation);
     }
   };
 
@@ -272,16 +293,8 @@ export default function MessagesPage() {
         <div style={{ width: '320px', background: '#141414', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
           <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #1F1F1F' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Chats</h2>
-              <button
-                onClick={() => setShowCreateGroup(true)}
-                style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '50%', color: '#FFFFFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
-              >
-                <PlusIcon style={{ width: '18px', height: '18px' }} />
-              </button>
+            <div style={{ marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Messaging</h2>
             </div>
             <input
               type="text"
@@ -400,21 +413,58 @@ export default function MessagesPage() {
                       <div 
                         style={{ 
                           position: 'relative',
-                          padding: '0.875rem 1.125rem', 
-                          background: isMe ? '#3B82F6' : '#2D2D2D', 
-                          color: '#FFFFFF', 
-                          borderRadius: '1rem',
-                          fontSize: '0.9375rem',
-                          lineHeight: 1.5
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          if (confirm(`Delete this message ${isMe ? 'for everyone or just for you?' : 'for you'}?\n\nClick OK to delete for ${isMe ? 'everyone' : 'yourself'}`)) {
-                            deleteMessage(message.id, isMe);
-                          }
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
                         }}
                       >
-                        {message.message_text}
+                        <div
+                          style={{ 
+                            padding: '0.875rem 1.125rem', 
+                            background: isMe ? '#3B82F6' : '#2D2D2D', 
+                            color: '#FFFFFF', 
+                            borderRadius: '1rem',
+                            fontSize: '0.9375rem',
+                            lineHeight: 1.5,
+                            flex: 1
+                          }}
+                        >
+                          {message.message_text}
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete this message ${isMe ? 'for everyone?' : 'for you?'}`)) {
+                              deleteMessage(message.id, isMe);
+                            }
+                          }}
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            color: '#EF4444',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            opacity: 0.7,
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                            e.currentTarget.style.background = '#EF4444';
+                            e.currentTarget.style.color = '#FFFFFF';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = '0.7';
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                            e.currentTarget.style.color = '#EF4444';
+                          }}
+                        >
+                          <TrashIcon style={{ width: '12px', height: '12px' }} />
+                        </button>
                       </div>
                       {isMe && (
                         <span style={{ fontSize: '0.75rem', color: '#71717A', textAlign: 'right', marginRight: '0.75rem' }}>
@@ -431,16 +481,13 @@ export default function MessagesPage() {
             {/* Message Input */}
             <div style={{ padding: '1.25rem 1.5rem', background: '#141414', borderTop: '1px solid #1F1F1F' }}>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
-                <button style={{ width: '40px', height: '40px', background: '#2D2D2D', border: 'none', borderRadius: '50%', color: '#FFFFFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <PlusIcon style={{ width: '20px', height: '20px' }} />
-                </button>
                 <div style={{ flex: 1, background: '#2D2D2D', borderRadius: '1.25rem', padding: '0.875rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                    placeholder="Type something..."
+                    placeholder="Write a message..."
                     style={{ flex: 1, background: 'none', border: 'none', color: '#FFFFFF', fontSize: '0.9375rem', outline: 'none' }}
                   />
                 </div>
