@@ -580,7 +580,7 @@ export default function PersonalPage() {
   // Convert Y position to time
   const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
     const relativeY = y - containerTop;
-    const hourHeight = 60; // 60px per hour
+    const hourHeight = 80; // 80px per hour for larger calendar boxes
     const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
     const hour = Math.floor(totalMinutes / 60);
     const minute = Math.round((totalMinutes % 60) / 15) * 15; // Snap to 15-min intervals
@@ -2844,7 +2844,7 @@ export default function PersonalPage() {
                     style={{ 
                       display: 'grid',
                       gridTemplateColumns: '80px repeat(7, 1fr)',
-                      minHeight: '900px',
+                      minHeight: '1280px',
                     }}
                   >
                     {/* Time labels column */}
@@ -2853,11 +2853,11 @@ export default function PersonalPage() {
                         <div
                           key={hour}
                           style={{
-                            height: '60px',
-                            padding: '8px 12px',
-                            fontSize: '12px',
+                            height: '80px',
+                            padding: '10px 14px',
+                            fontSize: '13px',
                             fontWeight: 500,
-                            color: '#52525B',
+                            color: '#71717A',
                             textAlign: 'right',
                             borderBottom: '1px solid #1F1F1F',
                           }}
@@ -2884,7 +2884,7 @@ export default function PersonalPage() {
                             const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
                             if (!rect) return;
                             const relativeY = e.clientY - rect.top;
-                            const hourHeight = 60;
+                            const hourHeight = 80;
                             const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
                             const hour = Math.floor(totalMinutes / 60) + 7;
                             const minute = Math.round((totalMinutes % 60) / 15) * 15;
@@ -2901,7 +2901,7 @@ export default function PersonalPage() {
                             <div
                               key={hour}
                               style={{
-                                height: '60px',
+                                height: '80px',
                                 borderBottom: '1px solid #1F1F1F',
                               }}
                             />
@@ -2911,9 +2911,9 @@ export default function PersonalPage() {
                           {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
                             const startMinutes = (dragStart.hour - 7) * 60 + dragStart.minute;
                             const endMinutes = (dragEnd.hour - 7) * 60 + dragEnd.minute;
-                            const pxPerMinute = 60 / 60;
+                            const pxPerMinute = 80 / 60;
                             const top = Math.min(startMinutes, endMinutes) * pxPerMinute;
-                            const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 20);
+                            const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 30);
                             return (
                               <div
                                 style={{ 
@@ -2950,9 +2950,9 @@ export default function PersonalPage() {
                             return dayBlocks.map((block, blockIdx) => {
                               const [startHour, startMin] = block.startTime.split(':').map(Number);
                               const [endHour, endMin] = block.endTime.split(':').map(Number);
-                              const pxPerMinute = 60 / 60;
+                              const pxPerMinute = 80 / 60;
                               const top = ((startHour - 7) * 60 + startMin) * pxPerMinute;
-                              const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 40);
+                              const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 50);
                               
                               // Use colorful palette based on block type or index
                               const colorIndex = block.type ? 
@@ -3866,9 +3866,10 @@ export default function PersonalPage() {
             {/* Meetings Box */}
             <div
                         style={{ 
-                background: '#fff',
+                background: '#1A1A1A',
                 marginTop: '16px',
                 borderRadius: '16px',
+                border: '1px solid #2D2D2D',
                 border: '1px solid #e2e8f0',
                 overflow: 'hidden',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
@@ -3976,17 +3977,17 @@ export default function PersonalPage() {
             width: '32px',
             height: '32px',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            background: '#fff',
+            border: '1px solid #2D2D2D',
+            background: '#1F1F1F',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
             zIndex: 50,
           }}
         >
-          <ChevronLeftIcon style={{ width: '14px', height: '14px', color: '#6b7280' }} />
+          <ChevronLeftIcon style={{ width: '14px', height: '14px', color: '#71717A' }} />
         </motion.button>
       )}
 
