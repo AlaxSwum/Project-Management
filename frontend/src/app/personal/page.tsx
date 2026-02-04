@@ -2085,7 +2085,7 @@ export default function PersonalPage() {
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : (sidebarCollapsed ? '72px' : '256px'),
           marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
-          background: '#f8f9fa',
+          background: '#0D0D0D',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
       >
@@ -2096,8 +2096,8 @@ export default function PersonalPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
               style={{
             padding: '20px 32px',
-            background: '#fff',
-            borderBottom: '1px solid #e5e7eb',
+            background: '#141414',
+            borderBottom: '1px solid #2D2D2D',
             position: 'sticky',
             top: 0,
             zIndex: 100,
@@ -2114,7 +2114,7 @@ export default function PersonalPage() {
                   style={{
                     fontSize: '24px',
                     fontWeight: '700',
-                    color: '#111827',
+                    color: '#FFFFFF',
                     letterSpacing: '-0.025em',
                     margin: 0,
                   }}
@@ -2136,14 +2136,14 @@ export default function PersonalPage() {
                       alignItems: 'center',
                       gap: '12px',
                       padding: '8px 16px',
-                      background: progress.percentage >= 100 ? 'rgba(34, 197, 94, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                      background: progress.percentage >= 100 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
                       borderRadius: '24px',
                     }}
                   >
         <div style={{ 
                       width: '100px', 
                       height: '6px', 
-                      background: 'rgba(0,0,0,0.08)', 
+                      background: 'rgba(255,255,255,0.1)', 
                       borderRadius: '3px',
                       overflow: 'hidden',
                     }}>
@@ -2176,10 +2176,11 @@ export default function PersonalPage() {
               <div
                 style={{
                   display: 'flex',
-                  background: '#f3f4f6',
+                  background: '#1F1F1F',
                   borderRadius: '10px',
                   padding: '3px',
                   position: 'relative',
+                  border: '1px solid #2D2D2D',
                 }}
               >
                 {/* Sliding Background Indicator */}
@@ -2191,9 +2192,9 @@ export default function PersonalPage() {
                     top: '3px',
                     bottom: '3px',
                     width: 'calc(33.33% - 2px)',
-                    background: '#fff',
+                    background: '#3B82F6',
                     borderRadius: '8px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                   }}
                   animate={{
                     left: viewMode === 'day' ? '3px' : viewMode === 'week' ? 'calc(33.33% + 1px)' : 'calc(66.66% - 1px)',
@@ -2213,7 +2214,7 @@ export default function PersonalPage() {
                       borderRadius: '7px',
                       cursor: 'pointer',
                       background: 'transparent',
-                      color: viewMode === mode ? '#111827' : '#6b7280',
+                      color: viewMode === mode ? '#FFFFFF' : '#71717A',
                       textTransform: 'capitalize',
                       position: 'relative',
                       zIndex: 1,
@@ -2240,8 +2241,8 @@ export default function PersonalPage() {
                   border: '1px solid #10b981',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-                  color: '#065f46',
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  color: '#10B981',
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -2308,13 +2309,13 @@ export default function PersonalPage() {
             justifyContent: 'space-between', 
               marginTop: '16px',
               paddingTop: '16px',
-              borderTop: '1px solid #f3f4f6',
+              borderTop: '1px solid #2D2D2D',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <motion.button
                 onClick={() => navigate('prev')}
-                whileHover={{ scale: 1.05, background: '#e5e7eb' }}
+                whileHover={{ scale: 1.05, background: '#2D2D2D' }}
                 whileTap={{ scale: 0.95 }}
                 style={{
                   width: '32px',
@@ -2322,11 +2323,11 @@ export default function PersonalPage() {
               display: 'flex', 
             alignItems: 'center', 
                   justifyContent: 'center',
-                  border: 'none',
+                  border: '1px solid #2D2D2D',
                   borderRadius: '8px',
-                  background: '#f3f4f6',
+                  background: '#1F1F1F',
                   cursor: 'pointer',
-                  color: '#374151',
+                  color: '#A1A1AA',
                   transition: 'background 0.15s ease',
                 }}
               >
@@ -2340,7 +2341,7 @@ export default function PersonalPage() {
                 style={{
                   fontSize: '16px',
                   fontWeight: '600',
-                  color: '#111827',
+                  color: '#FFFFFF',
                   margin: 0,
                   minWidth: '180px',
                   textAlign: 'center',
@@ -2365,7 +2366,7 @@ export default function PersonalPage() {
               
               <motion.button
                 onClick={() => navigate('next')}
-                whileHover={{ scale: 1.05, background: '#e5e7eb' }}
+                whileHover={{ scale: 1.05, background: '#2D2D2D' }}
                 whileTap={{ scale: 0.95 }}
                 style={{
                   width: '32px',
@@ -2373,11 +2374,11 @@ export default function PersonalPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: 'none',
+                  border: '1px solid #2D2D2D',
                   borderRadius: '8px',
-                  background: '#f3f4f6',
+                  background: '#1F1F1F',
                   cursor: 'pointer',
-                  color: '#374151',
+                  color: '#A1A1AA',
                   transition: 'background 0.15s ease',
                 }}
               >
@@ -2387,17 +2388,17 @@ export default function PersonalPage() {
 
             <motion.button
               onClick={() => setCurrentDate(new Date())}
-              whileHover={{ scale: 1.02, background: '#f3f4f6' }}
+              whileHover={{ scale: 1.02, background: '#2D2D2D' }}
               whileTap={{ scale: 0.98 }}
               style={{
                 padding: '7px 14px',
                 fontSize: '12px',
                 fontWeight: '500',
-                border: '1px solid #e5e7eb',
+                border: '1px solid #2D2D2D',
                 borderRadius: '6px',
-                background: '#fff',
+                background: '#10B981',
                 cursor: 'pointer',
-                color: '#1d1d1f',
+                color: '#FFFFFF',
               }}
             >
               Today
@@ -2444,10 +2445,10 @@ export default function PersonalPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
-                    background: '#fff',
+                    background: '#1A1A1A',
                     borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    border: '1px solid #2D2D2D',
                     overflow: 'hidden',
                   }}
                 >
@@ -2466,7 +2467,7 @@ export default function PersonalPage() {
                         key={hour}
                         style={{
                           display: 'flex',
-                          borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                          borderBottom: '1px solid #2D2D2D',
                           minHeight: '60px',
                         }}
                       >
@@ -2476,7 +2477,7 @@ export default function PersonalPage() {
                             padding: '8px 16px',
                             fontSize: '12px',
                             fontWeight: '500',
-                            color: '#86868b',
+                            color: '#71717A',
                             textAlign: 'right',
                             flexShrink: 0,
                             pointerEvents: 'none',
@@ -2487,7 +2488,7 @@ export default function PersonalPage() {
                         <div
                           style={{
                             flex: 1,
-                            borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
+                            borderLeft: '1px solid #2D2D2D',
                             position: 'relative',
                           }}
                         />
@@ -2772,10 +2773,10 @@ export default function PersonalPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
-                    background: '#fff',
+                    background: '#1A1A1A',
                     borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    border: '1px solid #2D2D2D',
                     overflow: 'auto',
                     maxHeight: 'calc(100vh - 180px)',
                     display: 'flex',
@@ -2787,8 +2788,8 @@ export default function PersonalPage() {
                     style={{
                       display: 'grid',
                       gridTemplateColumns: '80px repeat(7, 1fr)',
-                      borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-                      background: '#fff',
+                      borderBottom: '1px solid #2D2D2D',
+                      background: '#141414',
                       position: 'sticky',
                       top: 0,
                       zIndex: 20,
@@ -2804,14 +2805,14 @@ export default function PersonalPage() {
                 style={{
                             padding: '16px',
                             textAlign: 'center',
-                            borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
+                            borderLeft: '1px solid #2D2D2D',
                           }}
                         >
                           <div
                             style={{
                               fontSize: '12px',
                               fontWeight: '500',
-                              color: '#86868b',
+                              color: '#71717A',
                               textTransform: 'uppercase',
                               letterSpacing: '0.5px',
                             }}
@@ -2822,8 +2823,8 @@ export default function PersonalPage() {
                             style={{
                               fontSize: '24px',
                   fontWeight: '600',
-                              color: isToday ? '#fff' : '#1d1d1f',
-                              background: isToday ? '#0071e3' : 'transparent',
+                              color: isToday ? '#fff' : '#FFFFFF',
+                              background: isToday ? '#3B82F6' : 'transparent',
                               borderRadius: '50%',
                               width: '40px',
                               height: '40px',
@@ -2849,7 +2850,7 @@ export default function PersonalPage() {
                     }}
                   >
                     {/* Time labels column */}
-                    <div style={{ borderRight: '1px solid rgba(0, 0, 0, 0.04)' }}>
+                    <div style={{ borderRight: '1px solid #2D2D2D' }}>
                       {hours.map((hour) => (
                         <div
                           key={hour}
@@ -2857,9 +2858,9 @@ export default function PersonalPage() {
                             height: '50px',
                       padding: '4px 8px',
                             fontSize: '11px',
-                            color: '#86868b',
+                            color: '#71717A',
                             textAlign: 'right',
-                            borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                            borderBottom: '1px solid #2D2D2D',
                           }}
                         >
                           {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
@@ -3040,10 +3041,10 @@ export default function PersonalPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
-                    background: '#fff',
+                    background: '#1A1A1A',
                     borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    border: '1px solid #2D2D2D',
                     overflow: 'hidden',
                   }}
                 >
@@ -3052,7 +3053,8 @@ export default function PersonalPage() {
                     style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(7, 1fr)',
-                      borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                      borderBottom: '1px solid #2D2D2D',
+                      background: '#141414',
                     }}
                   >
                     {weekDays.map((day) => (
@@ -3063,7 +3065,7 @@ export default function PersonalPage() {
                           textAlign: 'center',
                           fontSize: '12px',
                         fontWeight: '600',
-                          color: '#86868b',
+                          color: '#71717A',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                         }}
@@ -3088,7 +3090,7 @@ export default function PersonalPage() {
                       return (
                         <motion.div
                           key={index}
-                          whileHover={{ background: 'rgba(0, 0, 0, 0.02)' }}
+                          whileHover={{ background: 'rgba(255, 255, 255, 0.03)' }}
                           onClick={() => {
                             setCurrentDate(day);
                             setViewMode('day');
@@ -3096,8 +3098,8 @@ export default function PersonalPage() {
                           style={{ 
                             minHeight: '100px',
                             padding: '8px',
-                            borderRight: (index + 1) % 7 !== 0 ? '1px solid rgba(0, 0, 0, 0.04)' : 'none',
-                            borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                            borderRight: (index + 1) % 7 !== 0 ? '1px solid #2D2D2D' : 'none',
+                            borderBottom: '1px solid #2D2D2D',
                             cursor: 'pointer',
                             opacity: isCurrentMonth ? 1 : 0.4,
                           }}
@@ -3106,8 +3108,8 @@ export default function PersonalPage() {
                             style={{
                               fontSize: '14px',
                               fontWeight: '500',
-                              color: isToday ? '#fff' : '#1d1d1f',
-                              background: isToday ? '#0071e3' : 'transparent',
+                              color: isToday ? '#fff' : '#FFFFFF',
+                              background: isToday ? '#3B82F6' : 'transparent',
                               borderRadius: '50%',
                               width: '28px',
                               height: '28px',
