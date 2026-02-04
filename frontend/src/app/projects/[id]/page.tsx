@@ -780,10 +780,15 @@ export default function ProjectDetailPage() {
         throw error;
       }
       
-      // Refresh project to get latest data
-      await fetchProject();
+      // Update local state immediately
+      setProject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: (prev.members || []).filter(m => m.id !== userId)
+        };
+      });
       
-      alert('Member removed successfully!');
     } catch (err) {
       console.error('Error removing member:', err);
       alert('Failed to remove member. Please try again.');
