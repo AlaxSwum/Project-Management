@@ -780,19 +780,10 @@ export default function ProjectDetailPage() {
         throw error;
       }
       
-      // Also update the members JSON in projects_project table
-      const updatedMembers = project.members?.filter(m => m.id !== userId) || [];
-      const { error: updateError } = await supabase
-        .from('projects_project')
-        .update({ members: updatedMembers })
-        .eq('id', project.id);
-      
-      if (updateError) {
-        console.error('Error updating members JSON:', updateError);
-      }
-      
       // Refresh project to get latest data
       await fetchProject();
+      
+      alert('Member removed successfully!');
     } catch (err) {
       console.error('Error removing member:', err);
       alert('Failed to remove member. Please try again.');
