@@ -25,12 +25,14 @@ import {
   MapIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
+import UserAvatar, { AvatarGroup } from '@/components/UserAvatar';
 
 interface User {
   id: number;
   name: string;
   email: string;
   role: string;
+  avatar_url?: string;
 }
 
 interface Subtask {
@@ -870,46 +872,7 @@ n              {/* Team Members Button - Avatar Style */}
                 }}
               >
                 <div style={{ display: 'flex' }}>
-                  {project.members?.slice(0, 3).map((member, i) => (
-                    <div 
-                      key={member.id}
-                      style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        borderRadius: '50%', 
-                        border: '2px solid #0D0D0D', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        fontSize: '0.75rem', 
-                        fontWeight: 600, 
-                        color: '#FFFFFF', 
-                        backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6'][i % 3], 
-                        marginLeft: i > 0 ? '-8px' : '0',
-                        transition: 'transform 0.2s'
-                      }}
-                    >
-                      {member.name.charAt(0)}
-                    </div>
-                  ))}
-                  {project.members && project.members.length > 3 && (
-                    <div style={{ 
-                      width: '32px', 
-                      height: '32px', 
-                      borderRadius: '50%', 
-                      border: '2px solid #0D0D0D', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      fontSize: '0.6875rem', 
-                      fontWeight: 600,
-                      color: '#FFFFFF', 
-                      backgroundColor: '#2D2D2D', 
-                      marginLeft: '-8px' 
-                    }}>
-                      +{project.members.length - 3}
-                    </div>
-                  )}
+                  <AvatarGroup users={project.members || []} max={3} size="md" />
                 </div>
                 </button>
                   <button
@@ -1885,32 +1848,7 @@ n              {/* Team Members Button - Avatar Style */}
                                         {/* Assignee */}
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
                               {task.assignees && task.assignees.length > 0 ? (
-                                            <div style={{ display: 'flex' }}>
-                                              {task.assignees.slice(0, 3).map((assignee, i) => (
-                                    <div 
-                                      key={assignee.id}
-                                                  style={{ 
-                                                    width: '28px', 
-                                                    height: '28px', 
-                                                    borderRadius: '50%', 
-                                                    border: '2px solid #0D0D0D', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'center', 
-                                                    fontSize: '0.6875rem', 
-                                                    fontWeight: 600, 
-                                                    color: '#FFFFFF', 
-                                                    backgroundColor: ['#3B82F6', '#EC4899', '#8B5CF6'][i % 3], 
-                                                    marginLeft: i > 0 ? '-8px' : '0',
-                                                    position: 'relative',
-                                                    zIndex: 3 - i
-                                                  }}
-                                      title={assignee.name}
-                                    >
-                                                  {assignee.name.charAt(0).toUpperCase()}
-                    </div>
-                  ))}
-                    </div>
+                                            <AvatarGroup users={task.assignees} max={3} size="sm" />
                               ) : (
                                             <span style={{ color: '#52525B', fontSize: '0.8125rem' }}>-</span>
                                           )}

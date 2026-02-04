@@ -210,7 +210,7 @@ export const supabaseDb = {
               .from('projects_project_members')
               .select(`
                 user_id,
-                auth_user(id, name, email, role)
+                auth_user(id, name, email, role, avatar_url)
               `)
               .eq('project_id', project.id)
             
@@ -438,11 +438,11 @@ export const supabaseDb = {
       const enrichedData = await Promise.all(
         data.map(async (task) => {
           const assigneesPromise = task.assignee_ids && task.assignee_ids.length > 0
-            ? supabase.from('auth_user').select('id, name, email, role').in('id', task.assignee_ids)
+            ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', task.assignee_ids)
             : Promise.resolve({ data: [] });
           
           const createdByPromise = task.created_by_id
-            ? supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
+            ? supabase.from('auth_user').select('id, name, email, avatar_url').eq('id', task.created_by_id).single()
             : Promise.resolve({ data: null });
 
           const [assigneesResult, createdByResult] = await Promise.all([assigneesPromise, createdByPromise]);
@@ -594,7 +594,7 @@ export const supabaseDb = {
 
       // ✅ Enrich the task with user data before returning
       const assignees = taskData.assignee_ids && taskData.assignee_ids.length > 0 ? 
-        await supabase.from('auth_user').select('id, name, email, role').in('id', taskData.assignee_ids) : 
+        await supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', taskData.assignee_ids) : 
         { data: [] };
 
       const enrichedTask = {
@@ -643,7 +643,7 @@ export const supabaseDb = {
 
       // ✅ Enrich the updated task with user data like createTask and getTasks do
       const assigneesPromise = updatedTask.assignee_ids && updatedTask.assignee_ids.length > 0
-        ? supabase.from('auth_user').select('id, name, email, role').in('id', updatedTask.assignee_ids)
+        ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', updatedTask.assignee_ids)
         : Promise.resolve({ data: [] });
       
       const createdByPromise = updatedTask.created_by_id
@@ -797,7 +797,7 @@ export const supabaseDb = {
           ? supabase.from('projects_project').select('id, name').in('id', projectIds)
           : Promise.resolve({ data: [] }),
         creatorIds.length > 0
-          ? supabase.from('auth_user').select('id, name, email').in('id', creatorIds)
+          ? supabase.from('auth_user').select('id, name, email, avatar_url').in('id', creatorIds)
           : Promise.resolve({ data: [] })
       ]);
       
@@ -1250,7 +1250,7 @@ export const supabaseDb = {
   getContentCalendarMembers: async () => {
     try {
       // Use direct HTTP request to bypass RLS issues
-      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?select=*,auth_user(id,name,email,role,is_superuser,is_staff)`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?select=*,auth_user(id,name,email,role,avatar_url,is_superuser,is_staff)`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
