@@ -45,6 +45,12 @@ interface Project {
   color?: string;
   task_count?: number;
   completed_task_count?: number;
+  members?: Array<{
+    id: number;
+    name: string;
+    email: string;
+    role?: string;
+  }>;
 }
 
 interface Task {
