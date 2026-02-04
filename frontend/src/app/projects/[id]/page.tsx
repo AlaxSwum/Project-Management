@@ -173,7 +173,7 @@ export default function ProjectDetailPage() {
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [editingMemberRole, setEditingMemberRole] = useState<string>('');
   const [customRoleInput, setCustomRoleInput] = useState<string>('');
-  const [ganttViewMode, setGanttViewMode] = useState<'week' | 'month' | 'year'>('week');
+  const [ganttViewMode, setGanttViewMode] = useState<'week' | 'month'>('month');
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
   const [enteredTags, setEnteredTags] = useState<string[]>([]);
@@ -866,7 +866,7 @@ n              {/* Team Members Button - Avatar Style */}
                 <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {/* View Mode Toggle */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D0D', padding: '0.25rem', borderRadius: '0.5rem' }}>
-                    {(['week', 'month', 'year'] as const).map(mode => (
+                    {(['week', 'month'] as const).map(mode => (
                       <button
                         key={mode}
                         onClick={() => setGanttViewMode(mode)}
@@ -894,8 +894,7 @@ n              {/* Team Members Button - Avatar Style */}
                       onClick={() => {
                         const d = new Date(ganttStartDate);
                         if (ganttViewMode === 'week') d.setDate(d.getDate() - 7);
-                        else if (ganttViewMode === 'month') d.setMonth(d.getMonth() - 1);
-                        else d.setFullYear(d.getFullYear() - 1);
+                        else d.setMonth(d.getMonth() - 1);
                         setGanttStartDate(d);
                       }}
                       style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
@@ -916,8 +915,7 @@ n              {/* Team Members Button - Avatar Style */}
                       onClick={() => {
                         const d = new Date(ganttStartDate);
                         if (ganttViewMode === 'week') d.setDate(d.getDate() + 7);
-                        else if (ganttViewMode === 'month') d.setMonth(d.getMonth() + 1);
-                        else d.setFullYear(d.getFullYear() + 1);
+                        else d.setMonth(d.getMonth() + 1);
                         setGanttStartDate(d);
                       }}
                       style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
@@ -928,9 +926,7 @@ n              {/* Team Members Button - Avatar Style */}
                     </button>
                     <div style={{ padding: '0.5rem 1rem', background: '#2D2D2D', borderRadius: '0.5rem', marginLeft: '0.5rem' }}>
                       <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>
-                        {ganttViewMode === 'week' ? ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
-                         ganttViewMode === 'month' ? ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
-                         ganttStartDate.getFullYear()}
+                        {ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
@@ -1043,191 +1039,184 @@ n              {/* Team Members Button - Avatar Style */}
                         })}
                       </div>
                     </div>
-                  ) : ganttViewMode === 'month' ? (
-                    // Month View - Days as rows, dates as columns (Hometender style)
-                    <div style={{ display: 'flex', minHeight: '100%' }}>
-                      {/* Day Labels Column */}
-                      <div style={{ width: '100px', flexShrink: 0, background: '#141414', borderRight: '1px solid #2D2D2D' }}>
-                        <div style={{ height: '48px', borderBottom: '1px solid #2D2D2D' }} />
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
+                  ) : (
+                    // Month View - Elux Space Timeline Style (dates horizontal, tasks floating)
+                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '1rem' }}>
+                      {/* Date Headers - Horizontal Timeline */}
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 0, marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #2D2D2D' }}>
+                        {(() => {
                           const today = new Date();
-                          const todayDayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
-                          const isToday = todayDayOfWeek === i && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
                           
-                          // Find the date for this day of week in the current week
-                          const weekStart = new Date(ganttStartDate);
-                          weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
-                          const dayDate = new Date(weekStart);
-                          dayDate.setDate(dayDate.getDate() + i);
-                          
-                          return (
-                            <div key={i} style={{ height: '80px', padding: '0.75rem', borderBottom: '1px solid #2D2D2D', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: isToday ? '#3B82F610' : 'transparent' }}>
-                              <span style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{day}</span>
-                              <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem' }}>{dayDate.getDate()}/{dayDate.getMonth() + 1}</span>
-                            </div>
-                          );
-                        })}
+                          return Array.from({ length: daysInMonth }, (_, i) => {
+                            const dayNum = i + 1;
+                            const date = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), dayNum);
+                            const dayOfWeek = date.getDay();
+                            const isToday = dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                            
+                            return (
+                              <div key={i} style={{ 
+                                flex: 1,
+                                minWidth: '40px',
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                alignItems: 'center',
+                                gap: '0.25rem'
+                              }}>
+                                <span style={{ color: isWeekend ? '#52525B' : '#71717A', fontSize: '0.6875rem', fontWeight: 500 }}>
+                                  {dayNames[dayOfWeek]}
+                                </span>
+                                <span style={{ 
+                                  color: isToday ? '#FFFFFF' : isWeekend ? '#52525B' : '#A1A1AA', 
+                                  fontSize: '0.8125rem', 
+                                  fontWeight: isToday ? 700 : 500,
+                                  background: isToday ? '#3B82F6' : 'transparent',
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  {dayNum}
+                                </span>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                       
-                      {/* Date Grid with Tasks */}
-                      <div style={{ flex: 1, minWidth: '800px', overflowX: 'auto' }}>
-                        {/* Date Headers - Show dates in month */}
-                        <div style={{ display: 'flex', height: '48px', borderBottom: '1px solid #2D2D2D', background: '#141414' }}>
+                      {/* Task Timeline Area */}
+                      <div style={{ flex: 1, position: 'relative', minHeight: '400px', background: '#141414', borderRadius: '0.75rem', overflow: 'hidden' }}>
+                        {/* Today indicator line */}
+                        {(() => {
+                          const today = new Date();
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          const isCurrentMonth = ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                          if (!isCurrentMonth) return null;
+                          const leftPos = ((today.getDate() - 0.5) / daysInMonth) * 100;
+                          return (
+                            <div style={{ position: 'absolute', left: `${leftPos}%`, top: 0, bottom: 0, width: '2px', background: '#3B82F6', zIndex: 100 }}>
+                              <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.625rem', padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                {today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
+                        {/* Grid lines */}
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', pointerEvents: 'none' }}>
                           {(() => {
                             const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
-                            const today = new Date();
-                            return Array.from({ length: Math.min(daysInMonth, 31) }, (_, i) => {
-                              const dayNum = i + 1;
-                              const isToday = dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
-                              return (
-                                <div key={i} style={{ minWidth: '50px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #2D2D2D', background: isToday ? '#3B82F620' : 'transparent' }}>
-                                  <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem', fontWeight: isToday ? 700 : 500 }}>{dayNum}</span>
-                                </div>
-                              );
-                            });
+                            return Array.from({ length: daysInMonth }, (_, i) => (
+                              <div key={i} style={{ flex: 1, minWidth: '40px', borderRight: '1px solid #1F1F1F' }} />
+                            ));
                           })()}
                         </div>
                         
-                        {/* Day Rows with Task Bars */}
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, dayIdx) => {
-                          const today = new Date();
-                          const todayDayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
-                          const isToday = todayDayOfWeek === dayIdx && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                        {/* Floating Task Bars */}
+                        {(() => {
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          const barColors = ['#10B981', '#F97316', '#8B5CF6', '#EC4899', '#06B6D4', '#F59E0B', '#EF4444', '#3B82F6'];
                           
-                          // Get tasks that fall on this day of week in this month
-                          const dayTasks = filteredTasks.filter(t => {
+                          // Get tasks for this month
+                          const monthTasks = filteredTasks.filter(t => {
                             if (!t.due_date && !t.start_date) return false;
                             const taskDate = t.due_date ? new Date(t.due_date) : new Date(t.start_date!);
-                            const taskDayOfWeek = taskDate.getDay() === 0 ? 6 : taskDate.getDay() - 1;
-                            return taskDayOfWeek === dayIdx && taskDate.getMonth() === ganttStartDate.getMonth() && taskDate.getFullYear() === ganttStartDate.getFullYear();
+                            return taskDate.getMonth() === ganttStartDate.getMonth() && taskDate.getFullYear() === ganttStartDate.getFullYear();
                           });
                           
-                          const barColors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'];
-                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
-                          
-                          return (
-                            <div key={dayIdx} style={{ display: 'flex', height: '80px', borderBottom: '1px solid #2D2D2D', position: 'relative', background: isToday ? '#3B82F608' : 'transparent' }}>
-                              {/* Grid lines */}
-                              {Array.from({ length: Math.min(daysInMonth, 31) }, (_, i) => {
-                                const dayNum = i + 1;
-                                const isTodayCol = dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
-                                return (
-                                  <div key={i} style={{ minWidth: '50px', flex: 1, borderRight: '1px solid #1F1F1F', background: isTodayCol ? '#3B82F610' : 'transparent' }} />
-                                );
-                              })}
-                              
-                              {/* Task bars */}
-                              {dayTasks.slice(0, 3).map((task, taskIdx) => {
-                                const barColor = barColors[taskIdx % barColors.length];
-                                const taskDate = task.due_date ? new Date(task.due_date) : new Date(task.start_date!);
-                                const dayNum = taskDate.getDate();
-                                const startDate = task.start_date ? new Date(task.start_date) : new Date(taskDate);
-                                startDate.setDate(startDate.getDate() - 3); // Default 3 day span if no start
-                                const startDay = Math.max(1, startDate.getDate());
-                                const endDay = dayNum;
-                                const leftPos = ((startDay - 1) / daysInMonth) * 100;
-                                const width = Math.max(((endDay - startDay + 1) / daysInMonth) * 100, 8);
-                                
-                                return (
-                                  <div
-                                    key={task.id}
-                                    onClick={() => setSelectedTask(task)}
-                                    style={{
-                                      position: 'absolute',
-                                      top: `${15 + taskIdx * 22}px`,
-                                      left: `${leftPos}%`,
-                                      width: `${width}%`,
-                                      height: '36px',
-                                      background: barColor,
-                                      borderRadius: '1rem',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      padding: '0 0.75rem',
-                                      gap: '0.5rem',
-                                      cursor: 'pointer',
-                                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                                      zIndex: taskIdx + 1,
-                                      transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.zIndex = '100'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.zIndex = String(taskIdx + 1); }}
-                                  >
-                                    {task.assignees?.[0] && (
-                                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#FFFFFF', border: `2px solid ${barColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, color: barColor, flexShrink: 0 }}>
-                                        {task.assignees[0].name.charAt(0)}
-                                      </div>
-                                    )}
-                                    <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
-                                  </div>
-                                );
-                              })}
-                              
-                              {/* Today indicator */}
-                              {isToday && (
-                                <div style={{ position: 'absolute', left: `${((today.getDate() - 0.5) / daysInMonth) * 100}%`, top: 0, bottom: 0, width: '2px', background: '#EF4444', zIndex: 50 }} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    // Year View - Month grid
-                    <div style={{ padding: '1rem' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-                        {Array.from({ length: 12 }, (_, monthIdx) => {
-                          const monthDate = new Date(ganttStartDate.getFullYear(), monthIdx, 1);
-                          const monthEnd = new Date(ganttStartDate.getFullYear(), monthIdx + 1, 0);
-                          const isCurrentMonth = monthIdx === new Date().getMonth() && ganttStartDate.getFullYear() === new Date().getFullYear();
-                          const monthTasks = filteredTasks.filter(t => {
-                            if (!t.due_date) return false;
-                            const taskDate = new Date(t.due_date);
-                            return taskDate.getMonth() === monthIdx && taskDate.getFullYear() === ganttStartDate.getFullYear();
+                          // Position tasks to avoid overlap
+                          const taskPositions: { task: typeof monthTasks[0]; row: number; startDay: number; endDay: number }[] = [];
+                          monthTasks.forEach((task, idx) => {
+                            const endDate = task.due_date ? new Date(task.due_date) : new Date(task.start_date!);
+                            const startDate = task.start_date ? new Date(task.start_date) : new Date(endDate.getTime() - 3 * 24 * 60 * 60 * 1000);
+                            const startDay = Math.max(1, startDate.getMonth() === ganttStartDate.getMonth() ? startDate.getDate() : 1);
+                            const endDay = Math.min(daysInMonth, endDate.getMonth() === ganttStartDate.getMonth() ? endDate.getDate() : daysInMonth);
+                            
+                            // Find available row
+                            let row = 0;
+                            while (taskPositions.some(tp => tp.row === row && !(endDay < tp.startDay || startDay > tp.endDay))) {
+                              row++;
+                            }
+                            taskPositions.push({ task, row, startDay, endDay });
                           });
                           
-                          return (
-                            <div key={monthIdx} style={{
-                              padding: '1rem',
-                              background: isCurrentMonth ? '#3B82F610' : '#141414',
-                              borderRadius: '0.75rem',
-                              border: isCurrentMonth ? '2px solid #3B82F6' : '1px solid #2D2D2D',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s'
-                            }}
-                            onClick={() => {
-                              setGanttStartDate(monthDate);
-                              setGanttViewMode('month');
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                            onMouseLeave={(e) => { if (!isCurrentMonth) e.currentTarget.style.borderColor = '#2D2D2D'; }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                                <span style={{ color: isCurrentMonth ? '#3B82F6' : '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600 }}>
-                                  {monthDate.toLocaleDateString('en-US', { month: 'short' })}
+                          return taskPositions.map(({ task, row, startDay, endDay }, idx) => {
+                            const barColor = barColors[idx % barColors.length];
+                            const leftPos = ((startDay - 1) / daysInMonth) * 100;
+                            const width = Math.max(((endDay - startDay + 1) / daysInMonth) * 100, 5);
+                            const topPos = 20 + row * 60;
+                            
+                            return (
+                              <div
+                                key={task.id}
+                                onClick={() => setSelectedTask(task)}
+                                style={{
+                                  position: 'absolute',
+                                  top: `${topPos}px`,
+                                  left: `${leftPos}%`,
+                                  width: `${width}%`,
+                                  minWidth: '80px',
+                                  height: '44px',
+                                  background: barColor,
+                                  borderRadius: '0.75rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '0 0.75rem',
+                                  gap: '0.5rem',
+                                  cursor: 'pointer',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  zIndex: idx + 1,
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.zIndex = '200'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.zIndex = String(idx + 1); e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'; }}
+                              >
+                                <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                  {task.name}
                                 </span>
-                                <span style={{ color: '#71717A', fontSize: '0.75rem' }}>{monthTasks.length} tasks</span>
+                                {/* Assignee avatars */}
+                                <div style={{ display: 'flex', marginLeft: 'auto', flexShrink: 0 }}>
+                                  {(task.assignees || []).slice(0, 3).map((assignee, aIdx) => (
+                                    <div
+                                      key={assignee.id}
+                                      style={{
+                                        width: '28px',
+                                        height: '28px',
+                                        borderRadius: '50%',
+                                        background: '#FFFFFF',
+                                        border: `2px solid ${barColor}`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.6875rem',
+                                        fontWeight: 600,
+                                        color: barColor,
+                                        marginLeft: aIdx > 0 ? '-8px' : '0'
+                                      }}
+                                    >
+                                      {assignee.name.charAt(0)}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              
-                              {/* Mini calendar dots */}
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.125rem' }}>
-                                {Array.from({ length: Math.min(monthEnd.getDate(), 28) }, (_, d) => {
-                                  const hasTasks = monthTasks.some(t => {
-                                    const td = new Date(t.due_date!);
-                                    return td.getDate() === d + 1;
-                                  });
-                                  return (
-                                    <div key={d} style={{
-                                      width: '8px',
-                                      height: '8px',
-                                      borderRadius: '50%',
-                                      background: hasTasks ? '#10B981' : '#2D2D2D'
-                                    }} />
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
+                        
+                        {/* Empty state */}
+                        {filteredTasks.filter(t => {
+                          if (!t.due_date && !t.start_date) return false;
+                          const taskDate = t.due_date ? new Date(t.due_date) : new Date(t.start_date!);
+                          return taskDate.getMonth() === ganttStartDate.getMonth() && taskDate.getFullYear() === ganttStartDate.getFullYear();
+                        }).length === 0 && (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks this month</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
