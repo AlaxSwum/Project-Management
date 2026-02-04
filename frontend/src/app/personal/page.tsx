@@ -2773,9 +2773,9 @@ export default function PersonalPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
-                    background: '#1A1A1A',
-                    borderRadius: '16px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    background: '#141414',
+                    borderRadius: '20px',
+                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
                     border: '1px solid #2D2D2D',
                     overflow: 'auto',
                     maxHeight: 'calc(100vh - 180px)',
@@ -2783,55 +2783,53 @@ export default function PersonalPage() {
                     flexDirection: 'column',
                   }}
                 >
-                  {/* Week Header - Sticky */}
+                  {/* Week Header - Sticky with larger dates */}
                   <div
                     style={{
                       display: 'grid',
                       gridTemplateColumns: '80px repeat(7, 1fr)',
                       borderBottom: '1px solid #2D2D2D',
-                      background: '#141414',
+                      background: '#0D0D0D',
                       position: 'sticky',
                       top: 0,
                       zIndex: 20,
                       flexShrink: 0,
                     }}
                   >
-                    <div style={{ padding: '16px' }} />
+                    <div style={{ padding: '20px 12px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '11px', color: '#52525B', fontWeight: 500 }}>GMT+5</span>
+                    </div>
                     {getWeekDays(currentDate).map((day, index) => {
                       const isToday = formatDate(day) === formatDate(new Date());
+                      const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
                       return (
                         <div
                           key={index}
-                style={{
-                            padding: '16px',
+                          style={{
+                            padding: '16px 8px 20px',
                             textAlign: 'center',
                             borderLeft: '1px solid #2D2D2D',
+                            background: isToday ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                           }}
                         >
                           <div
                             style={{
-                              fontSize: '12px',
+                              fontSize: '13px',
                               fontWeight: '500',
-                              color: '#71717A',
-                              textTransform: 'uppercase',
+                              color: isToday ? '#3B82F6' : '#71717A',
+                              textTransform: 'lowercase',
                               letterSpacing: '0.5px',
+                              marginBottom: '8px',
                             }}
                           >
-                            {weekDaysMap[day.getDay()]}
-            </div>
+                            {dayNames[day.getDay()]}
+                          </div>
                           <div
                             style={{
-                              fontSize: '24px',
-                  fontWeight: '600',
-                              color: isToday ? '#fff' : '#FFFFFF',
-                              background: isToday ? '#3B82F6' : 'transparent',
-                              borderRadius: '50%',
-                              width: '40px',
-                              height: '40px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              margin: '8px auto 0',
+                              fontSize: '32px',
+                              fontWeight: '700',
+                              color: isToday ? '#3B82F6' : '#FFFFFF',
+                              lineHeight: 1,
                             }}
                           >
                             {day.getDate()}
@@ -2845,190 +2843,218 @@ export default function PersonalPage() {
                   <div
                     style={{ 
                       display: 'grid',
-                      gridTemplateColumns: '70px repeat(7, 1fr)',
-                      height: '1200px', // 24 hours × 50px
+                      gridTemplateColumns: '80px repeat(7, 1fr)',
+                      minHeight: '900px',
                     }}
                   >
                     {/* Time labels column */}
-                    <div style={{ borderRight: '1px solid #2D2D2D' }}>
-                      {hours.map((hour) => (
+                    <div style={{ borderRight: '1px solid #1F1F1F' }}>
+                      {hours.filter(h => h >= 7 && h <= 22).map((hour) => (
                         <div
                           key={hour}
                           style={{
-                            height: '50px',
-                      padding: '4px 8px',
-                            fontSize: '11px',
-                            color: '#71717A',
+                            height: '60px',
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            color: '#52525B',
                             textAlign: 'right',
-                            borderBottom: '1px solid #2D2D2D',
+                            borderBottom: '1px solid #1F1F1F',
                           }}
                         >
-                          {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                          {hour === 0 ? '12 am' : hour < 12 ? `${hour} am` : hour === 12 ? '12 pm' : `${hour - 12} pm`}
                         </div>
                       ))}
-                  </div>
+                    </div>
                   
                     {/* Day columns with drag-to-create */}
-                    {getWeekDays(currentDate).map((day, dayIndex) => (
-                    <div 
-                        key={dayIndex}
-                        ref={(el) => { weekViewRefs.current[dayIndex] = el; }}
-                style={{
-                          borderLeft: '1px solid rgba(0, 0, 0, 0.04)',
-                          position: 'relative',
-                          cursor: isDragging ? 'ns-resize' : 'crosshair',
-                        }}
-                        onMouseDown={(e) => {
-                          const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
-                          if (!rect) return;
-                          const relativeY = e.clientY - rect.top;
-                          const hourHeight = 50; // 50px per hour
-                          const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
-                          const hour = Math.floor(totalMinutes / 60);
-                          const minute = Math.round((totalMinutes % 60) / 15) * 15;
-                          const time = { hour: Math.min(23, hour), minute: minute >= 60 ? 0 : minute };
-                          setIsDragging(true);
-                          setDragStart(time);
-                          setDragEnd(time);
-                          setDragDate(day);
-                          e.preventDefault();
-                        }}
-                      >
-                        {/* Hour grid lines */}
-                        {hours.map((hour) => (
-                          <div
-                            key={hour}
-                            style={{
-                              height: '50px',
-                              borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
-                            }}
-                          />
-                        ))}
-                        
-                        {/* Drag preview for this day */}
-                        {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
-                          const startMinutes = dragStart.hour * 60 + dragStart.minute;
-                          const endMinutes = dragEnd.hour * 60 + dragEnd.minute;
-                          const pxPerMinute = 50 / 60; // 50px per hour
-                          const top = Math.min(startMinutes, endMinutes) * pxPerMinute;
-                          const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 20);
-                          return (
+                    {getWeekDays(currentDate).map((day, dayIndex) => {
+                      const isToday = formatDate(day) === formatDate(new Date());
+                      return (
+                        <div 
+                          key={dayIndex}
+                          ref={(el) => { weekViewRefs.current[dayIndex] = el; }}
+                          style={{
+                            borderLeft: '1px solid #1F1F1F',
+                            position: 'relative',
+                            cursor: isDragging ? 'ns-resize' : 'crosshair',
+                            background: isToday ? 'rgba(59, 130, 246, 0.03)' : 'transparent',
+                          }}
+                          onMouseDown={(e) => {
+                            const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
+                            if (!rect) return;
+                            const relativeY = e.clientY - rect.top;
+                            const hourHeight = 60;
+                            const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
+                            const hour = Math.floor(totalMinutes / 60) + 7;
+                            const minute = Math.round((totalMinutes % 60) / 15) * 15;
+                            const time = { hour: Math.min(23, hour), minute: minute >= 60 ? 0 : minute };
+                            setIsDragging(true);
+                            setDragStart(time);
+                            setDragEnd(time);
+                            setDragDate(day);
+                            e.preventDefault();
+                          }}
+                        >
+                          {/* Hour grid lines */}
+                          {hours.filter(h => h >= 7 && h <= 22).map((hour) => (
                             <div
-                            style={{ 
-                                position: 'absolute',
-                                top: `${top}px`,
-                                left: '2px',
-                                right: '2px',
-                                height: `${height}px`,
-                                background: 'rgba(0, 113, 227, 0.2)',
-                                border: '2px dashed #0071e3',
-                                borderRadius: '4px',
-                                pointerEvents: 'none',
+                              key={hour}
+                              style={{
+                                height: '60px',
+                                borderBottom: '1px solid #1F1F1F',
                               }}
                             />
-                          );
-                        })()}
+                          ))}
                         
-                        {/* Blocks for this day */}
-                        {(() => {
-                          const dayBlocks = getBlocksForDate(day);
-                          const overlapPositions = calculateOverlapPositions(dayBlocks);
-                          
-                          return dayBlocks.map((block) => {
-                          const [startHour, startMin] = block.startTime.split(':').map(Number);
-                          const [endHour, endMin] = block.endTime.split(':').map(Number);
-                          const pxPerMinute = 50 / 60; // 50px per hour
-                          const top = (startHour * 60 + startMin) * pxPerMinute;
-                          const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 20);
-                          const colors = blockTypeColors[block.type];
-                          
-                          // Get overlap positioning for week view
-                          const overlapInfo = overlapPositions.get(block.id);
-                          const column = overlapInfo?.column || 0;
-                          const totalColumns = overlapInfo?.totalColumns || 1;
-                          const widthPercent = (100 - 4) / totalColumns; // 4px for margins
-                          const leftOffset = 2 + column * widthPercent;
-                          
-                          return (
-                            <motion.div
-                              key={block.id}
-                              whileHover={{ scale: 1.02, zIndex: 10 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleBlockClick(block);
-                              }}
-                              onDoubleClick={(e) => {
-                                e.stopPropagation();
-                                if (!block.id.startsWith('goal-') && !block.id.startsWith('meeting-')) {
-                                  duplicateBlock(block);
-                                }
-                              }}
-                              onContextMenu={(e) => handleContextMenu(e, block)}
-                              style={{
-                                position: 'absolute',
-                                top: `${top}px`,
-                                left: `${leftOffset}%`,
-                                width: `${widthPercent - 1}%`,
-                                height: `${height}px`,
-                                background: colors.bg,
-                                borderLeft: `2px solid ${colors.solid}`,
-                                borderRadius: '4px',
-                                padding: '2px 4px',
-                  cursor: 'pointer',
-                                fontSize: '9px',
-                                fontWeight: '500',
-                                color: block.completed ? '#86868b' : '#1d1d1f',
-                                overflow: 'hidden',
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: '3px',
-                                zIndex: column + 1,
-                              }}
-                            >
-                              {/* Quick checkbox */}
+                          {/* Drag preview for this day */}
+                          {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
+                            const startMinutes = (dragStart.hour - 7) * 60 + dragStart.minute;
+                            const endMinutes = (dragEnd.hour - 7) * 60 + dragEnd.minute;
+                            const pxPerMinute = 60 / 60;
+                            const top = Math.min(startMinutes, endMinutes) * pxPerMinute;
+                            const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 20);
+                            return (
                               <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const updatedBlock = { ...block, completed: !block.completed };
-                                  saveBlock(updatedBlock);
+                                style={{ 
+                                  position: 'absolute',
+                                  top: `${top}px`,
+                                  left: '4px',
+                                  right: '4px',
+                                  height: `${height}px`,
+                                  background: 'rgba(59, 130, 246, 0.2)',
+                                  border: '2px dashed #3B82F6',
+                                  borderRadius: '8px',
+                                  pointerEvents: 'none',
                                 }}
-                                style={{
-                                  width: '12px',
-                                  height: '12px',
-                                  borderRadius: '3px',
-                                  border: block.completed ? 'none' : '1.5px solid rgba(0, 0, 0, 0.25)',
-                                  background: block.completed ? '#22c55e' : 'transparent',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  flexShrink: 0,
-                                  marginTop: '1px',
-                                }}
-                              >
-                                {block.completed && <CheckIcon style={{ width: '8px', height: '8px', color: '#fff' }} />}
-                              </div>
-                              <div style={{ flex: 1, overflow: 'hidden' }}>
-                                <span style={{ textDecoration: block.completed ? 'line-through' : 'none', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
-                                <span style={{ fontSize: '8px', color: '#6b7280', display: 'block', marginTop: '1px' }}>
-                                  {(() => {
-                                    const formatTime12 = (time: string) => {
-                                      const [h, m] = time.split(':').map(Number);
-                                      const ampm = h >= 12 ? 'PM' : 'AM';
-                                      const hour12 = h % 12 || 12;
-                                      return `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
-                                    };
-                                    return `${formatTime12(block.startTime)} - ${formatTime12(block.endTime)}`;
-                                  })()}
-                                </span>
-                              </div>
-                            </motion.div>
-                          );
-                        });
-                        })()}
-                    </div>
-                  ))}
-                    </div>
+                              />
+                            );
+                          })()}
+                        
+                          {/* Blocks for this day */}
+                          {(() => {
+                            const dayBlocks = getBlocksForDate(day);
+                            const overlapPositions = calculateOverlapPositions(dayBlocks);
+                            
+                            // Colorful block colors for calendar.me style
+                            const calendarColors = [
+                              { bg: '#E9D5FF', border: '#A855F7', text: '#6B21A8' }, // Purple
+                              { bg: '#D1FAE5', border: '#10B981', text: '#065F46' }, // Green
+                              { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' }, // Blue
+                              { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' }, // Yellow
+                              { bg: '#FCE7F3', border: '#EC4899', text: '#9D174D' }, // Pink
+                              { bg: '#E0E7FF', border: '#6366F1', text: '#3730A3' }, // Indigo
+                              { bg: '#FFEDD5', border: '#F97316', text: '#9A3412' }, // Orange
+                            ];
+                            
+                            return dayBlocks.map((block, blockIdx) => {
+                              const [startHour, startMin] = block.startTime.split(':').map(Number);
+                              const [endHour, endMin] = block.endTime.split(':').map(Number);
+                              const pxPerMinute = 60 / 60;
+                              const top = ((startHour - 7) * 60 + startMin) * pxPerMinute;
+                              const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 40);
+                              
+                              // Use colorful palette based on block type or index
+                              const colorIndex = block.type ? 
+                                ['work', 'meeting', 'personal', 'health', 'learning', 'creative', 'other'].indexOf(block.type) : 
+                                blockIdx;
+                              const colors = calendarColors[Math.abs(colorIndex) % calendarColors.length];
+                              
+                              const overlapInfo = overlapPositions.get(block.id);
+                              const column = overlapInfo?.column || 0;
+                              const totalColumns = overlapInfo?.totalColumns || 1;
+                              const widthPercent = (100 - 8) / totalColumns;
+                              const leftOffset = 4 + column * widthPercent;
+                              
+                              return (
+                                <motion.div
+                                  key={block.id}
+                                  whileHover={{ scale: 1.02, zIndex: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleBlockClick(block);
+                                  }}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!block.id.startsWith('goal-') && !block.id.startsWith('meeting-')) {
+                                      duplicateBlock(block);
+                                    }
+                                  }}
+                                  onContextMenu={(e) => handleContextMenu(e, block)}
+                                  style={{
+                                    position: 'absolute',
+                                    top: `${Math.max(0, top)}px`,
+                                    left: `${leftOffset}%`,
+                                    width: `${widthPercent - 2}%`,
+                                    height: `${height}px`,
+                                    background: colors.bg,
+                                    borderLeft: `4px solid ${colors.border}`,
+                                    borderRadius: '8px',
+                                    padding: '8px 10px',
+                                    cursor: 'pointer',
+                                    overflow: 'hidden',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '4px',
+                                    zIndex: column + 1,
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                    transition: 'all 0.2s ease',
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                                    <div
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const updatedBlock = { ...block, completed: !block.completed };
+                                        saveBlock(updatedBlock);
+                                      }}
+                                      style={{
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '4px',
+                                        border: block.completed ? 'none' : `2px solid ${colors.border}`,
+                                        background: block.completed ? '#10B981' : 'rgba(255,255,255,0.8)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {block.completed && <CheckIcon style={{ width: '10px', height: '10px', color: '#fff' }} />}
+                                    </div>
+                                    <span style={{ 
+                                      fontSize: '12px', 
+                                      fontWeight: 600, 
+                                      color: colors.text,
+                                      textDecoration: block.completed ? 'line-through' : 'none',
+                                      lineHeight: 1.3,
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                    }}>{block.title}</span>
+                                  </div>
+                                  <span style={{ fontSize: '10px', color: colors.text, opacity: 0.7, fontWeight: 500 }}>
+                                    {(() => {
+                                      const formatTime12 = (time: string) => {
+                                        const [h, m] = time.split(':').map(Number);
+                                        const ampm = h >= 12 ? 'pm' : 'am';
+                                        const hour12 = h % 12 || 12;
+                                        return `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
+                                      };
+                                      return `${formatTime12(block.startTime)} - ${formatTime12(block.endTime)}`;
+                                    })()}
+                                  </span>
+                                </motion.div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </motion.div>
               )}
 
@@ -3493,13 +3519,13 @@ export default function PersonalPage() {
                               transition: 'all 0.15s ease',
                             }}
                           >
-                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#FFFFFF', marginBottom: '4px', lineHeight: '1.3' }}>
                               {task.name}
             </div>
-                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ color: task.project_color, fontWeight: '500' }}>{task.project_name}</span>
                               {task.due_date && (
-                                <span style={{ color: isOverdue ? '#ef4444' : isDueToday ? '#3b82f6' : '#94a3b8' }}>
+                                <span style={{ color: isOverdue ? '#EF4444' : isDueToday ? '#3B82F6' : '#71717A' }}>
                                   {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </span>
                               )}
@@ -3514,13 +3540,13 @@ export default function PersonalPage() {
                     <div style={{ 
                       textAlign: 'center', 
                       padding: '24px 16px', 
-                      color: '#a78bfa',
-                      background: '#faf5ff',
+                      color: '#8B5CF6',
+                      background: '#0D0D0D',
                       borderRadius: '8px',
-                      border: '1px dashed #ddd6fe',
+                      border: '1px dashed #2D2D2D',
                     }}>
-                      <RocketLaunchIcon style={{ width: '20px', height: '20px', color: '#c4b5fd', margin: '0 auto 8px' }} />
-                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#a78bfa' }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                      <RocketLaunchIcon style={{ width: '20px', height: '20px', color: '#8B5CF6', margin: '0 auto 8px', opacity: 0.6 }} />
+                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#71717A' }}>No timeline items {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -3533,20 +3559,20 @@ export default function PersonalPage() {
                             whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedExternalTimeline(item)}
                         style={{ 
-                              padding: '8px 10px',
+                              padding: '10px 12px',
                               borderRadius: '8px',
                               cursor: 'pointer',
-                              borderLeft: '3px solid #8b5cf6',
-                              background: isDueToday ? 'rgba(139, 92, 246, 0.06)' : '#f8fafc',
+                              borderLeft: '3px solid #8B5CF6',
+                              background: isDueToday ? 'rgba(139, 92, 246, 0.1)' : '#0D0D0D',
                               transition: 'all 0.15s ease',
                             }}
                           >
-                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: '#FFFFFF', marginBottom: '4px', lineHeight: '1.3' }}>
                               {item.title}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {item.category_name && <span style={{ color: '#8b5cf6', fontWeight: '500' }}>{item.category_name}</span>}
-                              <span style={{ color: '#94a3b8' }}>
+                            <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {item.category_name && <span style={{ color: '#8B5CF6', fontWeight: '500' }}>{item.category_name}</span>}
+                              <span>
                                 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 {item.end_date && ` - ${new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                       </span>
@@ -3562,13 +3588,13 @@ export default function PersonalPage() {
                     <div style={{ 
                       textAlign: 'center', 
                       padding: '24px 16px', 
-                      color: '#ec4899',
-                      background: '#fdf2f8',
+                      color: '#EC4899',
+                      background: '#0D0D0D',
                       borderRadius: '8px',
-                      border: '1px dashed #fbcfe8',
+                      border: '1px dashed #2D2D2D',
                     }}>
-                      <Squares2X2Icon style={{ width: '20px', height: '20px', color: '#f9a8d4', margin: '0 auto 8px' }} />
-                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#ec4899' }}>No posts scheduled {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                      <Squares2X2Icon style={{ width: '20px', height: '20px', color: '#EC4899', margin: '0 auto 8px', opacity: 0.6 }} />
+                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#71717A' }}>No posts scheduled {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -3589,7 +3615,7 @@ export default function PersonalPage() {
                           scheduled: { bg: '#E0E7FF', text: '#4F46E5' },
                           published: { bg: '#DCFCE7', text: '#16A34A' },
                         };
-                        const statusStyle = statusColors[post.status] || { bg: '#F3F4F6', text: '#6B7280' };
+                        const statusStyle = statusColors[post.status] || { bg: '#2D2D2D', text: '#71717A' };
                         return (
                           <motion.div
                             key={post.id}
@@ -3597,16 +3623,16 @@ export default function PersonalPage() {
                             whileTap={{ scale: 0.99 }}
                             onClick={() => setSelectedContentPost(post)}
                             style={{ 
-                              padding: '8px 10px',
+                              padding: '10px 12px',
                               borderRadius: '8px',
                               cursor: 'pointer',
-                              borderLeft: `3px solid ${post.isAssigned ? '#ec4899' : '#cbd5e1'}`,
-                              background: isToday ? 'rgba(236, 72, 153, 0.06)' : post.isAssigned ? '#fdf2f8' : '#f8fafc',
+                              borderLeft: `3px solid ${post.isAssigned ? '#EC4899' : '#52525B'}`,
+                              background: isToday ? 'rgba(236, 72, 153, 0.1)' : '#0D0D0D',
                               transition: 'all 0.15s ease',
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
-                              <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', lineHeight: '1.3', flex: 1 }}>
+                              <div style={{ fontSize: '12px', fontWeight: '500', color: '#FFFFFF', lineHeight: '1.3', flex: 1 }}>
                                 {post.title}
                               </div>
                               {post.isAssigned && (
@@ -3614,7 +3640,7 @@ export default function PersonalPage() {
                                   fontSize: '8px', 
                                   fontWeight: '700', 
                                   padding: '2px 5px', 
-                                  background: '#ec4899', 
+                                  background: '#EC4899', 
                                   color: '#fff', 
                                   borderRadius: '4px',
                                   marginLeft: '6px',
@@ -3624,8 +3650,8 @@ export default function PersonalPage() {
                                 </span>
                               )}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                              <span style={{ color: '#ec4899', fontWeight: '500' }}>{post.company_name}</span>
+                            <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                              <span style={{ color: '#EC4899', fontWeight: '500' }}>{post.company_name}</span>
                               <span style={{ 
                                 fontSize: '9px',
                                 padding: '1px 5px',
@@ -3637,7 +3663,7 @@ export default function PersonalPage() {
                               }}>
                                 {post.status}
                               </span>
-                              <span style={{ color: '#94a3b8' }}>
+                              <span>
                                 {new Date(post.planned_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                               </span>
                             </div>
@@ -3673,13 +3699,13 @@ export default function PersonalPage() {
                     <div style={{ 
                       textAlign: 'center', 
                       padding: '24px 16px', 
-                      color: '#10b981',
-                      background: '#ecfdf5',
+                      color: '#10B981',
+                      background: '#0D0D0D',
                       borderRadius: '8px',
-                      border: '1px dashed #a7f3d0',
+                      border: '1px dashed #2D2D2D',
                     }}>
-                      <ListBulletIcon style={{ width: '20px', height: '20px', color: '#6ee7b7', margin: '0 auto 8px' }} />
-                        <p style={{ fontSize: '11px', fontWeight: '500', margin: '0 0 8px 0', color: '#10b981' }}>No to-dos {viewMode === 'day' ? 'for today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                      <ListBulletIcon style={{ width: '20px', height: '20px', color: '#10B981', margin: '0 auto 8px', opacity: 0.6 }} />
+                        <p style={{ fontSize: '11px', fontWeight: '500', margin: '0 0 8px 0', color: '#71717A' }}>No to-dos {viewMode === 'day' ? 'for today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                         <button
                           onClick={() => setShowAddTodoModal(true)}
                           style={{
@@ -3688,7 +3714,7 @@ export default function PersonalPage() {
                             padding: '6px 12px',
                             border: 'none',
                             borderRadius: '6px',
-                            background: '#10b981',
+                            background: '#10B981',
                             color: '#fff',
                             cursor: 'pointer',
                             display: 'inline-flex',
@@ -3710,10 +3736,10 @@ export default function PersonalPage() {
                             padding: '8px 10px',
                             fontSize: '11px',
                             fontWeight: '600',
-                            border: '1px dashed #a7f3d0',
+                            border: '1px dashed #2D2D2D',
                             borderRadius: '8px',
-                            background: '#ecfdf5',
-                            color: '#10b981',
+                            background: '#0D0D0D',
+                            color: '#10B981',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -3728,9 +3754,9 @@ export default function PersonalPage() {
                         {filteredTodos.map((todo) => {
                         const isOverdue = new Date(todo.deadline) < new Date() && !todo.completed;
                         const priorityColors = {
-                          urgent: { bg: '#fef2f2', border: '#fecaca', text: '#dc2626' },
-                          important: { bg: '#fef3c7', border: '#fde68a', text: '#d97706' },
-                          normal: { bg: '#ecfdf5', border: '#a7f3d0', text: '#10b981' },
+                          urgent: { bg: '#DC262620', border: '#DC2626', text: '#EF4444' },
+                          important: { bg: '#D9770620', border: '#D97706', text: '#F59E0B' },
+                          normal: { bg: '#10B98120', border: '#10B981', text: '#10B981' },
                         };
                         const pColor = priorityColors[todo.priority];
                         return (
@@ -3739,11 +3765,11 @@ export default function PersonalPage() {
                             whileHover={{ x: 2 }}
                             whileTap={{ scale: 0.99 }}
                             style={{ 
-                              padding: '8px 10px',
+                              padding: '10px 12px',
                               borderRadius: '8px',
                               cursor: 'pointer',
                               borderLeft: `3px solid ${pColor.text}`,
-                              background: todo.completed ? '#f8fafc' : pColor.bg,
+                              background: todo.completed ? '#1A1A1A' : '#0D0D0D',
                               transition: 'all 0.15s ease',
                               opacity: todo.completed ? 0.7 : 1,
                             }}
@@ -3760,7 +3786,7 @@ export default function PersonalPage() {
                                   height: '16px',
                                   borderRadius: '4px',
                                   border: todo.completed ? 'none' : `2px solid ${pColor.text}`,
-                                  background: todo.completed ? '#10b981' : 'transparent',
+                                  background: todo.completed ? '#10B981' : 'transparent',
                                   cursor: 'pointer',
                                   flexShrink: 0,
                                   marginTop: '2px',
@@ -3775,14 +3801,14 @@ export default function PersonalPage() {
                                 <div style={{ 
                                   fontSize: '12px', 
                                   fontWeight: '500', 
-                                  color: todo.completed ? '#94a3b8' : '#1e293b', 
-                                  marginBottom: '2px', 
+                                  color: todo.completed ? '#71717A' : '#FFFFFF', 
+                                  marginBottom: '4px', 
                                   lineHeight: '1.3',
                                   textDecoration: todo.completed ? 'line-through' : 'none',
                                 }}>
                                   {todo.task_name}
                                 </div>
-                                <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                   <span style={{ 
                                     fontSize: '9px',
                                     padding: '1px 5px',
@@ -3791,19 +3817,18 @@ export default function PersonalPage() {
                                     color: pColor.text,
                                     fontWeight: '600',
                                     textTransform: 'capitalize',
-                                    border: `1px solid ${pColor.border}`,
                                   }}>
                                     {todo.priority}
                                   </span>
-                                  <span style={{ color: isOverdue ? '#dc2626' : '#94a3b8' }}>
+                                  <span style={{ color: isOverdue ? '#EF4444' : '#71717A' }}>
                                     Due: {new Date(todo.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                   </span>
-                                  <span style={{ color: '#94a3b8' }}>
+                                  <span>
                                     {todo.duration}h
                                   </span>
                                 </div>
                                 {todo.description && (
-                                  <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', lineHeight: '1.3' }}>
+                                  <div style={{ fontSize: '10px', color: '#52525B', marginTop: '4px', lineHeight: '1.3' }}>
                                     {todo.description.substring(0, 60)}{todo.description.length > 60 ? '...' : ''}
                                   </div>
                                 )}
@@ -3852,7 +3877,8 @@ export default function PersonalPage() {
               <div
                 style={{
                   padding: '14px 16px',
-                  background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                  background: '#1F1F1F',
+                  borderBottom: '1px solid #2D2D2D',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
@@ -3862,42 +3888,40 @@ export default function PersonalPage() {
                   width: '32px', 
                   height: '32px', 
                   borderRadius: '10px', 
-                  background: '#fff',
+                  background: '#F59E0B20',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 }}>
-                  <UsersIcon style={{ width: '18px', height: '18px', color: '#d97706' }} />
+                  <UsersIcon style={{ width: '18px', height: '18px', color: '#F59E0B' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#92400e' }}>Meetings</span>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#F59E0B' }}>Meetings</span>
                 </div>
                         <span style={{ 
                           fontSize: '12px', 
                   fontWeight: '700', 
-                  color: '#d97706', 
-                  background: '#fff', 
+                  color: '#F59E0B', 
+                  background: '#F59E0B20', 
                   padding: '4px 10px', 
                   borderRadius: '12px',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
                 }}>
                   {filteredMeetings.length}
                         </span>
               </div>
 
-              <div style={{ padding: '12px', maxHeight: '250px', overflowY: 'auto' }}>
+              <div style={{ padding: '12px', maxHeight: '250px', overflowY: 'auto', background: '#1A1A1A' }}>
                 {filteredMeetings.length === 0 ? (
                   <div style={{ 
                     textAlign: 'center', 
                     padding: '24px 16px', 
-                    color: '#d97706',
-                    background: '#fffbeb',
+                    color: '#F59E0B',
+                    background: '#0D0D0D',
                     borderRadius: '8px',
-                    border: '1px dashed #fde68a',
+                    border: '1px dashed #2D2D2D',
                   }}>
-                    <UsersIcon style={{ width: '20px', height: '20px', color: '#fbbf24', margin: '0 auto 8px' }} />
-                    <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#d97706' }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                    <UsersIcon style={{ width: '20px', height: '20px', color: '#F59E0B', margin: '0 auto 8px', opacity: 0.6 }} />
+                    <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#71717A' }}>No meetings {viewMode === 'day' ? 'today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                     </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -3910,21 +3934,21 @@ export default function PersonalPage() {
                           whileTap={{ scale: 0.99 }}
                           onClick={() => setSelectedExternalMeeting(meeting)}
                           style={{
-                            padding: '8px 10px',
+                            padding: '10px 12px',
                             borderRadius: '8px',
                             cursor: 'pointer',
-                            borderLeft: '3px solid #f59e0b',
-                            background: isToday ? 'rgba(245, 158, 11, 0.06)' : '#f8fafc',
+                            borderLeft: '3px solid #F59E0B',
+                            background: isToday ? 'rgba(245, 158, 11, 0.1)' : '#0D0D0D',
                             transition: 'all 0.15s ease',
                           }}
                         >
-                          <div style={{ fontSize: '12px', fontWeight: '500', color: '#1e293b', marginBottom: '2px', lineHeight: '1.3' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '500', color: '#FFFFFF', marginBottom: '4px', lineHeight: '1.3' }}>
                             {meeting.title}
                   </div>
-                          <div style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ color: '#d97706', fontWeight: '600' }}>{meeting.time}</span>
-                            <span style={{ color: '#94a3b8' }}>{meeting.duration}min</span>
-                            <span style={{ color: '#94a3b8' }}>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ color: '#F59E0B', fontWeight: '600' }}>{meeting.time}</span>
+                            <span>{meeting.duration}min</span>
+                            <span>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
             </div>
                         </motion.div>
                       );
