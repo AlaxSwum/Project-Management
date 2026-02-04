@@ -3732,7 +3732,11 @@ export default function CalendarPage() {
                   setShowMeetingDetail(false);
                   setSelectedMeeting(null);
                 }}
-                onUpdate={fetchData}
+                onUpdate={handleUpdateMeeting}
+                onDelete={handleDeleteMeeting}
+                projectMembers={projectMembers}
+                projects={projects}
+                onProjectChange={handleProjectChange}
               />
             )}
           </main>
