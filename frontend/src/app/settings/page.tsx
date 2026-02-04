@@ -90,13 +90,44 @@ export default function SettingsPage() {
   const loadProfileData = async () => {
     if (!user) return;
     
-    setProfileData({
-      name: user.name || '',
-      email: user.email || '',
-      location: '',
-      bio: '',
-      avatar_url: ''
-    });
+    try {
+      // Fetch profile data from database including avatar
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('name, email, avatar_url, location, bio')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error loading profile:', error);
+        // Fallback to user object
+        setProfileData({
+          name: user.name || '',
+          email: user.email || '',
+          location: '',
+          bio: '',
+          avatar_url: ''
+        });
+        return;
+      }
+      
+      setProfileData({
+        name: data?.name || user.name || '',
+        email: data?.email || user.email || '',
+        location: data?.location || '',
+        bio: data?.bio || '',
+        avatar_url: data?.avatar_url || ''
+      });
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        location: '',
+        bio: '',
+        avatar_url: ''
+      });
+    }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,13 +183,17 @@ export default function SettingsPage() {
     if (!user?.id) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('auth_user')
         .update({
           name: profileData.name,
+          location: profileData.location,
+          bio: profileData.bio,
           // Note: email changes might require re-authentication
         })
         .eq('id', user.id);
+      
+      if (error) throw error;
       
       alert('Profile updated successfully!');
     } catch (error) {

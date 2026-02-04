@@ -535,10 +535,22 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.875rem' }}>
-              {user?.name?.charAt(0) || 'U'}
-            </span>
+          <div style={{ 
+            width: '36px', 
+            height: '36px', 
+            borderRadius: '50%', 
+            background: user?.avatar_url 
+              ? `url(${user.avatar_url}) center/cover` 
+              : 'linear-gradient(135deg, #8B5CF6, #EC4899)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}>
+            {!user?.avatar_url && (
+              <span style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.875rem' }}>
+                {user?.name?.charAt(0) || 'U'}
+              </span>
+            )}
                         </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>

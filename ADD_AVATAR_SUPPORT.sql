@@ -1,11 +1,17 @@
 -- ========================================
--- ADD AVATAR SUPPORT TO AUTH_USER TABLE
+-- ADD AVATAR & PROFILE SUPPORT TO AUTH_USER TABLE
 -- ========================================
 -- Simple solution: Store avatars as base64 in database
 -- No Supabase Storage needed - avoids all RLS issues!
 
 -- Add avatar_url column to store base64 image data
 ALTER TABLE auth_user ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+-- Add location column for user profile
+ALTER TABLE auth_user ADD COLUMN IF NOT EXISTS location TEXT;
+
+-- Add bio column for user profile
+ALTER TABLE auth_user ADD COLUMN IF NOT EXISTS bio TEXT;
 
 -- Grant permissions for users to update their profile
 GRANT SELECT, UPDATE ON auth_user TO authenticated;
