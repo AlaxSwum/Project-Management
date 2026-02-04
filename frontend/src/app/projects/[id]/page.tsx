@@ -170,6 +170,8 @@ export default function ProjectDetailPage() {
   const [newTaskSubtasks, setNewTaskSubtasks] = useState<string[]>([]);
   const [tempSubtask, setTempSubtask] = useState('');
   const [showProjectMembers, setShowProjectMembers] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+  const [editingMemberRole, setEditingMemberRole] = useState<string>('');
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
   const [enteredTags, setEnteredTags] = useState<string[]>([]);
@@ -533,7 +535,7 @@ export default function ProjectDetailPage() {
               <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{project.name}</h1>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
-              {/* Team Members Button - Avatar Style */}
+n              {/* Team Members Button - Avatar Style */}
               <button
                 onClick={() => setShowProjectMembers(true)}
                 style={{ 
@@ -1934,88 +1936,200 @@ export default function ProjectDetailPage() {
                 {project.members?.map((member, i) => {
                   const memberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
                   const completedTasks = memberTasks.filter(t => t.status === 'done').length;
+                  const isEditing = editingMemberId === member.id;
+                  const roleOptions = ['Admin', 'Manager', 'Member', 'Developer', 'Designer', 'QA', 'Viewer'];
                   
                   return (
                     <div 
                       key={member.id}
                       style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '1rem', 
                         padding: '1rem',
-                        background: '#141414',
+                        background: isEditing ? '#1F1F1F' : '#141414',
                         borderRadius: '0.75rem',
-                        border: '1px solid #2D2D2D'
+                        border: isEditing ? '1px solid #3B82F6' : '1px solid #2D2D2D',
+                        transition: 'all 0.2s'
                       }}
                     >
-                      {/* Avatar */}
-                      <div style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        borderRadius: '50%', 
-                        backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#FFFFFF',
-                        fontSize: '1.125rem',
-                        fontWeight: 600,
-                        flexShrink: 0
-                      }}>
-                        {member.name.charAt(0)}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {/* Avatar */}
+                        <div style={{ 
+                          width: '48px', 
+                          height: '48px', 
+                          borderRadius: '50%', 
+                          backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5],
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#FFFFFF',
+                          fontSize: '1.125rem',
+                          fontWeight: 600,
+                          flexShrink: 0
+                        }}>
+                          {member.name.charAt(0)}
+                        </div>
+                        
+                        {/* Info */}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                            <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{member.name}</span>
+                            {!isEditing && (
+                              <span style={{ 
+                                padding: '0.125rem 0.5rem', 
+                                background: member.role === 'admin' || member.role === 'Admin' ? '#3B82F620' : 
+                                           member.role === 'Manager' ? '#8B5CF620' : '#71717A20', 
+                                borderRadius: '0.25rem', 
+                                fontSize: '0.6875rem', 
+                                color: member.role === 'admin' || member.role === 'Admin' ? '#3B82F6' : 
+                                       member.role === 'Manager' ? '#8B5CF6' : '#71717A',
+                                fontWeight: 500,
+                                textTransform: 'capitalize'
+                              }}>
+                                {member.role || 'Member'}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ color: '#71717A', fontSize: '0.8125rem' }}>{member.email}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                            <span style={{ color: '#A1A1AA' }}>{memberTasks.length} tasks</span>
+                            <span style={{ color: '#10B981' }}>{completedTasks} done</span>
+                          </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        {!isEditing && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingMemberId(member.id);
+                                setEditingMemberRole(member.role || 'Member');
+                              }}
+                              style={{ 
+                                padding: '0.5rem 0.875rem', 
+                                background: '#2D2D2D', 
+                                border: 'none', 
+                                borderRadius: '0.5rem', 
+                                color: '#A1A1AA', 
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.375rem'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#3B82F6'; e.currentTarget.style.color = '#FFFFFF'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                            >
+                              <PencilIcon style={{ width: '14px', height: '14px' }} />
+                              Edit
+                            </button>
+                          </div>
+                        )}
                       </div>
                       
-                      {/* Info */}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{member.name}</span>
-                          <span style={{ 
-                            padding: '0.125rem 0.5rem', 
-                            background: member.role === 'admin' ? '#3B82F620' : '#71717A20', 
-                            borderRadius: '0.25rem', 
-                            fontSize: '0.6875rem', 
-                            color: member.role === 'admin' ? '#3B82F6' : '#71717A',
-                            fontWeight: 500,
-                            textTransform: 'capitalize'
-                          }}>
-                            {member.role || 'Member'}
-                          </span>
+                      {/* Edit Mode - Role Selection */}
+                      {isEditing && (
+                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2D2D2D' }}>
+                          <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Select Role
+                          </label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                            {roleOptions.map(role => (
+                              <button
+                                key={role}
+                                onClick={() => setEditingMemberRole(role)}
+                                style={{
+                                  padding: '0.5rem 0.875rem',
+                                  background: editingMemberRole === role ? '#3B82F6' : '#2D2D2D',
+                                  border: editingMemberRole === role ? '1px solid #3B82F6' : '1px solid #3D3D3D',
+                                  borderRadius: '0.5rem',
+                                  color: editingMemberRole === role ? '#FFFFFF' : '#A1A1AA',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => { if (editingMemberRole !== role) { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}}
+                                onMouseLeave={(e) => { if (editingMemberRole !== role) { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}}
+                              >
+                                {role}
+                              </button>
+                            ))}
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => {
+                                setEditingMemberId(null);
+                                setEditingMemberRole('');
+                              }}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: 'transparent',
+                                border: '1px solid #3D3D3D',
+                                borderRadius: '0.5rem',
+                                color: '#A1A1AA',
+                                fontSize: '0.8125rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  // Update member role via API
+                                  const { error } = await supabase
+                                    .from('project_members')
+                                    .update({ role: editingMemberRole })
+                                    .eq('project_id', project.id)
+                                    .eq('user_id', member.id);
+                                  
+                                  if (error) throw error;
+                                  
+                                  // Update local state
+                                  setProject(prev => {
+                                    if (!prev) return prev;
+                                    return {
+                                      ...prev,
+                                      members: prev.members?.map(m => 
+                                        m.id === member.id ? { ...m, role: editingMemberRole } : m
+                                      )
+                                    };
+                                  });
+                                  
+                                  setEditingMemberId(null);
+                                  setEditingMemberRole('');
+                                } catch (err) {
+                                  console.error('Error updating role:', err);
+                                  alert('Failed to update role. Please try again.');
+                                }
+                              }}
+                              style={{
+                                padding: '0.5rem 1.25rem',
+                                background: '#10B981',
+                                border: 'none',
+                                borderRadius: '0.5rem',
+                                color: '#FFFFFF',
+                                fontSize: '0.8125rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
+                            >
+                              Save Role
+                            </button>
+                          </div>
                         </div>
-                        <div style={{ color: '#71717A', fontSize: '0.8125rem' }}>{member.email}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem' }}>
-                          <span style={{ color: '#A1A1AA' }}>{memberTasks.length} tasks</span>
-                          <span style={{ color: '#10B981' }}>{completedTasks} done</span>
-                        </div>
-                      </div>
-                      
-                      {/* Actions */}
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            alert(`Edit member: ${member.name}\n\nThis feature will allow you to:\n- Change member role\n- Update member info\n- Remove from project`);
-                          }}
-                          style={{ 
-                            padding: '0.5rem 0.875rem', 
-                            background: '#2D2D2D', 
-                            border: 'none', 
-                            borderRadius: '0.5rem', 
-                            color: '#A1A1AA', 
-                            fontSize: '0.75rem',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.375rem'
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#3B82F6'; e.currentTarget.style.color = '#FFFFFF'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
-                        >
-                          <PencilIcon style={{ width: '14px', height: '14px' }} />
-                          Edit
-                        </button>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
