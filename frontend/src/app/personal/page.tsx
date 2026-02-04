@@ -2207,11 +2207,11 @@ export default function PersonalPage() {
                     onClick={() => setViewMode(mode)}
                     whileTap={{ scale: 0.97 }}
                     style={{
-                      padding: '8px 18px',
-                      fontSize: '13px',
-                      fontWeight: '500',
+                      padding: '9px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
                       border: 'none',
-                      borderRadius: '7px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       background: 'transparent',
                       color: viewMode === mode ? '#FFFFFF' : '#71717A',
@@ -2219,6 +2219,7 @@ export default function PersonalPage() {
                       position: 'relative',
                       zIndex: 1,
                       transition: 'color 0.15s ease',
+                      letterSpacing: '0.01em',
                     }}
                   >
                     {mode}

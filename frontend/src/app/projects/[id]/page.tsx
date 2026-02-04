@@ -1779,164 +1779,152 @@ n              {/* Team Members Button - Avatar Style */}
                       const subtasksCompleted = Math.floor(Math.random() * 5);
                       const progress = (subtasksCompleted / subtasksTotal) * 100;
                       
+                      // Get vibrant color for this task based on status/priority
+                      const getTaskColor = () => {
+                        const colorMap: Record<string, { bg: string; text: string }> = {
+                          'backlog': { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', text: '#FFFFFF' },
+                          'in_progress': { bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)', text: '#FFFFFF' },
+                          'done': { bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', text: '#FFFFFF' },
+                          'archived': { bg: 'linear-gradient(135deg, #52525B 0%, #3F3F46 100%)', text: '#FFFFFF' },
+                        };
+                        
+                        // Use status for color, fallback to priority
+                        if (colorMap[task.status]) return colorMap[task.status];
+                        
+                        // Fallback colors by priority
+                        if (task.priority === 'high') return { bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', text: '#FFFFFF' };
+                        if (task.priority === 'medium') return { bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)', text: '#FFFFFF' };
+                        return { bg: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)', text: '#FFFFFF' };
+                      };
+                      
+                      const taskColor = getTaskColor();
+                      
                       return (
                         <div
                           key={task.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, task)}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
                           onClick={() => setSelectedTask(task)}
                           style={{ 
-                            background: '#1A1A1A', 
-                            border: '1px solid #2D2D2D', 
-                            borderRadius: '0.75rem', 
-                            padding: '1rem', 
+                            background: taskColor.bg,
+                            border: 'none',
+                            borderRadius: '14px', 
+                            padding: '14px 16px', 
                             cursor: 'pointer', 
-                            transition: 'all 0.2s', 
-                                              position: 'relative',
-                            minHeight: '220px',
-                            maxHeight: '220px',
-                                            display: 'flex',
-                            flexDirection: 'column'
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
+                            position: 'relative',
+                            minHeight: '150px',
+                            maxHeight: '150px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                          onMouseEnter={(e) => { 
+                            e.currentTarget.style.transform = 'translateY(-3px)'; 
+                            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.35)';
+                          }}
+                          onMouseLeave={(e) => { 
+                            e.currentTarget.style.transform = 'translateY(0)'; 
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
+                          }}
                         >
-                          {/* Tags */}
-                          {taskTags.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.75rem' }}>
-                              {taskTags.slice(0, 3).map((tag: string, i: number) => {
-                                const tagColor = getTagColor(tag);
-                                return (
-                                  <span
-                                    key={i}
-                                    style={{ padding: '0.25rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}
-                                  >
-                                    {tag}
-                                          </span>
-                                );
-                              })}
-                                </div>
-                              )}
-                              
-                          {/* Title and Action Buttons */}
-                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <h3 style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '0.9375rem', lineHeight: 1.4, margin: 0, flex: 1, fontFamily: 'Mabry Pro, sans-serif' }}>{task.name}</h3>
-                            <div style={{ display: 'flex', gap: '0.375rem' }}>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedTask(task);
-                                }}
-                                style={{
-                                  padding: '0.25rem 0.5rem',
-                                  background: 'transparent',
-                                  border: '1px solid #3B82F6',
-                                  borderRadius: '0.375rem',
-                                  color: '#3B82F6',
-                                  cursor: 'pointer',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  transition: 'all 0.2s',
-                                  fontFamily: 'Mabry Pro, sans-serif'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = '#3B82F6';
-                                  e.currentTarget.style.color = '#FFFFFF';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.color = '#3B82F6';
-                                }}
-                              >
-                                Edit
-                              </button>
-                            <button
-                              onClick={async (e) => {
+                          {/* Checkbox */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+                            <div
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm('Delete this task?')) {
-                                  try {
-                                    await taskService.deleteTask(task.id);
-                                    setTasks(tasks.filter(t => t.id !== task.id));
-                                    fetchProject();
-                                  } catch (error) {
-                                    alert('Error deleting task');
-                                  }
-                                }
+                                // Toggle task completion
                               }}
                               style={{
-                                padding: '0.25rem 0.5rem',
-                                background: 'transparent',
-                                border: '1px solid #EF4444',
-                                borderRadius: '0.375rem',
-                                color: '#EF4444',
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '5px',
+                                border: '2px solid rgba(255,255,255,0.9)',
+                                background: 'rgba(255,255,255,0.15)',
                                 cursor: 'pointer',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                transition: 'all 0.2s',
-                                fontFamily: 'Mabry Pro, sans-serif'
+                                flexShrink: 0,
+                                marginTop: '2px',
                               }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = '#EF4444';
-                                e.currentTarget.style.color = '#FFFFFF';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'transparent';
-                                e.currentTarget.style.color = '#EF4444';
-                              }}
-                            >
-                              Delete
-                            </button>
-                            </div>
+                            />
+                            <h3 style={{ 
+                              color: '#FFFFFF', 
+                              fontWeight: 600, 
+                              fontSize: '14px', 
+                              lineHeight: 1.4, 
+                              margin: 0, 
+                              flex: 1,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                            }}>{task.name}</h3>
                           </div>
-            
-                          {/* Description */}
-                          {task.description && (
-                            <p style={{ color: '#71717A', fontSize: '0.8125rem', marginBottom: '1rem', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', flex: '0 0 auto' }}>{task.description}</p>
+
+                          {/* Date */}
+                          {task.due_date && (
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '6px', 
+                              marginBottom: '10px',
+                              color: 'rgba(255,255,255,0.85)',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                            }}>
+                              <CalIcon style={{ width: '14px', height: '14px' }} />
+                              {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
                           )}
 
-                          {/* Spacer to push footer to bottom */}
-                          <div style={{ flex: 1 }} />
-
-                          {/* Progress */}
-                          <div style={{ marginBottom: '1rem', flex: '0 0 auto' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
-                              <span style={{ color: '#71717A', fontSize: '0.75rem' }}>Progress</span>
-                              <span style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 500 }}>
-                                {subtasksCompleted}/{subtasksTotal}
+                          {/* Priority Badge */}
+                          {task.priority && (
+                            <div style={{ marginBottom: '12px' }}>
+                              <span style={{ 
+                                padding: '4px 10px', 
+                                borderRadius: '6px', 
+                                fontSize: '11px', 
+                                fontWeight: 600,
+                                background: 'rgba(255,255,255,0.2)',
+                                color: '#FFFFFF',
+                                textTransform: 'capitalize',
+                              }}>
+                                {task.priority} priority
                               </span>
-                  </div>
-                            <div style={{ height: '4px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${progress}%`, backgroundColor: status.color, borderRadius: '9999px', transition: 'width 0.3s' }} />
-                </div>
-          </div>
+                            </div>
+                          )}
+
+                          {/* Spacer */}
+                          <div style={{ flex: 1 }} />
                 
-                          {/* Footer */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid #2D2D2D', flex: '0 0 auto' }}>
-                            {/* Avatars */}
-                            <div style={{ display: 'flex', gap: '-0.375rem' }}>
-                              {(task.assignees || []).slice(0, 2).map((assignee, i) => (
+                          {/* Footer with Assignee */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex' }}>
+                              {(task.assignees || []).slice(0, 3).map((assignee, i) => (
                                 <div
                                   key={assignee.id}
-                                  style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899'][i % 2], marginLeft: i > 0 ? '-6px' : '0' }}
+                                  style={{ 
+                                    width: '28px', 
+                                    height: '28px', 
+                                    borderRadius: '50%', 
+                                    border: '2px solid rgba(255,255,255,0.3)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    fontSize: '11px', 
+                                    fontWeight: 600, 
+                                    color: '#FFFFFF', 
+                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                    marginLeft: i > 0 ? '-8px' : '0',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                  }}
                                 >
                                   {assignee.name.charAt(0)}
-                                          </div>
-                                        ))}
-            </div>
-            
-                            {/* Counts */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
-                                <PaperClipIcon style={{ width: '14px', height: '14px' }} />
-                                <span>{Math.floor(Math.random() * 5) + 1}</span>
-              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#71717A', fontSize: '0.75rem' }}>
-                                <ChatBubbleLeftIcon style={{ width: '14px', height: '14px' }} />
-                                <span>{Math.floor(Math.random() * 20) + 1}</span>
-            </div>
-          </div>
-                                    </div>
-                </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       );
                     })}
 
