@@ -21,7 +21,8 @@ import {
   BellIcon,
   ChartBarIcon,
   ChevronDownIcon,
-  FolderIcon
+  FolderIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -64,6 +65,10 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
+  const [creatingProject, setCreatingProject] = useState(false);
 
   // Fetch projects where user is a member (from project_members table)
   useEffect(() => {
@@ -186,6 +191,58 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
     fetchTeamMembers();
   }, [user, myProjects]);
 
+  // Create new project function
+  const handleCreateProject = async () => {
+    if (!user?.id || !newProjectName.trim()) return;
+    
+    setCreatingProject(true);
+    try {
+      // Create the project
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects_project')
+        .insert({
+          name: newProjectName.trim(),
+          color: newProjectColor,
+          created_by: user.id,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      
+      if (projectError) {
+        console.error('Error creating project:', projectError);
+        alert('Failed to create project');
+        setCreatingProject(false);
+        return;
+      }
+      
+      // Add creator as a member with 'owner' role
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: newProject.id,
+          user_id: user.id,
+          role: 'owner',
+        });
+      
+      if (memberError) {
+        console.error('Error adding member:', memberError);
+      }
+      
+      // Update local state
+      setMyProjects(prev => [...prev, newProject]);
+      setNewProjectName('');
+      setShowCreateProject(false);
+      
+      // Navigate to the new project
+      router.push(`/projects/${newProject.id}`);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      alert('Failed to create project');
+    }
+    setCreatingProject(false);
+  };
+
   return (
     <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', background: '#0D0D0D', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', zIndex: 40 }}>
       {/* Workspace Header */}
@@ -293,6 +350,40 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                   No projects yet
                 </div>
               )}
+            
+            {/* Create New Project Button */}
+            <button
+              onClick={() => setShowCreateProject(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.5rem',
+                background: 'transparent',
+                color: '#71717A',
+                border: '1px dashed #3D3D3D',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                width: '100%',
+                marginTop: '0.5rem',
+                fontSize: '0.8125rem',
+                fontFamily: 'Mabry Pro, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#1A1A1A';
+                e.currentTarget.style.borderColor = '#10B981';
+                e.currentTarget.style.color = '#10B981';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = '#3D3D3D';
+                e.currentTarget.style.color = '#71717A';
+              }}
+            >
+              <PlusIcon style={{ width: '16px', height: '16px' }} />
+              <span>New Project</span>
+            </button>
           </div>
         </div>
 
@@ -488,6 +579,151 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                             </button>
                         </div>
                     </div>
+
+      {/* Create Project Modal */}
+      {showCreateProject && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+          }}
+          onClick={() => setShowCreateProject(false)}
+        >
+          <div
+            style={{
+              background: '#1A1A1A',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '400px',
+              maxWidth: '90vw',
+              border: '1px solid #2D2D2D',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ color: '#FFFFFF', fontSize: '1.25rem', fontWeight: 600, marginBottom: '20px', fontFamily: 'Mabry Pro, sans-serif' }}>
+              Create New Project
+            </h3>
+            
+            {/* Project Name */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#A1A1AA', fontSize: '0.875rem', marginBottom: '8px', fontFamily: 'Mabry Pro, sans-serif' }}>
+                Project Name
+              </label>
+              <input
+                type="text"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                placeholder="Enter project name"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  background: '#141414',
+                  border: '1px solid #3D3D3D',
+                  borderRadius: '8px',
+                  color: '#FFFFFF',
+                  fontSize: '0.9375rem',
+                  outline: 'none',
+                  fontFamily: 'Mabry Pro, sans-serif',
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+              />
+            </div>
+            
+            {/* Project Color */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#A1A1AA', fontSize: '0.875rem', marginBottom: '8px', fontFamily: 'Mabry Pro, sans-serif' }}>
+                Project Color
+              </label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'].map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setNewProjectColor(color)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: color,
+                      border: newProjectColor === color ? '3px solid #FFFFFF' : '3px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowCreateProject(false)}
+                style={{
+                  padding: '10px 20px',
+                  background: 'transparent',
+                  border: '1px solid #3D3D3D',
+                  borderRadius: '8px',
+                  color: '#A1A1AA',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Mabry Pro, sans-serif',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#2D2D2D';
+                  e.currentTarget.style.color = '#FFFFFF';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#A1A1AA';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateProject}
+                disabled={!newProjectName.trim() || creatingProject}
+                style={{
+                  padding: '10px 20px',
+                  background: newProjectName.trim() ? '#10B981' : '#3D3D3D',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: newProjectName.trim() ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Mabry Pro, sans-serif',
+                  opacity: creatingProject ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (newProjectName.trim() && !creatingProject) {
+                    e.currentTarget.style.background = '#059669';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (newProjectName.trim()) {
+                    e.currentTarget.style.background = '#10B981';
+                  }
+                }}
+              >
+                {creatingProject ? 'Creating...' : 'Create Project'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
