@@ -75,7 +75,7 @@ export default function CalendarPage() {
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   
   // Calendar view state
-  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day' | '15min'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
 
   // Mobile detection
   useEffect(() => {
@@ -171,6 +171,18 @@ export default function CalendarPage() {
 
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+  };
+
+  const previousWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() - 7);
+    setCurrentDate(newDate);
+  };
+
+  const nextWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + 7);
+    setCurrentDate(newDate);
   };
 
   const getTasksForDate = (date: Date) => {
@@ -593,83 +605,69 @@ export default function CalendarPage() {
         }
         
         .calendar-grid {
-          background: #141414;
-          border: 1px solid #2D2D2D;
-          border-radius: 12px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+          background: transparent;
+          padding: 0.5rem 0;
         }
+        
         .calendar-header {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
-          background: #1A1A1A;
-          border-bottom: 1px solid #2D2D2D;
+          gap: 0.75rem;
+          padding: 0 1rem 0.5rem 1rem;
         }
         
         .calendar-header-cell {
-          padding: 1rem;
+          padding: 0.5rem;
           text-align: center;
           font-weight: 600;
-          color: #E4E4E7;
-          border-right: 1px solid #2D2D2D;
+          color: #71717A;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
           font-size: 0.75rem;
           letter-spacing: 0.05em;
           text-transform: uppercase;
         }
-        
-        .calendar-header-cell:last-child {
-          border-right: none;
-        }
           .calendar-body {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+            padding: 1rem;
           }
         .calendar-cell {
-          min-height: 120px;
-          padding: 0.75rem;
-          border-right: 1px solid #2D2D2D;
-          border-bottom: 1px solid #2D2D2D;
+          min-height: 140px;
+          padding: 1rem;
           background: #141414;
-          transition: all 0.2s ease;
+          border: 1px solid #2D2D2D;
+          border-radius: 20px;
+          transition: all 0.3s ease;
           cursor: pointer;
         }
         
         .calendar-cell:hover {
           background: #1A1A1A;
-        }
-        
-        .calendar-cell:nth-child(7n) {
-          border-right: none;
+          border-color: #3D3D3D;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         
         .calendar-cell.other-month {
-          background: #1A1A1A;
+          background: #0D0D0D;
           color: #52525B;
+          opacity: 0.6;
         }
         
         .calendar-cell.today {
-          background: rgba(255, 179, 51, 0.05);
-          border-right: 1px solid #FFB333;
-          border-bottom: 1px solid #FFB333;
+          background: #141414;
+          border: 2px solid #3B82F6;
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
           position: relative;
         }
         
-        .calendar-cell.today::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 4px;
-          height: 100%;
-          background: #FFB333;
-        }
         .day-number {
-          font-weight: 600;
+          font-weight: 700;
           color: #FFFFFF;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
-          font-size: 1rem;
+          font-size: 1.5rem;
         }
         
         .calendar-cell.other-month .day-number {
@@ -677,8 +675,8 @@ export default function CalendarPage() {
         }
         
         .calendar-cell.today .day-number {
-          color: #FFB333;
-          font-weight: 700;
+          color: #3B82F6;
+          font-weight: 800;
         }
           .events-container {
             display: flex;
@@ -686,31 +684,36 @@ export default function CalendarPage() {
             gap: 0.25rem;
           }
         .task-item {
-          background: #1A1A1A;
-          border: 1px solid #2D2D2D;
-          border-radius: 8px;
-          padding: 0.5rem;
+          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+          border: none;
+          border-radius: 12px;
+          padding: 0.625rem 0.75rem;
           font-size: 0.75rem;
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.5rem;
           cursor: pointer;
           transition: all 0.2s ease;
-          border-left: 3px solid #2D2D2D;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         .task-item:hover {
-          background: #1F1F1F;
-          border-color: #FFB333;
-          border-left-color: #FFB333;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
         
         .task-item.important {
-          border-left-color: #FFB333;
-          background: rgba(255, 179, 51, 0.05);
+          background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        }
+        
+        .task-item.important:hover {
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
         }
         
         .task-item.overdue {
-          border-left-color: #F87239;
-          background: rgba(248, 114, 57, 0.05);
+          background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        
+        .task-item.overdue:hover {
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
           .task-header {
             display: flex;
@@ -2300,8 +2303,7 @@ export default function CalendarPage() {
                   {[
                     { key: 'month', label: 'Month' },
                     { key: 'week', label: 'Week' },
-                    { key: 'day', label: 'Day' },
-                    { key: '15min', label: '15 Min' }
+                    { key: 'day', label: 'Day' }
                   ].map(({ key, label }) => (
                     <button
                       key={key}
@@ -2337,13 +2339,13 @@ export default function CalendarPage() {
                 </div>
                 
                 <div className="calendar-nav">
-                  <button onClick={previousMonth} className="nav-btn">
+                  <button onClick={calendarView === 'week' ? previousWeek : previousMonth} className="nav-btn">
                     <ChevronLeftIcon style={{ width: '20px', height: '20px' }} />
                   </button>
                   <div className="month-year">
-                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                    {calendarView === 'week' ? `Week: ${monthNames[currentDate.getMonth()]}` : `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
                   </div>
-                  <button onClick={nextMonth} className="nav-btn">
+                  <button onClick={calendarView === 'week' ? nextWeek : nextMonth} className="nav-btn">
                     <ChevronRightIcon style={{ width: '20px', height: '20px' }} />
                   </button>
                 </div>
@@ -2490,19 +2492,166 @@ export default function CalendarPage() {
               </div>
             </div>
             ) : calendarView === 'week' ? (
-              <div style={{ padding: '1rem', color: '#FFFFFF' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Week View</h3>
-                <p style={{ color: '#71717A' }}>Week view coming soon...</p>
+              // Week View - Large rounded boxes for each day
+              <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(7, 1fr)', 
+                  gap: '1rem',
+                  marginBottom: '2rem'
+                }}>
+                  {Array.from({ length: 7 }).map((_, dayIndex) => {
+                    const weekStart = new Date(currentDate);
+                    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + dayIndex);
+                    const dayTasks = getTasksForDate(weekStart);
+                    const isToday = weekStart.toDateString() === today.toDateString();
+                    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
+                    const dayNumber = weekStart.getDate();
+                    
+                    return (
+                      <div
+                        key={dayIndex}
+                        style={{
+                          background: '#141414',
+                          borderRadius: '24px',
+                          padding: '1.5rem',
+                          minHeight: '280px',
+                          border: isToday ? '2px solid #3B82F6' : '1px solid #2D2D2D',
+                          transition: 'all 0.3s ease',
+                          display: 'flex',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        {/* Day name */}
+                        <div style={{ 
+                          fontSize: '0.75rem', 
+                          fontWeight: 600, 
+                          color: '#71717A',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.5rem'
+                        }}>
+                          {dayName.slice(0, 3)}
+                        </div>
+                        
+                        {/* Day number */}
+                        <div style={{ 
+                          fontSize: '2rem', 
+                          fontWeight: 700, 
+                          color: isToday ? '#3B82F6' : '#FFFFFF',
+                          marginBottom: '1rem'
+                        }}>
+                          {dayNumber}
+                        </div>
+                        
+                        {/* Tasks */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                          {dayTasks.slice(0, 4).map((task) => (
+                            <div
+                              key={task.id}
+                              onClick={() => handleTaskModalOpen(task)}
+                              style={{
+                                background: task.priority === 'high' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' :
+                                           task.priority === 'urgent' ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' :
+                                           'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                                padding: '0.75rem',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                              }}
+                            >
+                              <div style={{ 
+                                fontSize: '0.8125rem', 
+                                fontWeight: 600, 
+                                color: '#FFFFFF',
+                                marginBottom: '0.25rem',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {task.name}
+                              </div>
+                              {task.start_date && (
+                                <div style={{ 
+                                  fontSize: '0.6875rem', 
+                                  color: 'rgba(255,255,255,0.8)',
+                                  fontWeight: 500
+                                }}>
+                                  @ {new Date(task.start_date).toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {dayTasks.length > 4 && (
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#71717A',
+                              textAlign: 'center',
+                              padding: '0.5rem',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => handleShowMoreTasks(weekStart, dayTasks)}
+                            >
+                              +{dayTasks.length - 4} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Add Task Button */}
+                <button
+                  onClick={() => {
+                    // Handle add task
+                  }}
+                  style={{
+                    background: '#3B82F6',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.875rem 1.5rem',
+                    borderRadius: '12px',
+                    fontSize: '0.9375rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#2563EB';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#3B82F6';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <PlusIcon style={{ width: '18px', height: '18px' }} />
+                  Add Task
+                </button>
               </div>
-            ) : calendarView === 'day' ? (
+            ) : (
+              // Day View placeholder
               <div style={{ padding: '1rem', color: '#FFFFFF' }}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Day View</h3>
                 <p style={{ color: '#71717A' }}>Day view coming soon...</p>
-              </div>
-            ) : (
-              <div style={{ padding: '1rem', color: '#FFFFFF' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>15 Min View</h3>
-                <p style={{ color: '#71717A' }}>15 minute view coming soon...</p>
               </div>
             )}
 
