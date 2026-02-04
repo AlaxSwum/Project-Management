@@ -82,13 +82,20 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
       try {
         console.log('Fetching projects for user:', user.id);
         
+        // First, let's see ALL entries in project_members for debugging
+        const { data: allMembers, error: allMembersError } = await supabase
+          .from('project_members')
+          .select('*')
+          .limit(10);
+        console.log('All project_members (sample):', allMembers, 'Error:', allMembersError);
+        
         // Get project IDs where user is a member from project_members table
         const { data: userProjectIds, error: memberError } = await supabase
           .from('project_members')
           .select('project_id')
           .eq('user_id', user.id);
         
-        console.log('User project IDs:', userProjectIds);
+        console.log('User project IDs query result:', userProjectIds, 'Error:', memberError);
         
         if (memberError) {
           console.error('Error fetching project memberships:', memberError);
@@ -99,6 +106,13 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         
         const projectIds = userProjectIds?.map(p => p.project_id) || [];
         console.log('Project IDs to fetch:', projectIds);
+        
+        // Also check all projects in database
+        const { data: allProjects, error: allProjectsError } = await supabase
+          .from('projects_project')
+          .select('id, name')
+          .limit(10);
+        console.log('All projects (sample):', allProjects, 'Error:', allProjectsError);
         
         // If user has no projects, return empty
         if (projectIds.length === 0) {
@@ -115,7 +129,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           .in('id', projectIds)
           .order('name');
         
-        console.log('Fetched projects:', projects);
+        console.log('Fetched projects:', projects, 'Error:', projectError);
         
         if (projectError) {
           console.error('Error fetching projects:', projectError);
@@ -240,8 +254,9 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         console.error('Error adding member:', memberError);
       }
       
-      // Update local state
-      setMyProjects(prev => [...prev, newProject]);
+      // Update local state with the color we selected (even if not saved to DB)
+      const projectWithColor = { ...newProject, color: newProjectColor };
+      setMyProjects(prev => [...prev, projectWithColor]);
       setNewProjectName('');
       setShowCreateProject(false);
       
