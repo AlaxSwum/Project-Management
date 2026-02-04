@@ -172,6 +172,8 @@ export default function ProjectDetailPage() {
   const [showProjectMembers, setShowProjectMembers] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [editingMemberRole, setEditingMemberRole] = useState<string>('');
+  const [customRoleInput, setCustomRoleInput] = useState<string>('');
+  const [ganttViewMode, setGanttViewMode] = useState<'week' | 'month' | 'year'>('week');
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
   const [enteredTags, setEnteredTags] = useState<string[]>([]);
@@ -856,111 +858,400 @@ n              {/* Team Members Button - Avatar Style */}
               </div>
             </div>
           ) : selectedView === 'gantt' ? (
-            // Gantt Chart View - Daily Timeline
-            <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden' }}>
-              {/* Gantt Header with Month Navigation */}
-              <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Timeline</h3>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => {
-                      const newDate = new Date(ganttStartDate);
-                      newDate.setDate(newDate.getDate() - 14);
-                      setGanttStartDate(newDate);
-                    }}
-                    style={{ padding: '0.5rem 0.75rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
-                  >
-                    ← Previous
-                  </button>
-                  <button
-                    onClick={() => setGanttStartDate(new Date())}
-                    style={{ padding: '0.5rem 0.75rem', background: '#3B82F6', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
-                  >
-                    Today
-                  </button>
-                  <button
-                    onClick={() => {
-                      const newDate = new Date(ganttStartDate);
-                      newDate.setDate(newDate.getDate() + 14);
-                      setGanttStartDate(newDate);
-                    }}
-                    style={{ padding: '0.5rem 0.75rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
-                  >
-                    Next →
-                  </button>
+            // Gantt Chart View - Calendar Style
+            <div style={{ display: 'flex', gap: '1rem', height: '100%' }}>
+              {/* Main Gantt Area */}
+              <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                {/* Gantt Header */}
+                <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {/* View Mode Toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D0D', padding: '0.25rem', borderRadius: '0.5rem' }}>
+                    {(['week', 'month', 'year'] as const).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => setGanttViewMode(mode)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: ganttViewMode === mode ? '#3B82F6' : 'transparent',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          color: ganttViewMode === mode ? '#FFFFFF' : '#71717A',
+                          fontSize: '0.8125rem',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Navigation */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        if (ganttViewMode === 'week') d.setDate(d.getDate() - 7);
+                        else if (ganttViewMode === 'month') d.setMonth(d.getMonth() - 1);
+                        else d.setFullYear(d.getFullYear() - 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <button
+                      onClick={() => setGanttStartDate(new Date())}
+                      style={{ padding: '0.5rem 1rem', background: '#10B981', border: 'none', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
+                    >
+                      Today
+                    </button>
+                    <button
+                      onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        if (ganttViewMode === 'week') d.setDate(d.getDate() + 7);
+                        else if (ganttViewMode === 'month') d.setMonth(d.getMonth() + 1);
+                        else d.setFullYear(d.getFullYear() + 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    <div style={{ padding: '0.5rem 1rem', background: '#2D2D2D', borderRadius: '0.5rem', marginLeft: '0.5rem' }}>
+                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>
+                        {ganttViewMode === 'week' ? ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
+                         ganttViewMode === 'month' ? ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
+                         ganttStartDate.getFullYear()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gantt Content */}
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  {ganttViewMode === 'week' ? (
+                    // Week View - Days as rows, hours as columns
+                    <div style={{ display: 'flex', minHeight: '100%' }}>
+                      {/* Day Labels Column */}
+                      <div style={{ width: '100px', flexShrink: 0, background: '#141414', borderRight: '1px solid #2D2D2D' }}>
+                        <div style={{ height: '48px', borderBottom: '1px solid #2D2D2D' }} />
+                        {Array.from({ length: 7 }, (_, i) => {
+                          const date = new Date(ganttStartDate);
+                          date.setDate(date.getDate() - date.getDay() + i);
+                          const isToday = date.toDateString() === new Date().toDateString();
+                          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                          return (
+                            <div key={i} style={{ height: '80px', padding: '0.75rem', borderBottom: '1px solid #2D2D2D', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: isToday ? '#3B82F610' : 'transparent' }}>
+                              <span style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{dayNames[i]}</span>
+                              <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem' }}>{date.getDate()}/{date.getMonth() + 1}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Time Grid */}
+                      <div style={{ flex: 1, minWidth: '800px' }}>
+                        {/* Hour Headers */}
+                        <div style={{ display: 'flex', height: '48px', borderBottom: '1px solid #2D2D2D', background: '#141414' }}>
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const hour = 7 + i;
+                            return (
+                              <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #2D2D2D' }}>
+                                <span style={{ color: '#71717A', fontSize: '0.75rem', fontWeight: 500 }}>{hour}:00</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* Day Rows with Tasks */}
+                        {Array.from({ length: 7 }, (_, dayIdx) => {
+                          const date = new Date(ganttStartDate);
+                          date.setDate(date.getDate() - date.getDay() + dayIdx);
+                          const isToday = date.toDateString() === new Date().toDateString();
+                          const dayTasks = filteredTasks.filter(t => {
+                            if (!t.due_date) return false;
+                            const taskDate = new Date(t.due_date);
+                            return taskDate.toDateString() === date.toDateString();
+                          });
+                          
+                          const barColors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'];
+                          
+                          return (
+                            <div key={dayIdx} style={{ display: 'flex', height: '80px', borderBottom: '1px solid #2D2D2D', position: 'relative', background: isToday ? '#3B82F608' : 'transparent' }}>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <div key={i} style={{ flex: 1, borderRight: '1px solid #1F1F1F' }} />
+                              ))}
+                              
+                              {/* Tasks for this day */}
+                              {dayTasks.map((task, taskIdx) => {
+                                const barColor = barColors[taskIdx % barColors.length];
+                                const leftPos = 10 + (taskIdx % 3) * 25;
+                                const width = 40 + (taskIdx % 2) * 20;
+                                
+                                return (
+                                  <div
+                                    key={task.id}
+                                    onClick={() => setSelectedTask(task)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      left: `${leftPos}%`,
+                                      width: `${width}%`,
+                                      height: '40px',
+                                      background: barColor,
+                                      borderRadius: '0.5rem',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      padding: '0 0.75rem',
+                                      gap: '0.5rem',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                      zIndex: taskIdx + 1,
+                                      transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; e.currentTarget.style.zIndex = '100'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.zIndex = String(taskIdx + 1); }}
+                                  >
+                                    {task.assignees?.[0] && (
+                                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#FFFFFF', border: `2px solid ${barColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 600, color: barColor, flexShrink: 0 }}>
+                                        {task.assignees[0].name.charAt(0)}
+                                      </div>
+                                    )}
+                                    <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                                  </div>
+                                );
+                              })}
+                              
+                              {/* Today indicator line */}
+                              {isToday && (
+                                <div style={{ position: 'absolute', left: `${((new Date().getHours() - 7) / 12) * 100}%`, top: 0, bottom: 0, width: '2px', background: '#EF4444', zIndex: 50 }}>
+                                  <div style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444' }} />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : ganttViewMode === 'month' ? (
+                    // Month View - Calendar grid
+                    <div style={{ padding: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
+                        {/* Day Headers */}
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                          <div key={day} style={{ padding: '0.75rem', textAlign: 'center', color: '#71717A', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>{day}</div>
+                        ))}
+                        
+                        {/* Calendar Days */}
+                        {(() => {
+                          const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                          const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                          const startDay = monthStart.getDay();
+                          const daysInMonth = monthEnd.getDate();
+                          const today = new Date();
+                          
+                          return Array.from({ length: 42 }, (_, i) => {
+                            const dayNum = i - startDay + 1;
+                            const isValidDay = dayNum > 0 && dayNum <= daysInMonth;
+                            const date = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), dayNum);
+                            const isToday = isValidDay && date.toDateString() === today.toDateString();
+                            const dayTasks = isValidDay ? filteredTasks.filter(t => {
+                              if (!t.due_date) return false;
+                              const taskDate = new Date(t.due_date);
+                              return taskDate.getDate() === dayNum && taskDate.getMonth() === date.getMonth() && taskDate.getFullYear() === date.getFullYear();
+                            }) : [];
+                            
+                            return (
+                              <div key={i} style={{
+                                minHeight: '100px',
+                                padding: '0.5rem',
+                                background: isToday ? '#3B82F615' : isValidDay ? '#141414' : '#0D0D0D',
+                                borderRadius: '0.5rem',
+                                border: isToday ? '2px solid #3B82F6' : '1px solid #2D2D2D'
+                              }}>
+                                {isValidDay && (
+                                  <>
+                                    <div style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: isToday ? 700 : 500, marginBottom: '0.5rem' }}>{dayNum}</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                      {dayTasks.slice(0, 3).map((task, idx) => {
+                                        const colors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981'];
+                                        return (
+                                          <div
+                                            key={task.id}
+                                            onClick={() => setSelectedTask(task)}
+                                            style={{
+                                              padding: '0.25rem 0.5rem',
+                                              background: colors[idx % colors.length],
+                                              borderRadius: '0.25rem',
+                                              fontSize: '0.625rem',
+                                              color: '#FFFFFF',
+                                              fontWeight: 500,
+                                              cursor: 'pointer',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap'
+                                            }}
+                                          >
+                                            {task.name}
+                                          </div>
+                                        );
+                                      })}
+                                      {dayTasks.length > 3 && (
+                                        <span style={{ fontSize: '0.625rem', color: '#71717A' }}>+{dayTasks.length - 3} more</span>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    // Year View - Month grid
+                    <div style={{ padding: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                        {Array.from({ length: 12 }, (_, monthIdx) => {
+                          const monthDate = new Date(ganttStartDate.getFullYear(), monthIdx, 1);
+                          const monthEnd = new Date(ganttStartDate.getFullYear(), monthIdx + 1, 0);
+                          const isCurrentMonth = monthIdx === new Date().getMonth() && ganttStartDate.getFullYear() === new Date().getFullYear();
+                          const monthTasks = filteredTasks.filter(t => {
+                            if (!t.due_date) return false;
+                            const taskDate = new Date(t.due_date);
+                            return taskDate.getMonth() === monthIdx && taskDate.getFullYear() === ganttStartDate.getFullYear();
+                          });
+                          
+                          return (
+                            <div key={monthIdx} style={{
+                              padding: '1rem',
+                              background: isCurrentMonth ? '#3B82F610' : '#141414',
+                              borderRadius: '0.75rem',
+                              border: isCurrentMonth ? '2px solid #3B82F6' : '1px solid #2D2D2D',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onClick={() => {
+                              setGanttStartDate(monthDate);
+                              setGanttViewMode('month');
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                            onMouseLeave={(e) => { if (!isCurrentMonth) e.currentTarget.style.borderColor = '#2D2D2D'; }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                <span style={{ color: isCurrentMonth ? '#3B82F6' : '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600 }}>
+                                  {monthDate.toLocaleDateString('en-US', { month: 'short' })}
+                                </span>
+                                <span style={{ color: '#71717A', fontSize: '0.75rem' }}>{monthTasks.length} tasks</span>
+                              </div>
+                              
+                              {/* Mini calendar dots */}
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.125rem' }}>
+                                {Array.from({ length: Math.min(monthEnd.getDate(), 28) }, (_, d) => {
+                                  const hasTasks = monthTasks.some(t => {
+                                    const td = new Date(t.due_date!);
+                                    return td.getDate() === d + 1;
+                                  });
+                                  return (
+                                    <div key={d} style={{
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      background: hasTasks ? '#10B981' : '#2D2D2D'
+                                    }} />
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div style={{ display: 'flex' }}>
-                <div style={{ width: '280px', background: '#141414', borderRight: '1px solid #2D2D2D' }}>
-                  <div style={{ padding: '0.875rem 1rem', borderBottom: '2px solid #2D2D2D' }}>
-                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em' }}>Task</div>
+              {/* Right Sidebar - Mini Calendar */}
+              <div style={{ width: '260px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Mini Calendar */}
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1rem', border: '1px solid #2D2D2D' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <button onClick={() => { const d = new Date(ganttStartDate); d.setMonth(d.getMonth() - 1); setGanttStartDate(d); }} style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}>
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                    <button onClick={() => { const d = new Date(ganttStartDate); d.setMonth(d.getMonth() + 1); setGanttStartDate(d); }} style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}>
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem', marginBottom: '0.5rem' }}>
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                      <div key={i} style={{ textAlign: 'center', fontSize: '0.625rem', color: '#52525B', fontWeight: 600 }}>{d}</div>
+                    ))}
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
+                    {(() => {
+                      const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                      const startDay = monthStart.getDay();
+                      const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                      const today = new Date();
+                      
+                      return Array.from({ length: 42 }, (_, i) => {
+                        const dayNum = i - startDay + 1;
+                        const isValid = dayNum > 0 && dayNum <= daysInMonth;
+                        const isToday = isValid && dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                        
+                        return (
+                          <div key={i} style={{
+                            width: '28px',
+                            height: '28px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.75rem',
+                            color: isToday ? '#FFFFFF' : isValid ? '#A1A1AA' : '#3D3D3D',
+                            background: isToday ? '#3B82F6' : 'transparent',
+                            borderRadius: '0.375rem',
+                            fontWeight: isToday ? 600 : 400,
+                            cursor: isValid ? 'pointer' : 'default'
+                          }}>
+                            {isValid ? dayNum : ''}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
-                <div style={{ flex: 1, overflowX: 'auto' }}>
-                  <div style={{ display: 'flex', borderBottom: '1px solid #2D2D2D' }}>
-                    {Array.from({ length: 12 }, (_, weekIndex) => {
-                      const weekStartDate = new Date(ganttStartDate);
-                      weekStartDate.setDate(weekStartDate.getDate() + (weekIndex * 7));
-                      const weekEndDate = new Date(weekStartDate);
-                      weekEndDate.setDate(weekEndDate.getDate() + 6);
+                
+                {/* Upcoming Tasks */}
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1rem', border: '1px solid #2D2D2D', flex: 1 }}>
+                  <h4 style={{ color: '#71717A', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Upcoming</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                    {filteredTasks.filter(t => t.due_date && new Date(t.due_date) >= new Date()).slice(0, 5).map((task, i) => {
+                      const colors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981'];
                       return (
-                        <div key={weekIndex} style={{ minWidth: '210px', padding: '0.5rem', background: '#141414', borderRight: '1px solid #2D2D2D', textAlign: 'center' }}>
-                          <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase' }}>
-                            {weekStartDate.getDate()} {weekStartDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} - {weekEndDate.getDate()} {weekEndDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
+                        <div key={task.id} onClick={() => setSelectedTask(task)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#252525'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                          <div style={{ width: '4px', height: '32px', background: colors[i % colors.length], borderRadius: '2px' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>{task.name.length > 20 ? task.name.substring(0, 20) + '...' : task.name}</div>
+                            <div style={{ color: '#71717A', fontSize: '0.6875rem' }}>{new Date(task.due_date!).toLocaleDateString()}</div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                  <div style={{ display: 'flex', borderBottom: '2px solid #2D2D2D' }}>
-                    {Array.from({ length: 84 }, (_, dayIndex) => {
-                      const currentDate = new Date(ganttStartDate);
-                      currentDate.setDate(currentDate.getDate() + dayIndex);
-                      const isToday = currentDate.toDateString() === new Date().toDateString();
-                      const isSunday = currentDate.getDay() === 0;
-                      return (
-                        <div key={dayIndex} style={{ minWidth: '30px', padding: '0.5rem 0.25rem', background: isToday ? '#10B98120' : '#141414', borderRight: '1px solid #1F1F1F', borderLeft: isSunday && dayIndex > 0 ? '1px solid #2D2D2D' : 'none', textAlign: 'center' }}>
-                          <div style={{ fontSize: '0.6875rem', fontWeight: isToday ? 700 : 500, color: isToday ? '#10B981' : '#71717A' }}>{currentDate.getDate()}</div>
-                          {isToday && <div style={{ fontSize: '0.5625rem', fontWeight: 700, color: '#10B981', textTransform: 'uppercase', marginTop: '0.125rem' }}>TODAY</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', maxHeight: '600px', overflowY: 'auto' }}>
-                <div style={{ width: '280px' }}>
-                  {filteredTasks.filter(t => t.start_date && t.due_date).map((task, index) => (
-                    <div key={task.id} style={{ padding: '0.875rem 1rem', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '52px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: task.status === 'done' ? '#10B981' : TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A', flexShrink: 0 }} />
-                      <span style={{ fontSize: '0.875rem', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
-                    </div>
-                  ))}
-                  {filteredTasks.filter(t => t.start_date && t.due_date).length === 0 && (
-                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>No tasks with dates</div>
-                  )}
-                </div>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  {filteredTasks.filter(t => t.start_date && t.due_date).map((task, index) => {
-                    const taskStart = new Date(task.start_date!);
-                    const taskEnd = new Date(task.due_date!);
-                    const dayWidth = 30;
-                    const daysSinceStart = Math.floor((taskStart.getTime() - ganttStartDate.getTime()) / (1000 * 60 * 60 * 24));
-                    const taskDuration = Math.ceil((taskEnd.getTime() - taskStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                    const startOffset = Math.max(0, daysSinceStart * dayWidth);
-                    const widthInDays = taskDuration * dayWidth;
-                    const isCompleted = task.status === 'done';
-                    const barColor = isCompleted ? '#10B981' : TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A';
-                    return (
-                      <div key={task.id} style={{ position: 'relative', background: index % 2 === 0 ? '#1A1A1A' : '#0D0D0D', borderBottom: '1px solid #1F1F1F', minHeight: '52px' }}>
-                        <div onClick={() => setSelectedTask(task)} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: `${startOffset}px`, width: `${widthInDays}px`, height: '24px', background: barColor, borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', padding: '0 0.5rem', gap: '0.375rem', boxShadow: isCompleted ? '0 2px 8px rgba(16, 185, 129, 0.3)' : `0 2px 8px ${barColor}40` }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.03)'; e.currentTarget.style.boxShadow = `0 4px 16px ${barColor}60`; e.currentTarget.style.zIndex = '10'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; e.currentTarget.style.boxShadow = isCompleted ? '0 2px 8px rgba(16, 185, 129, 0.3)' : `0 2px 8px ${barColor}40`; e.currentTarget.style.zIndex = '1'; }}>
-                          {task.assignees && task.assignees.length > 0 && (<div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#FFFFFF', border: '2px solid ' + barColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, color: barColor, flexShrink: 0 }}>{task.assignees[0].name.charAt(0)}</div>)}
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             </div>
@@ -1749,162 +2040,96 @@ n              {/* Team Members Button - Avatar Style */}
                   </div>
                 </div>
 
-                {/* Timeline Container */}
-                <div style={{ flex: 1, background: '#141414', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #1F1F1F', overflow: 'hidden' }}>
-                  {/* Week Headers */}
-                  <div style={{ display: 'flex', marginBottom: '1.25rem', paddingLeft: '180px' }}>
-                    {['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'].map((week, i) => {
-                      const today = new Date();
-                      const weekOfMonth = Math.ceil(today.getDate() / 7);
-                      const isCurrentWeek = i + 1 === weekOfMonth && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
-                      
-                      return (
-                        <div key={week} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
-                          <span style={{ color: isCurrentWeek ? '#10B981' : '#52525B', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{week}</span>
-                          {isCurrentWeek && (
-                            <div style={{ position: 'absolute', top: '1.75rem', left: '50%', transform: 'translateX(-50%)', width: '2px', height: 'calc(100vh - 380px)', background: 'linear-gradient(180deg, #EF4444 0%, transparent 100%)', zIndex: 10 }}>
-                              <div style={{ position: 'absolute', top: '-0.625rem', left: '50%', transform: 'translateX(-50%)', padding: '0.25rem 0.5rem', background: '#10B981', borderRadius: '0.25rem', color: '#FFF', fontSize: '0.5625rem', fontWeight: 600, whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Today</div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Team Member Rows */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {/* Team Member Progress Cards */}
+                <div style={{ flex: 1, background: '#141414', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #1F1F1F', overflow: 'auto' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
                     {project.members?.map((member, memberIdx) => {
                       const memberColors = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16'];
                       const memberColor = memberColors[memberIdx % memberColors.length];
-                      const barColors = ['#86EFAC', '#FDE047', '#FDA4AF', '#A5B4FC', '#F9A8D4', '#93C5FD', '#FCA5A5', '#A7F3D0'];
                       
-                      // Get month boundaries
-                      const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
-                      const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
-                      
-                      // Filter tasks for this member that fall within the selected month
-                      const memberTasks = tasks.filter(t => {
-                        if (!t.assignees?.some(a => a.id === member.id)) return false;
-                        
-                        const taskDue = t.due_date ? new Date(t.due_date) : null;
-                        const taskStart = t.start_date ? new Date(t.start_date) : null;
-                        
-                        // Check if task falls within month (has due date or start date in this month)
-                        if (taskDue) {
-                          const dueInMonth = taskDue >= monthStart && taskDue <= monthEnd;
-                          if (dueInMonth) return true;
-                        }
-                        if (taskStart) {
-                          const startInMonth = taskStart >= monthStart && taskStart <= monthEnd;
-                          if (startInMonth) return true;
-                        }
-                        // Also include tasks that span across the month
-                        if (taskStart && taskDue) {
-                          const spansMonth = taskStart <= monthEnd && taskDue >= monthStart;
-                          if (spansMonth) return true;
-                        }
-                        return false;
-                      });
-                      
-                      // Count total tasks for this member (regardless of month)
-                      const totalMemberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id)).length;
+                      // Get all tasks for this member
+                      const allMemberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
+                      const completedTasks = allMemberTasks.filter(t => t.status === 'done').length;
+                      const inProgressTasks = allMemberTasks.filter(t => t.status === 'in_progress').length;
+                      const todoTasks = allMemberTasks.filter(t => t.status === 'todo').length;
+                      const totalTasks = allMemberTasks.length;
+                      const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
                       
                       return (
-                        <div key={member.id} style={{ display: 'flex', alignItems: 'flex-start', minHeight: '48px', paddingBottom: '0.5rem', borderBottom: memberIdx < (project.members?.length || 0) - 1 ? '1px solid #1F1F1F' : 'none' }}>
-                          {/* Member info */}
-                          <div style={{ width: '180px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', paddingRight: '1rem', paddingTop: '0.25rem' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: memberColor, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, boxShadow: `0 0 0 2px ${memberColor}30` }}>
-                              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#FFFFFF' }}>{member.name.charAt(0)}</span>
+                        <div 
+                          key={member.id}
+                          style={{ 
+                            background: '#1A1A1A',
+                            borderRadius: '0.875rem',
+                            padding: '1.25rem',
+                            border: '1px solid #2D2D2D',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = memberColor; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                        >
+                          {/* Member Header */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', marginBottom: '1rem' }}>
+                            <div style={{ 
+                              width: '48px', 
+                              height: '48px', 
+                              borderRadius: '50%', 
+                              backgroundColor: memberColor,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              boxShadow: `0 0 0 3px ${memberColor}30`
+                            }}>
+                              <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF' }}>{member.name.charAt(0)}</span>
                             </div>
-                            <div style={{ overflow: 'hidden' }}>
-                              <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {member.name.length > 14 ? member.name.substring(0, 14) + '...' : member.name}
-                              </span>
-                              <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{memberTasks.length} this month</span>
+                            <div style={{ flex: 1 }}>
+                              <h4 style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, margin: 0 }}>{member.name}</h4>
+                              <p style={{ color: '#71717A', fontSize: '0.75rem', margin: '0.125rem 0 0', textTransform: 'capitalize' }}>{member.role || 'Member'}</p>
+                            </div>
+                            {/* Completion Badge */}
+                            <div style={{ 
+                              background: completionPercent >= 80 ? '#10B98120' : completionPercent >= 50 ? '#F59E0B20' : '#EF444420',
+                              padding: '0.375rem 0.75rem',
+                              borderRadius: '1rem',
+                              color: completionPercent >= 80 ? '#10B981' : completionPercent >= 50 ? '#F59E0B' : '#EF4444',
+                              fontSize: '0.75rem',
+                              fontWeight: 600
+                            }}>
+                              {completionPercent}%
                             </div>
                           </div>
                           
-                          {/* Timeline bars for member's tasks */}
-                          <div style={{ flex: 1, position: 'relative', minHeight: '44px', display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingTop: '0.25rem' }}>
-                            {memberTasks.slice(0, 3).map((task, taskIdx) => {
-                              const taskDueDate = task.due_date ? new Date(task.due_date) : null;
-                              const taskStartDate = task.start_date ? new Date(task.start_date) : null;
-                              
-                              let startPos = (taskIdx * 15) + 5;
-                              let width = 25 + (taskIdx % 2) * 15;
-                              
-                              const totalDays = monthEnd.getDate();
-                              
-                              if (taskStartDate || taskDueDate) {
-                                // Calculate start position
-                                let effectiveStart = 1;
-                                if (taskStartDate) {
-                                  if (taskStartDate < monthStart) {
-                                    effectiveStart = 1;
-                                  } else {
-                                    effectiveStart = taskStartDate.getDate();
-                                  }
-                                } else if (taskDueDate) {
-                                  effectiveStart = Math.max(1, taskDueDate.getDate() - 7); // Default 7 day duration
-                                }
-                                
-                                // Calculate end position
-                                let effectiveEnd = totalDays;
-                                if (taskDueDate) {
-                                  if (taskDueDate > monthEnd) {
-                                    effectiveEnd = totalDays;
-                                  } else {
-                                    effectiveEnd = taskDueDate.getDate();
-                                  }
-                                } else if (taskStartDate) {
-                                  effectiveEnd = Math.min(totalDays, taskStartDate.getDate() + 7);
-                                }
-                                
-                                startPos = ((effectiveStart - 1) / totalDays) * 100;
-                                width = Math.max(10, ((effectiveEnd - effectiveStart + 1) / totalDays) * 100);
-                              }
-                              
-                              const barColor = barColors[taskIdx % barColors.length];
-                              
-                              return (
-                                <div 
-                                  key={task.id}
-                                  onClick={() => setSelectedTask(task)}
-                                  style={{ 
-                                    position: 'relative',
-                                    left: `${startPos}%`,
-                                    width: `${Math.min(width, 100 - startPos)}%`,
-                                    height: '28px',
-                                    backgroundColor: barColor,
-                                    borderRadius: '0.375rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    paddingLeft: '0.625rem',
-                                    paddingRight: '0.5rem',
-                                    cursor: 'pointer',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                    transition: 'transform 0.15s, box-shadow 0.15s'
-                                  }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)'; }}
-                                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)'; }}
-                                >
-                                  <span style={{ color: '#000', fontSize: '0.6875rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
-                                    {task.name}
-                                  </span>
-                                  {(task.priority === 'high' || task.priority === 'urgent') && (
-                                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: '0.375rem' }}>
-                                      <span style={{ fontSize: '0.5rem', color: '#FFF', fontWeight: 700 }}>!</span>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {memberTasks.length === 0 && (
-                              <div style={{ height: '28px', display: 'flex', alignItems: 'center' }}>
-                                <span style={{ color: '#3D3D3D', fontSize: '0.6875rem', fontStyle: 'italic' }}>No tasks this month</span>
-                              </div>
-                            )}
+                          {/* Progress Bar */}
+                          <div style={{ marginBottom: '1rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                              <span style={{ color: '#71717A', fontSize: '0.6875rem' }}>Task Completion</span>
+                              <span style={{ color: '#A1A1AA', fontSize: '0.6875rem' }}>{completedTasks}/{totalTasks}</span>
+                            </div>
+                            <div style={{ height: '8px', background: '#2D2D2D', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ 
+                                height: '100%', 
+                                width: `${completionPercent}%`, 
+                                background: `linear-gradient(90deg, ${memberColor} 0%, ${memberColor}CC 100%)`,
+                                borderRadius: '4px',
+                                transition: 'width 0.5s ease'
+                              }} />
+                            </div>
+                          </div>
+                          
+                          {/* Task Stats */}
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ flex: 1, background: '#141414', padding: '0.625rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                              <div style={{ color: '#10B981', fontSize: '1rem', fontWeight: 700 }}>{completedTasks}</div>
+                              <div style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Done</div>
+                            </div>
+                            <div style={{ flex: 1, background: '#141414', padding: '0.625rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                              <div style={{ color: '#3B82F6', fontSize: '1rem', fontWeight: 700 }}>{inProgressTasks}</div>
+                              <div style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active</div>
+                            </div>
+                            <div style={{ flex: 1, background: '#141414', padding: '0.625rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                              <div style={{ color: '#EF4444', fontSize: '1rem', fontWeight: 700 }}>{todoTasks}</div>
+                              <div style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Do</div>
+                            </div>
                           </div>
                         </div>
                       );
@@ -2112,7 +2337,7 @@ n              {/* Team Members Button - Avatar Style */}
                             {roleOptions.map(role => (
                               <button
                                 key={role}
-                                onClick={() => setEditingMemberRole(role)}
+                                onClick={() => { setEditingMemberRole(role); setCustomRoleInput(''); }}
                                 style={{
                                   padding: '0.5rem 0.875rem',
                                   background: editingMemberRole === role ? '#3B82F6' : '#2D2D2D',
@@ -2132,12 +2357,66 @@ n              {/* Team Members Button - Avatar Style */}
                             ))}
                           </div>
                           
+                          {/* Custom Role Input */}
+                          <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Or enter custom role
+                            </label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input
+                                type="text"
+                                value={customRoleInput}
+                                onChange={(e) => setCustomRoleInput(e.target.value)}
+                                placeholder="e.g. Product Owner, Scrum Master..."
+                                style={{
+                                  flex: 1,
+                                  padding: '0.625rem 0.875rem',
+                                  background: '#141414',
+                                  border: '1px solid #3D3D3D',
+                                  borderRadius: '0.5rem',
+                                  color: '#FFFFFF',
+                                  fontSize: '0.8125rem',
+                                  outline: 'none'
+                                }}
+                                onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                                onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                              />
+                              <button
+                                onClick={() => {
+                                  if (customRoleInput.trim()) {
+                                    setEditingMemberRole(customRoleInput.trim());
+                                  }
+                                }}
+                                disabled={!customRoleInput.trim()}
+                                style={{
+                                  padding: '0.625rem 1rem',
+                                  background: customRoleInput.trim() ? '#3B82F6' : '#2D2D2D',
+                                  border: 'none',
+                                  borderRadius: '0.5rem',
+                                  color: customRoleInput.trim() ? '#FFFFFF' : '#52525B',
+                                  fontSize: '0.8125rem',
+                                  fontWeight: 500,
+                                  cursor: customRoleInput.trim() ? 'pointer' : 'not-allowed',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                Apply
+                              </button>
+                            </div>
+                            {editingMemberRole && !roleOptions.includes(editingMemberRole) && (
+                              <p style={{ color: '#10B981', fontSize: '0.75rem', marginTop: '0.375rem' }}>
+                                Custom role selected: {editingMemberRole}
+                              </p>
+                            )}
+                          </div>
+                          
                           {/* Action Buttons */}
                           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                             <button
                               onClick={() => {
                                 setEditingMemberId(null);
                                 setEditingMemberRole('');
+                                setCustomRoleInput('');
                               }}
                               style={{
                                 padding: '0.5rem 1rem',
@@ -2180,6 +2459,7 @@ n              {/* Team Members Button - Avatar Style */}
                                   
                                   setEditingMemberId(null);
                                   setEditingMemberRole('');
+                                  setCustomRoleInput('');
                                 } catch (err) {
                                   console.error('Error updating role:', err);
                                   alert('Failed to update role. Please try again.');
