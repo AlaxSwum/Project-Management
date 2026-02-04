@@ -87,6 +87,12 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         const projects = await projectService.getProjects();
         console.log('Fetched projects from API:', projects);
         
+        // Debug: Check if projects have IDs
+        if (projects && projects.length > 0) {
+          console.log('First project sample:', projects[0]);
+          console.log('Project IDs:', projects.map(p => ({ id: p.id, name: p.name })));
+        }
+        
         setMyProjects(projects || []);
         setLoadingProjects(false);
       } catch (error) {
