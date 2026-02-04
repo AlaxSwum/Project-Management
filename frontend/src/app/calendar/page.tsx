@@ -2775,7 +2775,7 @@ export default function CalendarPage() {
                   })}
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Meeting Detail Modal */}
             {showMeetingDetail && selectedMeeting && (
