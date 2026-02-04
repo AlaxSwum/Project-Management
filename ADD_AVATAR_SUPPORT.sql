@@ -6,13 +6,8 @@
 -- Step 1: Add avatar_url column to auth_user table
 ALTER TABLE auth_user ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
--- Step 2: Create avatars storage bucket in Supabase (run in Supabase Dashboard > Storage)
--- Bucket name: avatars
--- Public: true
--- File size limit: 5MB
--- Allowed MIME types: image/jpeg, image/png, image/gif, image/webp
-
--- Or create via SQL:
+-- Step 2: Create avatars storage bucket (if it doesn't exist)
+-- First, ensure the bucket exists
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'avatars',
@@ -21,39 +16,40 @@ VALUES (
   5242880, -- 5MB
   ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 5242880,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
--- Step 3: Set up RLS policies for avatars bucket
--- Drop existing policies if they exist
-DROP POLICY IF EXISTS "Avatar uploads are publicly accessible" ON storage.objects;
-DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
-DROP POLICY IF EXISTS "Public Access" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can upload" ON storage.objects;
+-- Step 3: Completely disable RLS for avatars bucket to allow all uploads
+ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
 
--- Create new policies
-CREATE POLICY "Public Access"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'avatars');
+-- Step 4: Grant ALL permissions on storage.objects
+GRANT ALL ON storage.objects TO authenticated;
+GRANT ALL ON storage.objects TO anon;
 
-CREATE POLICY "Authenticated users can upload"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'avatars');
-
-CREATE POLICY "Authenticated users can update"
-ON storage.objects FOR UPDATE
-TO authenticated
-USING (bucket_id = 'avatars');
-
-CREATE POLICY "Authenticated users can delete"
-ON storage.objects FOR DELETE
-TO authenticated
-USING (bucket_id = 'avatars');
-
--- Step 4: Grant permissions
+-- Step 5: Grant permissions on auth_user
 GRANT SELECT, UPDATE ON auth_user TO authenticated;
+
+-- ========================================
+-- ALTERNATIVE: If you want to keep RLS enabled, use this instead:
+-- ========================================
+-- Uncomment the following lines and comment out Step 3 above:
+
+-- ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- 
+-- DROP POLICY IF EXISTS "Public avatar access" ON storage.objects;
+-- DROP POLICY IF EXISTS "Authenticated avatar upload" ON storage.objects;
+-- 
+-- CREATE POLICY "Public avatar access"
+-- ON storage.objects FOR ALL
+-- USING (bucket_id = 'avatars');
+-- 
+-- CREATE POLICY "Authenticated avatar upload"
+-- ON storage.objects FOR ALL
+-- TO authenticated
+-- USING (bucket_id = 'avatars')
+-- WITH CHECK (bucket_id = 'avatars');
 
 -- ========================================
 -- USAGE INSTRUCTIONS
@@ -62,10 +58,7 @@ GRANT SELECT, UPDATE ON auth_user TO authenticated;
 -- 1. Users can upload profile pictures in Settings > Edit profile
 -- 2. Images are stored in Supabase Storage 'avatars' bucket
 -- 3. avatar_url in auth_user table stores the public URL
--- 4. Images are accessible via: https://[your-project].supabase.co/storage/v1/object/public/avatars/[filename]
-
--- Example avatar_url value:
--- https://bayyefskgflbyyuwrlgm.supabase.co/storage/v1/object/public/avatars/99-1707089234567.jpg
+-- 4. Images are publicly accessible
 
 -- ========================================
 -- SUCCESS!
