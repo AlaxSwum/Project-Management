@@ -197,21 +197,18 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
     
     setCreatingProject(true);
     try {
-      // Create the project
+      // Create the project - only use fields that exist in the table
       const { data: newProject, error: projectError } = await supabase
         .from('projects_project')
         .insert({
           name: newProjectName.trim(),
-          color: newProjectColor,
-          created_by: user.id,
-          created_at: new Date().toISOString(),
         })
         .select()
         .single();
       
       if (projectError) {
         console.error('Error creating project:', projectError);
-        alert('Failed to create project');
+        alert('Failed to create project: ' + projectError.message);
         setCreatingProject(false);
         return;
       }
@@ -229,8 +226,9 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         console.error('Error adding member:', memberError);
       }
       
-      // Update local state
-      setMyProjects(prev => [...prev, newProject]);
+      // Update local state with the color we selected (even if not saved to DB)
+      const projectWithColor = { ...newProject, color: newProjectColor };
+      setMyProjects(prev => [...prev, projectWithColor]);
       setNewProjectName('');
       setShowCreateProject(false);
       
