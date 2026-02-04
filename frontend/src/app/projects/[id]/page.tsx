@@ -747,37 +747,11 @@ export default function ProjectDetailPage() {
     if (!selectedUserId || !project) return;
     
     try {
-      // Find the user to add from availableUsers
-      const userToAdd = availableUsers.find(u => u.id === selectedUserId);
-      if (!userToAdd) {
-        alert('User not found');
-        return;
-      }
+      // Add member using the API
+      await projectService.addProjectMember(project.id, selectedUserId);
       
-      // Add the new member to the members array
-      const updatedMembers = [
-        ...(project.members || []),
-        {
-          id: userToAdd.id,
-          name: userToAdd.name,
-          email: userToAdd.email,
-          role: newMemberRole
-        }
-      ];
-      
-      // Update the project with the new members array
-      await projectService.updateProject(project.id, {
-        members: updatedMembers
-      });
-      
-      // Update local state
-      setProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          members: updatedMembers
-        };
-      });
+      // Refresh project data to get updated members
+      await fetchProject();
       
       setShowAddMemberModal(false);
       setSelectedUserId(null);
@@ -796,23 +770,11 @@ export default function ProjectDetailPage() {
     if (!confirm('Remove this member from the project?')) return;
     
     try {
-      // Filter out the member from the members array
-      const updatedMembers = (project.members || []).filter(m => m.id !== userId);
+      // Remove member using the API
+      await projectService.removeProjectMember(project.id, userId);
       
-      // Update the project with the new members array
-      await projectService.updateProject(project.id, {
-        members: updatedMembers
-      });
-      
-      // Update local state immediately
-      setProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          members: updatedMembers
-        };
-      });
-      
+      // Refresh project data to get updated members
+      await fetchProject();
     } catch (err) {
       console.error('Error removing member:', err);
       alert('Failed to remove member. Please try again.');
@@ -826,13 +788,8 @@ export default function ProjectDetailPage() {
     if (!confirm('Are you sure you want to leave this project?')) return;
     
     try {
-      // Filter out the current user from the members array
-      const updatedMembers = (project.members || []).filter(m => m.id !== user.id);
-      
-      // Update the project with the new members array
-      await projectService.updateProject(project.id, {
-        members: updatedMembers
-      });
+      // Remove current user using the API
+      await projectService.removeProjectMember(project.id, user.id);
       
       // Redirect to dashboard
       router.push('/dashboard');
@@ -2900,24 +2857,9 @@ n              {/* Team Members Button - Avatar Style */}
                             <button
                               onClick={async () => {
                                 try {
-                                  // Update the member's role in the members array
-                                  const updatedMembers = (project.members || []).map(m => 
-                                    m.id === member.id ? { ...m, role: editingMemberRole } : m
-                                  );
-                                  
-                                  // Update the project with the new members array
-                                  await projectService.updateProject(project.id, {
-                                    members: updatedMembers
-                                  });
-                                  
-                                  // Update local state
-                                  setProject(prev => {
-                                    if (!prev) return prev;
-                                    return {
-                                      ...prev,
-                                      members: updatedMembers
-                                    };
-                                  });
+                                  // Note: Role updates are not currently supported in the backend
+                                  // To change a role, remove and re-add the member
+                                  alert('Role updates are not yet supported. To change a member\'s role, please remove them and add them back with the new role.');
                                   
                                   setEditingMemberId(null);
                                   setEditingMemberRole('');
