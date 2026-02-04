@@ -154,6 +154,8 @@ export default function ProjectDetailPage() {
   const [comments, setComments] = useState<any[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
   const [newComment, setNewComment] = useState('');
+  const [isEditingTask, setIsEditingTask] = useState(false);
+  const [editTaskForm, setEditTaskForm] = useState({ name: '', description: '', priority: '', status: '', due_date: '' });
   const [newAttachmentUrl, setNewAttachmentUrl] = useState('');
   const [newAttachmentName, setNewAttachmentName] = useState('');
   const [activeTab, setActiveTab] = useState<'subtask' | 'attachment' | 'comments'>('subtask');
@@ -507,6 +509,55 @@ export default function ProjectDetailPage() {
     } catch (error) {
       // Error adding comment
     }
+  };
+
+  const saveTaskEdit = async () => {
+    if (!selectedTask || !editTaskForm.name.trim()) return;
+    
+    try {
+      await taskService.updateTask(selectedTask.id, {
+        name: editTaskForm.name.trim(),
+        description: editTaskForm.description.trim(),
+        priority: editTaskForm.priority,
+        status: editTaskForm.status,
+        due_date: editTaskForm.due_date || null
+      });
+      
+      // Update local state
+      setTasks(tasks.map(t => t.id === selectedTask.id ? {
+        ...t,
+        name: editTaskForm.name.trim(),
+        description: editTaskForm.description.trim(),
+        priority: editTaskForm.priority,
+        status: editTaskForm.status,
+        due_date: editTaskForm.due_date || null
+      } : t));
+      
+      setSelectedTask({
+        ...selectedTask,
+        name: editTaskForm.name.trim(),
+        description: editTaskForm.description.trim(),
+        priority: editTaskForm.priority,
+        status: editTaskForm.status,
+        due_date: editTaskForm.due_date || null
+      });
+      
+      setIsEditingTask(false);
+    } catch (error) {
+      alert('Error updating task');
+    }
+  };
+
+  const startEditingTask = () => {
+    if (!selectedTask) return;
+    setEditTaskForm({
+      name: selectedTask.name || '',
+      description: selectedTask.description || '',
+      priority: selectedTask.priority || 'low',
+      status: selectedTask.status || 'todo',
+      due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : ''
+    });
+    setIsEditingTask(true);
   };
 
   if (authLoading || isLoading) {
@@ -2899,38 +2950,104 @@ n              {/* Team Members Button - Avatar Style */}
           >
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Task Detail</h2>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                {isEditingTask ? 'Edit Task' : 'Task Detail'}
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {!isEditingTask ? (
+                  <button
+                    onClick={startEditingTask}
+                    style={{ padding: '0.5rem 1rem', background: '#3B82F6', border: 'none', color: '#FFFFFF', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.375rem', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#2563EB'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#3B82F6'}
+                  >
+                    <PencilIcon style={{ width: '14px', height: '14px' }} />
+                    Edit
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsEditingTask(false)}
+                      style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid #2D2D2D', color: '#A1A1AA', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveTaskEdit}
+                      style={{ padding: '0.5rem 1rem', background: '#10B981', border: 'none', color: '#FFFFFF', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
+                    >
+                      Save Changes
+                    </button>
+                  </>
+                )}
                 <button
-                onClick={() => setSelectedTask(null)}
-                style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
-              >
-                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                  onClick={() => { setSelectedTask(null); setIsEditingTask(false); }}
+                  style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+                >
+                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
                 </button>
+              </div>
             </div>
 
             {/* Modal Body */}
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               {/* Left Panel - Task Details */}
               <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', borderRight: '1px solid #2D2D2D' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '1rem' }}>{selectedTask.name}</h1>
-                
-                <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-                  {selectedTask.description || 'No description provided'}
-                </p>
+                {isEditingTask ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editTaskForm.name}
+                      onChange={(e) => setEditTaskForm({ ...editTaskForm, name: e.target.value })}
+                      placeholder="Task name"
+                      style={{ width: '100%', fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', padding: '0.75rem 1rem', marginBottom: '1rem', outline: 'none' }}
+                    />
+                    <textarea
+                      value={editTaskForm.description}
+                      onChange={(e) => setEditTaskForm({ ...editTaskForm, description: e.target.value })}
+                      placeholder="Task description"
+                      rows={3}
+                      style={{ width: '100%', color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', padding: '0.75rem 1rem', marginBottom: '1.5rem', outline: 'none', resize: 'vertical' }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '1rem' }}>{selectedTask.name}</h1>
+                    <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                      {selectedTask.description || 'No description provided'}
+                    </p>
+                  </>
+                )}
 
                 {/* Task Properties Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Status</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
-                      <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
-                        {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
-                                     </span>
-                               </div>
-                               </div>
+                    {isEditingTask ? (
+                      <select
+                        value={editTaskForm.status}
+                        onChange={(e) => setEditTaskForm({ ...editTaskForm, status: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer' }}
+                      >
+                        {TASK_STATUSES.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
+                          {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
@@ -2960,26 +3077,49 @@ n              {/* Team Members Button - Avatar Style */}
                           </div>
                   )}
 
-                  {selectedTask.due_date && (
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Due date</label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Due date</label>
+                    {isEditingTask ? (
+                      <input
+                        type="date"
+                        value={editTaskForm.due_date}
+                        onChange={(e) => setEditTaskForm({ ...editTaskForm, due_date: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                    ) : selectedTask.due_date ? (
                       <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                         <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
                           {new Date(selectedTask.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                 </span>
-              </div>
-              </div>
-            )}
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                        <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No due date</span>
+                      </div>
+                    )}
+                  </div>
 
-              <div>
+                  <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Priority</label>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', background: selectedTask.priority === 'low' ? 'rgba(16, 185, 129, 0.2)' : '#0D0D0D', borderRadius: '9999px', border: '1px solid #2D2D2D' }}>
-                      <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'low' ? '#10B981' : '#FFFFFF', fontWeight: 500, textTransform: 'capitalize' }}>
-                        {selectedTask.priority}
-                      </span>
+                    {isEditingTask ? (
+                      <select
+                        value={editTaskForm.priority}
+                        onChange={(e) => setEditTaskForm({ ...editTaskForm, priority: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer' }}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    ) : (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', background: selectedTask.priority === 'high' ? 'rgba(239, 68, 68, 0.2)' : selectedTask.priority === 'medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)', borderRadius: '9999px', border: '1px solid #2D2D2D' }}>
+                        <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'high' ? '#EF4444' : selectedTask.priority === 'medium' ? '#F59E0B' : '#10B981', fontWeight: 500, textTransform: 'capitalize' }}>
+                          {selectedTask.priority || 'Low'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              </div>
 
                 {/* Tabs and Content Section */}
                 <div style={{ marginTop: '2rem' }}>
