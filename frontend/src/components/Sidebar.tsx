@@ -211,6 +211,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         .insert({
           name: newProjectName.trim(),
           description: '',
+          created_by_id: user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
