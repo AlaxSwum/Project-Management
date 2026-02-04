@@ -211,6 +211,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         .insert({
           name: newProjectName.trim(),
           description: '',
+          color: newProjectColor,
           created_by_id: user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -239,9 +240,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         console.error('Error adding member:', memberError);
       }
       
-      // Update local state with the color we selected (even if not saved to DB)
-      const projectWithColor = { ...newProject, color: newProjectColor };
-      setMyProjects(prev => [...prev, projectWithColor]);
+      // Update local state
+      setMyProjects(prev => [...prev, newProject]);
       setNewProjectName('');
       setShowCreateProject(false);
       
