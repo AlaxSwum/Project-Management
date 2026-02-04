@@ -768,22 +768,31 @@ export default function ProjectDetailPage() {
     if (!confirm('Remove this member from the project?')) return;
     
     try {
+      // Delete from project_members table
       const { error } = await supabase
         .from('project_members')
         .delete()
         .eq('project_id', project.id)
         .eq('user_id', userId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting from project_members:', error);
+        throw error;
+      }
       
-      // Update local state
-      setProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          members: prev.members?.filter(m => m.id !== userId)
-        };
-      });
+      // Also update the members JSON in projects_project table
+      const updatedMembers = project.members?.filter(m => m.id !== userId) || [];
+      const { error: updateError } = await supabase
+        .from('projects_project')
+        .update({ members: updatedMembers })
+        .eq('id', project.id);
+      
+      if (updateError) {
+        console.error('Error updating members JSON:', updateError);
+      }
+      
+      // Refresh project to get latest data
+      await fetchProject();
     } catch (err) {
       console.error('Error removing member:', err);
       alert('Failed to remove member. Please try again.');
