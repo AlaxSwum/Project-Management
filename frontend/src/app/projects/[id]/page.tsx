@@ -722,7 +722,10 @@ export default function ProjectDetailPage() {
       if (!error && data) {
         // Filter out users who are already members
         const currentMemberIds = project.members?.map(m => m.id) || [];
-        const available = data.filter(u => !currentMemberIds.includes(u.id));
+        const available = data.filter(u => !currentMemberIds.includes(u.id)).map(u => ({
+          ...u,
+          role: 'Member' // Default role for display
+        }));
         setAvailableUsers(available);
       }
     } catch (error) {
