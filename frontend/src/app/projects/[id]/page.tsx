@@ -533,27 +533,60 @@ export default function ProjectDetailPage() {
               <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{project.name}</h1>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
-              {/* Team Members Button */}
+              {/* Team Members Button - Avatar Style */}
               <button
                 onClick={() => setShowProjectMembers(true)}
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: '0.5rem', 
-                  padding: '0.5rem 0.75rem', 
-                  background: '#1A1A1A', 
-                  border: '1px solid #2D2D2D', 
-                  borderRadius: '0.5rem', 
+                  background: 'transparent', 
+                  border: 'none', 
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  padding: 0
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.background = '#242424'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.background = '#1A1A1A'; }}
               >
-                <UserGroupIcon style={{ width: '18px', height: '18px', color: '#A1A1AA' }} />
-                <span style={{ color: '#A1A1AA', fontSize: '0.875rem', fontWeight: 500 }}>
-                  {project.members?.length || 0} Members
-                </span>
+                <div style={{ display: 'flex' }}>
+                  {project.members?.slice(0, 3).map((member, i) => (
+                    <div 
+                      key={member.id}
+                      style={{ 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '50%', 
+                        border: '2px solid #0D0D0D', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        color: '#FFFFFF', 
+                        backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6'][i % 3], 
+                        marginLeft: i > 0 ? '-8px' : '0',
+                        transition: 'transform 0.2s'
+                      }}
+                    >
+                      {member.name.charAt(0)}
+                    </div>
+                  ))}
+                  {project.members && project.members.length > 3 && (
+                    <div style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      borderRadius: '50%', 
+                      border: '2px solid #0D0D0D', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      fontSize: '0.6875rem', 
+                      fontWeight: 600,
+                      color: '#FFFFFF', 
+                      backgroundColor: '#2D2D2D', 
+                      marginLeft: '-8px' 
+                    }}>
+                      +{project.members.length - 3}
+                    </div>
+                  )}
+                </div>
               </button>
                   <button
                     onClick={() => setShowCreateTask(true)}
@@ -1527,242 +1560,243 @@ export default function ProjectDetailPage() {
             })}
             </div>
           ) : (
-            // Growth Map View
-            <div style={{ display: 'flex', gap: '1.5rem', height: '100%' }}>
-              {/* Left Panel - Team Members */}
-              <div style={{ width: '280px', background: '#1A1A1A', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #2D2D2D', flexShrink: 0 }}>
-                <h3 style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Team Progress</h3>
-                
-                {/* Team members list */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {project.members?.map((member, idx) => {
-                    const memberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
-                    const completedTasks = memberTasks.filter(t => t.status === 'done').length;
-                    const totalTasks = memberTasks.length;
-                    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-                    
-                    return (
-                      <div 
-                        key={member.id}
-                        onClick={() => setSelectedTask(memberTasks[0] || null)}
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.75rem', 
-                          padding: '0.75rem',
-                          background: '#0D0D0D',
-                          borderRadius: '0.5rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#242424'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#0D0D0D'}
-                      >
-                        <div style={{ 
-                          width: '40px', 
-                          height: '40px', 
-                          borderRadius: '50%', 
-                          backgroundColor: ['#3B82F6', '#EC4899', '#8B5CF6', '#10B981', '#F59E0B'][idx % 5],
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#FFFFFF',
-                          fontSize: '0.875rem',
-                          fontWeight: 600
-                        }}>
-                          {member.name.charAt(0)}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>{member.name}</div>
-                          <div style={{ color: '#71717A', fontSize: '0.75rem' }}>{totalTasks} tasks assigned</div>
-                        </div>
-                        <div style={{ 
-                          width: '40px', 
-                          height: '40px', 
-                          borderRadius: '50%', 
-                          background: `conic-gradient(#10B981 ${progress}%, #2D2D2D ${progress}%)`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <div style={{ 
-                            width: '32px', 
-                            height: '32px', 
-                            borderRadius: '50%', 
-                            background: '#0D0D0D',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#FFFFFF',
-                            fontSize: '0.625rem',
-                            fontWeight: 600
-                          }}>
-                            {progress}%
-                          </div>
-                        </div>
+            // Growth Map View - Match Reference UI
+            <div style={{ display: 'flex', gap: '1.5rem', height: '100%', padding: '0.5rem' }}>
+              {/* Left Panel - Project Info & Team Groups */}
+              <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {/* Project Card */}
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1.25rem', border: '1px solid #2D2D2D' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '0.75rem', background: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FolderIcon style={{ width: '24px', height: '24px', color: '#10B981' }} />
+                    </div>
+                    <div>
+                      <h3 style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, margin: 0 }}>{project.name}</h3>
+                      <p style={{ color: '#71717A', fontSize: '0.75rem', margin: '0.25rem 0 0' }}>{project.description?.substring(0, 40) || 'Project tasks overview'}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Expected outcomes icons */}
+                  <p style={{ color: '#71717A', fontSize: '0.6875rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Team members</p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {project.members?.slice(0, 4).map((member, i) => (
+                      <div key={member.id} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: ['#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'][i % 4], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '0.75rem', fontWeight: 600 }}>
+                        {member.name.charAt(0)}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+                </div>
+
+                {/* In Progress Tasks */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', cursor: 'pointer' }}>
+                    <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>In Progress</span>
+                    <svg style={{ width: '16px', height: '16px', color: '#71717A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {tasks.filter(t => t.status === 'in_progress').slice(0, 3).map(task => (
+                      <div key={task.id} onClick={() => setSelectedTask(task)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '0.5rem', background: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#A1A1AA' }}>{task.name.charAt(0)}</span>
+                        </div>
+                        <span style={{ color: '#A1A1AA', fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Completed Tasks */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', cursor: 'pointer' }}>
+                    <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>Completed</span>
+                    <svg style={{ width: '16px', height: '16px', color: '#71717A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+
+                {/* Pending Tasks */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                    <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>To Do</span>
+                    <svg style={{ width: '16px', height: '16px', color: '#71717A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
                 </div>
               </div>
 
               {/* Main Growth Map Timeline */}
-              <div style={{ flex: 1, background: '#1A1A1A', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #2D2D2D', overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <div>
-                    <h3 style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Growth Map</h3>
-                    <p style={{ color: '#71717A', fontSize: '0.8125rem', margin: '0.25rem 0 0' }}>Track team progress over time</p>
+                    <h2 style={{ color: '#FFFFFF', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>My growth map</h2>
+                    <p style={{ color: '#71717A', fontSize: '0.875rem', margin: '0.25rem 0 0' }}>Track your team progress for the month</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button style={{ padding: '0.5rem 1rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer' }}>
-                      Weekly
-                    </button>
-                    <button style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#71717A', fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer' }}>
-                      Monthly
-                    </button>
-                  </div>
-                </div>
-
-                {/* Timeline Header */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #2D2D2D', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ width: '180px', flexShrink: 0 }} />
-                  {['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'].map((week, i) => (
-                    <div 
-                      key={week} 
-                      style={{ 
-                        flex: 1, 
-                        textAlign: 'center', 
-                        color: i === 2 ? '#10B981' : '#71717A', 
-                        fontSize: '0.8125rem', 
-                        fontWeight: 500,
-                        position: 'relative'
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <button 
+                      onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        d.setMonth(d.getMonth() - 1);
+                        setGanttStartDate(d);
                       }}
+                      style={{ width: '32px', height: '32px', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {week}
-                      {i === 2 && (
-                        <div style={{ 
-                          position: 'absolute', 
-                          bottom: '-1rem', 
-                          left: '50%', 
-                          transform: 'translateX(-50%)',
-                          padding: '0.125rem 0.5rem',
-                          background: '#10B981',
-                          borderRadius: '0.25rem',
-                          color: '#FFFFFF',
-                          fontSize: '0.6875rem',
-                          fontWeight: 600
-                        }}>
-                          Today
-                        </div>
-                      )}
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
+                      <CalIcon style={{ width: '18px', height: '18px', color: '#A1A1AA' }} />
+                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>
+                        {ganttStartDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      </span>
                     </div>
-                  ))}
+                    <button 
+                      onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        d.setMonth(d.getMonth() + 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '32px', height: '32px', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Task Bars by Team Member */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {project.members?.slice(0, 6).map((member, memberIdx) => {
-                    const memberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
-                    const barColors = ['#86EFAC', '#FDE047', '#FDA4AF', '#A5B4FC', '#F9A8D4', '#93C5FD'];
-                    
-                    return memberTasks.slice(0, 2).map((task, taskIdx) => {
-                      const startWeek = Math.floor(Math.random() * 2);
-                      const duration = Math.floor(Math.random() * 3) + 2;
+                {/* Timeline Container */}
+                <div style={{ flex: 1, background: '#1A1A1A', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #2D2D2D', marginTop: '1rem' }}>
+                  {/* Week Headers */}
+                  <div style={{ display: 'flex', marginBottom: '1.5rem', paddingLeft: '200px' }}>
+                    {['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'].map((week, i) => {
+                      const today = new Date();
+                      const weekOfMonth = Math.ceil(today.getDate() / 7);
+                      const isCurrentWeek = i + 1 === weekOfMonth && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
                       
                       return (
-                        <div key={`${member.id}-${task.id}`} style={{ display: 'flex', alignItems: 'center' }}>
-                          {/* Member info */}
-                          <div style={{ width: '180px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ 
-                              width: '32px', 
-                              height: '32px', 
-                              borderRadius: '50%', 
-                              backgroundColor: barColors[memberIdx % barColors.length],
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              overflow: 'hidden'
-                            }}>
-                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#000' }}>
-                                {member.name.charAt(0)}
-                              </span>
+                        <div key={week} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
+                          <span style={{ color: isCurrentWeek ? '#10B981' : '#71717A', fontSize: '0.8125rem', fontWeight: 500 }}>{week}</span>
+                          {isCurrentWeek && (
+                            <div style={{ position: 'absolute', top: '1.5rem', left: '50%', transform: 'translateX(-50%)', width: '2px', height: 'calc(100vh - 400px)', background: '#EF4444', zIndex: 10 }}>
+                              <div style={{ position: 'absolute', top: '-0.5rem', left: '50%', transform: 'translateX(-50%)', padding: '0.125rem 0.5rem', background: '#10B981', borderRadius: '0.25rem', color: '#FFF', fontSize: '0.625rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Today</div>
                             </div>
-                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>
-                              {task.name}
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Task Rows */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                    {tasks.slice(0, 8).map((task, idx) => {
+                      const barColors = ['#86EFAC', '#FDE047', '#FDA4AF', '#A5B4FC', '#F9A8D4', '#93C5FD', '#FCA5A5', '#A7F3D0'];
+                      const assignee = task.assignees?.[0];
+                      
+                      // Calculate position based on due date
+                      const taskDueDate = task.due_date ? new Date(task.due_date) : null;
+                      const taskStartDate = task.start_date ? new Date(task.start_date) : null;
+                      
+                      let startPos = 0;
+                      let width = 40;
+                      
+                      if (taskStartDate && taskDueDate) {
+                        const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                        const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                        const totalDays = monthEnd.getDate();
+                        
+                        const startDay = Math.max(1, Math.min(totalDays, taskStartDate.getDate()));
+                        const endDay = Math.max(1, Math.min(totalDays, taskDueDate.getDate()));
+                        
+                        startPos = ((startDay - 1) / totalDays) * 100;
+                        width = Math.max(15, ((endDay - startDay + 1) / totalDays) * 100);
+                      } else {
+                        startPos = (idx % 3) * 20;
+                        width = 30 + (idx % 2) * 20;
+                      }
+                      
+                      return (
+                        <div key={task.id} style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
+                          {/* Task info */}
+                          <div style={{ width: '200px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', paddingRight: '1rem' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: barColors[idx % barColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                              {assignee ? (
+                                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#000' }}>{assignee.name.charAt(0)}</span>
+                              ) : (
+                                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#000' }}>{task.name.charAt(0)}</span>
+                              )}
+                            </div>
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {task.name.length > 18 ? task.name.substring(0, 18) + '...' : task.name}
                             </span>
                           </div>
                           
                           {/* Timeline bar */}
-                          <div style={{ flex: 1, display: 'flex', position: 'relative', height: '32px' }}>
+                          <div style={{ flex: 1, position: 'relative', height: '100%' }}>
                             <div 
+                              onClick={() => setSelectedTask(task)}
                               style={{ 
                                 position: 'absolute',
-                                left: `${startWeek * 20}%`,
-                                width: `${duration * 20}%`,
-                                height: '28px',
-                                backgroundColor: barColors[memberIdx % barColors.length],
-                                borderRadius: '0.375rem',
+                                left: `${startPos}%`,
+                                width: `${width}%`,
+                                height: '32px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: barColors[idx % barColors.length],
+                                borderRadius: '0.5rem',
                                 display: 'flex',
                                 alignItems: 'center',
                                 paddingLeft: '0.75rem',
-                                overflow: 'hidden'
+                                paddingRight: '0.5rem',
+                                cursor: 'pointer',
+                                overflow: 'hidden',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                               }}
                             >
-                              <span style={{ color: '#000', fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                                {task.name.length > 20 ? task.name.substring(0, 20) + '...' : task.name}
+                              <span style={{ color: '#000', fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                                {task.name}
                               </span>
                               {task.priority === 'high' && (
-                                <span style={{ 
-                                  marginLeft: '0.5rem', 
-                                  width: '16px', 
-                                  height: '16px', 
-                                  borderRadius: '50%', 
-                                  background: '#EF4444', 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  justifyContent: 'center',
-                                  fontSize: '0.625rem',
-                                  color: '#FFF'
-                                }}>!</span>
+                                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
+                                  <span style={{ fontSize: '0.625rem', color: '#FFF' }}>!</span>
+                                </div>
                               )}
                             </div>
                           </div>
                         </div>
                       );
-                    });
-                  })}
+                    })}
+                  </div>
                 </div>
               </div>
 
-              {/* Right Panel - Overview */}
-              <div style={{ width: '260px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Right Panel - Overview & Reminders */}
+              <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Overview Card */}
-                <div style={{ background: '#1A1A1A', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #2D2D2D' }}>
-                  <h4 style={{ color: '#71717A', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Overview</h4>
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1.25rem', border: '1px solid #2D2D2D' }}>
+                  <h4 style={{ color: '#71717A', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Overview</h4>
                   <p style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, marginBottom: '1rem' }}>{project.name}</p>
                   
                   {/* Progress Ring */}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                    <div style={{ 
-                      width: '120px', 
-                      height: '120px', 
-                      borderRadius: '50%', 
-                      background: `conic-gradient(#10B981 0% ${Math.round((tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 100)}%, #F59E0B ${Math.round((tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 100)}% ${Math.round(((tasks.filter(t => t.status === 'done').length + tasks.filter(t => t.status === 'in_progress').length) / Math.max(tasks.length, 1)) * 100)}%, #2D2D2D ${Math.round(((tasks.filter(t => t.status === 'done').length + tasks.filter(t => t.status === 'in_progress').length) / Math.max(tasks.length, 1)) * 100)}% 100%)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <div style={{ 
-                        width: '90px', 
-                        height: '90px', 
-                        borderRadius: '50%', 
-                        background: '#1A1A1A',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <span style={{ color: '#FFFFFF', fontSize: '1.5rem', fontWeight: 700 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                    <div style={{ position: 'relative', width: '140px', height: '140px' }}>
+                      {/* Outer ring segments */}
+                      <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                        {/* Background circle */}
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#2D2D2D" strokeWidth="8" />
+                        {/* Done segment - Green */}
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="8" 
+                          strokeDasharray={`${(tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 251.2} 251.2`} 
+                          strokeLinecap="round" />
+                        {/* In Progress segment - Orange */}
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#F59E0B" strokeWidth="8" 
+                          strokeDasharray={`${(tasks.filter(t => t.status === 'in_progress').length / Math.max(tasks.length, 1)) * 251.2} 251.2`}
+                          strokeDashoffset={`${-(tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 251.2}`}
+                          strokeLinecap="round" />
+                        {/* Todo segment - Gray/Yellow */}
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#EAB308" strokeWidth="8" 
+                          strokeDasharray={`${(tasks.filter(t => t.status === 'todo').length / Math.max(tasks.length, 1)) * 251.2} 251.2`}
+                          strokeDashoffset={`${-((tasks.filter(t => t.status === 'done').length + tasks.filter(t => t.status === 'in_progress').length) / Math.max(tasks.length, 1)) * 251.2}`}
+                          strokeLinecap="round" />
+                      </svg>
+                      {/* Center text */}
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: '#FFFFFF', fontSize: '1.75rem', fontWeight: 700 }}>
                           {Math.round((tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 100)}%
                         </span>
                         <span style={{ color: '#71717A', fontSize: '0.6875rem' }}>Complete</span>
@@ -1770,56 +1804,36 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
                   
-                  {/* Stats */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  {/* Legend */}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', fontSize: '0.6875rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
-                      <span style={{ color: '#A1A1AA' }}>{tasks.filter(t => t.status === 'done').length} Done</span>
+                      <span style={{ color: '#A1A1AA' }}>Done</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }} />
-                      <span style={{ color: '#A1A1AA' }}>{tasks.filter(t => t.status === 'in_progress').length} Active</span>
+                      <span style={{ color: '#A1A1AA' }}>Active</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Upcoming Tasks */}
-                <div style={{ background: '#1A1A1A', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid #2D2D2D', flex: 1 }}>
-                  <h4 style={{ color: '#71717A', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Upcoming</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {tasks.filter(t => t.status !== 'done').slice(0, 3).map(task => (
-                      <div 
-                        key={task.id}
-                        onClick={() => setSelectedTask(task)}
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'flex-start', 
-                          gap: '0.75rem',
-                          cursor: 'pointer',
-                          padding: '0.5rem',
-                          borderRadius: '0.375rem',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#242424'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ 
-                          width: '32px', 
-                          height: '32px', 
-                          borderRadius: '0.375rem', 
-                          background: '#0D0D0D',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}>
-                          <MapIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
-                        </div>
-                        <div>
-                          <p style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, margin: 0, lineHeight: 1.4 }}>{task.name}</p>
-                          <p style={{ color: '#3B82F6', fontSize: '0.75rem', margin: '0.25rem 0 0' }}>
-                            {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
-                          </p>
+                {/* Reminder Card */}
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1.25rem', border: '1px solid #2D2D2D', flex: 1 }}>
+                  <h4 style={{ color: '#71717A', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Reminder</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {tasks.filter(t => t.status !== 'done' && t.due_date).slice(0, 3).map(task => (
+                      <div key={task.id} onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '0.5rem', background: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#A1A1AA' }}>{task.name.charAt(0)}</span>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500, margin: 0, lineHeight: 1.4 }}>{task.name.length > 25 ? task.name.substring(0, 25) + '...' : task.name}</p>
+                            <p style={{ color: '#3B82F6', fontSize: '0.75rem', margin: '0.25rem 0 0', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
+                              <svg style={{ width: '12px', height: '12px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}
