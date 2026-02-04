@@ -2948,15 +2948,15 @@ export default function PersonalPage() {
                             const dayBlocks = getBlocksForDate(day);
                             const overlapPositions = calculateOverlapPositions(dayBlocks);
                             
-                            // Colorful block colors for calendar.me style
+                            // Vibrant colorful block colors matching Kanban design
                             const calendarColors = [
-                              { bg: '#E9D5FF', border: '#A855F7', text: '#6B21A8' }, // Purple
-                              { bg: '#D1FAE5', border: '#10B981', text: '#065F46' }, // Green
-                              { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' }, // Blue
-                              { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' }, // Yellow
-                              { bg: '#FCE7F3', border: '#EC4899', text: '#9D174D' }, // Pink
-                              { bg: '#E0E7FF', border: '#6366F1', text: '#3730A3' }, // Indigo
-                              { bg: '#FFEDD5', border: '#F97316', text: '#9A3412' }, // Orange
+                              { bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)', border: '#8B5CF6', text: '#FFFFFF' }, // Purple
+                              { bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', border: '#10B981', text: '#FFFFFF' }, // Green
+                              { bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)', border: '#06B6D4', text: '#FFFFFF' }, // Cyan
+                              { bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: '#F59E0B', text: '#FFFFFF' }, // Orange
+                              { bg: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)', border: '#EC4899', text: '#FFFFFF' }, // Pink
+                              { bg: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', border: '#EF4444', text: '#FFFFFF' }, // Red
+                              { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', border: '#3B82F6', text: '#FFFFFF' }, // Blue
                             ];
                             
                             return dayBlocks.map((block, blockIdx) => {
@@ -2999,19 +2999,18 @@ export default function PersonalPage() {
                                     left: `${leftOffset}%`,
                                     width: `${widthPercent - 2}%`,
                                     height: `${height}px`,
-                                    background: `linear-gradient(135deg, ${colors.bg} 0%, ${colors.bg}DD 100%)`,
+                                    background: colors.bg,
                                     borderLeft: `5px solid ${colors.border}`,
-                                    borderRadius: '12px',
-                                    padding: '10px 12px',
+                                    borderRadius: '14px',
+                                    padding: '12px 14px',
                                     cursor: 'pointer',
                                     overflow: 'hidden',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: '6px',
                                     zIndex: column + 1,
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                                    boxShadow: `0 6px 16px rgba(0,0,0,0.25), 0 0 0 1px ${colors.border}40`,
                                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    backdropFilter: 'blur(8px)',
                                   }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -3024,21 +3023,21 @@ export default function PersonalPage() {
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
                                       style={{
-                                        width: '18px',
-                                        height: '18px',
+                                        width: '20px',
+                                        height: '20px',
                                         borderRadius: '6px',
-                                        border: block.completed ? 'none' : `2.5px solid ${colors.border}`,
-                                        background: block.completed ? `linear-gradient(135deg, #10B981, #059669)` : 'rgba(255,255,255,0.9)',
+                                        border: block.completed ? 'none' : `2.5px solid rgba(255,255,255,0.8)`,
+                                        background: block.completed ? `linear-gradient(135deg, #FFFFFF, #F0F0F0)` : 'rgba(255,255,255,0.2)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         cursor: 'pointer',
                                         flexShrink: 0,
-                                        boxShadow: block.completed ? '0 2px 6px rgba(16, 185, 129, 0.3)' : 'none',
+                                        boxShadow: block.completed ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
                                         transition: 'all 0.2s ease',
                                       }}
                                     >
-                                      {block.completed && <CheckIcon style={{ width: '11px', height: '11px', color: '#fff', strokeWidth: 3 }} />}
+                                      {block.completed && <CheckIcon style={{ width: '12px', height: '12px', color: '#10B981', strokeWidth: 3 }} />}
                                     </motion.div>
                                     <span style={{ 
                                       fontSize: '13px', 
