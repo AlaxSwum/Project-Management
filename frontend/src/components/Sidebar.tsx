@@ -46,9 +46,7 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { name: 'Personal', href: '/personal', icon: UserCircleIcon },
-  { name: 'My Tasks', href: '/my-tasks', icon: ClipboardDocumentListIcon },
   { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
-  { name: 'Invoices & Expenses', href: '/expenses', icon: CurrencyDollarIcon },
   { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
   { name: 'Meeting Schedule', href: '/calendar', icon: CalendarIcon },
   { name: 'Content Calendar', href: '/content-calendar', icon: CalendarDaysIcon },

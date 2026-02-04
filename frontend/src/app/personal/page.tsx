@@ -3295,19 +3295,19 @@ export default function PersonalPage() {
             top: '0',
             width: '380px',
             height: '100vh',
-            background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-            borderLeft: '1px solid #e2e8f0',
+            background: '#141414',
+            borderLeft: '1px solid #2D2D2D',
             overflowY: 'auto',
             zIndex: 100,
             padding: '0',
-            boxShadow: '-4px 0 20px rgba(0,0,0,0.05)',
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.3)',
           }}
         >
           {/* Header */}
           <div style={{
             padding: '16px 20px',
-            background: '#fff',
-            borderBottom: '1px solid #e2e8f0',
+            background: '#1A1A1A',
+            borderBottom: '1px solid #2D2D2D',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -3316,10 +3316,10 @@ export default function PersonalPage() {
             zIndex: 10,
           }}>
             <div>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>
                 {viewMode === 'day' ? 'Today\'s Focus' : viewMode === 'week' ? 'This Week' : 'This Month'}
               </h3>
-              <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0' }}>
+              <p style={{ fontSize: '11px', color: '#71717A', margin: '2px 0 0' }}>
                 Projects & Schedules
               </p>
             </div>
@@ -3329,8 +3329,8 @@ export default function PersonalPage() {
                 width: '32px',
                 height: '32px',
                 borderRadius: '10px',
-                border: 'none',
-                background: '#f1f5f9',
+                border: '1px solid #2D2D2D',
+                background: '#1F1F1F',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -3338,7 +3338,7 @@ export default function PersonalPage() {
                 transition: 'all 0.15s ease',
               }}
             >
-              <ChevronRightIcon style={{ width: '16px', height: '16px', color: '#64748b' }} />
+              <ChevronRightIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
                     </button>
                 </div>
 
@@ -3346,11 +3346,11 @@ export default function PersonalPage() {
           <div style={{ padding: '16px' }}>
             <div
               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '16px',
-                border: '1px solid #e2e8f0',
+                border: '1px solid #2D2D2D',
                 overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
               }}
             >
               {/* Tabs */}
@@ -3358,7 +3358,7 @@ export default function PersonalPage() {
                 style={{
                   display: 'flex',
                   padding: '3px',
-                  background: '#f1f5f9',
+                  background: '#0D0D0D',
                   margin: '8px',
                   borderRadius: '8px',
                   gap: '3px',
@@ -3373,15 +3373,15 @@ export default function PersonalPage() {
                     fontWeight: '600',
                             border: 'none', 
                     borderRadius: '6px',
-                    background: sidebarTab === 'tasks' ? '#fff' : 'transparent',
-                    color: sidebarTab === 'tasks' ? '#3b82f6' : '#64748b',
+                    background: sidebarTab === 'tasks' ? '#3B82F6' : 'transparent',
+                    color: sidebarTab === 'tasks' ? '#FFFFFF' : '#71717A',
                             cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '4px',
                     transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'tasks' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                    boxShadow: sidebarTab === 'tasks' ? '0 2px 4px rgba(59,130,246,0.3)' : 'none',
                   }}
                 >
                   <BriefcaseIcon style={{ width: '12px', height: '12px' }} />
@@ -3396,15 +3396,15 @@ export default function PersonalPage() {
                     fontWeight: '600',
                     border: 'none',
                     borderRadius: '6px',
-                    background: sidebarTab === 'timeline' ? '#fff' : 'transparent',
-                    color: sidebarTab === 'timeline' ? '#8b5cf6' : '#64748b',
+                    background: sidebarTab === 'timeline' ? '#8B5CF6' : 'transparent',
+                    color: sidebarTab === 'timeline' ? '#FFFFFF' : '#71717A',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '4px',
                     transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'timeline' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                    boxShadow: sidebarTab === 'timeline' ? '0 2px 4px rgba(139,92,246,0.3)' : 'none',
                   }}
                 >
                   <RocketLaunchIcon style={{ width: '12px', height: '12px' }} />
@@ -3419,15 +3419,15 @@ export default function PersonalPage() {
                     fontWeight: '600',
                     border: 'none',
                     borderRadius: '6px',
-                    background: sidebarTab === 'content' ? '#fff' : 'transparent',
-                    color: sidebarTab === 'content' ? '#ec4899' : '#64748b',
+                    background: sidebarTab === 'content' ? '#EC4899' : 'transparent',
+                    color: sidebarTab === 'content' ? '#FFFFFF' : '#71717A',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '4px',
                     transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'content' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                    boxShadow: sidebarTab === 'content' ? '0 2px 4px rgba(236,72,153,0.3)' : 'none',
                   }}
                 >
                   <Squares2X2Icon style={{ width: '12px', height: '12px' }} />
@@ -3442,15 +3442,15 @@ export default function PersonalPage() {
                     fontWeight: '600',
                     border: 'none',
                     borderRadius: '6px',
-                    background: sidebarTab === 'todo' ? '#fff' : 'transparent',
-                    color: sidebarTab === 'todo' ? '#10b981' : '#64748b',
+                    background: sidebarTab === 'todo' ? '#10B981' : 'transparent',
+                    color: sidebarTab === 'todo' ? '#FFFFFF' : '#71717A',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '4px',
                     transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'todo' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                    boxShadow: sidebarTab === 'todo' ? '0 2px 4px rgba(16,185,129,0.3)' : 'none',
                   }}
                 >
                   <ListBulletIcon style={{ width: '12px', height: '12px' }} />
@@ -3465,13 +3465,13 @@ export default function PersonalPage() {
                     <div style={{ 
                       textAlign: 'center', 
                       padding: '24px 16px', 
-                      color: '#94a3b8',
-                      background: '#f8fafc',
+                      color: '#71717A',
+                      background: '#0D0D0D',
                       borderRadius: '8px',
-                      border: '1px dashed #e2e8f0',
+                      border: '1px dashed #2D2D2D',
                     }}>
-                      <BriefcaseIcon style={{ width: '20px', height: '20px', color: '#cbd5e1', margin: '0 auto 8px' }} />
-                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#94a3b8' }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
+                      <BriefcaseIcon style={{ width: '20px', height: '20px', color: '#52525B', margin: '0 auto 8px' }} />
+                      <p style={{ fontSize: '11px', fontWeight: '500', margin: 0, color: '#71717A' }}>No tasks {viewMode === 'day' ? 'due today' : viewMode === 'week' ? 'this week' : 'this month'}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -3489,7 +3489,7 @@ export default function PersonalPage() {
                               borderRadius: '8px',
                               cursor: 'pointer',
                               borderLeft: `3px solid ${task.project_color || '#6b7280'}`,
-                              background: isDueToday ? 'rgba(59, 130, 246, 0.06)' : '#f8fafc',
+                              background: isDueToday ? 'rgba(59, 130, 246, 0.15)' : '#0D0D0D',
                               transition: 'all 0.15s ease',
                             }}
                           >
