@@ -180,6 +180,7 @@ export default function ProjectDetailPage() {
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [newMemberRole, setNewMemberRole] = useState<string>('Member');
+  const [userSearchQuery, setUserSearchQuery] = useState<string>('');
   const [ganttViewMode, setGanttViewMode] = useState<'week' | 'month'>('month');
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
@@ -753,6 +754,7 @@ export default function ProjectDetailPage() {
       setShowAddMemberModal(false);
       setSelectedUserId(null);
       setNewMemberRole('Member');
+      setUserSearchQuery('');
     } catch (err) {
       console.error('Error adding member:', err);
       alert('Failed to add member. Please try again.');
@@ -2543,7 +2545,7 @@ n              {/* Team Members Button - Avatar Style */}
       {/* Team Members Modal */}
       {showProjectMembers && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }} onClick={() => setShowProjectMembers(false)}>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
               <div>
@@ -2934,14 +2936,16 @@ n              {/* Team Members Button - Avatar Style */}
             
             {/* Content */}
             <div style={{ padding: '1.5rem' }}>
-              {/* User Selection */}
+              {/* User Search */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Select User
+                  Search User
                 </label>
-                <select
-                  value={selectedUserId || ''}
-                  onChange={(e) => setSelectedUserId(Number(e.target.value))}
+                <input
+                  type="text"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Type user name..."
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem',
@@ -2950,17 +2954,59 @@ n              {/* Team Members Button - Avatar Style */}
                     borderRadius: '0.5rem',
                     color: '#FFFFFF',
                     fontSize: '0.875rem',
-                    outline: 'none',
-                    cursor: 'pointer'
+                    outline: 'none'
                   }}
                   onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
                   onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
-                >
-                  <option value="">Select a user...</option>
-                  {availableUsers.map(user => (
-                    <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-                  ))}
-                </select>
+                />
+                
+                {/* Filtered Users List */}
+                {userSearchQuery && (
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    maxHeight: '200px', 
+                    overflowY: 'auto',
+                    background: '#141414',
+                    border: '1px solid #2D2D2D',
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem'
+                  }}>
+                    {availableUsers
+                      .filter(u => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()))
+                      .slice(0, 10)
+                      .map(user => (
+                        <div
+                          key={user.id}
+                          onClick={() => {
+                            setSelectedUserId(user.id);
+                            setUserSearchQuery(user.name);
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                            background: selectedUserId === user.id ? '#3B82F6' : 'transparent',
+                            color: selectedUserId === user.id ? '#FFFFFF' : '#E4E4E7',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedUserId !== user.id) {
+                              e.currentTarget.style.background = '#2D2D2D';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedUserId !== user.id) {
+                              e.currentTarget.style.background = 'transparent';
+                            }
+                          }}
+                        >
+                          <div style={{ fontWeight: 500 }}>{user.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.125rem' }}>{user.email}</div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
               
               {/* Role Selection */}
@@ -2999,6 +3045,7 @@ n              {/* Team Members Button - Avatar Style */}
                   setShowAddMemberModal(false);
                   setSelectedUserId(null);
                   setNewMemberRole('Member');
+                  setUserSearchQuery('');
                 }}
                 style={{
                   padding: '0.625rem 1.25rem',
