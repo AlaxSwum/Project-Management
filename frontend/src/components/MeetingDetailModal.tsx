@@ -202,8 +202,8 @@ export default function MeetingDetailModal({
             animation: fadeIn 0.3s ease-out;
           }
           .meeting-modal {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
+            background: #1A1A1A;
+            border: 1px solid #2D2D2D;
             border-radius: 12px;
             width: 100%;
             max-width: 450px;
@@ -214,10 +214,10 @@ export default function MeetingDetailModal({
             margin: 0 auto;
           }
           .meeting-modal-fixed {
-            border: 1px solid #e5e7eb !important;
+            border: 1px solid #2D2D2D !important;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
             max-width: 450px !important;
-            background: #ffffff !important;
+            background: #1A1A1A !important;
           }
           .modal-content {
             padding: 0;
@@ -226,16 +226,16 @@ export default function MeetingDetailModal({
           }
           .modal-header {
             padding: 1rem;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid #2D2D2D;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            background: #f8fafc;
+            background: #141414;
           }
           .modal-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #000000;
+            color: #FFFFFF;
             margin: 0;
             flex: 1;
             margin-right: 1rem;
@@ -247,20 +247,21 @@ export default function MeetingDetailModal({
           }
           .action-btn {
             padding: 0.5rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #3D3D3D;
             border-radius: 6px;
-            background: #ffffff;
+            background: #141414;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #E4E4E7;
           }
           .action-btn:hover {
-            border-color: #000000;
+            border-color: #FFFFFF;
             transform: translateY(-1px);
           }
-          .action-btn.edit { background: #f3f4f6; }
+          .action-btn.edit { background: #2D2D2D; }
           .action-btn.save { background: #000000; color: #ffffff; }
           .action-btn.delete { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
           .action-btn.close { background: #fef2f2; border-color: #fecaca; }
@@ -277,12 +278,12 @@ export default function MeetingDetailModal({
             align-items: center;
             gap: 0.75rem;
             padding: 0.6rem;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
+            background: #141414;
+            border: 1px solid #2D2D2D;
             border-radius: 8px;
           }
           .info-icon {
-            color: #6b7280;
+            color: #71717A;
             flex-shrink: 0;
           }
           .info-content {
@@ -290,12 +291,12 @@ export default function MeetingDetailModal({
           }
           .info-label {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
             margin-bottom: 0.25rem;
           }
           .info-value {
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             font-size: 0.875rem;
           }
           .form-group {
@@ -304,22 +305,24 @@ export default function MeetingDetailModal({
           .form-label {
             display: block;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
           }
           .form-input, .form-textarea, .form-select {
             width: 100%;
             padding: 0.75rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #3D3D3D;
             border-radius: 6px;
             font-size: 0.875rem;
             transition: border-color 0.2s ease;
             box-sizing: border-box;
+            background: #141414;
+            color: #FFFFFF;
           }
           .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
-            border-color: #000000;
+            border-color: #3B82F6;
           }
           .form-grid-3 {
             display: grid;
@@ -332,7 +335,7 @@ export default function MeetingDetailModal({
             margin-bottom: 1rem;
             width: 100%;
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #2D2D2D;
           }
           .notes-header {
             display: flex;
@@ -344,7 +347,7 @@ export default function MeetingDetailModal({
           .notes-title {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -369,7 +372,7 @@ export default function MeetingDetailModal({
             justify-content: flex-end;
             margin-top: 1.5rem;
             padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #2D2D2D;
           }
           .btn {
             padding: 0.75rem 1.5rem;
@@ -387,12 +390,12 @@ export default function MeetingDetailModal({
             background: #333333;
           }
           .btn-secondary {
-            background: #ffffff;
-            color: #000000;
-            border-color: #e5e7eb;
+            background: #141414;
+            color: #FFFFFF;
+            border-color: #3D3D3D;
           }
           .btn-secondary:hover {
-            border-color: #000000;
+            border-color: #FFFFFF;
           }
           .attendees-list {
             display: flex;
@@ -563,10 +566,10 @@ export default function MeetingDetailModal({
                       <div className="info-label">Meeting Agenda</div>
                       <div style={{ 
                         marginTop: '8px',
-                        background: '#F9FAFB',
+                        background: '#141414',
                         borderRadius: '8px',
                         overflow: 'hidden',
-                        border: '1px solid #E5E7EB'
+                        border: '1px solid #2D2D2D'
                       }}>
                         {meeting.agenda_items.map((item, index) => (
                           <div 
@@ -576,8 +579,8 @@ export default function MeetingDetailModal({
                               alignItems: 'center',
                               gap: '12px',
                               padding: '10px 12px',
-                              borderBottom: index < meeting.agenda_items!.length - 1 ? '1px solid #E5E7EB' : 'none',
-                              background: 'white'
+                              borderBottom: index < meeting.agenda_items!.length - 1 ? '1px solid #2D2D2D' : 'none',
+                              background: '#1A1A1A'
                             }}
                           >
                             <span style={{
@@ -595,7 +598,7 @@ export default function MeetingDetailModal({
                             }}>
                               {index + 1}
                             </span>
-                            <span style={{ fontSize: '13px', color: '#374151' }}>{item}</span>
+                            <span style={{ fontSize: '13px', color: '#E4E4E7' }}>{item}</span>
                           </div>
                         ))}
                       </div>
@@ -692,8 +695,8 @@ export default function MeetingDetailModal({
                       gap: '0.5rem', 
                       marginBottom: '0.75rem',
                       padding: '0.75rem',
-                      backgroundColor: '#f9fafb',
-                      border: '1px solid #e5e7eb',
+                      backgroundColor: '#141414',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '6px'
                     }}>
                       {editedMeeting.attendee_ids.map(memberId => {
@@ -736,7 +739,7 @@ export default function MeetingDetailModal({
                   {/* Member Selection */}
                   {projectMembers.length > 0 ? (
                     <div style={{
-                      border: '2px solid #e5e7eb',
+                      border: '2px solid #3D3D3D',
                       borderRadius: '6px',
                       maxHeight: '200px',
                       overflowY: 'auto'
@@ -759,10 +762,10 @@ export default function MeetingDetailModal({
                               alignItems: 'center',
                               gap: '0.75rem',
                               padding: '0.75rem',
-                              borderBottom: '1px solid #e5e7eb',
+                              borderBottom: '1px solid #2D2D2D',
                               cursor: 'pointer',
-                              backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
-                              borderLeft: isSelected ? '4px solid #000000' : '4px solid transparent'
+                              backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.2)' : '#141414',
+                              borderLeft: isSelected ? '4px solid #3B82F6' : '4px solid transparent'
                             }}
                           >
                             <input
@@ -772,10 +775,10 @@ export default function MeetingDetailModal({
                               style={{ cursor: 'pointer' }}
                             />
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: '500', color: '#000000' }}>
+                              <div style={{ fontWeight: '500', color: '#FFFFFF' }}>
                                 {member.name}
                               </div>
-                              <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                              <div style={{ fontSize: '0.875rem', color: '#71717A' }}>
                                 {member.email}
                               </div>
                             </div>
@@ -787,8 +790,8 @@ export default function MeetingDetailModal({
                     <div style={{
                       padding: '2rem',
                       textAlign: 'center',
-                      color: '#6b7280',
-                      border: '2px dashed #e5e7eb',
+                      color: '#71717A',
+                      border: '2px dashed #3D3D3D',
                       borderRadius: '6px'
                     }}>
                       {editedMeeting.project_id ? 'Loading project members...' : 'Select a project to see available members'}
@@ -813,7 +816,7 @@ export default function MeetingDetailModal({
               gap: '12px', 
               flexWrap: 'wrap',
               padding: '16px 0',
-              borderTop: '1px solid #e5e7eb',
+              borderTop: '1px solid #2D2D2D',
               marginTop: '16px',
             }}>
               {/* Follow-up Button */}
@@ -852,9 +855,9 @@ export default function MeetingDetailModal({
                   alignItems: 'center',
                   gap: '8px',
                   padding: '12px 20px',
-                  background: '#f3f4f6',
-                  color: '#374151',
-                  border: '1px solid #e5e7eb',
+                  background: '#2D2D2D',
+                  color: '#E4E4E7',
+                  border: '1px solid #3D3D3D',
                   borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '600',

@@ -499,8 +499,8 @@ export default function MeetingNotesModal({
               z-index: 60;
             }
             .notes-modal {
-              background: #ffffff;
-              border: 3px solid #000000;
+              background: #1A1A1A;
+              border: 3px solid #2D2D2D;
               border-radius: 16px;
               width: 100%;
               max-width: 900px;
@@ -510,13 +510,13 @@ export default function MeetingNotesModal({
             .loading-container {
               text-align: center;
               padding: 3rem;
-              color: #6b7280;
+              color: #71717A;
             }
             .loading-spinner {
               width: 40px;
               height: 40px;
-              border: 3px solid #e5e7eb;
-              border-top: 3px solid #000000;
+              border: 3px solid #3D3D3D;
+              border-top: 3px solid #FFFFFF;
               border-radius: 50%;
               animation: spin 1s linear infinite;
               margin: 0 auto 1rem;
@@ -547,8 +547,8 @@ export default function MeetingNotesModal({
             animation: fadeIn 0.3s ease-out;
           }
           .notes-modal {
-            background: #ffffff;
-            border: 3px solid #000000;
+            background: #1A1A1A;
+            border: 3px solid #2D2D2D;
             border-radius: 16px;
             width: 100%;
             max-width: 900px;
@@ -559,14 +559,14 @@ export default function MeetingNotesModal({
           }
           .notes-header {
             padding: 2rem;
-            border-bottom: 3px solid #e5e7eb;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 3px solid #2D2D2D;
+            background: linear-gradient(135deg, #141414 0%, #2D2D2D 100%);
             position: relative;
           }
           .notes-title {
             font-size: 2rem;
             font-weight: 800;
-            color: #000000;
+            color: #FFFFFF;
             margin: 0;
             display: flex;
             align-items: center;
@@ -577,16 +577,16 @@ export default function MeetingNotesModal({
             top: 1rem;
             right: 1rem;
             padding: 0.75rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #3D3D3D;
             border-radius: 8px;
-            background: #ffffff;
+            background: #141414;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #6b7280;
+            color: #71717A;
           }
           .close-btn:hover {
-            border-color: #000000;
-            color: #000000;
+            border-color: #FFFFFF;
+            color: #FFFFFF;
             transform: translateY(-1px);
           }
           .notes-content {
@@ -595,14 +595,14 @@ export default function MeetingNotesModal({
           .form-section {
             margin-bottom: 2rem;
             padding: 1.5rem;
-            background: #f8fafc;
-            border: 2px solid #e5e7eb;
+            background: #141414;
+            border: 2px solid #2D2D2D;
             border-radius: 12px;
           }
           .section-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
@@ -620,23 +620,25 @@ export default function MeetingNotesModal({
           .form-label {
             display: block;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
           }
           .form-input {
             width: 100%;
             padding: 0.75rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #3D3D3D;
             border-radius: 8px;
             font-size: 0.875rem;
             transition: all 0.2s ease;
             box-sizing: border-box;
+            background: #1A1A1A;
+            color: #FFFFFF;
           }
           .form-input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
           }
           .attendees-container {
             display: flex;
@@ -645,9 +647,9 @@ export default function MeetingNotesModal({
             margin-bottom: 1rem;
             min-height: 2rem;
             padding: 0.75rem;
-            border: 2px dashed #d1d5db;
+            border: 2px dashed #3D3D3D;
             border-radius: 8px;
-            background: #ffffff;
+            background: #1A1A1A;
           }
           .attendee-tag {
             background: #000000;
@@ -700,17 +702,18 @@ export default function MeetingNotesModal({
           }
           .member-btn {
             padding: 0.5rem 0.75rem;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
+            background: #2D2D2D;
+            border: 1px solid #3D3D3D;
             border-radius: 6px;
             font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 500;
+            color: #E4E4E7;
           }
           .member-btn:hover {
-            background: #e5e7eb;
-            border-color: #9ca3af;
+            background: #3D3D3D;
+            border-color: #71717A;
           }
           .discussion-item {
             display: flex;
@@ -738,7 +741,7 @@ export default function MeetingNotesModal({
             flex: 1;
             width: 100%;
             padding: 1rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #3D3D3D;
             border-radius: 8px;
             font-size: 0.875rem;
             min-height: 80px;
@@ -746,15 +749,17 @@ export default function MeetingNotesModal({
             transition: all 0.2s ease;
             position: relative;
             box-sizing: border-box;
+            background: #1A1A1A;
+            color: #FFFFFF;
           }
           .discussion-input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
           }
           .discussion-input.active {
-            border-color: #000000;
-            background: #f8fafc;
+            border-color: #3B82F6;
+            background: #141414;
           }
           .discussion-controls {
             display: flex;
@@ -763,17 +768,18 @@ export default function MeetingNotesModal({
           }
           .control-btn {
             padding: 0.5rem;
-            border: 1px solid #d1d5db;
+            border: 1px solid #3D3D3D;
             border-radius: 6px;
-            background: #ffffff;
+            background: #141414;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #E4E4E7;
           }
           .control-btn:hover {
-            border-color: #000000;
+            border-color: #FFFFFF;
           }
           .control-btn.add {
             background: #000000;
@@ -784,18 +790,18 @@ export default function MeetingNotesModal({
             background: #333333;
           }
           .previous-line {
-            background: #e5e7eb;
+            background: #2D2D2D;
             padding: 0.5rem;
             border-radius: 6px;
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
             margin-bottom: 0.5rem;
             font-style: italic;
           }
           .save-section {
             padding: 2rem;
-            border-top: 3px solid #e5e7eb;
-            background: #f8fafc;
+            border-top: 3px solid #2D2D2D;
+            background: #141414;
             display: flex;
             justify-content: center;
             gap: 1rem;
@@ -819,22 +825,22 @@ export default function MeetingNotesModal({
             transform: translateY(-2px);
           }
           .save-btn:disabled {
-            background: #9ca3af;
+            background: #71717A;
             cursor: not-allowed;
             transform: none;
           }
           .cancel-btn {
             padding: 1rem 2rem;
-            background: #ffffff;
-            color: #000000;
-            border: 2px solid #e5e7eb;
+            background: #141414;
+            color: #FFFFFF;
+            border: 2px solid #3D3D3D;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
           }
           .cancel-btn:hover {
-            border-color: #000000;
+            border-color: #FFFFFF;
             transform: translateY(-2px);
           }
           @keyframes fadeIn {
@@ -853,20 +859,20 @@ export default function MeetingNotesModal({
           .document-view {
             max-width: 100%;
             margin: 0 auto;
-            background: #ffffff;
+            background: #1A1A1A;
             padding: 2rem;
             line-height: 1.6;
-            color: #374151;
+            color: #E4E4E7;
           }
           .document-header {
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid #2D2D2D;
             padding-bottom: 1.5rem;
             margin-bottom: 2rem;
           }
           .document-title {
             font-size: 2rem;
             font-weight: 800;
-            color: #000000;
+            color: #FFFFFF;
             margin: 0 0 1rem 0;
             text-align: center;
           }
@@ -877,11 +883,11 @@ export default function MeetingNotesModal({
             margin-top: 1rem;
           }
           .meta-item {
-            background: #f8fafc;
+            background: #141414;
             padding: 0.5rem 0.75rem;
             border-radius: 6px;
             font-size: 0.875rem;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #2D2D2D;
           }
           .document-section {
             margin-bottom: 2rem;
@@ -889,10 +895,10 @@ export default function MeetingNotesModal({
           .section-heading {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #000000;
+            color: #FFFFFF;
             margin: 0 0 1rem 0;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #2D2D2D;
           }
           .attendees-grid {
             display: flex;
@@ -943,7 +949,7 @@ export default function MeetingNotesModal({
             flex-shrink: 0;
           }
           .document-footer {
-            border-top: 2px solid #e5e7eb;
+            border-top: 2px solid #2D2D2D;
             padding-top: 1.5rem;
             text-align: center;
           }
@@ -969,21 +975,21 @@ export default function MeetingNotesModal({
           .sub-section {
             margin-top: 1rem;
             padding: 1rem;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
+            background: #141414;
+            border: 1px solid #2D2D2D;
             border-radius: 8px;
             margin-left: 1rem;
           }
           .sub-section-heading {
             font-size: 1rem;
             font-weight: 600;
-            color: #374151;
+            color: #E4E4E7;
             margin: 0 0 0.75rem 0;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #2D2D2D;
           }
           .sub-list {
             margin-left: 0.5rem;
@@ -994,26 +1000,26 @@ export default function MeetingNotesModal({
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 1rem;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
+            background: #2D2D2D;
+            border: 1px solid #3D3D3D;
             border-radius: 6px;
             font-size: 0.875rem;
             font-weight: 600;
-            color: #374151;
+            color: #E4E4E7;
             cursor: pointer;
             transition: all 0.2s ease;
           }
           .add-section-btn:hover {
-            background: #e5e7eb;
-            border-color: #9ca3af;
+            background: #3D3D3D;
+            border-color: #71717A;
           }
           .add-section-input {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1rem;
             padding: 1rem;
-            background: #fef3c7;
-            border: 1px solid #fcd34d;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
             border-radius: 8px;
           }
           .add-section-input .form-input {
@@ -1021,22 +1027,22 @@ export default function MeetingNotesModal({
           }
           .cancel-section-btn {
             padding: 0.75rem 1rem;
-            background: #ffffff;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
+            background: #141414;
+            color: #71717A;
+            border: 1px solid #3D3D3D;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 500;
           }
           .cancel-section-btn:hover {
-            background: #f3f4f6;
-            border-color: #9ca3af;
+            background: #2D2D2D;
+            border-color: #71717A;
           }
           .general-notes-label {
             font-size: 0.75rem;
             font-weight: 600;
-            color: #6b7280;
+            color: #71717A;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 0.75rem;
@@ -1044,32 +1050,32 @@ export default function MeetingNotesModal({
           }
           .section-container {
             margin-top: 1rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 8px;
             overflow: hidden;
-            background: #ffffff;
+            background: #1A1A1A;
           }
           .section-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem 1rem;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            background: linear-gradient(135deg, #2D2D2D 0%, #3D3D3D 100%);
             cursor: pointer;
             transition: all 0.2s ease;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #2D2D2D;
           }
           .section-header:hover {
-            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            background: linear-gradient(135deg, #3D3D3D 0%, #4D4D4D 100%);
           }
           .section-name {
             font-weight: 700;
-            color: #000000;
+            color: #FFFFFF;
             flex: 1;
           }
           .section-count {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
             font-weight: 500;
           }
           .remove-section-btn {
@@ -1090,7 +1096,7 @@ export default function MeetingNotesModal({
           }
           .section-notes {
             padding: 1rem;
-            background: #fafafa;
+            background: #141414;
           }
           .section-note-item {
             margin-bottom: 0.75rem;
@@ -1209,7 +1215,7 @@ export default function MeetingNotesModal({
 
                 {projectMembers.length > 0 && (
                   <div className="project-members">
-                    <span style={{ fontSize: '0.75rem', color: '#6b7280', marginRight: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#71717A', marginRight: '0.5rem' }}>
                       Quick add:
                     </span>
                     {projectMembers.map((member, index) => (

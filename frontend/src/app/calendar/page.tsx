@@ -108,7 +108,7 @@ export default function CalendarPage() {
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   
   // Calendar view state
-  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
 
   // Mobile detection
   useEffect(() => {
@@ -2452,8 +2452,7 @@ export default function CalendarPage() {
                 }}>
                   {[
                     { key: 'month', label: 'Month' },
-                    { key: 'week', label: 'Week' },
-                    { key: 'day', label: 'Day' }
+                    { key: 'week', label: 'Week' }
                   ].map(({ key, label }) => (
                     <button
                       key={key}
@@ -2775,51 +2774,6 @@ export default function CalendarPage() {
                     );
                   })}
                 </div>
-                
-                {/* Add Task Button */}
-                <button
-                  onClick={() => {
-                    setSelectedDayDate(new Date());
-                    setNewMeeting({ 
-                      ...newMeeting, 
-                      start_date: new Date().toISOString().split('T')[0] 
-                    });
-                    setShowCreateMeeting(true);
-                  }}
-                  style={{
-                    background: '#3B82F6',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '0.875rem 1.5rem',
-                    borderRadius: '12px',
-                    fontSize: '0.9375rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#2563EB';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#3B82F6';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <PlusIcon style={{ width: '18px', height: '18px' }} />
-                  Add Meeting
-                </button>
-              </div>
-            ) : (
-              // Day View placeholder
-              <div style={{ padding: '1rem', color: '#FFFFFF' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Day View</h3>
-                <p style={{ color: '#71717A' }}>Day view coming soon...</p>
               </div>
             )}
 
