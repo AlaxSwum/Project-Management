@@ -2083,7 +2083,7 @@ export default function PersonalPage() {
         className="main-content personal-main personal-page"
         style={{
           minHeight: '100vh',
-          marginLeft: isMobile ? '0' : (sidebarCollapsed ? '72px' : '256px'),
+          marginLeft: '0',
           marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
           background: '#0D0D0D',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -4033,7 +4033,7 @@ export default function PersonalPage() {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
                       style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '20px',
             width: '100%',
                 maxWidth: '480px',
@@ -4054,7 +4054,7 @@ export default function PersonalPage() {
                   style={{
                     fontSize: '18px',
                     fontWeight: '600',
-                    color: '#1d1d1f',
+                    color: '#FFFFFF',
                     margin: 0,
                   }}
                 >
@@ -4261,7 +4261,7 @@ export default function PersonalPage() {
                           gap: '4px',
                           border: '1px dashed rgba(0, 0, 0, 0.2)',
                           borderRadius: '20px',
-                          background: '#fff',
+                          background: '#1A1A1A',
                             cursor: 'pointer',
                           color: '#86868b',
                           fontSize: '12px',
@@ -4505,7 +4505,7 @@ export default function PersonalPage() {
                       border: '1px solid rgba(0, 0, 0, 0.1)',
                       borderRadius: '10px',
                       outline: 'none',
-                      background: '#fff',
+                      background: '#1A1A1A',
                             cursor: 'pointer',
                     }}
                   >
@@ -4546,7 +4546,7 @@ export default function PersonalPage() {
                           width: '22px',
                           height: '22px',
                           borderRadius: '11px',
-                          background: '#fff',
+                          background: '#1A1A1A',
                           position: 'absolute',
                           top: '2px',
                           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
@@ -4843,9 +4843,9 @@ export default function PersonalPage() {
                     fontWeight: '500',
                     border: '1px solid rgba(0, 0, 0, 0.1)',
                   borderRadius: '12px',
-                    background: '#fff',
+                    background: '#1A1A1A',
                         cursor: 'pointer',
-                    color: '#1d1d1f',
+                    color: '#FFFFFF',
                       }}
                     >
                       Cancel
@@ -4886,7 +4886,7 @@ export default function PersonalPage() {
               position: 'fixed',
               top: contextMenu.y,
               left: contextMenu.x,
-              background: '#fff',
+              background: '#1A1A1A',
               borderRadius: '12px',
               boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)',
               border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -4913,7 +4913,7 @@ export default function PersonalPage() {
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: '500',
-                color: '#1d1d1f',
+                color: '#FFFFFF',
                 textAlign: 'left',
                 transition: 'background 0.15s',
               }}
@@ -4941,7 +4941,7 @@ export default function PersonalPage() {
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: '500',
-                color: '#1d1d1f',
+                color: '#FFFFFF',
                 textAlign: 'left',
                 transition: 'background 0.15s',
               }}
@@ -5045,7 +5045,7 @@ export default function PersonalPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '16px',
                 padding: '24px',
                 maxWidth: '400px',
@@ -5092,7 +5092,7 @@ export default function PersonalPage() {
                     borderRadius: '10px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    color: '#374151',
+                    color: '#E4E4E7',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -5183,7 +5183,7 @@ export default function PersonalPage() {
                 width: '100%',
                 maxWidth: '480px',
                 maxHeight: '85vh',
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '20px',
                 boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.2)',
                 display: 'flex',
@@ -5350,7 +5350,7 @@ export default function PersonalPage() {
                 {selectedBlock.description && (
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '12px', fontWeight: '600', color: '#86868b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notes</div>
-                    <div style={{ fontSize: '14px', lineHeight: 1.6, color: '#1d1d1f', whiteSpace: 'pre-wrap' }}>
+                    <div style={{ fontSize: '14px', lineHeight: 1.6, color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>
                       {selectedBlock.description}
                     </div>
                   </div>
@@ -5501,7 +5501,7 @@ export default function PersonalPage() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '16px',
                 width: '100%',
                 maxWidth: '480px',
@@ -5516,7 +5516,7 @@ export default function PersonalPage() {
                     <span style={{ fontSize: '10px', fontWeight: '600', color: selectedExternalTask.project_color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {selectedExternalTask.project_name}
                     </span>
-                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
+                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#FFFFFF', margin: '4px 0 0' }}>
                       {selectedExternalTask.name}
                     </h2>
                   </div>
@@ -5530,21 +5530,21 @@ export default function PersonalPage() {
                 {selectedExternalTask.description && (
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Description</label>
-                    <p style={{ fontSize: '14px', color: '#374151', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTask.description}</p>
+                    <p style={{ fontSize: '14px', color: '#E4E4E7', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTask.description}</p>
                   </div>
                 )}
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                   {selectedExternalTask.due_date && (
-                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <div style={{ padding: '12px', background: '#0D0D0D', borderRadius: '10px' }}>
                       <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Due Date</label>
-                      <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                      <p style={{ fontSize: '13px', color: '#FFFFFF', marginTop: '4px', fontWeight: '600' }}>
                         {new Date(selectedExternalTask.due_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </p>
                     </div>
                   )}
                   {selectedExternalTask.priority && (
-                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <div style={{ padding: '12px', background: '#0D0D0D', borderRadius: '10px' }}>
                       <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Priority</label>
                       <p style={{ fontSize: '13px', color: selectedExternalTask.priority === 'high' ? '#ef4444' : selectedExternalTask.priority === 'medium' ? '#f59e0b' : '#22c55e', marginTop: '4px', fontWeight: '600', textTransform: 'capitalize' }}>
                         {selectedExternalTask.priority}
@@ -5552,9 +5552,9 @@ export default function PersonalPage() {
                     </div>
                   )}
                   {selectedExternalTask.status && (
-                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <div style={{ padding: '12px', background: '#0D0D0D', borderRadius: '10px' }}>
                       <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</label>
-                      <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600', textTransform: 'capitalize' }}>
+                      <p style={{ fontSize: '13px', color: '#FFFFFF', marginTop: '4px', fontWeight: '600', textTransform: 'capitalize' }}>
                         {selectedExternalTask.status?.replace('_', ' ')}
                       </p>
                     </div>
@@ -5587,7 +5587,7 @@ export default function PersonalPage() {
                 </button>
                 <button
                   onClick={() => setSelectedExternalTask(null)}
-                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '10px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #2D2D2D', borderRadius: '10px', background: '#1A1A1A', color: '#E4E4E7', cursor: 'pointer' }}
                 >
                   Close
                 </button>
@@ -5623,7 +5623,7 @@ export default function PersonalPage() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
                               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '16px',
                 width: '100%',
                 maxWidth: '480px',
@@ -5640,7 +5640,7 @@ export default function PersonalPage() {
                         {selectedExternalTimeline.category_name}
                       </span>
                     )}
-                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '4px 0 0' }}>
+                    <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#FFFFFF', margin: '4px 0 0' }}>
                       {selectedExternalTimeline.title}
                     </h2>
                               </div>
@@ -5654,21 +5654,21 @@ export default function PersonalPage() {
                 {selectedExternalTimeline.description && (
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Description</label>
-                    <p style={{ fontSize: '14px', color: '#374151', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTimeline.description}</p>
+                    <p style={{ fontSize: '14px', color: '#E4E4E7', marginTop: '6px', lineHeight: '1.5' }}>{selectedExternalTimeline.description}</p>
                           </div>
                 )}
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                  <div style={{ padding: '12px', background: '#0D0D0D', borderRadius: '10px' }}>
                     <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Start Date</label>
-                    <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                    <p style={{ fontSize: '13px', color: '#FFFFFF', marginTop: '4px', fontWeight: '600' }}>
                       {new Date(selectedExternalTimeline.start_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </p>
                 </div>
                   {selectedExternalTimeline.end_date && (
-                    <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '10px' }}>
+                    <div style={{ padding: '12px', background: '#0D0D0D', borderRadius: '10px' }}>
                       <label style={{ fontSize: '10px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>End Date</label>
-                      <p style={{ fontSize: '13px', color: '#111827', marginTop: '4px', fontWeight: '600' }}>
+                      <p style={{ fontSize: '13px', color: '#FFFFFF', marginTop: '4px', fontWeight: '600' }}>
                         {new Date(selectedExternalTimeline.end_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </p>
               </div>
@@ -5699,7 +5699,7 @@ export default function PersonalPage() {
                   </button>
                   <button
                   onClick={() => setSelectedExternalTimeline(null)}
-                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #e5e7eb', borderRadius: '10px', background: '#fff', color: '#374151', cursor: 'pointer' }}
+                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #2D2D2D', borderRadius: '10px', background: '#1A1A1A', color: '#E4E4E7', cursor: 'pointer' }}
                 >
                   Close
                   </button>
@@ -5735,7 +5735,7 @@ export default function PersonalPage() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '20px',
                 width: '100%',
                 maxWidth: '520px',
@@ -5846,11 +5846,11 @@ export default function PersonalPage() {
                     </h4>
                     <p style={{ 
                       fontSize: '14px', 
-                      color: '#374151', 
+                      color: '#E4E4E7', 
                       lineHeight: '1.6',
                       margin: 0,
                       padding: '14px',
-                      background: '#f9fafb',
+                      background: '#0D0D0D',
                       borderRadius: '10px',
                       borderLeft: '3px solid #f59e0b',
                     }}>
@@ -5866,7 +5866,7 @@ export default function PersonalPage() {
                       Meeting Agenda
                     </h4>
                     <div style={{ 
-                      background: '#f9fafb', 
+                      background: '#0D0D0D', 
                       borderRadius: '12px', 
                       padding: '12px',
                       borderLeft: '3px solid #10b981',
@@ -5897,7 +5897,7 @@ export default function PersonalPage() {
                           }}>
                             {idx + 1}
                           </span>
-                          <span style={{ fontSize: '13px', color: '#374151', lineHeight: '1.4' }}>{item}</span>
+                          <span style={{ fontSize: '13px', color: '#E4E4E7', lineHeight: '1.4' }}>{item}</span>
                         </div>
                       ))}
                     </div>
@@ -5937,7 +5937,7 @@ export default function PersonalPage() {
                           }}>
                             {attendee.charAt(0).toUpperCase()}
                           </div>
-                          <span style={{ fontSize: '12px', color: '#374151', fontWeight: '500' }}>{attendee}</span>
+                          <span style={{ fontSize: '12px', color: '#E4E4E7', fontWeight: '500' }}>{attendee}</span>
                         </div>
                       ))}
                     </div>
@@ -5956,7 +5956,7 @@ export default function PersonalPage() {
                       lineHeight: '1.6',
                       margin: 0,
                       padding: '12px',
-                      background: '#fffbeb',
+                      background: '#1A1A1A',
                       borderRadius: '10px',
                       fontStyle: 'italic',
                     }}>
@@ -6008,10 +6008,10 @@ export default function PersonalPage() {
                     padding: '14px 20px', 
                     fontSize: '14px', 
                     fontWeight: '600', 
-                    border: '1px solid #e5e7eb', 
+                    border: '1px solid #2D2D2D', 
                     borderRadius: '12px', 
-                    background: '#fff', 
-                    color: '#374151', 
+                    background: '#1A1A1A', 
+                    color: '#E4E4E7', 
                     cursor: 'pointer',
                   }}
                 >
@@ -6049,7 +6049,7 @@ export default function PersonalPage() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '20px',
                 width: '100%',
                 maxWidth: '520px',
@@ -6178,11 +6178,11 @@ export default function PersonalPage() {
                     </h4>
                     <p style={{ 
                       fontSize: '14px', 
-                      color: '#374151', 
+                      color: '#E4E4E7', 
                       lineHeight: '1.6',
                       margin: 0,
                       padding: '14px',
-                      background: '#f9fafb',
+                      background: '#0D0D0D',
                       borderRadius: '10px',
                       borderLeft: '3px solid #ec4899',
                     }}>
@@ -6199,7 +6199,7 @@ export default function PersonalPage() {
                     </h4>
                     <p style={{ 
                       fontSize: '13px', 
-                      color: '#374151', 
+                      color: '#E4E4E7', 
                       lineHeight: '1.6',
                       margin: 0,
                       padding: '12px',
@@ -6220,7 +6220,7 @@ export default function PersonalPage() {
                     </h4>
                     <p style={{ 
                       fontSize: '13px', 
-                      color: '#374151', 
+                      color: '#E4E4E7', 
                       lineHeight: '1.6',
                       margin: 0,
                       padding: '12px',
@@ -6395,10 +6395,10 @@ export default function PersonalPage() {
                     padding: '14px 20px', 
                     fontSize: '14px', 
                     fontWeight: '600', 
-                    border: '1px solid #e5e7eb', 
+                    border: '1px solid #2D2D2D', 
                     borderRadius: '12px', 
-                    background: '#fff', 
-                    color: '#374151', 
+                    background: '#1A1A1A', 
+                    color: '#E4E4E7', 
                     cursor: 'pointer',
                   }}
                 >
@@ -6436,7 +6436,7 @@ export default function PersonalPage() {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#fff',
+                background: '#1A1A1A',
                 borderRadius: '20px',
                 width: '100%',
                 maxWidth: '480px',
@@ -6496,7 +6496,7 @@ export default function PersonalPage() {
               <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Task Name */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#E4E4E7', marginBottom: '8px' }}>
                     Task Name *
                   </label>
                   <input
@@ -6518,7 +6518,7 @@ export default function PersonalPage() {
                 {/* Date Range */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#E4E4E7', marginBottom: '8px' }}>
                       Start Date
                     </label>
                     <input
@@ -6536,7 +6536,7 @@ export default function PersonalPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#E4E4E7', marginBottom: '8px' }}>
                       Deadline
                     </label>
                     <input
@@ -6557,7 +6557,7 @@ export default function PersonalPage() {
 
                 {/* Duration */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#E4E4E7', marginBottom: '8px' }}>
                     Duration (hours to complete)
                   </label>
                   <input
@@ -6579,7 +6579,7 @@ export default function PersonalPage() {
 
                 {/* Priority */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#E4E4E7', marginBottom: '8px' }}>
                     Priority
                   </label>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -6613,7 +6613,7 @@ export default function PersonalPage() {
 
                 {/* Description */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#E4E4E7', marginBottom: '8px' }}>
                     Description (optional)
                   </label>
                   <textarea
@@ -6663,10 +6663,10 @@ export default function PersonalPage() {
                     padding: '14px 20px',
                     fontSize: '14px',
                     fontWeight: '600',
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid #2D2D2D',
                     borderRadius: '12px',
-                    background: '#fff',
-                    color: '#374151',
+                    background: '#1A1A1A',
+                    color: '#E4E4E7',
                     cursor: 'pointer',
                   }}
                 >
