@@ -197,11 +197,12 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
     
     setCreatingProject(true);
     try {
-      // Create the project - only use fields that exist in the table
+      // Create the project with required fields
       const { data: newProject, error: projectError } = await supabase
         .from('projects_project')
         .insert({
           name: newProjectName.trim(),
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();

@@ -186,6 +186,8 @@ export default function ProjectDetailPage() {
   const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
   const [enteredTags, setEnteredTags] = useState<string[]>([]);
   const [taskMenuOpen, setTaskMenuOpen] = useState<number | null>(null);
+  const [showDeleteProject, setShowDeleteProject] = useState(false);
+  const [deletingProject, setDeletingProject] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -842,6 +844,48 @@ export default function ProjectDetailPage() {
     }
   };
 
+  // Delete project (admin/owner only)
+  const deleteProject = async () => {
+    if (!project || !user) return;
+    
+    setDeletingProject(true);
+    try {
+      // First delete all project members
+      await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', project.id);
+      
+      // Then delete all tasks
+      await supabase
+        .from('projects_task')
+        .delete()
+        .eq('project_id', project.id);
+      
+      // Finally delete the project
+      const { error } = await supabase
+        .from('projects_project')
+        .delete()
+        .eq('id', project.id);
+      
+      if (error) throw error;
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('Error deleting project:', err);
+      alert('Failed to delete project. Please try again.');
+    }
+    setDeletingProject(false);
+  };
+
+  // Check if current user is owner/admin of the project
+  const isProjectOwner = () => {
+    if (!project?.members || !user) return false;
+    const currentMember = project.members.find(m => m.id === user.id);
+    return currentMember?.role === 'owner' || currentMember?.role === 'admin';
+  };
+
   if (authLoading || isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -934,6 +978,38 @@ n              {/* Team Members Button - Avatar Style */}
                     <PlusIcon style={{ width: '16px', height: '16px' }} />
                 New Task
                   </button>
+                  
+                  {/* Delete Project Button - Only for owners/admins */}
+                  {isProjectOwner() && (
+                    <button
+                      onClick={() => setShowDeleteProject(true)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        padding: '0.5rem 1rem', 
+                        background: 'transparent', 
+                        color: '#EF4444', 
+                        border: '1px solid #EF4444', 
+                        borderRadius: '0.5rem', 
+                        fontWeight: 500, 
+                        fontSize: '0.875rem', 
+                        cursor: 'pointer', 
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#EF4444';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#EF4444';
+                      }}
+                    >
+                      <TrashIcon style={{ width: '16px', height: '16px' }} />
+                      Delete
+                    </button>
+                  )}
             </div>
               </div>
               
@@ -3979,6 +4055,111 @@ n              {/* Team Members Button - Avatar Style */}
                   Add Column
               </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Project Confirmation Modal */}
+      {showDeleteProject && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+          }}
+          onClick={() => setShowDeleteProject(false)}
+        >
+          <div
+            style={{
+              background: '#1A1A1A',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '400px',
+              maxWidth: '90vw',
+              border: '1px solid #2D2D2D',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ 
+                width: '48px', 
+                height: '48px', 
+                borderRadius: '50%', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <TrashIcon style={{ width: '24px', height: '24px', color: '#EF4444' }} />
+              </div>
+              <div>
+                <h3 style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>
+                  Delete Project
+                </h3>
+                <p style={{ color: '#71717A', fontSize: '0.875rem', margin: '4px 0 0' }}>
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            
+            <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '20px' }}>
+              Are you sure you want to delete <strong style={{ color: '#FFFFFF' }}>{project?.name}</strong>? 
+              All tasks, comments, and data associated with this project will be permanently deleted.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowDeleteProject(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#2D2D2D',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteProject}
+                disabled={deletingProject}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#EF4444',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: deletingProject ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                  opacity: deletingProject ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!deletingProject) e.currentTarget.style.background = '#DC2626';
+                }}
+                onMouseLeave={(e) => {
+                  if (!deletingProject) e.currentTarget.style.background = '#EF4444';
+                }}
+              >
+                {deletingProject ? 'Deleting...' : 'Delete Project'}
+              </button>
             </div>
           </div>
         </div>
