@@ -2141,7 +2141,7 @@ n              {/* Team Members Button - Avatar Style */}
                             e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
                           }}
                         >
-                          {/* Checkbox */}
+                          {/* Header with Checkbox and Delete Button */}
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                             <div
                               onClick={(e) => {
@@ -2172,6 +2172,47 @@ n              {/* Team Members Button - Avatar Style */}
                               WebkitLineClamp: 2,
                               WebkitBoxOrient: 'vertical',
                             }}>{task.name}</h3>
+                            {/* Delete Button */}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!confirm('Are you sure you want to delete this task?')) return;
+                                try {
+                                  await taskService.deleteTask(task.id);
+                                  await fetchProject();
+                                } catch (err) {
+                                  console.error('Error deleting task:', err);
+                                  alert('Failed to delete task');
+                                }
+                              }}
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: 'rgba(239, 68, 68, 0.2)',
+                                color: '#EF4444',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                transition: 'all 0.2s',
+                                opacity: 0.8,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#EF4444';
+                                e.currentTarget.style.color = '#FFFFFF';
+                                e.currentTarget.style.opacity = '1';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                                e.currentTarget.style.color = '#EF4444';
+                                e.currentTarget.style.opacity = '0.8';
+                              }}
+                            >
+                              <TrashIcon style={{ width: '14px', height: '14px' }} />
+                            </button>
                           </div>
             
                           {/* Date */}
@@ -3209,7 +3250,20 @@ n              {/* Team Members Button - Avatar Style */}
                       type="date"
                       value={newTask.start_date}
                       onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
-                      style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem 1rem', 
+                        background: '#0D0D0D', 
+                        border: '1px solid #2D2D2D', 
+                        borderRadius: '0.5rem', 
+                        color: '#FFFFFF', 
+                        fontSize: '0.875rem', 
+                        outline: 'none', 
+                        cursor: 'pointer', 
+                        transition: 'border 0.2s',
+                        colorScheme: 'dark'
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                     />
@@ -3220,7 +3274,20 @@ n              {/* Team Members Button - Avatar Style */}
                       type="date"
                       value={newTask.due_date}
                       onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                      style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem 1rem', 
+                        background: '#0D0D0D', 
+                        border: '1px solid #2D2D2D', 
+                        borderRadius: '0.5rem', 
+                        color: '#FFFFFF', 
+                        fontSize: '0.875rem', 
+                        outline: 'none', 
+                        cursor: 'pointer', 
+                        transition: 'border 0.2s',
+                        colorScheme: 'dark'
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
                     />
