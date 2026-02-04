@@ -259,7 +259,13 @@ export default function NotificationsPage() {
                 return (
                   <div
                     key={notification.id}
-                    onClick={() => router.push(`/projects/${notification.project_id}`)}
+                    onClick={async () => {
+                      // Mark as read before navigating
+                      if (!notification.is_read) {
+                        await markAsRead(notification.id);
+                      }
+                      router.push(`/projects/${notification.project_id}`);
+                    }}
                     style={{
                       background: notification.is_read ? '#0D0D0D' : '#1A1A1A',
                       border: '1px solid',

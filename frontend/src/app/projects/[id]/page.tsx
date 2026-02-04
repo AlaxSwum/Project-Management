@@ -333,14 +333,7 @@ export default function ProjectDetailPage() {
         if (taskData) {
           const notifyUserIds = new Set<number>();
           
-          // Add assignees
-          if (taskData.assignee_ids && Array.isArray(taskData.assignee_ids)) {
-            taskData.assignee_ids.forEach((id: number) => {
-              if (id !== user.id) notifyUserIds.add(id);
-            });
-          }
-          
-          // Add report_to users
+          // Only notify report_to users when task is moved (not assignees)
           if (taskData.report_to_ids && Array.isArray(taskData.report_to_ids)) {
             taskData.report_to_ids.forEach((id: number) => {
               if (id !== user.id) notifyUserIds.add(id);
@@ -578,15 +571,10 @@ export default function ProjectDetailPage() {
     try {
       const { supabase } = await import('@/lib/supabase');
       
-      // Get all users who should be notified (assignees + report_to)
+      // Get all users who should be notified (only report_to users, not assignees)
       const notifyUserIds = new Set<number>();
       
-      // Add assignees
-      (selectedTask.assignees || []).forEach((assignee: any) => {
-        if (assignee.id !== user.id) notifyUserIds.add(assignee.id);
-      });
-      
-      // Add report_to users
+      // Only add report_to users - exclude current user
       if (selectedTask.report_to_ids && Array.isArray(selectedTask.report_to_ids)) {
         selectedTask.report_to_ids.forEach((id: number) => {
           if (id !== user.id) notifyUserIds.add(id);
