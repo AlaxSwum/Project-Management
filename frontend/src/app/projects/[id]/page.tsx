@@ -711,6 +711,8 @@ export default function ProjectDetailPage() {
 
   // Fetch available users to add as members
   const fetchAvailableUsers = async () => {
+    if (!project) return;
+    
     try {
       const { data, error } = await supabase
         .from('auth_user')
