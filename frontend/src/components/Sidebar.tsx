@@ -80,11 +80,15 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
       
       setLoadingProjects(true);
       try {
+        console.log('Fetching projects for user:', user.id);
+        
         // Get project IDs where user is a member from project_members table
         const { data: userProjectIds, error: memberError } = await supabase
           .from('project_members')
           .select('project_id')
           .eq('user_id', user.id);
+        
+        console.log('User project IDs:', userProjectIds);
         
         if (memberError) {
           console.error('Error fetching project memberships:', memberError);
@@ -94,9 +98,11 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         }
         
         const projectIds = userProjectIds?.map(p => p.project_id) || [];
+        console.log('Project IDs to fetch:', projectIds);
         
         // If user has no projects, return empty
         if (projectIds.length === 0) {
+          console.log('No projects found for user');
           setMyProjects([]);
           setLoadingProjects(false);
           return;
@@ -108,6 +114,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           .select('*')
           .in('id', projectIds)
           .order('name');
+        
+        console.log('Fetched projects:', projects);
         
         if (projectError) {
           console.error('Error fetching projects:', projectError);
@@ -202,14 +210,17 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         .from('projects_project')
         .insert({
           name: newProjectName.trim(),
+          description: '',
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .select()
         .single();
       
       if (projectError) {
         console.error('Error creating project:', projectError);
-        alert('Failed to create project: ' + projectError.message);
+        console.error('Error details:', JSON.stringify(projectError, null, 2));
+        alert('Failed to create project: ' + (projectError.message || 'Unknown error'));
         setCreatingProject(false);
         return;
       }
