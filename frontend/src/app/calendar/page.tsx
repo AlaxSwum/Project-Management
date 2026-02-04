@@ -156,7 +156,7 @@ export default function CalendarPage() {
           actual_hours: null,
           assignees: [],
           assignee: null,
-          created_by: { id: meeting.created_by_id, name: '', email: '' },
+          created_by: { id: meeting.created_by_id, name: '', email: '', role: '' },
           tags_list: [],
           created_at: meeting.created_at,
           updated_at: meeting.updated_at,
