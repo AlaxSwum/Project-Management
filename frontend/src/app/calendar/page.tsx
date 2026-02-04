@@ -254,11 +254,13 @@ export default function CalendarPage() {
         status: 'todo',
         start_date: startDateTime,
         due_date: endDateTime,
-        project_id: null, // Meeting not tied to specific project
         assignee_ids: [user?.id],
       };
       
-      await taskService.createTask(taskData as any);
+      // Create task without a project (personal meeting)
+      // If there's a project, use the first one, otherwise use 0 as placeholder
+      const projectId = projects.length > 0 ? projects[0].id : 0;
+      await taskService.createTask(projectId, taskData as any);
       
       // Refresh tasks
       await fetchData();
