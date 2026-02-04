@@ -81,18 +81,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
       
       setLoadingProjects(true);
       try {
-        console.log('Fetching projects for user:', user.id);
-        
         // Use the projectService which calls the Django API and includes members
         const projects = await projectService.getProjects();
-        console.log('Fetched projects from API:', projects);
-        
-        // Debug: Check if projects have IDs
-        if (projects && projects.length > 0) {
-          console.log('First project sample:', projects[0]);
-          console.log('Project IDs:', projects.map(p => ({ id: p.id, name: p.name })));
-        }
-        
         setMyProjects(projects || []);
         setLoadingProjects(false);
       } catch (error) {
@@ -191,7 +181,6 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
       
       if (projectError) {
         console.error('Error creating project:', projectError);
-        console.error('Error details:', JSON.stringify(projectError, null, 2));
         alert('Failed to create project: ' + (projectError.message || 'Unknown error'));
         setCreatingProject(false);
         return;
