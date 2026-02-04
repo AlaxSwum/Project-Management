@@ -412,11 +412,6 @@ export default function CalendarPage() {
           ? { ...t, status: newStatus }
           : t
       ));
-      
-      // Update selectedTask if it's the one being updated
-      if (selectedTask && selectedTask.id === taskId) {
-        setSelectedTask({ ...selectedTask, status: newStatus });
-      }
     } catch (err) {
       console.error('Failed to update task status:', err);
     }
@@ -427,29 +422,35 @@ export default function CalendarPage() {
     handleMeetingClick(task);
   };
 
-  const handleCloseTaskDetail = () => {
-    setShowTaskModal(false);
-    setSelectedTask(null);
-  };
-
-  const handleUpdateTask = async (taskData: any) => {
+  const handleUpdateMeeting = async (meetingData: any) => {
     try {
-      await taskService.updateTask(selectedTask!.id, taskData);
-      // Refresh data to get updated task
+      await supabase
+        .from('projects_meeting')
+        .update(meetingData)
+        .eq('id', selectedMeeting.id);
+      
+      // Refresh meetings
       await fetchData();
+      setShowMeetingDetail(false);
+      setSelectedMeeting(null);
     } catch (err) {
-      console.error('Failed to update task:', err);
+      console.error('Failed to update meeting:', err);
     }
   };
 
-  const handleDeleteTask = async (taskId: number) => {
+  const handleDeleteMeeting = async (meetingId: number) => {
     try {
-      await taskService.deleteTask(taskId);
-      // Refresh data after deletion
+      await supabase
+        .from('projects_meeting')
+        .delete()
+        .eq('id', meetingId);
+      
+      // Refresh meetings
       await fetchData();
-      handleCloseTaskDetail();
+      setShowMeetingDetail(false);
+      setSelectedMeeting(null);
     } catch (err) {
-      console.error('Failed to delete task:', err);
+      console.error('Failed to delete meeting:', err);
     }
   };
 
@@ -464,13 +465,13 @@ export default function CalendarPage() {
   // Handle escape key to close modal
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showTaskModal) {
-        setShowTaskModal(false);
-        setSelectedTask(null);
+      if (event.key === 'Escape' && showMeetingDetail) {
+        setShowMeetingDetail(false);
+        setSelectedMeeting(null);
       }
     };
 
-    if (showTaskModal) {
+    if (showMeetingDetail) {
       document.addEventListener('keydown', handleEscapeKey);
       document.body.style.overflow = 'hidden'; // Prevent background scrolling
       
@@ -479,7 +480,7 @@ export default function CalendarPage() {
         document.body.style.overflow = 'unset';
       };
     }
-  }, [showTaskModal]);
+  }, [showMeetingDetail]);
 
   // Calculate calendar values dynamically
   const today = new Date();
@@ -2822,15 +2823,19 @@ export default function CalendarPage() {
               </div>
             )}
 
-            {/* Task Detail Modal */}
-            {showTaskModal && selectedTask && (
-              <TaskDetailModal
-                task={selectedTask}
-                users={[]} // Calendar doesn't need user list for assignment changes
-                onClose={handleCloseTaskDetail}
-                onSave={handleUpdateTask}
-                onStatusChange={updateTaskStatus}
-                onDelete={handleDeleteTask}
+            {/* Meeting Detail Modal */}
+            {showMeetingDetail && selectedMeeting && (
+              <MeetingDetailModal
+                meeting={selectedMeeting}
+                onClose={() => {
+                  setShowMeetingDetail(false);
+                  setSelectedMeeting(null);
+                }}
+                onUpdate={handleUpdateMeeting}
+                onDelete={handleDeleteMeeting}
+                projectMembers={projectMembers}
+                projects={projects}
+                onProjectChange={handleProjectChange}
               />
             )}
             
