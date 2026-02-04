@@ -3870,9 +3870,8 @@ export default function PersonalPage() {
                 marginTop: '16px',
                 borderRadius: '16px',
                 border: '1px solid #2D2D2D',
-                border: '1px solid #e2e8f0',
                 overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
               }}
             >
               <div
