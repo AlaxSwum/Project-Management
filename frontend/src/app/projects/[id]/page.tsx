@@ -348,10 +348,12 @@ export default function ProjectDetailPage() {
       groups[monthKey].push(task);
     });
     
-    // Auto-expand current month
-    if (expandedMonths.length === 0 && groups[currentMonth]) {
-      setExpandedMonths([currentMonth]);
-    }
+    // Auto-expand current month (only once on first load)
+    React.useEffect(() => {
+      if (expandedMonths.length === 0 && groups[currentMonth]) {
+        setExpandedMonths([currentMonth]);
+      }
+    }, []);
     
     return groups;
   }, [filteredTasks]);
@@ -590,7 +592,7 @@ export default function ProjectDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
               {[
                 { id: 'kanban', label: 'Kanban', icon: Squares2X2Icon },
-                { id: 'list', label: 'Table', icon: ListBulletIcon },
+                { id: 'list', label: 'List', icon: ListBulletIcon },
                 { id: 'gantt', label: 'Gantt', icon: ChartBarIcon },
                 { id: 'calendar', label: 'Calendar', icon: CalIcon }
               ].map((view) => (
