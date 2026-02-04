@@ -124,7 +124,7 @@ export default function ProjectDetailPage() {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedView, setSelectedView] = useState<'kanban' | 'list' | 'calendar' | 'gantt'>('kanban');
-  const [expandedMonths, setExpandedMonths] = useState<string[]>(['todo', 'in_progress', 'review', 'done']);
+  const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -339,7 +339,6 @@ export default function ProjectDetailPage() {
   // Group tasks by month for table view
   const tasksByMonth = React.useMemo(() => {
     const groups: Record<string, typeof filteredTasks> = {};
-    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
     
     filteredTasks.forEach(task => {
       let monthKey = 'No Due Date';
@@ -350,15 +349,25 @@ export default function ProjectDetailPage() {
       groups[monthKey].push(task);
     });
     
-    // Auto-expand current month (only once on first load)
-    React.useEffect(() => {
-      if (expandedMonths.length === 0 && groups[currentMonth]) {
-        setExpandedMonths([currentMonth]);
-      }
-    }, []);
-    
     return groups;
   }, [filteredTasks]);
+  
+  // Auto-expand latest month with all its status groups on first load
+  useEffect(() => {
+    if (expandedMonths.length === 0 && Object.keys(tasksByMonth).length > 0) {
+      // Get the latest month (first after sorting by date descending)
+      const sortedMonths = Object.keys(tasksByMonth).sort((a, b) => {
+        if (a === 'No Due Date') return 1;
+        if (b === 'No Due Date') return -1;
+        return new Date(b).getTime() - new Date(a).getTime();
+      });
+      const latestMonth = sortedMonths[0];
+      
+      // Expand the month and all its status groups
+      const statusKeys = TASK_STATUSES.map(s => `${latestMonth}-${s.value}`);
+      setExpandedMonths([latestMonth, ...statusKeys]);
+    }
+  }, [tasksByMonth]);
 
   // Fetch subtasks, attachments, comments and activity when task is selected
   useEffect(() => {
@@ -901,278 +910,349 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           ) : selectedView === 'list' ? (
-            // List View - Craftboard Style (Grouped by Status)
+            // List View - Grouped by Month, then by Status within each month
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {TASK_STATUSES.map((status) => {
-                const statusTasks = filteredTasks.filter(t => t.status === status.value);
-                const isExpanded = expandedMonths.includes(status.value);
+              {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
+                // Sort: Latest months first, then No Due Date last
+                if (monthA === 'No Due Date') return 1;
+                if (monthB === 'No Due Date') return -1;
+                return new Date(monthB).getTime() - new Date(monthA).getTime();
+              }).map(([month, monthTasks], monthIndex) => {
+                const isMonthExpanded = expandedMonths.includes(month);
+                
+                // Status breakdown for this month
+                const statusCounts = TASK_STATUSES.map(status => ({
+                  ...status,
+                  count: monthTasks.filter(t => t.status === status.value).length
+                })).filter(s => s.count > 0);
                 
                 return (
-                  <div key={status.value} style={{ background: '#1A1A1A', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #2D2D2D' }}>
-                    {/* Status Group Header */}
+                  <div key={month} style={{ background: '#1A1A1A', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #2D2D2D' }}>
+                    {/* Month Header */}
                     <div 
                       onClick={() => {
-                        if (isExpanded) {
-                          setExpandedMonths(expandedMonths.filter(m => m !== status.value));
+                        if (isMonthExpanded) {
+                          setExpandedMonths(expandedMonths.filter(m => m !== month));
                         } else {
-                          setExpandedMonths([...expandedMonths, status.value]);
+                          setExpandedMonths([...expandedMonths, month]);
                         }
                       }}
                       style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'space-between',
-                        padding: '0.875rem 1.25rem', 
+                        padding: '1rem 1.25rem', 
                         cursor: 'pointer',
-                        borderBottom: isExpanded ? '1px solid #2D2D2D' : 'none',
+                        borderBottom: isMonthExpanded ? '1px solid #2D2D2D' : 'none',
                         background: '#141414'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <svg style={{ width: '16px', height: '16px', color: '#71717A', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                        <svg style={{ width: '18px', height: '18px', color: '#71717A', transform: isMonthExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
-                        <span style={{ color: status.color, fontSize: '0.9375rem', fontWeight: 600 }}>{status.label}</span>
+                        <CalIcon style={{ width: '20px', height: '20px', color: '#3B82F6' }} />
+                        <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600 }}>{month}</span>
                         <span style={{ 
-                          padding: '0.125rem 0.5rem', 
-                          background: `${status.color}20`, 
+                          padding: '0.25rem 0.625rem', 
+                          background: '#2D2D2D', 
                           borderRadius: '0.375rem', 
                           fontSize: '0.75rem', 
-                          color: status.color, 
+                          color: '#A1A1AA', 
                           fontWeight: 600 
                         }}>
-                          {statusTasks.length}
+                          {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
                         </span>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowCreateTask(true); }}
-                        style={{ 
-                          width: '24px', 
-                          height: '24px', 
-                          background: 'transparent', 
-                          border: 'none', 
-                          color: '#52525B', 
-                          cursor: 'pointer', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          borderRadius: '0.25rem',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = '#2D2D2D'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <PlusIcon style={{ width: '16px', height: '16px' }} />
-                      </button>
+                      
+                      {/* Status breakdown badges */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {statusCounts.map(status => (
+                          <div key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
+                            <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
+                              {status.count} {status.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Table Header */}
-                    {isExpanded && (
-                      <>
-                        <div style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
-                          padding: '0.75rem 1.25rem',
-                          background: '#0D0D0D',
-                          borderBottom: '1px solid #2D2D2D',
-                          gap: '0.5rem'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }} />
-                          </div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                            Task Name
-                          </div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                            Description
-                          </div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                            Estimation
-                          </div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                            Type
-                          </div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                            People
-                          </div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                            Priority
-                          </div>
-                          <div></div>
-                        </div>
-
-                        {/* Task Rows */}
-                        {statusTasks.length === 0 ? (
-                          <div style={{ padding: '2rem 1.25rem', textAlign: 'center', color: '#52525B', fontSize: '0.875rem' }}>
-                            No tasks in {status.label}
-                          </div>
-                        ) : (
-                          statusTasks.map((task) => {
-                            const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
-                            const taskType = tags.length > 0 ? tags[0] : 'General';
-                            const typeColor = taskType.toLowerCase().includes('dashboard') ? '#3B82F6' : 
-                                             taskType.toLowerCase().includes('mobile') ? '#8B5CF6' : 
-                                             taskType.toLowerCase().includes('api') ? '#EC4899' : '#71717A';
-                            
-                            return (
+                    {/* Expanded Month Content - Status Groups */}
+                    {isMonthExpanded && (
+                      <div style={{ padding: '0' }}>
+                        {TASK_STATUSES.map((status) => {
+                          const statusTasks = monthTasks.filter(t => t.status === status.value);
+                          if (statusTasks.length === 0) return null;
+                          
+                          const statusKey = `${month}-${status.value}`;
+                          const isStatusExpanded = expandedMonths.includes(statusKey);
+                          
+                          return (
+                            <div key={status.value} style={{ borderBottom: '1px solid #2D2D2D' }}>
+                              {/* Status Sub-Header */}
                               <div 
-                                key={task.id}
-                                onClick={() => setSelectedTask(task)}
-                                style={{ 
-                                  display: 'grid', 
-                                  gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
-                                  padding: '0.875rem 1.25rem',
-                                  borderBottom: '1px solid #1F1F1F',
-                                  cursor: 'pointer',
-                                  transition: 'background 0.15s',
-                                  gap: '0.5rem',
-                                  alignItems: 'center'
+                                onClick={() => {
+                                  if (isStatusExpanded) {
+                                    setExpandedMonths(expandedMonths.filter(m => m !== statusKey));
+                                  } else {
+                                    setExpandedMonths([...expandedMonths, statusKey]);
+                                  }
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'space-between',
+                                  padding: '0.75rem 1.25rem 0.75rem 2.5rem', 
+                                  cursor: 'pointer',
+                                  background: '#0D0D0D'
+                                }}
                               >
-                                {/* Checkbox */}
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                  <input 
-                                    type="checkbox" 
-                                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }} 
-                                    onClick={(e) => e.stopPropagation()} 
-                                  />
-                                </div>
-
-                                {/* Task Name */}
-                                <div style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {task.name}
-                                </div>
-
-                                {/* Description */}
-                                <div style={{ color: '#71717A', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {task.description || '-'}
-                                </div>
-
-                                {/* Estimation (Date Range) */}
-                                <div style={{ color: '#A1A1AA', fontSize: '0.8125rem' }}>
-                                  {task.start_date && task.due_date ? (
-                                    `${new Date(task.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                                  ) : task.due_date ? (
-                                    new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                  ) : (
-                                    '-'
-                                  )}
-                                </div>
-
-                                {/* Type */}
-                                <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                  <svg style={{ width: '14px', height: '14px', color: '#52525B', transform: isStatusExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                  <span style={{ color: status.color, fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
                                   <span style={{ 
-                                    padding: '0.25rem 0.625rem', 
+                                    padding: '0.125rem 0.5rem', 
+                                    background: `${status.color}20`, 
                                     borderRadius: '0.375rem', 
-                                    fontSize: '0.75rem', 
-                                    fontWeight: 500,
-                                    backgroundColor: `${typeColor}20`,
-                                    color: typeColor,
-                                    border: `1px solid ${typeColor}40`
+                                    fontSize: '0.6875rem', 
+                                    color: status.color, 
+                                    fontWeight: 600 
                                   }}>
-                                    {taskType}
+                                    {statusTasks.length}
                                   </span>
                                 </div>
-
-                                {/* People */}
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                  {task.assignees && task.assignees.length > 0 ? (
-                                    <div style={{ display: 'flex' }}>
-                                      {task.assignees.slice(0, 3).map((assignee, i) => (
-                                        <div 
-                                          key={assignee.id}
-                                          style={{ 
-                                            width: '28px', 
-                                            height: '28px', 
-                                            borderRadius: '50%', 
-                                            border: '2px solid #1A1A1A', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            justifyContent: 'center', 
-                                            fontSize: '0.7rem', 
-                                            fontWeight: 600, 
-                                            color: '#FFFFFF', 
-                                            backgroundColor: ['#3B82F6', '#EC4899', '#8B5CF6'][i % 3], 
-                                            marginLeft: i > 0 ? '-8px' : '0',
-                                            position: 'relative',
-                                            zIndex: 3 - i
-                                          }}
-                                          title={assignee.name}
-                                        >
-                                          {assignee.name.charAt(0).toUpperCase()}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <span style={{ color: '#52525B', fontSize: '0.875rem' }}>-</span>
-                                  )}
-                                </div>
-
-                                {/* Priority */}
-                                <div>
-                                  <span style={{ 
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.375rem',
-                                    fontSize: '0.8125rem',
-                                    fontWeight: 500,
-                                    color: task.priority === 'high' ? '#EF4444' : 
-                                           task.priority === 'medium' ? '#F59E0B' : '#22C55E'
-                                  }}>
-                                    <span style={{ 
-                                      width: '8px', 
-                                      height: '8px', 
-                                      borderRadius: '50%', 
-                                      backgroundColor: task.priority === 'high' ? '#EF4444' : 
-                                                       task.priority === 'medium' ? '#F59E0B' : '#22C55E'
-                                    }} />
-                                    {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Low'}
-                                  </span>
-                                </div>
-
-                                {/* Delete Button */}
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      if (confirm('Delete this task?')) {
-                                        try {
-                                          await taskService.deleteTask(task.id);
-                                          setTasks(tasks.filter(t => t.id !== task.id));
-                                          fetchProject();
-                                        } catch (error) {
-                                          alert('Error deleting task');
-                                        }
-                                      }
-                                    }}
-                                    style={{ 
-                                      width: '32px', 
-                                      height: '32px', 
-                                      background: 'transparent', 
-                                      border: 'none', 
-                                      color: '#52525B', 
-                                      cursor: 'pointer',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      borderRadius: '0.375rem',
-                                      transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#EF444420'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
-                                  >
-                                    <TrashIcon style={{ width: '18px', height: '18px' }} />
-                                  </button>
-                                </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setShowCreateTask(true); }}
+                                  style={{ 
+                                    width: '22px', 
+                                    height: '22px', 
+                                    background: 'transparent', 
+                                    border: 'none', 
+                                    color: '#52525B', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    borderRadius: '0.25rem',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = '#2D2D2D'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                  <PlusIcon style={{ width: '14px', height: '14px' }} />
+                                </button>
                               </div>
-                            );
-                          })
-                        )}
 
-                        {/* Add Task Row */}
-                        <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid #2D2D2D' }}>
+                              {/* Status Tasks Table */}
+                              {isStatusExpanded && (
+                                <>
+                                  {/* Table Header */}
+                                  <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
+                                    padding: '0.625rem 1.25rem 0.625rem 2.5rem',
+                                    background: '#0A0A0A',
+                                    borderBottom: '1px solid #1F1F1F',
+                                    gap: '0.5rem'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                      <input type="checkbox" style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: status.color }} />
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Task Name
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Description
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Estimation
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Type
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      People
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Priority
+                                    </div>
+                                    <div></div>
+                                  </div>
+
+                                  {/* Task Rows */}
+                                  {statusTasks.map((task) => {
+                                    const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
+                                    const taskType = tags.length > 0 ? tags[0] : 'General';
+                                    const typeColor = taskType.toLowerCase().includes('dashboard') ? '#3B82F6' : 
+                                                     taskType.toLowerCase().includes('mobile') ? '#8B5CF6' : 
+                                                     taskType.toLowerCase().includes('api') ? '#EC4899' : '#71717A';
+                                    
+                                    return (
+                                      <div 
+                                        key={task.id}
+                                        onClick={() => setSelectedTask(task)}
+                                        style={{ 
+                                          display: 'grid', 
+                                          gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
+                                          padding: '0.75rem 1.25rem 0.75rem 2.5rem',
+                                          borderBottom: '1px solid #1F1F1F',
+                                          cursor: 'pointer',
+                                          transition: 'background 0.15s',
+                                          gap: '0.5rem',
+                                          alignItems: 'center'
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                      >
+                                        {/* Checkbox */}
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                          <input 
+                                            type="checkbox" 
+                                            style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: status.color }} 
+                                            onClick={(e) => e.stopPropagation()} 
+                                          />
+                                        </div>
+
+                                        {/* Task Name */}
+                                        <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {task.name}
+                                        </div>
+
+                                        {/* Description */}
+                                        <div style={{ color: '#71717A', fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {task.description || '-'}
+                                        </div>
+
+                                        {/* Estimation */}
+                                        <div style={{ color: '#A1A1AA', fontSize: '0.8125rem' }}>
+                                          {task.start_date && task.due_date ? (
+                                            `${new Date(task.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                                          ) : task.due_date ? (
+                                            new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                          ) : (
+                                            '-'
+                                          )}
+                                        </div>
+
+                                        {/* Type */}
+                                        <div>
+                                          <span style={{ 
+                                            padding: '0.1875rem 0.5rem', 
+                                            borderRadius: '0.25rem', 
+                                            fontSize: '0.6875rem', 
+                                            fontWeight: 500,
+                                            backgroundColor: `${typeColor}20`,
+                                            color: typeColor,
+                                            border: `1px solid ${typeColor}40`
+                                          }}>
+                                            {taskType}
+                                          </span>
+                                        </div>
+
+                                        {/* People */}
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                          {task.assignees && task.assignees.length > 0 ? (
+                                            <div style={{ display: 'flex' }}>
+                                              {task.assignees.slice(0, 3).map((assignee, i) => (
+                                                <div 
+                                                  key={assignee.id}
+                                                  style={{ 
+                                                    width: '24px', 
+                                                    height: '24px', 
+                                                    borderRadius: '50%', 
+                                                    border: '2px solid #0D0D0D', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center', 
+                                                    fontSize: '0.625rem', 
+                                                    fontWeight: 600, 
+                                                    color: '#FFFFFF', 
+                                                    backgroundColor: ['#3B82F6', '#EC4899', '#8B5CF6'][i % 3], 
+                                                    marginLeft: i > 0 ? '-6px' : '0',
+                                                    position: 'relative',
+                                                    zIndex: 3 - i
+                                                  }}
+                                                  title={assignee.name}
+                                                >
+                                                  {assignee.name.charAt(0).toUpperCase()}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span style={{ color: '#52525B', fontSize: '0.8125rem' }}>-</span>
+                                          )}
+                                        </div>
+
+                                        {/* Priority */}
+                                        <div>
+                                          <span style={{ 
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 500,
+                                            color: task.priority === 'high' ? '#EF4444' : 
+                                                   task.priority === 'medium' ? '#F59E0B' : '#22C55E'
+                                          }}>
+                                            <span style={{ 
+                                              width: '6px', 
+                                              height: '6px', 
+                                              borderRadius: '50%', 
+                                              backgroundColor: task.priority === 'high' ? '#EF4444' : 
+                                                               task.priority === 'medium' ? '#F59E0B' : '#22C55E'
+                                            }} />
+                                            {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Low'}
+                                          </span>
+                                        </div>
+
+                                        {/* Delete Button */}
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                          <button
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              if (confirm('Delete this task?')) {
+                                                try {
+                                                  await taskService.deleteTask(task.id);
+                                                  setTasks(tasks.filter(t => t.id !== task.id));
+                                                  fetchProject();
+                                                } catch (error) {
+                                                  alert('Error deleting task');
+                                                }
+                                              }
+                                            }}
+                                            style={{ 
+                                              width: '28px', 
+                                              height: '28px', 
+                                              background: 'transparent', 
+                                              border: 'none', 
+                                              color: '#52525B', 
+                                              cursor: 'pointer',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              borderRadius: '0.25rem',
+                                              transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#EF444420'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
+                                          >
+                                            <TrashIcon style={{ width: '16px', height: '16px' }} />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+                        
+                        {/* Add Task Button */}
+                        <div style={{ padding: '0.75rem 1.25rem 0.75rem 2.5rem', background: '#0D0D0D' }}>
                           <button
                             onClick={() => setShowCreateTask(true)}
                             style={{ 
@@ -1183,18 +1263,18 @@ export default function ProjectDetailPage() {
                               background: 'none', 
                               border: 'none', 
                               cursor: 'pointer', 
-                              fontSize: '0.875rem', 
+                              fontSize: '0.8125rem', 
                               fontWeight: 500,
                               transition: 'color 0.2s'
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
                             onMouseLeave={(e) => e.currentTarget.style.color = '#52525B'}
                           >
-                            <PlusIcon style={{ width: '16px', height: '16px' }} />
+                            <PlusIcon style={{ width: '14px', height: '14px' }} />
                             Add task
                           </button>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 );
