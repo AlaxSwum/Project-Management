@@ -412,7 +412,7 @@ export default function ProjectDetailPage() {
         setAttachments(attachmentsRes.data || []);
         
         // Transform comments to include user_name
-        const transformedComments = (commentsRes.data || []).map(c => ({
+        const transformedComments = (commentsRes.data || []).map((c: any) => ({
           ...c,
           user_name: c.auth_user?.name || 'User',
           comment_text: c.comment
