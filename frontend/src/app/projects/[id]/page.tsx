@@ -18,7 +18,8 @@ import {
   CalendarIcon as CalIcon,
   ChartBarIcon,
   FolderIcon,
-  ClockIcon
+  ClockIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
 
@@ -123,7 +124,7 @@ export default function ProjectDetailPage() {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedView, setSelectedView] = useState<'kanban' | 'list' | 'calendar' | 'gantt'>('kanban');
-  const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
+  const [expandedMonths, setExpandedMonths] = useState<string[]>(['todo', 'in_progress', 'review', 'done']);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -900,204 +901,305 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           ) : selectedView === 'list' ? (
-            // Table View (Monday.com style - Improved)
-            <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}>
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                  <tr>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '40px', borderBottom: '2px solid #2D2D2D' }}>
-                      <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981' }} />
-                    </th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', minWidth: '280px', borderBottom: '2px solid #2D2D2D' }}>Task</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '140px', borderBottom: '2px solid #2D2D2D' }}>Owner</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '150px', borderBottom: '2px solid #2D2D2D' }}>Status</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '130px', borderBottom: '2px solid #2D2D2D' }}>Due Date</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '220px', borderBottom: '2px solid #2D2D2D' }}>Notes</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'center', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '80px', borderBottom: '2px solid #2D2D2D' }}>Files</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '160px', borderBottom: '2px solid #2D2D2D' }}>Timeline</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.075em', background: '#141414', width: '140px', borderBottom: '2px solid #2D2D2D' }}>Last Updated</th>
-                    <th style={{ padding: '0.875rem 1rem', textAlign: 'center', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', background: '#141414', width: '50px', borderBottom: '2px solid #2D2D2D' }}>
-                  <button
-                        onClick={() => setShowAddColumnModal(true)}
-                        style={{ width: '24px', height: '24px', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} 
-                        title="Add column"
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
-                      >
-                        <PlusIcon style={{ width: '14px', height: '14px' }} />
-                  </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Group by month - Latest first */}
-                  {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
-                    // Sort: Latest months first, then No Due Date last
-                    if (monthA === 'No Due Date') return 1;
-                    if (monthB === 'No Due Date') return -1;
-                    // Sort by date descending (newest first)
-                    return new Date(monthB).getTime() - new Date(monthA).getTime();
-                  }).map(([month, monthTasks]) => {
-                    const isExpanded = expandedMonths.includes(month);
-                    
-                    // Calculate status breakdown for this month
-                    const statusCounts = TASK_STATUSES.map(status => ({
-                      ...status,
-                      count: monthTasks.filter(t => t.status === status.value).length
-                    })).filter(s => s.count > 0);
-                    
-                    return (
-                      <React.Fragment key={month}>
-                        <tr style={{ background: '#0D0D0D' }}>
-                          <td colSpan={10} style={{ padding: '1rem 1.25rem', borderTop: '1px solid #2D2D2D', borderBottom: '1px solid #2D2D2D' }}>
-                  <button
-                              onClick={() => {
-                                if (isExpanded) {
-                                  setExpandedMonths(expandedMonths.filter(m => m !== month));
-                                } else {
-                                  setExpandedMonths([...expandedMonths, month]);
-                                }
-                              }}
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <svg style={{ width: '18px', height: '18px', color: '#A1A1AA', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                </svg>
-                                <CalIcon style={{ width: '18px', height: '18px', color: '#3B82F6' }} />
-                                <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600 }}>{month}</span>
-                                <span style={{ padding: '0.25rem 0.625rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
-                                  {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
-                                </span>
-                </div>
-
-                              {/* Status breakdown */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                {statusCounts.map(status => (
-                                  <div key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
-                                    <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
-                                      {status.count} {status.label}
-                                    </span>
-              </div>
-                                ))}
-            </div>
-                            </button>
-                          </td>
-                        </tr>
-                        {isExpanded && monthTasks.map((task, idx) => (
-                          <tr 
-                            key={task.id}
-                            onClick={() => setSelectedTask(task)}
-                            style={{ background: idx % 2 === 0 ? '#1A1A1A' : 'transparent', borderBottom: '1px solid #1F1F1F', cursor: 'pointer', transition: 'all 0.15s' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = idx % 2 === 0 ? '#1A1A1A' : 'transparent'; }}
-                          >
-                            <td style={{ padding: '0.875rem 1rem' }}>
-                              <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981' }} onClick={(e) => e.stopPropagation()} />
-                            </td>
-                            <td style={{ padding: '1rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{task.name}</span>
-              </div>
-                              {(() => {
-                                const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
-                                return tags.length > 0 && (
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.375rem' }}>
-                                    {tags.slice(0, 2).map((tag: string, i: number) => {
-                                      const tagColor = getTagColor(tag);
-                                      return (
-                                        <span key={i} style={{ padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontSize: '0.6875rem', fontWeight: 500, backgroundColor: `${tagColor}20`, color: tagColor }}>
-                                          {tag}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })()}
-                            </td>
-                            <td style={{ padding: '1rem' }}>
-                              {task.assignees && task.assignees.length > 0 ? (
-                                <div style={{ display: 'flex', gap: '-0.25rem' }}>
-                                  {task.assignees.slice(0, 2).map((assignee, i) => (
-                                    <div 
-                                      key={assignee.id}
-                                      style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid #1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 500, color: '#FFFFFF', backgroundColor: ['#8B5CF6', '#EC4899'][i % 2], marginLeft: i > 0 ? '-6px' : '0' }}
-                                      title={assignee.name}
-                                    >
-                                      {assignee.name.charAt(0)}
-                    </div>
-                  ))}
-                    </div>
-                              ) : (
-                                <span style={{ color: '#52525B', fontSize: '0.875rem' }}>-</span>
-                              )}
-                            </td>
-                            <td style={{ padding: '0.875rem 1rem' }}>
-                              <div style={{ 
-                                padding: '0.5rem 1rem', 
-                                borderRadius: '0.5rem', 
-                                fontSize: '0.8125rem', 
-                                fontWeight: 600,
-                                backgroundColor: task.status === 'done' ? '#10B981' : task.status === 'in_progress' ? '#F59E0B' : task.status === 'review' ? '#F97316' : '#71717A',
-                                color: '#FFFFFF',
-                                textTransform: 'capitalize',
-                                textAlign: 'center',
-                                display: 'inline-block'
-                              }}>
-                                {task.status === 'done' ? 'Done' : task.status === 'in_progress' ? 'In Progress' : task.status.replace('_', ' ')}
-                </div>
-                            </td>
-                            <td style={{ padding: '1rem', color: task.due_date ? '#FFFFFF' : '#52525B', fontSize: '0.875rem' }}>
-                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}
-                            </td>
-                            <td style={{ padding: '1rem', color: '#71717A', fontSize: '0.875rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {task.description || '-'}
-                            </td>
-                            <td style={{ padding: '1rem', textAlign: 'center' }}>
-                              <span style={{ color: '#71717A', fontSize: '0.875rem' }}>
-                                {Math.floor(Math.random() * 5)}
-                              </span>
-                            </td>
-                            <td style={{ padding: '1rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{ height: '4px', flex: 1, background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden', minWidth: '60px' }}>
-                                  <div style={{ height: '100%', width: '40%', backgroundColor: TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A', borderRadius: '9999px' }} />
-              </div>
-                                <span style={{ color: '#71717A', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>40%</span>
-            </div>
-                            </td>
-                            <td style={{ padding: '1rem', color: '#71717A', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                              {new Date(task.updated_at).toLocaleDateString()}
-                            </td>
-                            <td style={{ padding: '1rem', textAlign: 'center' }}>
-                              <button style={{ background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', padding: '0.25rem' }} onClick={(e) => { e.stopPropagation(); }}>
-                                <EllipsisHorizontalIcon style={{ width: '20px', height: '20px' }} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </React.Fragment>
-                    );
-                  })}
-                  
-                  {/* Add Task Row */}
-                  <tr style={{ borderTop: '1px solid #2D2D2D' }}>
-                    <td colSpan={10} style={{ padding: '1rem' }}>
+            // List View - Craftboard Style (Grouped by Status)
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {TASK_STATUSES.map((status) => {
+                const statusTasks = filteredTasks.filter(t => t.status === status.value);
+                const isExpanded = expandedMonths.includes(status.value);
+                
+                return (
+                  <div key={status.value} style={{ background: '#1A1A1A', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #2D2D2D' }}>
+                    {/* Status Group Header */}
+                    <div 
+                      onClick={() => {
+                        if (isExpanded) {
+                          setExpandedMonths(expandedMonths.filter(m => m !== status.value));
+                        } else {
+                          setExpandedMonths([...expandedMonths, status.value]);
+                        }
+                      }}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        padding: '0.875rem 1.25rem', 
+                        cursor: 'pointer',
+                        borderBottom: isExpanded ? '1px solid #2D2D2D' : 'none',
+                        background: '#141414'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <svg style={{ width: '16px', height: '16px', color: '#71717A', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span style={{ color: status.color, fontSize: '0.9375rem', fontWeight: 600 }}>{status.label}</span>
+                        <span style={{ 
+                          padding: '0.125rem 0.5rem', 
+                          background: `${status.color}20`, 
+                          borderRadius: '0.375rem', 
+                          fontSize: '0.75rem', 
+                          color: status.color, 
+                          fontWeight: 600 
+                        }}>
+                          {statusTasks.length}
+                        </span>
+                      </div>
                       <button
-                        onClick={() => setShowCreateTask(true)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, transition: 'color 0.2s' }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
+                        onClick={(e) => { e.stopPropagation(); setShowCreateTask(true); }}
+                        style={{ 
+                          width: '24px', 
+                          height: '24px', 
+                          background: 'transparent', 
+                          border: 'none', 
+                          color: '#52525B', 
+                          cursor: 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          borderRadius: '0.25rem',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = '#2D2D2D'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
                       >
                         <PlusIcon style={{ width: '16px', height: '16px' }} />
-                        Add task
                       </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-          </div>
+                    </div>
+
+                    {/* Table Header */}
+                    {isExpanded && (
+                      <>
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
+                          padding: '0.75rem 1.25rem',
+                          background: '#0D0D0D',
+                          borderBottom: '1px solid #2D2D2D',
+                          gap: '0.5rem'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }} />
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                            Task Name
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                            Description
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                            Estimation
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                            Type
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                            People
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                            Priority
+                          </div>
+                          <div></div>
+                        </div>
+
+                        {/* Task Rows */}
+                        {statusTasks.length === 0 ? (
+                          <div style={{ padding: '2rem 1.25rem', textAlign: 'center', color: '#52525B', fontSize: '0.875rem' }}>
+                            No tasks in {status.label}
+                          </div>
+                        ) : (
+                          statusTasks.map((task) => {
+                            const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
+                            const taskType = tags.length > 0 ? tags[0] : 'General';
+                            const typeColor = taskType.toLowerCase().includes('dashboard') ? '#3B82F6' : 
+                                             taskType.toLowerCase().includes('mobile') ? '#8B5CF6' : 
+                                             taskType.toLowerCase().includes('api') ? '#EC4899' : '#71717A';
+                            
+                            return (
+                              <div 
+                                key={task.id}
+                                onClick={() => setSelectedTask(task)}
+                                style={{ 
+                                  display: 'grid', 
+                                  gridTemplateColumns: '40px 1fr 1.5fr 160px 120px 100px 80px 50px',
+                                  padding: '0.875rem 1.25rem',
+                                  borderBottom: '1px solid #1F1F1F',
+                                  cursor: 'pointer',
+                                  transition: 'background 0.15s',
+                                  gap: '0.5rem',
+                                  alignItems: 'center'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                              >
+                                {/* Checkbox */}
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  <input 
+                                    type="checkbox" 
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }} 
+                                    onClick={(e) => e.stopPropagation()} 
+                                  />
+                                </div>
+
+                                {/* Task Name */}
+                                <div style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {task.name}
+                                </div>
+
+                                {/* Description */}
+                                <div style={{ color: '#71717A', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {task.description || '-'}
+                                </div>
+
+                                {/* Estimation (Date Range) */}
+                                <div style={{ color: '#A1A1AA', fontSize: '0.8125rem' }}>
+                                  {task.start_date && task.due_date ? (
+                                    `${new Date(task.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                                  ) : task.due_date ? (
+                                    new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                  ) : (
+                                    '-'
+                                  )}
+                                </div>
+
+                                {/* Type */}
+                                <div>
+                                  <span style={{ 
+                                    padding: '0.25rem 0.625rem', 
+                                    borderRadius: '0.375rem', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: 500,
+                                    backgroundColor: `${typeColor}20`,
+                                    color: typeColor,
+                                    border: `1px solid ${typeColor}40`
+                                  }}>
+                                    {taskType}
+                                  </span>
+                                </div>
+
+                                {/* People */}
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  {task.assignees && task.assignees.length > 0 ? (
+                                    <div style={{ display: 'flex' }}>
+                                      {task.assignees.slice(0, 3).map((assignee, i) => (
+                                        <div 
+                                          key={assignee.id}
+                                          style={{ 
+                                            width: '28px', 
+                                            height: '28px', 
+                                            borderRadius: '50%', 
+                                            border: '2px solid #1A1A1A', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            fontSize: '0.7rem', 
+                                            fontWeight: 600, 
+                                            color: '#FFFFFF', 
+                                            backgroundColor: ['#3B82F6', '#EC4899', '#8B5CF6'][i % 3], 
+                                            marginLeft: i > 0 ? '-8px' : '0',
+                                            position: 'relative',
+                                            zIndex: 3 - i
+                                          }}
+                                          title={assignee.name}
+                                        >
+                                          {assignee.name.charAt(0).toUpperCase()}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span style={{ color: '#52525B', fontSize: '0.875rem' }}>-</span>
+                                  )}
+                                </div>
+
+                                {/* Priority */}
+                                <div>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.375rem',
+                                    fontSize: '0.8125rem',
+                                    fontWeight: 500,
+                                    color: task.priority === 'high' ? '#EF4444' : 
+                                           task.priority === 'medium' ? '#F59E0B' : '#22C55E'
+                                  }}>
+                                    <span style={{ 
+                                      width: '8px', 
+                                      height: '8px', 
+                                      borderRadius: '50%', 
+                                      backgroundColor: task.priority === 'high' ? '#EF4444' : 
+                                                       task.priority === 'medium' ? '#F59E0B' : '#22C55E'
+                                    }} />
+                                    {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Low'}
+                                  </span>
+                                </div>
+
+                                {/* Delete Button */}
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (confirm('Delete this task?')) {
+                                        try {
+                                          await taskService.deleteTask(task.id);
+                                          setTasks(tasks.filter(t => t.id !== task.id));
+                                          fetchProject();
+                                        } catch (error) {
+                                          alert('Error deleting task');
+                                        }
+                                      }
+                                    }}
+                                    style={{ 
+                                      width: '32px', 
+                                      height: '32px', 
+                                      background: 'transparent', 
+                                      border: 'none', 
+                                      color: '#52525B', 
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      borderRadius: '0.375rem',
+                                      transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#EF444420'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
+                                  >
+                                    <TrashIcon style={{ width: '18px', height: '18px' }} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+
+                        {/* Add Task Row */}
+                        <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid #2D2D2D' }}>
+                          <button
+                            onClick={() => setShowCreateTask(true)}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.5rem', 
+                              color: '#52525B', 
+                              background: 'none', 
+                              border: 'none', 
+                              cursor: 'pointer', 
+                              fontSize: '0.875rem', 
+                              fontWeight: 500,
+                              transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = '#52525B'}
+                          >
+                            <PlusIcon style={{ width: '16px', height: '16px' }} />
+                            Add task
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             // Kanban Board View
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(280px, 1fr))', gap: '1.25rem', maxWidth: '100%' }}>
