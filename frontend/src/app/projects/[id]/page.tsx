@@ -670,16 +670,30 @@ export default function ProjectDetailPage() {
                 </div>
           </div>
 
-          {/* Filter Panel */}
+          {/* Filter Panel - Improved UI */}
           {showFilterPanel && (
-            <div style={{ margin: '1rem 1.5rem 0', padding: '1.25rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ margin: '1rem 1.5rem 0', padding: '1.5rem', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '1rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+              <div style={{ display: 'flex', gap: '2rem' }}>
                 {/* Status Filter */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {TASK_STATUSES.map(status => (
-                      <label key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <label 
+                        key={status.value} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          background: filters.status.includes(status.value) ? '#1F1F1F' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!filters.status.includes(status.value)) e.currentTarget.style.background = '#1A1A1A'; }}
+                        onMouseLeave={(e) => { if (!filters.status.includes(status.value)) e.currentTarget.style.background = 'transparent'; }}
+                      >
                         <input
                           type="checkbox"
                           checked={filters.status.includes(status.value)}
@@ -692,43 +706,77 @@ export default function ProjectDetailPage() {
                           }}
                           style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }}
                         />
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
-                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>{status.label}</span>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: status.color }} />
+                        <span style={{ fontSize: '0.875rem', color: '#E5E5E5' }}>{status.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
                 {/* Priority Filter */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priority</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                    {['low', 'medium', 'high', 'urgent'].map(priority => (
-                      <label key={priority} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Priority</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {[
+                      { value: 'low', color: '#22C55E' },
+                      { value: 'medium', color: '#F59E0B' },
+                      { value: 'high', color: '#EF4444' },
+                      { value: 'urgent', color: '#DC2626' }
+                    ].map(priority => (
+                      <label 
+                        key={priority.value} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          background: filters.priority.includes(priority.value) ? '#1F1F1F' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!filters.priority.includes(priority.value)) e.currentTarget.style.background = '#1A1A1A'; }}
+                        onMouseLeave={(e) => { if (!filters.priority.includes(priority.value)) e.currentTarget.style.background = 'transparent'; }}
+                      >
                         <input
                           type="checkbox"
-                          checked={filters.priority.includes(priority)}
+                          checked={filters.priority.includes(priority.value)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setFilters({ ...filters, priority: [...filters.priority, priority] });
+                              setFilters({ ...filters, priority: [...filters.priority, priority.value] });
                             } else {
-                              setFilters({ ...filters, priority: filters.priority.filter(p => p !== priority) });
+                              setFilters({ ...filters, priority: filters.priority.filter(p => p !== priority.value) });
                             }
                           }}
-                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#10B981' }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: priority.color }}
                         />
-                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF', textTransform: 'capitalize' }}>{priority}</span>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: priority.color }} />
+                        <span style={{ fontSize: '0.875rem', color: '#E5E5E5', textTransform: 'capitalize' }}>{priority.value}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
                 {/* Assignee Filter */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assignee</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', maxHeight: '150px', overflowY: 'auto' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Assignee</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
                     {project.members?.map((member, i) => (
-                      <label key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <label 
+                        key={member.id} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          background: filters.assignee.includes(member.id) ? '#1F1F1F' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!filters.assignee.includes(member.id)) e.currentTarget.style.background = '#1A1A1A'; }}
+                        onMouseLeave={(e) => { if (!filters.assignee.includes(member.id)) e.currentTarget.style.background = 'transparent'; }}
+                      >
                         <input
                           type="checkbox"
                           checked={filters.assignee.includes(member.id)}
@@ -741,10 +789,10 @@ export default function ProjectDetailPage() {
                           }}
                           style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3B82F6' }}
                         />
-                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600 }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.6875rem', fontWeight: 600 }}>
                           {member.name.charAt(0)}
                         </div>
-                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>{member.name}</span>
+                        <span style={{ fontSize: '0.875rem', color: '#E5E5E5' }}>{member.name}</span>
                       </label>
                     ))}
                   </div>
@@ -753,10 +801,12 @@ export default function ProjectDetailPage() {
 
               {/* Clear Filters Button */}
               {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
-                  <button
+                <button
                   onClick={() => setFilters({ status: [], priority: [], assignee: [], tags: [] })}
-                  style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#2D2D2D', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
-                  >
+                  style={{ marginTop: '1.25rem', padding: '0.625rem 1.25rem', background: '#EF4444', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#DC2626'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#EF4444'}
+                >
                   Clear All Filters
                   </button>
               )}
@@ -1844,6 +1894,162 @@ export default function ProjectDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Team Members Modal */}
+      {showProjectMembers && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }} onClick={() => setShowProjectMembers(false)}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <div>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Team Members</h2>
+                <p style={{ fontSize: '0.8125rem', color: '#71717A', margin: '0.25rem 0 0' }}>{project.members?.length || 0} members in this project</p>
+              </div>
+              <button
+                onClick={() => setShowProjectMembers(false)}
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+            
+            {/* Members List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {project.members?.map((member, i) => {
+                  const memberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
+                  const completedTasks = memberTasks.filter(t => t.status === 'done').length;
+                  
+                  return (
+                    <div 
+                      key={member.id}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '1rem', 
+                        padding: '1rem',
+                        background: '#141414',
+                        borderRadius: '0.75rem',
+                        border: '1px solid #2D2D2D'
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div style={{ 
+                        width: '48px', 
+                        height: '48px', 
+                        borderRadius: '50%', 
+                        backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#FFFFFF',
+                        fontSize: '1.125rem',
+                        fontWeight: 600,
+                        flexShrink: 0
+                      }}>
+                        {member.name.charAt(0)}
+                      </div>
+                      
+                      {/* Info */}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{member.name}</span>
+                          <span style={{ 
+                            padding: '0.125rem 0.5rem', 
+                            background: member.role === 'admin' ? '#3B82F620' : '#71717A20', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.6875rem', 
+                            color: member.role === 'admin' ? '#3B82F6' : '#71717A',
+                            fontWeight: 500,
+                            textTransform: 'capitalize'
+                          }}>
+                            {member.role || 'Member'}
+                          </span>
+                        </div>
+                        <div style={{ color: '#71717A', fontSize: '0.8125rem' }}>{member.email}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                          <span style={{ color: '#A1A1AA' }}>{memberTasks.length} tasks</span>
+                          <span style={{ color: '#10B981' }}>{completedTasks} done</span>
+                        </div>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          style={{ 
+                            padding: '0.5rem 0.75rem', 
+                            background: '#2D2D2D', 
+                            border: 'none', 
+                            borderRadius: '0.375rem', 
+                            color: '#A1A1AA', 
+                            fontSize: '0.75rem',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                        >
+                          <PencilIcon style={{ width: '14px', height: '14px' }} />
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  padding: '0.625rem 1rem', 
+                  background: 'transparent', 
+                  border: '1px solid #3B82F6', 
+                  borderRadius: '0.5rem', 
+                  color: '#3B82F6', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#3B82F6'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#3B82F6'; }}
+              >
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                Add Member
+              </button>
+              <button
+                onClick={() => setShowProjectMembers(false)}
+                style={{ 
+                  padding: '0.625rem 1.25rem', 
+                  background: '#2D2D2D', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  color: '#FFFFFF', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Task Modal */}
       {showCreateTask && (
