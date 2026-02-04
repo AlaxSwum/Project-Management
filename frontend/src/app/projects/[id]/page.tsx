@@ -2133,7 +2133,7 @@ n              {/* Team Members Button - Avatar Style */}
                           
                           {/* Progress Bar - Full width like previous UI */}
                           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ flex: 1, height: '32px', background: '#1F1F1F', borderRadius: '0.5rem', overflow: 'hidden', position: 'relative' }}>
+                            <div style={{ flex: 1, height: '32px', background: '#1F1F1F', borderRadius: '9999px', overflow: 'hidden', position: 'relative' }}>
                               {/* Filled Progress */}
                               <div style={{ 
                                 position: 'absolute',
@@ -2142,7 +2142,7 @@ n              {/* Team Members Button - Avatar Style */}
                                 height: '100%', 
                                 width: `${completionPercent}%`, 
                                 background: `linear-gradient(90deg, ${memberColor} 0%, ${memberColor}AA 100%)`,
-                                borderRadius: '0.5rem',
+                                borderRadius: '9999px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 paddingLeft: '0.75rem',
@@ -2166,7 +2166,7 @@ n              {/* Team Members Button - Avatar Style */}
                               minWidth: '48px',
                               padding: '0.375rem 0.625rem',
                               background: completionPercent >= 80 ? '#10B98120' : completionPercent >= 50 ? '#F59E0B20' : completionPercent > 0 ? '#3B82F620' : '#2D2D2D',
-                              borderRadius: '0.5rem',
+                              borderRadius: '9999px',
                               textAlign: 'center'
                             }}>
                               <span style={{ 
