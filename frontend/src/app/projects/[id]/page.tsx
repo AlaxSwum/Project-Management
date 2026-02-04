@@ -69,6 +69,7 @@ interface Task {
   project_id: number;
   subtasks?: Subtask[];
   activity?: ActivityLog[];
+  report_to_ids?: number[];
 }
 
 interface Project {
