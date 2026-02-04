@@ -300,7 +300,6 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
-            const showBadge = item.badge && unreadNotifications > 0;
             return (
                   <Link
                     key={item.name}
@@ -332,23 +331,6 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
               >
                 <item.icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                 <span style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{item.name}</span>
-                {showBadge && (
-                <span style={{
-                    minWidth: '20px', 
-                    height: '20px', 
-                    background: '#EF4444', 
-                    color: '#FFFFFF', 
-                    fontSize: '0.75rem', 
-                    fontWeight: 600, 
-                    borderRadius: '10px', 
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                    padding: '0 0.375rem'
-                }}>
-                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                </span>
-              )}
                   </Link>
             );
           })}
