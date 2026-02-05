@@ -69,11 +69,16 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
   const [creatingProject, setCreatingProject] = useState(false);
 
-  // Fetch projects using the API service (includes members)
+  // Fetch projects using the API service (includes members) - only on initial load
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user?.id) {
         setLoadingProjects(false);
+        return;
+      }
+      
+      // Skip if we already have projects loaded
+      if (myProjects.length > 0 && !loadingProjects) {
         return;
       }
       
@@ -90,7 +95,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
       }
     };
     fetchProjects();
-  }, [user, propsProjects]);
+  }, [user?.id]); // Only depend on user.id, not propsProjects
 
   // Fetch unread notification count
   useEffect(() => {

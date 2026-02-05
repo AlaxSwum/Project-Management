@@ -2365,8 +2365,25 @@ n              {/* Team Members Button - Avatar Style */}
                       const memberColors = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16'];
                       const memberColor = memberColors[memberIdx % memberColors.length];
                       
-                      // Get all tasks for this member
-                      const allMemberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
+                      // Get tasks for this member in the CURRENT SELECTED MONTH only
+                      const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                      const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                      
+                      const allMemberTasks = tasks.filter(t => {
+                        // Must be assigned to this member
+                        if (!t.assignees?.some(a => a.id === member.id)) return false;
+                        
+                        // Check if task falls within the selected month
+                        const dueDate = t.due_date ? new Date(t.due_date) : null;
+                        const startDate = t.start_date ? new Date(t.start_date) : null;
+                        
+                        // Task is in month if due date is in month, or start date is in month, or spans the month
+                        if (dueDate && dueDate >= monthStart && dueDate <= monthEnd) return true;
+                        if (startDate && startDate >= monthStart && startDate <= monthEnd) return true;
+                        if (startDate && dueDate && startDate <= monthEnd && dueDate >= monthStart) return true;
+                        
+                        return false;
+                      });
                       const completedTasks = allMemberTasks.filter(t => t.status === 'done').length;
                       const totalTasks = allMemberTasks.length;
                       const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -2445,27 +2462,48 @@ n              {/* Team Members Button - Avatar Style */}
                   <h4 style={{ color: '#52525B', fontSize: '0.625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.375rem' }}>Overview</h4>
                   <p style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>{project.name}</p>
                   
-                  {/* Progress Ring */}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                    <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-                      <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="#1F1F1F" strokeWidth="10" />
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="10" 
-                          strokeDasharray={`${(tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 251.2} 251.2`} 
-                          strokeLinecap="round" />
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="#F59E0B" strokeWidth="10" 
-                          strokeDasharray={`${(tasks.filter(t => t.status === 'in_progress').length / Math.max(tasks.length, 1)) * 251.2} 251.2`}
-                          strokeDashoffset={`${-(tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 251.2}`}
-                          strokeLinecap="round" />
-                      </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: '#FFFFFF', fontSize: '1.5rem', fontWeight: 700 }}>
-                          {Math.round((tasks.filter(t => t.status === 'done').length / Math.max(tasks.length, 1)) * 100)}%
-                        </span>
-                        <span style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Complete</span>
+                  {/* Progress Ring - Current Month Only */}
+                  {(() => {
+                    // Filter tasks for current selected month
+                    const overviewMonthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                    const overviewMonthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                    
+                    const monthTasks = tasks.filter(t => {
+                      const dueDate = t.due_date ? new Date(t.due_date) : null;
+                      const startDate = t.start_date ? new Date(t.start_date) : null;
+                      if (dueDate && dueDate >= overviewMonthStart && dueDate <= overviewMonthEnd) return true;
+                      if (startDate && startDate >= overviewMonthStart && startDate <= overviewMonthEnd) return true;
+                      if (startDate && dueDate && startDate <= overviewMonthEnd && dueDate >= overviewMonthStart) return true;
+                      return false;
+                    });
+                    
+                    const monthDone = monthTasks.filter(t => t.status === 'done').length;
+                    const monthInProgress = monthTasks.filter(t => t.status === 'in_progress').length;
+                    const totalMonthTasks = Math.max(monthTasks.length, 1);
+                    
+                    return (
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                        <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                          <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#1F1F1F" strokeWidth="10" />
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="10" 
+                              strokeDasharray={`${(monthDone / totalMonthTasks) * 251.2} 251.2`} 
+                              strokeLinecap="round" />
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#F59E0B" strokeWidth="10" 
+                              strokeDasharray={`${(monthInProgress / totalMonthTasks) * 251.2} 251.2`}
+                              strokeDashoffset={`${-(monthDone / totalMonthTasks) * 251.2}`}
+                              strokeLinecap="round" />
+                          </svg>
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#FFFFFF', fontSize: '1.5rem', fontWeight: 700 }}>
+                              {Math.round((monthDone / totalMonthTasks) * 100)}%
+                            </span>
+                            <span style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Complete</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                   
                   {/* Legend */}
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', fontSize: '0.6875rem' }}>

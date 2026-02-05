@@ -283,7 +283,7 @@ export const supabaseDb = {
         .from('projects_project_members')
         .select(`
           user_id,
-          auth_user(id, name, email, role)
+          auth_user(id, name, email, role, avatar_url)
         `)
         .eq('project_id', id)
       
@@ -1033,7 +1033,7 @@ export const supabaseDb = {
           created_at,
           task_id,
           user_id,
-          auth_user(id, name, email)
+          auth_user(id, name, email, avatar_url)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true })
