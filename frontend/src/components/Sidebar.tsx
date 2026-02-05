@@ -55,8 +55,6 @@ const NAV_ITEMS = [
 
 const PERSONAL_ITEMS = [
   { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
-  { name: 'Inbox', href: '/inbox', icon: InboxIcon },
-  { name: 'Daily Reports', href: '/daily-reports', icon: DocumentTextIcon },
 ];
 
 export default function Sidebar({ projects: propsProjects, onCreateProject }: SidebarProps) {

@@ -873,7 +873,7 @@ n              {/* Team Members Button - Avatar Style */}
               >
                 <div style={{ display: 'flex' }}>
                   <AvatarGroup users={project.members || []} max={3} size="md" />
-                </div>
+                    </div>
                 </button>
                   <button
                     onClick={() => setShowCreateTask(true)}
@@ -1108,9 +1108,7 @@ n              {/* Team Members Button - Avatar Style */}
                           }}
                           style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3B82F6' }}
                         />
-                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.6875rem', fontWeight: 600 }}>
-                          {member.name.charAt(0)}
-                        </div>
+                        <UserAvatar user={member} size="sm" />
                         <span style={{ fontSize: '0.875rem', color: '#E5E5E5' }}>{member.name}</span>
                       </label>
                     ))}
@@ -1334,9 +1332,7 @@ n              {/* Team Members Button - Avatar Style */}
                                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.zIndex = String(taskIdx + 1); }}
                                   >
                                     {task.assignees?.[0] && (
-                                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#FFFFFF', border: `2px solid ${barColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 600, color: barColor, flexShrink: 0 }}>
-                                        {task.assignees[0].name.charAt(0)}
-                                      </div>
+                                      <UserAvatar user={task.assignees[0]} size="sm" />
                                     )}
                                     <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
                         </div>
@@ -1495,27 +1491,7 @@ n              {/* Team Members Button - Avatar Style */}
                                 </span>
                                 {/* Assignee avatars */}
                                 <div style={{ display: 'flex', marginLeft: 'auto', flexShrink: 0 }}>
-                                  {(task.assignees || []).slice(0, 3).map((assignee, aIdx) => (
-                                    <div
-                                      key={assignee.id}
-                                      style={{
-                                        width: '28px',
-                                        height: '28px',
-                                        borderRadius: '50%',
-                                        background: '#FFFFFF',
-                                        border: `2px solid ${barColor}`,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '0.6875rem',
-                                        fontWeight: 600,
-                                        color: barColor,
-                                        marginLeft: aIdx > 0 ? '-8px' : '0'
-                                      }}
-                                    >
-                                      {assignee.name.charAt(0)}
-                    </div>
-                  ))}
+                                  <AvatarGroup users={task.assignees || []} max={3} size="sm" />
                                 </div>
                               </div>
                             );
@@ -1679,7 +1655,7 @@ n              {/* Team Members Button - Avatar Style */}
               </div>
                                 ))}
             </div>
-                    </div>
+              </div>
 
                     {/* Expanded Month Content - Status Groups */}
                     {isMonthExpanded && (
@@ -1691,7 +1667,7 @@ n              {/* Team Members Button - Avatar Style */}
                           const statusKey = `${month}-${status.value}`;
                           const isStatusExpanded = expandedMonths.includes(statusKey);
                           
-                          return (
+                                      return (
                             <div key={status.value} style={{ borderBottom: '1px solid #2D2D2D' }}>
                               {/* Status Sub-Header */}
                               <div 
@@ -1725,8 +1701,8 @@ n              {/* Team Members Button - Avatar Style */}
                                     fontWeight: 600 
                                   }}>
                                     {statusTasks.length}
-                                  </span>
-                                </div>
+                                        </span>
+                                  </div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setShowCreateTask(true); }}
                                   style={{ 
@@ -1815,12 +1791,12 @@ n              {/* Team Members Button - Avatar Style */}
                                           <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {task.name}
                                           </span>
-              </div>
+                    </div>
 
                                         {/* Description */}
                                         <div style={{ color: '#71717A', fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                           {task.description || '-'}
-                                        </div>
+                    </div>
 
                                         {/* Due Date */}
                                         <div style={{ color: '#A1A1AA', fontSize: '0.8125rem' }}>
@@ -1829,7 +1805,7 @@ n              {/* Team Members Button - Avatar Style */}
                                           ) : (
                                             <span style={{ color: '#52525B' }}>No date</span>
                                           )}
-                                        </div>
+                </div>
 
                                         {/* Type */}
                                         <div>
@@ -1842,8 +1818,8 @@ n              {/* Team Members Button - Avatar Style */}
                                             color: typeColor
                                           }}>
                                             {taskType}
-                                        </span>
-                                  </div>
+                              </span>
+              </div>
 
                                         {/* Assignee */}
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -1852,7 +1828,7 @@ n              {/* Team Members Button - Avatar Style */}
                               ) : (
                                             <span style={{ color: '#52525B', fontSize: '0.8125rem' }}>-</span>
                                           )}
-                </div>
+            </div>
 
                                         {/* Priority */}
                                         <div>
@@ -2103,8 +2079,8 @@ n              {/* Team Members Button - Avatar Style */}
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 if (!confirm('Are you sure you want to delete this task?')) return;
-                                try {
-                                  await taskService.deleteTask(task.id);
+                                  try {
+                                    await taskService.deleteTask(task.id);
                                   await fetchProject();
                                 } catch (err) {
                                   console.error('Error deleting task:', err);
@@ -2179,31 +2155,8 @@ n              {/* Team Members Button - Avatar Style */}
                 
                           {/* Footer with Assignee */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <div style={{ display: 'flex' }}>
-                              {(task.assignees || []).slice(0, 3).map((assignee, i) => (
-                                <div
-                                  key={assignee.id}
-                                  style={{ 
-                                    width: '28px', 
-                                    height: '28px', 
-                                    borderRadius: '50%', 
-                                    border: '2px solid rgba(255,255,255,0.3)',
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center', 
-                                    fontSize: '11px', 
-                                    fontWeight: 600, 
-                                    color: '#FFFFFF', 
-                                    backgroundColor: 'rgba(0,0,0,0.3)',
-                                    marginLeft: i > 0 ? '-8px' : '0',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                  }}
-                                >
-                                  {assignee.name.charAt(0)}
-                                          </div>
-                                        ))}
-            </div>
-                                    </div>
+                            <AvatarGroup users={task.assignees || []} max={3} size="sm" />
+                          </div>
                 </div>
                       );
                     })}
@@ -2275,18 +2228,7 @@ n              {/* Team Members Button - Avatar Style */}
                   </div>
                   
                   <p style={{ color: '#52525B', fontSize: '0.625rem', marginBottom: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>Team members</p>
-                  <div style={{ display: 'flex', gap: '0.375rem' }}>
-                    {project.members?.slice(0, 4).map((member, i) => (
-                      <div key={member.id} style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981'][i % 4], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '0.6875rem', fontWeight: 600, border: '2px solid #141414' }}>
-                        {member.name.charAt(0)}
-                      </div>
-                    ))}
-                    {project.members && project.members.length > 4 && (
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A1A1AA', fontSize: '0.5625rem', fontWeight: 600, border: '2px solid #141414' }}>
-                        +{project.members.length - 4}
-                                </div>
-                              )}
-              </div>
+                  <AvatarGroup users={project.members || []} max={4} size="sm" />
             </div>
 
                 {/* In Progress Section */}
@@ -2433,9 +2375,7 @@ n              {/* Team Members Button - Avatar Style */}
                         <div key={member.id} style={{ display: 'flex', alignItems: 'center', padding: '0.75rem 0', borderBottom: memberIdx < (project.members?.length || 0) - 1 ? '1px solid #1F1F1F' : 'none' }}>
                           {/* Member info */}
                           <div style={{ width: '200px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', paddingRight: '1rem' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: memberColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#FFFFFF' }}>{member.name.charAt(0)}</span>
-                            </div>
+                            <UserAvatar user={member} size="lg" />
                             <div style={{ overflow: 'hidden' }}>
                               <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {member.name.length > 12 ? member.name.substring(0, 12) + '...' : member.name}
@@ -2611,21 +2551,7 @@ n              {/* Team Members Button - Avatar Style */}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         {/* Avatar */}
-                        <div style={{ 
-                          width: '48px', 
-                          height: '48px', 
-                          borderRadius: '50%', 
-                          backgroundColor: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5],
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#FFFFFF',
-                          fontSize: '1.125rem',
-                          fontWeight: 600,
-                          flexShrink: 0
-                        }}>
-                          {member.name.charAt(0)}
-                        </div>
+                        <UserAvatar user={member} size="lg" />
                         
                         {/* Info */}
                         <div style={{ flex: 1 }}>
@@ -3255,9 +3181,7 @@ n              {/* Team Members Button - Avatar Style */}
                             }}
                             style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
                           />
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
-                            {member.name.charAt(0)}
-                            </div>
+                          <UserAvatar user={member} size="md" />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.name}
@@ -3318,9 +3242,7 @@ n              {/* Team Members Button - Avatar Style */}
                             }}
                             style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3B82F6' }}
                           />
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'][i % 5], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
-                            {member.name.charAt(0)}
-                </div>
+                          <UserAvatar user={member} size="md" />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {member.name}
@@ -3545,13 +3467,11 @@ n              {/* Team Members Button - Avatar Style */}
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {(selectedTask.assignees || []).map((assignee, i) => (
+                      {(selectedTask.assignees || []).map((assignee) => (
                         <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
-                          <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: ['#8B5CF6', '#F59E0B', '#EC4899'][i % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.65rem', fontWeight: 600 }}>
-                            {assignee.name.charAt(0)}
-                                </div>
+                          <UserAvatar user={assignee} size="xs" />
                           <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
-                </div>
+                        </div>
                       ))}
                       {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
                         <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>
@@ -3750,9 +3670,7 @@ n              {/* Team Members Button - Avatar Style */}
                           {comments.map((comment) => (
                             <div key={comment.id} style={{ padding: '1rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
                               <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
-                                  {comment.user_name?.charAt(0) || 'U'}
-                                  </div>
+                                <UserAvatar user={{ id: comment.user_id, name: comment.user_name || 'User', avatar_url: comment.user_avatar_url }} size="md" />
                                 <div style={{ flex: 1 }}>
                                   <div style={{ marginBottom: '0.5rem' }}>
                                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{comment.user_name || 'User'}</span>
@@ -3793,9 +3711,7 @@ n              {/* Team Members Button - Avatar Style */}
                 <div style={{ marginTop: '2rem', padding: '1rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
                   <div style={{ fontSize: '0.8125rem', color: '#71717A', marginBottom: '0.5rem' }}>Created by</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600 }}>
-                      {selectedTask.created_by?.name?.charAt(0) || 'U'}
-                  </div>
+                    <UserAvatar user={selectedTask.created_by || { name: 'Unknown' }} size="sm" />
                     <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
                       {selectedTask.created_by?.name || 'Unknown'}
                     </span>
@@ -3843,9 +3759,7 @@ n              {/* Team Members Button - Avatar Style */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {activityLog.map((activity) => (
                       <div key={activity.id} style={{ display: 'flex', gap: '0.75rem' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600, flexShrink: 0 }}>
-                          {activity.user_name.charAt(0)}
-                  </div>
+                        <UserAvatar user={{ name: activity.user_name }} size="md" />
                         <div style={{ flex: 1 }}>
                           <div style={{ marginBottom: '0.25rem' }}>
                             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{activity.user_name} </span>
@@ -3868,9 +3782,7 @@ n              {/* Team Members Button - Avatar Style */}
                     {/* Default activity - task created */}
                     {activityLog.length === 0 && (
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600 }}>
-                          {selectedTask.created_by?.name?.charAt(0) || 'U'}
-            </div>
+                        <UserAvatar user={selectedTask.created_by || { name: 'User' }} size="md" />
                         <div>
                           <div style={{ marginBottom: '0.25rem' }}>
                             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{selectedTask.created_by?.name || 'User'} </span>

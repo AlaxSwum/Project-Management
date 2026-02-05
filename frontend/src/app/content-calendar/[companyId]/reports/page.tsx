@@ -277,8 +277,8 @@ export default function ReportsPage() {
   }
 
   if (authLoading || !company) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
-      <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D0D0D' }}>
+      <div style={{ width: '32px', height: '32px', border: '3px solid #2D2D2D', borderTop: '3px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
@@ -288,68 +288,68 @@ export default function ReportsPage() {
       <MobileHeader title={company.name} isMobile={isMobile} />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg); } }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F5ED; }
-        .rpt-container { min-height: 100vh; display: flex; background: #F5F5ED; }
-        .rpt-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; }
-        .rpt-header { padding: 1.5rem 2rem; background: #fff; border-bottom: 1px solid #e8e8e8; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D0D; }
+        .rpt-container { min-height: 100vh; display: flex; background: #0D0D0D; }
+        .rpt-main { flex: 1; margin-left: ${isMobile ? '0' : '280px'}; background: #0D0D0D; padding-top: ${isMobile ? '70px' : '0'}; }
+        .rpt-header { padding: 1.5rem 2rem; background: #141414; border-bottom: 1px solid #1F1F1F; }
         .rpt-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-        .rpt-back { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; }
-        .rpt-title { font-size: 1.5rem; font-weight: 500; color: #1a1a1a; margin: 0; }
+        .rpt-back { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #2D2D2D; border-radius: 8px; background: #1F1F1F; cursor: pointer; color: #E4E4E7; }
+        .rpt-title { font-size: 1.5rem; font-weight: 600; color: #FFFFFF; margin: 0; }
         .rpt-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
-        .rpt-select { padding: 0.5rem 1rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.9rem; background: #fff; }
+        .rpt-select { padding: 0.5rem 1rem; border: 1px solid #2D2D2D; border-radius: 8px; font-size: 0.9rem; background: #1F1F1F; color: #FFFFFF; }
         .rpt-tabs { display: flex; gap: 0.5rem; margin-top: 1rem; }
-        .rpt-tab { padding: 0.625rem 1.25rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #666; }
-        .rpt-tab.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; border-color: transparent; }
+        .rpt-tab { padding: 0.625rem 1.25rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #2D2D2D; border-radius: 8px; background: #1F1F1F; cursor: pointer; color: #71717A; }
+        .rpt-tab.active { background: #3B82F6; color: #fff; border-color: transparent; }
         .rpt-platforms { display: flex; gap: 0.5rem; margin-top: 1rem; }
         .rpt-platform-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: 2px solid transparent; border-radius: 8px; cursor: pointer; text-transform: capitalize; }
-        .rpt-toggle { display: flex; background: #f5f5f5; border-radius: 8px; padding: 3px; }
-        .rpt-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: #666; }
-        .rpt-toggle-btn.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
+        .rpt-toggle { display: flex; background: #1F1F1F; border-radius: 8px; padding: 3px; }
+        .rpt-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: #71717A; }
+        .rpt-toggle-btn.active { background: #3B82F6; color: #fff; }
         .rpt-content { padding: 1.5rem 2rem; }
         .rpt-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 2rem; }
-        .rpt-stat { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 1.25rem; text-align: center; }
+        .rpt-stat { background: #141414; border: 1px solid #1F1F1F; border-radius: 12px; padding: 1.25rem; text-align: center; }
         .rpt-stat-value { font-size: 1.5rem; font-weight: 600; }
-        .rpt-stat-label { font-size: 0.75rem; color: #666; text-transform: uppercase; margin-top: 0.25rem; }
-        .rpt-chart-section { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .rpt-chart-title { font-size: 1rem; font-weight: 500; color: #1a1a1a; margin: 0 0 1.25rem 0; }
+        .rpt-stat-label { font-size: 0.75rem; color: #71717A; text-transform: uppercase; margin-top: 0.25rem; }
+        .rpt-chart-section { background: #141414; border: 1px solid #1F1F1F; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .rpt-chart-title { font-size: 1rem; font-weight: 600; color: #FFFFFF; margin: 0 0 1.25rem 0; }
         .rpt-bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; padding-top: 30px; }
         .rpt-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
         .rpt-bar { width: 100%; border-radius: 4px 4px 0 0; cursor: pointer; transition: opacity 0.2s; position: relative; min-height: 4px; }
         .rpt-bar:hover { opacity: 0.8; }
-        .rpt-bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #333; white-space: nowrap; }
-        .rpt-bar-label { font-size: 10px; color: #666; margin-top: 6px; font-weight: 500; }
-        .rpt-section { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
-        .rpt-section-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .rpt-section-title { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
-        .rpt-btn-edit { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; }
+        .rpt-bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #E4E4E7; white-space: nowrap; }
+        .rpt-bar-label { font-size: 10px; color: #71717A; margin-top: 6px; font-weight: 500; }
+        .rpt-section { background: #141414; border: 1px solid #1F1F1F; border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
+        .rpt-section-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #1F1F1F; display: flex; justify-content: space-between; align-items: center; }
+        .rpt-section-title { font-size: 1.125rem; font-weight: 600; color: #FFFFFF; margin: 0; }
+        .rpt-btn-edit { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #2D2D2D; border-radius: 8px; background: #1F1F1F; cursor: pointer; color: #E4E4E7; }
         .rpt-section-body { padding: 1.5rem; }
         .rpt-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-        .rpt-metric-card { background: #fafafa; border-radius: 12px; padding: 1rem; text-align: center; }
-        .rpt-metric-value { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; }
-        .rpt-metric-label { font-size: 0.75rem; color: #666; margin-top: 0.25rem; }
+        .rpt-metric-card { background: #1F1F1F; border-radius: 12px; padding: 1rem; text-align: center; }
+        .rpt-metric-value { font-size: 1.25rem; font-weight: 600; color: #FFFFFF; }
+        .rpt-metric-label { font-size: 0.75rem; color: #71717A; margin-top: 0.25rem; }
         .rpt-weeks-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin-top: 1rem; }
-        .rpt-week-card { background: #f5f5f5; border: 1px solid #e8e8e8; border-radius: 10px; padding: 1rem; cursor: pointer; text-align: center; transition: all 0.2s; }
-        .rpt-week-card:hover { border-color: #C483D9; }
-        .rpt-week-card.has-data { background: #f0f7ff; border-color: #5884FD; }
+        .rpt-week-card { background: #1F1F1F; border: 1px solid #2D2D2D; border-radius: 10px; padding: 1rem; cursor: pointer; text-align: center; transition: all 0.2s; color: #E4E4E7; }
+        .rpt-week-card:hover { border-color: #3B82F6; }
+        .rpt-week-card.has-data { background: #1E3A5F; border-color: #3B82F6; }
         .rpt-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .rpt-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; border-bottom: 2px solid #f0f0f0; background: #fafafa; }
-        .rpt-table td { padding: 1rem; border-bottom: 1px solid #f5f5f5; }
-        .rpt-table tr:hover { background: #fafafa; }
-        .rpt-modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); }
-        .rpt-modal-content { background: #fff; border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh; overflow: auto; }
-        .rpt-modal-header { padding: 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .rpt-modal-title { font-size: 1.25rem; font-weight: 500; color: #1a1a1a; margin: 0; }
-        .rpt-modal-close { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; }
+        .rpt-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #71717A; border-bottom: 2px solid #1F1F1F; background: #0D0D0D; }
+        .rpt-table td { padding: 1rem; border-bottom: 1px solid #1F1F1F; color: #E4E4E7; }
+        .rpt-table tr:hover { background: #1F1F1F; }
+        .rpt-modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
+        .rpt-modal-content { background: #141414; border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh; overflow: auto; border: 1px solid #2D2D2D; }
+        .rpt-modal-header { padding: 1.5rem; border-bottom: 1px solid #1F1F1F; display: flex; justify-content: space-between; align-items: center; }
+        .rpt-modal-title { font-size: 1.25rem; font-weight: 600; color: #FFFFFF; margin: 0; }
+        .rpt-modal-close { background: none; border: none; font-size: 1.5rem; color: #71717A; cursor: pointer; }
         .rpt-modal-body { padding: 1.5rem; }
         .rpt-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
         .rpt-form-group { display: flex; flex-direction: column; gap: 0.375rem; }
-        .rpt-label { font-size: 0.8rem; font-weight: 500; color: #333; }
-        .rpt-input { padding: 0.625rem 0.875rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.9rem; }
-        .rpt-modal-footer { padding: 1.5rem; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 0.75rem; }
+        .rpt-label { font-size: 0.8rem; font-weight: 500; color: #E4E4E7; }
+        .rpt-input { padding: 0.625rem 0.875rem; border: 1px solid #2D2D2D; border-radius: 8px; font-size: 0.9rem; background: #0D0D0D; color: #FFFFFF; }
+        .rpt-modal-footer { padding: 1.5rem; border-top: 1px solid #1F1F1F; display: flex; justify-content: flex-end; gap: 0.75rem; }
         .rpt-btn { padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 500; border-radius: 10px; cursor: pointer; }
-        .rpt-btn-secondary { background: #fff; border: 1px solid #e8e8e8; color: #333; }
-        .rpt-btn-primary { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); border: none; color: #fff; }
-        .rpt-empty { padding: 3rem; text-align: center; color: #666; }
+        .rpt-btn-secondary { background: #1F1F1F; border: 1px solid #2D2D2D; color: #E4E4E7; }
+        .rpt-btn-primary { background: #3B82F6; border: none; color: #fff; }
+        .rpt-empty { padding: 3rem; text-align: center; color: #71717A; }
       `}} />
 
       <div className="rpt-container">

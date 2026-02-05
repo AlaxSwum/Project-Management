@@ -528,8 +528,8 @@ export default function CompanyCalendarPage() {
   }
 
   if (authLoading || !company) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
-      <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D0D0D' }}>
+      <div style={{ width: '32px', height: '32px', border: '3px solid #2D2D2D', borderTop: '3px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
@@ -541,154 +541,154 @@ export default function CompanyCalendarPage() {
       <MobileHeader title={company.name} isMobile={isMobile} />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg); } }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #F5F5ED; }
-        .cal-container { min-height: 100vh; display: flex; background: #F5F5ED; overflow-x: hidden; }
-        .cal-main { flex: 1; margin-left: ${isMobile ? '0' : '256px'}; display: flex; flex-direction: column; background: #F5F5ED; padding-top: ${isMobile ? '70px' : '0'}; max-width: ${isMobile ? '100vw' : 'calc(100vw - 256px)'}; overflow-x: hidden; }
-        .cal-header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: #fff; border-bottom: 1px solid #e8e8e8; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #0D0D0D; }
+        .cal-container { min-height: 100vh; display: flex; background: #0D0D0D; overflow-x: hidden; }
+        .cal-main { flex: 1; margin-left: ${isMobile ? '0' : '280px'}; display: flex; flex-direction: column; background: #0D0D0D; padding-top: ${isMobile ? '70px' : '0'}; max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'}; overflow-x: hidden; }
+        .cal-header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: #141414; border-bottom: 1px solid #1F1F1F; }
         .cal-nav { display: flex; align-items: center; gap: 1rem; }
-        .cal-back { padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; }
-        .cal-title { font-size: 1.5rem; font-weight: 500; color: #1a1a1a; margin: 0; }
-        .cal-subtitle { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0 0; }
+        .cal-back { padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500; border: 1px solid #2D2D2D; border-radius: 10px; background: #1F1F1F; cursor: pointer; color: #E4E4E7; }
+        .cal-title { font-size: 1.5rem; font-weight: 600; color: #FFFFFF; margin: 0; }
+        .cal-subtitle { font-size: 0.85rem; color: #71717A; margin: 0.25rem 0 0 0; }
         .cal-budget-badge { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
         .cal-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-        .cal-toggle { display: flex; background: #f5f5f5; border-radius: 10px; padding: 4px; }
-        .cal-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; background: transparent; color: #666; }
-        .cal-toggle-btn.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
-        .cal-btn-secondary { padding: 0.625rem 1.25rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; cursor: pointer; color: #333; }
-        .cal-btn-primary { padding: 0.625rem 1.5rem; font-size: 0.9rem; font-weight: 500; border-radius: 10px; border: none; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(196, 131, 217, 0.3); }
+        .cal-toggle { display: flex; background: #1F1F1F; border-radius: 10px; padding: 4px; }
+        .cal-toggle-btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; background: transparent; color: #71717A; }
+        .cal-toggle-btn.active { background: #3B82F6; color: #fff; }
+        .cal-btn-secondary { padding: 0.625rem 1.25rem; font-size: 0.85rem; font-weight: 500; border: 1px solid #2D2D2D; border-radius: 10px; background: #1F1F1F; cursor: pointer; color: #E4E4E7; }
+        .cal-btn-primary { padding: 0.625rem 1.5rem; font-size: 0.9rem; font-weight: 600; border-radius: 10px; border: none; background: #3B82F6; color: #fff; cursor: pointer; }
         .cal-content { flex: 1; display: flex; overflow: hidden; padding: 1rem; gap: 1rem; }
         .cal-left { flex: 1; overflow: auto; max-width: 100%; }
-        .cal-calendar { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; max-width: 100%; }
-        .cal-cal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; }
-        .cal-month { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
+        .cal-calendar { background: #141414; border-radius: 16px; overflow: hidden; border: 1px solid #1F1F1F; max-width: 100%; }
+        .cal-cal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #1F1F1F; }
+        .cal-month { font-size: 1.125rem; font-weight: 600; color: #FFFFFF; margin: 0; }
         .cal-cal-nav { display: flex; gap: 0.5rem; }
-        .cal-cal-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; }
-        .cal-days-header { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #f0f0f0; }
-        .cal-day-header { padding: 0.75rem 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 600; color: #666; text-transform: uppercase; }
+        .cal-cal-btn { padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid #2D2D2D; border-radius: 8px; background: #1F1F1F; cursor: pointer; color: #E4E4E7; }
+        .cal-days-header { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #1F1F1F; }
+        .cal-day-header { padding: 0.75rem 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 600; color: #71717A; text-transform: uppercase; }
         .cal-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .cal-day { min-height: 90px; padding: 0.5rem; border-bottom: 1px solid #f5f5f5; border-right: 1px solid #f5f5f5; cursor: pointer; background: #fff; }
-        .cal-day:hover { background: #fafafa; }
-        .cal-day.other { background: #fafafa; }
-        .cal-day-num { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.375rem; color: #1a1a1a; }
-        .cal-day-num.other { color: #bbb; }
-        .cal-day-num.today { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; }
+        .cal-day { min-height: 90px; padding: 0.5rem; border-bottom: 1px solid #1F1F1F; border-right: 1px solid #1F1F1F; cursor: pointer; background: #141414; }
+        .cal-day:hover { background: #1F1F1F; }
+        .cal-day.other { background: #0D0D0D; }
+        .cal-day-num { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.375rem; color: #FFFFFF; }
+        .cal-day-num.other { color: #52525B; }
+        .cal-day-num.today { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #3B82F6; color: #fff; }
         .cal-post { font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 500; }
-        .cal-more { font-size: 0.65rem; color: #666; text-align: center; font-weight: 500; }
-        .cal-drawer { width: 42%; min-width: 420px; background: #fff; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e8e8e8; }
-        .cal-drawer-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
-        .cal-drawer-title { font-size: 1.125rem; font-weight: 500; color: #1a1a1a; margin: 0; }
-        .cal-drawer-close { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; }
+        .cal-more { font-size: 0.65rem; color: #71717A; text-align: center; font-weight: 500; }
+        .cal-drawer { width: 42%; min-width: 420px; background: #141414; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #1F1F1F; }
+        .cal-drawer-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #1F1F1F; display: flex; align-items: center; justify-content: space-between; background: #0D0D0D; }
+        .cal-drawer-title { font-size: 1.125rem; font-weight: 600; color: #FFFFFF; margin: 0; }
+        .cal-drawer-close { background: none; border: none; font-size: 1.5rem; color: #71717A; cursor: pointer; }
         .cal-drawer-body { flex: 1; overflow: auto; padding: 1.5rem; }
-        .cal-drawer-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; gap: 0.75rem; background: #fafafa; }
+        .cal-drawer-footer { padding: 1rem 1.5rem; border-top: 1px solid #1F1F1F; display: flex; gap: 0.75rem; background: #0D0D0D; }
         .cal-form-group { margin-bottom: 1.25rem; }
-        .cal-label { display: block; font-size: 0.85rem; font-weight: 500; color: #333; margin-bottom: 0.5rem; }
-        .cal-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; outline: none; }
-        .cal-input:focus { border-color: #C483D9; }
-        .cal-textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e8e8e8; border-radius: 10px; font-size: 0.9rem; resize: none; box-sizing: border-box; outline: none; }
+        .cal-label { display: block; font-size: 0.85rem; font-weight: 500; color: #E4E4E7; margin-bottom: 0.5rem; }
+        .cal-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #2D2D2D; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; outline: none; background: #0D0D0D; color: #FFFFFF; }
+        .cal-input:focus { border-color: #3B82F6; }
+        .cal-textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid #2D2D2D; border-radius: 10px; font-size: 0.9rem; resize: none; box-sizing: border-box; outline: none; background: #0D0D0D; color: #FFFFFF; }
         .cal-platforms { display: flex; flex-direction: column; gap: 0.75rem; }
-        .cal-platform-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #fafafa; border-radius: 10px; border: 1px solid #e8e8e8; }
-        .cal-platform-row.active { border-color: #C483D9; background: #fdf4ff; }
-        .cal-platform-check { width: 20px; height: 20px; border-radius: 4px; border: 2px solid #e8e8e8; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .cal-platform-check.active { background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); border-color: #C483D9; color: #fff; }
-        .cal-platform-name { flex: 1; font-weight: 500; text-transform: capitalize; }
-        .cal-platform-budget { width: 120px; padding: 0.5rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; text-align: right; }
-        .cal-copy-section { background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #bbf7d0; }
-        .cal-copy-title { font-size: 0.9rem; font-weight: 600; color: #166534; margin: 0 0 1rem 0; }
+        .cal-platform-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #1F1F1F; border-radius: 10px; border: 1px solid #2D2D2D; }
+        .cal-platform-row.active { border-color: #3B82F6; background: #1F1F1F; }
+        .cal-platform-check { width: 20px; height: 20px; border-radius: 4px; border: 2px solid #2D2D2D; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cal-platform-check.active { background: #3B82F6; border-color: #3B82F6; color: #fff; }
+        .cal-platform-name { flex: 1; font-weight: 500; text-transform: capitalize; color: #E4E4E7; }
+        .cal-platform-budget { width: 120px; padding: 0.5rem; border: 1px solid #2D2D2D; border-radius: 8px; font-size: 0.85rem; text-align: right; background: #0D0D0D; color: #FFFFFF; }
+        .cal-copy-section { background: #0F2818; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #166534; }
+        .cal-copy-title { font-size: 0.9rem; font-weight: 600; color: #4ADE80; margin: 0 0 1rem 0; }
         .cal-copy-item { margin-bottom: 1rem; }
         .cal-copy-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
-        .cal-copy-item-label { font-size: 0.8rem; font-weight: 500; color: #15803d; }
+        .cal-copy-item-label { font-size: 0.8rem; font-weight: 500; color: #4ADE80; }
         .cal-copy-btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border: none; border-radius: 6px; background: #22c55e; color: #fff; cursor: pointer; }
         .cal-copy-btn.copied { background: #16a34a; }
-        .cal-copy-content { background: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: #1a1a1a; line-height: 1.5; border: 1px solid #bbf7d0; }
-        .cal-target { background: #fafafa; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #e8e8e8; }
+        .cal-copy-content { background: #141414; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: #E4E4E7; line-height: 1.5; border: 1px solid #166534; }
+        .cal-target { background: #1F1F1F; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #2D2D2D; }
         .cal-target-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
         .cal-target-platform { display: flex; align-items: center; gap: 0.5rem; }
         .cal-target-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .cal-target-name { font-weight: 500; text-transform: capitalize; color: #1a1a1a; }
+        .cal-target-name { font-weight: 500; text-transform: capitalize; color: #FFFFFF; }
         .cal-target-budget { font-size: 0.85rem; font-weight: 600; color: #10b981; }
         .cal-target-status { padding: 0.25rem 0.75rem; font-size: 0.7rem; font-weight: 500; border-radius: 20px; }
-        .cal-target-select { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; }
-        .cal-target-input { width: 100%; padding: 0.625rem; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; box-sizing: border-box; }
+        .cal-target-select { width: 100%; padding: 0.625rem; border: 1px solid #2D2D2D; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; background: #0D0D0D; color: #FFFFFF; }
+        .cal-target-input { width: 100%; padding: 0.625rem; border: 1px solid #2D2D2D; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.5rem; box-sizing: border-box; background: #0D0D0D; color: #FFFFFF; }
         .cal-target-publish-btn { width: 100%; padding: 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: none; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #fff; cursor: pointer; }
-        .cal-target-published { font-size: 0.8rem; color: #666; margin-top: 0.75rem; padding: 0.625rem; background: #fff; border-radius: 6px; }
-        .cal-sheet { background: #fff; border-radius: 16px; overflow: auto; border: 1px solid #e8e8e8; }
+        .cal-target-published { font-size: 0.8rem; color: #71717A; margin-top: 0.75rem; padding: 0.625rem; background: #0D0D0D; border-radius: 6px; }
+        .cal-sheet { background: #141414; border-radius: 16px; overflow: auto; border: 1px solid #1F1F1F; }
         .cal-table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: 0.85rem; }
-        .cal-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; border-bottom: 2px solid #f0f0f0; background: #fafafa; }
-        .cal-table td { padding: 1rem; border-bottom: 1px solid #f5f5f5; }
-        .cal-table tr:hover { background: #fafafa; cursor: pointer; }
+        .cal-table th { padding: 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #71717A; border-bottom: 2px solid #1F1F1F; background: #0D0D0D; }
+        .cal-table td { padding: 1rem; border-bottom: 1px solid #1F1F1F; color: #E4E4E7; }
+        .cal-table tr:hover { background: #1F1F1F; cursor: pointer; }
         .cal-status-badge { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 20px; }
         .cal-empty { padding: 4rem 1.5rem; text-align: center; }
-        .cal-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #f0e6f5 0%, #e6f0ff 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+        .cal-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
         
-        /* Month Sheet Styles */
-        .ms-container { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e8e8e8; max-width: 100%; }
-        .ms-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #f0f0f0; background: #fafafa; flex-wrap: wrap; gap: 0.5rem; }
-        .ms-month { font-size: 1.1rem; font-weight: 600; color: #1a1a1a; margin: 0; }
+        /* Month Sheet Styles - Dark Theme */
+        .ms-container { background: #141414; border-radius: 16px; overflow: hidden; border: 1px solid #1F1F1F; max-width: 100%; }
+        .ms-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #1F1F1F; background: #0D0D0D; flex-wrap: wrap; gap: 0.5rem; }
+        .ms-month { font-size: 1.1rem; font-weight: 600; color: #FFFFFF; margin: 0; }
         .ms-nav { display: flex; gap: 0.5rem; }
-        .ms-nav-btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; cursor: pointer; color: #333; }
-        .ms-nav-btn:hover { background: #f5f5f5; }
+        .ms-nav-btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; border: 1px solid #2D2D2D; border-radius: 8px; background: #1F1F1F; cursor: pointer; color: #E4E4E7; }
+        .ms-nav-btn:hover { background: #2D2D2D; }
         .ms-spreadsheet { overflow-x: auto; padding: 0.5rem; }
-        .ms-week { margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
-        .ms-week-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; }
+        .ms-week { margin-bottom: 1.5rem; border: 1px solid #2D2D2D; border-radius: 8px; overflow: hidden; }
+        .ms-week-header { background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%); color: #fff; padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; }
         .ms-row { display: grid; grid-template-columns: 100px repeat(7, minmax(80px, 1fr)); }
-        .ms-cell { padding: 0.35rem 0.5rem; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; font-size: 0.7rem; min-height: 28px; display: flex; align-items: flex-start; }
-        .ms-label-cell { background: #f8f9fa; font-weight: 500; color: #333; position: sticky; left: 0; z-index: 10; border-left: none; font-size: 0.65rem; }
-        .ms-day-header { font-weight: 600; color: #1a1a1a; justify-content: center; background: #f0f0f0; text-transform: capitalize; font-size: 0.7rem; }
-        .ms-day-headers .ms-label-cell { background: #e8e8e8; }
-        .ms-weekend { background: #fff9e6 !important; }
-        .ms-weekend.ms-day-header { background: #ffeb99 !important; }
+        .ms-cell { padding: 0.35rem 0.5rem; border-bottom: 1px solid #1F1F1F; border-right: 1px solid #1F1F1F; font-size: 0.7rem; min-height: 28px; display: flex; align-items: flex-start; }
+        .ms-label-cell { background: #1F1F1F; font-weight: 500; color: #E4E4E7; position: sticky; left: 0; z-index: 10; border-left: none; font-size: 0.65rem; }
+        .ms-day-header { font-weight: 600; color: #FFFFFF; justify-content: center; background: #1F1F1F; text-transform: capitalize; font-size: 0.7rem; }
+        .ms-day-headers .ms-label-cell { background: #2D2D2D; }
+        .ms-weekend { background: #1A1A2E !important; }
+        .ms-weekend.ms-day-header { background: #252548 !important; }
         .ms-other-month { opacity: 0.5; }
-        .ms-data-cell { background: #fff; cursor: default; word-break: break-word; }
+        .ms-data-cell { background: #141414; cursor: default; word-break: break-word; color: #E4E4E7; }
         .ms-editable { cursor: pointer; }
-        .ms-editable:hover { background: #f0f7ff; }
+        .ms-editable:hover { background: #1F1F1F; }
         .ms-multiline { min-height: 45px; }
         .ms-value { line-height: 1.3; white-space: pre-wrap; font-size: 0.65rem; }
-        .ms-input { width: 100%; border: 2px solid #5884FD; border-radius: 4px; padding: 0.25rem; font-size: 0.7rem; outline: none; font-family: inherit; }
+        .ms-input { width: 100%; border: 2px solid #3B82F6; border-radius: 4px; padding: 0.25rem; font-size: 0.7rem; outline: none; font-family: inherit; background: #0D0D0D; color: #FFFFFF; }
         textarea.ms-input { min-height: 40px; resize: vertical; }
-        select.ms-input { cursor: pointer; font-size: 0.7rem; }
+        select.ms-input { cursor: pointer; font-size: 0.7rem; background: #0D0D0D; color: #FFFFFF; }
         
-        /* Platform Multi-Select Styles */
-        .ms-platform-editor { background: #fff; border: 2px solid #5884FD; border-radius: 8px; padding: 0.5rem; min-width: 140px; }
+        /* Platform Multi-Select Styles - Dark Theme */
+        .ms-platform-editor { background: #1F1F1F; border: 2px solid #3B82F6; border-radius: 8px; padding: 0.5rem; min-width: 140px; }
         .ms-platform-options { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 0.5rem; }
         .ms-platform-option { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; padding: 0.25rem; border-radius: 4px; font-size: 0.75rem; }
-        .ms-platform-option:hover { background: #f5f5f5; }
+        .ms-platform-option:hover { background: #2D2D2D; }
         .ms-platform-option input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
         .ms-platform-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .ms-platform-name { text-transform: capitalize; color: #333; }
-        .ms-platform-actions { display: flex; gap: 0.375rem; border-top: 1px solid #e8e8e8; padding-top: 0.5rem; }
-        .ms-platform-save { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 600; border: none; border-radius: 4px; background: linear-gradient(135deg, #C483D9 0%, #5884FD 100%); color: #fff; cursor: pointer; }
-        .ms-platform-cancel { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 500; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; color: #666; cursor: pointer; }
+        .ms-platform-name { text-transform: capitalize; color: #E4E4E7; }
+        .ms-platform-actions { display: flex; gap: 0.375rem; border-top: 1px solid #2D2D2D; padding-top: 0.5rem; }
+        .ms-platform-save { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 600; border: none; border-radius: 4px; background: #3B82F6; color: #fff; cursor: pointer; }
+        .ms-platform-cancel { flex: 1; padding: 0.375rem; font-size: 0.7rem; font-weight: 500; border: 1px solid #2D2D2D; border-radius: 4px; background: #141414; color: #A1A1AA; cursor: pointer; }
         .ms-platform-display { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
         .ms-platform-tag { padding: 1px 4px; border-radius: 3px; font-size: 0.55rem; font-weight: 600; color: #fff; text-transform: capitalize; white-space: nowrap; }
-        .ms-placeholder { color: #999; font-style: italic; font-size: 0.6rem; }
+        .ms-placeholder { color: #52525B; font-style: italic; font-size: 0.6rem; }
         
-        /* Published Status Styles */
+        /* Published Status Styles - Dark Theme */
         .ms-published-status { display: flex; align-items: center; justify-content: center; width: 100%; }
         .ms-status-icon { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; }
-        .ms-status-icon.ms-published { background: #dcfce7; color: #16a34a; }
-        .ms-status-icon.ms-not-published { background: #fee2e2; color: #dc2626; }
-        .ms-status-empty { color: #ccc; font-size: 0.8rem; }
+        .ms-status-icon.ms-published { background: #0F2818; color: #4ADE80; }
+        .ms-status-icon.ms-not-published { background: #2D1F1F; color: #EF4444; }
+        .ms-status-empty { color: #52525B; font-size: 0.8rem; }
         
-        /* Link Field Styles */
+        /* Link Field Styles - Dark Theme */
         .ms-link-display { display: flex; align-items: center; gap: 4px; width: 100%; }
-        .ms-link-icon { width: 14px; height: 14px; color: #5884FD; flex-shrink: 0; }
-        .ms-link-text { color: #5884FD; font-size: 0.75rem; text-decoration: underline; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
-        .ms-link-text:hover { color: #C483D9; }
-        .ms-link-empty { color: #999; font-size: 0.7rem; font-style: italic; }
-        .ms-link-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; background: linear-gradient(135deg, #e0f2fe, #dbeafe); border-radius: 4px; font-size: 0.65rem; color: #0369a1; }
-        .ms-link-badge.graphic { background: linear-gradient(135deg, #fce7f3, #fdf2f8); color: #be185d; }
-        .ms-link-badge.video { background: linear-gradient(135deg, #fee2e2, #fef2f2); color: #dc2626; }
-        .ms-link-badge.content { background: linear-gradient(135deg, #dcfce7, #f0fdf4); color: #16a34a; }
+        .ms-link-icon { width: 14px; height: 14px; color: #3B82F6; flex-shrink: 0; }
+        .ms-link-text { color: #3B82F6; font-size: 0.75rem; text-decoration: underline; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+        .ms-link-text:hover { color: #60A5FA; }
+        .ms-link-empty { color: #52525B; font-size: 0.7rem; font-style: italic; }
+        .ms-link-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; background: #1E3A5F; border-radius: 4px; font-size: 0.65rem; color: #60A5FA; }
+        .ms-link-badge.graphic { background: #3D1F3D; color: #F472B6; }
+        .ms-link-badge.video { background: #3D1F1F; color: #EF4444; }
+        .ms-link-badge.content { background: #1F3D1F; color: #4ADE80; }
         
-        /* New Post Modal Styles */
-        .cal-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; animation: fadeIn 0.2s ease-out; }
-        .cal-modal { background: #fff; border-radius: 16px; width: 520px; max-width: 90vw; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        .cal-modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%); }
-        .cal-modal-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
-        .cal-modal-close { background: #f5f5f5; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.25rem; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .cal-modal-close:hover { background: #fee2e2; color: #dc2626; }
+        /* New Post Modal Styles - Dark Theme */
+        .cal-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; animation: fadeIn 0.2s ease-out; backdrop-filter: blur(4px); }
+        .cal-modal { background: #141414; border-radius: 16px; width: 520px; max-width: 90vw; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid #2D2D2D; }
+        .cal-modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #1F1F1F; display: flex; align-items: center; justify-content: space-between; background: #0D0D0D; }
+        .cal-modal-title { font-size: 1.25rem; font-weight: 600; color: #FFFFFF; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .cal-modal-close { background: #1F1F1F; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.25rem; color: #71717A; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .cal-modal-close:hover { background: #3D1F1F; color: #EF4444; }
         .cal-modal-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
-        .cal-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; gap: 0.75rem; background: #fafafa; }
+        .cal-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #1F1F1F; display: flex; gap: 0.75rem; background: #0D0D0D; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}} />
