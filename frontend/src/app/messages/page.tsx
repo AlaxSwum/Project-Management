@@ -13,12 +13,14 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
+import UserAvatar from '@/components/UserAvatar';
 
 interface Message {
   id: number;
   conversation_id: number;
   sender_id: number;
   sender_name: string;
+  sender_avatar_url?: string;
   message_text: string;
   created_at: string;
   is_deleted: boolean;
@@ -37,6 +39,7 @@ interface Conversation {
     user_id: number;
     name: string;
     email: string;
+    avatar_url?: string;
   }>;
 }
 
@@ -168,7 +171,37 @@ export default function MessagesPage() {
         .eq('user_id', user.id)
         .order('last_message_at', { ascending: false });
       
-      setConversations(data || []);
+      // Enrich with avatar URLs for other participants
+      if (data) {
+        const enriched = await Promise.all(data.map(async (conv) => {
+          if (conv.other_participants && Array.isArray(conv.other_participants)) {
+            const enrichedParticipants = await Promise.all(
+              conv.other_participants.map(async (participant: any) => {
+                const { data: userData } = await supabase
+                  .from('auth_user')
+                  .select('avatar_url')
+                  .eq('id', participant.user_id)
+                  .single();
+                
+                return {
+                  ...participant,
+                  avatar_url: userData?.avatar_url
+                };
+              })
+            );
+            
+            return {
+              ...conv,
+              other_participants: enrichedParticipants
+            };
+          }
+          return conv;
+        }));
+        
+        setConversations(enriched);
+      } else {
+        setConversations([]);
+      }
     } catch (error) {
       // Error
     }
@@ -194,17 +227,18 @@ export default function MessagesPage() {
         .order('created_at', { ascending: true });
       
       if (data) {
-        // Enrich with sender names
+        // Enrich with sender names and avatars
         const enriched = await Promise.all(data.map(async (msg) => {
           const { data: sender } = await supabase
             .from('auth_user')
-            .select('name')
+            .select('name, avatar_url')
             .eq('id', msg.sender_id)
             .single();
           
           return {
             ...msg,
-            sender_name: sender?.name || 'User'
+            sender_name: sender?.name || 'User',
+            sender_avatar_url: sender?.avatar_url
           };
         }));
         
@@ -328,9 +362,13 @@ export default function MessagesPage() {
                   onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '1rem', fontWeight: 600, flexShrink: 0 }}>
-                      {displayName?.charAt(0) || 'U'}
-                    </div>
+                    <UserAvatar 
+                      user={{ 
+                        name: displayName, 
+                        avatar_url: conv.conversation_type === 'group' ? undefined : otherUser?.avatar_url 
+                      }} 
+                      size="lg" 
+                    />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                         <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -362,11 +400,17 @@ export default function MessagesPage() {
             {/* Chat Header */}
             <div style={{ padding: '1.25rem 1.5rem', background: '#141414', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>
-                  {selectedConv?.conversation_type === 'group' 
-                    ? selectedConv.group_name?.charAt(0) 
-                    : selectedConv?.other_participants?.[0]?.name?.charAt(0) || 'U'}
-                </div>
+                <UserAvatar 
+                  user={{ 
+                    name: selectedConv?.conversation_type === 'group' 
+                      ? selectedConv.group_name 
+                      : selectedConv?.other_participants?.[0]?.name,
+                    avatar_url: selectedConv?.conversation_type === 'group' 
+                      ? undefined 
+                      : selectedConv?.other_participants?.[0]?.avatar_url
+                  }} 
+                  size="md" 
+                />
                 <div>
                   <div style={{ fontSize: '1rem', fontWeight: 600, color: '#FFFFFF' }}>
                     {selectedConv?.conversation_type === 'group' 
@@ -400,9 +444,10 @@ export default function MessagesPage() {
                 return (
                   <div key={message.id} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: '0.75rem' }}>
                     {!isMe && (
-                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
-                        {message.sender_name?.charAt(0) || 'U'}
-                      </div>
+                      <UserAvatar 
+                        user={{ name: message.sender_name, avatar_url: message.sender_avatar_url }} 
+                        size="sm" 
+                      />
                     )}
                     <div style={{ maxWidth: '65%', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       {!isMe && (

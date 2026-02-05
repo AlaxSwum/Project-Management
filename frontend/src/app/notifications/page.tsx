@@ -13,6 +13,7 @@ import {
   UserPlusIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
+import UserAvatar from '@/components/UserAvatar';
 
 interface Notification {
   id: number;
@@ -21,6 +22,7 @@ interface Notification {
   sender_id: number;
   sender_name: string;
   sender_email: string;
+  sender_avatar_url?: string;
   project_name: string;
   notification_type: string;
   message: string;
@@ -86,7 +88,24 @@ export default function NotificationsPage() {
         .order('created_at', { ascending: false });
       
       if (!error && data) {
-        setNotifications(data);
+        // Enrich with sender avatar_url
+        const enriched = await Promise.all(data.map(async (notif) => {
+          if (notif.sender_id) {
+            const { data: sender } = await supabase
+              .from('auth_user')
+              .select('avatar_url')
+              .eq('id', notif.sender_id)
+              .single();
+            
+            return {
+              ...notif,
+              sender_avatar_url: sender?.avatar_url
+            };
+          }
+          return notif;
+        }));
+        
+        setNotifications(enriched);
       }
     } catch (error) {
       // Error fetching notifications
@@ -280,10 +299,11 @@ export default function NotificationsPage() {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = notification.is_read ? '#1F1F1F' : '#2D2D2D'; e.currentTarget.style.background = notification.is_read ? '#0D0D0D' : '#1A1A1A'; }}
                   >
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                      {/* Icon */}
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `${iconColor}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon style={{ width: '20px', height: '20px', color: iconColor }} />
-                      </div>
+                      {/* User Avatar */}
+                      <UserAvatar 
+                        user={{ name: notification.sender_name, avatar_url: notification.sender_avatar_url }} 
+                        size="md" 
+                      />
 
                       {/* Content */}
                       <div style={{ flex: 1, minWidth: 0 }}>
