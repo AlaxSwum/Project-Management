@@ -3,10 +3,17 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Redirect to login page automatically
+  useEffect(() => {
+    router.push('/login');
+  }, [router]);
 
   useEffect(() => {
     const checkMobile = () => {
