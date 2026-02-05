@@ -165,45 +165,67 @@ export default function MessagesPage() {
     if (!user?.id) return;
     
     try {
-      const { data } = await supabase
-        .from('user_conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('last_message_at', { ascending: false });
+      // Fetch conversations and participants manually with avatar_url
+      const { data: convParticipants } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id, conversations(id, conversation_type, group_name, last_message_at)')
+        .eq('user_id', user.id);
       
-      // Enrich with avatar URLs for other participants
-      if (data) {
-        const enriched = await Promise.all(data.map(async (conv) => {
-          if (conv.other_participants && Array.isArray(conv.other_participants)) {
-            const enrichedParticipants = await Promise.all(
-              conv.other_participants.map(async (participant: any) => {
-                const { data: userData } = await supabase
-                  .from('auth_user')
-                  .select('avatar_url')
-                  .eq('id', participant.user_id)
-                  .single();
-                
-                return {
-                  ...participant,
-                  avatar_url: userData?.avatar_url
-                };
-              })
-            );
-            
-            return {
-              ...conv,
-              other_participants: enrichedParticipants
-            };
-          }
-          return conv;
-        }));
-        
-        setConversations(enriched);
-      } else {
+      if (!convParticipants || convParticipants.length === 0) {
         setConversations([]);
+        return;
       }
+      
+      // Build conversations with enriched participants
+      const enrichedConversations = await Promise.all(
+        convParticipants.map(async (cp: any) => {
+          const conversation = cp.conversations;
+          if (!conversation) return null;
+          
+          // Get other participants with avatar_url
+          const { data: otherParticipants } = await supabase
+            .from('conversation_participants')
+            .select('user_id, auth_user(id, name, email, avatar_url)')
+            .eq('conversation_id', conversation.id)
+            .neq('user_id', user.id);
+          
+          // Get unread count
+          const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conversation.id)
+            .eq('is_read', false)
+            .neq('sender_id', user.id);
+          
+          // Format other participants
+          const formattedParticipants = (otherParticipants || []).map((p: any) => ({
+            user_id: p.auth_user.id,
+            name: p.auth_user.name,
+            email: p.auth_user.email,
+            avatar_url: p.auth_user.avatar_url
+          }));
+          
+          return {
+            conversation_id: conversation.id,
+            conversation_type: conversation.conversation_type,
+            group_name: conversation.group_name,
+            last_message_at: conversation.last_message_at,
+            unread_count: unreadCount || 0,
+            last_message: null,
+            other_participants: formattedParticipants
+          };
+        })
+      );
+      
+      // Filter out nulls and sort by last message
+      const validConversations = enrichedConversations
+        .filter(c => c !== null)
+        .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+      
+      setConversations(validConversations);
     } catch (error) {
-      // Error
+      console.error('Error fetching conversations:', error);
+      setConversations([]);
     }
   };
 
