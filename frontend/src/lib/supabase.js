@@ -224,7 +224,8 @@ export const supabaseDb = {
               id: member.auth_user?.id || member.user_id,
               name: member.auth_user?.name || 'Unknown User',
               email: member.auth_user?.email || '',
-              role: member.auth_user?.role || 'member'
+              role: member.auth_user?.role || 'member',
+              avatar_url: member.auth_user?.avatar_url
             }));
             
             return {
@@ -297,7 +298,8 @@ export const supabaseDb = {
         id: member.auth_user?.id || member.user_id,
         name: member.auth_user?.name || 'Unknown User',
         email: member.auth_user?.email || '',
-        role: member.auth_user?.role || 'member'
+        role: member.auth_user?.role || 'member',
+        avatar_url: member.auth_user?.avatar_url
       }));
       
       return {
