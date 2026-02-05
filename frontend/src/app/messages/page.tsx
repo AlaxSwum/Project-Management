@@ -364,7 +364,7 @@ export default function MessagesPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <UserAvatar 
                       user={{ 
-                        name: displayName, 
+                        name: displayName || 'Unknown', 
                         avatar_url: conv.conversation_type === 'group' ? undefined : otherUser?.avatar_url 
                       }} 
                       size="lg" 
@@ -402,9 +402,9 @@ export default function MessagesPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <UserAvatar 
                   user={{ 
-                    name: selectedConv?.conversation_type === 'group' 
+                    name: (selectedConv?.conversation_type === 'group' 
                       ? selectedConv.group_name 
-                      : selectedConv?.other_participants?.[0]?.name,
+                      : selectedConv?.other_participants?.[0]?.name) || 'Unknown',
                     avatar_url: selectedConv?.conversation_type === 'group' 
                       ? undefined 
                       : selectedConv?.other_participants?.[0]?.avatar_url
