@@ -202,17 +202,31 @@ export const supabaseDb = {
       
       if (error) return { data: null, error }
       
-      // Fetch project members separately for each accessible project
+      // Fetch project members separately for each accessible project with timeout
       const projectsWithMembers = await Promise.all(
         projects.map(async (project) => {
           try {
-            const { data: members, error: membersError } = await supabase
+            // Add timeout to prevent hanging queries
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Member fetch timeout')), 3000)
+            );
+            
+            const fetchPromise = supabase
               .from('projects_project_members')
               .select(`
                 user_id,
-                auth_user(id, name, email, role, avatar_url)
+                auth_user!inner(id, name, email, role, avatar_url)
               `)
               .eq('project_id', project.id)
+              .limit(100);
+            
+            const { data: members, error: membersError } = await Promise.race([
+              fetchPromise,
+              timeoutPromise
+            ]).catch(err => {
+              console.error(`Timeout fetching members for project ${project.id}`);
+              return { data: null, error: err };
+            });
             
             // If there's an error, log it but don't fail the whole request
             if (membersError) {
@@ -279,14 +293,35 @@ export const supabaseDb = {
       
       if (error) return { data: null, error }
       
-      // Fetch project members separately
-      const { data: members, error: membersError } = await supabase
-        .from('projects_project_members')
-        .select(`
-          user_id,
-          auth_user(id, name, email, role, avatar_url)
-        `)
-        .eq('project_id', id)
+      // Fetch project members separately with timeout
+      let members = null;
+      let membersError = null;
+      
+      try {
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Member fetch timeout')), 3000)
+        );
+        
+        const fetchPromise = supabase
+          .from('projects_project_members')
+          .select(`
+            user_id,
+            auth_user!inner(id, name, email, role, avatar_url)
+          `)
+          .eq('project_id', id)
+          .limit(100);
+        
+        const result = await Promise.race([fetchPromise, timeoutPromise]).catch(err => {
+          console.error(`Timeout fetching members for project ${id}`);
+          return { data: null, error: err };
+        });
+        
+        members = result.data;
+        membersError = result.error;
+      } catch (err) {
+        console.error(`Exception fetching members for project ${id}:`, err);
+        membersError = err;
+      }
       
       // If there's an error fetching members, log it but don't fail
       if (membersError) {
