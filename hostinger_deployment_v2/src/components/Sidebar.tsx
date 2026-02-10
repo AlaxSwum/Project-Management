@@ -32,6 +32,7 @@ import {
   KeyIcon,
   BuildingOfficeIcon,
   CurrencyDollarIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -1038,6 +1039,7 @@ Your report is now available in the system.`);
     { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
     { name: 'My Personal', href: '/personal', icon: CalendarDaysIcon },
     { name: 'Expenses', href: '/expenses', icon: CurrencyDollarIcon },
+    { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon },
     { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
     { name: 'Timetable', href: '/timetable', icon: ClockIcon },
     { name: 'Reporting', href: '/reporting', icon: ChartBarIcon },
@@ -1075,6 +1077,7 @@ Your report is now available in the system.`);
         { name: 'Home', href: '/dashboard', icon: HomeIcon },
         { name: 'My Tasks', href: '/my-tasks', icon: FolderIcon },
         { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
+        { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon },
         { name: 'Timetable', href: '/timetable', icon: ClockIcon },
       ]
     : mainNavItems;

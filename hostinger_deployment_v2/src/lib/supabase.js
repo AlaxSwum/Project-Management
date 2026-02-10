@@ -184,7 +184,7 @@ export const supabaseDb = {
     return { data, error }
   },
 
-  // Projects - with user-based access control
+  // Projects - with user-based access control (optimized: single query with joins)
   getProjects: async (userId) => {
     if (!userId) {
       // If no userId provided, return empty array for security
@@ -192,7 +192,7 @@ export const supabaseDb = {
     }
 
     try {
-      // First, get all project IDs where the user is a member
+      // Step 1: Get all project IDs where the user is a member
       const { data: membershipData, error: membershipError } = await supabase
         .from('projects_project_members')
         .select('project_id')
@@ -208,54 +208,55 @@ export const supabaseDb = {
       // Extract project IDs the user has access to
       const accessibleProjectIds = membershipData.map(m => m.project_id)
 
-      // Fetch only the projects the user is a member of
-      const { data: projects, error } = await supabase
-        .from('projects_project')
-        .select('*')
-        .in('id', accessibleProjectIds)
+      // Step 2: Fetch projects AND all their members in just 2 parallel queries
+      const [projectsResult, allMembersResult] = await Promise.all([
+        // Fetch only needed columns instead of select('*')
+        supabase
+          .from('projects_project')
+          .select('id, name, description, project_type, status, color, is_archived, start_date, due_date, created_at, updated_at, created_by_id')
+          .in('id', accessibleProjectIds),
+        // Fetch ALL members for ALL accessible projects in a single query with join
+        supabase
+          .from('projects_project_members')
+          .select(`
+            project_id,
+            user_id,
+            auth_user(id, name, email, role)
+          `)
+          .in('project_id', accessibleProjectIds)
+      ])
+
+      if (projectsResult.error) return { data: null, error: projectsResult.error }
       
-      if (error) return { data: null, error }
-      
-      // Fetch project members separately for each accessible project
-      const projectsWithMembers = await Promise.all(
-        projects.map(async (project) => {
-          try {
-            const { data: members, error: membersError } = await supabase
-              .from('projects_project_members')
-              .select(`
-                user_id,
-                auth_user(id, name, email, role)
-              `)
-              .eq('project_id', project.id)
-            
-            // If there's an error, log it but don't fail the whole request
-            if (membersError) {
-              console.error(`Error fetching members for project ${project.id}:`, membersError);
-            }
-            
-            // Transform members to match expected format
-            const transformedMembers = (members || []).map(member => ({
-              id: member.auth_user?.id || member.user_id,
-              name: member.auth_user?.name || 'Unknown User',
-              email: member.auth_user?.email || '',
-              role: member.auth_user?.role || 'member'
-            }));
-            
-            return {
-              ...project,
-              members: transformedMembers, // Use 'members' instead of 'project_members'
-              project_members: members || [] // Keep both for compatibility
-            }
-          } catch (err) {
-            console.error(`Exception fetching members for project ${project.id}:`, err);
-            return {
-              ...project,
-              members: [],
-              project_members: []
-            }
-          }
+      const projects = projectsResult.data
+      const allMembers = allMembersResult.data || []
+
+      // Log but don't fail if members query had an error
+      if (allMembersResult.error) {
+        console.error('Error fetching project members:', allMembersResult.error);
+      }
+
+      // Step 3: Group members by project_id in memory (O(n) instead of N+1 queries)
+      const membersByProject = {}
+      for (const member of allMembers) {
+        const pid = member.project_id
+        if (!membersByProject[pid]) {
+          membersByProject[pid] = []
+        }
+        membersByProject[pid].push({
+          id: member.auth_user?.id || member.user_id,
+          name: member.auth_user?.name || 'Unknown User',
+          email: member.auth_user?.email || '',
+          role: member.auth_user?.role || 'member'
         })
-      )
+      }
+
+      // Step 4: Attach members to projects
+      const projectsWithMembers = projects.map(project => ({
+        ...project,
+        members: membersByProject[project.id] || [],
+        project_members: (allMembers || []).filter(m => m.project_id === project.id)
+      }))
       
       return { data: projectsWithMembers, error: null }
     } catch (error) {
@@ -263,50 +264,52 @@ export const supabaseDb = {
     }
   },
 
-  // Single project access control
+  // Single project access control (optimized: parallel queries)
   getProject: async (id, userId) => {
     if (!userId) {
       return { data: null, error: new Error('Access denied: User ID required') }
     }
 
     try {
-      // First check if user has access to this project
-      const { data: membership, error: membershipError } = await supabase
-        .from('projects_project_members')
-        .select('id')
-        .eq('project_id', id)
-        .eq('user_id', userId)
-        .single()
+      // Run membership check, project fetch, and members fetch in parallel
+      const [membershipResult, projectResult, membersResult] = await Promise.all([
+        supabase
+          .from('projects_project_members')
+          .select('id')
+          .eq('project_id', id)
+          .eq('user_id', userId)
+          .single(),
+        supabase
+          .from('projects_project')
+          .select('id, name, description, project_type, status, color, is_archived, start_date, due_date, created_at, updated_at, created_by_id')
+          .eq('id', id)
+          .single(),
+        supabase
+          .from('projects_project_members')
+          .select(`
+            user_id,
+            auth_user(id, name, email, role)
+          `)
+          .eq('project_id', id)
+      ])
 
-      if (membershipError || !membership) {
+      // Check access
+      if (membershipResult.error || !membershipResult.data) {
         return { data: null, error: new Error('Access denied: You are not a member of this project') }
       }
 
-      // If user has access, fetch the project
-      const { data: project, error } = await supabase
-        .from('projects_project')
-        .select('*')
-        .eq('id', id)
-        .single()
+      if (projectResult.error) return { data: null, error: projectResult.error }
       
-      if (error) return { data: null, error }
+      const project = projectResult.data
+      const members = membersResult.data || []
       
-      // Fetch project members separately
-      const { data: members, error: membersError } = await supabase
-        .from('projects_project_members')
-        .select(`
-          user_id,
-          auth_user(id, name, email, role)
-        `)
-        .eq('project_id', id)
-      
-      // If there's an error fetching members, log it but don't fail
-      if (membersError) {
-        console.error(`Error fetching members for project ${id}:`, membersError);
+      // Log but don't fail if members query had an error
+      if (membersResult.error) {
+        console.error(`Error fetching members for project ${id}:`, membersResult.error);
       }
       
       // Transform members to match expected format
-      const transformedMembers = (members || []).map(member => ({
+      const transformedMembers = members.map(member => ({
         id: member.auth_user?.id || member.user_id,
         name: member.auth_user?.name || 'Unknown User',
         email: member.auth_user?.email || '',
@@ -317,7 +320,7 @@ export const supabaseDb = {
         data: {
           ...project,
           members: transformedMembers, // Use 'members' for components
-          project_members: members || [] // Keep both for compatibility
+          project_members: members // Keep both for compatibility
         },
         error: null
       }
@@ -341,6 +344,7 @@ export const supabaseDb = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         is_archived: false,  // ✅ Add required field
+        project_type: projectData.project_type || 'general',  // ✅ Default project_type to prevent NOT NULL violation
         status: projectData.status || 'planning',  // ✅ Default status
         // Set defaults for fields that might be missing
         start_date: projectData.start_date || null,

@@ -160,7 +160,7 @@ export default function ProjectDetailPage() {
         taskService.getProjectTasks(Number(params?.id)),
         projectService.getProjects()
       ]);
-      setProject(projectData);
+      setProject(projectData as any);
       setTasks(tasksData);
       setAllProjects(projectsData);
     } catch (err: any) {
