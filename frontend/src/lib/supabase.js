@@ -293,8 +293,8 @@ export const supabaseDb = {
       return {
         data: {
           ...project,
-          members: transformedMembers, // Use 'members' for components
-          project_members: members || [] // Keep both for compatibility
+          members: transformedMembers,
+          project_members: transformedMembers
         },
         error: null
       }
