@@ -107,9 +107,9 @@ export default function MessagesPage() {
     // Initial fetch
     fetchMessages(selectedConversation);
     
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates for this conversation
     const channel = supabase
-      .channel('messages')
+      .channel(`messages-${selectedConversation}`)
       .on(
         'postgres_changes',
         {
@@ -119,24 +119,24 @@ export default function MessagesPage() {
           filter: `conversation_id=eq.${selectedConversation}`
         },
         async (payload) => {
-          // Handle new message
           const newMessage = payload.new as any;
           
-          // Fetch sender name
+          // Don't add duplicate if it's our own optimistic message
+          if (newMessage.sender_id === user?.id) return;
+          
+          // Fetch sender info
           const { data: sender } = await supabase
             .from('auth_user')
-            .select('name')
+            .select('name, avatar_url')
             .eq('id', newMessage.sender_id)
             .single();
           
           // Add to messages state immediately
           setMessages(prev => [...prev, {
             ...newMessage,
-            sender_name: sender?.name || 'User'
+            sender_name: sender?.name || 'User',
+            sender_avatar_url: sender?.avatar_url
           }]);
-          
-          // Refresh conversations list to update last message
-          fetchConversations();
         }
       )
       .subscribe();
@@ -340,85 +340,47 @@ export default function MessagesPage() {
 
   const selectedConv = conversations.find(c => c.conversation_id === selectedConversation);
 
+  // Delete entire conversation
+  const deleteConversation = async () => {
+    if (!selectedConversation || !user?.id) return;
+    if (!confirm('Are you sure you want to delete this entire conversation? This cannot be undone.')) return;
+    
+    try {
+      // Delete all messages in the conversation
+      await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', selectedConversation);
+      
+      // Delete participants
+      await supabase
+        .from('conversation_participants')
+        .delete()
+        .eq('conversation_id', selectedConversation);
+      
+      // Delete conversation
+      await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', selectedConversation);
+      
+      setSelectedConversation(null);
+      setMessages([]);
+      fetchConversations();
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      alert('Failed to delete conversation');
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
       <Sidebar projects={projects} onCreateProject={() => {}} />
       
-      <div style={{ flex: 1, marginLeft: '280px', display: 'flex', background: '#0D0D0D' }}>
-        {/* Conversations List */}
-        <div style={{ width: '320px', background: '#141414', borderRight: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column' }}>
-          {/* Header */}
-          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #1F1F1F' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Messaging</h2>
-            </div>
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              style={{ width: '100%', padding: '0.75rem 1rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
-            />
-          </div>
-
-          {/* Conversations */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {conversations.map((conv) => {
-              const isSelected = conv.conversation_id === selectedConversation;
-              const otherUser = conv.other_participants?.[0];
-              const displayName = conv.conversation_type === 'group' 
-                ? conv.group_name 
-                : otherUser?.name || 'Unknown';
-              
-              return (
-                <div
-                  key={conv.conversation_id}
-                  onClick={() => setSelectedConversation(conv.conversation_id)}
-                  style={{
-                    padding: '1rem 1.25rem',
-                    background: isSelected ? '#1A1A1A' : 'transparent',
-                    borderLeft: isSelected ? '3px solid #3B82F6' : '3px solid transparent',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    borderBottom: '1px solid #1F1F1F'
-                  }}
-                  onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
-                  onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <UserAvatar 
-                      user={{ 
-                        name: displayName || 'Unknown', 
-                        avatar_url: conv.conversation_type === 'group' ? undefined : otherUser?.avatar_url 
-                      }} 
-                      size="lg" 
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {displayName}
-                        </span>
-                        {conv.unread_count > 0 && (
-                          <span style={{ minWidth: '20px', height: '20px', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 700, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.375rem' }}>
-                            {conv.unread_count > 9 ? '9+' : conv.unread_count}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '0.8125rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {conv.last_message?.message_text || 'No messages yet'}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#52525B', marginTop: '0.25rem' }}>
-                        {conv.last_message_at ? new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+      <div style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
         {/* Chat Area */}
         {selectedConversation ? (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0D0D0D', height: '100vh' }}>
             {/* Chat Header */}
             <div style={{ padding: '1.25rem 1.5rem', background: '#141414', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -442,16 +404,15 @@ export default function MessagesPage() {
                   <div style={{ fontSize: '0.8125rem', color: '#10B981' }}>Online</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button style={{ width: '36px', height: '36px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.5rem', transition: 'all 0.2s' }}>
-                  <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-                <button style={{ width: '36px', height: '36px', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.5rem', transition: 'all 0.2s' }}>
-                  <EllipsisVerticalIcon style={{ width: '20px', height: '20px' }} />
-                </button>
-              </div>
+              <button
+                onClick={deleteConversation}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.5rem', color: '#EF4444', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#EF4444'; }}
+              >
+                <TrashIcon style={{ width: '16px', height: '16px' }} />
+                Delete Chat
+              </button>
             </div>
 
             {/* Messages */}
@@ -569,7 +530,7 @@ export default function MessagesPage() {
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem', height: '100vh' }}>
             <div style={{ width: '80px', height: '80px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg style={{ width: '40px', height: '40px', color: '#3B82F6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -577,7 +538,7 @@ export default function MessagesPage() {
             </div>
             <div style={{ textAlign: 'center' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '0.5rem' }}>Select a conversation</h3>
-              <p style={{ color: '#71717A', fontSize: '0.875rem' }}>Choose a chat from the sidebar to start messaging</p>
+              <p style={{ color: '#71717A', fontSize: '0.875rem' }}>Choose a team member from the sidebar to start messaging</p>
             </div>
           </div>
         )}
