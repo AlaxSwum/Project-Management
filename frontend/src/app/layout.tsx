@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ElectronProvider } from "@/components/ElectronProvider";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 
 export const metadata: Metadata = {
   title: "Focus - Project Management",
@@ -50,9 +51,11 @@ export default function RootLayout({
         />
         <ElectronProvider>
         <AuthProvider>
+          <SidebarProvider>
           <div className="min-h-full" style={{ background: '#0D0D0D', minHeight: '100vh', color: '#FFFFFF' }}>
             {children}
           </div>
+          </SidebarProvider>
         </AuthProvider>
         </ElectronProvider>
       </body>

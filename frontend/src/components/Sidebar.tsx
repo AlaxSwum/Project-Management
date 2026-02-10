@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebarData } from '@/contexts/SidebarContext';
 import { supabase } from '@/lib/supabase';
-import { projectService } from '@/lib/api-compatibility';
 import {
   HomeIcon,
   CalendarIcon,
@@ -61,106 +61,16 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [myProjects, setMyProjects] = useState<Project[]>(propsProjects || []);
-  const [loadingProjects, setLoadingProjects] = useState(true);
+  const { projects: myProjects, teamMembers, loadingProjects, unreadNotifications, refreshProjects } = useSidebarData();
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
   const [creatingProject, setCreatingProject] = useState(false);
 
-  // Track if projects have been loaded once
-  const projectsLoadedRef = React.useRef(false);
-  
-  // Fetch projects using the API service - ONLY ONCE on mount
-  useEffect(() => {
-    if (!user?.id) {
-      setLoadingProjects(false);
-      return;
-    }
-    
-    // Only fetch once - never re-fetch on navigation
-    if (projectsLoadedRef.current) return;
-    
-    const fetchProjects = async () => {
-      setLoadingProjects(true);
-      try {
-        const projects = await projectService.getProjects();
-        setMyProjects(projects || []);
-        projectsLoadedRef.current = true;
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        setMyProjects([]);
-      } finally {
-        setLoadingProjects(false);
-      }
-    };
-    fetchProjects();
-  }, [user?.id]); // Only depend on user.id
-
-  // Fetch unread notification count
-  useEffect(() => {
-    const fetchNotificationCount = async () => {
-    if (!user?.id) return;
-    
-    try {
-        const { count } = await supabase
-          .from('task_notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('recipient_id', user.id)
-          .eq('is_read', false);
-        
-        setUnreadNotifications(count || 0);
-    } catch (error) {
-        // Error fetching notifications
-      }
-    };
-
-    fetchNotificationCount();
-    
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
-
   const handleLogout = async () => {
       await logout();
       router.push('/login');
   };
-
-  // Get all team members from assigned projects
-  const [teamMembers, setTeamMembers] = React.useState<any[]>([]);
-  
-  React.useEffect(() => {
-    const fetchTeamMembers = async () => {
-      if (!user?.id || !myProjects || myProjects.length === 0) {
-        setTeamMembers([]);
-        return;
-      }
-      
-      try {
-        // Get all unique members from all assigned projects
-        const allMembersMap = new Map();
-        
-        myProjects.forEach(project => {
-          if (project.members && Array.isArray(project.members)) {
-            project.members.forEach(member => {
-              if (member.id !== user.id && !allMembersMap.has(member.id)) {
-                allMembersMap.set(member.id, member);
-              }
-            });
-          }
-        });
-        
-        const members = Array.from(allMembersMap.values()).slice(0, 10);
-        setTeamMembers(members);
-    } catch (error) {
-        setTeamMembers([]);
-      }
-    };
-    
-    fetchTeamMembers();
-  }, [user, myProjects]);
 
   // Create new project function
   const handleCreateProject = async () => {
@@ -190,20 +100,29 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         return;
       }
       
-      // Add creator as a member with 'owner' role using the RPC function
+      // Add creator as a member - try RPC first, fall back to direct insert
       try {
         await supabase.rpc('add_project_member', {
           p_project_id: newProject.id,
           p_user_id: user.id,
           p_role: 'owner'
         });
-      } catch (memberError) {
-        console.error('Error adding member:', memberError);
+      } catch (rpcError) {
+        // Fallback: direct insert into projects_project_members
+        try {
+          await supabase
+            .from('projects_project_members')
+            .insert({
+              project_id: newProject.id,
+              user_id: user.id
+            });
+        } catch (insertError) {
+          console.error('Error adding member (fallback):', insertError);
+        }
       }
       
-      // Refresh projects list
-      const projects = await projectService.getProjects();
-      setMyProjects(projects || []);
+      // Refresh projects list from global context
+      await refreshProjects();
       setNewProjectName('');
       setShowCreateProject(false);
       
