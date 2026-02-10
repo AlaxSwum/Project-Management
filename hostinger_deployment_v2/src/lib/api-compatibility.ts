@@ -210,8 +210,9 @@ export const projectService = {
         throw new Error('Authentication required');
       }
       
-      // Verify current user has access to this project
-      await supabaseDb.getProject(projectId, currentUserId);
+      // Verify current user has access to this project (lightweight check)
+      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, currentUserId);
+      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
       
       const { data, error } = await supabaseDb.addProjectMember(projectId, userId);
       if (error) throw error;
@@ -229,8 +230,9 @@ export const projectService = {
         throw new Error('Authentication required');
       }
       
-      // Verify current user has access to this project
-      await supabaseDb.getProject(projectId, currentUserId);
+      // Verify current user has access to this project (lightweight check)
+      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, currentUserId);
+      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
       
       const { data, error } = await supabaseDb.removeProjectMember(projectId, userId);
       if (error) throw error;
@@ -252,8 +254,9 @@ export const taskService = {
         if (!userId) {
           return [];
         }
-        // Verify access to the specific project
-        await supabaseDb.getProject(projectId, userId); // This will throw if no access
+        // Verify access to the specific project (lightweight check)
+        const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
+        if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
       }
       
       const { data, error } = await supabaseDb.getTasks(projectId);
@@ -272,8 +275,9 @@ export const taskService = {
         return [];
       }
       
-      // Verify user has access to this project
-      await supabaseDb.getProject(projectId, userId); // This will throw if no access
+      // Verify user has access to this project (lightweight check)
+      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
+      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
       
       const { data, error } = await supabaseDb.getTasks(projectId);
       if (error) throw error;
@@ -306,8 +310,9 @@ export const taskService = {
       throw new Error('Authentication required');
     }
     
-    // Verify user has access to this project
-    await supabaseDb.getProject(projectId, userId); // This will throw if no access
+    // Verify user has access to this project (lightweight check)
+    const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
+    if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
     
     const { data, error } = await supabaseDb.createTask({
       ...taskData,
@@ -611,8 +616,9 @@ export const todoService = {
         return [];
       }
       
-      // Verify user has access to this project
-      await supabaseDb.getProject(projectId, userId);
+      // Verify user has access to this project (lightweight check)
+      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
+      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
       
       // Query todo_items table (simplified schema)
       const { data, error } = await supabase.from('todo_items')
@@ -651,8 +657,9 @@ export const todoService = {
         throw new Error('Authentication required');
       }
       
-      // Verify user has access to this project
-      await supabaseDb.getProject(projectId, userId);
+      // Verify user has access to this project (lightweight check)
+      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
+      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
       
       const { data, error } = await supabase.from('todo_items')
         .insert([{

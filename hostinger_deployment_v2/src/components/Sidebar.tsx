@@ -33,6 +33,7 @@ import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
   ChatBubbleLeftRightIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -124,6 +125,22 @@ export default function Sidebar({ projects: externalProjects, onCreateProject }:
     };
     fetchSidebarProjects();
   }, [user?.id, externalProjects]);
+
+  const handleDeleteProject = async (e: React.MouseEvent, projectId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+    try {
+      const { projectService } = await import('@/lib/api-compatibility');
+      await projectService.deleteProject(projectId);
+      // Refresh internal projects list
+      setInternalProjects(prev => prev.filter(p => p.id !== projectId));
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+      alert('Failed to delete project. Please try again.');
+    }
+  };
+
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',
@@ -1663,6 +1680,47 @@ Your report is now available in the system.`);
             font-weight: 600;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
           }
+
+          .project-item-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+          }
+
+          .project-item-wrapper .project-delete-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
+            z-index: 2;
+            color: #9CA3AF;
+            padding: 0;
+          }
+
+          .project-item-wrapper:hover .project-delete-btn {
+            opacity: 1;
+          }
+
+          .project-item-wrapper .project-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #EF4444;
+          }
+
+          .project-item-wrapper:hover .project-count {
+            opacity: 0;
+            pointer-events: none;
+          }
           
           .sidebar.collapsed .project-count {
             opacity: 0;
@@ -2324,28 +2382,37 @@ Your report is now available in the system.`);
             {isProjectsExpanded && (
               <div className="projects-list">
                 {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    href={`/projects/${project.id}`}
-                    className={`project-item ${isActive(`/projects/${project.id}`) ? 'active' : ''}`}
-                    onClick={closeMobileMenu}
-                  >
-                    <div className="project-info">
-                      <div
-                        className="project-color"
-                        style={{ backgroundColor: project.color || '#000000' }}
-                      />
-                      <span className="project-name" style={{
-                        wordWrap: 'break-word',
-                        overflowWrap: 'break-word',
-                        whiteSpace: 'normal',
-                        lineHeight: '1.3'
-                      }}>{project.name}</span>
-                    </div>
-                    <span className="project-count">
-                      {project.completed_task_count || 0}/{project.task_count || 0}
-                    </span>
-                  </Link>
+                  <div key={project.id} className="project-item-wrapper">
+                    <Link
+                      href={`/projects/${project.id}`}
+                      className={`project-item ${isActive(`/projects/${project.id}`) ? 'active' : ''}`}
+                      onClick={closeMobileMenu}
+                      style={{ flex: 1, paddingRight: '2.5rem' }}
+                    >
+                      <div className="project-info">
+                        <div
+                          className="project-color"
+                          style={{ backgroundColor: project.color || '#000000' }}
+                        />
+                        <span className="project-name" style={{
+                          wordWrap: 'break-word',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.3'
+                        }}>{project.name}</span>
+                      </div>
+                      <span className="project-count">
+                        {project.completed_task_count || 0}/{project.task_count || 0}
+                      </span>
+                    </Link>
+                    <button
+                      className="project-delete-btn"
+                      title="Delete project"
+                      onClick={(e) => handleDeleteProject(e, project.id)}
+                    >
+                      <TrashIcon style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

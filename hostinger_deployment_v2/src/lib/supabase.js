@@ -175,6 +175,18 @@ export const supabaseAuth = {
 
 // Database helpers
 export const supabaseDb = {
+  // Lightweight project access check - only verifies membership, no data fetch
+  checkProjectAccess: async (projectId, userId) => {
+    const { data, error } = await supabase
+      .from('projects_project_members')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('user_id', userId)
+      .limit(1)
+      .single()
+    return { hasAccess: !!data && !error, error }
+  },
+
   // Users
   getUsers: async () => {
     const { data, error } = await supabase
@@ -416,7 +428,8 @@ export const supabaseDb = {
       .from('projects_project')
       .delete()
       .eq('id', id)
-    return { data, error }
+      .select()
+    return { data: data?.[0], error }
   },
 
   // Tasks

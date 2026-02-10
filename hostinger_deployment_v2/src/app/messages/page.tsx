@@ -146,7 +146,7 @@ function MessagesContent() {
     }
   }, [searchParams, conversations, user, isLoadingConversations]);
 
-  // Real-time messaging subscription
+  // Real-time messaging subscription for the selected conversation
   useEffect(() => {
     if (!selectedConversation) return;
 
@@ -186,6 +186,46 @@ function MessagesContent() {
       supabase.removeChannel(channel);
     };
   }, [selectedConversation]);
+
+  // Global real-time subscription to refresh conversation list sidebar
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const globalChannel = supabase
+      .channel('messages-global-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload: any) => {
+          const newMsg = payload.new as any;
+          // Skip messages sent by current user (already handled by optimistic update)
+          if (newMsg.sender_id === user?.id) return;
+          // Refresh conversation list to update last message and ordering
+          fetchConversations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+        },
+        () => {
+          // Refresh conversation list when any conversation is updated
+          fetchConversations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(globalChannel);
+    };
+  }, [user?.id]);
 
   // Scroll to bottom
   useEffect(() => {
