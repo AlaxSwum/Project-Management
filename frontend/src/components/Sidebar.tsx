@@ -85,6 +85,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           name: newProjectName.trim(),
           description: '',
           color: newProjectColor,
+          project_type: 'general',
           created_by_id: user.id,
           is_archived: false,
           created_at: new Date().toISOString(),
