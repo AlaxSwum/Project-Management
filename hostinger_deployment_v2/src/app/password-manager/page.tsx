@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import Sidebar from '@/components/Sidebar';
 import { 
   PlusIcon, 
   EyeIcon, 
@@ -465,27 +464,23 @@ export default function PasswordManagerPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+      <div style={{ 
+        padding: '2rem', 
+        background: '#F5F5ED', 
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh'
+      }}>
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#F5F5ED', 
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh'
-        }}>
-          <div style={{ 
-            width: '32px', 
-            height: '32px', 
-            border: '3px solid #C483D9', 
-            borderTop: '3px solid #5884FD', 
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-        </div>
+          width: '32px', 
+          height: '32px', 
+          border: '3px solid #C483D9', 
+          borderTop: '3px solid #5884FD', 
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
       </div>
     );
   }
@@ -505,16 +500,12 @@ export default function PasswordManagerPage() {
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
-
-        <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#F5F5ED', 
-          flex: 1,
-          minHeight: '100vh'
-        }}>
+      <div style={{ 
+        padding: '2rem', 
+        background: '#F5F5ED', 
+        flex: 1,
+        minHeight: '100vh'
+      }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
@@ -870,7 +861,6 @@ export default function PasswordManagerPage() {
             )}
           </div>
         </div>
-      </div>
 
       {/* Create Password Modal */}
       {showCreateModal && (

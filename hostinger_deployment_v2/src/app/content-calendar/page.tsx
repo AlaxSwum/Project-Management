@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import Sidebar from '@/components/Sidebar'
-import MobileHeader from '@/components/MobileHeader'
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface ContentCalendarItem {
@@ -1145,10 +1143,7 @@ export default function ContentCalendarPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
-          marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
           flex: 1,
@@ -1166,16 +1161,12 @@ export default function ContentCalendarPage() {
             animation: 'spin 1s linear infinite'
           }}></div>
         </div>
-      </div>
     )
   }
 
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
         <div style={{ 
-          marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
           flex: 1,
@@ -1211,14 +1202,11 @@ export default function ContentCalendarPage() {
             </button>
           </div>
         </div>
-      </div>
     )
   }
 
   return (
     <>
-      {isMobile && <MobileHeader title="Content Calendar" isMobile={isMobile} />}
-      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -1367,11 +1355,8 @@ export default function ContentCalendarPage() {
         `
       }} />
       
-      <div className="content-calendar-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        
+      <div className="content-calendar-container" style={{ minHeight: '100vh', background: '#f8fafc' }}>
         <div className="content-calendar-main" style={{ 
-          marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '80px' : '2rem',
           background: 'transparent', 

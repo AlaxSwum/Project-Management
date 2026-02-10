@@ -10,8 +10,6 @@ import {
   PlusIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
 import { projectService } from '@/lib/api-compatibility';
 
 interface ChecklistItem {
@@ -672,10 +670,7 @@ export default function PersonalTaskManager() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
-        {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
-        <div style={{ 
-          marginLeft: isMobile ? '0' : '256px',
+      <div style={{ 
           padding: isMobile ? '1rem' : '2rem', 
           background: '#F8FAFC', 
           flex: 1,
@@ -692,7 +687,6 @@ export default function PersonalTaskManager() {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
-        </div>
       </div>
     );
   }
@@ -737,12 +731,7 @@ export default function PersonalTaskManager() {
         `
       }} />
       
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
-        {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
-        {isMobile && <MobileHeader title="Personal Tasks" isMobile={isMobile} />}
-
-        <div style={{ 
-          marginLeft: isMobile ? '0' : '256px',
+      <div style={{ 
           padding: isMobile ? '1rem' : '2rem', 
           background: '#F8FAFC', 
           flex: 1,
@@ -1204,7 +1193,6 @@ export default function PersonalTaskManager() {
               </div>
             </div>
           )}
-        </div>
       </div>
     </>
   );

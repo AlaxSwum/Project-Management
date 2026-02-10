@@ -19,8 +19,6 @@ import {
   PlusIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
-
 interface WeeklyReport {
   id: number;
   employee_id: number;
@@ -398,27 +396,23 @@ Your changes are now saved in the system.`);
   // Show loading state while auth is initializing
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+      <div style={{ 
+        padding: '2rem', 
+        background: '#F5F5ED', 
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh'
+      }}>
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#F5F5ED', 
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh'
-        }}>
-          <div style={{ 
-            width: '32px', 
-            height: '32px', 
-            border: '3px solid #C483D9', 
-            borderTop: '3px solid #5884FD', 
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-        </div>
+          width: '32px', 
+          height: '32px', 
+          border: '3px solid #C483D9', 
+          borderTop: '3px solid #5884FD', 
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
       </div>
     );
   }
@@ -438,16 +432,12 @@ Your changes are now saved in the system.`);
         `
       }} />
 
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
-
-        <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#fafafa', 
-          flex: 1,
-          minHeight: '100vh'
-        }}>
+      <div style={{ 
+        padding: '2rem', 
+        background: '#fafafa', 
+        flex: 1,
+        minHeight: '100vh'
+      }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
@@ -875,7 +865,6 @@ Your changes are now saved in the system.`);
             </div>
           )}
         </div>
-      </div>
     </>
   );
 } 

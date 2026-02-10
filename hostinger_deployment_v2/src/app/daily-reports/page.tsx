@@ -21,8 +21,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon as ChevronRightIconSolid,
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
-
 interface DailyReport {
   id: number;
   employee_id: number;
@@ -330,11 +328,7 @@ export default function DailyReportsPage() {
         `
       }} />
 
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
-
-        <div style={{ 
-          marginLeft: '256px',
+      <div style={{ 
           padding: '2rem', 
           background: '#fafafa', 
           flex: 1,
@@ -720,7 +714,6 @@ export default function DailyReportsPage() {
             </div>
           )}
         </div>
-      </div>
 
       {/* Report Detail Modal */}
       {showReportDetail && selectedReport && (

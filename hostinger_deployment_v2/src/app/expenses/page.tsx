@@ -24,8 +24,6 @@ import {
   ShareIcon,
   CogIcon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
-
 interface ExpenseFolder {
   id: number;
   name: string;
@@ -617,11 +615,7 @@ export default function ExpensesPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
-
-        <div style={{ 
-          marginLeft: isMobile ? '0' : '256px',
+      <div style={{ 
           padding: isMobile ? '1rem' : '2rem', 
           background: '#f8fafc', 
           flex: 1,
@@ -1199,7 +1193,6 @@ export default function ExpensesPage() {
             </div>
           )}
         </div>
-      </div>
 
       {/* Create Folder Modal */}
       {showCreateFolder && (

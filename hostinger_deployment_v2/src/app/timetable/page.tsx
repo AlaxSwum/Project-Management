@@ -14,10 +14,8 @@ import {
   XMarkIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
-import MobileHeader from '@/components/MobileHeader';
 
 interface Project {
   id: number;
@@ -607,8 +605,6 @@ export default function TimetablePage() {
 
   return (
     <div>
-      {isMobile && <MobileHeader title="Timetable" isMobile={isMobile} />}
-      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -629,7 +625,6 @@ export default function TimetablePage() {
           }
           .main-content {
             flex: 1;
-            margin-left: ${isMobile ? '0' : '280px'};
             background: transparent;
             max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
             overflow-x: hidden;
@@ -2223,10 +2218,7 @@ export default function TimetablePage() {
         `
       }} />
 
-      <div className="timetable-container">
-        {!isMobile && <Sidebar projects={projects} onCreateProject={handleCreateProject} />}
-
-        <main className="main-content">
+      <main className="main-content">
           <header className="header">
             <div className="header-content">
               <div>
@@ -3219,7 +3211,6 @@ export default function TimetablePage() {
               )}
           </div>
         </main>
-      </div>
 
       {/* Meeting Detail Modal */}
       {showMeetingDetail && selectedMeeting && (

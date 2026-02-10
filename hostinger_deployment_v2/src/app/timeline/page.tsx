@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
 import {
   PlusIcon,
@@ -813,15 +811,9 @@ export default function TimelineRoadmapPage() {
 
   return (
     <>
-      <MobileHeader title="Timeline & Roadmap" isMobile={isMobile} />
-      
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'white' }}>
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        
-        <div style={{
-          marginLeft: isMobile ? '0' : '280px',
+      <div style={{
           flex: 1,
-          padding: isMobile ? '90px 16px 20px' : '24px',
+          padding: isMobile ? '16px' : '24px',
           maxWidth: '100%',
           overflow: 'hidden'
         }}>
@@ -1379,7 +1371,6 @@ export default function TimelineRoadmapPage() {
             </>
           )}
         </div>
-      </div>
 
       {/* CREATE FOLDER MODAL */}
       {showFolderModal && (

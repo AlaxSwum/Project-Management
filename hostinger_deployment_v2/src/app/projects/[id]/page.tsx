@@ -22,11 +22,9 @@ import {
   ChevronRightIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
 import ProjectMembersModal from '@/components/ProjectMembersModal';
 import TodoListComponent from '@/components/TodoListComponent';
-import MobileHeader from '@/components/MobileHeader';
 
 interface User {
   id: number;
@@ -586,8 +584,6 @@ export default function ProjectDetailPage() {
 
   return (
     <div>
-      <MobileHeader title={project ? `Project: ${project.name}` : 'Project Details'} isMobile={isMobile} />
-      
       <style dangerouslySetInnerHTML={{
         __html: `
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -650,10 +646,9 @@ export default function ProjectDetailPage() {
           
           .main-content {
             flex: 1;
-            margin-left: ${isMobile ? '0' : '256px'};
             background: transparent;
             overflow-x: hidden;
-            max-width: ${isMobile ? '100vw' : 'calc(100vw - 256px)'};
+            max-width: 100vw;
             position: relative;
             z-index: 1;
             padding-top: ${isMobile ? '70px' : '0'};
@@ -1292,10 +1287,6 @@ export default function ProjectDetailPage() {
           }
           /* Mobile Responsive Styles */
           @media (max-width: 768px) {
-            .main-content {
-              margin-left: 0;
-            }
-            
             .project-stats {
               display: none !important;
             }
@@ -3227,9 +3218,6 @@ export default function ProjectDetailPage() {
             }
           }
           @media (max-width: 768px) {
-            .main-content {
-              margin-left: 0;
-            }
             .board-grid {
               grid-template-columns: 1fr;
               gap: 0.75rem;
@@ -3353,7 +3341,6 @@ export default function ProjectDetailPage() {
             }
             
             .main-content {
-              margin-left: 0 !important;
               max-width: 100vw !important;
               overflow-x: hidden !important;
               width: 100% !important;
@@ -3878,13 +3865,6 @@ export default function ProjectDetailPage() {
       }} />
       
       <div className="project-container">
-      {!isMobile && (
-        <Sidebar 
-          projects={allProjects} 
-          onCreateProject={() => {}} 
-        />
-      )}
-        
         <div className="main-content">
           <header className="header">
             <div className="header-content">

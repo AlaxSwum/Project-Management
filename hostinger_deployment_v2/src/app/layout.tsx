@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import DashboardLayoutWrapper from "@/components/DashboardLayoutWrapper";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -35,9 +36,9 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <AuthProvider>
-          <div className="min-h-full" style={{ background: '#F5F5ED' }}>
+          <DashboardLayoutWrapper>
             {children}
-          </div>
+          </DashboardLayoutWrapper>
         </AuthProvider>
       </body>
     </html>

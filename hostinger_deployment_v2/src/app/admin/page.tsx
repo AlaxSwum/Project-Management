@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@supabase/supabase-js';
-import Sidebar from '@/components/Sidebar';
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -810,19 +808,13 @@ export default function AdminDashboardPage() {
   return (
     <>
       <style jsx>{`
-        .admin-container {
-          min-height: 100vh;
-          display: flex;
-          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
-          position: relative;
-          overflow: hidden;
-        }
         .main-content {
           flex: 1;
-          margin-left: 280px;
           background: transparent;
           position: relative;
           z-index: 1;
+          min-height: 100vh;
+          background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
         }
         .header {
           background: rgba(255, 255, 255, 0.95);
@@ -857,9 +849,7 @@ export default function AdminDashboardPage() {
           margin: 0 auto;
         }
       `}</style>
-      <div className="admin-container">
-        <Sidebar projects={sidebarProjects} onCreateProject={() => router.push('/dashboard')} />
-        <div className="main-content">
+      <div className="main-content">
           <div className="header">
             <div className="header-content">
               <h1 className="title">Admin Dashboard</h1>
@@ -2090,7 +2080,6 @@ export default function AdminDashboardPage() {
         </div>
       )}
           </div>
-        </div>
       </div>
     </>
   );

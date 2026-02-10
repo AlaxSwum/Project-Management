@@ -24,9 +24,7 @@ import {
   ListBulletIcon,
   Squares2X2Icon
 } from '@heroicons/react/24/outline';
-import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
-import MobileHeader from '@/components/MobileHeader';
 
 interface User {
   id: number;
@@ -650,8 +648,6 @@ export default function MyTasksPage() {
 
   return (
     <div>
-      <MobileHeader title="My Tasks" isMobile={isMobile} />
-      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -681,7 +677,6 @@ export default function MyTasksPage() {
           }
           .main-content {
             flex: 1;
-            margin-left: ${isMobile ? '0' : '256px'};
             background: transparent;
             padding-top: ${isMobile ? '70px' : '0'};
             padding-left: ${isMobile ? '12px' : '0'};
@@ -1604,15 +1599,7 @@ export default function MyTasksPage() {
         `
       }} />
       
-      <div className="my-tasks-container">
-        {!isMobile && (
-          <Sidebar 
-            projects={allProjects} 
-            onCreateProject={() => {}} 
-          />
-        )}
-        
-        <div className="main-content">
+      <div className="main-content">
           <header className="header">
             <div className="header-content">
               <div>
@@ -2121,7 +2108,6 @@ export default function MyTasksPage() {
               onDelete={handleDeleteTask}
             />
           )}
-        </div>
       </div>
     </div>
   );

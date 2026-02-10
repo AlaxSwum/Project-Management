@@ -43,8 +43,8 @@ interface Project {
 }
 
 interface SidebarProps {
-  projects: Project[];
-  onCreateProject: () => void;
+  projects?: Project[];
+  onCreateProject?: () => void;
 }
 
 /*
@@ -84,10 +84,11 @@ HR APPROVAL WORKFLOW:
 5. Employee receives notification via Supabase realtime or email
 */
 
-export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
+export default function Sidebar({ projects: externalProjects, onCreateProject }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [internalProjects, setInternalProjects] = useState<Project[]>([]);
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -97,6 +98,31 @@ export default function Sidebar({ projects, onCreateProject }: SidebarProps) {
   const [hasContentCalendarAccess, setHasContentCalendarAccess] = useState(false);
   const [hasClassesAccess, setHasClassesAccess] = useState(false);
   const [hasCompanyOutreachAccess, setHasCompanyOutreachAccess] = useState(false);
+
+  // Use external projects if provided, otherwise fetch internally
+  const projects = (externalProjects && externalProjects.length > 0) ? externalProjects : internalProjects;
+
+  // Fetch projects internally if none provided from parent
+  useEffect(() => {
+    const fetchSidebarProjects = async () => {
+      if (externalProjects && externalProjects.length > 0) return; // Already have projects from parent
+      if (!user?.id) return;
+      try {
+        const { projectService } = await import('@/lib/api-compatibility');
+        const data = await projectService.getProjects();
+        if (Array.isArray(data)) {
+          setInternalProjects(data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            color: p.color || '#3B82F6'
+          })));
+        }
+      } catch (err) {
+        console.error('Sidebar: Failed to fetch projects:', err);
+      }
+    };
+    fetchSidebarProjects();
+  }, [user?.id, externalProjects]);
   const [absenceFormData, setAbsenceFormData] = useState({
     startDate: '',
     endDate: '',

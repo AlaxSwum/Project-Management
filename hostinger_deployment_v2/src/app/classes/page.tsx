@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import Sidebar from '@/components/Sidebar'
-import MobileHeader from '@/components/MobileHeader'
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon, ClockIcon, MapPinIcon, UsersIcon, CurrencyDollarIcon, PhoneIcon, LinkIcon } from '@heroicons/react/24/outline'
 
 // Reusable form styles
@@ -903,71 +901,63 @@ export default function ClassesPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
+      <div style={{ 
+        padding: '2rem', 
+        background: '#F5F5ED', 
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh'
+      }}>
         <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#F5F5ED', 
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh'
-        }}>
-          <div style={{ 
-            width: '32px', 
-            height: '32px', 
-            border: '3px solid #C483D9', 
-            borderTop: '3px solid #5884FD', 
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-        </div>
+          width: '32px', 
+          height: '32px', 
+          border: '3px solid #C483D9', 
+          borderTop: '3px solid #5884FD', 
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
       </div>
     )
   }
 
   if (!hasAccess) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
-          marginLeft: '256px',
-          padding: '2rem', 
-          background: '#F5F5ED', 
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh'
-        }}>
-          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
-              Access Denied
-            </h1>
-            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
-              You don't have permission to access the Classes section.
-              Please contact an administrator to request access.
-            </p>
-            <button
-              onClick={() => router.push('/dashboard')}
-              style={{
-                padding: '0.875rem 2rem',
-                background: '#5884FD',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
-              }}
-            >
-              Back to Dashboard
-            </button>
-          </div>
+      <div style={{ 
+        padding: '2rem', 
+        background: '#F5F5ED', 
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh'
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: '500px' }}>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
+            Access Denied
+          </h1>
+          <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
+            You don't have permission to access the Classes section.
+            Please contact an administrator to request access.
+          </p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            style={{
+              padding: '0.875rem 2rem',
+              background: '#5884FD',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+            }}
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     )
@@ -975,7 +965,6 @@ export default function ClassesPage() {
 
   return (
     <>
-      {isMobile && <MobileHeader title="Classes" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -1154,17 +1143,12 @@ export default function ClassesPage() {
         `
       }} />
       
-      <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        
-        <div className="classes-main-content" style={{ 
-          marginLeft: isMobile ? '0' : '256px',
-          padding: '2rem', 
-          background: 'transparent', 
-          flex: 1,
-          minHeight: '100vh',
-          paddingTop: isMobile ? '80px' : '2rem'
-        }}>
+      <div className="classes-main-content" style={{ 
+        padding: '2rem', 
+        background: 'transparent', 
+        flex: 1,
+        minHeight: '100vh'
+      }}>
           {/* Header */}
           <div className="classes-header" style={{ 
             display: 'flex', 
@@ -1856,7 +1840,6 @@ export default function ClassesPage() {
               <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>Folders organize your classes by category (e.g., PR Workshops, Media Training, etc.)</p>
             </div>
           )}
-        </div>
       </div>
 
       {/* Add Class Form Modal */}

@@ -10,7 +10,6 @@ import {
   PlusIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-  import Sidebar from '@/components/Sidebar';
   import { projectService } from '@/lib/api-compatibility';
 
 interface CalendarEvent {
@@ -514,11 +513,7 @@ export default function PersonalCalendarPage() {
   }
 
   return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <Sidebar projects={projects} onCreateProject={() => {}} />
-
         <div style={{ 
-          marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
           flex: 1,
@@ -819,6 +814,5 @@ export default function PersonalCalendarPage() {
               </div>
             )}
           </div>
-        </div>
   );
 }
