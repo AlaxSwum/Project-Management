@@ -380,9 +380,9 @@ export default function CalendarPage() {
       setShowCreateMeeting(false);
     } catch (err) {
       console.error('Error creating meeting:', err);
+      alert('Failed to create meeting');
     } finally {
       setCreatingMeeting(false);
-      alert('Failed to create meeting');
     }
   };
 
