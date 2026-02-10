@@ -33,6 +33,9 @@ interface SidebarContextType {
   teamMembers: TeamMember[];
   loadingProjects: boolean;
   unreadNotifications: number;
+  unreadMessages: Record<number, number>; // userId -> unread count
+  totalUnreadMessages: number;
+  clearUnreadForUser: (userId: number) => void;
   refreshProjects: () => Promise<void>;
 }
 
@@ -41,6 +44,9 @@ const SidebarContext = createContext<SidebarContextType>({
   teamMembers: [],
   loadingProjects: true,
   unreadNotifications: 0,
+  unreadMessages: {},
+  totalUnreadMessages: 0,
+  clearUnreadForUser: () => {},
   refreshProjects: async () => {},
 });
 
@@ -54,7 +60,19 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState<Record<number, number>>({});
   const [hasFetched, setHasFetched] = useState(false);
+
+  const totalUnreadMessages = Object.values(unreadMessages).reduce((sum, n) => sum + n, 0);
+
+  // Clear unread for a specific user when opening their chat
+  const clearUnreadForUser = useCallback((userId: number) => {
+    setUnreadMessages(prev => {
+      const next = { ...prev };
+      delete next[userId];
+      return next;
+    });
+  }, []);
 
   // Fetch projects ONCE when user logs in
   const refreshProjects = useCallback(async () => {
@@ -114,8 +132,43 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [user?.id]);
 
+  // Real-time message listener - get notified when ANY new message arrives
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('global-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const msg = payload.new as any;
+          // Only count messages from others, not our own
+          if (msg.sender_id && msg.sender_id !== user.id) {
+            setUnreadMessages(prev => ({
+              ...prev,
+              [msg.sender_id]: (prev[msg.sender_id] || 0) + 1
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   return (
-    <SidebarContext.Provider value={{ projects, teamMembers, loadingProjects, unreadNotifications, refreshProjects }}>
+    <SidebarContext.Provider value={{ 
+      projects, teamMembers, loadingProjects, unreadNotifications,
+      unreadMessages, totalUnreadMessages, clearUnreadForUser,
+      refreshProjects 
+    }}>
       {children}
     </SidebarContext.Provider>
   );

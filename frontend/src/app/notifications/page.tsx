@@ -145,6 +145,35 @@ export default function NotificationsPage() {
     }
   };
 
+  const deleteNotification = async (notificationId: number) => {
+    try {
+      await supabase
+        .from('task_notifications')
+        .delete()
+        .eq('id', notificationId);
+      
+      setNotifications(notifications.filter(n => n.id !== notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  const deleteAllNotifications = async () => {
+    if (!user?.id) return;
+    if (!confirm('Delete all notifications? This cannot be undone.')) return;
+    
+    try {
+      await supabase
+        .from('task_notifications')
+        .delete()
+        .eq('recipient_id', user.id);
+      
+      setNotifications([]);
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'status_changed':
@@ -213,6 +242,15 @@ export default function NotificationsPage() {
                   Mark All as Read
                 </button>
               )}
+              <button
+                onClick={deleteAllNotifications}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#EF4444'; }}
+              >
+                <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                Delete All
+              </button>
             </div>
 
             {/* Filter Tabs */}
@@ -337,6 +375,18 @@ export default function NotificationsPage() {
                               <CheckIcon style={{ width: '16px', height: '16px' }} />
                             </button>
                           )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
+                            }}
+                            style={{ padding: '0.375rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+                            title="Delete notification"
+                          >
+                            <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
                         </div>
 
                         {/* Task Name Badge */}

@@ -214,12 +214,12 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      // Fetch current project and tasks using the API (includes member data)
-      const [projectData, tasksData, allProjectsData] = await Promise.all([
+      // Fetch current project and tasks (don't re-fetch all projects - sidebar has them)
+      const [projectData, tasksData] = await Promise.all([
         projectService.getProject(Number(params?.id)),
-        taskService.getProjectTasks(Number(params?.id)),
-        projectService.getProjects()
+        taskService.getProjectTasks(Number(params?.id))
       ]);
+      const allProjectsData = null; // Use sidebar context instead
       
       // Check if user has access by seeing if they're a member in the project data
       if (projectData && projectData.members && Array.isArray(projectData.members)) {
@@ -885,8 +885,8 @@ n              {/* Team Members Button - Avatar Style */}
                 New Task
                   </button>
                   
-                  {/* Delete Project Button - Only for owners/admins */}
-                  {isProjectOwner() && (
+                  {/* Delete Project Button */}
+                  {(
                     <button
                       onClick={() => setShowDeleteProject(true)}
                       style={{ 
@@ -2156,7 +2156,7 @@ n              {/* Team Members Button - Avatar Style */}
                           {/* Footer with Assignee */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                             <AvatarGroup users={task.assignees || []} max={3} size="sm" />
-                          </div>
+                                    </div>
                 </div>
                       );
                     })}
@@ -2265,8 +2265,8 @@ n              {/* Team Members Button - Avatar Style */}
                                 <span style={{ color: '#A1A1AA', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.name}</span>
                               </div>
                             ))}
-                          </div>
-                        )}
+                                </div>
+                              )}
                       </div>
 
                       {/* Completed Section */}
@@ -2277,8 +2277,8 @@ n              {/* Team Members Button - Avatar Style */}
                             <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>Completed</span>
                           </div>
                           <span style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>{monthCompleted.length}</span>
-                        </div>
-                      </div>
+              </div>
+            </div>
 
                       {/* To Do Section */}
                       <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
@@ -3509,7 +3509,7 @@ n              {/* Team Members Button - Avatar Style */}
                         <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
                           <UserAvatar user={assignee} size="xs" />
                           <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
-                        </div>
+                </div>
                       ))}
                       {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
                         <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>

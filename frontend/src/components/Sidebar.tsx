@@ -61,7 +61,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { projects: myProjects, teamMembers, loadingProjects, unreadNotifications, refreshProjects } = useSidebarData();
+  const { projects: myProjects, teamMembers, loadingProjects, unreadNotifications, unreadMessages, totalUnreadMessages, clearUnreadForUser, refreshProjects } = useSidebarData();
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
@@ -391,10 +391,12 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {teamMembers.length > 0 ? teamMembers.map((member) => {
               const isActiveChat = pathname === '/messages' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('user') === String(member.id);
+              const memberUnread = unreadMessages[member.id] || 0;
               return (
                 <Link
                   key={member.id}
                   href={`/messages?user=${member.id}`}
+                  onClick={() => clearUnreadForUser(member.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: isActiveChat ? '#FFFFFF' : '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none', background: isActiveChat ? '#1A1A1A' : 'transparent' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
                   onMouseLeave={(e) => { if (!isActiveChat) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; } }}
@@ -413,6 +415,11 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>member</div>
                   </div>
+                  {memberUnread > 0 && (
+                    <span style={{ minWidth: '20px', height: '20px', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 700, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.375rem' }}>
+                      {memberUnread > 9 ? '9+' : memberUnread}
+                    </span>
+                  )}
                 </Link>
               );
             }) : (
