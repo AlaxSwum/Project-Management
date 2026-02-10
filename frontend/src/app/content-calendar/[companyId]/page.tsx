@@ -87,12 +87,21 @@ export default function CompanyCalendarPage() {
   
   const [postForm, setPostForm] = useState({
     title: '', description: '', content_type: 'static' as ContentType, category: '', status: 'draft' as PostStatus,
-    planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '',
+    planned_date: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`, planned_time: '', content_deadline: '', graphic_deadline: '',
     owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '',
     media_buying_notes: '', media_budget: 0, platforms: ['facebook'] as Platform[]
   })
   
   const [platformBudgets, setPlatformBudgets] = useState<PlatformBudget[]>([])
+
+  // Timezone-safe date helpers to prevent date shifting
+  const parseDateLocal = (dateStr: string): Date => {
+    const [y, m, d] = dateStr.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+  const formatDateLocal = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -140,7 +149,7 @@ export default function CompanyCalendarPage() {
   useEffect(() => { if (user?.id && companyId) { fetchCompany(); fetchMembers(); fetchPosts() } }, [user?.id, companyId, fetchCompany, fetchMembers, fetchPosts])
 
   const resetForm = () => {
-    setPostForm({ title: '', description: '', content_type: 'static', category: '', status: 'draft', planned_date: new Date().toISOString().split('T')[0], planned_time: '', content_deadline: '', graphic_deadline: '', owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '', media_buying_notes: '', media_budget: 0, platforms: ['facebook'] })
+    setPostForm({ title: '', description: '', content_type: 'static', category: '', status: 'draft', planned_date: formatDateLocal(new Date()), planned_time: '', content_deadline: '', graphic_deadline: '', owner_id: '', owner_name: '', designer_id: '', designer_name: '', hashtags: '', visual_concept: '', key_points: '', media_buying_notes: '', media_budget: 0, platforms: ['facebook'] })
     setPlatformBudgets([{ platform: 'facebook', budget: 0 }])
   }
 
@@ -268,7 +277,7 @@ export default function CompanyCalendarPage() {
     return days
   }, [currentMonth])
 
-  const postsByDate = useMemo(() => { const map: Record<string, ContentPost[]> = {}; posts.forEach(post => { const key = new Date(post.planned_date).toDateString(); if (!map[key]) map[key] = []; map[key].push(post) }); return map }, [posts])
+  const postsByDate = useMemo(() => { const map: Record<string, ContentPost[]> = {}; posts.forEach(post => { if (!post.planned_date) return; const key = parseDateLocal(post.planned_date).toDateString(); if (!map[key]) map[key] = []; map[key].push(post) }); return map }, [posts])
 
   const totalBudget = useMemo(() => posts.reduce((sum, p) => sum + (p.media_budget || 0), 0), [posts])
 
@@ -392,7 +401,7 @@ export default function CompanyCalendarPage() {
     if (!week) return
     
     const date = week.days[dayIdx]
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateLocal(date)
     
     try {
       const { supabase } = await import('@/lib/supabase')
@@ -449,7 +458,7 @@ export default function CompanyCalendarPage() {
     if (!week) return
     
     const date = week.days[dayIdx]
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateLocal(date)
     const dayPosts = postsByDate[date.toDateString()] || []
     
     try {
@@ -469,6 +478,12 @@ export default function CompanyCalendarPage() {
           case 'graphic_link': updateData.graphic_link = editValue; break
           case 'video_link': updateData.video_link = editValue; break
           case 'content_link': updateData.content_link = editValue; break
+          case 'post_link':
+            // post_link is stored on the target, not the post itself
+            if (post.targets?.[0]?.id) {
+              await supabase.from('content_post_targets').update({ permalink: editValue }).eq('id', post.targets[0].id)
+            }
+            break
         }
         
         if (Object.keys(updateData).length > 0) {
@@ -485,6 +500,7 @@ export default function CompanyCalendarPage() {
           created_by: String(user?.id)
         }
         
+        let postLinkValue = ''
         switch (field) {
           case 'topic': newPostData.description = editValue; break
           case 'post_type': newPostData.content_type = editValue.toLowerCase(); break
@@ -494,6 +510,7 @@ export default function CompanyCalendarPage() {
           case 'graphic_link': newPostData.graphic_link = editValue; break
           case 'video_link': newPostData.video_link = editValue; break
           case 'content_link': newPostData.content_link = editValue; break
+          case 'post_link': postLinkValue = editValue; break
         }
         
         const { data: newPost } = await supabase.from('content_posts').insert(newPostData).select().single()
@@ -503,7 +520,8 @@ export default function CompanyCalendarPage() {
           await supabase.from('content_post_targets').insert({
             post_id: newPost.id,
             platform: 'facebook',
-            platform_status: 'planned'
+            platform_status: 'planned',
+            permalink: postLinkValue || null
           })
         }
       }
@@ -949,7 +967,7 @@ export default function CompanyCalendarPage() {
                   <div className="cal-days-grid">
                     {calendarDays.map((day, idx) => {
                       const dayPosts = postsByDate[day.date.toDateString()] || []
-                      const dateStr = day.date.toISOString().split('T')[0]
+                      const dateStr = formatDateLocal(day.date)
                       return (
                         <div key={idx} onClick={() => openNewPost(dateStr)} className={`cal-day ${!day.isCurrentMonth ? 'other' : ''}`}>
                           <div className={`cal-day-num ${!day.isCurrentMonth ? 'other' : ''} ${day.isToday ? 'today' : ''}`}>{day.date.getDate()}</div>
