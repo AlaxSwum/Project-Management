@@ -325,8 +325,12 @@ export default function CalendarPage() {
     }
   };
 
+  const [creatingMeeting, setCreatingMeeting] = useState(false);
+  
   const createMeeting = async () => {
     if (!newMeeting.title.trim() || !newMeeting.start_date) return;
+    if (creatingMeeting) return; // Prevent double submission
+    setCreatingMeeting(true);
     
     try {
       // Insert into projects_meeting table with all fields
@@ -351,6 +355,7 @@ export default function CalendarPage() {
       if (error) {
         console.error('Error creating meeting:', error);
         alert('Failed to create meeting: ' + error.message);
+        setCreatingMeeting(false);
         return;
       }
       
@@ -375,6 +380,8 @@ export default function CalendarPage() {
       setShowCreateMeeting(false);
     } catch (err) {
       console.error('Error creating meeting:', err);
+    } finally {
+      setCreatingMeeting(false);
       alert('Failed to create meeting');
     }
   };

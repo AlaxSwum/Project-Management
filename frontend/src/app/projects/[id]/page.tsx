@@ -243,8 +243,12 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const [creatingTask, setCreatingTask] = useState(false);
+  
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creatingTask) return; // Prevent double submission
+    setCreatingTask(true);
     try {
       const taskData: any = {
         name: newTask.name.trim(),
@@ -253,7 +257,7 @@ export default function ProjectDetailPage() {
         status: 'todo',
         assignee_ids: newTask.assignee_ids,
         report_to_ids: newTask.report_to_ids,
-        tags: newTask.tags.trim(), // Database column is 'tags', not 'tags_list'
+        tags: newTask.tags.trim(),
         start_date: newTask.start_date || null,
         due_date: newTask.due_date || null,
       };
@@ -280,7 +284,9 @@ export default function ProjectDetailPage() {
       setShowCreateTask(false);
       fetchProject();
     } catch (err) {
-      // Error creating task
+      console.error('Error creating task:', err);
+    } finally {
+      setCreatingTask(false);
     }
   };
 

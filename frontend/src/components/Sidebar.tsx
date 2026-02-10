@@ -102,28 +102,29 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         return;
       }
       
-      // Add creator as a member - try RPC first, fall back to direct insert
-      try {
-        await supabase.rpc('add_project_member', {
-          p_project_id: newProject.id,
-          p_user_id: user.id,
-          p_role: 'owner'
+      // Add creator as admin member - direct insert (most reliable)
+      const { error: memberError } = await supabase
+        .from('projects_project_members')
+        .insert({
+          project_id: newProject.id,
+          user_id: user.id
         });
-      } catch (rpcError) {
-        // Fallback: direct insert into projects_project_members
+      
+      if (memberError) {
+        console.error('Error adding member:', memberError);
+        // Try RPC as fallback
         try {
-          await supabase
-            .from('projects_project_members')
-            .insert({
-              project_id: newProject.id,
-              user_id: user.id
-            });
-        } catch (insertError) {
-          console.error('Error adding member (fallback):', insertError);
+          await supabase.rpc('add_project_member', {
+            p_project_id: newProject.id,
+            p_user_id: user.id,
+            p_role: 'admin'
+          });
+        } catch (rpcError) {
+          console.error('RPC fallback also failed:', rpcError);
         }
       }
       
-      // Refresh projects list from global context
+      // Refresh projects list from global context so sidebar updates immediately
       await refreshProjects();
       setNewProjectName('');
       setShowCreateProject(false);
