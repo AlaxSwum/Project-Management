@@ -173,28 +173,24 @@ export const supabaseDb = {
   // Projects - with user-based access control
   getProjects: async (userId) => {
     if (!userId) {
-      // If no userId provided, return empty array for security
       return { data: [], error: null }
     }
 
     try {
-      // First, get all project IDs where the user is a member
+      // Step 1: Get user's project IDs (single query)
       const { data: membershipData, error: membershipError } = await supabase
         .from('projects_project_members')
         .select('project_id')
         .eq('user_id', userId)
 
       if (membershipError) return { data: null, error: membershipError }
-      
-      // If user is not a member of any projects, return empty array
       if (!membershipData || membershipData.length === 0) {
         return { data: [], error: null }
       }
 
-      // Extract project IDs the user has access to
       const accessibleProjectIds = membershipData.map(m => m.project_id)
 
-      // Fetch only the projects the user is a member of
+      // Step 2: Fetch projects (single query)
       const { data: projects, error } = await supabase
         .from('projects_project')
         .select('*')
@@ -202,61 +198,50 @@ export const supabaseDb = {
       
       if (error) return { data: null, error }
       
-      // Fetch project members separately for each accessible project with timeout
-      const projectsWithMembers = await Promise.all(
-        projects.map(async (project) => {
-          try {
-            // Add timeout to prevent hanging queries
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Member fetch timeout')), 3000)
-            );
-            
-            const fetchPromise = supabase
-              .from('projects_project_members')
-              .select(`
-                user_id,
-                auth_user!inner(id, name, email, role, avatar_url)
-              `)
-              .eq('project_id', project.id)
-              .limit(100);
-            
-            const { data: members, error: membersError } = await Promise.race([
-              fetchPromise,
-              timeoutPromise
-            ]).catch(err => {
-              console.error(`Timeout fetching members for project ${project.id}`);
-              return { data: null, error: err };
-            });
-            
-            // If there's an error, log it but don't fail the whole request
-            if (membersError) {
-              console.error(`Error fetching members for project ${project.id}:`, membersError);
-            }
-            
-            // Transform members to match expected format
-            const transformedMembers = (members || []).map(member => ({
-              id: member.auth_user?.id || member.user_id,
-              name: member.auth_user?.name || 'Unknown User',
-              email: member.auth_user?.email || '',
-              role: member.auth_user?.role || 'member',
-              avatar_url: member.auth_user?.avatar_url
-            }));
-            
-            return {
-              ...project,
-              members: transformedMembers, // Use 'members' instead of 'project_members'
-              project_members: members || [] // Keep both for compatibility
-            }
-          } catch (err) {
-            console.error(`Exception fetching members for project ${project.id}:`, err);
-            return {
-              ...project,
-              members: [],
-              project_members: []
-            }
-          }
-        })
-      )
+      // Step 3: Fetch ALL members for ALL projects in ONE query (not per-project!)
+      const { data: allMembers, error: allMembersError } = await supabase
+        .from('projects_project_members')
+        .select('project_id, user_id')
+        .in('project_id', accessibleProjectIds)
+
+      if (allMembersError) {
+        console.error('Error fetching all members:', allMembersError);
+      }
+
+      // Step 4: Get unique user IDs and fetch their info in ONE query
+      const uniqueUserIds = [...new Set((allMembers || []).map(m => m.user_id))];
+      
+      let usersMap = {};
+      if (uniqueUserIds.length > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', uniqueUserIds)
+        
+        if (users) {
+          usersMap = Object.fromEntries(users.map(u => [u.id, u]));
+        }
+      }
+
+      // Step 5: Group members by project and build final result
+      const membersByProject = {};
+      (allMembers || []).forEach(m => {
+        if (!membersByProject[m.project_id]) membersByProject[m.project_id] = [];
+        const userInfo = usersMap[m.user_id];
+        membersByProject[m.project_id].push({
+          id: userInfo?.id || m.user_id,
+          name: userInfo?.name || 'Unknown User',
+          email: userInfo?.email || '',
+          role: userInfo?.role || 'member',
+          avatar_url: userInfo?.avatar_url
+        });
+      });
+
+      const projectsWithMembers = projects.map(project => ({
+        ...project,
+        members: membersByProject[project.id] || [],
+        project_members: membersByProject[project.id] || []
+      }));
       
       return { data: projectsWithMembers, error: null }
     } catch (error) {
@@ -271,19 +256,6 @@ export const supabaseDb = {
     }
 
     try {
-      // First check if user has access to this project
-      const { data: membership, error: membershipError } = await supabase
-//         .from('projects_project_members')
-//         .select('id')
-//         .eq('project_id', id)
-//         .eq('user_id', userId)
-//         .single()
-// 
-//       // Skip membership check for now - allow all users
-//       // if (membershipError || !membership) {
-//       //   return { data: null, error: new Error('Access denied: You are not a member of this project') }
-      // }
-
       // Fetch the project
       const { data: project, error } = await supabase
         .from('projects_project')
@@ -293,49 +265,30 @@ export const supabaseDb = {
       
       if (error) return { data: null, error }
       
-      // Fetch project members separately with timeout
-      let members = null;
-      let membersError = null;
+      // Fetch member user_ids for this project (fast, no join)
+      const { data: memberRows } = await supabase
+        .from('projects_project_members')
+        .select('user_id')
+        .eq('project_id', id)
+
+      // Fetch user details in one query
+      const memberUserIds = (memberRows || []).map(m => m.user_id);
+      let transformedMembers = [];
       
-      try {
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Member fetch timeout')), 3000)
-        );
+      if (memberUserIds.length > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', memberUserIds)
         
-        const fetchPromise = supabase
-          .from('projects_project_members')
-          .select(`
-            user_id,
-            auth_user!inner(id, name, email, role, avatar_url)
-          `)
-          .eq('project_id', id)
-          .limit(100);
-        
-        const result = await Promise.race([fetchPromise, timeoutPromise]).catch(err => {
-          console.error(`Timeout fetching members for project ${id}`);
-          return { data: null, error: err };
-        });
-        
-        members = result.data;
-        membersError = result.error;
-      } catch (err) {
-        console.error(`Exception fetching members for project ${id}:`, err);
-        membersError = err;
+        transformedMembers = (users || []).map(u => ({
+          id: u.id,
+          name: u.name || 'Unknown User',
+          email: u.email || '',
+          role: u.role || 'member',
+          avatar_url: u.avatar_url
+        }));
       }
-      
-      // If there's an error fetching members, log it but don't fail
-      if (membersError) {
-        console.error(`Error fetching members for project ${id}:`, membersError);
-      }
-      
-      // Transform members to match expected format
-      const transformedMembers = (members || []).map(member => ({
-        id: member.auth_user?.id || member.user_id,
-        name: member.auth_user?.name || 'Unknown User',
-        email: member.auth_user?.email || '',
-        role: member.auth_user?.role || 'member',
-        avatar_url: member.auth_user?.avatar_url
-      }));
       
       return {
         data: {
