@@ -137,7 +137,7 @@ export default function CalendarPage() {
       setError(null);
       console.log('Calendar: Fetching meetings for user:', user?.id);
       
-      // Fetch both meetings and projects
+      // Fetch meetings where user is creator OR attendee, plus projects
       const [meetingsData, projectsData] = await Promise.all([
         supabase.from('projects_meeting').select('*').order('date', { ascending: true }),
         projectService.getProjects()
@@ -151,7 +151,15 @@ export default function CalendarPage() {
         return;
       }
       
-      console.log('Calendar: Fetched meetings:', meetingsData.data?.length || 0);
+      // Filter to only show meetings where current user is creator or attendee
+      const myMeetings = (meetingsData.data || []).filter((meeting: any) => {
+        if (meeting.created_by_id === user?.id) return true;
+        if (meeting.attendee_ids && Array.isArray(meeting.attendee_ids) && meeting.attendee_ids.includes(user?.id)) return true;
+        return false;
+      });
+      
+      // Replace data with filtered results
+      meetingsData.data = myMeetings;
       
       // Transform meetings to task format for calendar display
       const transformedMeetings = (meetingsData.data || []).map((meeting: any) => {
@@ -2655,8 +2663,8 @@ export default function CalendarPage() {
                     const isToday = weekStart.toDateString() === today.toDateString();
                     const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
                     const dayNumber = weekStart.getDate();
-                    
-                    return (
+                  
+                  return (
                       <div
                         key={dayIndex}
                         onClick={() => handleDayClick(weekStart)}
@@ -2770,11 +2778,11 @@ export default function CalendarPage() {
                             </div>
                           )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
             ) : null}
 
             {/* Meeting Detail Modal */}
