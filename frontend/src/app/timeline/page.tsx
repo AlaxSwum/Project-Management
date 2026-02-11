@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
 import { createClient } from '@supabase/supabase-js';
 import {
   PlusIcon,
@@ -1343,10 +1342,8 @@ export default function TimelineRoadmapPage() {
 
   return (
     <>
-      <MobileHeader title="Timeline & Roadmap" isMobile={isMobile} />
-      
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         
         <div className="page-main" style={{
           marginLeft: isMobile ? '0' : '280px',

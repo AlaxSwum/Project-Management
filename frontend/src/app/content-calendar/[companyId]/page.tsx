@@ -556,7 +556,6 @@ export default function CompanyCalendarPage() {
 
   return (
     <div>
-      <MobileHeader title={company.name} isMobile={isMobile} />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg); } }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #0D0D0D; }
@@ -709,10 +708,74 @@ export default function CompanyCalendarPage() {
         .cal-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #1F1F1F; display: flex; gap: 0.75rem; background: #0D0D0D; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* TABLET (max-width: 1024px) */
+        @media screen and (max-width: 1024px) {
+          .cal-main { margin-left: 0 !important; padding-top: 56px !important; max-width: 100vw !important; }
+          .cal-header { padding: 1rem !important; }
+          .cal-title { font-size: 1.25rem !important; }
+          .cal-content { flex-direction: column !important; padding: 0.75rem !important; }
+          .cal-drawer { width: 100% !important; min-width: unset !important; max-height: 50vh; border-radius: 12px !important; }
+          .cal-left { max-width: 100% !important; }
+          .cal-day { min-height: 70px !important; padding: 0.375rem !important; }
+          .cal-day-num { font-size: 0.75rem !important; }
+          .cal-post { font-size: 0.6rem !important; }
+          .ms-row { grid-template-columns: 80px repeat(7, minmax(60px, 1fr)) !important; }
+          .ms-cell { padding: 0.25rem !important; font-size: 0.6rem !important; }
+          .ms-label-cell { font-size: 0.55rem !important; }
+          .ms-platform-editor { min-width: 120px !important; }
+          .cal-modal { width: 90vw !important; max-width: 90vw !important; }
+        }
+
+        /* MOBILE (max-width: 768px) */
+        @media screen and (max-width: 768px) {
+          .cal-main { padding-top: 56px !important; }
+          .cal-header { padding: 0.75rem !important; flex-direction: column !important; align-items: flex-start !important; }
+          .cal-actions { width: 100% !important; justify-content: flex-start !important; }
+          .cal-toggle { width: 100% !important; }
+          .cal-toggle-btn { flex: 1 !important; text-align: center !important; font-size: 0.75rem !important; padding: 0.5rem 0.5rem !important; }
+          .cal-content { flex-direction: column !important; padding: 0.5rem !important; gap: 0.5rem !important; }
+          .cal-drawer { width: 100% !important; min-width: unset !important; max-height: 60vh !important; }
+          .cal-drawer-body { padding: 1rem !important; }
+          .cal-day { min-height: 50px !important; padding: 0.25rem !important; }
+          .cal-day-num { font-size: 0.7rem !important; }
+          .cal-post { font-size: 0.55rem !important; padding: 0.125rem 0.25rem !important; }
+          .cal-day-header { padding: 0.5rem 0.25rem !important; font-size: 0.6rem !important; }
+          .cal-cal-header { padding: 0.75rem 1rem !important; }
+          .cal-cal-btn { padding: 0.375rem 0.625rem !important; font-size: 0.75rem !important; }
+          .cal-sheet { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+          .cal-table { min-width: 700px !important; font-size: 0.75rem !important; }
+          .cal-table th { padding: 0.625rem 0.5rem !important; font-size: 0.65rem !important; }
+          .cal-table td { padding: 0.625rem 0.5rem !important; font-size: 0.75rem !important; }
+          .ms-spreadsheet { padding: 0.25rem !important; }
+          .ms-row { grid-template-columns: 70px repeat(7, minmax(50px, 1fr)) !important; }
+          .ms-cell { padding: 0.2rem 0.3rem !important; font-size: 0.55rem !important; min-height: 24px !important; }
+          .ms-label-cell { font-size: 0.5rem !important; }
+          .ms-value { font-size: 0.55rem !important; }
+          .ms-day-header { font-size: 0.55rem !important; }
+          .ms-platform-tag { font-size: 0.45rem !important; padding: 1px 3px !important; }
+          .ms-platform-editor { min-width: 100px !important; }
+          .cal-modal { width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important; max-height: 90vh !important; }
+          .cal-btn-primary, .cal-btn-secondary, .cal-back { font-size: 0.8rem !important; padding: 0.5rem 1rem !important; }
+          .cal-budget-badge { font-size: 0.75rem !important; padding: 0.375rem 0.75rem !important; }
+          .ms-header { padding: 0.75rem !important; }
+          .ms-nav-btn { padding: 0.3rem 0.5rem !important; font-size: 0.7rem !important; }
+        }
+
+        /* SMALL MOBILE (max-width: 480px) */
+        @media screen and (max-width: 480px) {
+          .cal-title { font-size: 1rem !important; }
+          .cal-subtitle { font-size: 0.75rem !important; }
+          .cal-content { padding: 0.25rem !important; }
+          .ms-row { grid-template-columns: 55px repeat(7, minmax(40px, 1fr)) !important; }
+          .ms-cell { font-size: 0.5rem !important; padding: 0.15rem 0.2rem !important; }
+          .ms-label-cell { font-size: 0.45rem !important; }
+          .cal-platform-budget { width: 80px !important; }
+        }
       `}} />
 
       <div className="cal-container">
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         <main className="page-main cal-main">
           <header className="cal-header">
             <div className="cal-nav">

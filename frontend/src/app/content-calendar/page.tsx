@@ -135,8 +135,7 @@ export default function ContentCalendarPage() {
 
     return (
     <div style={{ minHeight: '100vh', display: 'flex', background: '#0D0D0D' }}>
-      {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-      <MobileHeader title="Content Calendar" isMobile={isMobile} />
+      <Sidebar projects={[]} onCreateProject={() => {}} />
       
       <main className="page-main" style={{ 
         flex: 1, 

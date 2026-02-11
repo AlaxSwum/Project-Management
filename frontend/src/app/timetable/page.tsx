@@ -19,7 +19,6 @@ import {
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
-import MobileHeader from '@/components/MobileHeader';
 
 interface Project {
   id: number;
@@ -949,9 +948,8 @@ export default function TimetablePage() {
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#F5F5ED' }}>
-        {isMobile && <MobileHeader title="Meeting Schedule" isMobile={isMobile} />}
         <div style={{ display: 'flex' }}>
-          {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+          <Sidebar projects={[]} onCreateProject={() => {}} />
           <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
             {/* Skeleton Header */}
             <div style={{ marginBottom: '2rem' }}>
@@ -980,8 +978,6 @@ export default function TimetablePage() {
 
   return (
     <div>
-      {isMobile && <MobileHeader title="Meeting Schedule" isMobile={isMobile} />}
-      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -2597,7 +2593,7 @@ export default function TimetablePage() {
       }} />
 
       <div className="timetable-container">
-        {!isMobile && <Sidebar projects={projects} onCreateProject={handleCreateProject} />}
+        <Sidebar projects={projects} onCreateProject={handleCreateProject} />
 
         <main className="main-content">
           <header className="header">

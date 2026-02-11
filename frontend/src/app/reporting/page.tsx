@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { reportingService } from '@/lib/api-compatibility';
 // Icons removed for clean design;
 import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
 
 export default function ReportingPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -105,8 +104,6 @@ export default function ReportingPage() {
 
   return (
     <div>
-      <MobileHeader title="Reports" isMobile={isMobile} />
-      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -380,7 +377,7 @@ export default function ReportingPage() {
         }} />
 
       <div className="reporting-container">
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
 
         <main className="main-content">
           <header className="header">

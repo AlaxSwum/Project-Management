@@ -701,8 +701,7 @@ export default function PayrollPage() {
   if (isLoading || authLoading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <MobileHeader title="Payroll Generation" isMobile={isMobile} />
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
@@ -721,8 +720,7 @@ export default function PayrollPage() {
   if (!hasAccess) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        <MobileHeader title="Payroll Generation" isMobile={isMobile} />
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
@@ -777,10 +775,9 @@ export default function PayrollPage() {
           font-family: 'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
         }
       `}} />
-      <MobileHeader title="Payroll Generation" isMobile={isMobile} />
       
       <div className="payroll-page" style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
-        {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
+        <Sidebar projects={projects} onCreateProject={() => {}} />
         
         <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',

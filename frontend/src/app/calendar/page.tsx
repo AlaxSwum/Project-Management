@@ -553,7 +553,6 @@ export default function CalendarPage() {
 
   return (
     <div className="calendar-container">
-      {isMobile && <MobileHeader title="Calendar" isMobile={isMobile} />}
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -2440,12 +2439,10 @@ export default function CalendarPage() {
       }} />
       
       <div className="calendar-container">
-        {!isMobile && (
-          <Sidebar 
-            projects={projects} 
-            onCreateProject={() => {}} 
-          />
-        )}
+        <Sidebar 
+          projects={projects} 
+          onCreateProject={() => {}} 
+        />
         
         <div className="page-main main-content">
           <header className="header">

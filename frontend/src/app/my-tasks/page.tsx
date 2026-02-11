@@ -685,7 +685,6 @@ export default function MyTasksPage() {
 
   return (
     <div>
-      <MobileHeader title="My Tasks" isMobile={isMobile} />
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -1641,13 +1640,11 @@ export default function MyTasksPage() {
       }} />
       
       <div className="my-tasks-container">
-        {!isMobile && (
-          <Sidebar 
-            projects={allProjects} 
-            onCreateProject={() => {}} 
-            onCollapsedChange={setSidebarCollapsed}
-          />
-        )}
+        <Sidebar 
+          projects={allProjects} 
+          onCreateProject={() => {}} 
+          onCollapsedChange={setSidebarCollapsed}
+        />
         
         <div className="main-content">
           <header className="header">

@@ -285,7 +285,6 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <MobileHeader title={company.name} isMobile={isMobile} />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin { to { transform: rotate(360deg); } }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D0D; }
@@ -353,7 +352,7 @@ export default function ReportsPage() {
       `}} />
 
       <div className="rpt-container">
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         <main className="rpt-main page-main">
           <header className="rpt-header">
             <div className="rpt-header-top">

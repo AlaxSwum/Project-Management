@@ -1155,7 +1155,7 @@ export default function ClassesPage() {
       }} />
       
       <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-        {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
+        <Sidebar projects={[]} onCreateProject={() => {}} />
         
         <div className="classes-main-content page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
