@@ -41,7 +41,7 @@ export default function BusinessSelector({
 
   if (isLoading) {
     return (
-      <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-lg" />
+      <div className="h-10 w-48 bg-[#2D2D2D] animate-pulse rounded-lg" />
     );
   }
 
@@ -49,7 +49,7 @@ export default function BusinessSelector({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors min-w-[200px]"
+        className="flex items-center gap-3 px-4 py-2 bg-[#1A1A1A] border border-[#2D2D2D] rounded-lg hover:bg-[#141414] transition-colors min-w-[200px]"
       >
         {selectedBusiness ? (
           <>
@@ -73,22 +73,22 @@ export default function BusinessSelector({
           </>
         ) : (
           <>
-            <BuildingOfficeIcon className="w-5 h-5 text-gray-400" />
-            <span className="flex-1 text-left text-gray-500">Select Business</span>
+            <BuildingOfficeIcon className="w-5 h-5 text-[#52525B]" />
+            <span className="flex-1 text-left text-[#71717A]">Select Business</span>
           </>
         )}
         <ChevronDownIcon 
-          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-5 h-5 text-[#52525B] transition-transform ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-full bg-[#1A1A1A] border border-[#2D2D2D] rounded-lg shadow-lg z-50 overflow-hidden">
           {/* Business List */}
           <div className="max-h-60 overflow-y-auto">
             {businesses.length === 0 ? (
-              <div className="px-4 py-6 text-center text-gray-500">
+              <div className="px-4 py-6 text-center text-[#71717A]">
                 <BuildingOfficeIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                 <p className="text-sm">No businesses yet</p>
               </div>
@@ -100,7 +100,7 @@ export default function BusinessSelector({
                     onSelect(business);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#141414] transition-colors ${
                     selectedBusiness?.id === business.id ? 'bg-blue-50' : ''
                   }`}
                 >
@@ -121,7 +121,7 @@ export default function BusinessSelector({
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900">{business.name}</p>
                     {business.industry && (
-                      <p className="text-xs text-gray-500">{business.industry}</p>
+                      <p className="text-xs text-[#71717A]">{business.industry}</p>
                     )}
                   </div>
                   {selectedBusiness?.id === business.id && (
@@ -133,7 +133,7 @@ export default function BusinessSelector({
           </div>
 
           {/* Create New */}
-          <div className="border-t border-gray-200">
+          <div className="border-t border-[#2D2D2D]">
             <button
               onClick={() => {
                 onCreateNew();
@@ -184,7 +184,7 @@ export function CreateBusinessModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+      <div className="bg-[#1A1A1A] rounded-xl shadow-xl max-w-md w-full p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Business</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -241,7 +241,7 @@ export function CreateBusinessModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#141414]"
             >
               Cancel
             </button>

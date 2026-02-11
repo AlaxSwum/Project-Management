@@ -222,7 +222,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             display: flex;
             flex-direction: column;
             height: 100%;
-            background: #fafafa;
+            background: #1F1F1F;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
@@ -273,12 +273,12 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           .empty-comments {
             text-align: center;
             padding: 2rem 1rem;
-            color: #6b7280;
-            background: #ffffff;
+            color: #71717A;
+            background: #1A1A1A;
             border-radius: 8px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #2D2D2D;
             margin: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
           }
           
           .empty-comments p {
@@ -288,24 +288,24 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           
           .empty-comments p:first-of-type {
             font-weight: 600;
-            color: #374151;
+            color: #FFFFFF;
             font-size: 1rem;
           }
           
           .comment-item {
             margin-bottom: 1rem;
             padding: 1rem;
-            background: #ffffff;
+            background: #1A1A1A;
             border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #2D2D2D;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             transition: all 0.2s ease;
           }
           
           .comment-item:hover {
-            border-color: #d1d5db;
+            border-color: #3D3D3D;
             transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
           }
           
           .comment-item:last-child {
@@ -323,7 +323,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             width: 36px;
             height: 36px;
             background: #111827;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #2D2D2D;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -342,20 +342,20 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           
           .author-name {
             font-weight: 600;
-            color: #374151;
+            color: #FFFFFF;
             font-size: 0.875rem;
           }
           
           .comment-time {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
             font-weight: 500;
           }
           
           .comment-content {
             margin-left: 0;
             font-size: 0.875rem;
-            color: #374151;
+            color: #A1A1AA;
             line-height: 1.5;
             font-weight: 500;
             margin-bottom: 0.75rem;
@@ -370,22 +370,22 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: #141414;
+            border: 1px solid #2D2D2D;
             border-radius: 6px;
             margin-bottom: 0.5rem;
             transition: all 0.2s ease;
           }
 
           .attachment-item:hover {
-            background: #f3f4f6;
-            border-color: #d1d5db;
+            background: #1F1F1F;
+            border-color: #3D3D3D;
           }
 
           .attachment-icon {
             width: 20px;
             height: 20px;
-            color: #6b7280;
+            color: #71717A;
             flex-shrink: 0;
           }
 
@@ -396,19 +396,19 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           .attachment-name {
             font-size: 0.875rem;
             font-weight: 500;
-            color: #374151;
+            color: #A1A1AA;
             margin-bottom: 0.25rem;
           }
 
           .attachment-meta {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
           }
           
           .add-comment {
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #2D2D2D;
             padding: 1rem;
-            background: #ffffff;
+            background: #1A1A1A;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
@@ -434,7 +434,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           .comment-input {
             flex: 1;
             padding: 0.875rem 1rem;
-            border: 1px solid #d1d5db;
+            border: 1px solid #3D3D3D;
             border-radius: 8px;
             font-size: 0.875rem;
             line-height: 1.5;
@@ -444,20 +444,20 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             width: 100%;
             box-sizing: border-box;
             transition: all 0.2s ease;
-            background: #ffffff;
-            color: #374151;
+            background: #1A1A1A;
+            color: #A1A1AA;
             font-weight: 500;
             font-family: inherit;
           }
           
           .comment-input:focus {
             outline: none;
-            border-color: #374151;
-            box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+            border-color: #2D2D2D;
+            box-shadow: 0 0 0 3px rgba(45, 45, 45, 0.3);
           }
           
           .comment-input::placeholder {
-            color: #9ca3af;
+            color: #71717A;
             font-weight: 500;
           }
 
@@ -475,27 +475,27 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
 
           .file-action-btn {
             padding: 0.5rem;
-            background: #ffffff;
-            border: 1px solid #d1d5db;
+            background: #1A1A1A;
+            border: 1px solid #3D3D3D;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #6b7280;
+            color: #71717A;
           }
 
           .file-action-btn:hover {
-            background: #f9fafb;
-            border-color: #9ca3af;
-            color: #374151;
+            background: #141414;
+            border-color: #2D2D2D;
+            color: #A1A1AA;
           }
 
           .file-action-btn.active {
-            background: #f3f4f6;
-            border-color: #6b7280;
-            color: #374151;
+            background: #1F1F1F;
+            border-color: #2D2D2D;
+            color: #A1A1AA;
           }
           
           .send-comment-btn {
@@ -528,7 +528,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           .selected-files-title {
             font-size: 0.875rem;
             font-weight: 600;
-            color: #374151;
+            color: #FFFFFF;
             margin-bottom: 0.5rem;
           }
 
@@ -537,8 +537,8 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             align-items: center;
             justify-content: space-between;
             padding: 0.5rem;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: #141414;
+            border: 1px solid #2D2D2D;
             border-radius: 6px;
             margin-bottom: 0.5rem;
           }
@@ -553,12 +553,12 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           .file-name {
             font-size: 0.875rem;
             font-weight: 500;
-            color: #374151;
+            color: #A1A1AA;
           }
 
           .file-size {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
           }
 
           .remove-file-btn {
@@ -587,7 +587,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           }
 
           .drive-explorer-content {
-            background: #ffffff;
+            background: #1A1A1A;
             border-radius: 12px;
             width: 100%;
             max-width: 800px;
@@ -595,12 +595,12 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
           }
 
           .drive-explorer-header {
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #2D2D2D;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -609,7 +609,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
           .drive-explorer-title {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #374151;
+            color: #FFFFFF;
           }
 
           .close-explorer-btn {
@@ -617,14 +617,14 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             background: none;
             border: none;
             cursor: pointer;
-            color: #6b7280;
+            color: #71717A;
             border-radius: 6px;
             transition: all 0.2s ease;
           }
 
           .close-explorer-btn:hover {
-            background: #f3f4f6;
-            color: #374151;
+            background: #1F1F1F;
+            color: #A1A1AA;
           }
 
           .drive-explorer-body {
@@ -641,11 +641,11 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
             align-items: center;
             justify-content: center;
             padding: 3rem;
-            color: #6b7280;
+            color: #71717A;
             font-weight: 500;
-            background: #ffffff;
+            background: #1A1A1A;
             border-radius: 8px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #2D2D2D;
             margin: 1rem;
           }
           
@@ -700,7 +700,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
               </div>
             ) : comments.length === 0 ? (
               <div className="empty-comments">
-                <ChatBubbleLeftRightIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#d1d5db' }} />
+                <ChatBubbleLeftRightIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', color: '#3D3D3D' }} />
                 <p>No comments yet</p>
                 <p>Be the first to add a comment or share files!</p>
               </div>
@@ -745,10 +745,10 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
                                rel="noopener noreferrer"
                                style={{
                                  padding: '0.25rem 0.5rem',
-                                 background: '#f3f4f6',
-                                 border: '1px solid #d1d5db',
+                                 background: '#1F1F1F',
+                                 border: '1px solid #3D3D3D',
                                  borderRadius: '4px',
-                                 color: '#374151',
+                                 color: '#A1A1AA',
                                  textDecoration: 'none',
                                  fontSize: '0.75rem',
                                  fontWeight: '500'
@@ -787,7 +787,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
                   {selectedFiles.map((file, index) => (
                     <div key={`file-${index}`} className="selected-file-item">
                       <div className="file-info">
-                        <DocumentIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                        <DocumentIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
                         <span className="file-name">{file.name}</span>
                         <span className="file-size">({formatFileSize(file.size)})</span>
                       </div>
@@ -804,7 +804,7 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
                   {selectedDriveFiles.map((file, index) => (
                     <div key={`drive-${index}`} className="selected-file-item">
                       <div className="file-info">
-                        <DocumentIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                        <DocumentIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
                         <span className="file-name">{file.name}</span>
                         <span className="file-size">(Google Drive)</span>
                       </div>

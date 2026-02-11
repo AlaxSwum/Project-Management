@@ -143,8 +143,8 @@ export default function NotificationDropdown() {
         );
       default:
         return (
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-[#1F1F1F] rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-[#A1A1AA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -213,7 +213,7 @@ export default function NotificationDropdown() {
       {/* Notification Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+        className="relative p-2 text-[#A1A1AA] hover:text-white hover:bg-[#2D2D2D] rounded-lg transition-colors duration-200"
         aria-label="Notifications"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,10 +230,10 @@ export default function NotificationDropdown() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-96 bg-[#1A1A1A] rounded-lg shadow-lg border border-[#2D2D2D] z-50 max-h-96 overflow-hidden">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+          <div className="px-4 py-3 border-b border-[#2D2D2D] flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
@@ -247,24 +247,24 @@ export default function NotificationDropdown() {
           {/* Notifications List */}
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-[#71717A]">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-2 text-sm">Loading notifications...</p>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-[#71717A]">
                 <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 17h5l-5 5v-5zM12 2a7 7 0 00-7 7v4l-2 2v1h18v-1l-2-2V9a7 7 0 00-7-7z" />
                 </svg>
                 <p className="text-sm">No notifications yet</p>
-                <p className="text-xs text-gray-400 mt-1">You'll see updates about your tasks here</p>
+                <p className="text-xs text-[#52525B] mt-1">You'll see updates about your tasks here</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-150 ${
+                  className={`px-4 py-3 border-b border-gray-100 hover:bg-[#141414] cursor-pointer transition-colors duration-150 ${
                     !notification.is_read ? 'bg-blue-50' : ''
                   }`}
                 >
@@ -274,13 +274,13 @@ export default function NotificationDropdown() {
                     
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium text-gray-900 ${!notification.is_read ? 'font-semibold' : ''}`}>
+                      <p className={`text-sm font-medium text-white ${!notification.is_read ? 'font-semibold' : ''}`}>
                         {notification.title}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      <p className="text-sm text-[#A1A1AA] mt-1 line-clamp-2">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-[#52525B] mt-2">
                         {formatTimeAgo(notification.created_at)}
                       </p>
                     </div>
@@ -297,7 +297,7 @@ export default function NotificationDropdown() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="px-4 py-3 border-t border-[#2D2D2D] bg-[#141414]">
               <a
                 href="/inbox"
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"

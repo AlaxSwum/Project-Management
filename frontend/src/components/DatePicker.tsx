@@ -55,18 +55,18 @@ export default function DatePicker({
           className="input-field cursor-pointer flex items-center"
           onClick={() => setIsOpen(!isOpen)}
         >
-          <span className={value ? 'text-black' : 'text-gray-400'}>
+          <span className={value ? 'text-white' : 'text-[#52525B]'}>
             {value ? formatDate(value) : placeholder}
           </span>
         </div>
 
         {isOpen && (
-          <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 p-4 animate-fade-in">
+          <div className="absolute z-10 mt-1 w-full bg-[#1A1A1A] rounded-lg shadow-lg border border-[#2D2D2D] p-4 animate-fade-in">
             <input
               type="date"
               value={value}
               onChange={handleDateChange}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-black focus:ring-2 focus:ring-black focus:ring-offset-2 date-input-no-icon"
+              className="w-full px-4 py-2 border border-[#2D2D2D] rounded-lg focus:border-black focus:ring-2 focus:ring-black focus:ring-offset-2 date-input-no-icon"
               style={{
                 WebkitAppearance: 'none',
                 MozAppearance: 'textfield',

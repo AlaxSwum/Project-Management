@@ -104,12 +104,12 @@ export default function KPIDashboard({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-[#1A1A1A] rounded-xl shadow-sm border border-[#2D2D2D] p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4" />
+          <div className="h-8 bg-[#2D2D2D] rounded w-1/4" />
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-24 bg-gray-200 rounded" />
+              <div key={i} className="h-24 bg-[#2D2D2D] rounded" />
             ))}
           </div>
         </div>
@@ -120,16 +120,16 @@ export default function KPIDashboard({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-[#1A1A1A] rounded-xl shadow-sm border border-[#2D2D2D] p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">KPI Dashboard</h2>
+          <h2 className="text-xl font-semibold text-white">KPI Dashboard</h2>
           <div className="flex items-center gap-4">
             {/* View Mode Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-[#1F1F1F] rounded-lg p-1">
               <button
                 onClick={() => setViewMode('weekly')}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'weekly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+                  viewMode === 'weekly' ? 'bg-[#1A1A1A] text-white shadow-sm' : 'text-[#A1A1AA]'
                 }`}
               >
                 Weekly
@@ -137,7 +137,7 @@ export default function KPIDashboard({
               <button
                 onClick={() => setViewMode('monthly')}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'monthly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+                  viewMode === 'monthly' ? 'bg-[#1A1A1A] text-white shadow-sm' : 'text-[#A1A1AA]'
                 }`}
               >
                 Monthly
@@ -148,7 +148,7 @@ export default function KPIDashboard({
             <select
               value={selectedPlatform}
               onChange={(e) => onPlatformChange(e.target.value as Platform | 'all')}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-4 py-2 border border-[#3D3D3D] rounded-lg text-sm"
             >
               <option value="all">All Platforms</option>
               {Object.entries(PLATFORM_CONFIG).map(([key, config]) => (
@@ -194,8 +194,8 @@ export default function KPIDashboard({
         </div>
 
         {/* Engagement Breakdown */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h3 className="text-sm font-medium text-gray-700 mb-4">Engagement Breakdown</h3>
+        <div className="mt-6 pt-6 border-t border-[#2D2D2D]">
+          <h3 className="text-sm font-medium text-[#A1A1AA] mb-4">Engagement Breakdown</h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <EngagementCard
               label="Reactions"
@@ -228,8 +228,8 @@ export default function KPIDashboard({
 
       {/* Platform Breakdown */}
       {platformBreakdown.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Performance</h3>
+        <div className="bg-[#1A1A1A] rounded-xl shadow-sm border border-[#2D2D2D] p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Platform Performance</h3>
           <div className="space-y-3">
             {platformBreakdown.map((item: any) => (
               <PlatformRow
@@ -246,8 +246,8 @@ export default function KPIDashboard({
 
       {/* Top Performing Posts */}
       {topPosts.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Posts</h3>
+        <div className="bg-[#1A1A1A] rounded-xl shadow-sm border border-[#2D2D2D] p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Top Performing Posts</h3>
           <div className="space-y-3">
             {topPosts.slice(0, 5).map((post) => (
               <TopPostRow key={`${post.post_id}-${post.platform}`} post={post} />
@@ -282,7 +282,7 @@ function KPICard({
   };
 
   return (
-    <div className="bg-gray-50 rounded-xl p-4">
+    <div className="bg-[#141414] rounded-xl p-4">
       <div className="flex items-center justify-between mb-2">
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
           {icon}
@@ -297,8 +297,8 @@ function KPICard({
           </div>
         )}
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-500">{title}</p>
+      <p className="text-2xl font-bold text-white">{value}</p>
+      <p className="text-sm text-[#71717A]">{title}</p>
     </div>
   );
 }
@@ -314,13 +314,13 @@ function EngagementCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-      <div className="text-gray-400">
+    <div className="flex items-center gap-3 p-3 bg-[#141414] rounded-lg">
+      <div className="text-[#52525B]">
         {icon}
       </div>
       <div>
-        <p className="text-lg font-semibold text-gray-900">{value}</p>
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-lg font-semibold text-white">{value}</p>
+        <p className="text-xs text-[#71717A]">{label}</p>
       </div>
     </div>
   );
@@ -346,7 +346,7 @@ function PlatformRow({
   };
 
   return (
-    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+    <div className="flex items-center gap-4 p-3 bg-[#141414] rounded-lg">
       <div 
         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
         style={{ backgroundColor: config.color }}
@@ -354,11 +354,11 @@ function PlatformRow({
         {platform.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1">
-        <p className="font-medium text-gray-900">{config.name}</p>
-        <p className="text-sm text-gray-500">{posts} posts</p>
+        <p className="font-medium text-white">{config.name}</p>
+        <p className="text-sm text-[#71717A]">{posts} posts</p>
       </div>
       <div className="text-right">
-        <p className="font-medium text-gray-900">{formatNumber(reach)} reach</p>
+        <p className="font-medium text-white">{formatNumber(reach)} reach</p>
         <p className="text-sm text-green-600">{engagementRate.toFixed(2)}% ER</p>
       </div>
     </div>
@@ -375,7 +375,7 @@ function TopPostRow({ post }: { post: TopPerformingPost }) {
   };
 
   return (
-    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+    <div className="flex items-center gap-4 p-3 bg-[#141414] rounded-lg hover:bg-[#1F1F1F] transition-colors cursor-pointer">
       <div className="flex items-center gap-2 min-w-[100px]">
         <div 
           className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
@@ -383,22 +383,22 @@ function TopPostRow({ post }: { post: TopPerformingPost }) {
         >
           {post.platform.charAt(0).toUpperCase()}
         </div>
-        <span className="text-xs text-gray-500">#{post.rank_by_engagement}</span>
+        <span className="text-xs text-[#71717A]">#{post.rank_by_engagement}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-900 truncate">{post.title}</p>
-        <p className="text-sm text-gray-500">
+        <p className="font-medium text-white truncate">{post.title}</p>
+        <p className="text-sm text-[#71717A]">
           {new Date(post.published_at).toLocaleDateString()}
         </p>
       </div>
       <div className="flex items-center gap-4 text-sm">
         <div className="text-right">
-          <p className="font-medium text-gray-900">{formatNumber(post.reach)}</p>
-          <p className="text-xs text-gray-500">Reach</p>
+          <p className="font-medium text-white">{formatNumber(post.reach)}</p>
+          <p className="text-xs text-[#71717A]">Reach</p>
         </div>
         <div className="text-right">
           <p className="font-medium text-green-600">{post.engagement_rate?.toFixed(2) || 0}%</p>
-          <p className="text-xs text-gray-500">ER</p>
+          <p className="text-xs text-[#71717A]">ER</p>
         </div>
       </div>
     </div>

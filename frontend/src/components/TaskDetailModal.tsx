@@ -250,7 +250,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           }
           
           .task-modal-content {
-            background: rgba(255, 255, 255, 0.98);
+            background: #1A1A1A;
             border: 2px solid #FFB333;
             border-radius: 20px;
             width: 100%;
@@ -259,7 +259,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             max-height: 85vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(20px);
             animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1);
             position: relative;
@@ -287,7 +287,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             align-items: flex-start;
             gap: 1.5rem;
             flex-shrink: 0;
-            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            background: linear-gradient(135deg, #141414 0%, #1F1F1F 100%);
             position: relative;
             z-index: 1;
           }
@@ -297,12 +297,12 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             display: flex;
             flex-direction: column;
             min-height: 0;
-            background: #F5F5ED;
+            background: #1A1A1A;
           }
           
           .tab-navigation {
             display: flex;
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             flex-shrink: 0;
             border-bottom: 2px solid rgba(255, 179, 51, 0.1);
             backdrop-filter: blur(10px);
@@ -319,7 +319,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             border: none;
             cursor: pointer;
             font-weight: 600;
-            color: #6B7280;
+            color: #71717A;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             border-right: 1px solid rgba(255, 179, 51, 0.2);
             position: relative;
@@ -366,7 +366,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             flex: 1;
             overflow-y: auto;
             padding: 2rem 2.5rem;
-            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #141414 100%);
           }
           
           .task-title-section {
@@ -376,7 +376,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           .task-title {
             font-size: 1.875rem;
             font-weight: 700;
-            color: #374151;
+            color: #FFFFFF;
             margin-bottom: 1rem;
             line-height: 1.3;
             letter-spacing: -0.025em;
@@ -428,7 +428,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             padding: 0.75rem;
             border: 2px solid transparent;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             display: flex;
@@ -439,7 +439,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           
           .task-action-btn:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
           }
           
           .task-action-btn.edit {
@@ -473,20 +473,20 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           }
           
           .task-description {
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             padding: 1.5rem;
             border: 2px solid rgba(255, 179, 51, 0.2);
             border-radius: 12px;
             margin-bottom: 2rem;
             line-height: 1.6;
-            color: #374151;
+            color: #FFFFFF;
             white-space: pre-wrap;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
           }
           
           .task-description.empty {
-            color: #9CA3AF;
+            color: #52525B;
             font-style: italic;
             text-align: center;
           }
@@ -505,15 +505,15 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             padding: 1.25rem;
             border: 2px solid rgba(255, 179, 51, 0.2);
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
           }
           
           .task-detail-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
             border-color: #FFB333;
           }
           
@@ -531,7 +531,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           .task-detail-label {
             font-size: 0.875rem;
             font-weight: 600;
-            color: #6B7280;
+            color: #71717A;
             margin-bottom: 0.25rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -539,23 +539,23 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           
           .task-detail-value {
             font-weight: 600;
-            color: #374151;
+            color: #FFFFFF;
             font-size: 0.925rem;
           }
           
           .task-status-actions-inline {
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             border: 2px solid rgba(255, 179, 51, 0.2);
             border-radius: 12px;
             padding: 1.5rem;
             margin-top: 2rem;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
           }
           
           .status-actions-title {
             font-weight: 700;
-            color: #374151;
+            color: #FFFFFF;
             margin-bottom: 1rem;
             font-size: 1rem;
             letter-spacing: -0.025em;
@@ -574,7 +574,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             padding: 0.75rem 1.25rem;
             border: 2px solid #FFB333;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             font-weight: 600;
@@ -619,7 +619,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           
           .form-label {
             font-weight: 700;
-            color: #374151;
+            color: #FFFFFF;
             font-size: 0.925rem;
             letter-spacing: 0.025em;
           }
@@ -629,10 +629,10 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             border: 2px solid rgba(255, 179, 51, 0.3);
             border-radius: 12px;
             font-size: 0.925rem;
-            background: rgba(255, 255, 255, 0.9);
+            background: #141414;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             backdrop-filter: blur(10px);
-            color: #374151;
+            color: #FFFFFF;
             font-weight: 500;
           }
           
@@ -640,7 +640,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             outline: none;
             border-color: #FFB333;
             box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
-            background: #FFFFFF;
+            background: #1A1A1A;
           }
           
           .form-textarea {
@@ -684,15 +684,15 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           }
           
           .btn-secondary {
-            background: rgba(255, 255, 255, 0.9);
-            color: #6B7280;
-            border-color: rgba(245, 245, 237, 0.8);
+            background: #141414;
+            color: #71717A;
+            border-color: #2D2D2D;
           }
           
           .btn-secondary:hover {
-            background: #F9FAFB;
-            color: #374151;
-            border-color: #D1D5DB;
+            background: #1F1F1F;
+            color: #FFFFFF;
+            border-color: #3D3D3D;
             transform: translateY(-3px);
           }
           
@@ -710,7 +710,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           }
           
           .confirm-modal-content {
-            background: rgba(255, 255, 255, 0.98);
+            background: #1A1A1A;
             border: 2px solid #EF4444;
             border-radius: 16px;
             padding: 2rem;
@@ -719,7 +719,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             text-align: center;
             animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             backdrop-filter: blur(20px);
-            box-shadow: 0 20px 60px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
           }
           
           .confirm-modal-title {
@@ -731,7 +731,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
           }
           
           .confirm-modal-text {
-            color: #6B7280;
+            color: #71717A;
             margin-bottom: 2rem;
             line-height: 1.6;
             font-weight: 500;
@@ -927,16 +927,16 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                   <div className="form-group">
                     <label className="form-label">Assignees</label>
                     <div style={{ 
-                      border: '2px solid #e5e7eb', 
+                      border: '2px solid #2D2D2D', 
                       borderRadius: '8px', 
                       padding: '0.75rem',
-                      background: '#ffffff',
+                      background: '#141414',
                       minHeight: '100px',
                       maxHeight: '150px',
                       overflowY: 'auto'
                     }}>
                       {users.length === 0 ? (
-                        <div style={{ color: '#6b7280', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
+                        <div style={{ color: '#71717A', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
                           No team members available
                         </div>
                       ) : (
@@ -953,7 +953,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                               transition: 'background-color 0.2s ease',
                               marginBottom: '0.2rem'
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
                             onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
                             <input
@@ -974,16 +974,16 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                               }}
                               style={{ 
                                 marginRight: '0.5rem',
-                                accentColor: '#000000'
+                                accentColor: '#FFFFFF'
                               }}
                             />
                             <div style={{
                               width: '28px',
                               height: '28px',
                               borderRadius: '50%',
-                              background: editedTask.assignee_ids.includes(user.id) ? '#000000' : '#f3f4f6',
-                              color: editedTask.assignee_ids.includes(user.id) ? '#ffffff' : '#000000',
-                              border: '2px solid #000000',
+                              background: editedTask.assignee_ids.includes(user.id) ? '#FFFFFF' : '#1F1F1F',
+                              color: editedTask.assignee_ids.includes(user.id) ? '#000000' : '#FFFFFF',
+                              border: '2px solid #FFFFFF',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -995,7 +995,7 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                             <span style={{ 
                               fontSize: '0.85rem', 
                               fontWeight: '500',
-                              color: editedTask.assignee_ids.includes(user.id) ? '#000000' : '#374151'
+                              color: editedTask.assignee_ids.includes(user.id) ? '#FFFFFF' : '#FFFFFF'
                             }}>
                               {user.name}
                             </span>
@@ -1007,11 +1007,11 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                       <div style={{ 
                         marginTop: '0.5rem', 
                         padding: '0.4rem', 
-                        background: '#f0f9ff', 
+                        background: '#1A1A1A', 
                         border: '1px solid #3b82f6', 
                         borderRadius: '4px',
                         fontSize: '0.8rem',
-                        color: '#1e40af'
+                        color: '#FFFFFF'
                       }}>
                         <strong>{editedTask.assignee_ids.length} assignee{editedTask.assignee_ids.length === 1 ? '' : 's'} selected</strong>
                       </div>
@@ -1026,8 +1026,8 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                       className="form-input"
                       disabled
                       style={{ 
-                        backgroundColor: '#f9fafb', 
-                        color: '#6b7280',
+                        backgroundColor: '#141414', 
+                        color: '#71717A',
                         cursor: 'not-allowed'
                       }}
                     />
@@ -1103,9 +1103,9 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                                   width: '24px',
                                   height: '24px',
                                   borderRadius: '50%',
-                                  background: '#000000',
-                                  color: '#ffffff',
-                                  border: '2px solid #ffffff',
+                                  background: '#FFFFFF',
+                                  color: '#000000',
+                                  border: '2px solid #2D2D2D',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -1117,11 +1117,11 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
                                 }}>
                                   {assignee.name.charAt(0).toUpperCase()}
                                 </div>
-                                <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#FFFFFF' }}>
                                   {assignee.name}
                                 </span>
                                 {index < task.assignees.length - 1 && task.assignees.length > 1 && (
-                                  <span style={{ color: '#6b7280' }}>,</span>
+                                  <span style={{ color: '#71717A' }}>,</span>
                                 )}
                               </div>
                             ))}

@@ -347,7 +347,7 @@ export default function GoogleDriveExplorer({
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
           
           .google-drive-explorer {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(26, 26, 26, 0.95);
             border: 2px solid rgba(255, 179, 51, 0.3);
             border-radius: 16px;
             overflow: hidden;
@@ -356,7 +356,7 @@ export default function GoogleDriveExplorer({
             display: flex;
             flex-direction: column;
             backdrop-filter: blur(10px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           }
           .drive-header {
@@ -382,19 +382,19 @@ export default function GoogleDriveExplorer({
             font-size: 0.925rem;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(26, 26, 26, 0.9);
             backdrop-filter: blur(10px);
-            color: #374151;
+            color: #A1A1AA;
             font-weight: 500;
           }
           .drive-search input:focus {
             outline: none;
             border-color: rgba(255, 255, 255, 0.8);
             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-            background: #FFFFFF;
+            background: #1A1A1A;
           }
           .drive-search input::placeholder {
-            color: #9CA3AF;
+            color: #71717A;
             font-weight: 500;
           }
           .drive-search-icon {
@@ -419,28 +419,28 @@ export default function GoogleDriveExplorer({
             padding: 0.75rem 1.25rem;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(26, 26, 26, 0.9);
             cursor: pointer;
             font-size: 0.875rem;
             font-weight: 600;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            color: #374151;
+            color: #A1A1AA;
             backdrop-filter: blur(10px);
           }
           .drive-action-btn:hover {
             border-color: rgba(255, 255, 255, 0.8);
             transform: translateY(-2px);
-            background: #FFFFFF;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            background: #1A1A1A;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
           }
           .drive-action-btn.primary {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(26, 26, 26, 0.95);
             color: #F87239;
             border-color: rgba(255, 255, 255, 0.8);
             font-weight: 700;
           }
           .drive-action-btn.primary:hover {
-            background: #FFFFFF;
+            background: #1A1A1A;
             color: #DC2626;
           }
           .drive-action-btn:disabled {
@@ -449,7 +449,7 @@ export default function GoogleDriveExplorer({
             transform: none;
           }
           .selected-folder-info {
-            background: #eff6ff;
+            background: #1A1A1A;
             padding: 0.75rem;
             border-radius: 6px;
             margin-bottom: 1rem;
@@ -457,14 +457,14 @@ export default function GoogleDriveExplorer({
             align-items: center;
             gap: 0.5rem;
             font-size: 0.875rem;
-            color: #1e40af;
+            color: #A1A1AA;
           }
           .drive-content {
             flex: 1;
             overflow: hidden;
             display: flex;
             min-height: 0;
-            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #141414 100%);
           }
           .folder-tree-panel {
             width: 50%;
@@ -474,7 +474,7 @@ export default function GoogleDriveExplorer({
             max-height: 100%;
             display: flex;
             flex-direction: column;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(26, 26, 26, 0.5);
           }
           .folder-tree {
             flex: 1;
@@ -505,7 +505,7 @@ export default function GoogleDriveExplorer({
             max-height: 100%;
             display: flex;
             flex-direction: column;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(26, 26, 26, 0.3);
           }
           .drive-file-list {
             flex: 1;
@@ -532,7 +532,7 @@ export default function GoogleDriveExplorer({
             gap: 0.5rem;
           }
           .new-folder-btn {
-            background: #000000;
+            background: #2D2D2D;
             color: #ffffff;
             border: none;
             padding: 0.4rem 0.8rem;
@@ -546,7 +546,7 @@ export default function GoogleDriveExplorer({
             transition: all 0.2s ease;
           }
           .new-folder-btn:hover {
-            background: #374151;
+            background: #3D3D3D;
             transform: translateY(-1px);
           }
           .folder-tree-item {
@@ -560,10 +560,10 @@ export default function GoogleDriveExplorer({
             margin-bottom: 0.25rem;
           }
           .folder-tree-item:hover {
-            background: #f3f4f6;
+            background: #1F1F1F;
           }
           .folder-tree-item.selected {
-            background: #000000;
+            background: #2D2D2D;
             color: #ffffff;
           }
           .expand-button {
@@ -599,14 +599,14 @@ export default function GoogleDriveExplorer({
             align-items: center;
             justify-content: center;
             height: 200px;
-            color: #6b7280;
+            color: #71717A;
             font-size: 0.9rem;
           }
           .drive-error {
             padding: 2rem;
             text-align: center;
             color: #dc2626;
-            background: #fef2f2;
+            background: #1A1A1A;
             border-bottom: 1px solid #fecaca;
           }
 
@@ -615,12 +615,12 @@ export default function GoogleDriveExplorer({
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid #1F1F1F;
             cursor: pointer;
             transition: all 0.2s ease;
           }
           .drive-file-item:hover {
-            background: #f9fafb;
+            background: #141414;
           }
           .drive-file-icon {
             width: 20px;
@@ -631,7 +631,7 @@ export default function GoogleDriveExplorer({
             color: #3b82f6;
           }
           .drive-file-icon.file {
-            color: #6b7280;
+            color: #71717A;
           }
           .drive-file-info {
             flex: 1;
@@ -639,25 +639,25 @@ export default function GoogleDriveExplorer({
           }
           .drive-file-name {
             font-weight: 500;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.25rem;
             word-break: break-word;
             font-size: 0.875rem;
           }
           .drive-file-meta {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #71717A;
           }
           .drive-empty {
             padding: 3rem 1.5rem;
             text-align: center;
-            color: #6b7280;
+            color: #71717A;
           }
           .drive-empty-icon {
             width: 48px;
             height: 48px;
             margin: 0 auto 1rem;
-            color: #d1d5db;
+            color: #3D3D3D;
           }
           .search-results {
             width: 100%;
@@ -665,9 +665,9 @@ export default function GoogleDriveExplorer({
           }
           .search-info {
             padding: 0.75rem;
-            background: #eff6ff;
-            border-bottom: 1px solid #bfdbfe;
-            color: #1e40af;
+            background: #1A1A1A;
+            border-bottom: 1px solid #2D2D2D;
+            color: #A1A1AA;
             font-size: 0.875rem;
             margin-bottom: 1rem;
           }
@@ -682,8 +682,8 @@ export default function GoogleDriveExplorer({
             z-index: 50;
           }
           .dialog-content {
-            background: #ffffff;
-            border: 2px solid #000000;
+            background: #1A1A1A;
+            border: 2px solid #2D2D2D;
             border-radius: 12px;
             padding: 2rem;
             max-width: 400px;
@@ -693,20 +693,20 @@ export default function GoogleDriveExplorer({
             font-size: 1.25rem;
             font-weight: bold;
             margin-bottom: 1rem;
-            color: #000000;
+            color: #FFFFFF;
           }
           .dialog-input {
             width: 100%;
             padding: 0.75rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 6px;
             margin-bottom: 1.5rem;
             font-size: 1rem;
           }
           .dialog-input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #2D2D2D;
+            box-shadow: 0 0 0 3px rgba(45, 45, 45, 0.3);
           }
           .file-input {
             margin-bottom: 1rem;
@@ -714,17 +714,17 @@ export default function GoogleDriveExplorer({
           .file-input input {
             width: 100%;
             padding: 0.75rem;
-            border: 2px dashed #e5e7eb;
+            border: 2px dashed #2D2D2D;
             border-radius: 6px;
             font-size: 0.9rem;
           }
           .upload-info {
-            background: #f0f9f0;
+            background: #1A1A1A;
             padding: 1rem;
             border-radius: 6px;
             margin-bottom: 1rem;
             font-size: 0.875rem;
-            color: #166534;
+            color: #A1A1AA;
           }
           .dialog-actions {
             display: flex;
@@ -740,13 +740,13 @@ export default function GoogleDriveExplorer({
             border: 2px solid;
           }
           .dialog-btn-primary {
-            background: #000000;
+            background: #2D2D2D;
             color: #ffffff;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           .dialog-btn-primary:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
           }
           .dialog-btn-primary:disabled {
             opacity: 0.5;
@@ -754,12 +754,12 @@ export default function GoogleDriveExplorer({
             transform: none;
           }
           .dialog-btn-secondary {
-            background: #ffffff;
-            color: #000000;
-            border-color: #e5e7eb;
+            background: #1A1A1A;
+            color: #FFFFFF;
+            border-color: #2D2D2D;
           }
           .dialog-btn-secondary:hover {
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
         `
       }} />
@@ -978,21 +978,21 @@ export default function GoogleDriveExplorer({
             </div>
             
             {uploadFiles.length > 0 && (
-              <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
+              <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#71717A' }}>
                 <div style={{ marginBottom: '0.5rem' }}>
                   <strong>Selected {uploadFiles.length} file{uploadFiles.length === 1 ? '' : 's'}:</strong>
                 </div>
-                <div style={{ maxHeight: '150px', overflowY: 'auto', background: '#f9fafb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                <div style={{ maxHeight: '150px', overflowY: 'auto', background: '#141414', padding: '0.5rem', borderRadius: '4px', border: '1px solid #2D2D2D' }}>
                   {uploadFiles.map((file, index) => (
                     <div key={index} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center',
                       padding: '0.25rem 0',
-                      borderBottom: index < uploadFiles.length - 1 ? '1px solid #e5e7eb' : 'none'
+                      borderBottom: index < uploadFiles.length - 1 ? '1px solid #2D2D2D' : 'none'
                     }}>
                       <span style={{ flex: 1, marginRight: '0.5rem', fontSize: '0.8rem' }}>{file.name}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#71717A' }}>
                         ({Math.round(file.size / 1024)} KB)
                       </span>
                       <button
@@ -1016,27 +1016,27 @@ export default function GoogleDriveExplorer({
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#71717A' }}>
                   Total size: <strong>{Math.round(uploadFiles.reduce((sum, file) => sum + file.size, 0) / 1024)} KB</strong>
                 </div>
                               </div>
               )}
             
-            {uploading && uploadProgress.total > 0 && (
+                {uploading && uploadProgress.total > 0 && (
               <div style={{ 
                 marginBottom: '1rem', 
                 padding: '0.75rem', 
-                background: '#f0f9ff', 
+                background: '#1A1A1A', 
                 border: '1px solid #3b82f6', 
                 borderRadius: '6px' 
               }}>
-                <div style={{ marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: '#1e40af' }}>
+                <div style={{ marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: '#A1A1AA' }}>
                   Upload Progress: {uploadProgress.uploaded} of {uploadProgress.total} files
                 </div>
                 <div style={{ 
                   width: '100%', 
                   height: '8px', 
-                  background: '#e5e7eb', 
+                  background: '#2D2D2D', 
                   borderRadius: '4px', 
                   overflow: 'hidden',
                   marginBottom: '0.5rem'
@@ -1049,7 +1049,7 @@ export default function GoogleDriveExplorer({
                   }}></div>
                 </div>
                 {uploadProgress.currentFile && uploadProgress.currentFile !== 'Complete' && (
-                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#71717A' }}>
                     Currently uploading: <strong>{uploadProgress.currentFile}</strong>
                   </div>
                 )}

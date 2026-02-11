@@ -582,11 +582,11 @@ export default function MeetingNotesModal({
             background: #FFFFFF;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #374151;
+            color: #1A1A1A;
             box-shadow: 0 2px 8px rgba(255,255,255,0.2);
           }
           .close-btn:hover {
-            background: #F3F4F6;
+            background: #1F1F1F;
             color: #EF4444;
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(255,255,255,0.3);
@@ -945,7 +945,7 @@ export default function MeetingNotesModal({
             gap: 0.75rem;
           }
           .step-number {
-            color: #000000;
+            color: #FFFFFF;
             font-weight: 700;
             font-size: 1.25rem;
             flex-shrink: 0;
@@ -1104,7 +1104,7 @@ export default function MeetingNotesModal({
             margin-bottom: 0.75rem;
           }
           .section-number {
-            background: #4b5563 !important;
+            background: #71717A !important;
             font-size: 0.625rem !important;
             width: 1.5rem !important;
             height: 1.5rem !important;

@@ -264,8 +264,8 @@ export default function MeetingDetailModal({
           .action-btn.edit { background: #2D2D2D; }
           .action-btn.save { background: #000000; color: #ffffff; }
           .action-btn.delete { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
-          .action-btn.close { background: #FFFFFF; border: 2px solid #FFFFFF; color: #374151; box-shadow: 0 2px 8px rgba(255,255,255,0.3); }
-          .action-btn.close:hover { background: #F3F4F6; color: #EF4444; transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(255,255,255,0.4); }
+          .action-btn.close { background: #FFFFFF; border: 2px solid #FFFFFF; color: #1A1A1A; box-shadow: 0 2px 8px rgba(255,255,255,0.3); }
+          .action-btn.close:hover { background: #1F1F1F; color: #EF4444; transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(255,255,255,0.4); }
           .modal-body {
             padding: 1rem;
           }

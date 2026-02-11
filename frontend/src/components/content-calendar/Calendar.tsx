@@ -80,40 +80,40 @@ export default function Calendar({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="h-full flex flex-col bg-[#1A1A1A] rounded-xl shadow-sm border border-[#2D2D2D]">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">{monthName}</h2>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#2D2D2D]">
+        <h2 className="text-xl font-semibold text-white">{monthName}</h2>
         <div className="flex items-center gap-2">
           <button
             onClick={onToday}
-            className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm font-medium text-[#A1A1AA] hover:bg-[#1F1F1F] rounded-lg transition-colors"
           >
             Today
           </button>
-          <div className="flex items-center border border-gray-200 rounded-lg">
+          <div className="flex items-center border border-[#2D2D2D] rounded-lg">
             <button
               onClick={onPreviousMonth}
-              className="p-2 hover:bg-gray-100 rounded-l-lg transition-colors"
+              className="p-2 hover:bg-[#1F1F1F] rounded-l-lg transition-colors"
             >
-              <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
+              <ChevronLeftIcon className="w-5 h-5 text-[#A1A1AA]" />
             </button>
             <button
               onClick={onNextMonth}
-              className="p-2 hover:bg-gray-100 rounded-r-lg transition-colors"
+              className="p-2 hover:bg-[#1F1F1F] rounded-r-lg transition-colors"
             >
-              <ChevronRightIcon className="w-5 h-5 text-gray-600" />
+              <ChevronRightIcon className="w-5 h-5 text-[#A1A1AA]" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Week Day Headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200">
+      <div className="grid grid-cols-7 border-b border-[#2D2D2D]">
         {weekDays.map(day => (
           <div
             key={day}
-            className="px-2 py-3 text-center text-sm font-medium text-gray-500"
+            className="px-2 py-3 text-center text-sm font-medium text-[#71717A]"
           >
             {day}
           </div>
@@ -132,8 +132,8 @@ export default function Calendar({
               onClick={() => onSelectDate(day.date)}
               className={`
                 min-h-[100px] p-2 border-b border-r border-gray-100 cursor-pointer
-                transition-colors hover:bg-gray-50
-                ${!day.isCurrentMonth ? 'bg-gray-50' : 'bg-white'}
+                transition-colors hover:bg-[#141414]
+                ${!day.isCurrentMonth ? 'bg-[#141414]' : 'bg-[#1A1A1A]'}
               `}
             >
               {/* Date Number */}
@@ -142,13 +142,13 @@ export default function Calendar({
                   className={`
                     text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
                     ${day.isToday ? 'bg-blue-600 text-white' : ''}
-                    ${!day.isCurrentMonth ? 'text-gray-400' : 'text-gray-900'}
+                    ${!day.isCurrentMonth ? 'text-[#52525B]' : 'text-white'}
                   `}
                 >
                   {day.date.getDate()}
                 </span>
                 {dayPosts.length > 3 && (
-                  <span className="text-xs text-gray-500">+{dayPosts.length - 3}</span>
+                  <span className="text-xs text-[#71717A]">+{dayPosts.length - 3}</span>
                 )}
               </div>
 
@@ -224,7 +224,7 @@ function CalendarPostItem({
         </div>
         
         {/* Title */}
-        <span className="truncate text-gray-700 font-medium flex-1">
+        <span className="truncate text-[#A1A1AA] font-medium flex-1">
           {post.title}
         </span>
       </div>

@@ -178,16 +178,16 @@ export default function PostDrawer({
   return (
     <div 
       className={`
-        fixed right-0 top-0 h-full bg-white shadow-2xl border-l border-gray-200
+        fixed right-0 top-0 h-full bg-[#1A1A1A] shadow-2xl border-l border-[#2D2D2D]
         transition-transform duration-300 ease-in-out z-50
         w-full md:w-[500px] lg:w-[600px]
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#2D2D2D] bg-[#141414]">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-white">
             {mode === 'create' ? 'New Post' : mode === 'edit' ? 'Edit Post' : 'Post Details'}
           </h2>
           {post && mode === 'view' && <StatusBadge status={post.status} />}
@@ -197,7 +197,7 @@ export default function PostDrawer({
             <>
               <button
                 onClick={onEdit}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-[#A1A1AA] hover:bg-[#1F1F1F] rounded-lg transition-colors"
                 title="Edit"
               >
                 <PencilIcon className="w-5 h-5" />
@@ -213,7 +213,7 @@ export default function PostDrawer({
           )}
           <button
             onClick={onClose}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-[#A1A1AA] hover:bg-[#1F1F1F] rounded-lg transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -231,9 +231,9 @@ export default function PostDrawer({
           <div className="space-y-6">
             {/* Title & Type */}
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">{post.title}</h3>
               <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+                <span className="px-2 py-1 bg-[#1F1F1F] text-[#A1A1AA] text-sm rounded">
                   {CONTENT_TYPE_CONFIG[post.content_type]?.label || post.content_type}
                 </span>
                 {post.campaign && (
@@ -249,7 +249,7 @@ export default function PostDrawer({
 
             {/* Platforms */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Platforms</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Platforms</label>
               <div className="flex flex-wrap gap-2">
                 {post.platforms?.map(platform => (
                   <PlatformBadge key={platform} platform={platform} />
@@ -260,8 +260,8 @@ export default function PostDrawer({
             {/* Caption */}
             {post.caption && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Caption</label>
-                <p className="text-gray-600 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg">
+                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Caption</label>
+                <p className="text-[#A1A1AA] whitespace-pre-wrap bg-[#141414] p-3 rounded-lg">
                   {post.caption}
                 </p>
               </div>
@@ -270,8 +270,8 @@ export default function PostDrawer({
             {/* Schedule */}
             {post.planned_publish_at && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Scheduled For</label>
-                <div className="flex items-center gap-2 text-gray-600">
+                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Scheduled For</label>
+                <div className="flex items-center gap-2 text-[#A1A1AA]">
                   <ClockIcon className="w-5 h-5" />
                   {new Date(post.planned_publish_at).toLocaleString()}
                 </div>
@@ -280,23 +280,23 @@ export default function PostDrawer({
 
             {/* Team */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Team</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Team</label>
               <div className="space-y-2">
                 {post.owner && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 w-20">Owner:</span>
+                    <span className="text-sm text-[#71717A] w-20">Owner:</span>
                     <span className="text-sm font-medium">{post.owner.name}</span>
                   </div>
                 )}
                 {post.designer && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 w-20">Designer:</span>
+                    <span className="text-sm text-[#71717A] w-20">Designer:</span>
                     <span className="text-sm font-medium">{post.designer.name}</span>
                   </div>
                 )}
                 {post.editor && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 w-20">Editor:</span>
+                    <span className="text-sm text-[#71717A] w-20">Editor:</span>
                     <span className="text-sm font-medium">{post.editor.name}</span>
                   </div>
                 )}
@@ -306,19 +306,19 @@ export default function PostDrawer({
             {/* Checklist */}
             {post.checklist && post.checklist.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">
                   Checklist ({post.checklist.filter(c => c.is_completed).length}/{post.checklist.length})
                 </label>
                 <div className="space-y-2">
                   {post.checklist.map(item => (
                     <div 
                       key={item.id}
-                      className={`flex items-center gap-2 p-2 rounded ${item.is_completed ? 'bg-green-50' : 'bg-gray-50'}`}
+                      className={`flex items-center gap-2 p-2 rounded ${item.is_completed ? 'bg-green-50' : 'bg-[#141414]'}`}
                     >
-                      <div className={`w-5 h-5 rounded border ${item.is_completed ? 'bg-green-500 border-green-500' : 'border-gray-300'} flex items-center justify-center`}>
+                      <div className={`w-5 h-5 rounded border ${item.is_completed ? 'bg-green-500 border-green-500' : 'border-[#3D3D3D]'} flex items-center justify-center`}>
                         {item.is_completed && <CheckIcon className="w-3 h-3 text-white" />}
                       </div>
-                      <span className={item.is_completed ? 'line-through text-gray-400' : 'text-gray-700'}>
+                      <span className={item.is_completed ? 'line-through text-[#52525B]' : 'text-[#A1A1AA]'}>
                         {item.item_text}
                       </span>
                     </div>
@@ -329,7 +329,7 @@ export default function PostDrawer({
 
             {/* Status Workflow */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Change Status</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Change Status</label>
               <div className="flex flex-wrap gap-2">
                 {STATUSES.map(status => (
                   <button
@@ -357,25 +357,25 @@ export default function PostDrawer({
           <div className="space-y-6">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter post title"
               />
             </div>
 
             {/* Content Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Content Type</label>
               <select
                 value={formData.content_type}
                 onChange={(e) => setFormData({ ...formData, content_type: e.target.value as ContentType })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 {CONTENT_TYPES.map(type => (
                   <option key={type} value={type}>{CONTENT_TYPE_CONFIG[type].label}</option>
@@ -385,7 +385,7 @@ export default function PostDrawer({
 
             {/* Platforms */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">
                 Platforms <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -397,7 +397,7 @@ export default function PostDrawer({
                     className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
                       formData.platforms.includes(platform)
                         ? 'text-white shadow-md'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-[#1F1F1F] text-[#A1A1AA] hover:bg-[#2D2D2D]'
                     }`}
                     style={{
                       backgroundColor: formData.platforms.includes(platform) 
@@ -413,34 +413,34 @@ export default function PostDrawer({
 
             {/* Caption */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Caption</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Caption</label>
               <textarea
                 value={formData.caption}
                 onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Write your caption..."
               />
             </div>
 
             {/* Schedule */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Schedule</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Schedule</label>
               <input
                 type="datetime-local"
                 value={formData.planned_publish_at}
                 onChange={(e) => setFormData({ ...formData, planned_publish_at: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Campaign */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Campaign</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Campaign</label>
               <select
                 value={formData.campaign_id || ''}
                 onChange={(e) => setFormData({ ...formData, campaign_id: e.target.value ? parseInt(e.target.value) : null })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">No Campaign</option>
                 {campaigns.map(campaign => (
@@ -452,11 +452,11 @@ export default function PostDrawer({
             {/* Team Assignment */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Owner</label>
+                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Owner</label>
                 <select
                   value={formData.owner_id || ''}
                   onChange={(e) => setFormData({ ...formData, owner_id: e.target.value ? parseInt(e.target.value) : null })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-[#3D3D3D] rounded-lg text-sm"
                 >
                   <option value="">Select</option>
                   {members.map(m => (
@@ -465,11 +465,11 @@ export default function PostDrawer({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Designer</label>
+                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Designer</label>
                 <select
                   value={formData.designer_id || ''}
                   onChange={(e) => setFormData({ ...formData, designer_id: e.target.value ? parseInt(e.target.value) : null })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-[#3D3D3D] rounded-lg text-sm"
                 >
                   <option value="">Select</option>
                   {members.map(m => (
@@ -478,11 +478,11 @@ export default function PostDrawer({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Editor</label>
+                <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Editor</label>
                 <select
                   value={formData.editor_id || ''}
                   onChange={(e) => setFormData({ ...formData, editor_id: e.target.value ? parseInt(e.target.value) : null })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-[#3D3D3D] rounded-lg text-sm"
                 >
                   <option value="">Select</option>
                   {members.map(m => (
@@ -494,11 +494,11 @@ export default function PostDrawer({
 
             {/* Priority */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Priority</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Low</option>
                 <option value="normal">Normal</option>
@@ -509,10 +509,10 @@ export default function PostDrawer({
 
             {/* Checklist */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Checklist</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Checklist</label>
               <div className="space-y-2 mb-2">
                 {formData.checklist_items.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                  <div key={index} className="flex items-center gap-2 p-2 bg-[#141414] rounded">
                     <span className="flex-1 text-sm">{item}</span>
                     <button
                       type="button"
@@ -533,7 +533,7 @@ export default function PostDrawer({
                   value={newChecklistItem}
                   onChange={(e) => setNewChecklistItem(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="flex-1 px-3 py-2 border border-[#3D3D3D] rounded-lg text-sm"
                   placeholder="Add checklist item"
                 />
                 <button
@@ -548,12 +548,12 @@ export default function PostDrawer({
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+              <label className="block text-sm font-medium text-[#A1A1AA] mb-2">Notes</label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-[#3D3D3D] rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Internal notes..."
               />
             </div>
@@ -563,11 +563,11 @@ export default function PostDrawer({
 
       {/* Footer Actions */}
       {(mode === 'edit' || mode === 'create') && (
-        <div className="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 bg-white">
+        <div className="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-[#2D2D2D] bg-[#1A1A1A]">
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              className="flex-1 px-4 py-2 border border-[#3D3D3D] text-[#A1A1AA] rounded-lg hover:bg-[#141414]"
             >
               Cancel
             </button>

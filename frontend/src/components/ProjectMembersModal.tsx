@@ -103,20 +103,20 @@ export default function ProjectMembersModal({
             animation: fadeIn 0.3s ease-out;
           }
           .members-modal-content {
-            background: #ffffff;
-            border: 2px solid #000000;
+            background: #1A1A1A;
+            border: 2px solid #2D2D2D;
             border-radius: 12px;
             width: 100%;
             max-width: 600px;
             max-height: 80vh;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
             animation: slideIn 0.3s ease-out;
             position: relative;
           }
           .members-modal-header {
             padding: 1.5rem 2rem;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid #2D2D2D;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -124,7 +124,7 @@ export default function ProjectMembersModal({
           .members-modal-title {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #000000;
+            color: #FFFFFF;
           }
           .members-modal-body {
             padding: 2rem;
@@ -140,22 +140,24 @@ export default function ProjectMembersModal({
           .search-input {
             width: 100%;
             padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.2s ease;
+            background: #141414;
+            color: #FFFFFF;
           }
           .search-input:focus {
             outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            border-color: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
           }
           .search-icon {
             position: absolute;
             left: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #9ca3af;
+            color: #71717A;
           }
           .members-section {
             margin-bottom: 2rem;
@@ -163,15 +165,15 @@ export default function ProjectMembersModal({
           .section-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
           }
           .member-count {
-            background: #f3f4f6;
-            color: #374151;
+            background: #1F1F1F;
+            color: #A1A1AA;
             padding: 0.25rem 0.5rem;
             border-radius: 12px;
             font-size: 0.8rem;
@@ -187,13 +189,14 @@ export default function ProjectMembersModal({
             align-items: center;
             justify-content: space-between;
             padding: 1rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 8px;
             transition: all 0.2s ease;
+            background: #141414;
           }
           .user-item:hover {
-            border-color: #d1d5db;
-            background: #f9fafb;
+            border-color: #3D3D3D;
+            background: #1F1F1F;
           }
           .user-info {
             display: flex;
@@ -203,31 +206,31 @@ export default function ProjectMembersModal({
           .user-avatar {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border: 2px solid #000000;
+            background: linear-gradient(135deg, #1F1F1F 0%, #2D2D2D 100%);
+            border: 2px solid #FFFFFF;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1rem;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
           }
           .user-details {
             flex: 1;
           }
           .user-name {
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.25rem;
           }
           .user-email {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: #A1A1AA;
           }
           .user-role {
             font-size: 0.75rem;
-            color: #9ca3af;
+            color: #52525B;
             text-transform: uppercase;
             font-weight: 500;
           }
@@ -235,7 +238,7 @@ export default function ProjectMembersModal({
             padding: 0.5rem;
             border: 2px solid;
             border-radius: 6px;
-            background: #ffffff;
+            background: #141414;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -275,12 +278,12 @@ export default function ProjectMembersModal({
             transition: all 0.2s ease;
           }
           .close-btn:hover {
-            background: #f3f4f6;
+            background: #1F1F1F;
           }
           .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
+            background: #1A1A1A;
+            border: 1px solid #EF4444;
+            color: #EF4444;
             padding: 0.75rem;
             border-radius: 6px;
             margin-bottom: 1rem;
@@ -289,7 +292,7 @@ export default function ProjectMembersModal({
           .empty-state {
             text-align: center;
             padding: 2rem;
-            color: #6b7280;
+            color: #A1A1AA;
           }
           @keyframes fadeIn {
             from { opacity: 0; }
@@ -376,14 +379,14 @@ export default function ProjectMembersModal({
               {!searchQuery ? (
                 <div className="empty-state">
                   <p>🔍 Search by name or email to find team members</p>
-                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#9ca3af' }}>
+                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#52525B' }}>
                     For privacy, team members are only shown when searched
                   </p>
                 </div>
               ) : nonMembers.length === 0 ? (
                 <div className="empty-state">
                   <p>No users found matching "{searchQuery}"</p>
-                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#9ca3af' }}>
+                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#52525B' }}>
                     Try searching by full name or email address
                   </p>
                 </div>
