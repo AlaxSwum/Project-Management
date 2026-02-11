@@ -2760,10 +2760,16 @@ label[style*="color: #6B7280"] {
 /* ============================================== */
 
 @media screen and (max-width: 1024px) {
-  /* Ensure all buttons have minimum tap target */
-  button:not(.sidebar-color-btn):not(.sidebar-cancel-btn):not(.sidebar-submit-btn):not(.sidebar-create-btn):not(.sidebar-logout-btn):not(.mobile-hamburger) {
+  /* Ensure all buttons have minimum tap target - exclude modal/internal buttons */
+  button:not(.sidebar-color-btn):not(.sidebar-cancel-btn):not(.sidebar-submit-btn):not(.sidebar-create-btn):not(.sidebar-logout-btn):not(.mobile-hamburger):not(.task-action-btn):not(.tab-button):not(.status-btn):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-danger):not(.cal-toggle-btn):not(.cal-btn-secondary):not(.cal-btn-primary):not(.cal-back):not(.cal-cal-btn):not(.cal-modal-close):not(.ms-nav-btn):not(.ms-platform-save):not(.ms-platform-cancel) {
     min-height: 44px !important;
     min-width: 44px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+  }
+  
+  /* All buttons get tap highlight removal */
+  button {
     -webkit-tap-highlight-color: transparent !important;
     touch-action: manipulation !important;
   }

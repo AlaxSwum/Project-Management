@@ -766,52 +766,188 @@ export default function TaskDetailModal({ task, users, onClose, onSave, onStatus
             50% { opacity: 0.7; }
           }
           
-          /* Mobile optimizations */
-          @media (max-width: 768px) {
-            .task-modal-overlay {
-              padding: 0.75rem;
-              z-index: 100000;
-            }
+          /* TABLET optimizations (max-width: 1024px) */
+          @media (max-width: 1024px) {
             .task-modal-content {
-              max-width: calc(100vw - 1.5rem);
-              border-radius: 16px;
-              height: 90vh;
-              margin: 0 auto;
-              z-index: 100001;
+              max-width: calc(100vw - 2rem) !important;
+              height: 90vh !important;
+              max-height: 90vh !important;
+              border-radius: 16px !important;
             }
             .task-modal-header {
-              padding: 1.5rem;
-              flex-direction: column;
-              align-items: stretch;
-              gap: 1rem;
+              padding: 1.25rem 1.5rem !important;
             }
-            .task-header-actions {
-              justify-content: center;
+            .task-title {
+              font-size: 1.5rem !important;
             }
             .tab-content {
-              padding: 1.5rem;
+              padding: 1.25rem 1.5rem !important;
+            }
+          }
+
+          /* MOBILE optimizations (max-width: 768px) */
+          @media (max-width: 768px) {
+            .task-modal-overlay {
+              padding: 0 !important;
+              align-items: flex-end !important;
+            }
+            .task-modal-content {
+              max-width: 100vw !important;
+              width: 100vw !important;
+              height: 95vh !important;
+              max-height: 95vh !important;
+              border-radius: 16px 16px 0 0 !important;
+              border-bottom: none !important;
+              margin: 0 !important;
+            }
+            .task-modal-header {
+              padding: 1rem !important;
+              flex-direction: column !important;
+              align-items: stretch !important;
+              gap: 0.75rem !important;
+            }
+            .task-title {
+              font-size: 1.25rem !important;
+              margin-bottom: 0.5rem !important;
+            }
+            .task-meta-badges {
+              gap: 0.5rem !important;
+            }
+            .task-badge {
+              padding: 0.375rem 0.75rem !important;
+              font-size: 0.75rem !important;
+              border-radius: 8px !important;
+              border-width: 1px !important;
+            }
+            .task-header-actions {
+              justify-content: flex-end !important;
+              gap: 0.5rem !important;
+            }
+            .task-action-btn {
+              padding: 0.625rem !important;
+              min-height: auto !important;
+              min-width: auto !important;
+              border-radius: 10px !important;
+            }
+            .tab-navigation {
+              flex-shrink: 0 !important;
+            }
+            .tab-button {
+              padding: 0.875rem 0.75rem !important;
+              font-size: 0.8rem !important;
+              gap: 0.5rem !important;
+              min-height: auto !important;
+              min-width: auto !important;
+            }
+            .tab-button:hover {
+              transform: none !important;
+            }
+            .tab-button.active {
+              transform: none !important;
+            }
+            .tab-content {
+              padding: 1rem !important;
+            }
+            .task-description {
+              padding: 1rem !important;
+              font-size: 0.875rem !important;
+              margin-bottom: 1rem !important;
+              border-width: 1px !important;
             }
             .task-details-grid {
-              grid-template-columns: 1fr;
-              gap: 1rem;
+              grid-template-columns: 1fr !important;
+              gap: 0.75rem !important;
+              margin-bottom: 1rem !important;
             }
             .task-detail-item {
-              padding: 1rem;
+              padding: 0.875rem !important;
+              gap: 0.75rem !important;
+              border-width: 1px !important;
+            }
+            .task-detail-item:hover {
+              transform: none !important;
+            }
+            .task-detail-label {
+              font-size: 0.75rem !important;
+            }
+            .task-detail-value {
+              font-size: 0.85rem !important;
+            }
+            .task-status-actions-inline {
+              padding: 1rem !important;
+              margin-top: 1rem !important;
+              border-width: 1px !important;
+            }
+            .status-buttons {
+              gap: 0.5rem !important;
+              flex-wrap: wrap !important;
+            }
+            .status-btn {
+              padding: 0.625rem 0.875rem !important;
+              font-size: 0.8rem !important;
+              border-radius: 10px !important;
+              border-width: 1px !important;
+              min-height: auto !important;
+              min-width: auto !important;
+              flex: 1 1 45% !important;
+            }
+            .status-btn:hover {
+              transform: none !important;
+            }
+            .edit-form {
+              gap: 1.25rem !important;
             }
             .edit-form div[style*="grid"] {
               grid-template-columns: 1fr !important;
             }
+            .form-input, .form-textarea, .form-select {
+              padding: 0.875rem 1rem !important;
+              font-size: 16px !important;
+              border-width: 1px !important;
+            }
             .form-actions {
-              flex-direction: column;
-              gap: 1rem;
+              flex-direction: column !important;
+              gap: 0.75rem !important;
             }
             .btn {
-              padding: 1.25rem;
-              font-size: 1rem;
+              padding: 1rem !important;
+              font-size: 0.9rem !important;
+              min-height: auto !important;
+              min-width: auto !important;
             }
-            .tab-button {
-              padding: 1rem;
-              font-size: 0.875rem;
+            .confirm-modal-content {
+              max-width: calc(100vw - 2rem) !important;
+              padding: 1.5rem !important;
+            }
+            .confirm-modal-actions {
+              flex-direction: column !important;
+              gap: 0.75rem !important;
+            }
+            .btn-danger {
+              min-height: auto !important;
+              min-width: auto !important;
+            }
+          }
+
+          /* SMALL MOBILE (max-width: 480px) */
+          @media (max-width: 480px) {
+            .task-modal-content {
+              height: 100vh !important;
+              max-height: 100vh !important;
+              border-radius: 0 !important;
+            }
+            .task-title {
+              font-size: 1.125rem !important;
+            }
+            .task-modal-header {
+              padding: 0.75rem !important;
+            }
+            .tab-content {
+              padding: 0.75rem !important;
+            }
+            .task-badge {
+              padding: 0.25rem 0.5rem !important;
+              font-size: 0.7rem !important;
             }
           }
         `
