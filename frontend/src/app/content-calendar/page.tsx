@@ -130,15 +130,15 @@ export default function ContentCalendarPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D0D0D' }}>
       <div style={{ width: '32px', height: '32px', border: '3px solid #2D2D2D', borderTop: '3px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
+      </div>
+    )
 
-  return (
+    return (
     <div style={{ minHeight: '100vh', display: 'flex', background: '#0D0D0D' }}>
       {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
       <MobileHeader title="Content Calendar" isMobile={isMobile} />
       
-      <main style={{ 
+      <main className="page-main" style={{ 
         flex: 1, 
         marginLeft: isMobile ? 0 : '280px', 
         background: '#0D0D0D',
@@ -197,14 +197,14 @@ export default function ContentCalendarPage() {
             <PlusIcon style={{ width: '20px', height: '20px' }} />
             New Company
           </button>
-        </div>
-
+            </div>
+            
         {/* Content */}
         <div style={{ padding: '0 2rem 2rem' }}>
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
               <div style={{ width: '32px', height: '32px', border: '3px solid #2D2D2D', borderTop: '3px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            </div>
+              </div>
           ) : filteredCompanies.length === 0 ? (
             <div style={{ 
               background: '#141414', 
@@ -251,8 +251,8 @@ export default function ContentCalendarPage() {
                   Create Company
                 </button>
               )}
-            </div>
-          ) : (
+                </div>
+              ) : (
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', 
@@ -296,7 +296,7 @@ export default function ContentCalendarPage() {
                         <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '1.25rem' }}>
                           {company.name.charAt(0).toUpperCase()}
                         </span>
-                      </div>
+                        </div>
                       <div style={{ flex: 1 }}>
                         <h3 style={{ 
                           fontSize: '1.125rem', 
@@ -471,7 +471,7 @@ export default function ContentCalendarPage() {
                 onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
                 onBlur={(e) => e.target.style.borderColor = '#2D2D2D'}
               />
-            </div>
+          </div>
             
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#E4E4E7', marginBottom: '0.5rem' }}>
@@ -497,7 +497,7 @@ export default function ContentCalendarPage() {
                 onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
                 onBlur={(e) => e.target.style.borderColor = '#2D2D2D'}
               />
-            </div>
+              </div>
             
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid #1F1F1F' }}>
               <button
@@ -529,8 +529,8 @@ export default function ContentCalendarPage() {
                 Create Company
               </button>
             </div>
-          </div>
-        </div>
+                </div>
+                </div>
       )}
 
       {/* Members Modal */}
@@ -590,7 +590,7 @@ export default function ContentCalendarPage() {
                 >
                   <option value="">Select member</option>
                   {teamMembers.map(m => <option key={m.id} value={String(m.id)}>{m.name}</option>)}
-                </select>
+                        </select>
                 <select
                   value={memberForm.role}
                   onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })}
@@ -605,7 +605,7 @@ export default function ContentCalendarPage() {
                   }}
                 >
                   {COMPANY_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
+                        </select>
                 <button
                   onClick={handleAddMember}
                   style={{
@@ -620,14 +620,14 @@ export default function ContentCalendarPage() {
                 >
                   Add
                 </button>
-              </div>
-            </div>
+                    </div>
+                    </div>
 
             {/* Members List */}
-            {members.length === 0 ? (
+                {members.length === 0 ? (
               <p style={{ color: '#71717A', textAlign: 'center', padding: '2rem' }}>No members yet</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {members.map(member => (
                   <div 
                     key={member.id} 
@@ -656,12 +656,12 @@ export default function ContentCalendarPage() {
                       }}>
                         {(member.user_name || 'U').charAt(0).toUpperCase()}
                       </div>
-                      <div>
+                    <div>
                         <div style={{ fontWeight: 500, color: '#FFFFFF' }}>{member.user_name || 'Unknown'}</div>
                         <div style={{ fontSize: '0.8125rem', color: '#71717A' }}>{member.user_email}</div>
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ 
                         padding: '0.375rem 0.75rem', 
                         fontSize: '0.75rem', 
@@ -687,11 +687,11 @@ export default function ContentCalendarPage() {
                       >
                         Remove
                       </button>
-                    </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #1F1F1F' }}>
               <button
@@ -716,6 +716,6 @@ export default function ContentCalendarPage() {
       <style jsx global>{`
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
-    </div>
+            </div>
   )
 }

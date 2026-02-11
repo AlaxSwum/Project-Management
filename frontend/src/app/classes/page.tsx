@@ -905,7 +905,7 @@ export default function ClassesPage() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
@@ -932,7 +932,7 @@ export default function ClassesPage() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
@@ -1157,7 +1157,7 @@ export default function ClassesPage() {
       <div className="classes-container" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
-        <div className="classes-main-content" style={{ 
+        <div className="classes-main-content page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: '2rem', 
           background: 'transparent', 

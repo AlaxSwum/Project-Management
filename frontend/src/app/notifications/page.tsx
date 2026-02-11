@@ -220,7 +220,7 @@ export default function NotificationsPage() {
     <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
       <Sidebar projects={projects} onCreateProject={() => {}} />
       
-      <div style={{ flex: 1, marginLeft: '280px', background: '#0D0D0D' }}>
+      <div className="page-main" style={{ flex: 1, marginLeft: '280px', background: '#0D0D0D' }}>
         {/* Header */}
         <header style={{ padding: '2rem 2rem 1.5rem', borderBottom: '1px solid #1F1F1F' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>

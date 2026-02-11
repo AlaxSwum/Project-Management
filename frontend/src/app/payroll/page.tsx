@@ -703,7 +703,7 @@ export default function PayrollPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <MobileHeader title="Payroll Generation" isMobile={isMobile} />
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '70px' : '2rem',
@@ -723,7 +723,7 @@ export default function PayrollPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <MobileHeader title="Payroll Generation" isMobile={isMobile} />
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '70px' : '2rem',
@@ -782,7 +782,7 @@ export default function PayrollPage() {
       <div className="payroll-page" style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         {!isMobile && <Sidebar projects={projects} onCreateProject={() => {}} />}
         
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '70px' : '2rem',

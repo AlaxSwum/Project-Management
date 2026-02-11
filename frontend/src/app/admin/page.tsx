@@ -859,7 +859,7 @@ export default function AdminDashboardPage() {
       `}</style>
       <div className="admin-container">
         <Sidebar projects={sidebarProjects} onCreateProject={() => router.push('/dashboard')} />
-        <div className="main-content">
+        <div className="main-content page-main">
           <div className="header">
             <div className="header-content">
               <h1 className="title">Admin Dashboard</h1>

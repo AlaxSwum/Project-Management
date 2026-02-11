@@ -265,7 +265,7 @@ export default function SettingsPage() {
     <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
       <Sidebar projects={projects} onCreateProject={() => {}} />
       
-      <div style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
+      <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
         {/* Header */}
         <div style={{ padding: '2rem', borderBottom: '1px solid #1F1F1F', background: '#141414' }}>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Settings</h1>

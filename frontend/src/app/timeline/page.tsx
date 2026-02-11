@@ -1348,7 +1348,7 @@ export default function TimelineRoadmapPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
-        <div style={{
+        <div className="page-main" style={{
           marginLeft: isMobile ? '0' : '280px',
           flex: 1,
           padding: isMobile ? '90px 16px 20px' : '32px',

@@ -1004,7 +1004,7 @@ export default function CompanyOutreachPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <MobileHeader title="Company Outreach" isMobile={isMobile} />
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '70px' : '2rem',
@@ -1038,7 +1038,7 @@ export default function CompanyOutreachPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <MobileHeader title="Company Outreach" isMobile={isMobile} />
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '70px' : '2rem',
@@ -1095,7 +1095,7 @@ export default function CompanyOutreachPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
         
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '12px' : '2rem', 
           paddingTop: isMobile ? '70px' : '2rem',

@@ -235,7 +235,7 @@ export default function PersonalPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: isMobile ? '0' : '256px',
           padding: isMobile ? '1rem' : '2rem', 
           background: '#f8fafc', 

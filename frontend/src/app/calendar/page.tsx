@@ -2447,7 +2447,7 @@ export default function CalendarPage() {
           />
         )}
         
-        <div className="main-content">
+        <div className="page-main main-content">
           <header className="header">
             <div className="header-content">
               <h1 className="header-title">

@@ -1,9 +1,9 @@
 {
+  "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/api/send-reminders": "pages/api/send-reminders.js",
   "/api/test-notifications": "pages/api/test-notifications.js",
   "/api/test": "pages/api/test.js",
-  "/_app": "pages/_app.js",
   "/api/google-drive-proxy": "pages/api/google-drive-proxy.js",
   "/_document": "pages/_document.js"
 }

@@ -69,7 +69,7 @@ export default function DashboardPage() {
     <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
       <Sidebar projects={projects} onCreateProject={() => {}} />
       
-      <div style={{ flex: 1, marginLeft: '280px', background: '#0D0D0D' }}>
+      <div className="page-main" style={{ flex: 1, marginLeft: '280px', background: '#0D0D0D' }}>
         {/* Header */}
         <div style={{ padding: '2rem 2rem 1.5rem', borderBottom: '1px solid #1F1F1F' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.5rem', fontFamily: 'Mabry Pro, sans-serif' }}>

@@ -39,10 +39,10 @@
     "id": 7514,
     "files": [
       "static/chunks/7708-d547e2bb1f4decd6.js",
-      "static/chunks/8411-aebb92fd76416b58.js",
-      "static/chunks/3152-626940a2759b0978.js",
-      "static/chunks/7514-373f0e05f09de464.js",
-      "static/chunks/1904.a6a52f090d470c87.js"
+      "static/chunks/8411-aa7d48fd7982d8d4.js",
+      "static/chunks/3152-166633a0e9f92694.js",
+      "static/chunks/7514-a900f931cb58fd02.js",
+      "static/chunks/3581.789e5c98c3cdf977.js"
     ]
   },
   "../app/employee-absent/page.tsx -> @/lib/supabase": {
@@ -86,6 +86,12 @@
   "../components/MeetingDetailModal.tsx -> ../lib/api-compatibility": {
     "id": 3152,
     "files": []
+  },
+  "../components/Sidebar.tsx -> @/lib/api-compatibility": {
+    "id": 3152,
+    "files": [
+      "static/chunks/3152-166633a0e9f92694.js"
+    ]
   },
   "../components/Sidebar.tsx -> @/lib/supabase": {
     "id": 8411,

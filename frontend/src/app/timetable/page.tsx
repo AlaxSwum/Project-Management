@@ -952,7 +952,7 @@ export default function TimetablePage() {
         {isMobile && <MobileHeader title="Meeting Schedule" isMobile={isMobile} />}
         <div style={{ display: 'flex' }}>
           {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-          <div style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
+          <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
             {/* Skeleton Header */}
             <div style={{ marginBottom: '2rem' }}>
               <div style={{ height: '32px', width: '250px', background: '#E5E7EB', borderRadius: '8px', marginBottom: '12px', animation: 'pulse 1.5s infinite' }}></div>

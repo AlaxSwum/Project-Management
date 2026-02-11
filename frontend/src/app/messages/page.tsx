@@ -377,7 +377,7 @@ export default function MessagesPage() {
     <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
       <Sidebar projects={projects} onCreateProject={() => {}} />
       
-      <div style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
+      <div className="page-main" style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
         {/* Chat Area */}
         {selectedConversation ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0D0D0D', height: '100vh' }}>

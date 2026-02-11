@@ -400,7 +400,7 @@ Your changes are now saved in the system.`);
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#F5F5ED', 
@@ -441,7 +441,7 @@ Your changes are now saved in the system.`);
       <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#fafafa', 

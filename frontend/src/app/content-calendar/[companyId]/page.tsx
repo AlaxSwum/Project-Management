@@ -713,7 +713,7 @@ export default function CompanyCalendarPage() {
 
       <div className="cal-container">
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        <main className="cal-main">
+        <main className="page-main cal-main">
           <header className="cal-header">
             <div className="cal-nav">
               <button onClick={() => router.push('/content-calendar')} className="cal-back">Back</button>

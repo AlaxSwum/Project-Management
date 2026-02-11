@@ -264,7 +264,7 @@ export default function EmployeeAbsentPage() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#fafafa', 
@@ -295,7 +295,7 @@ export default function EmployeeAbsentPage() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#fafafa', 
@@ -332,7 +332,7 @@ export default function EmployeeAbsentPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#fafafa' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#fafafa', 

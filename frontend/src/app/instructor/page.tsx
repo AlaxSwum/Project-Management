@@ -639,7 +639,7 @@ export default function InstructorDashboard() {
     }}>
       <Sidebar projects={[]} onCreateProject={() => {}} />
       
-      <div style={{
+      <div className="page-main" style={{
         flex: '1',
         marginLeft: '16rem',
         padding: 'var(--spacing-xl)'

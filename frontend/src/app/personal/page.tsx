@@ -2080,7 +2080,7 @@ export default function PersonalPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="main-content personal-main personal-page"
+        className="main-content personal-main personal-page page-main"
         style={{
           minHeight: '100vh',
           marginLeft: isMobile ? '0' : (sidebarCollapsed ? '72px' : '256px'),

@@ -321,7 +321,7 @@ export default function GoalsPage() {
         onCollapsedChange={setIsSidebarCollapsed}
       />
 
-      <main style={{
+      <main className="page-main" style={{
         flex: 1,
         marginLeft: isSidebarCollapsed ? 80 : 280,
         padding: '32px',

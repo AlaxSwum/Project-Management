@@ -603,7 +603,7 @@ export default function PasswordVaultPage() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#0D0D0D', 
@@ -708,7 +708,7 @@ export default function PasswordVaultPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D' }}>
         <Sidebar projects={[]} onCreateProject={() => {}} />
 
-        <div style={{ 
+        <div className="page-main" style={{ 
           marginLeft: '256px',
           padding: '2rem', 
           background: '#0D0D0D', 

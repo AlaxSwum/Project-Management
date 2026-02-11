@@ -354,7 +354,7 @@ export default function ReportsPage() {
 
       <div className="rpt-container">
         {!isMobile && <Sidebar projects={[]} onCreateProject={() => {}} />}
-        <main className="rpt-main">
+        <main className="rpt-main page-main">
           <header className="rpt-header">
             <div className="rpt-header-top">
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

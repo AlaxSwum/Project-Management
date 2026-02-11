@@ -104,11 +104,21 @@ export default function Sidebar({ projects: externalProjects, onCreateProject }:
   // Use external projects if provided, otherwise fetch internally
   const projects = (externalProjects && externalProjects.length > 0) ? externalProjects : internalProjects;
 
-  // Fetch projects internally if none provided from parent
+  // Fetch projects internally ONCE on mount - use stable user ID instead of user object
+  const userIdRef = useRef<number | null>(null);
+  const hasLoadedProjects = useRef(false);
+
   useEffect(() => {
     const fetchSidebarProjects = async () => {
       if (externalProjects && externalProjects.length > 0) return; // Already have projects from parent
       if (!user?.id) return;
+      
+      // Only fetch if we haven't loaded yet OR user ID changed
+      if (hasLoadedProjects.current && userIdRef.current === user.id) return;
+      
+      userIdRef.current = user.id;
+      hasLoadedProjects.current = true;
+      
       try {
         const { projectService } = await import('@/lib/api-compatibility');
         const data = await projectService.getProjects();
@@ -124,7 +134,7 @@ export default function Sidebar({ projects: externalProjects, onCreateProject }:
       }
     };
     fetchSidebarProjects();
-  }, [user?.id, externalProjects]);
+  }, [user, externalProjects]);
 
   const handleDeleteProject = async (e: React.MouseEvent, projectId: number) => {
     e.preventDefault();
