@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
+import GlobalMessageNotification from '@/components/GlobalMessageNotification';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -39,17 +40,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {!isMobile && <Sidebar />}
-      {isMobile && <MobileHeader title="" isMobile={isMobile} />}
-      <div style={{ 
-        marginLeft: isMobile ? '0' : '256px', 
-        flex: 1, 
-        minHeight: '100vh',
-        width: isMobile ? '100%' : 'calc(100% - 256px)'
-      }}>
-        {children}
+    <>
+      <GlobalMessageNotification />
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        {!isMobile && <Sidebar />}
+        {isMobile && <MobileHeader title="" isMobile={isMobile} />}
+        <div style={{ 
+          marginLeft: isMobile ? '0' : '256px', 
+          flex: 1, 
+          minHeight: '100vh',
+          width: isMobile ? '100%' : 'calc(100% - 256px)'
+        }}>
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

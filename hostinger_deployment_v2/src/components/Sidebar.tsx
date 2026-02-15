@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 import NotificationDropdown from './NotificationDropdown';
 import {
   HomeIcon,
@@ -90,7 +91,7 @@ export default function Sidebar({ projects: externalProjects, onCreateProject }:
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [internalProjects, setInternalProjects] = useState<Project[]>([]);
+  const { projects: contextProjects, removeProject } = useProjects();
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -101,40 +102,8 @@ export default function Sidebar({ projects: externalProjects, onCreateProject }:
   const [hasClassesAccess, setHasClassesAccess] = useState(false);
   const [hasCompanyOutreachAccess, setHasCompanyOutreachAccess] = useState(false);
 
-  // Use external projects if provided, otherwise fetch internally
-  const projects = (externalProjects && externalProjects.length > 0) ? externalProjects : internalProjects;
-
-  // Fetch projects internally ONCE on mount - use stable user ID instead of user object
-  const userIdRef = useRef<number | null>(null);
-  const hasLoadedProjects = useRef(false);
-
-  useEffect(() => {
-    const fetchSidebarProjects = async () => {
-      if (externalProjects && externalProjects.length > 0) return; // Already have projects from parent
-      if (!user?.id) return;
-      
-      // Only fetch if we haven't loaded yet OR user ID changed
-      if (hasLoadedProjects.current && userIdRef.current === user.id) return;
-      
-      userIdRef.current = user.id;
-      hasLoadedProjects.current = true;
-      
-      try {
-        const { projectService } = await import('@/lib/api-compatibility');
-        const data = await projectService.getProjects();
-        if (Array.isArray(data)) {
-          setInternalProjects(data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            color: p.color || '#3B82F6'
-          })));
-        }
-      } catch (err) {
-        console.error('Sidebar: Failed to fetch projects:', err);
-      }
-    };
-    fetchSidebarProjects();
-  }, [user, externalProjects]);
+  // Use external projects if provided (from page), otherwise use context (persistent across navigations)
+  const projects = (externalProjects && externalProjects.length > 0) ? externalProjects : contextProjects;
 
   const handleDeleteProject = async (e: React.MouseEvent, projectId: number) => {
     e.preventDefault();
@@ -143,8 +112,12 @@ export default function Sidebar({ projects: externalProjects, onCreateProject }:
     try {
       const { projectService } = await import('@/lib/api-compatibility');
       await projectService.deleteProject(projectId);
-      // Refresh internal projects list
-      setInternalProjects(prev => prev.filter(p => p.id !== projectId));
+      // Remove from context (persistent across all pages)
+      removeProject(projectId);
+      // Navigate to dashboard if we were viewing this project
+      if (pathname?.includes(`/projects/${projectId}`)) {
+        router.push('/dashboard');
+      }
     } catch (err) {
       console.error('Failed to delete project:', err);
       alert('Failed to delete project. Please try again.');

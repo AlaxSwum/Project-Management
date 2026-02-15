@@ -97,6 +97,12 @@
     "id": 8411,
     "files": []
   },
+  "../contexts/ProjectsContext.tsx -> @/lib/api-compatibility": {
+    "id": 3152,
+    "files": [
+      "static/chunks/3152-166633a0e9f92694.js"
+    ]
+  },
   "../lib/meetingNotesService.ts -> @/lib/supabase": {
     "id": 8411,
     "files": []

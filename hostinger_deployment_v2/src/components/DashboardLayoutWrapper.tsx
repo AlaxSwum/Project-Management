@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { ProjectsProvider } from '@/contexts/ProjectsContext';
 import DashboardLayout from '@/components/DashboardLayout';
 
 // Pages that should NOT have the sidebar
@@ -18,5 +19,9 @@ export default function DashboardLayoutWrapper({ children }: { children: React.R
     return <div className="min-h-full" style={{ background: '#F5F5ED' }}>{children}</div>;
   }
 
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <ProjectsProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ProjectsProvider>
+  );
 }
