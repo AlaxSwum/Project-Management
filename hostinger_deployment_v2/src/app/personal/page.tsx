@@ -391,7 +391,7 @@ const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
   recurringEndDate: db.recurring_end_date,
   excludedDates: db.excluded_dates,
   completed: db.completed,
-  completedDates: db.completed_dates || [],
+  completedDates: (db as any).completed_dates || [],
   created_at: db.created_at,
   updated_at: db.updated_at,
 });
