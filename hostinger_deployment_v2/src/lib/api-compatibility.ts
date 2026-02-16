@@ -42,14 +42,6 @@ const getCurrentUserId = async (): Promise<number | null> => {
   }
 };
 
-// Simple in-memory cache to prevent duplicate fetches (e.g., Sidebar + page both calling getProjects)
-const projectsCache: { data: any[] | null; timestamp: number; promise: Promise<any[]> | null } = {
-  data: null,
-  timestamp: 0,
-  promise: null,
-};
-const CACHE_TTL_MS = 5000; // Cache projects for 5 seconds to deduplicate near-simultaneous calls
-
 // Compatibility layer for existing components to use Supabase instead of Django backend
 export const authService = {
   async login(email: string, password: string) {
@@ -94,45 +86,13 @@ export const projectService = {
         console.log('No user ID found, returning empty array');
         return [];
       }
-
-      const now = Date.now();
-
-      // Return cached data if still fresh
-      if (projectsCache.data && (now - projectsCache.timestamp) < CACHE_TTL_MS) {
-        return projectsCache.data;
-      }
-
-      // If there's already an in-flight request, reuse it to avoid duplicate network calls
-      if (projectsCache.promise) {
-        return projectsCache.promise;
-      }
-
-      // Create the fetch promise and store it so concurrent callers reuse it
-      projectsCache.promise = (async () => {
-        try {
-          const { data, error } = await supabaseDb.getProjects(userId);
-          if (error) throw error;
-          const result = Array.isArray(data) ? data : [];
-          projectsCache.data = result;
-          projectsCache.timestamp = Date.now();
-          return result;
-        } finally {
-          projectsCache.promise = null;
-        }
-      })();
-
-      return projectsCache.promise;
+      const { data, error } = await supabaseDb.getProjects(userId);
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error in getProjects:', error);
       return []; // Return empty array on error to prevent crashes
     }
-  },
-
-  // Invalidate the projects cache (call after creating/updating/deleting projects)
-  invalidateProjectsCache() {
-    projectsCache.data = null;
-    projectsCache.timestamp = 0;
-    projectsCache.promise = null;
   },
 
   async getProject(id: number) {
@@ -153,21 +113,18 @@ export const projectService = {
   async createProject(projectData: any) {
     const { data, error } = await supabaseDb.createProject(projectData);
     if (error) throw error;
-    projectService.invalidateProjectsCache(); // Clear cache so Sidebar picks up new project
     return data;
   },
 
   async updateProject(id: number, projectData: any) {
     const { data, error } = await supabaseDb.updateProject(id, projectData);
     if (error) throw error;
-    projectService.invalidateProjectsCache(); // Clear cache so changes are reflected
     return data;
   },
 
   async deleteProject(id: number) {
     const { data, error } = await supabaseDb.deleteProject(id);
     if (error) throw error;
-    projectService.invalidateProjectsCache(); // Clear cache so deleted project disappears
     return data;
   },
 
@@ -210,9 +167,8 @@ export const projectService = {
         throw new Error('Authentication required');
       }
       
-      // Verify current user has access to this project (lightweight check)
-      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, currentUserId);
-      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+      // Verify current user has access to this project
+      await supabaseDb.getProject(projectId, currentUserId);
       
       const { data, error } = await supabaseDb.addProjectMember(projectId, userId);
       if (error) throw error;
@@ -230,9 +186,8 @@ export const projectService = {
         throw new Error('Authentication required');
       }
       
-      // Verify current user has access to this project (lightweight check)
-      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, currentUserId);
-      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+      // Verify current user has access to this project
+      await supabaseDb.getProject(projectId, currentUserId);
       
       const { data, error } = await supabaseDb.removeProjectMember(projectId, userId);
       if (error) throw error;
@@ -254,9 +209,8 @@ export const taskService = {
         if (!userId) {
           return [];
         }
-        // Verify access to the specific project (lightweight check)
-        const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
-        if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+        // Verify access to the specific project
+        await supabaseDb.getProject(projectId, userId); // This will throw if no access
       }
       
       const { data, error } = await supabaseDb.getTasks(projectId);
@@ -275,9 +229,8 @@ export const taskService = {
         return [];
       }
       
-      // Verify user has access to this project (lightweight check)
-      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
-      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+      // Verify user has access to this project
+      await supabaseDb.getProject(projectId, userId); // This will throw if no access
       
       const { data, error } = await supabaseDb.getTasks(projectId);
       if (error) throw error;
@@ -310,9 +263,8 @@ export const taskService = {
       throw new Error('Authentication required');
     }
     
-    // Verify user has access to this project (lightweight check)
-    const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
-    if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+    // Verify user has access to this project
+    await supabaseDb.getProject(projectId, userId); // This will throw if no access
     
     const { data, error } = await supabaseDb.createTask({
       ...taskData,
@@ -616,9 +568,8 @@ export const todoService = {
         return [];
       }
       
-      // Verify user has access to this project (lightweight check)
-      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
-      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+      // Verify user has access to this project
+      await supabaseDb.getProject(projectId, userId);
       
       // Query todo_items table (simplified schema)
       const { data, error } = await supabase.from('todo_items')
@@ -657,9 +608,8 @@ export const todoService = {
         throw new Error('Authentication required');
       }
       
-      // Verify user has access to this project (lightweight check)
-      const { hasAccess } = await supabaseDb.checkProjectAccess(projectId, userId);
-      if (!hasAccess) throw new Error('Access denied: You are not a member of this project');
+      // Verify user has access to this project
+      await supabaseDb.getProject(projectId, userId);
       
       const { data, error } = await supabase.from('todo_items')
         .insert([{
