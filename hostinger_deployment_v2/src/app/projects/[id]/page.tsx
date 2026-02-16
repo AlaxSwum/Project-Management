@@ -572,6 +572,65 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const deleteAttachmentLink = async (attachmentId: number) => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { error } = await supabase
+        .from('task_attachment_links')
+        .delete()
+        .eq('id', attachmentId);
+      if (!error) {
+        setAttachments(attachments.filter(a => a.id !== attachmentId));
+      }
+    } catch (error) {
+      console.error('Error deleting attachment:', error);
+    }
+  };
+
+  const [editingAttachmentId, setEditingAttachmentId] = useState<number | null>(null);
+  const [editAttachmentName, setEditAttachmentName] = useState('');
+  const [editAttachmentUrl, setEditAttachmentUrl] = useState('');
+
+  const startEditAttachment = (attachment: any) => {
+    setEditingAttachmentId(attachment.id);
+    setEditAttachmentName(attachment.attachment_name);
+    setEditAttachmentUrl(attachment.attachment_url);
+  };
+
+  const saveEditAttachment = async () => {
+    if (!editingAttachmentId) return;
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { error } = await supabase
+        .from('task_attachment_links')
+        .update({ attachment_name: editAttachmentName.trim(), attachment_url: editAttachmentUrl.trim() })
+        .eq('id', editingAttachmentId);
+      if (!error) {
+        setAttachments(attachments.map(a => a.id === editingAttachmentId 
+          ? { ...a, attachment_name: editAttachmentName.trim(), attachment_url: editAttachmentUrl.trim() } 
+          : a));
+        setEditingAttachmentId(null);
+      }
+    } catch (error) {
+      console.error('Error editing attachment:', error);
+    }
+  };
+
+  const deleteComment = async (commentId: number) => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { error } = await supabase
+        .from('task_comments')
+        .delete()
+        .eq('id', commentId);
+      if (!error) {
+        setComments(comments.filter(c => c.id !== commentId));
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
   // Create notification for task updates
   const createNotification = async (taskId: number, type: string, message: string, oldStatus?: string, newStatus?: string) => {
     if (!user?.id || !selectedTask) return;
@@ -3661,8 +3720,29 @@ n              {/* Team Members Button - Avatar Style */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                           {attachments.map((attachment) => (
                             <div key={attachment.id} style={{ padding: '0.75rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                              {editingAttachmentId === attachment.id ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  <input
+                                    value={editAttachmentName}
+                                    onChange={(e) => setEditAttachmentName(e.target.value)}
+                                    placeholder="Attachment name"
+                                    style={{ padding: '0.5rem', background: '#141414', border: '1px solid #3D3D3D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                                  />
+                                  <input
+                                    value={editAttachmentUrl}
+                                    onChange={(e) => setEditAttachmentUrl(e.target.value)}
+                                    placeholder="URL"
+                                    style={{ padding: '0.5rem', background: '#141414', border: '1px solid #3D3D3D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                                  />
+                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button onClick={saveEditAttachment} style={{ padding: '0.375rem 0.75rem', background: '#10B981', color: '#fff', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', minHeight: 'auto', minWidth: 'auto' }}>Save</button>
+                                    <button onClick={() => setEditingAttachmentId(null)} style={{ padding: '0.375rem 0.75rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', minHeight: 'auto', minWidth: 'auto' }}>Cancel</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                                <PaperClipIcon style={{ width: '16px', height: '16px', color: '#10B981' }} />
+                                <PaperClipIcon style={{ width: '16px', height: '16px', color: '#10B981', flexShrink: 0 }} />
                                 <a 
                                   href={attachment.attachment_url} 
                                   target="_blank" 
@@ -3671,10 +3751,26 @@ n              {/* Team Members Button - Avatar Style */}
                                 >
                                   {attachment.attachment_name}
                                 </a>
+                                <button
+                                  onClick={() => startEditAttachment(attachment)}
+                                  style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#71717A', borderRadius: '4px', minHeight: 'auto', minWidth: 'auto' }}
+                                  title="Edit"
+                                >
+                                  <PencilIcon style={{ width: '14px', height: '14px' }} />
+                                </button>
+                                <button
+                                  onClick={() => deleteAttachmentLink(attachment.id)}
+                                  style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', borderRadius: '4px', minHeight: 'auto', minWidth: 'auto' }}
+                                  title="Delete"
+                                >
+                                  <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                </button>
                             </div>
                               <div style={{ fontSize: '0.75rem', color: '#71717A', marginLeft: '1.75rem' }}>
                                 Added by {attachment.user_name} • {new Date(attachment.created_at).toLocaleDateString()}
                             </div>
+                                </>
+                              )}
                           </div>
                     ))}
                   </div>
@@ -3716,11 +3812,20 @@ n              {/* Team Members Button - Avatar Style */}
                               <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem' }}>
                                 <UserAvatar user={{ id: comment.user_id, name: comment.user_name || 'User', avatar_url: comment.user_avatar_url }} size="md" />
                                 <div style={{ flex: 1 }}>
-                                  <div style={{ marginBottom: '0.5rem' }}>
+                                  <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{comment.user_name || 'User'}</span>
-                                    <span style={{ fontSize: '0.75rem', color: '#71717A', marginLeft: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.75rem', color: '#71717A', marginLeft: '0.5rem', flex: 1 }}>
                                       {new Date(comment.created_at).toLocaleDateString()} at {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
+                                    {comment.user_id === user?.id && (
+                                      <button
+                                        onClick={() => deleteComment(comment.id)}
+                                        style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', borderRadius: '4px', minHeight: 'auto', minWidth: 'auto' }}
+                                        title="Delete comment"
+                                      >
+                                        <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                      </button>
+                                    )}
                                   </div>
                                   <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.5, margin: 0 }}>
                                     {comment.comment_text}
