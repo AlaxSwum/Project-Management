@@ -49,7 +49,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { name: 'Personal', href: '/my-personal', icon: UserCircleIcon },
+  { name: 'Personal', href: '/personal', icon: UserCircleIcon },
   { name: 'Password Vault', href: '/password-vault', icon: KeyIcon },
   { name: 'Meeting Schedule', href: '/calendar', icon: CalendarIcon },
   { name: 'Content Calendar', href: '/content-calendar', icon: CalendarDaysIcon },
